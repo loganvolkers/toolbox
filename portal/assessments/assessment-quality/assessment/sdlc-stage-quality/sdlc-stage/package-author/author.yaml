@@ -1,4 +1,4 @@
-apiVersion: toolbox.dev/assessment/v1
+apiVersion: seikika.com/assessment/v1
 entity: assessment:sdlc-stage-quality/sdlc-stage:package-author/author
 rubric: assessment-quality
 subjectHash: fdf79fcdc4ab
@@ -10,11 +10,11 @@ verdicts:
     reason: >-
       Every citation in
       portal/assessments/sdlc-stage-quality/sdlc-stage/package-author/author.yaml
-      lands. .github/workflows/ci.yml:67-71 loops `toolbox validate` and
-      `toolbox test` over packages/*/tests.
-      packages/github-actions/tests/toolbox.yaml:9 is `include: [{package: ..,
-      ...}]`. crates/toolbox-model/src/package.rs:256-257 rejects any
-      apiVersion but toolbox.dev/package/v0, and package.rs:55-68 parses
+      lands. .github/workflows/ci.yml:67-71 loops `seikika validate` and
+      `seikika test` over packages/*/tests.
+      packages/github-actions/tests/seikika.yaml:9 is `include: [{package: ..,
+      ...}]`. crates/seikika-model/src/package.rs:256-257 rejects any
+      apiVersion but seikika.com/package/v0, and package.rs:55-68 parses
       `github:owner/repo[/subdir]@version`. docs/design/package-author-sdlc.md
       §6 runs from line 213 to 295, with the 6.2 rows at lines 234-235.
       dist-workspace.toml lists shell and powershell installers,
@@ -26,7 +26,7 @@ verdicts:
       executable-exit should fail. The rubric says "Fail when nothing in
       `checks:` would fail if the exit criterion were not met"
       (portal/standards/sdlc.yaml:403-405). The stage's `checks:` is only
-      packages/github-actions/toolbox-package.yaml
+      packages/github-actions/seikika-package.yaml
       (portal/sdlc/stages/package-author.yaml:16): a data file, not a command.
       The assessment concedes this in its own reason (author.yaml lines 17-19)
       and passes anyway, because ci.yml:67-71 is not listed. The other three

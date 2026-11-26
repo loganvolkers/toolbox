@@ -23,7 +23,7 @@ def main() -> None:
     out = pathlib.Path(f"/tmp/graphify-ab/blind-r{rnd}")
     rng = random.Random(secrets.randbits(64))
     key = []
-    for repo in ("openfga", "toolbox"):
+    for repo in ("openfga", "seikika"):
         runs = sorted(src.glob(f"{repo}-*.answers.md"))
         labels = rng.sample(range(100, 1000), len(runs))
         (out / repo).mkdir(parents=True, exist_ok=True)

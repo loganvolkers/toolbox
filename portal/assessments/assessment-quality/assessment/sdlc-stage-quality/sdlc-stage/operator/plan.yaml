@@ -1,4 +1,4 @@
-apiVersion: toolbox.dev/assessment/v1
+apiVersion: seikika.com/assessment/v1
 entity: assessment:sdlc-stage-quality/sdlc-stage:operator/plan
 rubric: assessment-quality
 subjectHash: 41bf27bf4b52
@@ -12,11 +12,11 @@ verdicts:
       portal/assessments/sdlc-stage-quality/sdlc-stage/operator/plan.yaml
       match the stage and the command. portal/sdlc/stages/operator.yaml:56-68
       is the plan stage: the exit criterion is a plan against the running
-      portal attached to the PR, the command is `toolbox plan --local`, and
+      portal attached to the PR, the command is `seikika plan --local`, and
       checks is empty. docs/design/sdlc.md:14-15 marks `plan --remote` and the
-      portal-repo Actions as M6, and §8 (line 176) is the toolbox-dev/plan
-      sticky comment. crates/toolbox-cli/src/main.rs:75-76 requires `--base`,
-      and :80-82 adds `--format`. plan() (main.rs:880-904) prints the diff and
+      portal-repo Actions as M6, and §8 (line 176) is the seikika/plan sticky
+      comment. crates/seikika-cli/src/main.rs:75-76 requires `--base`, and
+      :80-82 adds `--format`. plan() (main.rs:880-904) prints the diff and
       returns success, so a level drop does not fail the process.
       sdlc.md:66-101 is the remote-plan design, including GitHub OIDC at line
       100. The doc comment at main.rs:69 is the two-recompute diff D37 names.

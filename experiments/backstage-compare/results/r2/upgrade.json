@@ -1,5 +1,5 @@
 {
-  "toolbox": {
+  "seikika": {
     "upgradeLinesPerRelease": 0,
     "rollbackManualStepsPerRelease": 0,
     "upgradeWindow": "v0.1.1..HEAD"

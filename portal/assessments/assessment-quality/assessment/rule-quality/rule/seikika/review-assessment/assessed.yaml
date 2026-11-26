@@ -1,0 +1,67 @@
+apiVersion: seikika.com/assessment/v1
+entity: assessment:rule-quality/rule:seikika/review-assessment/assessed
+rubric: assessment-quality
+subjectHash: 2bc46c8db224
+assessor: {kind: agent, name: cursor-reviewer-04, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: supported
+    verdict: pass
+    reason: >-
+      The citations in
+      portal/assessments/rule-quality/rule/seikika/review-assessment/assessed.yaml
+      hold. In portal/standards/assessments.yaml, `reviewState` is 67-73,
+      `selfReviewed` 105-112, the rule's evidence 262-266, its fix 267-269 and
+      gold grounding 274-282. crates/seikika-connect/src/assessment.rs:151-160
+      is the content hash. docs/design/thresholds.md:55 is the silver cell,
+      and 63-66 accept renaming as a visible false statement.
+      portal/tests/standards.test.yaml:1016-1023 pins stale and fresh, and
+      1247-1257 pins the self-review fail. Decision 2 of
+      D01M831P5QWJQ4A2FT85N5MXJQF is the source of the silver level.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      I found no missed failure. There is a latent edge: `selfReviewed` needs
+      `has(entity.assessorName)` (assessments.yaml:111), so if the assessment
+      is unnamed, any review counts as independent. But meta-assessment's
+      ratcheted assessor-named (assessments.yaml:165, 176-187) stops new
+      unnamed assessments, so measures-intent can stand as a pass.
+  - criterion: reproducible
+    verdict: unsure
+    reason: >-
+      hard-to-game fails on deliberate renaming: "write the assessment as `a`
+      and the review as `b`". docs/design/thresholds.md:63-66 accepts exactly
+      that as a false statement visible in review. The same assessor, in
+      portal/assessments/rule-quality/rule/seikika/review-assessment/no-open-findings.yaml,
+      leaves renaming open as the residual route of its own suggestion. One
+      assessor could pass hard-to-game by the design's acceptance, and another
+      could fail it by the rubric's "renamed item"
+      (portal/standards/meta.yaml:1164-1166).
+    suggestion: >-
+      State why renaming counts as gaming here despite
+      docs/design/thresholds.md:63-66, for example that no prompt makes a
+      reviewer look for it. Or pass hard-to-game, cite that acceptance, and
+      keep the run-id idea as a note.
+  - criterion: actionable
+    verdict: fail
+    reason: >-
+      The suggestion in
+      portal/assessments/rule-quality/rule/seikika/review-assessment/assessed.yaml
+      has the assessor copy a run id from the brief into `assessor.run`. Its
+      own words are "harder to fake by accident". The fail rests on a
+      deliberate rename, and a run id the assessor types is just as easy to
+      give a second value. After the change, the cheapest route is still
+      writing a different string, so hard-to-game would still fail.
+    suggestion: >-
+      Make the identity something the assessor doesn't type. One way: have
+      `seikika assess` stamp `assessor.run` from the harness environment (such
+      as a cloud agent's id) and record which commit added each file. Then
+      count a review as a self-review when the run or the commit matches the
+      assessment's. If that's out of reach, pass hard-to-game under
+      docs/design/thresholds.md:63-66 instead.
+summary: >-
+  The citations, the line numbers and the two passes hold. The
+  hard-to-game fail rests on deliberate renaming, which the design
+  explicitly accepts and which the same assessor leaves open elsewhere, so
+  it is a judgement call. The run-id suggestion only catches accidental
+  self-review, so it wouldn't change the verdict it is attached to.

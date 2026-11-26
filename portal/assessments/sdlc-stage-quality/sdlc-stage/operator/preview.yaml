@@ -1,4 +1,4 @@
-apiVersion: toolbox.dev/assessment/v1
+apiVersion: seikika.com/assessment/v1
 entity: sdlc-stage:operator/preview
 rubric: sdlc-stage-quality
 subjectHash: e1c0151edc7e
@@ -10,10 +10,10 @@ verdicts:
     reason: >-
       Both `commands` and `checks` are empty, and the status is `designed`
       (portal/sdlc/stages/operator.yaml:69-79). Nothing creates a preview URL
-      per PR or checks that it is torn down on merge. `toolbox-dev/preview`
-      and `toolbox preview gc` exist only in docs/design/sdlc.md §5 and §8.
+      per PR or checks that it is torn down on merge. `seikika/preview` and
+      `seikika preview gc` exist only in docs/design/sdlc.md §5 and §8.
     suggestion: >-
-      Build the compose adapter first (sdlc.md:58, `toolbox preview up`) and a
+      Build the compose adapter first (sdlc.md:58, `seikika preview up`) and a
       CI job that brings a preview up, probes `/readyz`, and tears it down.
       List that job under `checks:`.
   - criterion: agent-can-complete
@@ -21,16 +21,16 @@ verdicts:
     reason: >-
       No command or Action exists (`commands: []`,
       portal/sdlc/stages/operator.yaml:75; no `preview` subcommand in
-      crates/toolbox-cli/src/main.rs:43-322), so an agent would have to invent
+      crates/seikika-cli/src/main.rs:43-322), so an agent would have to invent
       the environment, the GitHub Deployment and the teardown itself. Hosting
       a per-PR URL also needs cloud or cluster credentials, which the stage
       does not mention. The only listed doc, docs/design/sdlc.md, describes
       the target design (§5, lines 103-121) rather than steps that work today.
     suggestion: >-
-      Until `toolbox-dev/preview` exists, document a do-it-yourself preview:
-      FROM the release image (image/Dockerfile:3-4) with the PR's portal
-      copied in, run with `toolbox serve --fixtures`. Say which secrets the
-      hosting step needs.
+      Until `seikika/preview` exists, document a do-it-yourself preview: FROM
+      the release image (image/Dockerfile:3-4) with the PR's portal copied in,
+      run with `seikika serve --fixtures`. Say which secrets the hosting step
+      needs.
   - criterion: reuses-artifacts
     verdict: pass
     reason: >-
@@ -43,8 +43,8 @@ verdicts:
   - criterion: decoupled-from-core
     verdict: fail
     reason: >-
-      The designed stage needs new Toolbox surfaces: the `toolbox-dev/preview`
-      Action, `toolbox preview gc`, and a server-side redacted production
+      The designed stage needs new Seikika surfaces: the `seikika/preview`
+      Action, `seikika preview gc`, and a server-side redacted production
       sample export (docs/design/sdlc.md:103-121). An operator cannot meet the
       exit criterion without that work in this repository.
     suggestion: >-

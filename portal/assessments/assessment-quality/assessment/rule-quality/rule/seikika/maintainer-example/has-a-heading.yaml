@@ -1,0 +1,48 @@
+apiVersion: seikika.com/assessment/v1
+entity: assessment:rule-quality/rule:seikika/maintainer-example/has-a-heading
+rubric: assessment-quality
+subjectHash: dd58d4882189
+assessor: {kind: agent, name: cursor-reviewer-34, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: supported
+    verdict: pass
+    reason: >-
+      The citations in
+      portal/assessments/rule-quality/rule/seikika/maintainer-example/has-a-heading.yaml
+      match. crates/seikika-connector-workspace/src/examples.rs:14-19 takes
+      the first line starting with "# " and trims it, with no fence or Setext
+      handling. portal/standards/examples.yaml:56-64 is the non-empty title
+      check, the "no heading" evidence, the start-with-# Name fix and the
+      rationale. docs/design/example-standards.md:58 says the file starts with
+      a level-1 heading, and :22 puts a heading at bronze.
+      docs/decisions/D01M7W5G0T00000000000000000.md:9 sets that bronze.
+      portal/tests/standards.test.yaml:641-643 pins evidence ['no heading'].
+      The 47 live write-ups are the README and docs/examples globs, and each
+      one's first non-blank line is a "# " heading.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      measures-intent should fail: the fix and the design say the file starts
+      with a heading, and the extractor accepts any "# " line. hard-to-game is
+      right that a bare "# " trims to empty and fails (examples.rs:18,
+      examples.yaml:56). fix-leads-to-pass and threshold-justified follow the
+      evidence string and D78. Nothing else in the rule should fail.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      The extractor is a four-line find. A second assessor fails
+      measures-intent for the fence and Setext cases and passes the other
+      three criteria from the same lines.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      Taking the title from the first non-blank line outside front matter,
+      accepting a Setext underline and skipping fenced lines would make
+      "starts with a heading" what the check accepts, which is the
+      measures-intent fail. The other verdicts are passes.
+summary: >-
+  The has-a-heading assessment is trustworthy. The extractor really takes
+  the first "# " line anywhere, the 47 live files do start with a real
+  heading, and the bronze level is D78. The suggestion would make the
+  check match the fix.

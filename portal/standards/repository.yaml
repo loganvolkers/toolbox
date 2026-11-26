@@ -1,5 +1,5 @@
 # The repository: supply chain config and the repository level (docs/design/supply-chain-standards.md, repo-level.md).
-# Included by portal/toolbox.yaml; see portal/README.md for the layout.
+# Included by portal/seikika.yaml; see portal/README.md for the layout.
 
 kinds:
   # The checkout (docs/design/supply-chain-standards.md, docs/design/repo-level.md).
@@ -71,11 +71,11 @@ scorecards:
       and gold pins the code-scanning action like any other.
     links:
     - title: 'Decision: supply-chain settings'
-      url: https://github.com/loganvolkers/toolbox/blob/main/docs/decisions/D01M7WMSMS40000000000000000.md
+      url: https://github.com/seikika/seikika/blob/main/docs/decisions/D01M7WMSMS40000000000000000.md
     - title: Supply-chain standards design
-      url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/supply-chain-standards.md
+      url: https://github.com/seikika/seikika/blob/main/docs/design/supply-chain-standards.md
     - title: Carry OpenSSF Scorecard decision
-      url: https://github.com/loganvolkers/toolbox/blob/main/docs/decisions/D01M82E93XAPNE0WFXEPJZ59WG4.md
+      url: https://github.com/seikika/seikika/blob/main/docs/decisions/D01M82E93XAPNE0WFXEPJZ59WG4.md
     owner: group:maintainers
     track: delivery
     levels: [bronze, silver, gold]
@@ -145,9 +145,9 @@ scorecards:
       none.
     links:
     - title: 'Decision: the repository level'
-      url: https://github.com/loganvolkers/toolbox/blob/main/docs/decisions/D01M7WMSMS50000000000000000.md
+      url: https://github.com/seikika/seikika/blob/main/docs/decisions/D01M7WMSMS50000000000000000.md
     - title: Repository level design
-      url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/repo-level.md
+      url: https://github.com/seikika/seikika/blob/main/docs/design/repo-level.md
     owner: group:maintainers
     track: maintainer
     levels: [bronze, silver, gold]

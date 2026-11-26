@@ -18,7 +18,7 @@ is wrong on day one: scores read the wrong facts, ownership is split, and agents
 | **Code locations + telemetry** (path globs, APM service names) | Datadog (`codeLocations`, auto-detected dependencies, `inheritFrom`) | Automatic and fresh | Needs telemetry; naming drift across tools |
 | **Record linkage** (deterministic + probabilistic matching, review queues) | MDM/data tooling generally | Handles the long tail | Needs human review to be trusted |
 
-Toolbox combines all four, and adds what none of them have: **explicit unmatched/ambiguous states,
+Seikika combines all four, and adds what none of them have: **explicit unmatched/ambiguous states,
 coverage metrics, and PR-based resolution.**
 
 ## 3. Model
@@ -42,7 +42,7 @@ coverage metrics, and PR-based resolution.**
    a previous accepted link). Match, confidence 1.0.
 2. **Declared matchers** (code, per connector record kind; CEL over record and candidate entity):
    ```ts
-   new tb.Matcher("pagerduty-service-to-service", {
+   new seikika.Matcher("pagerduty-service-to-service", {
      record: "pagerduty.service",
      target: service,
      rules: [
@@ -83,7 +83,7 @@ coverage metrics, and PR-based resolution.**
 | **Entity rename** (same external ids, new name) | Detected as a rename, not delete+create. The old ref becomes an **alias**, and refs, links, score history, notifications and ReBAC tuples follow the new ref |
 | **Merge** (two entities are the same) | `mergedInto` redirect; histories are concatenated; external ids are unioned; conflicts are surfaced |
 | **Split** (one service becomes two) | Declared in code (`split: { from, into: [...] , by: "codeLocations" }`); history stays with the original, which is marked `splitInto` |
-| **Kind or property rename** (model change) | `toolbox plan` detects it and requires a declared migration (`rename`, `retype`, `move`). Data is migrated in an online expand/contract migration |
+| **Kind or property rename** (model change) | `seikika plan` detects it and requires a declared migration (`rename`, `retype`, `move`). Data is migrated in an online expand/contract migration |
 | **Rule rename** | Rule ids are stable, and `renamedFrom` keeps history continuous |
 
 Aliases resolve everywhere: API, MCP, search, ReBAC subject and object refs, and views.
@@ -93,7 +93,7 @@ Aliases resolve everywhere: API, MCP, search, ReBAC subject and object refs, and
 - **Link coverage** per connector and record kind (`matched / total`), the ambiguous count and the
   conflict count are exported as metrics and evaluated by the meta-catalog **Connector** scorecard
   (e.g. silver ≥ 90% coverage).
-- `toolbox plan` shows coverage deltas for matcher changes, e.g. "+212 PagerDuty services linked,
+- `seikika plan` shows coverage deltas for matcher changes, e.g. "+212 PagerDuty services linked,
   3 new ambiguities".
 - `explain` for any fact shows its link chain: fact ← record ← external id ← link method ← proposal PR.
 

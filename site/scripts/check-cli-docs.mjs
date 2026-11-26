@@ -3,7 +3,7 @@
  * Drift check: re-load CLI catalog and ensure build-time fingerprint is stable.
  * Pages CI runs it as `pnpm check:cli-docs`.
  *
- * This script invokes toolbox describe directly (mirrors cli-describe.ts logic)
+ * This script invokes seikika describe directly (mirrors cli-describe.ts logic)
  * so it does not require a TypeScript build step.
  */
 import { spawnSync } from 'node:child_process';
@@ -15,17 +15,17 @@ const siteRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const repoRoot = resolve(siteRoot, '..');
 const snapshotPath = join(siteRoot, 'src/data/cli-catalog.fingerprint.json');
 
-function resolveToolbox() {
-  if (process.env.TOOLBOX_BIN && existsSync(process.env.TOOLBOX_BIN)) {
-    return process.env.TOOLBOX_BIN;
+function resolveSeikika() {
+  if (process.env.SEIKIKA_BIN && existsSync(process.env.SEIKIKA_BIN)) {
+    return process.env.SEIKIKA_BIN;
   }
   for (const c of [
-    join(repoRoot, 'target/debug/toolbox'),
-    join(repoRoot, 'target/release/toolbox'),
+    join(repoRoot, 'target/debug/seikika'),
+    join(repoRoot, 'target/release/seikika'),
   ]) {
     if (existsSync(c)) return c;
   }
-  const build = spawnSync('cargo', ['build', '-p', 'toolbox-cli', '--locked'], {
+  const build = spawnSync('cargo', ['build', '-p', 'seikika-cli', '--locked'], {
     cwd: repoRoot,
     encoding: 'utf8',
   });
@@ -33,11 +33,11 @@ function resolveToolbox() {
     console.error(build.stderr);
     process.exit(1);
   }
-  return join(repoRoot, 'target/debug/toolbox');
+  return join(repoRoot, 'target/debug/seikika');
 }
 
-function describe(toolbox) {
-  const r = spawnSync(toolbox, ['describe'], { cwd: repoRoot, encoding: 'utf8' });
+function describe(seikika) {
+  const r = spawnSync(seikika, ['describe'], { cwd: repoRoot, encoding: 'utf8' });
   if (r.status !== 0) {
     console.error(r.stderr || r.stdout);
     process.exit(1);
@@ -48,7 +48,7 @@ function describe(toolbox) {
     if (!line.trim()) continue;
     const rec = JSON.parse(line);
     if (rec.kind === 'command') {
-      const help = spawnSync(toolbox, [...String(rec.data.name).split(/\s+/), '--help'], {
+      const help = spawnSync(seikika, [...String(rec.data.name).split(/\s+/), '--help'], {
         cwd: repoRoot,
         encoding: 'utf8',
       });
@@ -83,8 +83,8 @@ function describe(toolbox) {
 }
 
 const mode = process.argv.includes('--write') ? 'write' : 'check';
-const toolbox = resolveToolbox();
-const catalog = describe(toolbox);
+const seikika = resolveSeikika();
+const catalog = describe(seikika);
 const body = `${JSON.stringify(catalog, null, 2)}\n`;
 
 if (mode === 'write') {

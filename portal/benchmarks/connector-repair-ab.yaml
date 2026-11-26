@@ -1,10 +1,10 @@
 # DX Benchmark catalog entry (docs/design/dx-benchmarks.md §6), scored by maintainer-benchmark.
 records:
   - id: connector-repair-ab
-    title: 'Cloud/SaaS connector repair loop: Toolbox vs Ocean vs Backstage'
+    title: 'Cloud/SaaS connector repair loop: Seikika vs Ocean vs Backstage'
     question: >-
       When an agent inherits a near-correct Forge connector that fails truth,
-      does Toolbox's test/drive feedback loop cost fewer calls and surface
+      does Seikika's test/drive feedback loop cost fewer calls and surface
       more bugs than Port Ocean or a Backstage EntityProvider?
     layers: [package-author]
     stages: [package-author/build-connector, package-author/test]
@@ -24,7 +24,7 @@ records:
       connector-ab v3 did not transfer to the repair loop.
     changed: [D01M83NX8BXH45GQA7WMN4ACEH9]
     servedValue: >-
-      Showed diagnose→repair is a distinct claim from author→change; Toolbox
+      Showed diagnose→repair is a distinct claim from author→change; Seikika
       matched rivals on correctness but lost on cost and tied on diagnosis
       recall under the pre-registered bar
     blockedOn: ''

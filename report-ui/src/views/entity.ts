@@ -107,7 +107,7 @@ export const entityViews = {
             ),
             scName ? el("div", { className: "sub" }, "Rule page: ", ruleLink(scName, n, null, true), " ", el("code", { className: "rid", textContent: n })) : null,
             o === "unknown"
-              ? el("div", { className: "fix" }, el("b", { textContent: "Next: " }), "This check was not run, so there is no evidence to fix. Run it, then ", el("code", { textContent: "toolbox report" }), " again.")
+              ? el("div", { className: "fix" }, el("b", { textContent: "Next: " }), "This check was not run, so there is no evidence to fix. Run it, then ", el("code", { textContent: "seikika report" }), " again.")
               : rule.fix
                 ? el("div", { className: "fix" }, el("b", { textContent: "Fix: " }), ...rich(fixFor(rule.fix)))
                 : "",
@@ -131,7 +131,7 @@ export const entityViews = {
             rule.level ? el("span", { className: "sub", textContent: "needed for " + rule.level }) : "",
           ),
           o === "unknown"
-            ? el("div", { className: "fix" }, el("b", { textContent: "Next: " }), "This check was not run, so there is no evidence to fix. Run it, then ", el("code", { textContent: "toolbox report" }), " again.")
+            ? el("div", { className: "fix" }, el("b", { textContent: "Next: " }), "This check was not run, so there is no evidence to fix. Run it, then ", el("code", { textContent: "seikika report" }), " again.")
             : rule.fix
               ? el("div", { className: "fix" }, el("b", { textContent: "Fix: " }), ...rich(fixFor(rule.fix)))
               : "",
@@ -188,7 +188,7 @@ export const entityViews = {
         { className: "callout", style: "background:color-mix(in srgb,var(--unknown) 12%,var(--card))" },
         el("span", {}, unrunWords(sc, unsure), " Next: run ", ...unsure.map(function (n, i) {
           return el("span", {}, i ? (i === unsure.length - 1 ? " and " : ", ") : "", ruleTitleOf(sc, n));
-        }), ", then ", el("code", { textContent: "toolbox report" }), " again. This scorecard shows no medal until they run."),
+        }), ", then ", el("code", { textContent: "seikika report" }), " again. This scorecard shows no medal until they run."),
       );
     var next = nextLevel(sc, score.level);
     if (!next) return el("div", { className: "callout done" }, "✓ Top level reached: every rule passes.");

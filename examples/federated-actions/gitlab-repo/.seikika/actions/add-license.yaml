@@ -1,0 +1,13 @@
+actions:
+  - name: add-license
+    kind: Portal
+    description: Add a LICENSE file, as a merge request.
+    inputs:
+      type: object
+      properties: {spdx: {type: string, enum: [MIT, Apache-2.0], default: MIT}}
+    # Pushes a branch and opens a merge request on main. The run is proposed until the merge
+    # request is merged, then succeeded: review is the approval.
+    executor:
+      type: change
+      base: main
+      run: echo "$SEIKIKA_INPUT_SPDX License" > LICENSE

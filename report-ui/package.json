@@ -1,11 +1,11 @@
 {
-  "name": "@toolbox-dev/astro-report",
+  "name": "@seikika/astro-report",
   "version": "0.1.0",
-  "description": "Astro integration for publishing Toolbox catalog and scorecard snapshots.",
+  "description": "Astro integration for publishing Seikika catalog and scorecard snapshots.",
   "license": "MIT",
   "type": "module",
   "engines": { "node": ">=22" },
-  "repository": { "type": "git", "url": "https://github.com/loganvolkers/toolbox.git", "directory": "report-ui" },
+  "repository": { "type": "git", "url": "https://github.com/seikika/seikika.git", "directory": "report-ui" },
   "publishConfig": { "access": "public" },
   "files": ["integration.mjs", "integration.d.mts", "src"],
   "exports": {
@@ -22,7 +22,7 @@
     "probe": "node scripts/probe.mjs storybook-static",
     "smoke": "node scripts/smoke.mjs"
   },
-  "dependencies": { "@astrojs/vue": "7.1.6", "@toolbox-dev/ui": "workspace:^" },
+  "dependencies": { "@astrojs/vue": "7.1.6", "@seikika/ui": "workspace:^" },
   "peerDependencies": { "astro": "^7.0.0", "vue": "^3.5.0" },
   "devDependencies": {
     "@storybook/vue3-vite": "10.6.8",

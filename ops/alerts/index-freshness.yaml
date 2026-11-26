@@ -1,12 +1,12 @@
 # Alert stub: index freshness (Prometheus / Mimir). Wired when a Grafana pack lands.
 groups:
-  - name: toolbox.index
+  - name: seikika.index
     rules:
-    - alert: ToolboxIndexStale
-      expr: toolbox_index_freshness_seconds > 300
+    - alert: SeikikaIndexStale
+      expr: seikika_index_freshness_seconds > 300
       for: 10m
       labels: {severity: warning}
       annotations:
-        summary: Toolbox search index is stale
+        summary: Seikika search index is stale
         description: >-
-          toolbox_index_freshness_seconds has been above 300s for 10m.
+          seikika_index_freshness_seconds has been above 300s for 10m.

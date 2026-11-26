@@ -1,0 +1,63 @@
+{
+  "run": "seikika-2",
+  "C1": "holds",
+  "P1": {
+    "verdict": "holds",
+    "evidence": "`git -C origins/<r>.git ls-tree -r main -- .seikika` for alpha, beta and gamma lists .seikika/seikika.yaml, .seikika/actions/mark-deprecated.yaml and .seikika/tests/mark-deprecated.test.yaml on each origin's main (committed in 43ff597, f057524, fa3f2b7). The action file (inputs schema, approval rule, executor) is byte-identical in all three (sha1 f1faae98...); each seikika.yaml names the repository's portal and owner group:<r>-maintainers. org/seikika.yaml holds only federation.children pointing at the three origins."
+  },
+  "P2": {
+    "verdict": "holds",
+    "evidence": "From org/ with `. ./env.sh`: `seikika run --as ann mark-deprecated --entity portal:alpha -i 'successor=Acme/Bad Name' -i 'reason=<valid>' [--yes] -o json` -> exit 2, errors ['successor: \"Acme/Bad Name\" does not match \"^[a-z0-9-]+/[a-z0-9-]+$\"'], no id. With -i successor=acme/dependabot-proxy-v2 -i reason=short (5 characters) [--yes] -> exit 2, 'reason: \"short\" is shorter than 20 characters'. Tried with and without --yes. No run recorded (runs/ stayed at 9). alpha main d3cb7cfc before and after."
+  },
+  "P3": {
+    "verdict": "holds",
+    "evidence": "`seikika run --as ann mark-deprecated --entity portal:beta -i successor=acme/probe-preview -i 'reason=Adjudicator probe P3: preview only, nothing should change.' -o json` -> exit 0; effects: file:DEPRECATED.md update with the full diff ('+# Deprecated: use acme/probe-preview', blank, '+Adjudicator probe P3: ...'), and push branch:main 'one commit, pushed once approved (never forced)'; approvers user:ann|user:bob. No run id, runs/ unchanged; beta main d7a29fef before and after."
+  },
+  "P4": {
+    "verdict": "holds",
+    "evidence": "From org/: `seikika run --as ann mark-deprecated --entity portal:gamma -i successor=acme/probe-approval -i 'reason=Adjudicator probe P4: approval rules must hold here.' --yes -o json` -> exit 3, run_2fug2009d6da awaiting_approval, requested_by user:ann. gamma main 6e3d3aba after request. `--as ann --approve run_2fug2009d6da` -> exit 2 'a requester cannot approve their own run' (-o json and text). `--as carol --approve` -> exit 2 'user:carol is not one of the pending approvers [\"user:ann|user:bob\"]' (both modes). `--verify` -> awaiting_approval, approved_by [], exit 3. gamma main still 6e3d3aba."
+  },
+  "P5": {
+    "verdict": "holds",
+    "evidence": "`seikika run --as bob --approve run_2fug2009d6da --note 'adjudicator P5' --wait -o json` -> exit 0. gamma main 6e3d3aba -> e45a1525; `git show main:DEPRECATED.md` is exactly '# Deprecated: use acme/probe-approval', blank, the P4 reason, trailing newline; trailers Seikika-Run, Requested-By: user:ann, Approved-By: user:bob. `--verify` -> succeeded; verification: by child portal, child_run run_2fug2i2u5mjy, by base origin/main, 'fetched origin/main: the commit is on it, and every file it changed has the content the preview showed', DEPRECATED.md blob 63ae45d matches true. bin/seikika is byte-identical to seikika-1's (sha256 92a71941...); at the frozen commit 554e83f1, run.rs on_base() -> executor::landed() -> merged() runs `git fetch -q -- origin main`, `merge-base --is-ancestor`, then compares each changed file's blob on the fetched origin/main before done() can set succeeded."
+  },
+  "P6": {
+    "verdict": "holds",
+    "evidence": "Wrote origins/alpha.git/hooks/pre-receive (message, exit 1). ann requested (successor acme/probe-reject) -> run_2fug507wj0mr; `--as bob --approve ... --wait -o json` -> exit 1, state failed, error 'the push to origin main was refused, so nothing landed: ... [remote rejected] ... (pre-receive hook declined)'; events end approved, dispatched, running, failed. `--verify` -> failed, child failed, exit 1. alpha main d3cb7cfc before and after. Hook removed; no non-sample hooks remain."
+  },
+  "P7": {
+    "verdict": "holds",
+    "evidence": "From org/: `seikika run --as ann -o json` -> exit 0, mark-deprecated listed for portal:alpha, portal:beta and portal:gamma, each verified true. P4 was requested from org/ with --entity portal:gamma."
+  },
+  "P8": {
+    "verdict": "holds",
+    "evidence": "`seikika run --as ann --verify run_2fug2009d6da -o json`: requested_by user:ann; approval.approved_by [user:bob]; inputs {successor: acme/probe-approval, reason: ...}; state succeeded; outputs.commit e45a1525; events with `at`: previewed and confirmed by user:ann 14:09:18Z, awaiting_approval 14:09:18Z, approved by user:bob 14:09:18Z (with the note), dispatched, running, executor_succeeded, succeeded 14:09:19Z."
+  },
+  "P9": {
+    "verdict": "holds",
+    "evidence": "Every probe step was one non-interactive `seikika run ... -o json` command with JSON output and exit codes 0 succeeded, 1 failed, 2 refused or invalid, 3 awaiting approval. Refusals with -o json print {\"error\": ...} and exit 2."
+  },
+  "P10": {
+    "verdict": "holds",
+    "evidence": "Operated from org/HANDOFF.md alone: `cd org && . ./env.sh`, then its list, preview, request (--yes), approve (--wait), verify and rejected-push commands as written. Nothing needed starting. No fixes. Source was read only for P5."
+  },
+  "fixes": [],
+  "strikes": [
+    {"path": ".seikika-state/runs/run_2fu88ifjltwa.json", "lines": 217, "reason": "run record written by seikika while running (runtime data)"},
+    {"path": ".seikika-state/runs/run_2fu8d1fgz5go.json", "lines": 104, "reason": "run record written by seikika while running (runtime data)"},
+    {"path": ".seikika-state/runs/run_2fu8ekfk7p7u.json", "lines": 217, "reason": "run record written by seikika while running (runtime data)"},
+    {"path": ".seikika-state/runs/run_2fu8eoqroal9.json", "lines": 217, "reason": "run record written by seikika while running (runtime data)"},
+    {"path": ".seikika-state/runs/run_2fu8ev9fv1c7.json", "lines": 104, "reason": "run record written by seikika while running (runtime data)"},
+    {"path": ".seikika-state/runs/run_2fu8frmmfvd7.json", "lines": 104, "reason": "run record written by seikika while running (runtime data)"},
+    {"path": ".seikika-state/runs/run_2fu8ooutdib7.json", "lines": 159, "reason": "run record of the agent's own rejected-push test (runtime data)"},
+    {"path": ".seikika-state/runs/run_2fu8p051pulk.json", "lines": 77, "reason": "run record of the agent's own rejected-push test (child run; runtime data)"},
+    {"path": ".seikika-state/runs/run_2fu8wt3qt7kw.json", "lines": 78, "reason": "run record of the agent's own test through the served portal (runtime data)"},
+    {"path": ".seikika-state/served/org/runs/run_2fu8wgqdu1li.json", "lines": 165, "reason": "run record written by the served portal during the agent's serve test (runtime data)"},
+    {"path": ".seikika-state/served/org/runs/spent-tokens", "lines": 1, "reason": "served portal's spent confirm-token ledger (runtime state)"},
+    {"path": ".seikika-state/served/org/signing-key", "lines": 1, "reason": "generated key written by seikika at run time"}
+  ],
+  "linesBeforeStrikes": 1527,
+  "linesAfterStrikes": 83,
+  "fullyPasses": true,
+  "notes": "Kept lines: alpha/.seikika/actions/mark-deprecated.yaml 25, alpha/.seikika/tests/mark-deprecated.test.yaml 36, three .seikika/seikika.yaml 3 each, org/env.sh 6, org/seikika.yaml 7 (beta's and gamma's action and test files are byte-identical copies, not in the files map). Handoff inaccuracy that did not block anything: its Files table and R7 row put run records under `.seikika-state/federation/…/runs/`, but they are in `.seikika-state/runs/`; `--verify` and `--runs` read them either way. Refused approval attempts (ann's, carol's) are not written into the run's events. A blocked precondition exits 1, as the handoff says. My probes left gamma's main at e45a1525 (P5's DEPRECATED.md, by design) and added four run records under .seikika-state/runs. No process was started, none is running."
+}

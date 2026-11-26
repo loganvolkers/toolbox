@@ -9,7 +9,7 @@ without changing the manifest design?
 
 | Check | Result |
 |---|---|
-| [`portal/acme.ts`](./portal/acme.ts) rebuilds [`examples/reference-portal/toolbox.yaml`](../../examples/reference-portal/toolbox.yaml) | **Identical** (598 canonical JSON lines; CEL and prose compared with whitespace collapsed). Changing one value is detected |
+| [`portal/acme.ts`](./portal/acme.ts) rebuilds [`examples/reference-portal/seikika.yaml`](../../examples/reference-portal/seikika.yaml) | **Identical** (598 canonical JSON lines; CEL and prose compared with whitespace collapsed). Changing one value is detected |
 | Builder output against `manifest.schema.json` | 0 errors |
 | [`tests/type-errors.ts`](./tests/type-errors.ts): 8 deliberate mistakes | All 8 are compile errors (undeclared record kind, freshness key, unknown field in `sources`, malformed source id, rule at an undeclared level, unknown typed field path, action without `expect`/`unverified`, bad duration) |
 | Finding | The level check first passed silently: TypeScript widened the level union from the rules. Fixed with `NoInfer` (TypeScript ≥ 5.4) |

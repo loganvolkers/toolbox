@@ -16,7 +16,7 @@ D01M83RDWQ5EVKY5SFHDWAD5HFH. The other rules, the catalog fields and the scoreca
 1. **Why.** The *W* rule (medians differ by more than the wider arm's range) almost never gives a
    false result, and it almost never finds a real one. At five runs per arm it detects a
    one-standard-deviation effect 4% of the time and a two-standard-deviation effect 23% of the
-   time (simulation, normal data). In graphify-ab, every Graphify run on Toolbox made fewer calls
+   time (simulation, normal data). In graphify-ab, every Graphify run on Seikika made fewer calls
    and read less than every baseline run (exact p = 0.008 on each), and the rule called both
    inconclusive. The red team found this ([graphify-red-team.md](../graphify-red-team.md) R1), and
    the designer's re-check confirmed it
@@ -32,7 +32,7 @@ D01M83RDWQ5EVKY5SFHDWAD5HFH. The other rules, the catalog fields and the scoreca
    | Reporting | Every run, the minimum, median and maximum, *W*, U and p |
 
 3. **It cuts both ways.** Read post hoc, the rank test would have given Graphify two cost wins on
-   Toolbox and Toolbox two more against reviewdog, and it would have erased Toolbox's round-1 loss
+   Seikika and Seikika two more against reviewdog, and it would have erased Seikika's round-1 loss
    to reviewdog in gate-repair-ab, which ran three runs per arm
    ([graphify-red-team-response.md](../graphify-red-team-response.md) §4). Re-labelling past
    rounds under a rule chosen after seeing them is what P5 forbids, so they keep their labels, and

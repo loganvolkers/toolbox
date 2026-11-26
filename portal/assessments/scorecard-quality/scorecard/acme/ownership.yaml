@@ -1,4 +1,4 @@
-apiVersion: toolbox.dev/assessment/v1
+apiVersion: seikika.com/assessment/v1
 entity: scorecard:acme/ownership
 rubric: scorecard-quality
 subjectHash: ab70c0565555
@@ -10,7 +10,7 @@ verdicts:
     reason: >-
       All four rules serve the platform team's question "who answers for this
       repository, and can that answer be trusted"
-      (examples/reference-portal/toolbox.yaml:173-178). The tier and the
+      (examples/reference-portal/seikika.yaml:173-178). The tier and the
       protected branch are there because approvals and the claim depend on
       them, as the rationale says. has-tier fits least, since it is
       classification, but the rationale ties it to the same approval
@@ -20,7 +20,7 @@ verdicts:
     reason: >-
       Bronze (`verified` or `inferred`) is contained in silver's
       claim-verified (`verified`), and silver adds what makes the claim safe
-      (examples/reference-portal/toolbox.yaml:188-227). Both levels are
+      (examples/reference-portal/seikika.yaml:188-227). Both levels are
       reachable in fixtures: platform-infra and checkout-web are bronze,
       payments-api is silver, and ledger is none
       (examples/reference-portal/tests/ownership.test.yaml).
@@ -28,10 +28,10 @@ verdicts:
     verdict: fail
     reason: >-
       claim-verified's rationale says the claimed team reviews the claim
-      (examples/reference-portal/toolbox.yaml:203-206). That holds only if the
+      (examples/reference-portal/seikika.yaml:203-206). That holds only if the
       default branch requires code-owner review. branch-protected reads the
       API's `protected` flag
-      (crates/toolbox-connector-github/src/main.rs:158-162), which any ruleset
+      (crates/seikika-connector-github/src/main.rs:158-162), which any ruleset
       sets. No rule checks required code-owner review, which is what D17
       (D01M7TCJ3280000000000000000) and docs/authorization.md §4.8 depend on.
     suggestion: >-
@@ -44,7 +44,7 @@ verdicts:
     reason: >-
       None of the four rules has evidence (brief facts: hasEvidence false),
       and branch-protected's fix names no place (fixNamesPlace false). An
-      agent raising ledger to bronze needs `toolbox owner` to see that
+      agent raising ledger to bronze needs `seikika owner` to see that
       CODEOWNERS names `@acme/platform` against the `group:payments` claim
       (docs/research-log.md:59, A2). The failing score alone doesn't say it.
     suggestion: >-
@@ -53,8 +53,8 @@ verdicts:
       Settings > Rules > Rulesets (or `gh api repos/{o}/{r}/rulesets`) in
       branch-protected's fix.
 summary: >-
-  A well-built ladder grounded in D17, computed by toolbox-derive's
+  A well-built ladder grounded in D17, computed by seikika-derive's
   CODEOWNERS authority and covered by fourteen asserts. Its silver level
   promises that the claimed team reviews the claim, but nothing checks
   that code-owner review is required. None of its rules carries evidence,
-  so an agent needs `toolbox owner` to see why a claim failed.
+  so an agent needs `seikika owner` to see why a claim failed.

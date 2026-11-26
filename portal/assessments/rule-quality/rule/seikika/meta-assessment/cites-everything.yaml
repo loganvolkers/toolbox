@@ -1,0 +1,59 @@
+apiVersion: seikika.com/assessment/v1
+entity: rule:seikika/meta-assessment/cites-everything
+rubric: rule-quality
+subjectHash: f15817ddbfad
+assessor: {kind: agent, name: cursor-assessor-04, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: measures-intent
+    verdict: pass
+    reason: >-
+      `uncited` lists every verdict whose reason has no resolvable citation
+      (crates/seikika-connect/src/assessment.rs:202). Against the repository
+      that means a path that exists, a file name only one file has, or a D or
+      Q id the repository has (assessment.rs:43-45, 124-149), or a URL. The
+      check requires the list to be empty
+      (portal/standards/assessments.yaml:204-215). That is "every verdict
+      cites something a reviewer can open", what the name and fix say. Whether
+      the source supports the reason is assessment-quality's `supported`
+      (assessments.yaml:321-325).
+  - criterion: hard-to-game
+    verdict: fail
+    reason: >-
+      Any URL with a dotted host counts, and it is never resolved or fetched:
+      the match at crates/seikika-connect/src/assessment.rs:29-35 returns true
+      before any repository lookup. So appending `https://example.com` to each
+      pass reason reaches gold, which is cheaper than finding the file the
+      verdict rests on. Paths and ids, by contrast, must exist. Citing an
+      unrelated existing path also passes, but that is a false statement a
+      review can catch.
+    suggestion: >-
+      When a repository is at hand, count a URL only if it points into this
+      repository (a github.com/<owner>/seikika blob URL whose path exists) or
+      appears in the Sources section of a file under docs/. Add a fixture
+      assessment whose only citation is `https://example.com` and expect it to
+      stay below gold.
+  - criterion: fix-leads-to-pass
+    verdict: pass
+    reason: >-
+      The evidence lists the uncited criteria (assessments.yaml:207). The fix
+      names the forms the code accepts: a path, a unique file name, an
+      existing decision or question id, or a URL (assessments.yaml:208-211;
+      crates/seikika-connect/src/assessment.rs:10-14). Adding one to each
+      listed reason empties `uncited`. The one live failure,
+      portal/assessments/sdlc-stage-quality/sdlc-stage/operator/monitor.yaml
+      (two criteria in portal/results.json), can be raised that way.
+  - criterion: threshold-justified
+    verdict: pass
+    reason: >-
+      There is no number. Gold follows D80 ("cited findings, then cited
+      everything") and docs/design/scorecards-for-scorecards.md:295. It adds
+      passes to silver's findings, as docs/design/thresholds.md:24-25 asks of
+      gold, and its rationale says why a pass needs a source
+      (assessments.yaml:212-215).
+summary: >-
+  It measures what it says and sits at the right level above
+  cites-for-findings. The cheap route is the URL branch: any well-formed
+  URL counts without being resolved, so a placeholder link reaches gold
+  while every repository citation has to exist. Restricting URLs to this
+  repository or to cited Sources would close it.

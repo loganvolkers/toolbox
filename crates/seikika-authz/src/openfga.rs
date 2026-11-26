@@ -1,0 +1,576 @@
+//! OpenFGA inside the Seikika container (D38, Q11 default): the unmodified upstream server run
+//! as a supervised co-process on localhost, plus a small HTTP client. With Postgres, OpenFGA's
+//! `tuple` table is replaced by a read-only view over `seikika.derived_tuples`, so tuples are
+//! never written to OpenFGA (D26). With the memory datastore (tests, `seikika dev`), tuple
+//! deltas are written through its API instead.
+
+use serde_json::{Value, json};
+use std::process::Stdio;
+use std::time::Duration;
+use tokio::process::{Child, Command};
+
+pub type Tuple = (String, String, String); // (user, relation, object)
+
+#[derive(Debug, Clone)]
+pub enum Datastore {
+    Memory,
+    /// A Postgres URI OpenFGA can use (its own tables live in the `public` schema).
+    Postgres(String),
+}
+
+/// A running OpenFGA with one store and one model.
+pub struct OpenFga {
+    http: reqwest::Client,
+    pub base: String,
+    pub store: String,
+    pub model_id: String,
+    pub model: Value,
+    pub datastore: Datastore,
+    _child: Option<Child>,
+}
+
+fn free_port() -> u16 {
+    std::net::TcpListener::bind("127.0.0.1:0")
+        .and_then(|l| l.local_addr())
+        .map(|a| a.port())
+        .unwrap_or(18081)
+}
+
+/// A store name OpenFGA accepts (3–64 of letters, digits and `-`).
+pub fn store_name(name: &str) -> String {
+    let mut s: String = name
+        .chars()
+        .map(|c| if c.is_ascii_alphanumeric() { c } else { '-' })
+        .take(64)
+        .collect();
+    while s.len() < 3 {
+        s.push('-');
+    }
+    s
+}
+
+/// The OpenFGA binary: `SEIKIKA_OPENFGA_BIN`, else `openfga` on PATH.
+pub fn binary() -> String {
+    std::env::var("SEIKIKA_OPENFGA_BIN").unwrap_or_else(|_| "openfga".into())
+}
+
+/// The server's environment variables OpenFGA inherits: its own `OPENFGA_*` settings, Postgres TLS
+/// settings and system basics. Not `DATABASE_URL` or `SEIKIKA_*`: in-image connectors run as the
+/// same user and can read the environment of any process they share it with.
+fn openfga_env() -> impl Iterator<Item = (String, String)> {
+    std::env::vars().filter(|(k, _)| {
+        ["PATH", "TZ", "TMPDIR", "SSL_CERT_FILE", "SSL_CERT_DIR"].contains(&k.as_str())
+            || (k.starts_with("OPENFGA_")
+                && !k.starts_with("OPENFGA_DATASTORE_URI")
+                && !k.starts_with("OPENFGA_AUTHN"))
+            || k.starts_with("PGSSL")
+    })
+}
+
+/// A private directory holding OpenFGA's `config.yaml`, which it reads from its working directory
+/// at start-up. The datastore URI and the preshared key go there rather than into argv, which
+/// every local user can read in `/proc/<pid>/cmdline`, or the environment. Removed on drop, once
+/// OpenFGA has read it.
+struct ConfigDir(std::path::PathBuf);
+
+impl ConfigDir {
+    fn new(datastore: &Datastore, key: &str) -> Result<ConfigDir, String> {
+        let dir = std::env::temp_dir().join(format!(
+            "seikika-openfga-{}-{}",
+            std::process::id(),
+            free_port()
+        ));
+        let mut builder = std::fs::DirBuilder::new();
+        #[cfg(unix)]
+        std::os::unix::fs::DirBuilderExt::mode(&mut builder, 0o700);
+        builder
+            .create(&dir)
+            .map_err(|e| format!("{}: {e}", dir.display()))?;
+        let quote = |s: &str| serde_json::to_string(s).expect("a string serialises");
+        let mut config = match datastore {
+            Datastore::Postgres(uri) => {
+                format!("datastore:\n  engine: postgres\n  uri: {}\n", quote(uri))
+            }
+            Datastore::Memory => "datastore:\n  engine: memory\n".to_owned(),
+        };
+        config += &format!(
+            "authn:\n  method: preshared\n  preshared:\n    keys: [{}]\n",
+            quote(key)
+        );
+        let mut options = std::fs::OpenOptions::new();
+        options.write(true).create_new(true);
+        #[cfg(unix)]
+        std::os::unix::fs::OpenOptionsExt::mode(&mut options, 0o600);
+        let dir = ConfigDir(dir);
+        std::io::Write::write_all(
+            &mut options
+                .open(dir.0.join("config.yaml"))
+                .map_err(|e| format!("{}: {e}", dir.0.display()))?,
+            config.as_bytes(),
+        )
+        .map_err(|e| format!("{}: {e}", dir.0.display()))?;
+        Ok(dir)
+    }
+
+    fn command(&self, bin: &str) -> Command {
+        let mut c = Command::new(bin);
+        c.current_dir(&self.0).env_clear().envs(openfga_env());
+        c
+    }
+}
+
+impl Drop for ConfigDir {
+    fn drop(&mut self) {
+        let _ = std::fs::remove_dir_all(&self.0);
+    }
+}
+
+/// The answers of one batch-check response, in request order. A per-check error (e.g. a datastore
+/// timeout) is not a denial: it fails the batch, so the API answers 502 instead of pretending the
+/// entity doesn't exist. An absent `allowed` with no error is `false` (proto3 omits default values).
+fn batch_results(r: &Value, chunk: &[Tuple]) -> Result<Vec<bool>, String> {
+    (0..chunk.len())
+        .map(|i| {
+            let item = &r["result"][format!("c{i}")];
+            match (&item["error"], item["allowed"].as_bool()) {
+                (e, _) if !e.is_null() => Err(format!("check {:?} failed: {e}", chunk[i])),
+                (_, a) if item.is_object() => Ok(a.unwrap_or(false)),
+                _ => Err(format!("check {:?}: no result in the response", chunk[i])),
+            }
+        })
+        .collect()
+}
+
+impl OpenFga {
+    /// Start OpenFGA, create (or reuse) the store `store_name` and write `model` (JSON).
+    pub async fn start(
+        datastore: Datastore,
+        store_name: &str,
+        model: Value,
+    ) -> Result<OpenFga, String> {
+        let bin = binary();
+        // Any local process can reach the loopback port; only the server holds the key.
+        let key = crate::authn::new_pat().map_err(|e| format!("no random source: {e}"))?;
+        let config = ConfigDir::new(&datastore, &key)?;
+        let mut args: Vec<String> = Vec::new();
+        if let Datastore::Postgres(_) = &datastore {
+            let out = config
+                .command(&bin)
+                .args(["migrate", "--datastore-engine", "postgres"])
+                .output()
+                .await
+                .map_err(|e| format!("cannot run {bin}: {e}"))?;
+            if !out.status.success() {
+                return Err(format!(
+                    "openfga migrate failed: {}",
+                    String::from_utf8_lossy(&out.stderr)
+                ));
+            }
+            args.extend(["--datastore-engine".into(), "postgres".into()]);
+        } else {
+            args.extend(["--datastore-engine".into(), "memory".into()]);
+        }
+        let (http_port, grpc_port) = (free_port(), free_port());
+        args.extend([
+            "--http-addr".into(),
+            format!("127.0.0.1:{http_port}"),
+            "--grpc-addr".into(),
+            format!("127.0.0.1:{grpc_port}"),
+            "--playground-enabled=false".into(),
+            "--metrics-enabled=false".into(),
+            "--log-level".into(),
+            "warn".into(),
+        ]);
+        let child = config
+            .command(&bin)
+            .arg("run")
+            .args(&args)
+            .stdout(Stdio::null())
+            .stderr(Stdio::null())
+            .kill_on_drop(true)
+            .spawn()
+            .map_err(|e| format!("cannot start {bin}: {e}"))?;
+        let base = format!("http://127.0.0.1:{http_port}");
+        let mut auth = reqwest::header::HeaderValue::try_from(format!("Bearer {key}"))
+            .map_err(|e| e.to_string())?;
+        auth.set_sensitive(true);
+        let http = reqwest::Client::builder()
+            .default_headers(
+                [(reqwest::header::AUTHORIZATION, auth)]
+                    .into_iter()
+                    .collect(),
+            )
+            .build()
+            .map_err(|e| e.to_string())?;
+        let mut fga = OpenFga {
+            http,
+            base,
+            store: String::new(),
+            model_id: String::new(),
+            model: model.clone(),
+            datastore,
+            _child: Some(child),
+        };
+        fga.wait_healthy(Duration::from_secs(20)).await?;
+        drop(config);
+        fga.store = fga
+            .find_or_create_store(&self::store_name(store_name))
+            .await?;
+        fga.model_id = fga.write_model(&model).await?;
+        Ok(fga)
+    }
+
+    async fn wait_healthy(&self, timeout: Duration) -> Result<(), String> {
+        let deadline = tokio::time::Instant::now() + timeout;
+        loop {
+            if let Ok(r) = self.http.get(format!("{}/healthz", self.base)).send().await
+                && r.status().is_success()
+            {
+                return Ok(());
+            }
+            if tokio::time::Instant::now() > deadline {
+                return Err("OpenFGA did not become healthy".into());
+            }
+            tokio::time::sleep(Duration::from_millis(100)).await;
+        }
+    }
+
+    async fn call(
+        &self,
+        method: reqwest::Method,
+        path: &str,
+        body: Option<Value>,
+    ) -> Result<Value, String> {
+        let mut req = self.http.request(method, format!("{}{path}", self.base));
+        if let Some(b) = body {
+            req = req.json(&b);
+        }
+        let resp = req
+            .send()
+            .await
+            .map_err(|e| format!("OpenFGA {path}: {e}"))?;
+        let status = resp.status();
+        let v: Value = resp.json().await.unwrap_or(Value::Null);
+        if !status.is_success() {
+            return Err(format!("OpenFGA {path}: {status} {v}"));
+        }
+        Ok(v)
+    }
+
+    async fn find_or_create_store(&self, name: &str) -> Result<String, String> {
+        let list = self
+            .call(reqwest::Method::GET, "/stores?page_size=100", None)
+            .await?;
+        if let Some(id) = list["stores"]
+            .as_array()
+            .into_iter()
+            .flatten()
+            .find(|s| s["name"] == name)
+            .and_then(|s| s["id"].as_str())
+        {
+            return Ok(id.to_owned());
+        }
+        let created = self
+            .call(
+                reqwest::Method::POST,
+                "/stores",
+                Some(json!({"name": name})),
+            )
+            .await?;
+        created["id"]
+            .as_str()
+            .map(str::to_owned)
+            .ok_or_else(|| "OpenFGA: store id missing".into())
+    }
+
+    /// Switch to a new, empty store (with the same model), e.g. one per test.
+    pub async fn fresh_store(&mut self, name: &str) -> Result<(), String> {
+        let created = self
+            .call(
+                reqwest::Method::POST,
+                "/stores",
+                Some(json!({"name": store_name(name)})),
+            )
+            .await?;
+        self.store = created["id"]
+            .as_str()
+            .map(str::to_owned)
+            .ok_or("OpenFGA: store id missing")?;
+        self.model_id = self.write_model(&self.model.clone()).await?;
+        Ok(())
+    }
+
+    pub async fn write_model(&self, model: &Value) -> Result<String, String> {
+        let r = self
+            .call(
+                reqwest::Method::POST,
+                &format!("/stores/{}/authorization-models", self.store),
+                Some(model.clone()),
+            )
+            .await?;
+        r["authorization_model_id"]
+            .as_str()
+            .map(str::to_owned)
+            .ok_or_else(|| "OpenFGA: model id missing".into())
+    }
+
+    /// Memory datastore only: apply a tuple delta through the write API (100 per request).
+    pub async fn write_tuples(&self, added: &[Tuple], removed: &[Tuple]) -> Result<(), String> {
+        let key = |(u, r, o): &Tuple| json!({"user": u, "relation": r, "object": o});
+        for chunk in removed.chunks(100) {
+            let body = json!({"deletes": {"tuple_keys": chunk.iter().map(key).collect::<Vec<_>>()}, "authorization_model_id": self.model_id});
+            self.call(
+                reqwest::Method::POST,
+                &format!("/stores/{}/write", self.store),
+                Some(body),
+            )
+            .await?;
+        }
+        for chunk in added.chunks(100) {
+            let body = json!({"writes": {"tuple_keys": chunk.iter().map(key).collect::<Vec<_>>()}, "authorization_model_id": self.model_id});
+            self.call(
+                reqwest::Method::POST,
+                &format!("/stores/{}/write", self.store),
+                Some(body),
+            )
+            .await?;
+        }
+        Ok(())
+    }
+
+    pub async fn check(&self, user: &str, relation: &str, object: &str) -> Result<bool, String> {
+        let body = json!({"tuple_key": {"user": user, "relation": relation, "object": object}, "authorization_model_id": self.model_id});
+        let r = self
+            .call(
+                reqwest::Method::POST,
+                &format!("/stores/{}/check", self.store),
+                Some(body),
+            )
+            .await?;
+        Ok(r["allowed"].as_bool().unwrap_or(false))
+    }
+
+    /// Many checks, 50 per request (OpenFGA's default batch limit).
+    pub async fn batch_check(&self, checks: &[Tuple]) -> Result<Vec<bool>, String> {
+        let mut out = Vec::with_capacity(checks.len());
+        for chunk in checks.chunks(50) {
+            let items: Vec<Value> = chunk
+                .iter()
+                .enumerate()
+                .map(|(i, (u, r, o))| json!({"tuple_key": {"user": u, "relation": r, "object": o}, "correlation_id": format!("c{i}")}))
+                .collect();
+            let body = json!({"checks": items, "authorization_model_id": self.model_id});
+            let r = self
+                .call(
+                    reqwest::Method::POST,
+                    &format!("/stores/{}/batch-check", self.store),
+                    Some(body),
+                )
+                .await?;
+            out.extend(batch_results(&r, chunk)?);
+        }
+        Ok(out)
+    }
+
+    pub async fn list_objects(
+        &self,
+        user: &str,
+        relation: &str,
+        object_type: &str,
+    ) -> Result<Vec<String>, String> {
+        let body = json!({"type": object_type, "relation": relation, "user": user, "authorization_model_id": self.model_id});
+        let r = self
+            .call(
+                reqwest::Method::POST,
+                &format!("/stores/{}/list-objects", self.store),
+                Some(body),
+            )
+            .await?;
+        let mut objs: Vec<String> = r["objects"]
+            .as_array()
+            .into_iter()
+            .flatten()
+            .filter_map(|o| o.as_str().map(str::to_owned))
+            .collect();
+        objs.sort();
+        Ok(objs)
+    }
+}
+
+/// Replace OpenFGA's `tuple` table with a read-only view over `seikika.derived_tuples` for `store`.
+/// Idempotent: safe on every start.
+///
+/// The relation replaced is the `tuple` OpenFGA actually reads: the first base table of that name
+/// on this connection's `search_path`, else the view already installed there. A role named
+/// `seikika` resolves unqualified names into the `seikika` schema (Postgres puts `$user` ahead of
+/// `public`), and that is where `openfga migrate` creates its tables. Replacing only `public.tuple`
+/// leaves those checks reading an empty table, so every `can_view` denies.
+///
+/// Every column must hold what OpenFGA's own writes would. `user_type` in particular follows
+/// `tuple.GetUserTypeFromUser` (OpenFGA v1.22.1, `pkg/tuple/tuple.go`): a userset (`type:id#rel`) or
+/// a wildcard (`*`, `type:*`) is `userset`, anything else `user`. Some of OpenFGA's reads filter on
+/// it and others don't, so a wrong value denies intermittently, whenever the check takes a path that
+/// filters (docs/research-log.md, *OpenFGA wrong denials*).
+pub async fn install_tuple_view(pool: &sqlx::PgPool, store: &str) -> Result<(), String> {
+    if !store.chars().all(|c| c.is_ascii_alphanumeric()) {
+        return Err(format!("unexpected OpenFGA store id {store}"));
+    }
+    let schema = tuple_schema(pool).await?;
+    let sql = tuple_view_sql(&schema, store);
+    // store was validated as ASCII alphanumeric above; AssertSqlSafe is sqlx 0.9's audited bypass.
+    sqlx::raw_sql(sqlx::AssertSqlSafe(sql))
+        .execute(pool)
+        .await
+        .map_err(|e| format!("installing the tuple view: {e}"))?;
+    Ok(())
+}
+
+/// The schema of the `tuple` relation OpenFGA reads on this connection (see
+/// [`install_tuple_view`]), validated as a plain identifier.
+async fn tuple_schema(pool: &sqlx::PgPool) -> Result<String, String> {
+    let found: Option<String> = sqlx::query_scalar(
+        r#"SELECT n.nspname::text
+           FROM pg_class c
+           JOIN pg_namespace n ON n.oid = c.relnamespace
+           WHERE c.relname = 'tuple'
+             AND c.relkind IN ('r', 'v')
+             AND n.nspname = ANY (current_schemas(false))
+           ORDER BY CASE c.relkind WHEN 'r' THEN 0 ELSE 1 END,
+                    array_position(current_schemas(false), n.nspname)
+           LIMIT 1"#,
+    )
+    .fetch_optional(pool)
+    .await
+    .map_err(|e| format!("finding OpenFGA's tuple relation: {e}"))?;
+    let schema = found.unwrap_or_else(|| "public".to_owned());
+    if !schema
+        .chars()
+        .all(|c| c.is_ascii_alphanumeric() || c == '_')
+    {
+        return Err(format!(
+            "unexpected schema for OpenFGA's tuple relation: {schema}"
+        ));
+    }
+    Ok(schema)
+}
+
+/// The statements that move OpenFGA's table aside and put the view and its indexes in its place.
+fn tuple_view_sql(schema: &str, store: &str) -> String {
+    format!(
+        r#"
+DO $$ BEGIN
+  IF EXISTS (
+    SELECT 1 FROM pg_class c
+    JOIN pg_namespace n ON n.oid = c.relnamespace
+    WHERE n.nspname = '{schema}' AND c.relname = 'tuple' AND c.relkind = 'r'
+  ) THEN
+    DROP TABLE IF EXISTS {schema}.tuple_openfga_unused;
+    ALTER TABLE {schema}.tuple RENAME TO tuple_openfga_unused;
+  END IF;
+END $$;
+CREATE OR REPLACE VIEW {schema}.tuple AS
+  SELECT '{store}'::text AS store,
+         split_part(object, ':', 1) AS object_type,
+         substr(object, strpos(object, ':') + 1) AS object_id,
+         relation,
+         subject AS _user,
+         CASE WHEN subject LIKE '%#%' OR subject = '*' OR subject ~ '^[^:]+:\*$'
+              THEN 'userset' ELSE 'user' END AS user_type,
+         NULL::text AS condition_name,
+         NULL::bytea AS condition_context,
+         md5(object || '|' || relation || '|' || subject) AS ulid,
+         now() AS inserted_at
+  FROM seikika.derived_tuples;
+-- OpenFGA filters on the view's computed columns; these let Postgres use an index for them
+-- instead of scanning every tuple on every read of a check.
+CREATE INDEX IF NOT EXISTS derived_tuples_by_object ON seikika.derived_tuples
+  (split_part(object, ':', 1), substr(object, strpos(object, ':') + 1), relation);
+CREATE INDEX IF NOT EXISTS derived_tuples_by_user ON seikika.derived_tuples
+  (split_part(object, ':', 1), relation, subject);
+"#
+    )
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn batch_errors_are_not_denials() {
+        let t = |o: &str| ("user:alice".to_owned(), "viewer".to_owned(), o.to_owned());
+        let chunk = [t("repository:a"), t("repository:b")];
+        let ok = json!({"result": {"c0": {"allowed": true}, "c1": {}}});
+        assert_eq!(batch_results(&ok, &chunk).unwrap(), vec![true, false]);
+        let err =
+            json!({"result": {"c0": {"allowed": true}, "c1": {"error": {"message": "timeout"}}}});
+        assert!(batch_results(&err, &chunk).unwrap_err().contains("timeout"));
+        let missing = json!({"result": {"c0": {"allowed": true}}});
+        assert!(batch_results(&missing, &chunk).is_err());
+    }
+
+    #[test]
+    fn the_datastore_uri_and_key_are_in_a_private_file_until_dropped() {
+        let uri = r#"postgres://u:p"w@db/x?sslmode=disable"#;
+        let dir = ConfigDir::new(&Datastore::Postgres(uri.into()), "k").unwrap();
+        let file = dir.0.join("config.yaml");
+        let text = std::fs::read_to_string(&file).unwrap();
+        assert!(
+            text.contains(r#"uri: "postgres://u:p\"w@db/x?sslmode=disable""#),
+            "{text}"
+        );
+        assert!(text.contains(r#"keys: ["k"]"#), "{text}");
+        #[cfg(unix)]
+        {
+            use std::os::unix::fs::PermissionsExt;
+            let mode = |p: &std::path::Path| std::fs::metadata(p).unwrap().permissions().mode();
+            assert_eq!(mode(&dir.0) & 0o777, 0o700);
+            assert_eq!(mode(&file) & 0o777, 0o600);
+        }
+        let path = dir.0.clone();
+        drop(dir);
+        assert!(!path.exists());
+    }
+
+    #[cfg(target_os = "linux")]
+    #[tokio::test]
+    async fn openfga_gets_no_server_credentials() {
+        if std::process::Command::new(binary())
+            .arg("version")
+            .output()
+            .is_err()
+        {
+            assert!(
+                std::env::var_os("SEIKIKA_REQUIRE_OPENFGA").is_none(),
+                "openfga binary not found and SEIKIKA_REQUIRE_OPENFGA is set"
+            );
+            eprintln!("skipping: openfga binary not found (set SEIKIKA_OPENFGA_BIN)");
+            return;
+        }
+        let model = crate::fga_dsl::to_json(
+            "model\n  schema 1.1\ntype user\ntype doc\n  relations\n    define viewer: [user]\n",
+        )
+        .unwrap();
+        let fga = OpenFga::start(Datastore::Memory, "env-test", model)
+            .await
+            .unwrap();
+        let pid = fga._child.as_ref().and_then(Child::id).unwrap();
+        let environ = std::fs::read(format!("/proc/{pid}/environ")).unwrap();
+        let allowed: std::collections::BTreeSet<String> = openfga_env().map(|(k, _)| k).collect();
+        for var in environ.split(|b| *b == 0).filter(|v| !v.is_empty()) {
+            let key = String::from_utf8_lossy(var.split(|b| *b == b'=').next().unwrap());
+            assert!(allowed.contains(key.as_ref()), "OpenFGA inherited {key}");
+        }
+        let cmdline =
+            String::from_utf8_lossy(&std::fs::read(format!("/proc/{pid}/cmdline")).unwrap())
+                .into_owned();
+        assert!(!cmdline.contains("datastore-uri"), "{cmdline}");
+        let anonymous = reqwest::Client::new()
+            .get(format!("{}/stores", fga.base))
+            .send()
+            .await
+            .unwrap();
+        assert_eq!(anonymous.status(), 401, "OpenFGA answers only the server");
+        let cwd = std::fs::read_link(format!("/proc/{pid}/cwd")).unwrap();
+        assert!(!cwd.join("config.yaml").exists(), "{}", cwd.display());
+    }
+}

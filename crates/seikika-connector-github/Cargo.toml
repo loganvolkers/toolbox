@@ -1,0 +1,30 @@
+[package]
+name = "seikika-connector-github"
+description = "Seikika connector: GitHub repositories, CODEOWNERS, apps and installations (docs/v1-spec.md §7.4)."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+
+[dependencies]
+jsonwebtoken.workspace = true
+reqwest.workspace = true
+serde_json.workspace = true
+tokio.workspace = true
+seikika-connect = { path = "../seikika-connect" }
+
+[lints]
+workspace = true
+
+[package.metadata.dist]
+dist = true
+
+[package.metadata.binstall]
+pkg-url = "{ repo }/releases/download/v{ version }/{ name }-{ target-triple }{ archive-suffix }"
+bin-dir = "{ name }-{ target-triple }/{ bin }{ binary-ext }"
+pkg-fmt = "txz"
+
+[package.metadata.binstall.overrides.x86_64-pc-windows-msvc]
+pkg-fmt = "zip"

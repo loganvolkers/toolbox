@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""Apply Changesets-compatible files to Toolbox native manifests (Option B).
+"""Apply Changesets-compatible files to Seikika native manifests (Option B).
 
 Reads pending ``.changeset/*.md``, bumps Cargo workspace version, root
-CHANGELOG.md, and discovered ``packages/*/toolbox-package.yaml`` under
+CHANGELOG.md, and discovered ``packages/*/seikika-package.yaml`` under
 lockstep policy. Dynamic ``includes`` globs in ``.changeset/config.json``
 expand the registry so new packages/actions are picked up without listing
 each name. Does not publish or tag — after apply, tag ``vX.Y.Z`` so
@@ -121,7 +121,7 @@ def write_yaml_version(path: Path, new_version: str) -> None:
 
 
 def read_yaml_name(path: Path) -> str:
-    """Return the top-level ``name:`` from a toolbox-package.yaml (line scan)."""
+    """Return the top-level ``name:`` from a seikika-package.yaml (line scan)."""
     for line in path.read_text(encoding="utf-8").splitlines():
         stripped = line.strip()
         if not stripped or stripped.startswith("#"):
@@ -144,7 +144,7 @@ def expand_globs(root: Path, patterns: list[str]) -> list[Path]:
 
 def logical_name_for_include(root: Path, kind: str, path: Path) -> str:
     """Map a discovered manifest path to the Changeset frontmatter name."""
-    if kind == "toolbox-package":
+    if kind == "seikika-package":
         name = read_yaml_name(path)
         # Prefer YAML name; dirname should match for live packages.
         return name
@@ -178,9 +178,9 @@ def resolve_registry(root: Path, config: dict[str, Any]) -> dict[str, dict[str, 
             raise ValueError(
                 f"includes[{idx}] requires kind and non-empty globs list"
             )
-        if kind not in {"toolbox-package", "action"}:
+        if kind not in {"seikika-package", "action"}:
             raise ValueError(
-                f"includes[{idx}]: kind must be toolbox-package or action, got {kind!r}"
+                f"includes[{idx}]: kind must be seikika-package or action, got {kind!r}"
             )
         for path in expand_globs(root, [str(g) for g in globs]):
             try:
@@ -218,10 +218,10 @@ def resolve_registry(root: Path, config: dict[str, Any]) -> dict[str, dict[str, 
 def package_paths_to_version(
     root: Path, registry: dict[str, dict[str, Any]]
 ) -> list[Path]:
-    """Paths of toolbox-package manifests to bump under lockstep."""
+    """Paths of seikika-package manifests to bump under lockstep."""
     paths: list[Path] = []
     for meta in registry.values():
-        if meta.get("kind") != "toolbox-package":
+        if meta.get("kind") != "seikika-package":
             continue
         rel = meta.get("path")
         if not rel:
@@ -291,10 +291,10 @@ def collect_pending(
 def apply(root: Path, *, dry_run: bool = False) -> str:
     config = load_config(root)
     registry = resolve_registry(root, config)
-    if "toolbox" not in registry:
-        raise ValueError("registry must define toolbox (cargo-workspace)")
+    if "seikika" not in registry:
+        raise ValueError("registry must define seikika (cargo-workspace)")
     bump_kind, summaries, files = collect_pending(root, registry)
-    cargo_meta = registry["toolbox"]
+    cargo_meta = registry["seikika"]
     cargo_path = root / cargo_meta["path"]
     old = read_cargo_workspace_version(cargo_path)
     new = bump_semver(old, bump_kind)

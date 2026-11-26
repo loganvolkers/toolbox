@@ -1,0 +1,245 @@
+# Acme, reading a live Git server and a SCIM feed. This is the reference portal's shape
+# with connector URLs supplied by the environment, and with Backstage's catalog kinds mapped
+# from catalog-info.yaml. Fixtures are not the source.
+apiVersion: seikika.com/v1alpha1
+
+portal:
+  name: acme
+  title: Acme developer portal
+  owner: group:platform
+  seikika: "0.1"
+
+connectors:
+  - name: github
+    package: builtin:github
+    runtime: in-image
+    config:
+      org: acme
+      apiUrl: ${env:GITHUB_API_URL}
+      token: ${env:GITHUB_TOKEN}
+    records: [repository, codeowners]
+    freshness: {repository: 10s, codeowners: 10s}
+  - name: git-files
+    package: builtin:git-files
+    runtime: in-image
+    config:
+      org: acme
+      apiUrl: ${env:GITHUB_API_URL}
+      token: ${env:GITHUB_TOKEN}
+      splitKinds: true
+      paths: [catalog-info.yaml]
+      files: [README.md]
+    records: [component, api, system, domain, resource, file]
+    freshness:
+      component: 10s
+      api: 10s
+      system: 10s
+      domain: 10s
+      resource: 10s
+      file: 10s
+  - {name: idp, package: builtin:scim, runtime: remote, records: [user, group]}
+
+kinds:
+  - name: Group
+    identityFrom: [connector:idp]
+    fields:
+      title: {type: string}
+      githubTeam: {type: string}
+      members: {type: list, items: string}
+    sources: {default: [connector:idp]}
+    map:
+    - from: idp/group
+      id: "'group:' + record.slug"
+      set: >-
+        {'title': record.displayName, 'githubTeam': record.githubTeam,
+        'members': record.members}
+
+  - name: User
+    identityFrom: [connector:idp]
+    fields: {displayName: {type: string}, email: {type: string, facet: contact}}
+    sources: {default: [connector:idp]}
+    map:
+    - from: idp/user
+      id: "'user:' + record.login"
+      set: "{'displayName': record.name, 'email': record.email}"
+
+  - name: Repository
+    identityFrom: [connector:github]
+    fields:
+      title: {type: string}
+      archived: {type: boolean}
+      hasReadme: {type: boolean}
+    sources:
+      default: [connector:github]
+      fields: {hasReadme: [connector:git-files]}
+    map:
+    - from: github/repository
+      id: "'repository:' + record.name"
+      set: "{'title': record.name, 'archived': record.archived}"
+    - from: git-files/file
+      id: "'repository:' + record.repo"
+      set: "{'hasReadme': record.path == 'README.md' && record.present}"
+
+  - name: Component
+    identityFrom: [connector:git-files]
+    fields:
+      title: {type: string}
+      owner: {type: string}
+      system: {type: string}
+      lifecycle: {type: string}
+    relations:
+      system: {to: System, unresolved: ignore}
+      providesApi: {to: API, many: true, unresolved: ignore}
+      consumesApi: {to: API, many: true, unresolved: ignore}
+      dependsOn: {to: Resource, many: true, unresolved: ignore}
+    sources: {default: [connector:git-files]}
+    map:
+    - from: git-files/component
+      id: "'component:' + record.content.metadata.name"
+      set: >-
+        {'title': record.content.metadata.name,
+         'owner': has(record.content.spec.owner) ? record.content.spec.owner : null,
+         'system': has(record.content.spec.system) ? record.content.spec.system : null,
+         'lifecycle': has(record.content.spec.lifecycle) ? record.content.spec.lifecycle : null}
+      relations:
+        system: >-
+          has(record.content.spec.system) ? ['system:' +
+          record.content.spec.system] : []
+        providesApi: >-
+          has(record.content.spec.providesApis) ? record.content.spec.providesApis
+          : []
+        consumesApi: >-
+          has(record.content.spec.consumesApis) ? record.content.spec.consumesApis
+          : []
+        dependsOn: "has(record.content.spec.dependsOn) ? record.content.spec.dependsOn : []"
+
+  - name: API
+    identityFrom: [connector:git-files]
+    fields:
+      title: {type: string}
+      owner: {type: string}
+      system: {type: string}
+      lifecycle: {type: string}
+    relations: {system: {to: System, unresolved: ignore}}
+    sources: {default: [connector:git-files]}
+    map:
+    - from: git-files/api
+      id: "'api:' + record.content.metadata.name"
+      set: >-
+        {'title': record.content.metadata.name,
+         'owner': has(record.content.spec.owner) ? record.content.spec.owner : null,
+         'system': has(record.content.spec.system) ? record.content.spec.system : null,
+         'lifecycle': has(record.content.spec.lifecycle) ? record.content.spec.lifecycle : null}
+      relations:
+        system: >-
+          has(record.content.spec.system) ? ['system:' +
+          record.content.spec.system] : []
+
+  - name: System
+    identityFrom: [connector:git-files]
+    fields:
+      title: {type: string}
+      owner: {type: string}
+      domain: {type: string}
+    relations: {partOf: {to: Domain, unresolved: ignore}}
+    sources: {default: [connector:git-files]}
+    map:
+    - from: git-files/system
+      id: "'system:' + record.content.metadata.name"
+      set: >-
+        {'title': record.content.metadata.name,
+         'owner': has(record.content.spec.owner) ? record.content.spec.owner : null,
+         'domain': has(record.content.spec.domain) ? record.content.spec.domain : null}
+      relations:
+        partOf: "has(record.content.spec.domain) ? [record.content.spec.domain] : []"
+
+  - name: Domain
+    identityFrom: [connector:git-files]
+    fields: {title: {type: string}, owner: {type: string}}
+    sources: {default: [connector:git-files]}
+    map:
+    - from: git-files/domain
+      id: "'domain:' + record.content.metadata.name"
+      set: >-
+        {'title': record.content.metadata.name,
+         'owner': has(record.content.spec.owner) ? record.content.spec.owner : null}
+
+  - name: Resource
+    identityFrom: [connector:git-files]
+    fields:
+      title: {type: string}
+      owner: {type: string}
+      system: {type: string}
+    relations: {system: {to: System, unresolved: ignore}}
+    sources: {default: [connector:git-files]}
+    map:
+    - from: git-files/resource
+      id: "'resource:' + record.content.metadata.name"
+      set: >-
+        {'title': record.content.metadata.name,
+         'owner': has(record.content.spec.owner) ? record.content.spec.owner : null,
+         'system': has(record.content.spec.system) ? record.content.spec.system : null}
+      relations:
+        system: >-
+          has(record.content.spec.system) ? ['system:' +
+          record.content.spec.system] : []
+
+scorecards:
+  - name: readme
+    kind: Repository
+    owner: group:platform
+    rationale: >-
+      A repository is where a newcomer or an agent lands first; with no README
+      nothing says what it is, who owns it or how to run it, so every reader
+      reverse-engineers it.
+    links:
+    - title: 'GitHub: about READMEs'
+      url: https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-readmes
+    levels: [bronze]
+    rules:
+    - name: has-readme
+      level: bronze
+      check: has(entity.hasReadme) && entity.hasReadme
+      fix: Add a README.md at the root of the repository.
+      rationale: >-
+        The README is the one file every host renders on the repository's front
+        page, so it is where readers look before anything else.
+    facets: {summary: public, details: public}
+
+authz:
+  model: authz/model.fga
+  tuples:
+    - static:
+      - {user: user:*, relation: viewer, object: portal:acme}
+      - {user: group:platform#member, relation: admin, object: portal:acme}
+    - kind: Group
+      emit: >-
+        entity.members.map(m, {'user': 'user:' + m, 'relation': 'member',
+        'object': entity.id})
+    - kind: Repository
+      emit: "[{'user': 'portal:acme', 'relation': 'portal', 'object': entity.id}]"
+    - kind: Component
+      emit: >-
+        [{'user': 'portal:acme', 'relation': 'portal', 'object': entity.id}] +
+        (has(entity.owner) && entity.owner.startsWith('group:') ? [{'user':
+        entity.owner, 'relation': 'owner', 'object': entity.id}] : [])
+    - kind: API
+      emit: >-
+        [{'user': 'portal:acme', 'relation': 'portal', 'object': entity.id}] +
+        (has(entity.owner) && entity.owner.startsWith('group:') ? [{'user':
+        entity.owner, 'relation': 'owner', 'object': entity.id}] : [])
+    - kind: System
+      emit: >-
+        [{'user': 'portal:acme', 'relation': 'portal', 'object': entity.id}] +
+        (has(entity.owner) && entity.owner.startsWith('group:') ? [{'user':
+        entity.owner, 'relation': 'owner', 'object': entity.id}] : [])
+    - kind: Domain
+      emit: >-
+        [{'user': 'portal:acme', 'relation': 'portal', 'object': entity.id}] +
+        (has(entity.owner) && entity.owner.startsWith('group:') ? [{'user':
+        entity.owner, 'relation': 'owner', 'object': entity.id}] : [])
+    - kind: Resource
+      emit: >-
+        [{'user': 'portal:acme', 'relation': 'portal', 'object': entity.id}] +
+        (has(entity.owner) && entity.owner.startsWith('group:') ? [{'user':
+        entity.owner, 'relation': 'owner', 'object': entity.id}] : [])

@@ -4,7 +4,7 @@ defineProps<{ title: string; description?: string; heading?: "h1" | "h2" }>();
 </script>
 
 <template>
-  <article class="tb-scorecard">
+  <article class="seikika-scorecard">
     <slot name="breadcrumbs" />
     <slot name="header">
       <PageHeader :title="title" :description="description" :heading="heading">

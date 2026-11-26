@@ -1,6 +1,6 @@
 # The Box A/B: Several Tools, One Box or Hand-Written Glue
 
-**Question:** when a repository already runs several tools, does keeping them in Toolbox's box cost
+**Question:** when a repository already runs several tools, does keeping them in Seikika's box cost
 a coding agent less than the CI glue teams write by hand? The tasks are adding, upgrading, swapping,
 ratcheting and reading tools, and both arms must keep each tool usable on its own.
 
@@ -10,11 +10,11 @@ tokens.** The hypothesis is R6 in [repo-value.md](../../docs/design/repo-value.m
 developer-experience feedback, the same way for both arms. The results are in §0, the feedback and
 what was fixed in §0.3.
 
-**Next:** the [spec A/B](../spec-ab/README.md) tests a results spec three ways: by hand from the spec, with Toolbox, and building on Backstage.
+**Next:** the [spec A/B](../spec-ab/README.md) tests a results spec three ways: by hand from the spec, with Seikika, and building on Backstage.
 
-This tests the box, not tool building ([toolbox-and-tools.md](../../docs/design/toolbox-and-tools.md)).
+This tests the box, not tool building ([seikika-and-tools.md](../../docs/design/seikika-and-tools.md)).
 The standards A/B ([../standards-ab](../standards-ab/README.md)) compared building a tool with
-Toolbox's primitives against writing a Python script, and Toolbox lost. That was the wrong half.
+Seikika's primitives against writing a Python script, and Seikika lost. That was the wrong half.
 Teams rarely lack a linter. What they lack is one place that holds all of them: each tool's pinned
 version, one baseline, whether a pull request made anything worse, and the jobs left.
 
@@ -46,7 +46,7 @@ correct state; the box arm read more to get there.
 | 6. Read | 94k / 8 | **87k** / 7 | — | — | Yes; both answers matched the key |
 
 **What the numbers say:**
-- **Phase 1 is the box's cost:** learning Toolbox took 30k more tokens and 13 more calls. After that
+- **Phase 1 is the box's cost:** learning Seikika took 30k more tokens and 13 more calls. After that
   the gap narrows to 2k–16k per phase, and phase 6 (read), which favours the box by design (§1),
   went to the box.
 - **The box arm's glue includes a workaround.** Its 53-line `accept.py` exists only because
@@ -54,7 +54,7 @@ correct state; the box arm read more to get there.
   A's gate script grew from 197 to about 280 lines.
 - **Both arms caught things the other didn't.** Arm A closed the zizmor-ignore hole with
   `--no-ignores`, which arm B only documented. In phase 6, arm A saw that the harness's scripted
-  "fixes" dodge the semgrep rule rather than fix the code (below). Arm B found a Toolbox bug (two
+  "fixes" dodge the semgrep rule rather than fix the code (below). Arm B found a Seikika bug (two
   includes of one tool ran `semgrep --version --version`).
 
 **Run conditions that affect the numbers:**
@@ -64,7 +64,7 @@ correct state; the box arm read more to get there.
 - **The harness was fixed four times during the run**, always on the scoring side, never in what an
   agent saw. Each fix was followed by a rescore, and superseded results are in
   [results/superseded/](results/superseded/):
-  - arm B's gate needed `toolbox` on the harness's PATH;
+  - arm B's gate needed `seikika` on the harness's PATH;
   - zizmor's own JSON uses `verbatim_path`;
   - WF001's truth must come from the base checkout, because the arms delete WF001;
   - a stalled tool is now retried.
@@ -83,16 +83,16 @@ box, most important first:
 |---|---|---|
 | 1 | `--accept` restarts every campaign over the scorecard: accepting new findings and changing the standard look the same (B2, B3, B4) | **Fixed:** `--keep-campaigns`; a restart keeps the old start under `restartedFrom`; an upgrade procedure in the report skill |
 | 2 | A missing tool passes the gate silently: a kit's `optional: true` makes its rules unknown (B1) | **Fixed:** `--fail-on-unknown`. A plain check still passes, because `optional` means that by design |
-| 3 | Two includes of one tool concatenate `versionArgs`, so `toolbox doctor` reports the tool missing (B5) | **Fixed:** nested lists must be equal, or validate names the field |
+| 3 | Two includes of one tool concatenate `versionArgs`, so `seikika doctor` reports the tool missing (B5) | **Fixed:** nested lists must be equal, or validate names the field |
 | 4 | The gate's regression lists every finding in the file and doesn't mark the new ones; the baseline keeps only counts (B6, A6) | **Open:** needs a fingerprint per finding in the baseline (C1 in [root-causes.md](../../docs/design/root-causes.md)) |
-| 5 | Progress needs one `toolbox campaign` per campaign, each rerunning connectors (B2, B3, B4) | **Partly fixed:** one run already prints every campaign, and the skill now says so; it prints the absolute paydown. Reading progress from the baseline without a rerun is open |
+| 5 | Progress needs one `seikika campaign` per campaign, each rerunning connectors (B2, B3, B4) | **Partly fixed:** one run already prints every campaign, and the skill now says so; it prints the absolute paydown. Reading progress from the baseline without a rerun is open |
 | 6 | zizmor drops `# zizmor: ignore` findings from its SARIF, so `countSuppressed` can't see a new ignore (B3; arm A used `--no-ignores`) | **Fixed in docs:** the sarif kit's zizmor command uses `--no-ignores` over `.github/` |
 | 7 | No kit for actionlint alone; the sarif kit hard-codes `parse: sarif`, so arm B wrote about 50 lines (B1) | **Open:** a `parse` parameter on the sarif kit or an actionlint kit; a kit design choice |
 | 8 | The semgrep kit takes one `config` and one `target` (B1) | **Fixed in docs**: use the sarif kit for several; rule ids follow the rule file's path |
-| 9 | `toolbox vendor` writes the machine's absolute path in VENDORED.json (B1) | **Fixed:** relative to the portal |
+| 9 | `seikika vendor` writes the machine's absolute path in VENDORED.json (B1) | **Fixed:** relative to the portal |
 | 10 | Kit campaigns can't be turned off or given a start (B2) | **Open:** a kit parameter; fragments can't emit a campaign conditionally yet |
 | 11 | "no-findings evidence grew 4 → 6" reads as if there were no findings; `reproduce:` reruns the whole tool (B6) | **Open:** renaming the kits' rule changes every baseline that uses them |
-| 12 | The version is pinned in three or four places (portal, workflow, pyproject, lockfile) and only one is checked (A4, B4) | **Open:** `toolbox doctor` could read a workflow's install pins |
+| 12 | The version is pinned in three or four places (portal, workflow, pyproject, lockfile) and only one is checked (A4, B4) | **Open:** `seikika doctor` could read a workflow's install pins |
 | 13 | STANDARD.md breaks backticks in parameter values; empty scorecards print `()`; its CI snippet uses unpinned actions and doesn't say tools must be installed (B1, B3) | **Fixed** |
 | 14 | The runner has no per-job timeout, so a stalled tool blocks the gate (A3, and this run's semgrep stalls) | **Open:** an opt-in `timeout` per runner job that kills the process group |
 
@@ -105,19 +105,19 @@ Feedback about the tools themselves, from both arms, and the box's answer to eac
 | Exit codes differ per tool, and zizmor's aren't in its `--help` (A1, A3) | The runner reads output, not exit codes |
 | actionlint's results depend on whether shellcheck is installed (A1) | Open; a pin can't cover an optional dependency |
 
-## 1. What using the box on Toolbox for Toolbox showed
+## 1. What using the box on Seikika for Seikika showed
 
-These lessons come from T4T's own use. Rows marked *built since* describe features added after
+These lessons come from S4S's own use. Rows marked *built since* describe features added after
 this plan was first written. They favour the box in the phases named, and the write-up must say so.
 
 | What happened | Lesson for the A/B |
 |---|---|
 | Putting ruff in the box by hand took a 90-line standard; the [`sarif` kit](../../packages/sarif/README.md) made it a 15-line `include` | Adding a tool is where the box should win most (phase 3) |
-| *Built since:* one pin per tool, with `toolbox tools install` and `tools config` (D01M800DHD0Z1RTPH7CM46GZS3B). The pin used to live in four places | Phase 4 upgrades a pin. Arm B has one place to change it |
+| *Built since:* one pin per tool, with `seikika tools install` and `tools config` (D01M800DHD0Z1RTPH7CM46GZS3B). The pin used to live in four places | Phase 4 upgrades a pin. Arm B has one place to change it |
 | take-it-out passed first time for zizmor, actionlint, ruff and semgrep | Cheap to require of both arms: the harness checks both the same way (§6) |
-| Adding a tool whose files already have findings would have dropped T4T's repository level | Phase 3 adds zizmor, which has 335 findings on day one |
+| Adding a tool whose files already have findings would have dropped S4S's repository level | Phase 3 adds zizmor, which has 335 findings on day one |
 | *Built since:* root causes (D01M7ZZYZ1SXSTHDZQK8A1CZMMN). A regression names its chain down to a file, its evidence and a command that reproduces it | Phase 6 asks why a gate failed. This favours the box by design |
-| *Built since:* `toolbox tools find` and the `find-tools` skill (D01M801A9QNVCSBBJATYV721TCS) | Phase 1 may start from it |
+| *Built since:* `seikika tools find` and the `find-tools` skill (D01M801A9QNVCSBBJATYV721TCS) | Phase 1 may start from it |
 | A stricter package check broke an old vendored kit on upgrade | Phase 4 upgrades a tool. Kits stay at one version through the run |
 | `--against` reruns every connector in a worktree, so a repository-relative binary failed there | Tools are on the `PATH` (`$AB_HOME/bin`), never built in the repository |
 | semgrep's SARIF lists only files with findings, so a fixed file disappears | Phase 2's paydown removes findings; both arms must count that as progress |
@@ -151,13 +151,13 @@ this plan was first written. They favour the box in the phases named, and the wr
 
 | | Arm A: glue | Arm B: the box |
 |---|---|---|
-| Given | The repository, the tools on `$AB_HOME/bin`, Python and the shell | The same, plus `toolbox` on `$AB_HOME/box-bin` |
-| May read | The repository only; not Toolbox | Also Toolbox's `README.md`, `docs/v1-spec.md`, `docs/design/`, `docs/reference/`, `examples/`, `packages/`, `crates/`, `schema/` and `plugins/` (B′'s allowlist) |
+| Given | The repository, the tools on `$AB_HOME/bin`, Python and the shell | The same, plus `seikika` on `$AB_HOME/box-bin` |
+| May read | The repository only; not Seikika | Also Seikika's `README.md`, `docs/v1-spec.md`, `docs/design/`, `docs/reference/`, `examples/`, `packages/`, `crates/`, `schema/` and `plugins/` (B′'s allowlist) |
 | Never | `$AB_HOME` beyond running its binaries; `experiments/`; `docs/research-log.md` | The same |
 | Builds | Whatever it chooses | A portal, with vendored kits |
 
 **Answer leaks removed before the run:** `packages/semgrep` named phase 2's rule and its counts,
-`toolbox-and-tools.md` quoted the kit's PostHog numbers, and the catalog named the fork. All are
+`seikika-and-tools.md` quoted the kit's PostHog numbers, and the catalog named the fork. All are
 generic now. What remains is qualitative: that PostHog runs semgrep, and the tools
 `finding-tools.md` found. Arm A sees both in PostHog's own CI.
 
@@ -206,7 +206,7 @@ Recorded before the run as R6 in [repo-value.md](../../docs/design/repo-value.md
 
 | File | Does |
 |---|---|
-| [`harness/setup.sh`](harness/setup.sh) | Rebuilds everything under `$AB_HOME` (default `/tmp/box-ab`) from nothing: the pinned tools, the semgrep wrapper, Toolbox (release build) and the fork at `153f1b8d`. Idempotent, about 3.5 minutes |
+| [`harness/setup.sh`](harness/setup.sh) | Rebuilds everything under `$AB_HOME` (default `/tmp/box-ab`) from nothing: the pinned tools, the semgrep wrapper, Seikika (release build) and the fork at `153f1b8d`. Idempotent, about 3.5 minutes |
 | [`harness/ab.py`](harness/ab.py) | `truth`, `cases`, `parity`, `swap`, `glue`, `progress-fixes`, `last-pr`, and `arm init/commit/restore` for copies and checkpoints |
 | [`harness/ref.py`](harness/ref.py) | A reference implementation of the interface, only to dry-run the harness |
 | [`prompts/make.py`](prompts/make.py) | The twelve prompts from one template |
@@ -290,7 +290,7 @@ each tool's increase.
 
 - One run per phase and arm, on one repository: indicative, not significant.
 - The read allowlist is in the prompt, not enforced. Agents' transcripts aren't audited.
-- The box arm uses tools Toolbox's maintainers chose to slot (SARIF). A tool with only a bespoke
+- The box arm uses tools Seikika's maintainers chose to slot (SARIF). A tool with only a bespoke
   format would cost the box a fitting, and isn't tested here.
 - Two of PostHog's 26 semgrep rules, and actionlint without shellcheck (§2).
 - Phase 6 favours the box by design (§1).
@@ -298,6 +298,6 @@ each tool's increase.
 
 ## Sources
 
-- [docs/design/toolbox-and-tools.md](../../docs/design/toolbox-and-tools.md): the box's promises
+- [docs/design/seikika-and-tools.md](../../docs/design/seikika-and-tools.md): the box's promises
 - [docs/research-log.md](../../docs/research-log.md), *The box* and *Box A/B preparation*: what was checked by hand
 - The PostHog fork's `.github/workflows/ci-security.yaml` (semgrep 1.163.0), `ci-actionlint.yml` (actionlint 1.7.12), `ci-python.yml` (ruff), `pyproject.toml` (`ruff~=0.14.11`) and `tools/hogli-commands/hogli_commands/workflow_lint/`

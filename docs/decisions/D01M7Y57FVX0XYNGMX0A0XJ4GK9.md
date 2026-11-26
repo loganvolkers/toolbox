@@ -13,4 +13,4 @@ decided: 2026-11-21T04:18:29Z
 
 **Status:** ✅
 
-**Where:** [examples/repo-portal-starter/toolbox.yaml](../../examples/repo-portal-starter/toolbox.yaml), [design/package-standards.md](../design/package-standards.md), [crates/toolbox-connector-workspace/src/npm.rs](../../crates/toolbox-connector-workspace/src/npm.rs)
+**Where:** [examples/repo-portal-starter/seikika.yaml](../../examples/repo-portal-starter/seikika.yaml), [design/package-standards.md](../design/package-standards.md), [crates/seikika-connector-workspace/src/npm.rs](../../crates/seikika-connector-workspace/src/npm.rs)

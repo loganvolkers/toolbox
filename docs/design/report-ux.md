@@ -1,19 +1,19 @@
 # Hosted report UX
 
 *Status: decided 2026-11-21 (D01M7XY1QYKW2D0HMSG50R0XTQH); redesigned after a blind design audit
-on 2026-11-24 (D01M85MK7FCRXH2TRMRKXTNA5GT, [audit](../audits/toolbox-report-2026-11-24.md)); tracks,
+on 2026-11-24 (D01M85MK7FCRXH2TRMRKXTNA5GT, [audit](../audits/seikika-report-2026-11-24.md)); tracks,
 kind groups, rationale and measured vs agent-judged results added after a second audit the same day
-(D01M868BY0KJNEYE9WBFZYEYFYH, [audit](../audits/toolbox-report-2026-11-24-2.md)). This document is
+(D01M868BY0KJNEYE9WBFZYEYFYH, [audit](../audits/seikika-report-2026-11-24-2.md)). This document is
 about the box: how it reports what the tools found.
 Amends the static page in [repo-portals.md](./repo-portals.md) §4. The agent skill is
-[`report-ux`](../../plugins/toolbox-operator/skills/report-ux/SKILL.md); changes are judged with
+[`report-ux`](../../plugins/seikika-operator/skills/report-ux/SKILL.md); changes are judged with
 [`design-audit`](./design-audit.md).*
 
 ---
 
 ## 1. Conclusion
 
-A VP of engineering opening Toolbox's own report must be able to **judge quality in one scroll**,
+A VP of engineering opening Seikika's own report must be able to **judge quality in one scroll**,
 then **explore the catalog and every check** without switching to `serve`. The page that shipped
 under D92/D93 was a scorecard tab strip that expanded **failing rules only**. That is a work list,
 not a quality judgement.
@@ -31,7 +31,7 @@ not a quality judgement.
 
 | Expectation | What the page did |
 |---|---|
-| "How healthy is Toolbox?" in the first viewport | Landed on the first scorecard name alphabetically |
+| "How healthy is Seikika?" in the first viewport | Landed on the first scorecard name alphabetically |
 | See the software inventory | No catalog; only entities that appear under the selected scorecard |
 | See the bar we already clear | Expanded rows listed failing rules only; passing rules were invisible |
 | Scan thirty-plus standards | Equal-weight pill buttons with no summary ranking |
@@ -52,7 +52,7 @@ remain partially blocked in cloud sessions; docs pages and GitHub READMEs were u
 
 ## 4. Skill adopted
 
-No existing Cursor or Toolbox skill covered engineering-quality report UX. The new skill
+No existing Cursor or Seikika skill covered engineering-quality report UX. The new skill
 `report-ux` encodes the reader jobs and the reject criteria above. Agents that change the HTML
 element or `report_json` must follow it. `maintainer-skill` scores the file like every other skill.
 
@@ -61,7 +61,7 @@ element or `report_json` must follow it. `maintainer-skill` scores the file like
 `report -o json|html|web` keeps `portal`, `snapshot`, `scorecards`, and `scores`, and adds:
 
 ```json
-"catalog": { "Crate": ["crate:toolbox-cli", "..."], "Skill": ["..."] },
+"catalog": { "Crate": ["crate:seikika-cli", "..."], "Skill": ["..."] },
 "tracks": { "maintainer": { "title": "…", "owner": "…" } },
 "campaigns": { "skill-silver": { "status": "active", "percent": 88, "includes": [], "entities": {} } },
 "scorecards": { "maintainer-skill": { "title": "Agent skills", "description": "…", "rationale": "…", "links": [],
@@ -69,7 +69,7 @@ element or `report_json` must follow it. `maintainer-skill` scores the file like
 "kindGroups": [{ "name": "code", "title": "Code", "description": "…", "kinds": ["Crate"] }],
 "kinds": { "Crate": { "title": null, "description": "…" } },
 "comparisons": { "vs-backstage-capabilities": { "facts": {}, "reads": {}, "fields": {} } },
-"unassessed": { "review-crate": ["crate:toolbox-api", "..."] }
+"unassessed": { "review-crate": ["crate:seikika-api", "..."] }
 ```
 
 `unassessed` lists, per scorecard with judged rules, the scored entities no assessment points at.
@@ -87,7 +87,7 @@ repo-portals §4). Catalog browse and entity score rollups are computed in the e
   `#scorecard/<name>`, `#rule/<scorecard>/<rule>`, `#compare`, `#compare/<name>`. A scorecard's filters
   ride in the hash (`#scorecard/<name>?level=none&outcome=failing&rule=<rule>&q=<text>`), so a work list
   can be shared; so does the catalog's name filter (`#catalog/<Kind>?q=<text>`).
-- The tab title names the page ("Agent skills · Toolbox for Toolbox"), and each history entry keeps its
+- The tab title names the page ("Agent skills · Seikika for Seikika"), and each history entry keeps its
   scroll position, so Back returns to the same place in a long list.
 - Mode chrome uses `role="tab"` / `aria-selected` with arrow-key movement.
 - Every row is one link or one `<summary>`, never a clickable row that contains a link (axe
@@ -173,7 +173,7 @@ repo-portals §4). Catalog browse and entity score rollups are computed in the e
   behind on with their rule counts, and a rule-by-rule tally follows, because factors are not
   weighted. Only the leading value on a rule is coloured.
 - A link to a hash that matches nothing says so and selects no tab.
-- A factor's "How it is scored" says in words what the harness recorded for each product and which value is ahead, then the expression, then, where Toolbox is behind, what would close the gap.
+- A factor's "How it is scored" says in words what the harness recorded for each product and which value is ahead, then the expression, then, where Seikika is behind, what would close the gap.
 - A check not run is neither a pass nor a failure. It is left out of the failure bars, the biggest
   lever, the failing filter and row tallies; a note under the bars names each not-run rule and its
   count, and the scorecard says how many entities' levels are provisional because of it. A kind
@@ -351,7 +351,7 @@ repo-portals §4). Catalog browse and entity score rollups are computed in the e
 - Every bar, even at 0%, draws at least 3px, so zero reads as a value and not a gap.
 - A tooltip is one element above the page, fixed to the viewport, so no collapsed or scrolling box
   clips it; it stays open while the pointer moves onto it and closes on Escape.
-- The Compare verdict names what Toolbox lacks when one factor is behind, not just the factor.
+- The Compare verdict names what Seikika lacks when one factor is behind, not just the factor.
 - Evidence speaks to the reader: a connector that did not run reads "Not measured", and repeated
   evidence points to the rule it repeats.
 - A long list is summarised: each track's group on the Scorecards index shows its weakest four and a
@@ -421,8 +421,8 @@ the previous release would give it something to compare with.
 ## Sources
 
 - [design-audit.md](./design-audit.md) and its rubric; the baseline and re-audit in
-  [toolbox-report-2026-11-24.md](../audits/toolbox-report-2026-11-24.md), and the second loop in
-  [toolbox-report-2026-11-24-2.md](../audits/toolbox-report-2026-11-24-2.md).
+  [seikika-report-2026-11-24.md](../audits/seikika-report-2026-11-24.md), and the second loop in
+  [seikika-report-2026-11-24-2.md](../audits/seikika-report-2026-11-24-2.md).
 - OpsLevel Maturity Report docs; Cortex Bird's eye and All Scorecards docs; Port scorecards guide;
   OpenSSF Scorecard viewer (`scorecard.dev/viewer`); Bach et al., *Dashboard Design Patterns*
   (arXiv:2205.00757); [repo-portals.md](./repo-portals.md); [minimal-ui.md](./minimal-ui.md).

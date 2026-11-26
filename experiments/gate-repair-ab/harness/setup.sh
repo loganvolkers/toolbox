@@ -2,11 +2,11 @@
 # Build one run's workspace: <dest>/openfga on branch `pr` (the planted PR) over `main` (the fork at
 # the pinned commit plus the arm's gate), and <dest>/bin with the tools on PATH.
 #
-#   setup.sh <openfga-src> <arm: toolbox|reviewdog> <dest> <toolbox-checkout> <toolbox-target-dir>
+#   setup.sh <openfga-src> <arm: seikika|reviewdog> <dest> <seikika-checkout> <seikika-target-dir>
 #
-# <openfga-src> is an export of loganvolkers/openfga@7d89a566 (README §3). <toolbox-checkout> is the
-# frozen Toolbox commit the round runs on; its packages/github-actions is vendored into arm A, and
-# <toolbox-target-dir> holds its `toolbox` and `toolbox-connector-*` binaries.
+# <openfga-src> is an export of loganvolkers/openfga@7d89a566 (README §3). <seikika-checkout> is the
+# frozen Seikika commit the round runs on; its packages/github-actions is vendored into arm A, and
+# <seikika-target-dir> holds its `seikika` and `seikika-connector-*` binaries.
 set -euo pipefail
 src=$1 arm=$2 dest=$3 checkout=$4 target=$5
 here=$(cd "$(dirname "$0")" && pwd)
@@ -14,7 +14,7 @@ dest=$(realpath -m "$dest")
 [ ! -e "$dest" ] || { echo "setup: $dest exists" >&2; exit 1; }
 mkdir -p "$dest/bin"
 for tool in zizmor actionlint reviewdog; do ln -s "$(command -v "$tool")" "$dest/bin/$tool"; done
-cp "$target/toolbox" "$target"/toolbox-connector-* "$dest/bin/"
+cp "$target/seikika" "$target"/seikika-connector-* "$dest/bin/"
 rm -f "$dest"/bin/*.d
 export PATH="$dest/bin:$PATH"
 
@@ -26,12 +26,12 @@ git config user.name "openfga maintainer"
 git config user.email "maintainer@example.invalid"
 cp "$checkout/packages/github-actions/actionlint.yaml" .github/actionlint.yaml
 case "$arm" in
-  toolbox)
-    mkdir -p .toolbox
-    cp "$here/toolbox.yaml" .toolbox/toolbox.yaml
-    toolbox vendor "$checkout/packages/github-actions" --portal .toolbox >/dev/null
-    toolbox validate .toolbox >/dev/null
-    toolbox report .toolbox --skip github-actions --baseline .toolbox/results.json --update >/dev/null
+  seikika)
+    mkdir -p .seikika
+    cp "$here/seikika.yaml" .seikika/seikika.yaml
+    seikika vendor "$checkout/packages/github-actions" --portal .seikika >/dev/null
+    seikika validate .seikika >/dev/null
+    seikika report .seikika --skip github-actions --baseline .seikika/results.json --update >/dev/null
     ;;
   reviewdog)
     cp "$here/quality-gate.sh" scripts/quality-gate.sh

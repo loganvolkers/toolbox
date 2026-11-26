@@ -1,0 +1,27 @@
+# DX Benchmark catalog entry (docs/design/dx-benchmarks.md §6), scored by maintainer-benchmark.
+records:
+  - id: s4s-fresh-agent
+    title: 'Seikika for Seikika: a fresh agent raises a scorecard'
+    question: >-
+      Can a fresh agent, with only the CLI and MCP, raise one of this
+      repository's scorecards?
+    layers: [maintainer, user]
+    stages: [maintainer/monitor]
+    hypotheses: []
+    rival: ''
+    repos: []
+    status: archived
+    ran: 2026-11-20
+    outcome: >-
+      user-mcp went from 4 silver and 7 bronze to 11 gold in 56 tool calls;
+      its friction became findings F9-F14
+    changed:
+    - >-
+      F9-F14 in docs/design/seikika-for-seikika.md (observed MCP calls, among
+      others)
+    servedValue: >-
+      A dogfood run with no rival arm and no open-source repository. Its
+      friction was fixed, and the A/Bs that followed replaced it
+    blockedOn: ''
+    readme: docs/design/seikika-for-seikika.md
+    results: docs/research-log.md

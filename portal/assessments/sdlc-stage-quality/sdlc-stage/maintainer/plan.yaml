@@ -1,4 +1,4 @@
-apiVersion: toolbox.dev/assessment/v1
+apiVersion: seikika.com/assessment/v1
 entity: sdlc-stage:maintainer/plan
 rubric: sdlc-stage-quality
 subjectHash: 2eed59615bde

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Turn a run's raw results into the product records the comparative scorecards read. Usage:
-[TOOLBOX_COMMIT=<sha>] snapshot.py <results-dir>. Writes portal/comparisons/{toolbox,backstage}.yaml and prints the
+[SEIKIKA_COMMIT=<sha>] snapshot.py <results-dir>. Writes portal/comparisons/{seikika,backstage}.yaml and prints the
 spread (min, median, max over runs) as a markdown table, for RESULTS.md.
 
 Performance and memory are the medians over runs at SIZE components (README.md); every other
@@ -17,12 +17,13 @@ import yaml
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[1]
 SIZE = int(os.environ.get("SIZE", "10000"))
-ARMS = {"toolbox": "Toolbox", "backstage": "Backstage"}
-# The commit target/release/toolbox was built from, for the record.
-BUILT = os.environ.get("TOOLBOX_COMMIT") or subprocess.run(
+ARMS = {"seikika": "Seikika", "backstage": "Backstage"}
+# The commit target/release/seikika was built from, for the record.
+BUILT = os.environ.get("SEIKIKA_COMMIT") or subprocess.run(
     ["git", "rev-parse", "--short", "HEAD"], cwd=ROOT, capture_output=True, text=True,
     check=True).stdout.strip()
-VERSIONS = {"toolbox": f"{BUILT} (release build); install facts from v0.1.1",
+RELEASE = os.environ.get("SEIKIKA_VERSION", "v0.2.0")
+VERSIONS = {"seikika": f"{BUILT} (release build); install facts from {RELEASE}",
             "backstage": "create-app 0.9.4 (Backstage 1.57.0), Node 24.22.3"}
 PERF = ["readyS", "catalogReadableS", "rssIdleMb", "rssLoadedMb", "recoveredS"]
 READS = ["get", "list"]  # one entity by id; a filtered page, the read whose URL has a query
@@ -61,7 +62,7 @@ def main():
     upgrade = json.loads((results / "upgrade.json").read_text())
     commit = subprocess.run(["git", "log", "-1", "--format=%h", "--", "experiments/backstage-compare"],
                             cwd=ROOT, capture_output=True, text=True, check=True).stdout.strip()
-    spread = ["| Fact | Size | Toolbox min / median / max | Backstage min / median / max |",
+    spread = ["| Fact | Size | Seikika min / median / max | Backstage min / median / max |",
               "|---|---|---|---|"]
     perf = {arm: {n: runs(results, arm, n) for n in (1000, SIZE)} for arm in ARMS}
     for n in sorted({1000, SIZE}):

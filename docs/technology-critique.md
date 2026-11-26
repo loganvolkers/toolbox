@@ -1,4 +1,4 @@
-# Technology Critique: Is the Toolbox Architecture Sprawl?
+# Technology Critique: Is the Seikika Architecture Sprawl?
 
 > **Status 2026-11-20:** adopted as the v1 baseline with amendments (D36–D47). C2 (OpenFGA sidecar) became "OpenFGA inside the container" (D38), C3 (no durable engine before Phase 3) became "DBOS-model workflows in-process" (D39) and C7 (headless UI) became the UI extension contract with in-image bundles (D40), all because of charter goal G1 (single-container deployment).
 
@@ -30,7 +30,7 @@ derived tuples through a Postgres view** agrees with the SQL permission view on 
 (§7.3). So the incremental circuit (DBSP), the logical-decoding change log, checkpoints in object
 storage, content-addressed sub-circuits, the embedded Go c-archive and most of the deterministic
 simulation exist to solve problems this scale does not have. Separately, the GraphQL layer, the
-`@toolbox/ui` design system with persona-aware Storybook, the Pulumi-style polyglot SDKs, WASM
+`@seikika/ui` design system with persona-aware Storybook, the Pulumi-style polyglot SDKs, WASM
 functions and the TCP-as-a-standard are generic web-app or platform concerns that no Port pain and no
 hard requirement needs in v1. What survives is small and genuinely IDP-specific: a **manifest in git
 with `plan` diffs**, **field-level source precedence**, **CODEOWNERS-backed ownership**, **facet
@@ -39,7 +39,7 @@ Postgres, and an OpenFGA sidecar**. Backstage's compatibility obligations block 
 maintainer's four claimed innovations (speed, MCP, config as code, DX); they are shipped or merely
 unimplemented there. What Backstage's model genuinely constrains is **field-level source of truth** (one
 source per entity) and **facet-level authorization** (whole entities to every plugin), which is where
-Toolbox's real technical case lies (§4).
+Seikika's real technical case lies (§4).
 
 | # | Component (as designed) | Verdict | One-line reason |
 |---|---|---|---|
@@ -55,7 +55,7 @@ Toolbox's real technical case lies (§4).
 | 10 | CODEOWNERS authority (D17) | **Keep** | Cheap, IDP-specific, closes the squatting hole |
 | 11 | Per-field `sources` precedence + native store (D13) | **Keep** | The merge measured at 1.6–4.6 ms for 100k entities; native data is one revisioned table |
 | 12 | Pulumi model: language hosts, config monitor, polyglot codegen (D3) | **Cut / defer** | Replace with a YAML/JSON manifest + JSON Schema, and one TS typed builder that prints JSON (no host, no gRPC) |
-| 13 | Manifest + `toolbox plan` (score, authz, mapping diffs) | **Keep** | The clearest differentiator; implemented as two full recomputes over one snapshot and a diff |
+| 13 | Manifest + `seikika plan` (score, authz, mapping diffs) | **Keep** | The clearest differentiator; implemented as two full recomputes over one snapshot and a diff |
 | 14 | CEL for predicates | **Keep** | Standard, shared with OpenFGA conditions; cel-rust runs it (2.7 s for 10M evaluations on 4 threads) |
 | 15 | CEL for mappings + own CEL type checker | **Defer** | Validate mapping outputs against kind JSON Schemas on fixtures; write a type checker only if fixtures miss real errors |
 | 16 | WASM functions (wasmtime, WIT, Javy) | **Cut / defer** | No v1 rule needs Turing-complete in-engine logic; connectors can compute facts |
@@ -64,8 +64,8 @@ Toolbox's real technical case lies (§4).
 | 19 | MCP server (~12 task tools) | **Keep** | Differentiator; generic OpenAPI→MCP generators produce CRUD-per-endpoint tools, the opposite of the design |
 | 20 | CLI | **Keep** | Thin client; local `plan`/`test` |
 | 21 | GraphQL, read-only, trusted documents (D30) | **Cut / defer** | A first-party UI needs a handful of view endpoints, not a query language, cost analysis and a document registry |
-| 22 | React SPA + `@toolbox/ui` + Storybook 10 page/persona stories + fixture recording (D31) | **Replace with generic / defer** | A web-framework concern. Ship a minimal read-only UI; let operators build rich UIs on the public API (§6) |
-| 23 | `toolbox dev` daemon with Salsa-memoised pipeline, warm language hosts | **Replace with generic** | A watcher plus full recompute over 2k fixture entities is tens of milliseconds [I, from §7.1] |
+| 22 | React SPA + `@seikika/ui` + Storybook 10 page/persona stories + fixture recording (D31) | **Replace with generic / defer** | A web-framework concern. Ship a minimal read-only UI; let operators build rich UIs on the public API (§6) |
+| 23 | `seikika dev` daemon with Salsa-memoised pipeline, warm language hosts | **Replace with generic** | A watcher plus full recompute over 2k fixture entities is tens of milliseconds [I, from §7.1] |
 | 24 | tantivy + vectors (search) | **Defer** | Phase 4; Postgres full-text search first, pgvector if needed |
 | 25 | SQLite mode | **Cut** | A second store doubles conformance work; dev uses in-memory, prod Postgres |
 | 26 | Deterministic simulation (turmoil), Antithesis, Kani, shuttle, covering arrays | **Cut / defer** | Most target the replicated incremental design that §7.1 removes; the full recompute *is* the reference model |
@@ -102,7 +102,7 @@ alternative.
 | **Config monitor** (tonic/gRPC or HTTP) + language hosts | Pulumi-style `Register` calls | D3 | Process management, per-language hosts | Program prints JSON to stdout |
 | **AuthZEN**, **SCIM**, **CloudEvents**, **SSE** | Interop, revocation, events | Plan §5, notifications | Each small; together a surface | SSE only in v1 |
 | **IAP JWT / OIDC / OAuth 2.1 / PAT / GitHub OIDC** | Authentication | D20 | Five auth paths | IAP JWT + PAT in v1 |
-| **DBSP** (`dbsp` 0.384, 323 published versions) | Incremental view maintenance | D21 | Pre-1.0 churn; checkpoints and state-preserving changes are Feldera-Enterprise features Toolbox must rebuild ([adversarial-critique.md](./adversarial-critique.md) H5); **ICE on rustc 1.97** (§7.3); Feldera pins rustc 1.99.0 | Full recompute; Postgres materialised views |
+| **DBSP** (`dbsp` 0.384, 323 published versions) | Incremental view maintenance | D21 | Pre-1.0 churn; checkpoints and state-preserving changes are Feldera-Enterprise features Seikika must rebuild ([adversarial-critique.md](./adversarial-critique.md) H5); **ICE on rustc 1.97** (§7.3); Feldera pins rustc 1.99.0 | Full recompute; Postgres materialised views |
 | **DBOS** (Rust SDK 0.6, "pre-production") | Durable side effects | D22 | Pre-production; ties workflow tables to DBOS schema | Postgres job table; Temporal/Restate later |
 | **Postgres logical decoding** (`wal_level=logical`, replication slots) | Commit-ordered change log | D21 | Slot management, WAL retention incidents if a consumer stalls [I]; managed-Postgres permissions | Snapshot reads + version counter |
 | **Postgres** | State | Plan §6.2 | — | — (keep) |
@@ -113,7 +113,7 @@ alternative.
 | **comrak / pulldown-cmark / Mermaid / MiniJinja** | Docs and templates | Plan §4.4, §4.3 | Small | Same (fine) |
 | **React 19 + React Aria + design tokens** | First-party and operator UI | D31 | A design system to maintain | Any React component library; or no first-party rich UI |
 | **Storybook 10 + Vitest browser + Playwright + MSW-style recorded fixtures** | Stories as tests, persona views | D31 | A second test stack; fixture recording through the real engine | Plain component tests; API contract tests |
-| **Vite 8 (Rolldown) in `toolbox dev`, TS 7 native `tsc`** | UI dev loop | D29, D31 | A Node toolchain inside a Rust CLI | Standard Vite in a separate UI repo |
+| **Vite 8 (Rolldown) in `seikika dev`, TS 7 native `tsc`** | UI dev loop | D29, D31 | A Node toolchain inside a Rust CLI | Standard Vite in a separate UI repo |
 | **turmoil / madsim, Antithesis, Kani, shuttle, loom, bolero/proptest, cargo-mutants, Elle, NIST covering arrays** | Verification | D14 | Each is a specialism; release gates cost compute ([principal-review.md](./principal-review.md) §3.4) | proptest + differential tests |
 | **cargo-nextest, Bacon, watchexec, hakari, guppy, sccache, LLD/mold/wild, Cranelift, nightly parallel frontend** | Build speed | D29 | Tooling to maintain; nightly opt-in | Cargo + nextest |
 | **OpenTelemetry, Prometheus, Grafana Foundation SDK, Perses, PostHog** | Observability | D6 | Moderate | OTel + Prometheus only |
@@ -125,7 +125,7 @@ alternative.
 To keep the score auditable, each category is counted and weighted by how much it costs a maintainer
 or an operator: things you must *build and keep correct* weigh more than libraries you call.
 
-| Category (weight) | Toolbox as designed | Toolbox, minimal (§8) | Backstage | Next.js + Postgres app | Port (adopter-facing only) |
+| Category (weight) | Seikika as designed | Seikika, minimal (§8) | Backstage | Next.js + Postgres app | Port (adopter-facing only) |
 |---|---|---|---|---|---|
 | Implementation languages (×3) | 4: Rust, Go, TS, Python | 2: Rust, TS | 1: TS | 1: TS | n/a (SaaS) |
 | Author-facing languages (×2) | 8: TS/Py program, YAML, CEL, OpenFGA DSL, TSX, GraphQL docs, MiniJinja, WASM source | 3: YAML/TS manifest, CEL, OpenFGA DSL | 3: TS, YAML (app-config, descriptors), Nunjucks templates | 2: TS, SQL | 3: JQ, YAML/JSON mappings, HCL (Terraform) |
@@ -135,7 +135,7 @@ or an operator: things you must *build and keep correct* weigh more than librari
 | Major engines/frameworks embedded (×1) | 18 | 6: axum, sqlx, cel-rust, rmcp, React, OTel | ~8 | ~4 | n/a |
 | **Score** | **77** | **33** | **≈ 27** | **16** | **≈ 12 (adopter side)** |
 
-**Reading [I]:** the designed Toolbox is roughly **3× Backstage and 5× a Next.js app** by this measure,
+**Reading [I]:** the designed Seikika is roughly **3× Backstage and 5× a Next.js app** by this measure,
 while its product scope (Phase 1) is narrower than Backstage's. The minimal architecture lands close to
 Backstage, which is the right neighbourhood for a framework that people deploy and extend. The
 Port column is low because Port keeps its stack behind a SaaS boundary; the adopter's surface (JQ,
@@ -178,13 +178,13 @@ general-purpose implementation that measured fast enough.
 ## 4. The Backstage compatibility claim
 
 **Claim tested:** Backstage's backwards-compatibility obligations will prevent it from adopting
-Toolbox's innovations in speed (dev loop and data freshness), MCP/agent-first interfaces, config as
+Seikika's innovations in speed (dev loop and data freshness), MCP/agent-first interfaces, config as
 code, and developer experience.
 
 **Finding: mostly false.** Backstage's compatibility policy is *weak*, not strong: monthly releases may
 contain breaking changes, with a deprecation path of at least one release where possible [P]. What slows
 Backstage is ecosystem size and migration latency (about three years per core rewrite), not a
-compatibility freeze. One Toolbox idea is genuinely blocked by Backstage's data model; the rest are
+compatibility freeze. One Seikika idea is genuinely blocked by Backstage's data model; the rest are
 unimplemented or already shipping.
 
 ### 4.1 The policy
@@ -223,10 +223,10 @@ unimplemented or already shipping.
 already partly in Backstage; **speed** is implemented for entity ingestion and unimplemented (not
 blocked) for derived data and the dev loop; **DX** is not a compatibility question. The genuinely
 compatibility-constrained items are **field-level source of truth** and **facet-level authorization**.
-Those two are real, IDP-specific and Toolbox's strongest technical case. They do not require DBSP,
+Those two are real, IDP-specific and Seikika's strongest technical case. They do not require DBSP,
 GraphQL, WASM or polyglot SDKs.
 
-**Could Toolbox ship as Backstage modules?** For a Backstage shop, yes for most of it: a
+**Could Seikika ship as Backstage modules?** For a Backstage shop, yes for most of it: a
 scorecard/derivation backend plugin, a CODEOWNERS-authority processor, a `plan` CLI and GitHub check,
 curated MCP actions, and an OpenFGA-backed permission policy. The two constrained items would live in
 a sidecar service (the merging provider plus a facet-shaping API) that Backstage reads. That is close to
@@ -234,12 +234,12 @@ the headless engine of §6 with a Backstage frontend.
 
 ---
 
-## 5. Port pains → Toolbox components → smallest sufficient stack
+## 5. Port pains → Seikika components → smallest sufficient stack
 
 The maintainer did not list Port's problems. These are inferred from the design docs (config in a DB as
 a non-goal, JQ, source of truth, write-back, Ocean, actions) and checked against public evidence.
 
-| # | Inferred Port pain | Evidence | Toolbox component that addresses it | Smallest stack that also addresses it |
+| # | Inferred Port pain | Evidence | Seikika component that addresses it | Smallest stack that also addresses it |
 |---|---|---|---|---|
 | P1 | **Config lives in Port's database; Terraform is only an API client, so UI edits and code drift apart** | Provider issues: #280 "port_blueprint drift not detected after manual UI edits"; #290 "Constant drift in the entity resource"; #273 "Persistent drift due to sorting of entity owning teams"; #108 "I had to do ClickOps … then run TF to identify the drift" to learn the syntax [P, via GitHub search API] | Manifest in git; server refuses runtime config mutation (D2) | A manifest (YAML/JSON + JSON Schema) applied by CI to a server with **no config write API**. No SDK or language host needed |
 | P2 | **JQ mappings are hard to check** (nulls, silent failures, type errors; version lag) | Port's docs list "null returns, silent failures, and type errors" as common JQ problems; Port runs jq 1.7.1 and lacks 1.8 functions (roadmap) [S]; Ocean evaluates JQ per field per record in Python ([ocean.md](./ocean.md) §2) [P] | Typed CEL mappings with object construction; raw-record store so remaps don't re-fetch | Keep JQ (jaq in Rust) or untyped CEL; **validate mapping outputs against kind JSON Schemas on fixtures** at build; store raw records in one Postgres table |
@@ -266,13 +266,13 @@ Storybook pipeline; TCP governance; AuthZEN.
 | Planned piece | Where | What a web framework (Next.js, Remix, plain Vite + React Router) already gives |
 |---|---|---|
 | SPA shell, routing, code splitting per action/view | [frontend.md](./design/frontend.md) §3.2 | File-based routing, code splitting |
-| Building operator TSX into the server image (`toolbox build` runs Vite, `rust-embed`) | plan §4.5, frontend §3.2 | A normal frontend build and deploy |
+| Building operator TSX into the server image (`seikika build` runs Vite, `rust-embed`) | plan §4.5, frontend §3.2 | A normal frontend build and deploy |
 | Session handling behind IAP/OIDC, CSRF rules | [authorization.md](./authorization.md) §4.9, graphql §5 | Auth middleware and libraries |
 | Generated forms from JSON Schema, field widgets, custom components | frontend §3 | RJSF or similar; any component library |
 | A read-only GraphQL data layer with trusted documents, cost analysis, ETags | [graphql.md](./design/graphql.md) | Server-side data fetching (server components or loaders) against REST; persisted queries if GraphQL is used at all |
-| `@toolbox/ui` design system (React Aria, tokens, primitives) | frontend §3.1 | React Aria Components, shadcn-style kits |
+| `@seikika/ui` design system (React Aria, tokens, primitives) | frontend §3.1 | React Aria Components, shadcn-style kits |
 | Storybook 10 page-level persona stories with fixtures recorded by running the engine | frontend §5 | Component tests; API contract tests against fixtures |
-| Vite dev server inside the `toolbox dev` daemon | developer-velocity §4 | `vite dev` next to the API |
+| Vite dev server inside the `seikika dev` daemon | developer-velocity §4 | `vite dev` next to the API |
 
 None of these is IDP-specific. They are where "rebuilding Next.js" is literally true. The
 IDP-specific parts of the UI are thin: entity pages generated from kind schemas, redaction markers, and
@@ -280,7 +280,7 @@ the dry-run/approval presentation, which the server already computes.
 
 ### 6.2 The headless-engine alternative
 
-**Toolbox becomes a headless engine: REST + MCP + CLI over one service layer, plus a minimal built-in
+**Seikika becomes a headless engine: REST + MCP + CLI over one service layer, plus a minimal built-in
 read-only UI. Rich UIs are clients of the public API.**
 
 | Concern | Headless engine | Lost or deferred |
@@ -377,7 +377,7 @@ crate per heavy dependency (each actually used), built with the profile from
 internal compiler error (`instantiate_and_check_impossible_predicates` in
 `operator::dynamic::multijoin::star_join`) at `opt-level = 2`, the setting the velocity design gives
 `dbsp`. Feldera pins **rustc 1.99.0** in `rust-toolchain.toml`, although `dbsp` declares
-`rust-version = 1.96.1` [P]. Toolbox would inherit Feldera's toolchain cadence.
+`rust-version = 1.96.1` [P]. Seikika would inherit Feldera's toolchain cadence.
 
 With rustc 1.99.0 the full set builds. Results:
 
@@ -431,7 +431,7 @@ incrementally. The UI is a client of the public API.**
  └───────────────▲───────────────────────────────┬────────────────────────────────────────────┘
                  │ writes                         │ REPEATABLE READ snapshot + input version
  ┌───────────────┴───────────────────────────────▼────────────────────────────────────────────┐
- │ toolbox (Rust, one binary: api | worker)                                                    │
+ │ seikika (Rust, one binary: api | worker)                                                    │
  │  recompute on change (debounced): map (CEL) → merge by sources → CODEOWNERS authority       │
  │   → rules (CEL) → levels → aggregates/closures → tuples (written as a derived table)        │
  │  immutable in-memory snapshot, swapped atomically; snapshot id = consistency token          │
@@ -445,7 +445,7 @@ incrementally. The UI is a client of the public API.**
 | Differentiator | How the minimal architecture keeps it | Evidence |
 |---|---|---|
 | **Speed: freshness** | Full recompute in ~3 s at 100k/2M; single-entity paths in milliseconds if needed | §7.1 |
-| **Speed: dev loop** | `toolbox dev` = watcher + full recompute over fixtures; no daemon pipeline, no Salsa; small workspace | §7.1 (2k entities ≈ 1/50 of 3 s) [I], §7.3 |
+| **Speed: dev loop** | `seikika dev` = watcher + full recompute over fixtures; no daemon pipeline, no Salsa; small workspace | §7.1 (2k entities ≈ 1/50 of 3 s) [I], §7.3 |
 | **MCP / agent-first** | Hand-designed task tools over the same service layer as REST | §3 |
 | **Config as code + `plan`** | Manifest (YAML/JSON + JSON Schema; optional TS typed builder that prints JSON); plan diffs scores, ownership and tuples between two recomputes | §7.1 |
 | **DX** | One binary, one store, one auth sidecar; three author-facing languages (manifest, CEL, OpenFGA DSL) | §2.2 |
@@ -463,7 +463,7 @@ incrementally. The UI is a client of the public API.**
 | **Typed CEL checker, CEL object construction for mappings** | Fixture validation misses mapping or rule errors that reach production more than occasionally |
 | **WASM functions** | **≥ 5 real rules** in a real portal cannot be expressed in CEL or as connector-computed facts |
 | **GraphQL** | A non-first-party UI client exists, or entity pages need more than three round trips at the p95 budget |
-| **`@toolbox/ui`, persona Storybook, tier-2/3 action UIs** | Phase 3 actions ship and generated forms measurably fail users (task completion, support load) |
+| **`@seikika/ui`, persona Storybook, tier-2/3 action UIs** | Phase 3 actions ship and generated forms measurably fail users (task completion, support load) |
 | **tantivy / vector search** | Postgres full-text search misses the relevance or latency bar on the Phase 4 benchmark |
 | **TCP as a governed standard** | A third party asks to implement it |
 | **Deterministic simulation (turmoil), Antithesis** | Multi-replica concurrency exists (workflows, leases), i.e. Phase 3 |
@@ -484,7 +484,7 @@ Not recorded here; each needs the maintainer's call.
 | C4 | **v1 authoring = YAML/JSON manifest + one TS typed builder** that prints JSON; no language hosts or config monitor; Python and WASM deferred | D3, D23, D24 (WASM part) | §2, §5; [principal-review.md](./principal-review.md) §4.1 |
 | C5 | **Ingestion is an OpenAPI endpoint, not a published protocol**; TCP governance (Q2) resolved as "not now" | D4, Q2 | §3, §5 P6 |
 | C6 | **Defer GraphQL** | D30 | §3, §6 |
-| C7 | **Headless engine**: the built-in UI is minimal, read-only plus generated forms, and uses only public endpoints; `@toolbox/ui`/Storybook personas deferred to Phase 3 | D31 | §6 |
+| C7 | **Headless engine**: the built-in UI is minimal, read-only plus generated forms, and uses only public endpoints; `@seikika/ui`/Storybook personas deferred to Phase 3 | D31 | §6 |
 | C8 | **Verification and velocity scope cut**: the full recompute is the reference model; differential tests (Rust vs SQL, OpenFGA vs SQL) and property tests; DST and the velocity tooling deferred | D14, D29 | §7.1, §7.2 |
 | C9 | **A sprawl budget for v1**: ≤ 2 implementation languages, ≤ 1 required runtime service besides Postgres, ≤ 3 author-facing languages; any addition needs an ADR with a measurement | new | §2.2 |
 | C10 | **Toolchain risk**: any dependency that pins a Rust toolchain newer than the workspace's must be isolated or rejected | new | §7.3 (`dbsp` ICE on 1.97, Feldera pins 1.99) |
@@ -544,5 +544,5 @@ Not recorded here; each needs the maintainer's call.
 - [openfga/openfga assets/migrations/postgres](https://github.com/openfga/openfga/tree/main/assets/migrations/postgres) ·
   [pkg/storage/sqlcommon/sqlcommon.go](https://github.com/openfga/openfga/blob/main/pkg/storage/sqlcommon/sqlcommon.go)
 
-**Earlier Toolbox reviews:** [principal-review.md](./principal-review.md) ·
+**Earlier Seikika reviews:** [principal-review.md](./principal-review.md) ·
 [adversarial-critique.md](./adversarial-critique.md) · [red-team.md](./red-team.md)

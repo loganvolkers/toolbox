@@ -1,4 +1,4 @@
-# Phase 4 — Read answers (Toolbox arm A, tenant B)
+# Phase 4 — Read answers (Seikika arm A, tenant B)
 
 Answers from `OUT/entities.ndjson`, `RUN.md`, `FORGE.md`, and portal/connector config only. No live Forge.
 
@@ -21,7 +21,7 @@ Answers from `OUT/entities.ndjson`, `RUN.md`, `FORGE.md`, and portal/connector c
 
 ## 5. What config field switches tenants?
 
-`token` in the connector JSON config (`TOOLBOX_CONNECTOR_CONFIG` / `connector drive --config`). Tenant B uses `tenant-b-token` (tenant A used `tenant-a-token`). `baseUrl` also changes with the tenant (`http://127.0.0.1:9744` vs `…9743` per `FORGE.md` / last dump in `RUN.md`).
+`token` in the connector JSON config (`SEIKIKA_CONNECTOR_CONFIG` / `connector drive --config`). Tenant B uses `tenant-b-token` (tenant A used `tenant-a-token`). `baseUrl` also changes with the tenant (`http://127.0.0.1:9744` vs `…9743` per `FORGE.md` / last dump in `RUN.md`).
 
 ## DX feedback
 

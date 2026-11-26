@@ -1,0 +1,74 @@
+apiVersion: seikika.com/assessment/v1
+entity: rule:seikika/maintainer-crate/bounded-complexity
+rubric: rule-quality
+subjectHash: 565d076fc3b3
+assessor: {kind: agent, name: cursor-assessor-07, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: measures-intent
+    verdict: fail
+    reason: >-
+      The rationale says each independent path needs a test
+      (portal/standards/crates.yaml:285-288). But the counter adds one only
+      for `if`/`while`/`for`/`loop`, match arms beyond the first, and
+      `&&`/`||` (crates/seikika-connector-workspace/src/rust.rs:74-92). Every
+      `?` and every `let ... else` is an early-exit path it doesn't see. On a
+      scratch crate run through target/debug/seikika-connector-workspace, a
+      function with one `let ... else` and two `?` reported complexity 1. The
+      reverse also happens: a flat lookup `match` scores one per arm, though
+      each arm is a single mapping. That is how Checker::cross_references in
+      seikika-model reaches 73 today. Branches inside closures count towards
+      the enclosing function, and a nested `fn` counts twice: in its parent's
+      body and on its own.
+    suggestion: >-
+      Count `?` and the diverging branch of `let ... else` in `Complexity`,
+      and add a fixture function whose only branches are `?`. Alternatively,
+      read clippy's `cognitive_complexity` from the runner (clippy already
+      measures this, and AGENTS.md asks why no existing tool covers a fact
+      before writing an extractor), with the bound in `clippy.toml`.
+  - criterion: hard-to-game
+    verdict: pass
+    reason: >-
+      The connector ignores `#[allow]` attributes, so there is no suppression
+      to add. A renamed function keeps its complexity
+      (crates/seikika-connector-workspace/src/rust.rs:157-165). The cheapest
+      way below 30 is to extract branches into named helpers, which is what
+      the fix asks for. Rewriting `if`/`return` into `?`, `let ... else` or
+      combinators also lowers the score without removing a path, but that is a
+      style change rather than an empty one. The three crates failing today,
+      seikika-api, seikika-derive and seikika-model, peak at 51, 58 and 73,
+      too far over for that rewrite to close.
+  - criterion: fix-leads-to-pass
+    verdict: pass
+    reason: >-
+      The evidence lists each function over 30 as `name at file:line:
+      complexity N` (portal/standards/crates.yaml:279-281). The fix says to
+      extract match arms and use early returns (crates.yaml:282-284).
+      Extracting arms into helpers lowers the count, because only the helper's
+      own body is measured. An early `if ... { return }` is still an `if`, so
+      it only helps when written as `?` or `let ... else`. `at` points to the
+      first doc-comment line rather than to `fn` (for example, seikika-exec's
+      change_run is reported at change.rs:337, while `fn` is at line 341), but
+      that still locates the function.
+  - criterion: threshold-justified
+    verdict: fail
+    reason: >-
+      docs/design/seikika-for-seikika.md:103 states "complexity ≤ 30" for
+      silver but gives no reason. docs/design/thresholds.md, the page meant to
+      hold every number as measured or chosen (thresholds.md:13-16), has no
+      row for it. The rule links NIST SP 500-235
+      (portal/standards/crates.yaml:289-291), which is McCabe's method. Only
+      its landing page could be read in this session, and it gives no number.
+      Nothing ties 30 to that source or to a measurement of this repository.
+    suggestion: >-
+      Add a row to docs/design/thresholds.md for 30. Either measure the
+      distribution (the workspace connector already lists every function's
+      complexity) and set silver at an outlier percentile, or label 30 as
+      chosen ("twice the gold bound") and say why.
+summary: >-
+  A sound silver outlier guard whose number has no stated reason and whose
+  counter is not quite McCabe's. Evidence and fix are actionable. But `?`
+  and `let ... else` add no paths, flat lookup matches inflate the count,
+  and thresholds.md has no row for 30. The three live failures (51, 58,
+  73) are genuine, so the miscounting matters more at the gold bound of 15
+  than here.

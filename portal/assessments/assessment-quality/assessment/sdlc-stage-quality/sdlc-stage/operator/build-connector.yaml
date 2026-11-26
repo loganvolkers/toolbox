@@ -1,4 +1,4 @@
-apiVersion: toolbox.dev/assessment/v1
+apiVersion: seikika.com/assessment/v1
 entity: assessment:sdlc-stage-quality/sdlc-stage:operator/build-connector
 rubric: assessment-quality
 subjectHash: d8e2a4fed420
@@ -10,24 +10,24 @@ verdicts:
     reason: >-
       Three of the four reasons in
       portal/assessments/sdlc-stage-quality/sdlc-stage/operator/build-connector.yaml
-      match the stage at portal/sdlc/stages/operator.yaml:15-33. toolbox
-      connector test runs crates/toolbox-connect/src/conformance.rs (the CLI
+      match the stage at portal/sdlc/stages/operator.yaml:15-33. seikika
+      connector test runs crates/seikika-connect/src/conformance.rs (the CLI
       calls conformance::run and exits 1 when a check fails,
-      crates/toolbox-cli/src/main.rs:1138-1162), and
-      crates/toolbox-connect/src/conformance.rs:5 and :109 validate messages
-      against the connector schema. crates/toolbox-cli/tests/install.rs:174
+      crates/seikika-cli/src/main.rs:1138-1162), and
+      crates/seikika-connect/src/conformance.rs:5 and :109 validate messages
+      against the connector schema. crates/seikika-cli/tests/install.rs:174
       refuses a tampered archive. The stage lists those two checks and the
       four commands, and its gap is "no scaffold or SDK outside Rust".
       binary_for resolves github: packages from the install cache
-      (crates/toolbox-api/src/connectors.rs:213-219, D90). The
+      (crates/seikika-api/src/connectors.rs:213-219, D90). The
       reuses-artifacts path does not exist:
-      crates/toolbox-api/src/artifacts.rs is not a file. toolbox install's
-      github: download is crates/toolbox-model/src/artifacts.rs:1-5,
-      re-exported by crates/toolbox-api/src/lib.rs:6.
+      crates/seikika-api/src/artifacts.rs is not a file. seikika install's
+      github: download is crates/seikika-model/src/artifacts.rs:1-5,
+      re-exported by crates/seikika-api/src/lib.rs:6.
     suggestion: >-
-      Cite crates/toolbox-model/src/artifacts.rs for the download, and
-      crates/toolbox-api/src/connectors.rs:213-219 for the cache lookup. The
-      claim that toolbox install downloads github:owner/repo@v1 is that file's
+      Cite crates/seikika-model/src/artifacts.rs for the download, and
+      crates/seikika-api/src/connectors.rs:213-219 for the cache lookup. The
+      claim that seikika install downloads github:owner/repo@v1 is that file's
       header.
   - criterion: complete
     verdict: pass
@@ -52,7 +52,7 @@ verdicts:
   - criterion: actionable
     verdict: pass
     reason: >-
-      Adding toolbox connector new, which
+      Adding seikika connector new, which
       docs/design/package-author-sdlc.md:126 already proposes, and ending at a
       passing conformance run, would remove the gap the stage records and give
       agent-can-complete a command instead of an open choice. That is the
@@ -60,5 +60,5 @@ verdicts:
 summary: >-
   The stage assessment is right about the conformance exit, the missing
   scaffold and install-from-a-release. It cites
-  crates/toolbox-api/src/artifacts.rs, which is not a file; the download
-  lives in crates/toolbox-model/src/artifacts.rs.
+  crates/seikika-api/src/artifacts.rs, which is not a file; the download
+  lives in crates/seikika-model/src/artifacts.rs.

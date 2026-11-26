@@ -1,4 +1,4 @@
-apiVersion: toolbox.dev/assessment/v1
+apiVersion: seikika.com/assessment/v1
 entity: assessment:rule-quality/rule:acme/ownership/has-owner
 rubric: assessment-quality
 subjectHash: cbaae53745ca
@@ -10,13 +10,13 @@ verdicts:
     reason: >-
       Every citation in
       portal/assessments/rule-quality/rule/acme/ownership/has-owner.yaml
-      lands. examples/reference-portal/toolbox.yaml:299-300 emits the owner
+      lands. examples/reference-portal/seikika.yaml:299-300 emits the owner
       tuple only for verified and inferred, matching the check at :190.
-      crates/toolbox-derive/src/lib.rs:981-987 sets unverified when a claim is
+      crates/seikika-derive/src/lib.rs:981-987 sets unverified when a claim is
       not in the CODEOWNERS teams, and inferred only when there is no claim
       and exactly one team (:986). The ledger case is pinned by
       examples/reference-portal/tests/ownership.test.yaml:36-39, and the
-      authority path is toolbox.yaml:101-105. The fix is :191-193, the
+      authority path is seikika.yaml:101-105. The fix is :191-193, the
       scorecard rationale :173-178, the rule rationale :194-196.
       docs/research-log.md:59 records A2 as ledger unverified with the
       CODEOWNERS evidence and the fix.
@@ -25,17 +25,17 @@ verdicts:
     reason: >-
       The four passes match the rubric. measures-intent holds because the
       check is the same predicate as the tuple
-      (examples/reference-portal/toolbox.yaml:190 and :299-300). hard-to-game
+      (examples/reference-portal/seikika.yaml:190 and :299-300). hard-to-game
       holds: the cheapest pass is one CODEOWNERS team on catalog-info.yaml,
-      which is a named owner (crates/toolbox-derive/src/lib.rs:986). The fix
+      which is a named owner (crates/seikika-derive/src/lib.rs:986). The fix
       aims at verified, which still passes bronze. There is no numeric
       threshold; bronze is stated in the scorecard rationale (:173-176).
   - criterion: reproducible
     verdict: pass
     reason: >-
       Each verdict is the status machine in
-      crates/toolbox-derive/src/lib.rs:981-987 and the rule text in
-      examples/reference-portal/toolbox.yaml:188-196. A second assessor
+      crates/seikika-derive/src/lib.rs:981-987 and the rule text in
+      examples/reference-portal/seikika.yaml:188-196. A second assessor
       reading those and the ledger expectation at
       examples/reference-portal/tests/ownership.test.yaml:36-39 reaches the
       same four passes.

@@ -1,4 +1,4 @@
-apiVersion: toolbox.dev/assessment/v1
+apiVersion: seikika.com/assessment/v1
 entity: assessment:scorecard-quality/scorecard:repo/docs
 rubric: assessment-quality
 subjectHash: 6169b99e813d
@@ -10,14 +10,14 @@ verdicts:
     reason: >-
       The citations in
       portal/assessments/scorecard-quality/scorecard/repo/docs.yaml hold
-      except one pointer. In examples/repo-portal-starter/toolbox.yaml the
+      except one pointer. In examples/repo-portal-starter/seikika.yaml the
       card is at 156-179 and the rule's evidence and fix at 171-175.
-      crates/toolbox-connector-workspace/src/main.rs:297-318 reads only inline
+      crates/seikika-connector-workspace/src/main.rs:297-318 reads only inline
       links and drops fragments. portal/results.json lists scorecard:repo/docs
       as failing meta-scorecard `fixtures-reach-every-level`.
       tests/standards.test.yaml:36-39 shows `docs/runbook.md`. The pointer
       that misses: "the same failure its rationale names" cites the card's
-      rationale (toolbox.yaml:161-164), which says nothing about breakage. The
+      rationale (seikika.yaml:161-164), which says nothing about breakage. The
       rule's rationale (:176-178) is what names it. The lychee and
       markdown-link-check comparison cites no source.
   - criterion: complete

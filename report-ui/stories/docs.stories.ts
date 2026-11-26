@@ -1,6 +1,6 @@
 import { h } from "vue";
-import PageFrame from "@toolbox-dev/ui/components/PageFrame.vue";
-import PageHeader from "@toolbox-dev/ui/components/PageHeader.vue";
+import PageFrame from "@seikika/ui/components/PageFrame.vue";
+import PageHeader from "@seikika/ui/components/PageHeader.vue";
 import CliReference from "../../site/src/components/CliReference.vue";
 
 import NpmPackageCatalog from "../../site/src/components/NpmPackageCatalog.vue";
@@ -16,7 +16,7 @@ export const CliCommands = {
         commands: [{
           name: "get", slug: "get", about: "Read a catalog entity.", mcpTool: "get_entity", structuredOutput: true,
           args: [{ name: "entity", long: null, positional: true, described: true }],
-          usage: "toolbox get <ENTITY>", helpText: "Usage: toolbox get <ENTITY>",
+          usage: "seikika get <ENTITY>", helpText: "Usage: seikika get <ENTITY>",
         }, { name: "validate", slug: "validate", about: "Validate a portal.", mcpTool: null,
           args: [], structuredOutput: false }],
         mcpTools: [{ name: "get_entity", description: "Read a catalog entity.", cliCommands: ["get"] }],

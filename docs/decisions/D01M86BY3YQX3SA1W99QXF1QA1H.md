@@ -33,8 +33,8 @@ its effect is observed.
    need an interactive sign-in, never a token or MCP (D57). Nobody approves their own run, and
    each person approves once. A served run changes atomically, so two approvals or an approval
    and a cancel can't both act.
-5. **One lifecycle at every level, and done means observed:** `toolbox run` (a checkout, no
-   server), `toolbox serve` (REST and MCP), and a parent dispatching to a child share one
+5. **One lifecycle at every level, and done means observed:** `seikika run` (a checkout, no
+   server), `seikika serve` (REST and MCP), and a parent dispatching to a child share one
    preparation step, so a preview means the same everywhere. A change counts only once it is on
    its base. A postcondition that held before the run ends `unverified`, and a workflow that is
    never seen ends `timed_out`.

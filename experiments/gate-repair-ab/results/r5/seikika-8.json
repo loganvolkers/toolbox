@@ -1,0 +1,51 @@
+{
+  "run": "seikika-8",
+  "arm": "seikika-prev",
+  "bcId": "bc-c5768b63-cea0-57d1-94b3-29cb2f15e4a0",
+  "toolCalls": 3,
+  "byTool": {
+    "run_terminal_cmd": 3
+  },
+  "gateRuns": 2,
+  "resultChars": 10741,
+  "missingResults": [],
+  "readImputed": 0,
+  "resultCharsImputed": 10741,
+  "gateChars": 3972,
+  "wallSeconds": 8,
+  "score": {
+    "arm": "seikika",
+    "dest": "/tmp/gate-repair-ab/r5/seikika-8",
+    "correct": true,
+    "checks": {
+      "no-new-findings": {
+        "ok": true,
+        "grew": {}
+      },
+      "intent-pr-summary": {
+        "ok": true,
+        "needs": [
+          "lint"
+        ]
+      },
+      "intent-release-digests": {
+        "ok": true,
+        "uses": [
+          "actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a"
+        ]
+      },
+      "gate-untouched": {
+        "ok": true,
+        "changed": []
+      },
+      "no-suppressions": {
+        "ok": true,
+        "added": []
+      },
+      "gate-passes": {
+        "ok": true,
+        "exit": 0
+      }
+    }
+  }
+}

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Score one finished run: correct only if every check passes. Hidden from the agents.
 
-    score.py <arm: toolbox|reviewdog> <dest>     # <dest> as given to setup.sh
+    score.py <arm: seikika|reviewdog> <dest>     # <dest> as given to setup.sh
 
 Checks, read from the tools directly rather than from either arm's gate:
 - no-new-findings: for every (file, rule), zizmor and actionlint report no more findings in the
@@ -11,7 +11,7 @@ Checks, read from the tools directly rather than from either arm's gate:
   the same action path (`actions/cache`, not `actions/cache/restore`);
 - pins-known: each of those `uses:` is pinned to a full SHA that `main` already pins that action's
   repository to: offline, the only SHAs known to be real commits;
-- gate-untouched: the gate's files match `main` (arm A: .toolbox/; arm B: scripts/quality-gate.sh;
+- gate-untouched: the gate's files match `main` (arm A: .seikika/; arm B: scripts/quality-gate.sh;
   both: .github/actionlint.yaml), and no zizmor config file was added;
 - no-suppressions: no `zizmor: ignore` comment was added;
 - gate-passes: the arm's own gate exits 0.
@@ -28,10 +28,10 @@ import tempfile
 import yaml
 
 GATES = {
-    "toolbox": ["toolbox", "report", ".toolbox", "--skip", "github-actions", "--baseline", ".toolbox/results.json"],
+    "seikika": ["seikika", "report", ".seikika", "--skip", "github-actions", "--baseline", ".seikika/results.json"],
     "reviewdog": ["scripts/quality-gate.sh"],
 }
-GATE_FILES = {"toolbox": [".toolbox"], "reviewdog": ["scripts/quality-gate.sh"]}
+GATE_FILES = {"seikika": [".seikika"], "reviewdog": ["scripts/quality-gate.sh"]}
 WEEKLY = ".github/workflows/weekly.yaml"
 
 

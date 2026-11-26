@@ -6,7 +6,7 @@ Rust SDK later is a migration rather than a redesign?
 
 **Answer (2026-11-20, Postgres 16.15): yes for the behaviours v1 needs.** [`schema.sql`](./schema.sql)
 uses DBOS's table and column names (`workflow_status`, `operation_outputs`, `notifications`, from
-`dbos-transact-rust` at `bad825f`, `migrations/1_initial_dbos_schema.sql`) plus one Toolbox table
+`dbos-transact-rust` at `bad825f`, `migrations/1_initial_dbos_schema.sql`) plus one Seikika table
 (`executors`, for instance heartbeats). [`test.sql`](./test.sql) shows:
 
 | Behaviour | Result |

@@ -5,8 +5,8 @@ Maintainer SDLC.*
 
 ## Conclusion
 
-Toolbox is an **OTLP producer** with **Prometheus `/metrics` retained**. All bootstrap
-lives in [`crates/toolbox-telemetry`](../../crates/toolbox-telemetry/): `init`, resource
+Seikika is an **OTLP producer** with **Prometheus `/metrics` retained**. All bootstrap
+lives in [`crates/seikika-telemetry`](../../crates/seikika-telemetry/): `init`, resource
 (`service.name`), exporters, SemVer metric catalog, and the `tracing` → OTLP log bridge.
 Operators own the Collector and backends (Grafana LGTM as the D6 reference).
 
@@ -18,12 +18,12 @@ Operators own the Collector and backends (Grafana LGTM as the D6 reference).
 | Metrics | Catalog instruments; scrape via `/metrics`; OTLP meters dual-write catalog names |
 | Logs | JSON (CI/prod) or pretty (local); `trace_id` when a span is active |
 
-`TOOLBOX_MCP_TRACE` NDJSON stays a contract-coverage artifact (F9), not distributed tracing.
+`SEIKIKA_MCP_TRACE` NDJSON stays a contract-coverage artifact (F9), not distributed tracing.
 
 ## Metric catalog
 
-See [`METRIC_CATALOG.md`](../../crates/toolbox-telemetry/METRIC_CATALOG.md). Canonical
-snapshot lag is `toolbox_snapshot_lag_seconds`; `toolbox_snapshot_age_seconds` is a
+See [`METRIC_CATALOG.md`](../../crates/seikika-telemetry/METRIC_CATALOG.md). Canonical
+snapshot lag is `seikika_snapshot_lag_seconds`; `seikika_snapshot_age_seconds` is a
 deprecated alias while `TELEMETRY_PROM_ALIASES` is on (default).
 
 ## Local testbed
@@ -32,7 +32,7 @@ deprecated alias while `TELEMETRY_PROM_ALIASES` is on (default).
 `otelcol-contrib` with a file exporter and [`scripts/score.sh`](../../experiments/otel-testbed/scripts/score.sh)
 applies the design §13 rubric. CI job `otel-testbed` must pass.
 
-## T4T
+## S4S
 
 Scorecard `maintainer-observability` over kind `Observability` (declared in
 `portal/observability/`). Rules fail when the crate, catalog, scrape test, alert stubs,
@@ -41,8 +41,8 @@ operator/monitor assessment or OTLP testbed are missing. Gold includes
 
 ## Env
 
-Documented in the crate README: `OTEL_*`, `TOOLBOX_TELEMETRY`, `TOOLBOX_METRICS_PROMETHEUS`,
-`TOOLBOX_LOG_FORMAT`, `TELEMETRY_PROM_ALIASES`, `OTEL_METRIC_EXPORT_INTERVAL`.
+Documented in the crate README: `OTEL_*`, `SEIKIKA_TELEMETRY`, `SEIKIKA_METRICS_PROMETHEUS`,
+`SEIKIKA_LOG_FORMAT`, `TELEMETRY_PROM_ALIASES`, `OTEL_METRIC_EXPORT_INTERVAL`.
 
 ## Sources
 

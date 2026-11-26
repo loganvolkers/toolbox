@@ -4,8 +4,8 @@ import { after, before, beforeEach, test } from 'node:test';
 import { fileURLToPath } from 'node:url';
 import { createEmulator } from 'emulate';
 
-const binary = fileURLToPath(new URL('../../target/debug/toolbox-connector-github', import.meta.url));
-const org = 'toolbox-fixture';
+const binary = fileURLToPath(new URL('../../target/debug/seikika-connector-github', import.meta.url));
+const org = 'seikika-fixture';
 const token = 'emulate-test-token';
 const appId = 12345;
 const installationId = 67890;
@@ -15,8 +15,8 @@ const unknownId = 2147483647;
 const preferredOwners = {
   repo: 'active',
   rules: [
-    { pattern: '*', owners: ['@toolbox-fixture/core'] },
-    { pattern: '/docs/', owners: ['@toolbox-fixture/docs', '@direct-admin'] },
+    { pattern: '*', owners: ['@seikika-fixture/core'] },
+    { pattern: '/docs/', owners: ['@seikika-fixture/docs', '@direct-admin'] },
   ],
 };
 let github;
@@ -66,8 +66,8 @@ before(async () => {
         ],
         apps: [{
           app_id: appId,
-          slug: 'toolbox-fixture-app',
-          name: 'Toolbox Fixture App',
+          slug: 'seikika-fixture-app',
+          name: 'Seikika Fixture App',
           permissions: { contents: 'read' },
           installations: [{
             installation_id: installationId,
@@ -87,9 +87,9 @@ beforeEach(async () => {
   ({ id: archivedId } = await api(archivedRepo, 'PATCH', { archived: true }));
   await api(`${activeRepo}/collaborators/direct-admin`, 'PUT', { permission: 'admin' });
   preferredSha = await writeCodeowners('.github/CODEOWNERS',
-    '# preferred location\n* @toolbox-fixture/core\n/docs/ @toolbox-fixture/docs @direct-admin # inline comment\n');
-  rootSha = await writeCodeowners('CODEOWNERS', '* @toolbox-fixture/root\n');
-  await writeCodeowners('docs/CODEOWNERS', '* @toolbox-fixture/fallback\n');
+    '# preferred location\n* @seikika-fixture/core\n/docs/ @seikika-fixture/docs @direct-admin # inline comment\n');
+  rootSha = await writeCodeowners('CODEOWNERS', '* @seikika-fixture/root\n');
+  await writeCodeowners('docs/CODEOWNERS', '* @seikika-fixture/fallback\n');
 });
 
 after(async () => {
@@ -99,12 +99,12 @@ after(async () => {
 async function refresh(kind, externalIds, credentials = { token }) {
   const command = { type: 'command', command: 'refresh', command_id: 'refresh', kind, external_ids: externalIds };
   // The connector receives only the synthetic config, even if the developer has GITHUB_TOKEN set.
-  const env = { TOOLBOX_CONNECTOR_CONFIG: JSON.stringify({ org, apiUrl: github.url, ...credentials }) };
+  const env = { SEIKIKA_CONNECTOR_CONFIG: JSON.stringify({ org, apiUrl: github.url, ...credentials }) };
   const stdout = await new Promise((resolve, reject) => {
     const child = execFile(binary, { env, timeout: 15_000 }, (error, output, stderr) => {
       if (error) {
         const message = error.code === 'ENOENT'
-          ? 'Build the connector with cargo build --locked -p toolbox-connector-github.'
+          ? 'Build the connector with cargo build --locked -p seikika-connector-github.'
           : `Running the connector failed. ${stderr}`;
         reject(new Error(message, { cause: error }));
       } else {
@@ -163,14 +163,14 @@ test('CODEOWNERS refresh follows precedence as files are removed', async () => {
     message: 'Remove preferred CODEOWNERS', sha: preferredSha,
   });
   assertRefresh(await refresh('codeowners', [active]), 'codeowners', [[active, {
-    repo: 'active', rules: [{ pattern: '*', owners: ['@toolbox-fixture/root'] }],
+    repo: 'active', rules: [{ pattern: '*', owners: ['@seikika-fixture/root'] }],
   }]]);
 
   await api(`${activeRepo}/contents/CODEOWNERS`, 'DELETE', {
     message: 'Remove root CODEOWNERS', sha: rootSha,
   });
   assertRefresh(await refresh('codeowners', [active]), 'codeowners', [[active, {
-    repo: 'active', rules: [{ pattern: '*', owners: ['@toolbox-fixture/fallback'] }],
+    repo: 'active', rules: [{ pattern: '*', owners: ['@seikika-fixture/fallback'] }],
   }]]);
 });
 

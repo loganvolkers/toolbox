@@ -18,7 +18,7 @@ needed a server.
    - a trial of an action across repositories before anyone deploys a server;
    - a CI job or bastion host that keeps the parent's state directory, where the job's own
      access control decides who may run `--approve`.
-   It is not the way for a team to approve: that remains `toolbox serve` behind a proxy or OIDC
+   It is not the way for a team to approve: that remains `seikika serve` behind a proxy or OIDC
    (D57), where an approver is proven and the key stays on the server's host.
 2. **The trust is stated where operators read it.** The `add-action` skill and
    [examples/federated-actions](../../examples/federated-actions/README.md) say that a checkout
@@ -27,12 +27,12 @@ needed a server.
    entry `group:<name>` counts `who` when the portal's authorization model, evaluated over the
    tuples it derives (`authz.tuples`, static or emitted), makes `who` a `member` of the group:
    directly, through a nested group (`group:leads#member`), or through a wildcard. The evaluator
-   (`toolbox_authz::local`) is exact for direct types, `or`, computed relations and `from`, which
+   (`seikika_authz::local`) is exact for direct types, `or`, computed relations and `from`, which
    follow from the tuples alone. It refuses `and` and `but not`, rather than grant more than
    OpenFGA would; a group defined that way needs a served portal. Without a model, a group is
    still met by nobody (T6). Groups are defined in the portal that decides approvals, which in a
    federation is the org's, so a group is declared once for every child.
-4. **`toolbox test` cases can say who is in a group.** A child's cases run without the org's
+4. **`seikika test` cases can say who is in a group.** A child's cases run without the org's
    portal, so a case's `members` (`group:release: [user:dave]`) stands in for it; groups the
    child's own model resolves count as well.
 

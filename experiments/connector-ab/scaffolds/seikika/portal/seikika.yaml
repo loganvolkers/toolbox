@@ -1,0 +1,33 @@
+apiVersion: seikika.com/v1alpha1
+
+portal:
+  name: forge-connector
+  title: Forge connector (scaffold)
+  owner: group:platform
+  seikika: "0.1"
+
+connectors:
+  - name: forge
+    package: local:forge
+    runtime: in-image
+    # Keep in sync with SEIKIKA_CONNECTOR_CONFIG / connector drive --config when switching tenants.
+    config: {baseUrl: http://127.0.0.1:9743, token: tenant-a-token}
+    records: [project, issue]
+
+kinds:
+  - name: Project
+    identityFrom: [connector:forge]
+    fields: {title: {type: string}}
+    sources: {default: [connector:forge]}
+    map:
+    - from: forge/project
+      id: "'project:' + record.key"
+      set: "{'title': record.name}"
+  - name: Issue
+    identityFrom: [connector:forge]
+    fields: {title: {type: string}}
+    sources: {default: [connector:forge]}
+    map:
+    - from: forge/issue
+      id: "'issue:' + record.key"
+      set: "{'title': record.summary}"

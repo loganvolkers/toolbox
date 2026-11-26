@@ -11,8 +11,8 @@ from 0 to 4 against named reader tasks. A second auditor, who never sees the fir
 re-audits the change. The change is done when no usability score falls, the targeted scores
 rise, and serious axe-core violations do not grow. The hosted report is redesigned to that bar
 (below).** The process is in [design-audit.md](../design/design-audit.md), with the skill
-[`design-audit`](../../plugins/toolbox-operator/skills/design-audit/SKILL.md). The first audit is
-[toolbox-report-2026-11-24.md](../audits/toolbox-report-2026-11-24.md).
+[`design-audit`](../../plugins/seikika-operator/skills/design-audit/SKILL.md). The first audit is
+[seikika-report-2026-11-24.md](../audits/seikika-report-2026-11-24.md).
 
 1. **Why a blind auditor.** `report-ux` (D01M7XY1QYKW2D0HMSG50R0XTQH) gave builders a
    checklist, and the page passed it while readers still found it hard to understand and joyless.
@@ -38,5 +38,5 @@ rise, and serious axe-core violations do not grow. The hosted report is redesign
 ## Where
 
 - [design-audit.md](../design/design-audit.md), [report-ux.md](../design/report-ux.md)
-- `plugins/toolbox-operator/skills/design-audit/`, `plugins/toolbox-operator/skills/report-ux/`
-- `crates/toolbox-cli/src/toolbox-report.js`, `crates/toolbox-cli/src/report.rs`
+- `plugins/seikika-operator/skills/design-audit/`, `plugins/seikika-operator/skills/report-ux/`
+- `crates/seikika-cli/src/seikika-report.js`, `crates/seikika-cli/src/report.rs`

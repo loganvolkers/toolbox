@@ -9,14 +9,14 @@
 | Job | v1 language | Notes |
 |---|---|---|
 | Configuration | **YAML/JSON manifest**, or a **TypeScript program** using the builder | Both produce the same canonical `manifest.json` (D53); YAML can be split with `include` (D54); [typescript-builder.md](./typescript-builder.md) |
-| Mappings, computed fields, rules, conditions, options, postconditions | **CEL** | One expression language with object construction; checked by `toolbox validate` |
+| Mappings, computed fields, rules, conditions, options, postconditions | **CEL** | One expression language with object construction; checked by `seikika validate` |
 | Authorization model | **OpenFGA DSL** + `.fga.yaml` tests | Unmodified OpenFGA evaluates it |
 | Connectors | **Any language** over the connector API (stdio or HTTP) | [connector-control.md](./connector-control.md) |
 | Action logic | **Any language** as an in-image or HTTP executor | [action-runs.md](./action-runs.md) |
-| Custom UI | **Any framework** through the UI extension contract; Astro + Vue on `@toolbox-dev/ui` is the default kit | [minimal-ui.md](./minimal-ui.md), v1-spec §7.6 |
+| Custom UI | **Any framework** through the UI extension contract; Astro + Vue on `@seikika/ui` is the default kit | [minimal-ui.md](./minimal-ui.md), v1-spec §7.6 |
 
 **Deferred:** the Python SDK and Pulumi-style language hosts (D41), WASM functions for in-engine
-logic (D41), a governed connector standard (D42), and Toolbox's own CEL type checker. Logic that CEL
+logic (D41), a governed connector standard (D42), and Seikika's own CEL type checker. Logic that CEL
 can't express goes to a connector (compute the fact at the source) or an executor (side effects), not
 into the engine.
 
@@ -53,20 +53,20 @@ where it runs best:
 - **In-engine logic:** sandboxed, deterministic WASM (Shopify), never a service the customer must host
   (Salesforce Functions).
 - **Side effects:** executors and connectors out of process.
-- **UI:** a single, widely known web stack (React + TypeScript on the `@toolbox/ui` design system), for
+- **UI:** a single, widely known web stack (React + TypeScript on the `@seikika/ui` design system), for
   operators only ([frontend.md](./frontend.md), [dashboards.md](./dashboards.md)).
 
 ### 2. The language map
 
 | Job | Language | Why it's the right tool | Tooling shipped |
 |---|---|---|---|
-| Portal program: kinds, sources, connectors, scorecards, actions, views, policies | **TypeScript** (first-class), **Python** (second), **YAML/JSON manifest** (no runtime). Others via codegen when contributors appear | Real abstraction, packages, tests and IDEs; the languages agents write best. Pulumi model retained | Generated SDK types for the portal's own schema; `toolbox check` diagnostics with fixes; test runner |
+| Portal program: kinds, sources, connectors, scorecards, actions, views, policies | **TypeScript** (first-class), **Python** (second), **YAML/JSON manifest** (no runtime). Others via codegen when contributors appear | Real abstraction, packages, tests and IDEs; the languages agents write best. Pulumi model retained | Generated SDK types for the portal's own schema; `seikika check` diagnostics with fixes; test runner |
 | Predicates: rules, filters, conditions, policies, `where`, applies-to | **CEL** | Formal spec + **conformance suite**; non-Turing-complete; used by Kubernetes and **by OpenFGA conditions**, so one predicate language everywhere | **Typed CEL:** checked at build time against the generated kind schemas; LSP completion; cost estimation |
 | Field mappings (record → fragment) | **CEL with map/list construction** + `optional` types | Kubernetes **MutatingAdmissionPolicy** precedent: CEL builds partial objects (apply configurations) declaratively. Same language and type checker as rules; missing-field semantics defined by the spec | Typed against both the connector's `discover` schema and the target kind |
-| Complex transforms (recursion, grouping, folds, heavy reshaping) | **TypeScript or Rust functions compiled to WASM** (Javy/StarlingMonkey for TS; native for Rust/Go) | Deterministic, fuel-limited, sandboxed (Shopify model); unit-testable in the author's language; no service to host | `toolbox ext new transform --lang ts`; fixtures; property tests |
-| Authorization model | **OpenFGA DSL** | The evaluator *is* OpenFGA ([authorization.md](../authorization.md)) | `fga model test` + `toolbox test` |
+| Complex transforms (recursion, grouping, folds, heavy reshaping) | **TypeScript or Rust functions compiled to WASM** (Javy/StarlingMonkey for TS; native for Rust/Go) | Deterministic, fuel-limited, sandboxed (Shopify model); unit-testable in the author's language; no service to host | `seikika ext new transform --lang ts`; fixtures; property tests |
+| Authorization model | **OpenFGA DSL** | The evaluator *is* OpenFGA ([authorization.md](../authorization.md)) | `fga model test` + `seikika test` |
 | Connectors, action executors | **Any language** (connector protocol; DBOS SDKs for durable steps) | I/O-heavy and vendor-SDK-heavy; out of process by nature | SDKs, conformance kit |
-| Operator UI extensions | **React/TSX** on `@toolbox/ui`; Web Component island as an escape hatch | One design system, one test stack; agent fluency ([frontend.md](./frontend.md) §4) | `@toolbox/ui`, Storybook 10, story-based tests |
+| Operator UI extensions | **React/TSX** on `@seikika/ui`; Web Component island as an escape hatch | One design system, one test stack; agent fluency ([frontend.md](./frontend.md) §4) | `@seikika/ui`, Storybook 10, story-based tests |
 | Ad-hoc graph queries (agents, later) | Read-only **GQL** subset | ISO standard, Cypher-like, familiar to agents | — |
 
 **Why not JSONata or jq for mappings:**
@@ -107,7 +107,7 @@ Custom behaviour uses the **first tier that can express it**:
   - Identical meaning in every SDK; agents know it.
 - *Cons:*
   - Limited expressiveness (no recursion or general fold), and awkward deep reshaping.
-  - Lives in strings inside TS or Python (mitigated by Toolbox's CEL checker and LSP).
+  - Lives in strings inside TS or Python (mitigated by Seikika's CEL checker and LSP).
   - cel-rust conformance must be verified (Q10).
 
 **WASM**

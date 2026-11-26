@@ -1,0 +1,67 @@
+apiVersion: seikika.com/assessment/v1
+entity: rule:seikika/vs-backstage-security/loopback-by-default
+rubric: rule-quality
+subjectHash: 37116f51e2e9
+assessor: {kind: agent, name: cursor-assessor-16, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: measures-intent
+    verdict: fail
+    reason: >-
+      The rationale is reachability before auth is configured
+      (portal/standards/backstage-comparison.yaml:517-519). The check reads
+      the bind address. For a container image that is a proxy that can drift
+      from the intent. The image must listen off loopback to be reachable at
+      all: Cloud Run injects PORT (image/Dockerfile:22-24). Seikika's answer
+      to the harm is token auth by default off loopback
+      (D01M857ZB3FZJZWX8G3BF5W1RNR; crates/seikika-cli/src/server.rs:35-40),
+      and the anonymous-read and forged-identity probes confirm it. So the
+      rule fails a product that is reachable but refuses everyone. It would
+      pass one bound to loopback behind a reverse proxy that forwards without
+      auth.
+    suggestion: >-
+      Restate the fact as "off loopback, the server serves nothing without
+      credentials until configured otherwise". Score it from surface.py on the
+      image, or keep the bind-address check but scope it to the bare binary
+      and say so.
+  - criterion: hard-to-game
+    verdict: fail
+    reason: >-
+      The value is a hand-written boolean in
+      experiments/backstage-compare/facts.yaml:8-14, not a probe. Rounds 1 and
+      2 scored it `true` by judging the bare binary instead of the image, and
+      the adjudicator had to correct it (ADJUDICATION.md:260-265). The
+      cheapest way to pass is still to choose which artifact to judge. The
+      brief's measured probe, P1 with `ss -ltnp` (RESEARCH.md:181), is not in
+      surface.py.
+    suggestion: >-
+      Have surface.py record the listening sockets of the image as shipped
+      (P1) and write loopbackByDefault from that, rather than from facts.yaml.
+  - criterion: fix-leads-to-pass
+    verdict: fail
+    reason: >-
+      The fix says to bind 127.0.0.1 unless `--listen` says otherwise, in
+      crates/seikika-cli/src/main.rs. The binary already does this: with no
+      --listen and no PORT it binds 127.0.0.1:8080
+      (crates/seikika-cli/src/server.rs:8-16, called from main.rs:674). The
+      fail comes from `ENV PORT=8080` in image/Dockerfile:24, which the fix
+      does not mention, and from facts.yaml, which holds the value. Removing
+      PORT would break Cloud Run, as the Dockerfile's comment says (line 22).
+    suggestion: >-
+      Point the fix at image/Dockerfile and at
+      experiments/backstage-compare/facts.yaml, and state the trade-off with
+      Cloud Run. If the rule is restated as above, point it at server.rs
+      `default_auth_mode` instead.
+  - criterion: threshold-justified
+    verdict: pass
+    reason: >-
+      The rule is boolean. It is RESEARCH.md F6 probe P1 (line 181), grounded
+      in OWASP ASVS 5.0 V13 and CISA Secure by Design (RESEARCH.md:67). Single
+      bronze level per D01M857ZB468ZM2YS6GNSEG6YB9.
+summary: >-
+  The weakest rule in the scorecard. It checks a bind address that a
+  container image cannot keep on loopback. It reads a hand-set fact whose
+  basis has already flipped once. Its fix names code that already binds
+  loopback, while the cause is the Dockerfile's PORT. The harm it names is
+  better measured by probing whether the server serves anything without
+  credentials.

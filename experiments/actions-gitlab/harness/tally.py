@@ -11,7 +11,7 @@ spec = importlib.util.spec_from_file_location(
     "ab", os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "actions-ab", "harness", "tally.py"))
 ab = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(ab)
-ab.ARMS = ["toolbox", "gitlab"]
+ab.ARMS = ["seikika", "gitlab"]
 
 if __name__ == "__main__":
     sys.argv = sys.argv[:2]

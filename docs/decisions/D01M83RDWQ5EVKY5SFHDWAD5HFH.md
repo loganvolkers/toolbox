@@ -16,11 +16,11 @@ D01M82X2K0DYWTCA23MQJ4CKR0Z. The standard and the catalog stay as they are.
 
 1. **Why.** Two protocol-1 benchmarks reached conclusions their data cannot carry
    (D01M83RDWR52WVNER0MV5T84NSX):
-   - connector-ab declared a Toolbox win in its third round. Only Toolbox's arm had changed
+   - connector-ab declared a Seikika win in its third round. Only Seikika's arm had changed
      between rounds: its prompts, its scaffold's recipe, and a product format the same pull
      request called "to widen connector-ab lead". The win was 1 call against a rival whose total
      moved by 21 calls across rounds in which that rival's prompts and scaffold had not changed.
-   - deploy-ab declared a defeat. The probes gave only Toolbox an authentication bypass, and its
+   - deploy-ab declared a defeat. The probes gave only Seikika an authentication bypass, and its
      agent restarted a container that had been built before the run. No tokens were recorded, so
      the bar could not be applied either way.
 
@@ -33,8 +33,8 @@ D01M82X2K0DYWTCA23MQJ4CKR0Z. The standard and the catalog stay as they are.
    |---|---|
    | P1. Committed prompts | Every rendered prompt, for every arm and phase, sits under the experiment's `prompts/` before the first arm starts. A launch whose prompt differs from the committed one is void |
    | P2. Repeated runs | At least three fresh runs per arm per phase. Report every run and the minimum, median and maximum. A cost hypothesis holds or fails only if the gap between medians is larger than the wider arm's range; otherwise it is inconclusive. Runs are not dropped for their result, only for a harness fault named before rerunning |
-   | P3. Frozen rounds | A round fixes one commit (`frozenAt`) for Toolbox, the harness, and every arm's scaffold, prompt and docs. A fix between rounds starts a new round, in which every arm reruns every scored phase |
-   | P4. Symmetric arms | Every arm's scaffold gives the same level of help. If one arm gets a recipe, all do. Rival friction is fixed before the next round, as carefully as Toolbox's. Deferring it means the next round is not run |
+   | P3. Frozen rounds | A round fixes one commit (`frozenAt`) for Seikika, the harness, and every arm's scaffold, prompt and docs. A fix between rounds starts a new round, in which every arm reruns every scored phase |
+   | P4. Symmetric arms | Every arm's scaffold gives the same level of help. If one arm gets a recipe, all do. Rival friction is fixed before the next round, as carefully as Seikika's. Deferring it means the next round is not run |
    | P5. No harness-shaped product | A product change made after a benchmark names a use outside the harness and no harness file, schema or convention. The harness adapts to the product, not the reverse. The adjudicator lists every change between rounds and says whether it passes (`fitAudit`) |
    | P6. A reported measure | The bar is written in a measure (`measure`) that a dry run has shown the runtime reports for every arm. It is never swapped after the run. If a measure goes missing, its cost hypotheses are void |
    | P7. Independent adjudication | The adjudicator applies the bar and writes the outcome. They did not design the experiment, build an arm, or change the product between rounds (`designer`, `adjudicator`). The outcome uses only holds, fails, inconclusive or void, per hypothesis |

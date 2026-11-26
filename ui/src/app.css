@@ -1,5 +1,5 @@
 body { margin: 0; }
-#toolbox-initial-entity { padding: 20px; }
+#seikika-initial-entity { padding: 20px; }
 @scope (.portal-ui) {
 a { color: var(--accent); text-decoration: underline; } a:hover { text-decoration-thickness: 2px; }
 nav.top { display: flex; gap: 16px; align-items: center; padding: 10px 24px; border-bottom: 1px solid var(--line); flex-wrap: wrap; }

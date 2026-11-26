@@ -1,4 +1,4 @@
-apiVersion: toolbox.dev/assessment/v1
+apiVersion: seikika.com/assessment/v1
 entity: sdlc-stage:package-author/distribute
 rubric: sdlc-stage-quality
 subjectHash: 80311bf34ef0
@@ -11,12 +11,12 @@ verdicts:
       The stage lists no checks (portal/sdlc/stages/package-author.yaml), so
       nothing fails when a tag does not publish attested artifacts or an OCI
       mirror. Consumer pinning by git ref and content hash is tested in
-      crates/toolbox-cli/tests/install.rs
+      crates/seikika-cli/tests/install.rs
       (install_git_package_tag_branch_and_commit), but the stage does not list
       it. Its gap "registry undecided (Q15)" is out of date: Q15 is resolved
       by D89 (docs/questions.md).
     suggestion: >-
-      List crates/toolbox-cli/tests/install.rs as a check for the consumer
+      List crates/seikika-cli/tests/install.rs as a check for the consumer
       half, and add a package release workflow whose run fails without an
       attested archive and a digest-matching OCI push.
   - criterion: agent-can-complete
@@ -29,28 +29,28 @@ verdicts:
       own table (line 78) says "Specified. No release archive is produced".
     suggestion: >-
       Ship a reusable package release workflow (archive, actions/attest, OCI
-      push) and a `toolbox package publish --dry-run` the stage can list.
+      push) and a `seikika package publish --dry-run` the stage can list.
   - criterion: reuses-artifacts
     verdict: pass
     reason: >-
       Consumers compile nothing: packages are cloned at a ref and pinned by
-      content hash in toolbox.lock, connector binaries come from
-      checksum-verified release assets (crates/toolbox-api/src/artifacts.rs),
+      content hash in seikika.lock, connector binaries come from
+      checksum-verified release assets (crates/seikika-api/src/artifacts.rs),
       and tools are pinned in the package's tools: section
       (packages/github-actions/fragments/github-actions.yaml line 59) and
-      installed with `toolbox tools install` or `toolbox doctor --mise`.
+      installed with `seikika tools install` or `seikika doctor --mise`.
   - criterion: decoupled-from-core
     verdict: fail
     reason: >-
       The git half needs no core change, but the exit criterion does: fetching
       from an OCI mirror by digest and verifying attestations need resolver
-      code that crates/toolbox-cli/src/install.rs does not have
+      code that crates/seikika-cli/src/install.rs does not have
       (docs/design/packages.md §4.4, "We write a small resolver"; PQ3 open in
       §9).
     suggestion: >-
       Add OCI fetch by digest and attestation verification to the resolver
       once, so authors can then publish from their own repositories with no
-      further change to Toolbox.
+      further change to Seikika.
   - criterion: fast-feedback
     verdict: fail
     reason: >-
@@ -66,7 +66,7 @@ verdicts:
     reason: >-
       Nothing proves distribution on any real package: the one test of
       resolution is a synthetic host, acme/pkg/packages/demo, in
-      crates/toolbox-cli/tests/install.rs, and the packages under packages/
+      crates/seikika-cli/tests/install.rs, and the packages under packages/
       are included by path in portal/, not pinned from a tag by another
       repository.
     suggestion: >-

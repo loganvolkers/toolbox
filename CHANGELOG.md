@@ -15,11 +15,11 @@ First installable release (D90).
 
 ### Added
 
-- Attested per-platform archives and shell/PowerShell installers for `toolbox` and the first-party connectors (`github`, `git-files`, `runner`, `workspace`, `scim`).
-- Container image workflow (`ghcr.io/<owner>/toolbox:<version>`) built from the Linux archives.
-- `actions/report` input `toolbox-version` to download checksum-verified binaries instead of compiling.
+- Attested per-platform archives and shell/PowerShell installers for `seikika` and the first-party connectors (`github`, `git-files`, `runner`, `workspace`, `scim`).
+- Container image workflow (`ghcr.io/<owner>/seikika:<version>`) built from the Linux archives.
+- `actions/report` input `seikika-version` to download checksum-verified binaries instead of compiling.
 - Repo portal starter (`examples/repo-portal-starter`) and packages (`packages/github-actions`).
-- `toolbox install` / `toolbox doctor` for released executable connectors and declared tools.
+- `seikika install` / `seikika doctor` for released executable connectors and declared tools.
 
 ### Notes
 

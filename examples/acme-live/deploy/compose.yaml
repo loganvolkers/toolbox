@@ -6,12 +6,12 @@ services:
   postgres:
     image: postgres:16
     environment:
-      POSTGRES_USER: toolbox
-      POSTGRES_PASSWORD: toolbox
-      POSTGRES_DB: toolbox
+      POSTGRES_USER: seikika
+      POSTGRES_PASSWORD: seikika
+      POSTGRES_DB: seikika
     ports: [54329:5432]
     healthcheck:
-      test: [CMD-SHELL, pg_isready -U toolbox -d toolbox]
+      test: [CMD-SHELL, pg_isready -U seikika -d seikika]
       interval: 2s
       timeout: 5s
       retries: 40
@@ -51,17 +51,17 @@ services:
 
   portal:
     profiles: [portal]
-    image: toolbox-acme:local
+    image: seikika-acme:local
     environment:
       PORT: "8080"
-      DATABASE_URL: postgres://toolbox:toolbox@postgres:5432/toolbox
+      DATABASE_URL: postgres://seikika:seikika@postgres:5432/seikika
       GITHUB_API_URL: http://facade:8091
       GITHUB_TOKEN: acme-reader
-      TOOLBOX_AUTH_MODE: dev
-      TOOLBOX_ALLOW_DEV_AUTH_OFF_LOOPBACK: "1"
-      TOOLBOX_CONNECTOR_TOKENS: idp=idp-token
-      TOOLBOX_CONNECTOR_TOKEN: idp-token
-      TOOLBOX_SCIM_TOKEN: scim-token
+      SEIKIKA_AUTH_MODE: dev
+      SEIKIKA_ALLOW_DEV_AUTH_OFF_LOOPBACK: "1"
+      SEIKIKA_CONNECTOR_TOKENS: idp=idp-token
+      SEIKIKA_CONNECTOR_TOKEN: idp-token
+      SEIKIKA_SCIM_TOKEN: scim-token
     ports: [8080:8080, 9100:9100]
     depends_on:
       postgres: {condition: service_healthy}

@@ -1,0 +1,54 @@
+apiVersion: seikika.com/assessment/v1
+entity: rule:seikika/review-crate/passes-review
+rubric: rule-quality
+subjectHash: 0fefda714071
+assessor: {kind: agent, name: cursor-cloud-agent, model: claude-opus-5.5}
+at: 2026-11-24
+verdicts:
+  - criterion: measures-intent
+    verdict: pass
+    reason: >-
+      The earlier finding is fixed: source_hash now covers src/, tests/ and
+      Cargo.toml (crates/seikika-connector-workspace/src/rust.rs:271-291), so
+      changing tests or dependencies makes the assessment stale. A small
+      residual is that small-contract judges other crates' imports, which
+      aren't hashed, and the `hash` field description still says "src/ files"
+      (portal/standards/crates.yaml:43-46).
+  - criterion: hard-to-game
+    verdict: fail
+    reason: >-
+      Cheapest attempt: write
+      portal/assessments/crate-design/crate/<name>.yaml with four `pass`
+      verdicts, each "Fine; see crates/<name>/src/lib.rs." Any resolving path
+      satisfies reviewUncited
+      (crates/seikika-connect/src/assessment.rs:41-47), and no rule of
+      review-crate (portal/standards/crates.yaml:284-370) asks who wrote the
+      assessment or whether it was itself reviewed. docs/design/thresholds.md
+      §3 says so: a crate rule can't see its assessment's review. So the
+      crate's own author can earn gold with a cursory self-assessment.
+    suggestion: >-
+      Copy the assessment's review state onto the assessment record in the
+      connector (it has both files), so a crate rule can require an
+      independently reviewed assessment; or require at gold an assessor other
+      than the crate's last git committer.
+  - criterion: fix-leads-to-pass
+    verdict: pass
+    reason: >-
+      The fix names portal/assessments/ and re-assessment
+      (crates.yaml:352-354), and the evidence lists failing criteria or
+      uncited ones; for the crate card the uncited reasons are in the same
+      assessment the fix points to, so re-assessing with citations passes.
+  - criterion: threshold-justified
+    verdict: pass
+    reason: >-
+      Gold is stated in D01M831P5QWJQ4A2FT85N5MXJQF and
+      docs/design/thresholds.md §3, and reviewUncited makes it ask for more
+      than bronze and silver imply, so the earlier fail is fixed.
+summary: >-
+  Re-assessed after the rule gained a rationale: its check, evidence, fix
+  and level are the same as on main, as is the code the reasons cite, so
+  the verdicts stand; line numbers are updated for the rationale lines
+  inserted above them. The rationale states the why without claiming more
+  than the check sees. The hash and the ladder are fixed, but a
+  self-written all-pass assessment that cites any real file still earns
+  gold.

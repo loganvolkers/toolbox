@@ -1,4 +1,4 @@
-apiVersion: toolbox.dev/assessment/v1
+apiVersion: seikika.com/assessment/v1
 entity: assessment:rule-quality/rule:repo/repo-hygiene/has-readme
 rubric: assessment-quality
 subjectHash: 2114132bc6d6
@@ -10,9 +10,9 @@ verdicts:
     reason: >-
       The citations in
       portal/assessments/rule-quality/rule/repo/repo-hygiene/has-readme.yaml
-      hold. In examples/repo-portal-starter/toolbox.yaml the fix is at 96-97
+      hold. In examples/repo-portal-starter/seikika.yaml the fix is at 96-97
       and the evidence at 93-94.
-      crates/toolbox-connector-workspace/src/repo.rs:73-76 counts whitespace
+      crates/seikika-connector-workspace/src/repo.rs:73-76 counts whitespace
       tokens in the whole file. legacy-tool's 12 words fail
       (tests/standards.test.yaml:26-31). `rg` finds no 50-word row in
       docs/design/thresholds.md. One claim is inaccurate. The reason says the

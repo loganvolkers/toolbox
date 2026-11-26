@@ -1,0 +1,59 @@
+apiVersion: seikika.com/assessment/v1
+entity: assessment:rule-quality/rule:seikika/maintainer-plugin/portable-components
+rubric: assessment-quality
+subjectHash: b26fabf99435
+assessor: {kind: agent, name: cursor-reviewer-06, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: supported
+    verdict: pass
+    reason: >-
+      The citations in
+      portal/assessments/rule-quality/rule/seikika/maintainer-plugin/portable-components.yaml
+      hold. crates/seikika-connector-workspace/src/plugins.rs:121-163 flags
+      every SKILL.md outside `skills/<name>/`, and line 133 skips
+      dot-directories, but not `com.example.client`. Spec §8 and §8.2
+      (https://github.com/agentplugins/agent-plugins-spec/blob/main/spec/1.0.0.md)
+      put client files in a top-level reverse-domain directory. §6.1 and §7.1
+      discover only immediate children of `skills/`.
+      portal/standards/plugins.yaml:107-109 is the fix. D81 and
+      docs/design/agent-plugins.md:20 are right. There is one mild
+      overstatement. Through portal/seikika.yaml:128, maintainer-skill
+      catalogues a dot-directory skill, because the walker skips only target,
+      node_modules, .git, dist and .venv
+      (crates/seikika-connect/src/files.rs:8). But no rule there flags its
+      location.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      measures-intent and fix-leads-to-pass fail correctly. The walker flags
+      the reverse-domain directory that the fix's second sentence recommends
+      (plugins.yaml:108-109 against plugins.rs:133-145). threshold-justified
+      passes on D81 and spec §7.1.
+  - criterion: reproducible
+    verdict: unsure
+    reason: >-
+      The hard-to-game pass rests on judgement. Moving a listed SKILL.md to
+      `.agents/skills/x/` costs the same `git mv` as moving it to `skills/x/`,
+      and it clears the evidence (plugins.rs:133). The assessment's own
+      measures-intent reason says so. The rubric fails when "a renamed item
+      ... would pass it" (portal/standards/meta.yaml:1164-1166). The assessor
+      passes because the dodge breaks the skill, and a second assessor may
+      well fail it.
+    suggestion: >-
+      Fail hard-to-game on the dot-directory route. Otherwise, argue from a
+      source why a dodge that breaks the skill is enough deterrent, rather
+      than from maintainer-skill cataloguing it.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      Exempting reverse-domain top-level directories flips both
+      measures-intent and fix-leads-to-pass. So does deleting the fix's second
+      sentence, for fix-leads-to-pass. Scanning dot-directories closes the
+      other half of measures-intent.
+summary: >-
+  Correct on the core finding: the walker contradicts spec §8, so it flags
+  client files the fix tells you to put in a reverse-domain directory, and
+  it ignores dot-directories. Citations hold. The hard-to-game pass is
+  judgement: a dot-directory move is as cheap as the right move and clears
+  the rule.

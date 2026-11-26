@@ -1,0 +1,65 @@
+apiVersion: seikika.com/assessment/v1
+entity: rule:seikika/vs-backstage-change-safety/upgrade-lines
+rubric: rule-quality
+subjectHash: 7b570b6bf4a1
+assessor: {kind: agent, name: cursor-assessor-17, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: measures-intent
+    verdict: fail
+    reason: >-
+      For Seikika, upgrade.py:67-78 returns 0 when the v0.1.0 starter still
+      passes `validate` and `test` under the current binary. Otherwise it
+      returns the starter's whole diff from v0.1.0 to HEAD, which is not
+      divided by any number of releases, despite the field's name "per
+      release" (portal/standards/backstage-comparison.yaml:102-104). The
+      starter is two files of repo-scoring config
+      (examples/repo-portal-starter), so a breaking change to anything it
+      doesn't use (connectors, authz, served kinds) still reads 0. Backstage's
+      47.3 counts template-diff lines it suggests, not lines it requires
+      (upgrade.py:40-50). The rationale admits the two measures differ
+      (:715-717), and the adjudication says "this measure does not show it"
+      (experiments/backstage-compare/ADJUDICATION.md:216-222).
+    suggestion: >-
+      Upgrade a portal that uses every manifest section (the bench portal or
+      examples/reference-portal) through each release pair, count the required
+      hand edits, and divide by the number of pairs. For Backstage, run
+      `versions:bump` plus hand edits until green, as RESEARCH.md F9
+      prescribes.
+  - criterion: hard-to-game
+    verdict: pass
+    reason: >-
+      The probe runs the old release's starter, taken with `git archive
+      v0.1.0`, against the current binary (upgrade.py:67-74). Editing today's
+      starter changes nothing. The cheapest way to keep 0 is to keep the
+      manifest backward compatible, which is the intent. The narrow coverage
+      is the measures-intent problem above, not a cheap way to pass.
+  - criterion: fix-leads-to-pass
+    verdict: pass
+    reason: >-
+      The evidence gives "N lines to change per release". The fix says to keep
+      examples/repo-portal-starter passing `seikika validate` and `seikika
+      test` across releases, and names upgrade.py
+      (backstage-comparison.yaml:708-711). Making the old starter pass again
+      is exactly what upgrade.py:72-76 checks, so following the fix and
+      rerunning the harness reaches 0.
+  - criterion: threshold-justified
+    verdict: fail
+    reason: >-
+      The bar of 10 lines has no source. The pre-registered README gives "—"
+      for upgrade lines (experiments/backstage-compare/README.md:48), and
+      RESULTS.md:261-265 records that the scorecard bars were "written after
+      the smoke rounds". RESEARCH.md F9 sets only a comparative bar (Seikika ≤
+      Backstage, RESEARCH.md:65). Nothing explains why 10 lines, or bronze.
+    suggestion: >-
+      State the number's source in docs/design/thresholds.md or
+      backstage-comparison.md, for example "an upgrade needs no hand edits"
+      (== 0, the claim the rationale makes when it says the adopter keeps a
+      manifest, not an app; backstage-comparison.md §2 F9), or drop the
+      absolute bar and keep only the comparative value.
+summary: >-
+  The fix points at the right lever, and the probe is hard to game, but
+  the number shows little about upgrade cost. Seikika's 0 says only that a
+  two-file v0.1.0 starter still validates. The field isn't per release,
+  and Backstage's figure counts suggested lines rather than required ones.
+  The bar of 10 was set after the smoke rounds.

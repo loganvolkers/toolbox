@@ -1,7 +1,7 @@
 # Finding the Tools a Repository Already Uses
 
 *Status: built, 2026-11-21 (D01M801A9QNVCSBBJATYV721TCS). About the box
-([toolbox-and-tools.md](./toolbox-and-tools.md)): it reports which tools a repository carries
+([seikika-and-tools.md](./seikika-and-tools.md)): it reports which tools a repository carries
 and which are in the box. It decides nothing. It serves the operator SDLC: setting up a repo
 portal, or a new standard.*
 
@@ -10,7 +10,7 @@ portal, or a new standard.*
 ## 1. Conclusion
 
 **Finding tools takes two passes: a deterministic inventory, then an agent that checks it.**
-- **`toolbox tools find`** reads config files, CI, hook and task-runner commands, package
+- **`seikika tools find`** reads config files, CI, hook and task-runner commands, package
   manifests and installer files, and matches them against a catalog of tools. For each tool it
   prints:
   - the evidence, as file and line;
@@ -32,7 +32,7 @@ Those judgements are the agent's, as with assessments (D79).
 
 | Repository | Tools found (status) | Scripts CI runs | Time (release build) |
 |---|---|---|---|
-| This one (T4T) | ruff, zizmor, actionlint, clippy (in box); rustfmt, yamark, codeql (candidates) | 10 | 0.4 s (debug) |
+| This one (S4S) | ruff, zizmor, actionlint, clippy (in box); rustfmt, yamark, codeql (candidates) | 10 | 0.4 s (debug) |
 | PostHog fork | 13: ruff, actionlint, semgrep, golangci-lint, eslint, clippy, rustfmt, shellcheck, hadolint, markdownlint, mypy, prettier, codeql | 15 | 0.12 s |
 | Codex fork | 7: ruff, eslint, clippy, rustfmt, markdownlint, prettier, cargo-deny | 13 | 0.23 s (debug) |
 | gh-aw fork | 8: zizmor, actionlint, semgrep, golangci-lint, shellcheck, markdownlint, prettier, codeql | 16 | 1.06 s, over 25 MB of workflow YAML |
@@ -57,7 +57,7 @@ built by hand: the inventory agrees with it.
 
 ## 3. The catalog
 
-`crates/toolbox-cli/src/tool-catalog.yaml` holds 24 tools. Each has config globs, a CI pattern,
+`crates/seikika-cli/src/tool-catalog.yaml` holds 24 tools. Each has config globs, a CI pattern,
 package names, and its slot: a SARIF command, a fitting, or a built-in connector.
 
 **`checked` says where a SARIF command was run and its output read.** Where it's empty, the
@@ -81,7 +81,7 @@ command comes from the tool's docs or help, and the skill tells the agent to run
 
 ## Sources
 
-- [toolbox-and-tools.md](./toolbox-and-tools.md): slots, fittings and take-it-out
+- [seikika-and-tools.md](./seikika-and-tools.md): slots, fittings and take-it-out
 - [tool-installation.md](./tool-installation.md): the `install` ids in the catalog
 - `golangci-lint run --help` (2.5.0), run here
 - The A/B forks of PostHog, Codex and gh-aw ([experiments/standards-ab](../../experiments/standards-ab))

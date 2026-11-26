@@ -1,10 +1,10 @@
 # DX Benchmark catalog entry (docs/design/dx-benchmarks.md §6), scored by maintainer-benchmark.
 records:
   - id: spec-ab
-    title: Results by hand, with Toolbox, or on Backstage (R7)
+    title: Results by hand, with Seikika, or on Backstage (R7)
     question: >-
       With a well-specified results format, can agents produce and consume
-      results without Toolbox, and what does building on Backstage cost?
+      results without Seikika, and what does building on Backstage cost?
     layers: [user, operator]
     stages: [operator/author, user/build]
     hypotheses: [R7]

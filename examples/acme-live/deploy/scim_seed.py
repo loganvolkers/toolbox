@@ -10,9 +10,9 @@ import os
 import sys
 import urllib.request
 
-EXT = "urn:ietf:params:scim:schemas:extension:toolbox:2.0:Group"
+EXT = "urn:ietf:params:scim:schemas:extension:seikika:2.0:Group"
 BASE = sys.argv[1].rstrip("/")
-TOKEN = os.environ.get("TOOLBOX_SCIM_TOKEN", "")
+TOKEN = os.environ.get("SEIKIKA_SCIM_TOKEN", "")
 
 USERS = [
     ("alice", "Alice Ng", "alice@acme.test"),

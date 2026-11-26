@@ -1,26 +1,26 @@
-diff -ruN '--exclude=OUT' '--exclude=target' '--exclude=FORGE.md' '--exclude=Cargo.lock' '--exclude=rust-toolchain.toml' experiments/connector-ab/scaffolds/toolbox/Cargo.toml /tmp/connector-ab/arms/A/Cargo.toml
---- experiments/connector-ab/scaffolds/toolbox/Cargo.toml	2026-11-23 02:41:58.054451230 +0000
+diff -ruN '--exclude=OUT' '--exclude=target' '--exclude=FORGE.md' '--exclude=Cargo.lock' '--exclude=rust-toolchain.toml' experiments/connector-ab/scaffolds/seikika/Cargo.toml /tmp/connector-ab/arms/A/Cargo.toml
+--- experiments/connector-ab/scaffolds/seikika/Cargo.toml	2026-11-23 02:41:58.054451230 +0000
 +++ /tmp/connector-ab/arms/A/Cargo.toml	2026-11-23 02:48:58.825025786 +0000
 @@ -9,7 +9,7 @@
  path = "src/main.rs"
  
  [dependencies]
--toolbox-connect = { path = "__TOOLBOX_ROOT__/crates/toolbox-connect" }
-+toolbox-connect = { path = "/agent/repos/toolbox/crates/toolbox-connect" }
+-seikika-connect = { path = "__SEIKIKA_ROOT__/crates/seikika-connect" }
++seikika-connect = { path = "/agent/repos/seikika/crates/seikika-connect" }
  serde_json = "1"
  tokio = { version = "1", features = ["rt-multi-thread", "macros", "io-util", "io-std"] }
  reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls"] }
-diff -ruN '--exclude=OUT' '--exclude=target' '--exclude=FORGE.md' '--exclude=Cargo.lock' '--exclude=rust-toolchain.toml' experiments/connector-ab/scaffolds/toolbox/portal/toolbox.yaml /tmp/connector-ab/arms/A/portal/toolbox.yaml
---- experiments/connector-ab/scaffolds/toolbox/portal/toolbox.yaml	1970-01-01 00:00:00.000000000 +0000
-+++ /tmp/connector-ab/arms/A/portal/toolbox.yaml	2026-11-23 02:58:36.766931253 +0000
+diff -ruN '--exclude=OUT' '--exclude=target' '--exclude=FORGE.md' '--exclude=Cargo.lock' '--exclude=rust-toolchain.toml' experiments/connector-ab/scaffolds/seikika/portal/seikika.yaml /tmp/connector-ab/arms/A/portal/seikika.yaml
+--- experiments/connector-ab/scaffolds/seikika/portal/seikika.yaml	1970-01-01 00:00:00.000000000 +0000
++++ /tmp/connector-ab/arms/A/portal/seikika.yaml	2026-11-23 02:58:36.766931253 +0000
 @@ -0,0 +1,34 @@
-+apiVersion: toolbox.dev/v1alpha1
++apiVersion: seikika.com/v1alpha1
 +
 +portal:
 +  name: forge-ab-a
 +  title: Forge connector arm A
 +  owner: group:platform
-+  toolbox: "0.1"
++  seikika: "0.1"
 +
 +connectors:
 +  - name: forge
@@ -48,31 +48,31 @@ diff -ruN '--exclude=OUT' '--exclude=target' '--exclude=FORGE.md' '--exclude=Car
 +      - from: forge/issue
 +        id: "'issue:' + record.key"
 +        set: "{'title': record.summary}"
-diff -ruN '--exclude=OUT' '--exclude=target' '--exclude=FORGE.md' '--exclude=Cargo.lock' '--exclude=rust-toolchain.toml' experiments/connector-ab/scaffolds/toolbox/RUN.md /tmp/connector-ab/arms/A/RUN.md
---- experiments/connector-ab/scaffolds/toolbox/RUN.md	2026-11-23 02:42:03.126454824 +0000
+diff -ruN '--exclude=OUT' '--exclude=target' '--exclude=FORGE.md' '--exclude=Cargo.lock' '--exclude=rust-toolchain.toml' experiments/connector-ab/scaffolds/seikika/RUN.md /tmp/connector-ab/arms/A/RUN.md
+--- experiments/connector-ab/scaffolds/seikika/RUN.md	2026-11-23 02:42:03.126454824 +0000
 +++ /tmp/connector-ab/arms/A/RUN.md	2026-11-23 03:01:29.738776476 +0000
 @@ -1,8 +1,54 @@
 -# How to run (fill this in)
-+# How to run (arm A — Forge / Toolbox)
++# How to run (arm A — Forge / Seikika)
  
 -Document:
 +Work from `/tmp/connector-ab/arms/A`.
  
 -1. How to build the connector.
--2. The `TOOLBOX_CONNECTOR_CONFIG` shape.
+-2. The `SEIKIKA_CONNECTOR_CONFIG` shape.
 -3. How to produce `OUT/entities.ndjson` (env var or subcommand).
--4. How to run `toolbox connector test` against the binary.
+-4. How to run `seikika connector test` against the binary.
 +## 1. Build
 +
 +```bash
 +export PATH=/tmp/connector-ab/bin:$PATH
-+# toolbox-connect needs edition 2024 (Rust 1.97); the arm's default cargo may be older.
++# seikika-connect needs edition 2024 (Rust 1.97); the arm's default cargo may be older.
 +cargo +1.97.0 build
 +```
 +
 +Binary: `target/debug/forge-connector`.
 +
-+## 2. `TOOLBOX_CONNECTOR_CONFIG`
++## 2. `SEIKIKA_CONNECTOR_CONFIG`
 +
 +JSON object (secrets already resolved; no env expansion inside the connector):
 +
@@ -92,7 +92,7 @@ diff -ruN '--exclude=OUT' '--exclude=target' '--exclude=FORGE.md' '--exclude=Car
 +```bash
 +cd /tmp/connector-ab/arms/A
 +export PATH=/tmp/connector-ab/bin:$PATH
-+export TOOLBOX_CONNECTOR_CONFIG='{"baseUrl":"http://127.0.0.1:9743","token":"tenant-a-token"}'
++export SEIKIKA_CONNECTOR_CONFIG='{"baseUrl":"http://127.0.0.1:9743","token":"tenant-a-token"}'
 +export FORGE_WRITE_ENTITIES=1
 +
 +printf '%s\n' '{"type":"command","command_id":"cmd_resync1","command":"resync","kinds":["project","issue"],"priority":"background","deadline":"2099-01-01T00:00:00Z"}' \
@@ -101,41 +101,41 @@ diff -ruN '--exclude=OUT' '--exclude=target' '--exclude=FORGE.md' '--exclude=Car
 +
 +Mapped lines are sorted by `kind` then `id`. Kinds in phase 1: `project`, `issue` (no `component`).
 +
-+## 4. `toolbox connector test`
++## 4. `seikika connector test`
 +
-+Minimal portal: `portal/toolbox.yaml` (connector name `forge`, records `project` + `issue`).
++Minimal portal: `portal/seikika.yaml` (connector name `forge`, records `project` + `issue`).
 +
 +```bash
 +cd /tmp/connector-ab/arms/A
 +export PATH=/tmp/connector-ab/bin:$PATH
-+toolbox connector test --name forge --portal portal -- ./target/debug/forge-connector
++seikika connector test --name forge --portal portal -- ./target/debug/forge-connector
 +```
 +
 +Override config (e.g. another tenant) with `--config '{"baseUrl":"…","token":"…"}'`.
-diff -ruN '--exclude=OUT' '--exclude=target' '--exclude=FORGE.md' '--exclude=Cargo.lock' '--exclude=rust-toolchain.toml' experiments/connector-ab/scaffolds/toolbox/src/main.rs /tmp/connector-ab/arms/A/src/main.rs
---- experiments/connector-ab/scaffolds/toolbox/src/main.rs	2026-11-23 02:42:01.230453459 +0000
+diff -ruN '--exclude=OUT' '--exclude=target' '--exclude=FORGE.md' '--exclude=Cargo.lock' '--exclude=rust-toolchain.toml' experiments/connector-ab/scaffolds/seikika/src/main.rs /tmp/connector-ab/arms/A/src/main.rs
+--- experiments/connector-ab/scaffolds/seikika/src/main.rs	2026-11-23 02:42:01.230453459 +0000
 +++ /tmp/connector-ab/arms/A/src/main.rs	2026-11-23 03:01:27.590783038 +0000
 @@ -1,11 +1,333 @@
--//! Scaffold: implement a Forge connector with `toolbox_connect::sdk::{Source, Out, run_stdio}`.
--//! Config via `TOOLBOX_CONNECTOR_CONFIG` JSON: `{"baseUrl","token"}`.
+-//! Scaffold: implement a Forge connector with `seikika_connect::sdk::{Source, Out, run_stdio}`.
+-//! Config via `SEIKIKA_CONNECTOR_CONFIG` JSON: `{"baseUrl","token"}`.
 -//! Kinds: `project`, `issue` (phase 1); add `component` from phase 3.
 -//! Also write mapped entities to `OUT/entities.ndjson` when `FORGE_WRITE_ENTITIES=1`.
 -
 -fn main() {
 -    eprintln!(
--        "scaffold: replace this binary with a Source that calls run_stdio; see crates/toolbox-connect/src/sdk.rs"
+-        "scaffold: replace this binary with a Source that calls run_stdio; see crates/seikika-connect/src/sdk.rs"
 -    );
 -    std::process::exit(2);
 +//! Forge (mock Jira Cloud) stdio connector.
 +//!
-+//! `TOOLBOX_CONNECTOR_CONFIG`: `{"baseUrl":"http://127.0.0.1:9743","token":"tenant-a-token"}`.
++//! `SEIKIKA_CONNECTOR_CONFIG`: `{"baseUrl":"http://127.0.0.1:9743","token":"tenant-a-token"}`.
 +//! Record kinds: `project`, `issue` (phase 1). External ids: `forge:<key>`.
 +//! With `FORGE_WRITE_ENTITIES=1`, a resync also writes mapped catalog entities to
 +//! `OUT/entities.ndjson` (or `FORGE_ENTITIES_PATH`), sorted by kind then id.
 +
 +use serde_json::{Value, json};
 +use std::path::PathBuf;
-+use toolbox_connect::sdk::{Out, Source, run_stdio};
++use seikika_connect::sdk::{Out, Source, run_stdio};
 +
 +struct Forge {
 +    base_url: String,
@@ -148,9 +148,9 @@ diff -ruN '--exclude=OUT' '--exclude=target' '--exclude=FORGE.md' '--exclude=Car
 +impl Forge {
 +    fn from_env() -> Result<Self, String> {
 +        let cfg: Value = serde_json::from_str(
-+            &std::env::var("TOOLBOX_CONNECTOR_CONFIG").unwrap_or_else(|_| "{}".into()),
++            &std::env::var("SEIKIKA_CONNECTOR_CONFIG").unwrap_or_else(|_| "{}".into()),
 +        )
-+        .map_err(|e| format!("TOOLBOX_CONNECTOR_CONFIG: {e}"))?;
++        .map_err(|e| format!("SEIKIKA_CONNECTOR_CONFIG: {e}"))?;
 +        let s = |k: &str| cfg.get(k).and_then(Value::as_str).map(str::to_owned);
 +        Ok(Forge {
 +            base_url: s("baseUrl")

@@ -1,0 +1,41 @@
+apiVersion: seikika.com/assessment/v1
+entity: rule:seikika/vs-backstage-capabilities/graph
+rubric: rule-quality
+subjectHash: 53543353f36b
+assessor: {kind: agent, name: cursor-assessor-15, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: measures-intent
+    verdict: pass
+    reason: >-
+      "Show an entity's relations as a graph" is the brief's "relation graph"
+      scenario (RESEARCH.md:114). Seikika serves it at /v1/entities/{id}/graph
+      (crates/seikika-api/src/routes.rs:46), `seikika graph` and the `graph`
+      MCP tool (mcp.rs:39); Backstage through plugin-catalog-graph
+      (facts.yaml:163).
+  - criterion: hard-to-game
+    verdict: fail
+    reason: >-
+      `capGraph` is asserted in experiments/backstage-compare/facts.yaml:74
+      and merged by snapshot.py:85; the harness never requests a graph, so a
+      one-line edit passes even if the route were removed.
+    suggestion: >-
+      In surface.py, request each product's graph for component:c1 (Seikika's
+      /v1/entities/component:c1/graph, Backstage's catalog-graph relations)
+      and set `capGraph` only when it returns the edge to the component's
+      system from gen.py.
+  - criterion: fix-leads-to-pass
+    verdict: pass
+    reason: >-
+      The fix names the command and the exact route registered at
+      crates/seikika-api/src/routes.rs:46, which is the evidence facts.yaml:74
+      cites, so restoring them restores the fact.
+  - criterion: threshold-justified
+    verdict: pass
+    reason: >-
+      Boolean, no threshold; "each capability true" is the pre-registered bar
+      (experiments/backstage-compare/README.md:53; ADJUDICATION.md:114).
+summary: >-
+  A clear, correctly scoped capability rule with a fix that names its
+  route. Like its siblings it trusts a facts.yaml boolean where a
+  one-request probe of the graph endpoint would do.

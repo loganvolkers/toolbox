@@ -1,0 +1,59 @@
+apiVersion: seikika.com/assessment/v1
+entity: rule:seikika/maintainer-observability/assessed-monitor
+rubric: rule-quality
+subjectHash: b5ae3afab47a
+assessor: {kind: agent, name: cursor-assessor-09, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: measures-intent
+    verdict: fail
+    reason: >-
+      The rationale says that only a review against sdlc-stage-quality judges
+      whether the monitor stage works for an agent
+      (portal/standards/observability.yaml:193-196). The check only asks
+      whether
+      portal/assessments/sdlc-stage-quality/sdlc-stage/operator/monitor.yaml
+      exists (observability.yaml:67-72). A stale assessment, whose
+      `subjectHash` no longer matches the stage, passes, and so does one that
+      fails every criterion. The portal already models both of those: the
+      review-* ladder's bronze is "no review that failed a criterion" and its
+      silver is "a current review" (docs/design/thresholds.md §3).
+    suggestion: >-
+      Read the review state the portal already computes for
+      `sdlc-stage:operator/monitor` (fresh, with no failing criterion), for
+      example by requiring review-sdlc-stage at least silver for that entity,
+      instead of checking that the file exists.
+  - criterion: hard-to-game
+    verdict: fail
+    reason: >-
+      Copying any YAML to the declared path passes, and so does pointing
+      `monitorAssessment` (portal/observability/runtime.yaml:16) at any
+      existing file. `seikika assess check` would reject a malformed
+      assessment, but this rule doesn't consult it.
+    suggestion: >-
+      Use the assessment records the workspace connector already emits
+      (`assessment` in portal/seikika.yaml's record list) and check the
+      entity, rubric, freshness and verdicts, not the path.
+  - criterion: fix-leads-to-pass
+    verdict: pass
+    reason: >-
+      The fix elides the directory
+      ("portal/assessments/.../operator/monitor.yaml",
+      portal/standards/observability.yaml:190-192), but the evidence,
+      `missingAssessment` (:67-72), prints the full declared path from
+      portal/observability/runtime.yaml:16, and "via seikika assess
+      (sdlc-stage-quality)" leads to `seikika assess brief
+      sdlc-stage:operator/monitor`, whose brief names the file. Writing it
+      passes.
+  - criterion: threshold-justified
+    verdict: pass
+    reason: >-
+      There is no threshold. Silver matches D01M81ADN8C10EA1Z1VNRY3A5JZ, which
+      says S4S "assesses `sdlc-stage:operator/monitor`" alongside the crate
+      checks, and the scorecard places "a reviewed monitor stage" at silver
+      (observability.yaml:102-103).
+summary: >-
+  The rule rightly brings judgement into an otherwise mechanical card, but
+  it checks that the assessment file exists, not what the review says. A
+  stale or failing review still passes, even though the portal already
+  knows both states.

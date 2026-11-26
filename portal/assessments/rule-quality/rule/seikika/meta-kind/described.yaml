@@ -1,0 +1,45 @@
+apiVersion: seikika.com/assessment/v1
+entity: rule:seikika/meta-kind/described
+rubric: rule-quality
+subjectHash: f66c85a7aa1d
+assessor: {kind: agent, name: cursor-assessor-03, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: measures-intent
+    verdict: pass
+    reason: >-
+      The check is filled(k.description), meaning non-blank after trimming
+      (crates/seikika-cli/src/model.rs:197, 281-285), which is what
+      "described" claims. The seven kinds failing it today are all the
+      starter's and the reference portal's (kind:acme/* and kind:repo/* in
+      portal/results.json). They have no description at all, which is the case
+      the rationale describes (portal/standards/meta.yaml:741-743).
+  - criterion: hard-to-game
+    verdict: fail
+    reason: >-
+      Only whitespace is rejected (model.rs:281-285), so `description: TBD` or
+      the kind's own name passes. Unlike fields, kinds don't need very short
+      descriptions: the shortest existing kind description in the three
+      portals is 7 words (Command in portal/standards/cli.yaml), so a floor
+      that excludes placeholders costs real kinds nothing.
+    suggestion: >-
+      For kinds, require at least four words that aren't just the kind's name
+      or title, and reject TODO/TBD-style placeholders. That keeps every
+      current description passing and stops a one-word stand-in.
+  - criterion: fix-leads-to-pass
+    verdict: pass
+    reason: >-
+      The evidence names the kind (meta.yaml:737), and the fix names the
+      `description:` key and what it should say. kind:demo/Bare is the pinned
+      failing fixture (portal/tests/standards.test.yaml:806).
+  - criterion: threshold-justified
+    verdict: pass
+    reason: >-
+      No number. Silver follows the card's rationale: being exercised in tests
+      is the floor, and "descriptions sit above it because they help readers
+      without making any score wrong" (meta.yaml:696-700). The level is listed
+      in docs/design/scorecards-for-scorecards.md:207.
+summary: >-
+  A correct presence check at a justified level, with a fix that works. It
+  accepts any placeholder word. Real kind descriptions are full sentences,
+  so a small word floor would close that route without false failures.

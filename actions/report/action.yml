@@ -1,16 +1,16 @@
-# Toolbox report: score this repository with its repo portal and ratchet against a committed
+# Seikika report: score this repository with its repo portal and ratchet against a committed
 # baseline (docs/design/repo-portals.md, D66, D69). One step in a workflow:
 #
 #   - uses: actions/checkout@v4
-#   - uses: loganvolkers/toolbox/actions/report@<commit sha>
+#   - uses: seikika/seikika/actions/report@<commit sha>
 #
-# with `.toolbox/toolbox.yaml` in the repository (start from examples/repo-portal-starter) and
-# `.toolbox/results.json` committed (create it with `mode: update`, see the README next to this file).
-name: Toolbox report
+# with `.seikika/seikika.yaml` in the repository (start from examples/repo-portal-starter) and
+# `.seikika/results.json` committed (create it with `mode: update`, see the README next to this file).
+name: Seikika report
 description: >-
-  Score a repository against its Toolbox standards and fail when anything
+  Score a repository against its Seikika standards and fail when anything
   gets worse than the committed baseline.
-author: Toolbox
+author: Seikika
 branding: {icon: check-square, color: blue}
 
 inputs:
@@ -20,8 +20,8 @@ inputs:
       baseline are relative to it.
     default: .
   portal:
-    description: Directory containing the repo portal's toolbox.yaml.
-    default: .toolbox
+    description: Directory containing the repo portal's seikika.yaml.
+    default: .seikika
   baseline:
     description: Results file to ratchet against (default <portal>/results.json).
     default: ""
@@ -42,17 +42,17 @@ inputs:
     default: "true"
   artifact-name:
     description: Name of the uploaded artifact.
-    default: toolbox-report
-  toolbox-dir:
+    default: seikika-report
+  seikika-dir:
     description: >-
-      A directory that already holds the toolbox binaries (toolbox,
-      toolbox-connector-*). Takes precedence over toolbox-version.
+      A directory that already holds the seikika binaries (seikika,
+      seikika-connector-*). Takes precedence over seikika-version.
     default: ""
-  toolbox-version:
+  seikika-version:
     description: >-
-      A released Toolbox version (e.g. 0.1.0) to download, checksum-verified,
+      A released Seikika version (e.g. 0.2.0) to download, checksum-verified,
       from the action's repository's GitHub releases (D90). When empty, the
-      action builds toolbox from its own source at the action's ref, and
+      action builds seikika from its own source at the action's ref, and
       caches it.
     default: ""
 
@@ -61,7 +61,7 @@ outputs:
     description: pass, regressed, stale, missing-baseline, unknown or error
     value: ${{ steps.run.outputs.result }}
   exit-code:
-    description: Exit code of toolbox report (0 pass, 1 ratchet failure, 2 error).
+    description: Exit code of seikika report (0 pass, 1 ratchet failure, 2 error).
     value: ${{ steps.run.outputs.exit-code }}
   report:
     description: Path of the Markdown report.
@@ -74,65 +74,65 @@ outputs:
     value: ${{ steps.run.outputs.baseline }}
   verdict:
     description: >-
-      Path of the verdict JSON (toolbox-verdict/v1, D96) with each regression
+      Path of the verdict JSON (seikika-verdict/v1, D96) with each regression
       and improvement.
     value: ${{ steps.run.outputs.verdict }}
 
 runs:
   using: composite
   steps:
-    - name: Download released toolbox binaries
-      if: inputs.toolbox-dir == '' && inputs.toolbox-version != ''
+    - name: Download released seikika binaries
+      if: inputs.seikika-dir == '' && inputs.seikika-version != ''
       shell: bash
       env:
-        TOOLBOX_REPO: ${{ github.action_repository || 'loganvolkers/toolbox' }}
-        TOOLBOX_VERSION: ${{ inputs.toolbox-version }}
-        TOOLBOX_BIN: ${{ runner.temp }}/toolbox-bin
+        SEIKIKA_REPO: ${{ github.action_repository || 'seikika/seikika' }}
+        SEIKIKA_VERSION: ${{ inputs.seikika-version }}
+        SEIKIKA_BIN: ${{ runner.temp }}/seikika-bin
       run: bash "$GITHUB_ACTION_PATH/install.sh"
-    - name: Cache key for the toolbox build
+    - name: Cache key for the seikika build
       id: key
-      if: inputs.toolbox-dir == '' && inputs.toolbox-version == ''
+      if: inputs.seikika-dir == '' && inputs.seikika-version == ''
       shell: bash
       run: |
         root="$GITHUB_ACTION_PATH/../.."
         h=$(cd "$root" && cat Cargo.lock rust-toolchain.toml $(find crates schema -type f -not -path '*/target/*' | LC_ALL=C sort) | sha256sum | cut -c1-16)
-        echo "key=toolbox-bin-${RUNNER_OS}-${RUNNER_ARCH}-$h" >> "$GITHUB_OUTPUT"
-    - name: Restore toolbox binaries
+        echo "key=seikika-bin-${RUNNER_OS}-${RUNNER_ARCH}-$h" >> "$GITHUB_OUTPUT"
+    - name: Restore seikika binaries
       id: cache
-      if: inputs.toolbox-dir == '' && inputs.toolbox-version == ''
+      if: inputs.seikika-dir == '' && inputs.seikika-version == ''
       uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
       with:
-        path: ${{ runner.temp }}/toolbox-bin
+        path: ${{ runner.temp }}/seikika-bin
         key: ${{ steps.key.outputs.key }}
     - name: Restore the Cargo build (incremental across commits)
       if: >-
-        inputs.toolbox-dir == '' && inputs.toolbox-version == '' &&
+        inputs.seikika-dir == '' && inputs.seikika-version == '' &&
         steps.cache.outputs.cache-hit != 'true'
       uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
       with:
         path: |
           ~/.cargo/registry
           ~/.cargo/git
-          ${{ runner.temp }}/toolbox-target
+          ${{ runner.temp }}/seikika-target
         key: ${{ steps.key.outputs.key }}-target
-        restore-keys: toolbox-bin-${{ runner.os }}-${{ runner.arch }}-
-    - name: Build toolbox from the action's source
+        restore-keys: seikika-bin-${{ runner.os }}-${{ runner.arch }}-
+    - name: Build seikika from the action's source
       if: >-
-        inputs.toolbox-dir == '' && inputs.toolbox-version == '' &&
+        inputs.seikika-dir == '' && inputs.seikika-version == '' &&
         steps.cache.outputs.cache-hit != 'true'
       shell: bash
       run: |
         cd "$GITHUB_ACTION_PATH/../.."          # rust-toolchain.toml pins the toolchain here
-        cargo build --locked --target-dir "$RUNNER_TEMP/toolbox-target" \
-          -p toolbox-cli -p toolbox-connector-workspace -p toolbox-connector-runner
-        mkdir -p "$RUNNER_TEMP/toolbox-bin"
-        cp "$RUNNER_TEMP"/toolbox-target/debug/toolbox "$RUNNER_TEMP"/toolbox-target/debug/toolbox-connector-* "$RUNNER_TEMP/toolbox-bin/" 2>/dev/null || true
-        rm -f "$RUNNER_TEMP"/toolbox-bin/*.d
-    - name: Toolbox report
+        cargo build --locked --target-dir "$RUNNER_TEMP/seikika-target" \
+          -p seikika-cli -p seikika-connector-workspace -p seikika-connector-runner
+        mkdir -p "$RUNNER_TEMP/seikika-bin"
+        cp "$RUNNER_TEMP"/seikika-target/debug/seikika "$RUNNER_TEMP"/seikika-target/debug/seikika-connector-* "$RUNNER_TEMP/seikika-bin/" 2>/dev/null || true
+        rm -f "$RUNNER_TEMP"/seikika-bin/*.d
+    - name: Seikika report
       id: run
       shell: bash
       env:
-        TOOLBOX_BIN: ${{ inputs.toolbox-dir != '' && inputs.toolbox-dir || format('{0}/toolbox-bin', runner.temp) }}
+        SEIKIKA_BIN: ${{ inputs.seikika-dir != '' && inputs.seikika-dir || format('{0}/seikika-bin', runner.temp) }}
         INPUT_WORKING_DIRECTORY: ${{ inputs.working-directory }}
         INPUT_PORTAL: ${{ inputs.portal }}
         INPUT_BASELINE: ${{ inputs.baseline }}
@@ -157,5 +157,5 @@ runs:
       env:
         REPORT_RESULT: ${{ steps.run.outputs.result }}
       run: |
-        echo "::error title=Toolbox report::${REPORT_RESULT} (see the job summary)"
+        echo "::error title=Seikika report::${REPORT_RESULT} (see the job summary)"
         exit 1

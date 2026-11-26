@@ -41,7 +41,7 @@ With one critical issue, "security: red" *is* the detail.
 - Make **declassification** an explicit, reviewed declaration in code: "this rule's pass/fail outcome
   is declassified to `can_view_score_summary`".
 - Restate S1 as *non-interference modulo declared declassifications*.
-- Have `toolbox plan` list every declassification a change introduces.
+- Have `seikika plan` list every declassification a change introduces.
 - Add a **minimum-cardinality threshold** to aggregates over restricted data (k-anonymity style) so
   rollups of one or two entities don't reveal details.
 
@@ -186,7 +186,7 @@ The single database now holds:
 ### 2.5 🟠 Per-replica derived state breaks rolling upgrades
 If replicas compute derived data in memory (graph, bitmaps, search), then during a rolling deploy of
 a **config or engine change**, N and N+1 replicas compute *different* answers from the same database.
-Users and agents flip between them, and `toolbox verify` can pass on one and fail on another.
+Users and agents flip between them, and `seikika verify` can pass on one and fail on another.
 
 **Fix:**
 - **Derivation epochs:** derived state is tagged with `(engine_version, manifest_hash)`.
@@ -230,9 +230,9 @@ The dangerous bugs live in **isolation semantics**: READ COMMITTED anomalies, lo
 effectively serializable, so simulation will *never* surface these bugs.
 
 **Fix:**
-- `MemStore` must model the **isolation level Toolbox actually runs at**, including permitted
+- `MemStore` must model the **isolation level Seikika actually runs at**, including permitted
   anomalies and commit reordering.
-- Or Toolbox runs critical transactions at `SERIALIZABLE` with retry, and `MemStore` injects
+- Or Seikika runs critical transactions at `SERIALIZABLE` with retry, and `MemStore` injects
   serialization failures.
 - Either way, **Elle-style history checks run against real Postgres** in nightly container tests.
   This is where Antithesis earns its money.
@@ -272,7 +272,7 @@ testing on core crates, is significant compute and money for an OSS project.
   type checker sees. The SDKs mostly wrap object literals the manifest JSON Schema already describes,
   and agents write schema-validated YAML/JSON as reliably as TS.
 - **Risk:** customer logic in SDK-language *functions* (TCP `evaluate`) needs a runtime service the
-  customer hosts. That contradicts "Toolbox is a dependency, not a platform you run".
+  customer hosts. That contradicts "Seikika is a dependency, not a platform you run".
 
 **Fix:**
 - **v1 = YAML/JSON manifest (with JSON Schema + LSP) + one TypeScript SDK.** Add Python when demand
@@ -304,7 +304,7 @@ Most self-hosted portals are **internal-only**, which breaks:
 None of these reach a private network. Port solves this with outbound-only agents (Ocean over
 Kafka/polling).
 
-**Fix:** design an **outbound-only relay** now. A small `toolbox-relay` runs in the customer network
+**Fix:** design an **outbound-only relay** now. A small `seikika-relay` runs in the customer network
 and long-polls a relay, either a customer-hosted public endpoint or an optional hosted one. Otherwise,
 document self-hosted runners as required, and make the GitHub App work in polling mode.
 
@@ -359,7 +359,7 @@ lake, previews) is sequenced *after* the wedge has users.
 The plan has SLOs for latency, not for **outcomes**. Add:
 - time to first portal
 - % of services with verified owners after 30 days
-- agent task success with vs. without Toolbox (the Phase 4 benchmark, moved to the wedge)
+- agent task success with vs. without Seikika (the Phase 4 benchmark, moved to the wedge)
 - weekly active agents and humans
 
 ---
@@ -399,9 +399,9 @@ The plan has SLOs for latency, not for **outcomes**. Add:
 | 1.1 Declassification | **Accepted.** Facets with information-flow labels; explicit, reviewed declassification; minimum cardinality. Catalogs stay public by default | [authorization.md](./authorization.md) §4.2 |
 | 1.2 Plan as inference oracle | **Rejected as over-engineering.** Git is the boundary: the portal repo is privileged, plan output goes to the PR in full, forks never plan | [design/sdlc.md](./design/sdlc.md) §4 |
 | 1.3 Squatted claims | **Accepted, using CODEOWNERS** as the authority | [authorization.md](./authorization.md) §4.8 |
-| 1.4 Lethal trifecta | **Rejected.** Protection is delegated to MCP clients, agent harnesses, egress controls and the identity-aware proxy. Toolbox provides annotations, markers, approvals and audit | [authorization.md](./authorization.md) §4.5 |
+| 1.4 Lethal trifecta | **Rejected.** Protection is delegated to MCP clients, agent harnesses, egress controls and the identity-aware proxy. Seikika provides annotations, markers, approvals and audit | [authorization.md](./authorization.md) §4.5 |
 | 1.5 Canvases | **Canvases cancelled.** Dashboards are built via Claude Artifacts / Cursor Canvas + MCP; UI customisation is operator-only | [design/dashboards.md](./design/dashboards.md) |
-| 1.6 Revocation | **Accepted:** revocation SLO, identity-aware-proxy authentication, Toolbox owns the permissions boundary | [authorization.md](./authorization.md) §4.9 |
+| 1.6 Revocation | **Accepted:** revocation SLO, identity-aware-proxy authentication, Seikika owns the permissions boundary | [authorization.md](./authorization.md) §4.9 |
 | 2.1–2.6 Consistency | **Accepted and superseded** by one logical-decoding change log + a DBSP circuit (no batch or nightly recomputation) + DBOS-model workflows + epochs | [design/incremental-computation.md](./design/incremental-computation.md) |
 | 3.x Verification realism | **Accepted:** `MemStore` isolation fidelity, dependency determinism audit, engines under simulation; continuous rather than nightly campaigns | [design/verification.md](./design/verification.md) |
 | 4.1 Pulumi model | **Kept** (code-first extensibility), TS/Python/YAML first; typed CEL; WASM instead of HTTP `evaluate` services | [design/extensibility.md](./design/extensibility.md) |

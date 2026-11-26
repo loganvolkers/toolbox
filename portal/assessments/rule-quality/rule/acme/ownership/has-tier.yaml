@@ -1,4 +1,4 @@
-apiVersion: toolbox.dev/assessment/v1
+apiVersion: seikika.com/assessment/v1
 entity: rule:acme/ownership/has-tier
 rubric: rule-quality
 subjectHash: 3669d846a912
@@ -9,7 +9,7 @@ verdicts:
     verdict: pass
     reason: >-
       The approval policy reads the tier
-      (examples/reference-portal/toolbox.yaml:27 and the action's `approval`,
+      (examples/reference-portal/seikika.yaml:27 and the action's `approval`,
       :319-321), and `has(entity.tier)` is true when catalog-info or a native
       edit sets it (sources, :116). The value is an enum of "0"-"3" (:95), so
       set means usable. All four fixture repositories pass, platform-infra
@@ -19,12 +19,12 @@ verdicts:
     verdict: fail
     reason: >-
       The repository team sets the tier in its own catalog-info.yaml, and no
-      authority backs it (sources, examples/reference-portal/toolbox.yaml:
+      authority backs it (sources, examples/reference-portal/seikika.yaml:
       116). Ownership has a CODEOWNERS authority
-      (examples/reference-portal/toolbox.yaml:99-106); the tier has none. Tier
+      (examples/reference-portal/seikika.yaml:99-106); the tier has none. Tier
       "2" or "3" passes the rule and also turns off security approval for app
       installs (`entity.tier in ['0', '1'] ? 'security' : 'none'`,
-      examples/reference-portal/toolbox.yaml:27). So the cheapest pass is the
+      examples/reference-portal/seikika.yaml:27). So the cheapest pass is the
       least scrutinised tier, which is the opposite of the rationale's "tell a
       critical repository from a sandbox" (:213-216).
     suggestion: >-
@@ -37,14 +37,14 @@ verdicts:
     reason: >-
       The fix names both sources the kind accepts: `spec.tier` in
       catalog-info.yaml, or a native edit by the platform team
-      (examples/reference-portal/toolbox.yaml:210-212, :116). It doesn't list
-      the allowed values "0"-"3" (:95), but `toolbox validate` rejects others.
+      (examples/reference-portal/seikika.yaml:210-212, :116). It doesn't list
+      the allowed values "0"-"3" (:95), but `seikika validate` rejects others.
   - criterion: threshold-justified
     verdict: pass
     reason: >-
       There is no number. Silver is justified in the scorecard rationale (a
       tier that approvals depend on,
-      examples/reference-portal/toolbox.yaml:176-177) and in the rule's own
+      examples/reference-portal/seikika.yaml:176-177) and in the rule's own
       rationale (:213-216).
 summary: >-
   Sound as a completeness check, but the self-declared tier can be gamed:

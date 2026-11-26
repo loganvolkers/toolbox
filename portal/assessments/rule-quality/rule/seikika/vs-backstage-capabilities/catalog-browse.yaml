@@ -1,0 +1,45 @@
+apiVersion: seikika.com/assessment/v1
+entity: rule:seikika/vs-backstage-capabilities/catalog-browse
+rubric: rule-quality
+subjectHash: 88ca8215e272
+assessor: {kind: agent, name: cursor-assessor-15, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: measures-intent
+    verdict: pass
+    reason: >-
+      The rule is the brief's first F1 scenario, "catalog browse and filter"
+      (experiments/backstage-compare/RESEARCH.md:112), and Seikika's `true`
+      rests on real surfaces: the UI's `Catalog` page with a filter parameter
+      (ui/src/components/PortalView.vue, ui/src/routes.ts), `seikika query`
+      and the query MCP tool (facts.yaml:70-72).
+  - criterion: hard-to-game
+    verdict: fail
+    reason: >-
+      `capCatalogBrowse` is a boolean typed into facts.yaml:70-72 and copied
+      over measured facts by snapshot.py:85, so editing one line passes. That
+      is wasteful here, because measure.py already pages every owner's
+      components through a filtered list on both arms and stops unless the
+      owner and component pairs match the corpus (README.md:54-56).
+    suggestion: >-
+      Set `capCatalogBrowse` in snapshot.py from the list equivalence gate
+      (`ownersDigest`) having passed for the arm, and remove it from
+      facts.yaml, so a product passes only by answering a filtered browse.
+  - criterion: fix-leads-to-pass
+    verdict: pass
+    reason: >-
+      For a regression, the fix names the two surfaces whose loss would flip
+      the fact, the UI catalog pages (ui/src/components/PortalView.vue) and
+      `seikika query`; restoring them restores the evidence facts.yaml cites.
+  - criterion: threshold-justified
+    verdict: pass
+    reason: >-
+      A boolean with no threshold; "each capability true" was pre-registered
+      (experiments/backstage-compare/README.md:53, ADJUDICATION.md:114), and
+      the scenario list comes from the D47 parity audit
+      (D01M7V8P2VY0000000000000000).
+summary: >-
+  A faithful encoding of the first parity-audit scenario with a concrete
+  fix. Its weakness is shared with the other capability rules but sharper
+  here: the harness already proves filtered browsing on both arms, yet the
+  rule reads a hand-written boolean instead.

@@ -1,0 +1,51 @@
+apiVersion: seikika.com/assessment/v1
+entity: assessment:rule-quality/rule:seikika/user-cli/structured-output
+rubric: assessment-quality
+subjectHash: 0de1de5c03e3
+assessor: {kind: agent, name: cursor-reviewer-35, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: supported
+    verdict: fail
+    reason: >-
+      structuredOutput is true when any argument's long name is output or
+      format (crates/seikika-cli/src/main.rs:1228-1230). Remote.output is a
+      free String at main.rs:426-428, and mcp takes remote: Remote
+      (main.rs:251). The exemption is portal/standards/cli.yaml:181, the fix
+      is 183-185, and the rationale is 186-189. Bronze "Has help; -o json" is
+      docs/design/seikika-for-seikika.md:106. The search fail pin is
+      portal/tests/standards.test.yaml:891-895. The stability-contract
+      citation does not hold. docs/design/user-sdlc.md:61-72 is REST paths,
+      MCP tool schemas, problem codes and snapshot ids. It does not say the
+      contract is checkable only on output a script can parse.
+    suggestion: >-
+      Drop the user-sdlc.md:61-72 sentence, or cite the lines that actually
+      discuss script-parseable CLI output. seikika-for-seikika.md:106 and
+      cli.yaml:186-189 already carry the bronze bar.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      measures-intent and hard-to-game fail because the check reads a flag
+      name. Adding an unread output argument passes, and read_call
+      (main.rs:583) is not what the check consults. Following the fix text
+      does make the check true, which is what fix-leads-to-pass asks. Bronze
+      is still justified by seikika-for-seikika.md:106.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      The two fails are the flag-name test at main.rs:1228-1230. A second
+      assessor does not need to agree about the stability-contract sentence to
+      reach the same verdicts, because the bronze citation that does hold is
+      seikika-for-seikika.md:106.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      Setting structuredOutput only when an output or format argument's values
+      include json, and pinning -o json in a test, would make a dummy flag
+      fail the rule. That changes both fails. Dropping Remote from mcp would
+      make the exemption unnecessary, which is the gap the reason names.
+summary: >-
+  The structured-output assessment is right that the check reads a flag
+  name, so a dummy --output passes and mcp is exempt by name. It fails
+  supported because user-sdlc.md:61-72 is the REST and MCP stability
+  table, not a claim that the contract depends on CLI JSON.

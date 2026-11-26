@@ -1,7 +1,7 @@
 # OpenSSF as the Template: Others' Opinionated Standards, Carried by the Box
 
 *Status: built for security, 2026-11-22 (D01M82E93XAPNE0WFXEPJZ59WG4). About the box
-([toolbox-and-tools.md](./toolbox-and-tools.md)): carrying someone else's standard and its tool as
+([seikika-and-tools.md](./seikika-and-tools.md)): carrying someone else's standard and its tool as
 they are, and what an author needs to make one like it. Package author SDLC (authors publish
 standards); operator SDLC (a portal carries them). Bottom-up end
 (D01M80Y0XEK069GD08VCCNF0WB8).*
@@ -10,7 +10,7 @@ standards); operator SDLC (a portal carries them). Bottom-up end
 
 ## 1. Conclusion
 
-**Toolbox doesn't define scorecards of its own where an established standard exists. It carries
+**Seikika doesn't define scorecards of its own where an established standard exists. It carries
 them, and it is a template for people who want to build the next one.**
 - **OpenSSF Scorecard is the model.** It is an opinionated standard for one domain, software supply
   chain security. It has:
@@ -23,7 +23,7 @@ them, and it is a template for people who want to build the next one.**
     adopters.
 - **The opportunity is every other domain.** Nobody has an OpenSSF Scorecard for observability,
   code quality, correctness, or conformance with an architecture ("our services are hexagonal",
-  "every handler emits a span"). Toolbox's job is to make building one cheap, and to carry it beside
+  "every handler emits a span"). Seikika's job is to make building one cheap, and to carry it beside
   the others once it exists.
 - **Built:** the [`openssf-scorecard` kit](../../packages/openssf-scorecard/README.md) carries
   Scorecard 5.7.0 unchanged. Its checks, scores and documentation stay OpenSSF's. The box adds:
@@ -31,29 +31,29 @@ them, and it is a template for people who want to build the next one.**
   - a campaign to bring every check to 10;
   - the reproduce command.
 
-  Toolbox for Toolbox includes the kit as `maintainer-openssf`, and has retired its own versions
+  Seikika for Seikika includes the kit as `maintainer-openssf`, and has retired its own versions
   of two of Scorecard's checks (§4).
 
-## 2. What an opinionated standard is made of, in OpenSSF and in Toolbox
+## 2. What an opinionated standard is made of, in OpenSSF and in Seikika
 
-| Part | OpenSSF Scorecard | Toolbox's primitive | Gap |
+| Part | OpenSSF Scorecard | Seikika's primitive | Gap |
 |---|---|---|---|
-| **Facts with evidence** | Probes (`def.yml`: motivation, implementation, outcomes; findings with locations) | Connector records and SARIF findings (the slot), entity fields | Distinct outcomes: probes have five, Toolbox has `unknown` for three of them ([results-spec.md](./results-spec.md) §4) |
+| **Facts with evidence** | Probes (`def.yml`: motivation, implementation, outcomes; findings with locations) | Connector records and SARIF findings (the slot), entity fields | Distinct outcomes: probes have five, Seikika has `unknown` for three of them ([results-spec.md](./results-spec.md) §4) |
 | **Judgements** | Checks: a 0–10 score from probes, with a risk level | Scorecard rules in CEL, with levels, measures and evidence | Scores are rules plus levels; a 0–10 scale is a measure, as the kit shows |
 | **Documentation per judgement** | `docs/checks.md`: what, why, how to fix | Rule `fix` text, `-o standard` (STANDARD.md) | — |
-| **One tool, many places** | CLI, GitHub Action, API, `--local` | `toolbox report`, `actions/report`, `serve`, MCP | — |
+| **One tool, many places** | CLI, GitHub Action, API, `--local` | `seikika report`, `actions/report`, `serve`, MCP | — |
 | **Catalogs and conformance** | Conformance mode over the OSPS Baseline, as Gemara | Campaigns and tracks; standards packages | Mapping a rule to a catalog control ([results-spec.md](./results-spec.md) §4, `standard`) |
 | **Ratchet over time** | None: a score is a snapshot (the API keeps history) | Baselines, the ratchet, campaigns from a recorded start, root causes | **The box's addition.** It applies to any standard it carries |
 | **Distribution and versions** | Releases; checks change between releases | Packages pinned by version and digest (D89), tools pinned in `tools:` | — |
-| **Governance** | An OpenSSF technical initiative, public RFCs and adopters | None yet | Out of scope: a standard's author governs it, and Toolbox hosts it |
+| **Governance** | An OpenSSF technical initiative, public RFCs and adopters | None yet | Out of scope: a standard's author governs it, and Seikika hosts it |
 
 ## 3. A standard for another domain, built the same way
 
-The author of, say, *an observability scorecard* writes a package, not a tool inside Toolbox:
+The author of, say, *an observability scorecard* writes a package, not a tool inside Seikika:
 
 | Step | In the package | Precedent here |
 |---|---|---|
-| 1. The facts | A tool, or an existing one, that emits records or SARIF: "every HTTP handler opens a span", "metric names follow the convention" | `toolbox-connector-workspace` observability facts; semgrep rules through the SARIF slot |
+| 1. The facts | A tool, or an existing one, that emits records or SARIF: "every HTTP handler opens a span", "metric names follow the convention" | `seikika-connector-workspace` observability facts; semgrep rules through the SARIF slot |
 | 2. The judgements | Rules over those facts, with levels, a measure and fix text | `portal/standards/observability.yaml` (`maintainer-observability`) |
 | 3. Documentation | Each rule's fix, generated into STANDARD.md | `-o standard` |
 | 4. Tests | Fixtures where each rule both passes and fails, and expectations | `packages/*/tests`, the meta-standards (`meta-rule`: decided on fixtures) |
@@ -64,7 +64,7 @@ failed this repository's ratchet until its kind, fields, rule and connector each
 descriptions (`meta-kind`, `meta-field`, `meta-rule`, `meta-connector`, D71). An author gets that
 discipline for free.
 
-## 4. What Toolbox for Toolbox stopped doing itself
+## 4. What Seikika for Seikika stopped doing itself
 
 | This portal's rule | OpenSSF check | Now |
 |---|---|---|
@@ -84,7 +84,7 @@ campaign `maintainer-openssf-ten` starts there.
 advisories against `Cargo.lock`. Here `api.osv.dev` is blocked, and Scorecard scored it 10, exited
 0 and printed nothing: a tool error that reads as a pass. Its score also changes whenever an
 advisory is published, with no change to the repository. A ratchet needs a result that reproduces
-in every environment, so Toolbox for Toolbox runs the other ten checks with Scorecard's own
+in every environment, so Seikika for Seikika runs the other ten checks with Scorecard's own
 `--checks` flag. The kit's README warns other portals. The 23 advisories are real and open (O5).
 
 **Advisories that reproduce (O5, D01M885GT32STM506V32XKPP37G).** `maintainer-advisories` scores
@@ -108,7 +108,7 @@ Scorecard won on everything a standard is for:
 - it runs unchanged on a new repository (reusing the agent's build cost as much as building it);
 - it gives one definition, so scores compare (two builds differed by up to 4.4 points in an area).
 
-So the template's value is cost and comparability, not detection. A domain standard Toolbox
+So the template's value is cost and comparability, not detection. A domain standard Seikika
 carries should be judged on the same six measures (that experiment's §5). The way to keep the
 agent's extra findings is local rules beside the standard, the A + S arm that comes next.
 

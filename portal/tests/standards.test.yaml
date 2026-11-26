@@ -1,4 +1,4 @@
-# Hand-written expectations for the Toolbox-for-Toolbox standards, over the curated fixtures in
+# Hand-written expectations for the Seikika-for-Seikika standards, over the curated fixtures in
 # ../fixtures (a trimmed snapshot of this repo plus hand-made runner results). They pin what each
 # rule means; the live portal applies the same rules to the whole repository.
 name: standards
@@ -8,32 +8,32 @@ assert:
       a crate with passing tests and clippy, 80%+ documented, no huge
       functions reaches silver
     expect: >-
-      score('maintainer-crate', 'crate:toolbox-expr').level == 'silver' &&
+      score('maintainer-crate', 'crate:seikika-expr').level == 'silver' &&
       score('maintainer-crate',
-      'crate:toolbox-expr').rules['fully-documented'] == 'fail'
+      'crate:seikika-expr').rules['fully-documented'] == 'fail'
   - name: a failing test run caps a crate below bronze
     expect: >-
-      score('maintainer-crate', 'crate:toolbox-derive').rules['tests-pass'] ==
-      'fail' && score('maintainer-crate', 'crate:toolbox-derive').level ==
+      score('maintainer-crate', 'crate:seikika-derive').rules['tests-pass'] ==
+      'fail' && score('maintainer-crate', 'crate:seikika-derive').level ==
       'none'
   - name: clippy warnings and missing tests both fail bronze
     expect: >-
       score('maintainer-crate',
-      'crate:toolbox-connector-git-files').rules['clippy-clean'] == 'fail' &&
+      'crate:seikika-connector-git-files').rules['clippy-clean'] == 'fail' &&
       score('maintainer-crate',
-      'crate:toolbox-connector-git-files').rules['has-tests'] == 'fail'
+      'crate:seikika-connector-git-files').rules['has-tests'] == 'fail'
   - name: placeholder crates are skipped
-    expect: score('maintainer-crate', 'crate:toolbox-durable').level == 'skipped'
+    expect: score('maintainer-crate', 'crate:seikika-durable').level == 'skipped'
   - name: runner results land on the crate entity
     expect: >-
-      entity('crate:toolbox-derive').tests.failed == 1 &&
-      entity('crate:toolbox-connector-git-files').clippy.warnings == 1
+      entity('crate:seikika-derive').tests.failed == 1 &&
+      entity('crate:seikika-connector-git-files').clippy.warnings == 1
   - name: evidence names the functions to split
     expect: >-
-      entity('crate:toolbox-derive').longFunctions.exists(f,
+      entity('crate:seikika-derive').longFunctions.exists(f,
       f.startsWith('Pipeline::run at src/lib.rs'))
   - name: workspace dependencies become inbound relations
-    expect: "'crates/toolbox-derive' in entity('crate:toolbox-expr').dependents"
+    expect: "'crates/seikika-derive' in entity('crate:seikika-expr').dependents"
   # Layer 1: docs
   - name: a design doc without a Sources section stops at bronze
     expect: >-
@@ -65,7 +65,7 @@ assert:
       score('cli-skill', 'command:validate').level == 'bronze' &&
       score('cli-skill', 'command:push').rules['has-skill'] == 'fail' &&
       score('cli-skill', 'command:push').evidence['has-skill'] == ['missing
-      skill for toolbox push'] && score('cli-skill', 'command:push').level ==
+      skill for seikika push'] && score('cli-skill', 'command:push').level ==
       'none'
   # Layer 3: user interfaces
   - name: the acceptance script exercises the owner command
@@ -82,15 +82,15 @@ assert:
   - name: failing rules carry their evidence
     expect: >-
       score('maintainer-crate',
-      'crate:toolbox-derive').evidence['short-functions'].size() == 3 &&
+      'crate:seikika-derive').evidence['short-functions'].size() == 3 &&
       score('maintainer-crate',
-      'crate:toolbox-connector-git-files').evidence['clippy-clean'] ==
+      'crate:seikika-connector-git-files').evidence['clippy-clean'] ==
       ['src/main.rs:12 clippy::needless_return unneeded `return` statement']
   - name: passing rules have no evidence
     expect: >-
       !('crate-docs' in score('maintainer-crate',
-      'crate:toolbox-derive').evidence) && !('tests-pass' in
-      score('maintainer-crate', 'crate:toolbox-expr').evidence)
+      'crate:seikika-derive').evidence) && !('tests-pass' in
+      score('maintainer-crate', 'crate:seikika-expr').evidence)
   - name: evidence lists what fails
     expect: >-
       score('user-mcp', 'mcp-tool:search').evidence['inputs-described'] ==
@@ -100,7 +100,7 @@ assert:
     expect: >-
       score('operator-cli', 'command:validate').rules['exercised'] == 'fail'
       && score('operator-cli', 'command:validate').evidence['exercised'] ==
-      ['no script under scripts/ and no test under crates/*/tests runs toolbox
+      ['no script under scripts/ and no test under crates/*/tests runs seikika
       validate']
   - name: >-
       without a runner run, contract-tested falls back to tools/call bodies
@@ -159,8 +159,8 @@ assert:
       'workflow:.github/workflows/ci.yml').evidence['fail-rate-under-20'] ==
       ['92% of the last 12 decided runs on main failed on their first attempt
       (92% still failed after re-runs; 0 cancelled runs not counted)',
-      'https://github.com/loganvolkers/toolbox/actions/runs/12',
-      'https://github.com/loganvolkers/toolbox/actions/runs/11'] &&
+      'https://github.com/seikika/seikika/actions/runs/12',
+      'https://github.com/seikika/seikika/actions/runs/11'] &&
       score('maintainer-ci-reliability',
       'workflow:.github/workflows/ci.yml').rules['main-not-stuck-red'] ==
       'fail'
@@ -221,23 +221,23 @@ assert:
       actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2'] &&
       score('maintainer-action-deps', 'action:actions/cache').level ==
       'bronze'
-  # Scorecards for scorecards (fixtures: real records from `toolbox describe scorecards` for a few of
+  # Scorecards for scorecards (fixtures: real records from `seikika describe scorecards` for a few of
   # our rules, plus a synthetic "sprawling" scorecard). They also score themselves.
   - name: >-
       a well-made rule whose tests pin both outcomes reaches gold; one pinned
       only failing doesn't
     expect: >-
       score('meta-rule',
-      'rule:toolbox/maintainer-ci-security/no-medium-findings').level ==
+      'rule:seikika/maintainer-ci-security/no-medium-findings').level ==
       'gold' && score('meta-rule',
-      'rule:toolbox/meta-rule/tested').evidence['pins-both-outcomes'] == ['no
+      'rule:seikika/meta-rule/tested').evidence['pins-both-outcomes'] == ['no
       expectation pins meta-rule/tested == \'pass\'']
   - name: an untested rule that never fails on the fixtures stops below bronze
     expect: >-
       score('meta-rule',
-      'rule:toolbox/maintainer-ci-security/least-privilege-token').rules['tested']
+      'rule:seikika/maintainer-ci-security/least-privilege-token').rules['tested']
       == 'fail' && score('meta-rule',
-      'rule:toolbox/maintainer-ci-security/least-privilege-token').rules['both-outcomes-on-fixtures']
+      'rule:seikika/maintainer-ci-security/least-privilege-token').rules['both-outcomes-on-fixtures']
       == 'fail'
   - name: >-
       a rule that never evaluates on fixtures, with a two-word fix, fails
@@ -255,7 +255,7 @@ assert:
       itself
     expect: >-
       score('meta-rule',
-      'rule:toolbox/maintainer-ci-security/no-medium-findings').rules['explains-why']
+      'rule:seikika/maintainer-ci-security/no-medium-findings').rules['explains-why']
       == 'pass' && score('meta-rule',
       'rule:demo/sprawling/everything').rules['explains-why'] == 'fail' &&
       score('meta-rule',
@@ -264,7 +264,7 @@ assert:
   - name: a scorecard with a rationale explains why; one without fails silver
     expect: >-
       score('meta-scorecard',
-      'scorecard:toolbox/user-cli').rules['explains-why'] == 'pass' &&
+      'scorecard:seikika/user-cli').rules['explains-why'] == 'pass' &&
       score('meta-scorecard',
       'scorecard:demo/sprawling').rules['explains-why'] == 'fail' &&
       score('meta-scorecard',
@@ -281,12 +281,12 @@ assert:
       score('meta-rule',
       'rule:acme/github-app-hygiene/only-approved-apps').rules['always-explains']
       == 'fail' && score('meta-rule',
-      'rule:toolbox/user-cli/has-help').rules['always-explains'] == 'fail'
+      'rule:seikika/user-cli/has-help').rules['always-explains'] == 'fail'
   - name: the meta scorecard scores its own rules (no further level)
     expect: >-
-      score('meta-rule', 'rule:toolbox/meta-rule/tested').rules['tested'] ==
+      score('meta-rule', 'rule:seikika/meta-rule/tested').rules['tested'] ==
       'pass' && score('meta-scorecard',
-      'scorecard:toolbox/meta-rule').rules['tested'] == 'pass'
+      'scorecard:seikika/meta-rule').rules['tested'] == 'pass'
   - name: >-
       a scorecard with an empty level and fixtures at one level fails bronze,
       naming them
@@ -299,19 +299,19 @@ assert:
       an untested scorecard fails bronze, and untested rules roll up to their
       scorecard
     expect: >-
-      score('meta-scorecard', 'scorecard:toolbox/user-cli').rules['tested'] ==
+      score('meta-scorecard', 'scorecard:seikika/user-cli').rules['tested'] ==
       'fail' &&
-      entity('scorecard:toolbox/maintainer-ci-security').untestedRules ==
+      entity('scorecard:seikika/maintainer-ci-security').untestedRules ==
       ['least-privilege-token']
   - name: >-
       always-explains, every-rule-tested and the rest of the meta rules are
       pinned here too
     expect: >-
       'always-explains' in score('meta-rule',
-      'rule:toolbox/meta-rule/tested').rules && score('meta-scorecard',
-      'scorecard:toolbox/maintainer-ci-security').rules['every-rule-tested']
+      'rule:seikika/meta-rule/tested').rules && score('meta-scorecard',
+      'scorecard:seikika/maintainer-ci-security').rules['every-rule-tested']
       == 'fail' && score('meta-scorecard',
-      'scorecard:toolbox/maintainer-ci-security').rules['every-level-has-rules']
+      'scorecard:seikika/maintainer-ci-security').rules['every-level-has-rules']
       == 'pass'
   # Agent skills (synthetic fixtures: one gold, one bronze, one below bronze)
   - name: a focused skill with evals, a procedure and no hidden text reaches gold
@@ -414,7 +414,7 @@ assert:
       'connector:crates/demo/unsafe').evidence['described'] == ['Cargo.toml
       has no description'] && score('maintainer-connector',
       'connector:crates/demo/unsafe').evidence['config-documented'] == ['crate
-      docs name neither TOOLBOX_CONNECTOR_CONFIG nor a CLI flag'] &&
+      docs name neither SEIKIKA_CONNECTOR_CONFIG nor a CLI flag'] &&
       score('maintainer-connector',
       'connector:crates/demo/unsafe').evidence['speaks-the-protocol'] ==
       ['none'] && score('maintainer-connector',
@@ -795,28 +795,28 @@ assert:
       a described, tested kind in the fixtures stops at silver while a field
       is undescribed
     expect: >-
-      score('meta-kind', 'kind:toolbox/Crate').level == 'silver' &&
-      score('meta-kind', 'kind:toolbox/Crate').rules['fields-described'] ==
+      score('meta-kind', 'kind:seikika/Crate').level == 'silver' &&
+      score('meta-kind', 'kind:seikika/Crate').rules['fields-described'] ==
       'fail' && score('meta-kind',
-      'kind:toolbox/Crate').evidence['fields-described'] == ['codeLines'] &&
+      'kind:seikika/Crate').evidence['fields-described'] == ['codeLines'] &&
       score('meta-kind', 'kind:demo/Tiny').level == 'gold'
   - name: a kind no fixture or test reaches fails bronze, and says so
     expect: >-
       score('meta-kind', 'kind:demo/Bare').rules['in-fixtures'] == 'fail' &&
       score('meta-kind', 'kind:demo/Bare').rules['described'] == 'fail' &&
-      score('meta-kind', 'kind:toolbox/File').rules['tested'] == 'fail' &&
-      score('meta-kind', 'kind:toolbox/File').rules['in-fixtures'] == 'pass'
+      score('meta-kind', 'kind:seikika/File').rules['tested'] == 'fail' &&
+      score('meta-kind', 'kind:seikika/File').rules['in-fixtures'] == 'pass'
   - name: fields climb from populated to described to shaped
     expect: >-
-      score('meta-field', 'field:toolbox/Crate.codeLines').level == 'bronze'
+      score('meta-field', 'field:seikika/Crate.codeLines').level == 'bronze'
       && score('meta-field',
-      'field:toolbox/Crate.codeLines').rules['described'] == 'fail' &&
-      score('meta-field', 'field:toolbox/Crate.hash').level == 'gold' &&
-      score('meta-field', 'field:toolbox/Crate.hash').rules['has-shape'] ==
+      'field:seikika/Crate.codeLines').rules['described'] == 'fail' &&
+      score('meta-field', 'field:seikika/Crate.hash').level == 'gold' &&
+      score('meta-field', 'field:seikika/Crate.hash').rules['has-shape'] ==
       'pass'
   - name: object fields are opaque and empty fields fail bronze
     expect: >-
-      score('meta-field', 'field:toolbox/Rule.check').rules['has-shape'] ==
+      score('meta-field', 'field:seikika/Rule.check').rules['has-shape'] ==
       'fail' && score('meta-field',
       'field:demo/Bare.blob').rules['populated-in-fixtures'] == 'fail' &&
       score('meta-field',
@@ -830,202 +830,202 @@ assert:
       score('meta-connector',
       'connector:acme/github').evidence['freshness-declared'] ==
       ['codeowners'] && score('meta-connector',
-      'connector:toolbox/workspace').evidence['refreshable'] == ['assessment']
+      'connector:seikika/workspace').evidence['refreshable'] == ['assessment']
   - name: >-
       a connector that maps, fixtures, bounds and refreshes every record
       reaches gold
     expect: >-
-      score('meta-connector', 'connector:toolbox/surfaces').level == 'gold' &&
+      score('meta-connector', 'connector:seikika/surfaces').level == 'gold' &&
       score('meta-connector',
-      'connector:toolbox/surfaces').rules['records-mapped'] == 'pass' &&
+      'connector:seikika/surfaces').rules['records-mapped'] == 'pass' &&
       score('meta-connector',
-      'connector:toolbox/surfaces').rules['has-fixtures'] == 'pass' &&
+      'connector:seikika/surfaces').rules['has-fixtures'] == 'pass' &&
       score('meta-connector',
       'connector:acme/github').rules['freshness-declared'] == 'fail' &&
       score('meta-connector',
-      'connector:toolbox/surfaces').rules['freshness-declared'] == 'pass' &&
+      'connector:seikika/surfaces').rules['freshness-declared'] == 'pass' &&
       score('meta-connector',
-      'connector:toolbox/surfaces').rules['refreshable'] == 'pass'
+      'connector:seikika/surfaces').rules['refreshable'] == 'pass'
   # Judgement: agent assessments (D79)
   - name: an assessment file becomes an entity related to what it assesses
     expect: >-
-      entity('assessment:rule-quality/rule:toolbox/maintainer-ci-security/least-privilege-token').verdict
+      entity('assessment:rule-quality/rule:seikika/maintainer-ci-security/least-privilege-token').verdict
       == 'fail' &&
-      entity('rule:toolbox/maintainer-ci-security/least-privilege-token').reviewFailing
+      entity('rule:seikika/maintainer-ci-security/least-privilege-token').reviewFailing
       == ['hard-to-game']
   - name: >-
       a fresh, all-pass assessment is gold; an open finding is none; doubts
       stop at silver; a stale review's failing criteria stay open
     expect: >-
       score('review-rule',
-      'rule:toolbox/maintainer-ci-security/least-privilege-token').level ==
+      'rule:seikika/maintainer-ci-security/least-privilege-token').level ==
       'none' && score('review-rule',
-      'rule:toolbox/maintainer-ci-security/least-privilege-token').evidence['no-open-findings']
+      'rule:seikika/maintainer-ci-security/least-privilege-token').evidence['no-open-findings']
       == ['hard-to-game'] && score('review-rule',
-      'rule:toolbox/meta-rule/tested').level == 'none' && score('review-rule',
-      'rule:toolbox/meta-rule/tested').evidence['no-open-findings'] ==
+      'rule:seikika/meta-rule/tested').level == 'none' && score('review-rule',
+      'rule:seikika/meta-rule/tested').evidence['no-open-findings'] ==
       ['hard-to-game (from a stale review: re-assess to close it)'] &&
       score('review-rule',
-      'rule:toolbox/user-cli/has-help').rules['no-open-findings'] == 'pass' &&
+      'rule:seikika/user-cli/has-help').rules['no-open-findings'] == 'pass' &&
       score('review-rule',
-      'rule:toolbox/maintainer-ci-security/no-medium-findings').level ==
+      'rule:seikika/maintainer-ci-security/no-medium-findings').level ==
       'gold' && score('review-rule',
-      'rule:toolbox/maintainer-ci-security/least-privilege-token').rules['passes-review']
+      'rule:seikika/maintainer-ci-security/least-privilege-token').rules['passes-review']
       == 'fail' && score('review-rule',
-      'rule:toolbox/user-cli/has-help').level == 'silver' &&
+      'rule:seikika/user-cli/has-help').level == 'silver' &&
       score('review-rule',
-      'rule:toolbox/user-cli/has-help').rules['no-doubts'] == 'fail'
+      'rule:seikika/user-cli/has-help').rules['no-doubts'] == 'fail'
   - name: an assessment of an older version is stale, not current
     expect: >-
-      entity('rule:toolbox/meta-rule/tested').reviewState == 'stale' &&
-      score('review-rule', 'rule:toolbox/meta-rule/tested').rules['assessed']
+      entity('rule:seikika/meta-rule/tested').reviewState == 'stale' &&
+      score('review-rule', 'rule:seikika/meta-rule/tested').rules['assessed']
       == 'fail' && score('review-rule',
-      'rule:toolbox/meta-rule/tested').evidence['assessed'] == ['the rule
+      'rule:seikika/meta-rule/tested').evidence['assessed'] == ['the rule
       changed since it was assessed']
   - name: only our own rules are reviewed
     expect: >-
       score('review-rule', 'rule:demo/sprawling/everything').level ==
       'skipped' && score('review-rule',
-      'rule:toolbox/maintainer-ci-security/no-medium-findings').rules['assessed']
+      'rule:seikika/maintainer-ci-security/no-medium-findings').rules['assessed']
       == 'pass'
   - name: a user command without structured output is at none
     expect: >-
       score('user-cli', 'command:search').level == 'none' && score('user-cli',
-      'command:search').evidence['structured-output'] == ['toolbox search has
+      'command:search').evidence['structured-output'] == ['seikika search has
       no -o json output']
   - name: scorecards are reviewed against scorecard-quality
     expect: >-
       score('review-scorecard',
-      'scorecard:toolbox/maintainer-ci-security').level == 'silver' &&
+      'scorecard:seikika/maintainer-ci-security').level == 'silver' &&
       score('review-scorecard',
-      'scorecard:toolbox/maintainer-ci-security').evidence['passes-review'] ==
+      'scorecard:seikika/maintainer-ci-security').evidence['passes-review'] ==
       ['actionable cites nothing that resolves'] && score('review-scorecard',
-      'scorecard:toolbox/meta-rule').rules['no-open-findings'] == 'fail' &&
+      'scorecard:seikika/meta-rule').rules['no-open-findings'] == 'fail' &&
       score('review-scorecard',
-      'scorecard:toolbox/meta-rule').evidence['passes-review'] ==
+      'scorecard:seikika/meta-rule').evidence['passes-review'] ==
       ['no-obvious-gap'] && score('review-scorecard',
-      'scorecard:toolbox/user-cli').rules['assessed'] == 'fail' &&
+      'scorecard:seikika/user-cli').rules['assessed'] == 'fail' &&
       score('review-scorecard',
-      'scorecard:toolbox/meta-rule').rules['assessed'] == 'pass' &&
+      'scorecard:seikika/meta-rule').rules['assessed'] == 'pass' &&
       score('review-scorecard',
-      'scorecard:toolbox/maintainer-ci-security').rules['no-doubts'] == 'pass'
+      'scorecard:seikika/maintainer-ci-security').rules['no-doubts'] == 'pass'
       && score('review-scorecard',
-      'scorecard:toolbox/user-cli').rules['no-doubts'] == 'fail' &&
-      score('review-scorecard', 'scorecard:toolbox/operator-cli').level ==
+      'scorecard:seikika/user-cli').rules['no-doubts'] == 'fail' &&
+      score('review-scorecard', 'scorecard:seikika/operator-cli').level ==
       'gold'
   - name: >-
       crates are reviewed against crate-design, and go stale when their
       sources change
     expect: >-
-      score('review-crate', 'crate:toolbox-expr').level == 'none' &&
-      score('review-crate', 'crate:toolbox-expr').evidence['no-open-findings']
+      score('review-crate', 'crate:seikika-expr').level == 'none' &&
+      score('review-crate', 'crate:seikika-expr').evidence['no-open-findings']
       == ['replaceable-defaults'] && score('review-crate',
-      'crate:toolbox-expr').evidence['passes-review'] ==
+      'crate:seikika-expr').evidence['passes-review'] ==
       ['replaceable-defaults'] && score('review-crate',
-      'crate:toolbox-expr').rules['no-doubts'] == 'fail' &&
-      score('review-crate', 'crate:toolbox-derive').rules['no-doubts'] ==
+      'crate:seikika-expr').rules['no-doubts'] == 'fail' &&
+      score('review-crate', 'crate:seikika-derive').rules['no-doubts'] ==
       'pass' && score('review-crate',
-      'crate:toolbox-derive').rules['passes-review'] == 'pass' &&
+      'crate:seikika-derive').rules['passes-review'] == 'pass' &&
       score('review-crate',
-      'crate:toolbox-connector-git-files').rules['assessed'] == 'fail' &&
-      score('review-crate', 'crate:toolbox-derive').rules['assessed'] ==
+      'crate:seikika-connector-git-files').rules['assessed'] == 'fail' &&
+      score('review-crate', 'crate:seikika-derive').rules['assessed'] ==
       'pass'
   - name: >-
       crate gold needs a second assessor's grounded review of the crate-design
       assessment
     expect: >-
       score('review-crate',
-      'crate:toolbox-derive').rules['independently-reviewed'] == 'pass' &&
+      'crate:seikika-derive').rules['independently-reviewed'] == 'pass' &&
       score('review-crate',
-      'crate:toolbox-expr').evidence['independently-reviewed'] == ['no current
+      'crate:seikika-expr').evidence['independently-reviewed'] == ['no current
       assessment-quality review of the crate-design assessment by another
       assessor that cites it or its sources']
   - name: review rules pass where the assessment is current and clean
     expect: >-
       score('review-rule',
-      'rule:toolbox/maintainer-ci-security/no-medium-findings').rules['passes-review']
+      'rule:seikika/maintainer-ci-security/no-medium-findings').rules['passes-review']
       == 'pass' && score('review-rule',
-      'rule:toolbox/maintainer-ci-security/no-medium-findings').rules['no-doubts']
+      'rule:seikika/maintainer-ci-security/no-medium-findings').rules['no-doubts']
       == 'pass'
   # Assessments and rubrics are standards too (D80)
   - name: an assessment that cites a source for every verdict reaches gold
     expect: >-
       score('meta-assessment',
-      'assessment:rule-quality/rule:toolbox/maintainer-ci-security/no-medium-findings').level
+      'assessment:rule-quality/rule:seikika/maintainer-ci-security/no-medium-findings').level
       == 'gold' && score('meta-assessment',
-      'assessment:scorecard-quality/scorecard:toolbox/maintainer-ci-security').level
+      'assessment:scorecard-quality/scorecard:seikika/maintainer-ci-security').level
       == 'silver' && score('meta-assessment',
-      'assessment:scorecard-quality/scorecard:toolbox/maintainer-ci-security').evidence['cites-everything']
+      'assessment:scorecard-quality/scorecard:seikika/maintainer-ci-security').evidence['cites-everything']
       == ['actionable']
   - name: a fail without a suggestion, or an unnamed assessor, fails bronze
     expect: >-
       score('meta-assessment',
-      'assessment:rule-quality/rule:toolbox/maintainer-ci-security/least-privilege-token').evidence['suggests-fixes']
+      'assessment:rule-quality/rule:seikika/maintainer-ci-security/least-privilege-token').evidence['suggests-fixes']
       == ['hard-to-game'] && score('meta-assessment',
-      'assessment:rule-quality/rule:toolbox/meta-rule/tested').rules['assessor-named']
+      'assessment:rule-quality/rule:seikika/meta-rule/tested').rules['assessor-named']
       == 'fail' && score('meta-assessment',
-      'assessment:rule-quality/rule:toolbox/maintainer-ci-security/no-medium-findings').rules['assessor-named']
+      'assessment:rule-quality/rule:seikika/maintainer-ci-security/no-medium-findings').rules['assessor-named']
       == 'pass' && score('meta-assessment',
-      'assessment:rule-quality/rule:toolbox/maintainer-ci-security/no-medium-findings').rules['suggests-fixes']
+      'assessment:rule-quality/rule:seikika/maintainer-ci-security/no-medium-findings').rules['suggests-fixes']
       == 'pass'
   - name: an uncited finding stops at bronze
     expect: >-
       score('meta-assessment',
-      'assessment:rule-quality/rule:toolbox/user-cli/has-help').level ==
+      'assessment:rule-quality/rule:seikika/user-cli/has-help').level ==
       'bronze' && score('meta-assessment',
-      'assessment:rule-quality/rule:toolbox/user-cli/has-help').evidence['cites-for-findings']
+      'assessment:rule-quality/rule:seikika/user-cli/has-help').evidence['cites-for-findings']
       == ['threshold-justified'] && score('meta-assessment',
-      'assessment:scorecard-quality/scorecard:toolbox/maintainer-ci-security').rules['cites-for-findings']
+      'assessment:scorecard-quality/scorecard:seikika/maintainer-ci-security').rules['cites-for-findings']
       == 'pass' && score('meta-assessment',
-      'assessment:rule-quality/rule:toolbox/maintainer-ci-security/no-medium-findings').rules['cites-everything']
+      'assessment:rule-quality/rule:seikika/maintainer-ci-security/no-medium-findings').rules['cites-everything']
       == 'pass'
   - name: rubrics climb from described and used, to guided, to discriminating
     expect: >-
       score('meta-rubric', 'rubric:demo/vague').level == 'none' &&
       score('meta-rubric', 'rubric:demo/vague').rules['described'] == 'fail'
       && score('meta-rubric', 'rubric:demo/vague').rules['in-use'] == 'fail'
-      && score('meta-rubric', 'rubric:toolbox/crate-design').level == 'bronze'
-      && score('meta-rubric', 'rubric:toolbox/crate-design').rules['guided']
+      && score('meta-rubric', 'rubric:seikika/crate-design').level == 'bronze'
+      && score('meta-rubric', 'rubric:seikika/crate-design').rules['guided']
       == 'fail' && score('meta-rubric', 'rubric:demo/sharp').level == 'gold'
   - name: a criterion every assessment passed keeps a rubric from gold
     expect: >-
-      score('meta-rubric', 'rubric:toolbox/rule-quality').level == 'silver' &&
+      score('meta-rubric', 'rubric:seikika/rule-quality').level == 'silver' &&
       score('meta-rubric',
-      'rubric:toolbox/rule-quality').evidence['discriminates'] ==
+      'rubric:seikika/rule-quality').evidence['discriminates'] ==
       ['fix-leads-to-pass passed in every assessment'] && score('meta-rubric',
-      'rubric:toolbox/rule-quality').rules['guided'] == 'pass' &&
+      'rubric:seikika/rule-quality').rules['guided'] == 'pass' &&
       score('meta-rubric', 'rubric:demo/sharp').rules['discriminates'] ==
       'pass' && score('meta-rubric',
-      'rubric:toolbox/rule-quality').rules['described'] == 'pass' &&
-      score('meta-rubric', 'rubric:toolbox/rule-quality').rules['in-use'] ==
+      'rubric:seikika/rule-quality').rules['described'] == 'pass' &&
+      score('meta-rubric', 'rubric:seikika/rule-quality').rules['in-use'] ==
       'pass'
   - name: >-
       assessments are reviewed against assessment-quality, and the reviews are
       not
     expect: >-
       score('review-assessment',
-      'assessment:rule-quality/rule:toolbox/maintainer-ci-security/no-medium-findings').level
+      'assessment:rule-quality/rule:seikika/maintainer-ci-security/no-medium-findings').level
       == 'gold' && score('review-assessment',
-      'assessment:rule-quality/rule:toolbox/user-cli/has-help').rules['no-open-findings']
+      'assessment:rule-quality/rule:seikika/user-cli/has-help').rules['no-open-findings']
       == 'fail' && score('review-assessment',
-      'assessment:rule-quality/rule:toolbox/user-cli/has-help').evidence['passes-review']
+      'assessment:rule-quality/rule:seikika/user-cli/has-help').evidence['passes-review']
       == ['complete', 'the review cites neither this assessment nor anything
       it cites (fix the review)'] && score('review-assessment',
-      'assessment:assessment-quality/assessment:rule-quality/rule:toolbox/user-cli/has-help').level
+      'assessment:assessment-quality/assessment:rule-quality/rule:seikika/user-cli/has-help').level
       == 'skipped'
   - name: a review of an older version of an assessment is stale
     expect: >-
-      entity('assessment:rule-quality/rule:toolbox/maintainer-ci-security/least-privilege-token').reviewState
+      entity('assessment:rule-quality/rule:seikika/maintainer-ci-security/least-privilege-token').reviewState
       == 'stale' && score('review-assessment',
-      'assessment:rule-quality/rule:toolbox/maintainer-ci-security/least-privilege-token').rules['assessed']
+      'assessment:rule-quality/rule:seikika/maintainer-ci-security/least-privilege-token').rules['assessed']
       == 'fail' && score('review-assessment',
-      'assessment:rule-quality/rule:toolbox/maintainer-ci-security/no-medium-findings').rules['assessed']
+      'assessment:rule-quality/rule:seikika/maintainer-ci-security/no-medium-findings').rules['assessed']
       == 'pass' && score('review-assessment',
-      'assessment:rule-quality/rule:toolbox/maintainer-ci-security/no-medium-findings').rules['passes-review']
+      'assessment:rule-quality/rule:seikika/maintainer-ci-security/no-medium-findings').rules['passes-review']
       == 'pass' && score('review-assessment',
-      'assessment:rule-quality/rule:toolbox/maintainer-ci-security/no-medium-findings').rules['no-doubts']
+      'assessment:rule-quality/rule:seikika/maintainer-ci-security/no-medium-findings').rules['no-doubts']
       == 'pass' && score('review-assessment',
-      'assessment:crate-design/crate:toolbox-derive').rules['no-doubts'] ==
+      'assessment:crate-design/crate:seikika-derive').rules['no-doubts'] ==
       'fail'
   # The SDLC layers and their stages (D87)
   - name: a built, documented, automated stage with a command reaches gold
@@ -1116,7 +1116,7 @@ assert:
       'maintainer-advisories:experiments/stale/Cargo.lock').evidence['no-findings']
       == ['line 0: RUSTSEC-2026-0543 Package \'chrono@0.4.45\' is vulnerable
       to \'RUSTSEC-2026-0543\'.']
-  # Runtime observability (toolbox-telemetry / OTel catalog)
+  # Runtime observability (seikika-telemetry / OTel catalog)
   - name: a complete observability checklist reaches gold
     expect: >-
       score('maintainer-observability', 'observability:demo-focused').level ==
@@ -1261,31 +1261,31 @@ assert:
       a review written by the assessment's own assessor is no independent
       check
     expect: >-
-      entity('assessment:crate-design/crate:toolbox-connector-git-files').selfReviewed
+      entity('assessment:crate-design/crate:seikika-connector-git-files').selfReviewed
       && score('review-assessment',
-      'assessment:crate-design/crate:toolbox-connector-git-files').rules['assessed']
+      'assessment:crate-design/crate:seikika-connector-git-files').rules['assessed']
       == 'fail' && score('review-assessment',
-      'assessment:crate-design/crate:toolbox-connector-git-files').evidence['assessed']
+      'assessment:crate-design/crate:seikika-connector-git-files').evidence['assessed']
       == ['reviewed by its own assessor, fixture-agent'] &&
-      !entity('assessment:rule-quality/rule:toolbox/maintainer-ci-security/no-medium-findings').selfReviewed
+      !entity('assessment:rule-quality/rule:seikika/maintainer-ci-security/no-medium-findings').selfReviewed
   - name: >-
       a test that asserts nothing fails has-tests, an ignored test fails
       tests-pass, and too few tests for the code fail silver
     expect: >-
-      score('maintainer-crate', 'crate:toolbox-derive').evidence['has-tests']
+      score('maintainer-crate', 'crate:seikika-derive').evidence['has-tests']
       == ['tests::smoke (src/lib.rs:10) asserts nothing'] &&
-      score('maintainer-crate', 'crate:toolbox-expr').rules['has-tests'] ==
+      score('maintainer-crate', 'crate:seikika-expr').rules['has-tests'] ==
       'pass' && score('maintainer-crate',
-      'crate:toolbox-expr').rules['tests-scale-with-code'] == 'pass' &&
+      'crate:seikika-expr').rules['tests-scale-with-code'] == 'pass' &&
       score('maintainer-crate',
-      'crate:toolbox-connector-git-files').evidence['tests-scale-with-code']
+      'crate:seikika-connector-git-files').evidence['tests-scale-with-code']
       == ['0 tests per 1,000 lines (0 tests, 182 lines)'] &&
       score('maintainer-crate',
-      'crate:toolbox-derive').rules['tests-scale-with-code'] == 'pass' &&
+      'crate:seikika-derive').rules['tests-scale-with-code'] == 'pass' &&
       score('maintainer-crate',
-      'crate:toolbox-derive').evidence['tests-pass'][0] == 'fail: 1 failed, 1
+      'crate:seikika-derive').evidence['tests-pass'][0] == 'fail: 1 failed, 1
       ignored' && 'tests::off (src/lib.rs:40) is compiled out' in
-      score('maintainer-crate', 'crate:toolbox-derive').evidence['tests-pass']
+      score('maintainer-crate', 'crate:seikika-derive').evidence['tests-pass']
   - name: >-
       a stage's claims are checked against facts: an unknown status, a command
       that runs nothing and a check no workflow runs, and a layer stage with
@@ -1307,24 +1307,24 @@ assert:
       none, and gold needs a fixture at every level
     expect: >-
       score('meta-scorecard',
-      'scorecard:toolbox/maintainer-ci-security').evidence['described'] ==
+      'scorecard:seikika/maintainer-ci-security').evidence['described'] ==
       ['scorecard maintainer-ci-security has no description'] &&
-      score('meta-scorecard', 'scorecard:toolbox/user-cli').rules['described']
+      score('meta-scorecard', 'scorecard:seikika/user-cli').rules['described']
       == 'pass' && score('meta-scorecard',
-      'scorecard:toolbox/user-cli').rules['fixtures-show-the-ladder'] ==
+      'scorecard:seikika/user-cli').rules['fixtures-show-the-ladder'] ==
       'fail' && score('meta-scorecard',
       'scorecard:acme/github-app-hygiene').rules['fixtures-show-the-ladder']
       == 'pass' && score('meta-scorecard',
       'scorecard:acme/github-app-hygiene').rules['fixtures-reach-every-level']
       == 'pass' && score('meta-scorecard',
-      'scorecard:toolbox/user-cli').evidence['fixtures-reach-every-level'] ==
+      'scorecard:seikika/user-cli').evidence['fixtures-reach-every-level'] ==
       ['no fixture entity reaches silver']
   - name: >-
       gold rules name where to act: evidence that reads what failed, and a fix
       that names a place
     expect: >-
       score('meta-rule',
-      'rule:toolbox/maintainer-ci-security/no-medium-findings').rules['evidence-tracks-check']
+      'rule:seikika/maintainer-ci-security/no-medium-findings').rules['evidence-tracks-check']
       == 'pass' && score('meta-rule',
       'rule:demo/sprawling/present').rules['evidence-tracks-check'] == 'pass'
       && score('meta-rule',
@@ -1336,9 +1336,9 @@ assert:
       'fail' && score('meta-rule',
       'rule:acme/github-app-hygiene/only-approved-apps').rules['evidence-tracks-check']
       == 'fail' && score('meta-rule',
-      'rule:toolbox/maintainer-ci-security/least-privilege-token').rules['fix-names-a-place']
+      'rule:seikika/maintainer-ci-security/least-privilege-token').rules['fix-names-a-place']
       == 'pass' && score('meta-rule',
-      'rule:toolbox/user-cli/has-help').evidence['fix-names-a-place'][0].startsWith('the
+      'rule:seikika/user-cli/has-help').evidence['fix-names-a-place'][0].startsWith('the
       fix names no path')
   - name: a computed field with too much CEL misses meta-field gold
     expect: >-
@@ -1346,25 +1346,25 @@ assert:
       'field:demo/Tiny.size').evidence['computed-readable'] == ['computed: 80
       CEL nodes, loop depth 2 (60 nodes and no nested loops at most;
       docs/design/thresholds.md)'] && score('meta-field',
-      'field:toolbox/Crate.codeLines').rules['computed-readable'] == 'pass'
-  # Toolbox against Backstage (docs/design/backstage-comparison.md, D01M857ZB468ZM2YS6GNSEG6YB9)
+      'field:seikika/Crate.codeLines').rules['computed-readable'] == 'pass'
+  # Seikika against Backstage (docs/design/backstage-comparison.md, D01M857ZB468ZM2YS6GNSEG6YB9)
   - name: >-
       vs-backstage-performance: a product that meets every bar reaches bronze,
       and one that misses every bar stays at none
     expect: >-
-      score('vs-backstage-performance', 'product:toolbox').level == 'bronze'
-      && score('vs-backstage-performance', 'product:toolbox').rules['ready']
+      score('vs-backstage-performance', 'product:seikika').level == 'bronze'
+      && score('vs-backstage-performance', 'product:seikika').rules['ready']
       == 'pass' && score('vs-backstage-performance',
-      'product:toolbox').rules['catalog-readable'] == 'pass' &&
+      'product:seikika').rules['catalog-readable'] == 'pass' &&
       score('vs-backstage-performance',
-      'product:toolbox').rules['get-latency'] == 'pass' &&
+      'product:seikika').rules['get-latency'] == 'pass' &&
       score('vs-backstage-performance',
-      'product:toolbox').rules['get-throughput'] == 'pass' &&
+      'product:seikika').rules['get-throughput'] == 'pass' &&
       score('vs-backstage-performance',
-      'product:toolbox').rules['list-latency'] == 'pass' &&
+      'product:seikika').rules['list-latency'] == 'pass' &&
       score('vs-backstage-performance',
-      'product:toolbox').rules['list-throughput'] == 'pass' &&
-      score('vs-backstage-performance', 'product:toolbox').rules['recovery']
+      'product:seikika').rules['list-throughput'] == 'pass' &&
+      score('vs-backstage-performance', 'product:seikika').rules['recovery']
       == 'pass' && score('vs-backstage-performance',
       'product:backstage').level == 'none' &&
       score('vs-backstage-performance', 'product:backstage').rules['ready'] ==
@@ -1384,15 +1384,15 @@ assert:
       vs-backstage-footprint: a product that meets every bar reaches bronze,
       and one that misses every bar stays at none
     expect: >-
-      score('vs-backstage-footprint', 'product:toolbox').level == 'bronze' &&
-      score('vs-backstage-footprint', 'product:toolbox').rules['idle-memory']
+      score('vs-backstage-footprint', 'product:seikika').level == 'bronze' &&
+      score('vs-backstage-footprint', 'product:seikika').rules['idle-memory']
       == 'pass' && score('vs-backstage-footprint',
-      'product:toolbox').rules['loaded-memory'] == 'pass' &&
-      score('vs-backstage-footprint', 'product:toolbox').rules['install-size']
+      'product:seikika').rules['loaded-memory'] == 'pass' &&
+      score('vs-backstage-footprint', 'product:seikika').rules['install-size']
       == 'pass' && score('vs-backstage-footprint',
-      'product:toolbox').rules['adopter-files'] == 'pass' &&
+      'product:seikika').rules['adopter-files'] == 'pass' &&
       score('vs-backstage-footprint',
-      'product:toolbox').rules['adopter-lines'] == 'pass' &&
+      'product:seikika').rules['adopter-lines'] == 'pass' &&
       score('vs-backstage-footprint', 'product:backstage').level == 'none' &&
       score('vs-backstage-footprint',
       'product:backstage').rules['idle-memory'] == 'fail' &&
@@ -1408,22 +1408,22 @@ assert:
       vs-backstage-security: a product that meets every bar reaches bronze,
       and one that misses every bar stays at none
     expect: >-
-      score('vs-backstage-security', 'product:toolbox').level == 'bronze' &&
+      score('vs-backstage-security', 'product:seikika').level == 'bronze' &&
       score('vs-backstage-security',
-      'product:toolbox').rules['anonymous-read'] == 'pass' &&
+      'product:seikika').rules['anonymous-read'] == 'pass' &&
       score('vs-backstage-security',
-      'product:toolbox').rules['forged-identity'] == 'pass' &&
-      score('vs-backstage-security', 'product:toolbox').rules['anonymous-mcp']
+      'product:seikika').rules['forged-identity'] == 'pass' &&
+      score('vs-backstage-security', 'product:seikika').rules['anonymous-mcp']
       == 'pass' && score('vs-backstage-security',
-      'product:toolbox').rules['client-cannot-delete'] == 'pass' &&
+      'product:seikika').rules['client-cannot-delete'] == 'pass' &&
       score('vs-backstage-security',
-      'product:toolbox').rules['loopback-by-default'] == 'pass' &&
+      'product:seikika').rules['loopback-by-default'] == 'pass' &&
       score('vs-backstage-security',
-      'product:toolbox').rules['owner-only-fields'] == 'pass' &&
+      'product:seikika').rules['owner-only-fields'] == 'pass' &&
       score('vs-backstage-security',
-      'product:toolbox').rules['extension-process-isolated'] == 'pass' &&
+      'product:seikika').rules['extension-process-isolated'] == 'pass' &&
       score('vs-backstage-security',
-      'product:toolbox').rules['extension-credential-isolated'] == 'pass' &&
+      'product:seikika').rules['extension-credential-isolated'] == 'pass' &&
       score('vs-backstage-security', 'product:backstage').level == 'none' &&
       score('vs-backstage-security',
       'product:backstage').rules['anonymous-read'] == 'fail' &&
@@ -1445,15 +1445,15 @@ assert:
       vs-backstage-supply-chain: a product that meets every bar reaches
       bronze, and one that misses every bar stays at none
     expect: >-
-      score('vs-backstage-supply-chain', 'product:toolbox').level == 'bronze'
+      score('vs-backstage-supply-chain', 'product:seikika').level == 'bronze'
       && score('vs-backstage-supply-chain',
-      'product:toolbox').rules['packages'] == 'pass' &&
+      'product:seikika').rules['packages'] == 'pass' &&
       score('vs-backstage-supply-chain',
-      'product:toolbox').rules['known-vulnerabilities'] == 'pass' &&
+      'product:seikika').rules['known-vulnerabilities'] == 'pass' &&
       score('vs-backstage-supply-chain',
-      'product:toolbox').rules['high-vulnerabilities'] == 'pass' &&
+      'product:seikika').rules['high-vulnerabilities'] == 'pass' &&
       score('vs-backstage-supply-chain',
-      'product:toolbox').rules['provenance'] == 'pass' &&
+      'product:seikika').rules['provenance'] == 'pass' &&
       score('vs-backstage-supply-chain', 'product:backstage').level == 'none'
       && score('vs-backstage-supply-chain',
       'product:backstage').rules['packages'] == 'fail' &&
@@ -1467,15 +1467,15 @@ assert:
       vs-backstage-change-safety: a product that meets every bar reaches
       bronze, and one that misses every bar stays at none
     expect: >-
-      score('vs-backstage-change-safety', 'product:toolbox').level == 'bronze'
+      score('vs-backstage-change-safety', 'product:seikika').level == 'bronze'
       && score('vs-backstage-change-safety',
-      'product:toolbox').rules['offline-validate'] == 'pass' &&
+      'product:seikika').rules['offline-validate'] == 'pass' &&
       score('vs-backstage-change-safety',
-      'product:toolbox').rules['change-preview'] == 'pass' &&
+      'product:seikika').rules['change-preview'] == 'pass' &&
       score('vs-backstage-change-safety',
-      'product:toolbox').rules['upgrade-lines'] == 'pass' &&
+      'product:seikika').rules['upgrade-lines'] == 'pass' &&
       score('vs-backstage-change-safety',
-      'product:toolbox').rules['rollback-steps'] == 'pass' &&
+      'product:seikika').rules['rollback-steps'] == 'pass' &&
       score('vs-backstage-change-safety', 'product:backstage').level == 'none'
       && score('vs-backstage-change-safety',
       'product:backstage').rules['offline-validate'] == 'fail' &&
@@ -1489,10 +1489,10 @@ assert:
       vs-backstage-org-fit: a product that meets every bar reaches bronze, and
       one that misses every bar stays at none
     expect: >-
-      score('vs-backstage-org-fit', 'product:toolbox').level == 'bronze' &&
-      score('vs-backstage-org-fit', 'product:toolbox').rules['repo-scoped'] ==
+      score('vs-backstage-org-fit', 'product:seikika').level == 'bronze' &&
+      score('vs-backstage-org-fit', 'product:seikika').rules['repo-scoped'] ==
       'pass' && score('vs-backstage-org-fit',
-      'product:toolbox').rules['federation'] == 'pass' &&
+      'product:seikika').rules['federation'] == 'pass' &&
       score('vs-backstage-org-fit', 'product:backstage').level == 'none' &&
       score('vs-backstage-org-fit', 'product:backstage').rules['repo-scoped']
       == 'fail' && score('vs-backstage-org-fit',
@@ -1501,13 +1501,13 @@ assert:
       vs-backstage-agent-surface: a product that meets every bar reaches
       bronze, and one that misses every bar stays at none
     expect: >-
-      score('vs-backstage-agent-surface', 'product:toolbox').level == 'bronze'
+      score('vs-backstage-agent-surface', 'product:seikika').level == 'bronze'
       && score('vs-backstage-agent-surface',
-      'product:toolbox').rules['mcp-by-default'] == 'pass' &&
+      'product:seikika').rules['mcp-by-default'] == 'pass' &&
       score('vs-backstage-agent-surface',
-      'product:toolbox').rules['tools-list-size'] == 'pass' &&
+      'product:seikika').rules['tools-list-size'] == 'pass' &&
       score('vs-backstage-agent-surface',
-      'product:toolbox').rules['get-entity-size'] == 'pass' &&
+      'product:seikika').rules['get-entity-size'] == 'pass' &&
       score('vs-backstage-agent-surface', 'product:backstage').level == 'none'
       && score('vs-backstage-agent-surface',
       'product:backstage').rules['mcp-by-default'] == 'fail' &&
@@ -1519,11 +1519,11 @@ assert:
       vs-backstage-extensibility: a product that meets every bar reaches
       bronze, and one that misses every bar stays at none
     expect: >-
-      score('vs-backstage-extensibility', 'product:toolbox').level == 'bronze'
+      score('vs-backstage-extensibility', 'product:seikika').level == 'bronze'
       && score('vs-backstage-extensibility',
-      'product:toolbox').rules['any-language'] == 'pass' &&
+      'product:seikika').rules['any-language'] == 'pass' &&
       score('vs-backstage-extensibility',
-      'product:toolbox').rules['without-rebuild'] == 'pass' &&
+      'product:seikika').rules['without-rebuild'] == 'pass' &&
       score('vs-backstage-extensibility', 'product:backstage').level == 'none'
       && score('vs-backstage-extensibility',
       'product:backstage').rules['any-language'] == 'fail' &&
@@ -1533,29 +1533,29 @@ assert:
       vs-backstage-capabilities: a product that meets every bar reaches
       bronze, and one that misses every bar stays at none
     expect: >-
-      score('vs-backstage-capabilities', 'product:toolbox').level == 'bronze'
+      score('vs-backstage-capabilities', 'product:seikika').level == 'bronze'
       && score('vs-backstage-capabilities',
-      'product:toolbox').rules['catalog-browse'] == 'pass' &&
-      score('vs-backstage-capabilities', 'product:toolbox').rules['ownership']
+      'product:seikika').rules['catalog-browse'] == 'pass' &&
+      score('vs-backstage-capabilities', 'product:seikika').rules['ownership']
       == 'pass' && score('vs-backstage-capabilities',
-      'product:toolbox').rules['graph'] == 'pass' &&
+      'product:seikika').rules['graph'] == 'pass' &&
       score('vs-backstage-capabilities',
-      'product:toolbox').rules['docs-search'] == 'pass' &&
-      score('vs-backstage-capabilities', 'product:toolbox').rules['docs'] ==
+      'product:seikika').rules['docs-search'] == 'pass' &&
+      score('vs-backstage-capabilities', 'product:seikika').rules['docs'] ==
       'pass' && score('vs-backstage-capabilities',
-      'product:toolbox').rules['templates'] == 'pass' &&
+      'product:seikika').rules['templates'] == 'pass' &&
       score('vs-backstage-capabilities',
-      'product:toolbox').rules['scorecards'] == 'pass' &&
-      score('vs-backstage-capabilities', 'product:toolbox').rules['api-docs']
+      'product:seikika').rules['scorecards'] == 'pass' &&
+      score('vs-backstage-capabilities', 'product:seikika').rules['api-docs']
       == 'pass' && score('vs-backstage-capabilities',
-      'product:toolbox').rules['kubernetes'] == 'pass' &&
+      'product:seikika').rules['kubernetes'] == 'pass' &&
       score('vs-backstage-capabilities',
-      'product:toolbox').rules['notifications'] == 'pass' &&
+      'product:seikika').rules['notifications'] == 'pass' &&
       score('vs-backstage-capabilities',
-      'product:toolbox').rules['permission-rule'] == 'pass' &&
-      score('vs-backstage-capabilities', 'product:toolbox').rules['mcp-read']
+      'product:seikika').rules['permission-rule'] == 'pass' &&
+      score('vs-backstage-capabilities', 'product:seikika').rules['mcp-read']
       == 'pass' && score('vs-backstage-capabilities',
-      'product:toolbox').rules['community'] == 'pass' &&
+      'product:seikika').rules['community'] == 'pass' &&
       score('vs-backstage-capabilities', 'product:backstage').level == 'none'
       && score('vs-backstage-capabilities',
       'product:backstage').rules['catalog-browse'] == 'fail' &&

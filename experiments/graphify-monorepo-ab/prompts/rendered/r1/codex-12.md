@@ -5,21 +5,21 @@ Rules:
 - Read only files under /tmp/graphify-monorepo-ab/r1/codex-12. Don't read or search anything elsewhere on this machine, except your own scratch files.
 - Don't change any file under /tmp/graphify-monorepo-ab/r1/codex-12, except to write /tmp/graphify-monorepo-ab/r1/codex-12/ANSWERS.md. Put any scratch files in /tmp/graphify-monorepo-ab/scratch/r1/codex-12, and nowhere else.
 - Don't start subagents.
-- This project has a Cursor rule, `.cursor/rules/toolbox.mdc`, that applies to you. Its text:
+- This project has a Cursor rule, `.cursor/rules/seikika.mdc`, that applies to you. Its text:
 
 <rule>
-This project has a Toolbox repo portal at .toolbox/ (kinds Repository, Doc and Crate). A Toolbox server for this checkout is running at http://127.0.0.1:8312. Run every toolbox command with `TOOLBOX_URL=http://127.0.0.1:8312 TOOLBOX_AS=agent` in its environment.
+This project has a Seikika repo portal at .seikika/ (kinds Repository, Doc and Crate). A Seikika server for this checkout is running at http://127.0.0.1:8312. Run every seikika command with `SEIKIKA_URL=http://127.0.0.1:8312 SEIKIKA_AS=agent` in its environment.
 
-**MANDATORY: Before using Read, Grep, Glob, or Bash to explore the codebase, you MUST run toolbox first:**
-- `toolbox search "<text>" -o json` — find entities by id or title
-- `toolbox query --kind <Kind> --filter "<CEL over entity>" -o json` — the entities of one kind that match a filter
-- `toolbox get <id> -o json` — one entity: its fields, where each came from, and its inbound and outbound relations
-- `toolbox graph <id> --depth <1-3> -o json` — the relations around an entity
+**MANDATORY: Before using Read, Grep, Glob, or Bash to explore the codebase, you MUST run seikika first:**
+- `seikika search "<text>" -o json` — find entities by id or title
+- `seikika query --kind <Kind> --filter "<CEL over entity>" -o json` — the entities of one kind that match a filter
+- `seikika get <id> -o json` — one entity: its fields, where each came from, and its inbound and outbound relations
+- `seikika graph <id> --depth <1-3> -o json` — the relations around an entity
 
-A Crate (`crate:<package name>`) has `path` (relative to codex-rs/), `description`, `targets`, `functions` (name, at, lines, complexity), `codeLines`, `unitTests`, `dependents` and `dependentCount`, and the relation `dependsOn` (its normal dependencies inside the workspace). `toolbox describe portal .toolbox` prints every kind and field.
+A Crate (`crate:<package name>`) has `path` (relative to codex-rs/), `description`, `targets`, `functions` (name, at, lines, complexity), `codeLines`, `unitTests`, `dependents` and `dependentCount`, and the relation `dependsOn` (its normal dependencies inside the workspace). `seikika describe portal .seikika` prints every kind and field.
 
 Only use Read/Grep/Glob directly when:
-1. toolbox has already oriented you and you need to read or debug specific lines
+1. seikika has already oriented you and you need to read or debug specific lines
 2. the portal doesn't hold the fact you need
 </rule>
 

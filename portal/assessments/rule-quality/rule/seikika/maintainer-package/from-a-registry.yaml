@@ -1,0 +1,57 @@
+apiVersion: seikika.com/assessment/v1
+entity: rule:seikika/maintainer-package/from-a-registry
+rubric: rule-quality
+subjectHash: c61d9cf8f13b
+assessor: {kind: agent, name: cursor-assessor-06, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: measures-intent
+    verdict: fail
+    reason: >-
+      `is_remote` (crates/seikika-connector-workspace/src/npm.rs:94-111)
+      recognises `git+`, `git:`, `github:`, `gitlab:`, `bitbucket:` and
+      http(s) URLs. It misses npm's bare GitHub shorthand `user/repo` (and
+      `user/repo#ref`), which the npm package.json document lists under
+      "GitHub URLs"
+      (https://docs.npmjs.com/cli/v12/configuring-npm/package-json/) and which
+      installs straight from GitHub. A scratch manifest with `"c":
+      "user/repo"` run through target/debug/seikika-connector-workspace
+      reported `gitRanges: []`, so the rule passes a dependency that skips the
+      registry, the exact case its rationale names
+      (portal/standards/packages.yaml:105-107).
+    suggestion: >-
+      Treat a spec of the form `<owner>/<repo>[#ref]` (no `@`, not a semver
+      range, not a local prefix) as remote, and add `git@host:` scp-style
+      URLs; add a unit test beside
+      `caret_ranges_are_bounded_and_workspace_stars_are_local` (npm.rs:318).
+  - criterion: hard-to-game
+    verdict: fail
+    reason: >-
+      With `leftpad@github:left/pad` in the evidence, rewriting it as
+      `left/pad` installs the same commit and clears the evidence, because
+      is_remote only matches URL and `git+`/`github:`-style prefixes
+      (crates/seikika-connector-workspace/src/npm.rs:94-112). That is a
+      shorter edit than finding the registry version the fix asks for.
+    suggestion: >-
+      The shorthand detection above closes this route.
+  - criterion: fix-leads-to-pass
+    verdict: pass
+    reason: >-
+      The evidence is the list of `name@url` specs (packages.yaml:101; the
+      unsafe fixture pins ['leftpad@git+https://example.invalid/leftpad'] at
+      portal/tests/standards.test.yaml:559-560) and the fix says to depend on
+      a registry version instead. Replacing each listed spec with a semver
+      range empties the list.
+  - criterion: threshold-justified
+    verdict: pass
+    reason: >-
+      No numeric threshold. Bronze comes from D76
+      (docs/decisions/D01M7W56B7R0000000000000000.md: "no `*`, `>=`, git or
+      tarball URL") and docs/design/package-standards.md:21,66, and fits the
+      safety-floor principle in docs/design/thresholds.md:19-21: an unreviewed
+      code source belongs in the floor.
+summary: >-
+  The rule is the right bronze standard, but the detector misses npm's own
+  `user/repo` GitHub shorthand, so the most common way to depend on a git
+  branch passes, and an agent can clear the evidence by shortening the
+  URL. Fixes and level are fine.

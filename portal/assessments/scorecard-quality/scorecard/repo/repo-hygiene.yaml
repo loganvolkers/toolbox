@@ -1,4 +1,4 @@
-apiVersion: toolbox.dev/assessment/v1
+apiVersion: seikika.com/assessment/v1
 entity: scorecard:repo/repo-hygiene
 rubric: scorecard-quality
 subjectHash: 37464747c99f
@@ -11,7 +11,7 @@ verdicts:
       All five rules check root files that tell a newcomer or agent what the
       repository is, who reviews it and whether it may be reused, for the
       pilot repository's maintainers
-      (examples/repo-portal-starter/toolbox.yaml:72-81). The licence serves
+      (examples/repo-portal-starter/seikika.yaml:72-81). The licence serves
       reusers rather than reviewers, but the description scopes the card as
       "basics", and every rule shares the no-build, no-network constraint
       (docs/design/repo-portals.md:140).
@@ -20,7 +20,7 @@ verdicts:
     reason: >-
       Silver mixes completing ownership (codeowners-catch-all,
       owners-are-teams) with an unrelated licence file (has-license,
-      examples/repo-portal-starter/toolbox.yaml:141-153). has-license is one
+      examples/repo-portal-starter/seikika.yaml:141-153). has-license is one
       file, cheaper than bronze's 50-word README. payments-api shows the
       split: its ownership is fine apart from `@alice`, yet it stops at bronze
       on the licence too
@@ -33,9 +33,9 @@ verdicts:
     verdict: fail
     reason: >-
       The rationale says these files tell a newcomer or an agent how to work
-      in the repository (examples/repo-portal-starter/toolbox.yaml:77-79).
+      in the repository (examples/repo-portal-starter/seikika.yaml:77-79).
       GitHub's community profile also lists CONTRIBUTING, and agents read
-      AGENTS.md, which T4T scores in `maintainer-agent-doc` (D75). The starter
+      AGENTS.md, which S4S scores in `maintainer-agent-doc` (D75). The starter
       checks neither, so a repository can reach silver with no written build
       or test instructions.
     suggestion: >-
@@ -46,7 +46,7 @@ verdicts:
     verdict: pass
     reason: >-
       Every rule has evidence and a fix that names a file (brief and
-      examples/repo-portal-starter/toolbox.yaml:90-153). Raising payments-api
+      examples/repo-portal-starter/seikika.yaml:90-153). Raising payments-api
       from bronze to silver works from them alone: the evidence names `@alice`
       to move to the team, and the fix says to add a LICENSE. has-license's
       README-note alternative is the one fix that doesn't lead to a pass.

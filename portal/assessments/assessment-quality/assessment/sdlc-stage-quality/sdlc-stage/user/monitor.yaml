@@ -1,4 +1,4 @@
-apiVersion: toolbox.dev/assessment/v1
+apiVersion: seikika.com/assessment/v1
 entity: assessment:sdlc-stage-quality/sdlc-stage:user/monitor
 rubric: assessment-quality
 subjectHash: 3e9b799d6af0
@@ -11,11 +11,11 @@ verdicts:
       Every citation in
       portal/assessments/sdlc-stage-quality/sdlc-stage/user/monitor.yaml
       holds. portal/sdlc/stages/user.yaml:57-58 is `commands: []` and `checks:
-      []`. crates/toolbox-telemetry/src/metrics_prom.rs:75 is "Deprecated
-      alias for toolbox_snapshot_lag_seconds". `rg -i deprecat crates/` finds
+      []`. crates/seikika-telemetry/src/metrics_prom.rs:75 is "Deprecated
+      alias for seikika_snapshot_lag_seconds". `rg -i deprecat crates/` finds
       nothing else but a CEL string in a scale example.
       schema/manifest.schema.json has no "deprecat" key.
-      crates/toolbox-derive/src/plan.rs:89-91 and 265 count removed actions
+      crates/seikika-derive/src/plan.rs:89-91 and 265 count removed actions
       and MCP tools. user-sdlc.md:59 is the "Hear about changes" row, and
       lines 61-73 are the §4 stability contract.
   - criterion: complete
@@ -25,7 +25,7 @@ verdicts:
       command, executable-exit and agent-can-complete fail. Nothing is built
       or installed, so reuses-artifacts passes, per the guidance's "pass when
       nothing is built or installed" (portal/standards/sdlc.yaml:417-418).
-      Deprecation metadata needs a manifest schema change and toolbox-api
+      Deprecation metadata needs a manifest schema change and seikika-api
       headers, so decoupled-from-core fails.
   - criterion: reproducible
     verdict: pass

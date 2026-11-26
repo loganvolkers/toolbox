@@ -1,0 +1,48 @@
+apiVersion: seikika.com/assessment/v1
+entity: assessment:rule-quality/rule:seikika/vs-backstage-performance/recovery
+rubric: assessment-quality
+subjectHash: 67ce170642f8
+assessor: {kind: agent, name: cursor-reviewer-16, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: supported
+    verdict: fail
+    reason: >-
+      The harness citations in
+      portal/assessments/rule-quality/rule/seikika/vs-backstage-performance/recovery.yaml
+      land. measure.py:76-84 kills the tree, 276-278 kills after the reads,
+      279-283 times the restart, and 280 passes `fresh=False` with no `load`.
+      RESEARCH.md:285 asks for a kill during ingest, and README.md:40 and
+      plan.md:923 give the 60 s bars. The rationale is
+      backstage-comparison.yaml:333-336. state.rs holds the restart's first
+      recompute (crates/seikika-api/src/state.rs:161-183, 305). The exception
+      is "Single bronze level per D01M857ZB468ZM2YS6GNSEG6YB9". That decision
+      defines standings and says nothing about levels; the level is `levels:
+      [bronze]` at backstage-comparison.yaml:222.
+    suggestion: >-
+      Cite backstage-comparison.yaml:222 for the single bronze level.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      The four passes are right. The restart has no gate after it, but the
+      reason claims only that a server that just reports ready cannot pass.
+      measure.py:281 requires the last id readable as well, and Seikika's
+      atomic snapshot means that id implies the rest. The missing mid-ingest
+      kill is named in measures-intent, and the rule's evidence claims no more
+      (backstage-comparison.yaml:328).
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      Each verdict rests on measure.py:276-283, the pre-registered bar and the
+      plan's cold-start budget, which a second assessor reads the same way.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      There are no fail or unsure verdicts in
+      portal/assessments/rule-quality/rule/seikika/vs-backstage-performance/recovery.yaml,
+      so no suggestion is needed.
+summary: >-
+  The verdicts are right, and the harness citations land exactly: a
+  SIGKILL of the whole tree, a restart from the database alone, and the
+  plan's 60 s budget. The one error is attributing the single bronze level
+  to D01M857ZB468ZM2YS6GNSEG6YB9, which doesn't set levels.

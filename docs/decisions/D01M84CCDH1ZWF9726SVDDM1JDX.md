@@ -5,7 +5,7 @@ decided: 2026-11-23T14:15:00Z
 
 # A gate lists each new finding once, under its entity, and a lint rule's finding says what to change to
 
-**When `toolbox report --baseline` (or `--against`) fails, its summary lists each new finding on
+**When `seikika report --baseline` (or `--against`) fails, its summary lists each new finding on
 one line, grouped by the entity it is on. That line names every rule that reports the finding. The
 summary no longer prints one block per rule, with that rule's evidence and the record the entity
 came from. The `github-actions` package also gives the same finding the same text across its
@@ -16,7 +16,7 @@ amends the summary that [D01M841J2SN4V3AVZZ5D91YAR51](./D01M841J2SN4V3AVZZ5D91YA
 annotations don't change.
 
 1. **Why.** In round 3 of [gate-repair-ab](../../experiments/gate-repair-ab/README.md), the
-   Toolbox gate's first output was 2,867 characters long for 7 regressions. The reviewdog gate
+   Seikika gate's first output was 2,867 characters long for 7 regressions. The reviewdog gate
    needed 1,222 characters on stdout for the same defects. Three things made up the difference:
    - one zizmor finding appeared under two or three rules, each with its own block;
    - every block ended with a `from: connector …` line naming the entity's first source record,
@@ -58,7 +58,7 @@ annotations don't change.
    - Any repository's bare `--baseline` gate, `--against` comparisons, and the stderr summary of the
      `actions/report` CI log. This repository's own ratchet is an example: a long new function now
      reads `short-functions: + gate at src/causes.rs:209: 82 lines` under its crate.
-   - Every portal that includes `packages/github-actions`, including Toolbox for Toolbox and the
+   - Every portal that includes `packages/github-actions`, including Seikika for Seikika and the
      pilot repositories that use the starter.
 
    No harness file changed with this decision.

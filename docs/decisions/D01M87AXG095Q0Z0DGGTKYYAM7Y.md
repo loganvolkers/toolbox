@@ -32,15 +32,15 @@ needs the same lifecycle. Tested against a real GitLab CE 19.6.1 and runner
    `local` child, so the run has the child's approvers, blockers and effects and the grant binds
    them. Before this, a GitHub `ci` child was dispatched with no approvers and no grant.
 5. **GitLab pipelines take inputs, not variables.** The parent sends `action`, `inputs`,
-   `requested_by`, `toolbox_run`, `parent_run` and `grant` as pipeline inputs; the shipped
+   `requested_by`, `seikika_run`, `parent_run` and `grant` as pipeline inputs; the shipped
    `.gitlab-ci.yml` maps each to a job variable with `expand: false`. New gitlab.com projects
    refuse pipeline variables; inputs are not restricted, and the job never interpolates them
-   into script text. The parent reads `toolbox-run.json` from the `toolbox` job's artifacts
+   into script text. The parent reads `seikika-run.json` from the `seikika` job's artifacts
    whatever the pipeline concluded. Exit 4 (`unverified`) is a warning in the job.
 6. **A review is opened by whoever pushed.** A pusher that knows its host uses push options on
    GitLab, or the REST call on GitHub; when the parent pushed a `local` child's branch to a forge
    it declares, the parent opens the review with that forge's token. The review's title ends
-   `(toolbox run <id>)` and its description carries `Toolbox-Run:`, and a run is merged when its
+   `(seikika run <id>)` and its description carries `Seikika-Run:`, and a run is merged when its
    commit is an ancestor of the base, a commit carries the trailer, or a subject ends with the
    marker (GitLab's squash keeps only the title).
 7. **A new forge is a `Kind` and one module.** Each seam is an exhaustive `match` on `Kind`, so

@@ -1,5 +1,5 @@
 ---
-"toolbox": patch
+"seikika": patch
 "demo": patch
 ---
 

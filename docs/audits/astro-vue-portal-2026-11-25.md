@@ -7,9 +7,9 @@ operational links even when the snapshot contains no score for it.
 ## Scope and tasks
 
 Three independent auditors reviewed each set of rendered captures using the
-[design-audit rubric](../../plugins/toolbox-operator/skills/design-audit/references/rubric.md).
+[design-audit rubric](../../plugins/seikika-operator/skills/design-audit/references/rubric.md).
 The baseline used the embedded report at `a1e568d`. The comparison used the Vue stories with
-the same Toolbox-for-Toolbox and OpenFGA snapshots. The Checkout example adds service metadata
+the same Seikika-for-Seikika and OpenFGA snapshots. The Checkout example adds service metadata
 to demonstrate the shared overview. Views were captured at 1280 and 390 pixels in light and dark.
 
 | Reader | Task | Baseline | Vue report |

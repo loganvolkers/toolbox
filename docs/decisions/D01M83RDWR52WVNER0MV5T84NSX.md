@@ -6,10 +6,10 @@ decided: 2026-11-23T08:45:00Z
 # Correct the record: connector-ab's v1 failed and v3 is overfitted and within noise; deploy-ab is inconclusive
 
 **connector-ab's result is now: v1 failed C1 and C2 and held C3, and v1 is the only round the bar
-applies to as written. v2 and v3 are not wins. Between rounds only the Toolbox arm changed. One
+applies to as written. v2 and v3 are not wins. Between rounds only the Seikika arm changed. One
 change was a product format made to fit the harness. The v3 margin of 1 call is smaller than
 the 21-call swing of a rival that did not change. deploy-ab's result is now inconclusive, not a
-defeat. The probes gave only Toolbox an authentication bypass. The Toolbox arm restarted a container that
+defeat. The probes gave only Seikika an authentication bypass. The Seikika arm restarted a container that
 had been built before the run, while the Backstage arm built a 207-line module. No tokens were
 recorded, so the bar can't be applied. This supersedes the conclusions in
 D01M83FFM2K6XS4EAVHVP92TBDZ, D01M83GQ1KP8A0WR3P2S7AG54WQ and D01M83H3HBH2SC205MX3ANRZYWN. The
@@ -18,16 +18,16 @@ agent that designed neither experiment (D01M83RDWQ5EVKY5SFHDWAD5HFH, P7):
 [connector-ab](../../experiments/connector-ab/ADJUDICATION.md) and
 [deploy-ab](../../experiments/deploy-ab/ADJUDICATION.md).
 
-1. **connector-ab.** Calls for phases 1+3, Toolbox / Ocean / Backstage:
+1. **connector-ab.** Calls for phases 1+3, Seikika / Ocean / Backstage:
 
-   | Round | Toolbox | Ocean | Backstage |
+   | Round | Seikika | Ocean | Backstage |
    |---|---|---|---|
    | v1 | 65 | 63 | 46 |
    | v2 | 59 | 63 | 61 |
    | v3 | 39 | 57 | 40 |
 
    - **Only arm A changed.** 3f9641b changed only A's prompts (1-A, 3-A, 4-A and 5-A). It gave A
-     a wider read allowlist, a hint to use `toolbox connector drive`, and a portal stub. It
+     a wider read allowlist, a hint to use `seikika connector drive`, and a portal stub. It
      rewrote A's `RUN.md` from "fill this in" into a full recipe. c1f5feb, titled "catalog
      format to widen connector-ab lead", added `--format catalog`. That writes "harness-shaped"
      NDJSON, and only A's recipe names it. Ocean's and Backstage's `RUN.md` still read "How to
@@ -45,15 +45,15 @@ agent that designed neither experiment (D01M83RDWQ5EVKY5SFHDWAD5HFH, P7):
    So C1 and C2 **failed in v1**, which is the record. v2 and v3 are **overfitted and within
    noise**: neither a win nor a loss, and neither is evidence for C1 or C2. C3 held in every
    round. One more correction: D01M83H3HBH2SC205MX3ANRZYWN says the v3 phase-3 first pass failed for
-   "Toolbox and Backstage". The discarded scores show it failed for Toolbox and **Ocean**, while
+   "Seikika and Backstage". The discarded scores show it failed for Seikika and **Ocean**, while
    Backstage passed.
-2. **deploy-ab.** The bar holds if both arms pass S1–S3 and Toolbox uses fewer tokens. It fails if
-   Toolbox misses a shared probe, or passes them on at least as many tokens. Neither happened, and
+2. **deploy-ab.** The bar holds if both arms pass S1–S3 and Seikika uses fewer tokens. It fails if
+   Seikika misses a shared probe, or passes them on at least as many tokens. Neither happened, and
    no tokens exist, so the outcome is **inconclusive**. Four other problems would have stopped a
    win or a loss from counting anyway:
-   - the S2 probe sends `x-toolbox-user` and `?as=` to Toolbox, while Backstage meets its guest
+   - the S2 probe sends `x-seikika-user` and `?as=` to Seikika, while Backstage meets its guest
      sign-in page;
-   - both Toolbox agents report that the `toolbox-acme:local` image and the `acme-portal-1`
+   - both Seikika agents report that the `seikika-acme:local` image and the `acme-portal-1`
      container "were already correct" and only needed restarting. The deploy was done before the
      run;
    - the facade has no GraphQL, so the "GitHub catalog provider" the Backstage prompt suggests

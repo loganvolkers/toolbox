@@ -1,7 +1,7 @@
 # DX Benchmarks: Measuring Our SDLCs Against Open Source
 
 *Status: an internal standard (D01M82X2K0DYWTCA23MQJ4CKR0Z). About the box
-([toolbox-and-tools.md](./toolbox-and-tools.md)): how we measure whether the box helps the agents
+([seikika-and-tools.md](./seikika-and-tools.md)): how we measure whether the box helps the agents
 that use it. Maintainer SDLC ([maintainer-sdlc.md](./maintainer-sdlc.md)); each benchmark measures
 one or more of the four SDLC layers ([../sdlc.md](../sdlc.md)). The catalog is in
 [portal/benchmarks/](../../portal/benchmarks), scored by `maintainer-benchmark`. Runs follow
@@ -13,17 +13,17 @@ D01M85G2YXV2VRTZWQJ33MHXCKN, in effect from D01M87QHJWYKGNH0182XQ5NKHMB).*
 ## 1. Conclusion
 
 **A DX Benchmark is a pre-registered A/B in which fresh coding agents do real lifecycle work on
-open-source repositories, once with Toolbox and once with its strongest alternative. The results,
-the cost and the friction are all published, including when Toolbox loses.** It is how we find
-Toolbox's rough edges, and how we decide whether a claim about Toolbox is true. It is a maintainer
-standard: a claim that Toolbox makes something easier needs a benchmark behind it.
+open-source repositories, once with Seikika and once with its strongest alternative. The results,
+the cost and the friction are all published, including when Seikika loses.** It is how we find
+Seikika's rough edges, and how we decide whether a claim about Seikika is true. It is a maintainer
+standard: a claim that Seikika makes something easier needs a benchmark behind it.
 
 - **They measure the SDLCs, not the model.** Industry benchmarks such as SWE-bench, Terminal-Bench
   and Next.js Evals hold the task fixed and compare agents. Ours hold the agent fixed and compare
   the developer platform around it: the box against hand-written glue, a portal against a
   checklist, a reusable standard against a home build. Each benchmark names the SDLC layers and
   stages it exercises (§2).
-- **They have changed Toolbox more than any review.** Fourteen benchmarks so far (§3).
+- **They have changed Seikika more than any review.** Fourteen benchmarks so far (§3).
   - R3 failed its bar three times: the checklist A/B, the standards A/B and its rerun.
   - R6, the box A/B, failed on tokens.
   - R2 met its bar only after fixes, because the first run failed on all four forks.
@@ -36,21 +36,21 @@ standard: a claim that Toolbox makes something easier needs a benchmark behind i
   - scoring missing data as `unknown`;
   - a dozen CLI fixes.
 - **Two results were wrong, and have been corrected** (D01M83RDWR52WVNER0MV5T84NSX).
-  - connector-ab's third round reported a Toolbox win. Only Toolbox's arm had changed, one change
+  - connector-ab's third round reported a Seikika win. Only Seikika's arm had changed, one change
     was a product format shaped to the harness, and the 1-call margin was smaller than an unchanged
     rival's run-to-run swing.
-  - deploy-ab reported a defeat. The probes authenticated only Toolbox, and its container was
+  - deploy-ab reported a defeat. The probes authenticated only Seikika, and its container was
     built before the run.
 
   Both were run by the agents that designed them, one run per arm. Protocol 2 (§4.1) is the fix.
   Every result before it is one sample.
 - **The first protocol-2 win over a rival is narrow by design.** In pin-repair-ab's round 2, agents
-  with Toolbox's gate read a median of 5,794 characters against 18,300 with reviewdog's, because
+  with Seikika's gate read a median of 5,794 characters against 18,300 with reviewdog's, because
   the gate names the pins the repository already uses. Calls and gate read were inconclusive,
   and read held by only 1,073 characters over *W*. It is one repository and one planted pull
-  request, chosen where Toolbox's hints should help, and it took a measure fix (L20) to see it.
-- **The pattern they found:** Toolbox rarely beats a capable agent on a single run. Agents are
-  trained on programming languages and their tools, not on Toolbox. Toolbox's value appears with
+  request, chosen where Seikika's hints should help, and it took a measure fix (L20) to see it.
+- **The pattern they found:** Seikika rarely beats a capable agent on a single run. Agents are
+  trained on programming languages and their tools, not on Seikika. Seikika's value appears with
   repetition: on the second repository, the tenth run, the next upgrade, the comparison across
   repositories. The benchmarks now measure that directly: reuse cost, convergence, and runs over
   time.
@@ -65,16 +65,16 @@ standard: a claim that Toolbox makes something easier needs a benchmark behind i
 | **A question tied to a hypothesis** | One sentence, linked to a hypothesis with a bar (R1–R7 in [repo-value.md](./repo-value.md), or new) | A benchmark without a decision behind it is a demo |
 | **The SDLC layers and stages** | The layers it measures (maintainer, package author, operator, user) and the stages within them, from [portal/sdlc/](../../portal/sdlc) | The benchmarks are how we know each layer's stages work for agents |
 | **A rival arm** | The strongest alternative a team would really use: an agent from scratch, a written checklist, hand-written CI glue, an existing standard (OpenSSF Scorecard), or another platform (Backstage) | Beating a straw man proves nothing |
-| **Open-source repositories at pinned commits** | Forks we didn't write (OpenFGA, Codex, gh-aw, PostHog so far), exported at a commit | Real code, reproducible, and not tuned to Toolbox |
+| **Open-source repositories at pinned commits** | Forks we didn't write (OpenFGA, Codex, gh-aw, PostHog so far), exported at a commit | Real code, reproducible, and not tuned to Seikika |
 | **A bar set before running** | The README states the hypotheses, what "holds" and "fails" mean, and the known limits, and is not edited after the run except for its status line. The bar uses a measure a dry run showed the runtime reports (P6) | It stops us explaining away a loss |
 | **Fresh agents, equal conditions** | At least three fresh runs per arm per phase (P2). The same model, budget and tools in each arm, the prompts committed before the first run (P1), no network, isolated copies, one launch per workspace at a time | Differences come from the arm, not the setup or the noise |
-| **Symmetric arms** | One frozen commit per round (P3). Every arm gets the same level of help, and rival friction is fixed as carefully as Toolbox's (P4). No product change is shaped to the harness (P5) | A rival that never changed can't lose to a Toolbox tuned to the test |
+| **Symmetric arms** | One frozen commit per round (P3). Every arm gets the same level of help, and rival friction is fixed as carefully as Seikika's (P4). No product change is shaped to the harness (P5) | A rival that never changed can't lose to a Seikika tuned to the test |
 | **Independent truth** | Correctness is judged by a script or a recorded adjudication with evidence, not by the arm's own report. The adjudicator did not design the experiment or change the product (P7) | Agents' self-reports overstate success, and so do designers |
 | **Cost** | Tokens, tool calls, wall time, and lines of glue per phase | Equal correctness at higher cost is a loss |
 | **Friction** | Each arm is asked for developer-experience feedback the same way. It is triaged into fixed, deferred or rejected, with a reason | Friction is the most useful output |
 | **A result, published** | `RESULTS.md` or the README's results section, a row in [research-log.md](../research-log.md), and the catalog entry | A loss we hide is a loss we repeat |
 
-**It is not a test.** `cargo test`, the acceptance scripts and the T4T ratchet check that Toolbox
+**It is not a test.** `cargo test`, the acceptance scripts and the S4S ratchet check that Seikika
 behaves as specified. A DX Benchmark checks whether that specification helps the agents that use
 it. **It is not a scale gate either:** `scripts/scale-gate.py` measures machines, and a DX
 Benchmark measures the work of agents.
@@ -87,28 +87,28 @@ lessons that cut across them:
 | # | Lesson | From |
 |---|---|---|
 | L1 | **Pre-registration earns its keep.** Without a bar set beforehand, both of the standards A/B's losses could have been explained as "learning cost" | standards A/B (D01M7Z2ZZ97VZQNTDT4QQHM3HQD), box A/B |
-| L2 | **Fix the friction, then rerun the same arm.** The rerun B′ cut Toolbox's tokens from 582k to 510k. It still lost, but it showed which friction mattered | standards A/B rerun |
+| L2 | **Fix the friction, then rerun the same arm.** The rerun B′ cut Seikika's tokens from 582k to 510k. It still lost, but it showed which friction mattered | standards A/B rerun |
 | L3 | **Close known friction before running.** A benchmark that hits friction we already know about measures nothing new. Pilot adoptions, such as adding the security scorecards to `loganvolkers/rt-buddy`, are the cheapest place to find it | box A/B, the rt-buddy pilot |
-| L4 | **Measure the right half.** The standards A/B compared building a tool with Toolbox against writing a script. Teams rarely lack a linter: they lack one place for all of them. The box A/B tested that | box A/B §0 |
+| L4 | **Measure the right half.** The standards A/B compared building a tool with Seikika against writing a script. Teams rarely lack a linter: they lack one place for all of them. The box A/B tested that | box A/B §0 |
 | L5 | **Single runs favour the agent; repetition favours the standard.** A home-built scorecard found more than OpenSSF, but reusing it cost as much as building it, and two builds disagreed by up to 4.4 points | security A/B |
 | L6 | **A tool error must never read as zero findings.** The harness kills timed-out process groups and fails loudly. Scorecard's Vulnerabilities check scores 10 when OSV is unreachable | box A/B harness, security A/B |
 | L7 | **Remove answer leaks, and keep a read allowlist.** The truth lives in the experiment's own files and the research log; the arms must not read them | box A/B prep, standards A/B rerun |
 | L8 | **Results files are the arm's output, and the harness may refuse them.** Subagents may be blocked from writing report files. Plan for the report to come back as text, and record the deviation | security A/B |
 | L9 | **Export each arm's diff before deleting its copy.** Disk fills; a deleted arm can't be scored again | box A/B |
 | L10 | **One run is one sample.** Every result so far is one run per phase. State it, and prefer two independent builds (convergence) when runs are expensive. Protocol 2 now requires three (P2) | all |
-| L11 | **A rerun that changes one arm measures the change, not the platform.** connector-ab's v2 and v3 changed only Toolbox's prompts and recipe, and added `--format catalog`, which emits the harness's own NDJSON shape. The "win" that followed tells us the tuning worked on this harness, nothing more | connector-ab ([ADJUDICATION.md](../../experiments/connector-ab/ADJUDICATION.md)) |
+| L11 | **A rerun that changes one arm measures the change, not the platform.** connector-ab's v2 and v3 changed only Seikika's prompts and recipe, and added `--format catalog`, which emits the harness's own NDJSON shape. The "win" that followed tells us the tuning worked on this harness, nothing more | connector-ab ([ADJUDICATION.md](../../experiments/connector-ab/ADJUDICATION.md)) |
 | L12 | **The noise is larger than it looks.** Backstage's phase 1 had the same prompt and scaffold in every round, and took 29, 38 and 29 calls. A 1-call margin from one run is no margin | connector-ab |
-| L13 | **An unequal start is not a result.** deploy-ab authenticated only Toolbox in S2, its Toolbox arm restarted a container built before the run, and its Backstage prompt suggested a provider the facade can't serve | deploy-ab ([ADJUDICATION.md](../../experiments/deploy-ab/ADJUDICATION.md)) |
+| L13 | **An unequal start is not a result.** deploy-ab authenticated only Seikika in S2, its Seikika arm restarted a container built before the run, and its Backstage prompt suggested a provider the facade can't serve | deploy-ab ([ADJUDICATION.md](../../experiments/deploy-ab/ADJUDICATION.md)) |
 | L14 | **See the measure before the bar uses it.** Two bars were written in tokens that the runtime never reported. One then swapped in calls after the run. A dry run would have shown it | connector-ab, deploy-ab |
-| L15 | **Run before and after in one round.** In gate-repair-ab's round 2, reviewdog's median read doubled with nothing changed, because agents chose to explore more. A third arm running the previous Toolbox in the same round removed that drift | gate-repair-ab ([ADJUDICATION.md](../../experiments/gate-repair-ab/ADJUDICATION.md)) |
+| L15 | **Run before and after in one round.** In gate-repair-ab's round 2, reviewdog's median read doubled with nothing changed, because agents chose to explore more. A third arm running the previous Seikika in the same round removed that drift | gate-repair-ab ([ADJUDICATION.md](../../experiments/gate-repair-ab/ADJUDICATION.md)) |
 | L16 | **Measure what the change touches, and guard the rest.** A total that includes the agent's own exploration hid a 4.8× cut in gate output. Make the touched part the primary measure, and require that the totals don't fail. Register it before the round, and say if earlier rounds suggested it | gate-repair-ab |
 | L17 | **The transcript is not the screen.** The runtime keeps a command's stdout only, so a verdict on stderr was read but not counted | gate-repair-ab §0.1 |
-| L18 | **Calls measure how an agent edits, not only what it was told.** In gate-repair-ab's round 4, every reviewdog run edited and reran its gate in one shell command, and every Toolbox run used two editor calls and a separate rerun. With both arms' ranges at 1 call, that alone decided the calls hypothesis. Report calls by kind (edits, gate runs, exploration) beside the total | gate-repair-ab ([ADJUDICATION.md](../../experiments/gate-repair-ab/ADJUDICATION.md) threat 12) |
-| L19 | **Check that the measure can move before asking again.** In gate-repair-ab's round 5, every run in every arm printed the branch's workflows before editing, even when the gate had quoted the lines. That reading, 3,500 to more than 15,000 characters a run, set the floor and the noise of the read measure, so a better gate output could not separate the arms. The same unchanged Toolbox also moved by 3 calls between rounds. A second try at the same win needs a measure, task or run count under which the change could exceed *W* | gate-repair-ab ([ADJUDICATION.md](../../experiments/gate-repair-ab/ADJUDICATION.md) threats 21–25) |
+| L18 | **Calls measure how an agent edits, not only what it was told.** In gate-repair-ab's round 4, every reviewdog run edited and reran its gate in one shell command, and every Seikika run used two editor calls and a separate rerun. With both arms' ranges at 1 call, that alone decided the calls hypothesis. Report calls by kind (edits, gate runs, exploration) beside the total | gate-repair-ab ([ADJUDICATION.md](../../experiments/gate-repair-ab/ADJUDICATION.md) threat 12) |
+| L19 | **Check that the measure can move before asking again.** In gate-repair-ab's round 5, every run in every arm printed the branch's workflows before editing, even when the gate had quoted the lines. That reading, 3,500 to more than 15,000 characters a run, set the floor and the noise of the read measure, so a better gate output could not separate the arms. The same unchanged Seikika also moved by 3 calls between rounds. A second try at the same win needs a measure, task or run count under which the change could exceed *W* | gate-repair-ab ([ADJUDICATION.md](../../experiments/gate-repair-ab/ADJUDICATION.md) threats 21–25) |
 | L20 | **Count what the transcript dropped, per arm, before a label.** In pin-repair-ab, the runtime recorded no result for seven terminal commands over two rounds, all in reviewdog's arm: four gate runs and three greps over every `uses:` line. Each came from a command that exited non-zero, and every arm A command ended in one that exits 0. The agents had read them, so the measure undercounted one arm, and round 1's read comparison came out inconclusive. Replaying the run's commands in a fresh workspace rebuilds them, kept only when the replay reproduces the run's recorded results | pin-repair-ab ([ADJUDICATION.md](../../experiments/pin-repair-ab/ADJUDICATION.md)) |
 | L21 | **A quality measure needs headroom.** In graphify-ab, every answer on a repository scored the same key-fact coverage in both arms, so *W* was 0 and no coverage hypothesis could hold or fail. Answer the questions with the baseline arm in the dry run, and freeze only a set it doesn't saturate. A turn cap also makes headroom, but then the cap is part of the claim | graphify-ab ([ADJUDICATION.md](../../experiments/graphify-ab/ADJUDICATION.md)) |
 | L22 | **Harder questions don't buy headroom; claim cost and size *W* for it.** graphify-monorepo-ab hardened its questions twice on a 950k-line monorepo (trait dispatch, two hops of callers with test exclusion, a five-crate trace), and every answer still scored 0.981 or more without a turn cap. The only misses were conventions the questions left open, split across arms. For a tool whose claim is fewer tokens, make score a guard from the start and pre-register cost; with five runs per arm, the closest cost hypothesis reached 88% of *W*, so a cost claim needs more runs per arm or a tighter task | graphify-monorepo-ab ([ADJUDICATION.md](../../experiments/graphify-monorepo-ab/ADJUDICATION.md)) |
-| L23 | **A rule that can't find an effect is not evidence of none.** The *W* rule detects a two-standard-deviation effect 23% of the time at five runs per arm. In graphify-ab, every Graphify run on Toolbox made fewer calls and read less than every baseline run (exact p = 0.008), and the rule called it inconclusive; the decision and survey then wrote "inside the noise". A fresh adversarial session found it, not the designer or the adjudicator. Size the test before the run, report "not shown" rather than "no effect", and have someone without the designer's context attack a verdict before it becomes a decision | [graphify-red-team.md](../graphify-red-team.md) R1–R2; D01M85G2YXV2VRTZWQJ33MHXCKN |
+| L23 | **A rule that can't find an effect is not evidence of none.** The *W* rule detects a two-standard-deviation effect 23% of the time at five runs per arm. In graphify-ab, every Graphify run on Seikika made fewer calls and read less than every baseline run (exact p = 0.008), and the rule called it inconclusive; the decision and survey then wrote "inside the noise". A fresh adversarial session found it, not the designer or the adjudicator. Size the test before the run, report "not shown" rather than "no effect", and have someone without the designer's context attack a verdict before it becomes a decision | [graphify-red-team.md](../graphify-red-team.md) R1–R2; D01M85G2YXV2VRTZWQJ33MHXCKN |
 
 ## 4. How to run one
 
@@ -116,7 +116,7 @@ lessons that cut across them:
    it fails. If both lead to the same action, don't run it.
 2. **Close the friction loop first (L3).** Fix, or explicitly defer, the friction already known
    from pilots and earlier runs, so the benchmark measures what's new.
-3. **Choose the rival honestly.** Ask what a capable team would do without Toolbox, and give that
+3. **Choose the rival honestly.** Ask what a capable team would do without Seikika, and give that
    arm the same tools on PATH. Our record shows the rival is often an agent with a checklist, or
    from scratch.
 4. **Pick at least two open-source repositories, of different languages and sizes**, and pin their
@@ -160,8 +160,8 @@ the record as single samples: evidence of friction, not of a claim.
 |---|---|---|---|
 | **P1. Committed prompts** | Every rendered prompt, for every arm and phase, is committed under the experiment's `prompts/` before the first arm starts. A launch whose prompt differs is void | `prompts` | deploy-ab's prompts had to be recovered from agent records |
 | **P2. Repeated runs** | At least three fresh runs per arm per phase, and five when the phase registers a cost hypothesis. Publish every run and the minimum, median and maximum. A cost hypothesis holds or fails on an exact two-sided Mann-Whitney test at α = 0.05 after a Holm correction over the round's cost hypotheses (D01M85G2YXV2VRTZWQJ33MHXCKN); otherwise it is inconclusive. The README states the smallest effect the design detects four times in five, and reports *W* (the wider arm's range), which decided rounds frozen before that decision reached `main` (D01M87QHJWYKGNH0182XQ5NKHMB), actions-ab's included. A run is dropped only for a harness fault named before the rerun, never for its result | `runsPerArm`, `spread`, `deterministic` | L10, L12, L23 |
-| **P3. Frozen rounds** | One commit fixes Toolbox, the harness, and every arm's scaffold, prompts and docs for the round. A fix starts a new round, and every arm reruns every scored phase | `frozenAt` | connector-ab replaced a failing phase with a rerun after an A-only tip |
-| **P4. Symmetric arms** | Every arm's scaffold gives the same level of help: a recipe for all, or for none. Rival friction is fixed before the next round as carefully as Toolbox's. Deferring it means the round is not run. Probes treat the arms alike: if one gets an identity, all do | `fitAudit` | L11, L13 |
+| **P3. Frozen rounds** | One commit fixes Seikika, the harness, and every arm's scaffold, prompts and docs for the round. A fix starts a new round, and every arm reruns every scored phase | `frozenAt` | connector-ab replaced a failing phase with a rerun after an A-only tip |
+| **P4. Symmetric arms** | Every arm's scaffold gives the same level of help: a recipe for all, or for none. Rival friction is fixed before the next round as carefully as Seikika's. Deferring it means the round is not run. Probes treat the arms alike: if one gets an identity, all do | `fitAudit` | L11, L13 |
 | **P5. No harness-shaped product** | A product change made after a benchmark names a use outside the harness and no harness file, schema or convention. The harness adapts to the product, not the reverse | `fitAudit` | L11 |
 | **P6. A reported measure** | The bar is written in a measure that a dry run showed the runtime reports for every arm, and it is never swapped after the run. If it goes missing, its cost hypotheses are void | `measure` | L14 |
 | **P7. Independent adjudication** | The adjudicator applies the bar and writes the outcome. They did not design the experiment, build an arm, or change the product between rounds. Each hypothesis gets one of four labels: holds, fails, inconclusive or void | `designer`, `adjudicator` | Both corrected results were judged by their designers |
@@ -201,7 +201,7 @@ fill (our survey, 2026-11-23).
 ## 6. Lifecycle and the catalog
 
 Every benchmark has an entry in [portal/benchmarks/](../../portal/benchmarks), one YAML file per
-benchmark, scored by `maintainer-benchmark` in Toolbox for Toolbox.
+benchmark, scored by `maintainer-benchmark` in Seikika for Seikika.
 
 | Status | Meaning |
 |---|---|
@@ -224,7 +224,7 @@ because its harness and its truth are reused.
 |---|---|
 | Bronze | The question, the SDLC layers and the status are declared, and every declared path exists |
 | Silver | It names a rival arm, its hypotheses and open-source repositories at pinned commits; an archived benchmark says why; a benchmark not yet run is registered under protocol 2 (prompts, runs, measure, an independent adjudicator) |
-| Gold | A run benchmark records its outcome and results, and what it changed in Toolbox, and it ran under protocol 2: the frozen commit, the spread, and the fit audit. A protocol-1 run stops at silver |
+| Gold | A run benchmark records its outcome and results, and what it changed in Seikika, and it ran under protocol 2: the frozen commit, the spread, and the fit audit. A protocol-1 run stops at silver |
 
 ## 7. Next
 
@@ -236,10 +236,10 @@ because its harness and its truth are reused.
 | B4 | Benchmarks for the user and package-author layers. Package-author `build-connector` is measured by [connector-ab](../../experiments/connector-ab/README.md): v1 failed C1 and C2, and the reruns are inconclusive. Diagnose→repair feedback is measured by [connector-repair-ab](../../experiments/connector-repair-ab/README.md) (D1–D3), a protocol-1 run. The user layer still has none of its own |
 | B5 | Rerun the box A/B after the rt-buddy friction fixes (L3), then the A + S arm of the security A/B, and native Scorecard against the kit |
 | B6 | Publish the catalog on the docs site, with each benchmark's bar and result side by side |
-| B7 | `deploy-ab`: a laptop deploy of Toolbox against Backstage, scored by catalog probes rather than `/readyz` ([local-simulation.md](./local-simulation.md), Q19). Run twice, inconclusive. Rerun under protocol 2 after the fixes in its [ADJUDICATION.md](../../experiments/deploy-ab/ADJUDICATION.md) |
+| B7 | `deploy-ab`: a laptop deploy of Seikika against Backstage, scored by catalog probes rather than `/readyz` ([local-simulation.md](./local-simulation.md), Q19). Run twice, inconclusive. Rerun under protocol 2 after the fixes in its [ADJUDICATION.md](../../experiments/deploy-ab/ADJUDICATION.md) |
 | B8 | Review `connector drive --format catalog` under P5: keep it if it has a use outside connector-ab's harness, or drop it (D01M83RDWR52WVNER0MV5T84NSX) |
 | B9 | Rerun connector-ab under protocol 2, with every arm's recipe written to the same level and Ocean's and Backstage's deferred friction fixed first |
-| B10 | gate-repair-ab showed that the ratchet's gate output is cheaper to read (G8, and again G16 in round 4). It did not show that Toolbox beats reviewdog: round 4 lost on calls (G13), and round 5 tied. By L19, the question changed: [pin-repair-ab](../../experiments/pin-repair-ab/README.md) asked it on a task whose fixes need pins from other files. There, in round 2, Toolbox beat reviewdog on read (N7: median 5,794 vs 18,300 characters), with calls and gate read inconclusive, after D01M84X4JDHXS98K89KN4AB0RCD and a replay measure (L20). It is narrow: N7 holds by 1,073 characters over *W*, and it depends on the replay. Still to do: the same question on a second repository and on a real pull request, and a hint naming the jobs a mistyped `needs:` could mean ([gate-repair-ab README](../../experiments/gate-repair-ab/README.md) §0.6) |
+| B10 | gate-repair-ab showed that the ratchet's gate output is cheaper to read (G8, and again G16 in round 4). It did not show that Seikika beats reviewdog: round 4 lost on calls (G13), and round 5 tied. By L19, the question changed: [pin-repair-ab](../../experiments/pin-repair-ab/README.md) asked it on a task whose fixes need pins from other files. There, in round 2, Seikika beat reviewdog on read (N7: median 5,794 vs 18,300 characters), with calls and gate read inconclusive, after D01M84X4JDHXS98K89KN4AB0RCD and a replay measure (L20). It is narrow: N7 holds by 1,073 characters over *W*, and it depends on the replay. Still to do: the same question on a second repository and on a real pull request, and a hint naming the jobs a mistyped `needs:` could mean ([gate-repair-ab README](../../experiments/gate-repair-ab/README.md) §0.6) |
 
 ## Sources
 

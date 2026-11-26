@@ -3,7 +3,7 @@
 Run 2026-11-22 on OpenFGA (R1) and Codex (R2), as pre-registered in
 [README.md](./README.md). The raw outputs, both arms' code, costs and
 judgements are in [data/](./data). This is about tools and standards,
-not the box: Toolbox wasn't used in either arm.
+not the box: Seikika wasn't used in either arm.
 
 ## 1. Conclusion
 
@@ -153,11 +153,11 @@ build beats it by about six confirmed findings per repository. -
 **It wins on reuse cost and convergence.** These measures predict
 whether a scorecard's numbers can be compared across repositories and
 ratcheted over time. -
-**A domain standard Toolbox carries should be at least as good as *S* on reuse cost and convergence.**
+**A domain standard Seikika carries should be at least as good as *S* on reuse cost and convergence.**
 It should also beat *S* on recall of the agent's findings, for example
 by letting a repository add its own rules on top.
 
-**What this means for Toolbox.** The case for a standard in the box
+**What this means for Seikika.** The case for a standard in the box
 isn't that it finds more. It is that it costs nothing to repeat and
 gives the same answer everywhere. The obvious next step is a
 combination: *S* as the floor, plus the home build's extras kept as

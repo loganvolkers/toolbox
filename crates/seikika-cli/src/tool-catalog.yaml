@@ -1,0 +1,170 @@
+# Tools `seikika tools find` recognises (docs/design/finding-tools.md). About the box: what it
+# can tell about the tools a repository already uses, and how each one fits a slot.
+#
+# Per tool:
+#   configs:   file globs, matched against a file's name or the end of its path
+#   pyproject: a `[tool.<x>]` section in pyproject.toml
+#   npm/pypi:  package names in package.json, pyproject.toml or requirements files
+#   ci:        a regex over CI, hook, task-runner and installer files
+#   sarif:     a command whose stdout is SARIF and whose exit status is 0 on findings; {files}
+#              is the box's file list
+#   checked:   where that command was run and its SARIF read; empty means it comes from the
+#              tool's docs or help and an agent must check it (the find-tools skill)
+#   kit:       the package that puts it in the box; fitting: the parser when there's no SARIF
+#   connector: a built-in connector that already runs it
+- name: ruff
+  about: Python linter
+  configs: [ruff.toml, .ruff.toml]
+  pyproject: ruff
+  pypi: [ruff]
+  ci: \bruff\b
+  sarif: ruff check --no-cache --output-format sarif --exit-zero {files}
+  checked: this repository's maintainer-python standard (ruff 0.14.0)
+  kit: sarif
+  install: {pypi: ruff, mise: pipx:ruff, aqua: astral-sh/ruff}
+- name: zizmor
+  about: GitHub Actions security audits
+  configs: [zizmor.yml, zizmor.yaml]
+  ci: \bzizmor\b
+  sarif: zizmor --offline --no-exit-codes --format sarif {files}
+  checked: the github-actions kit (zizmor 1.32.0)
+  kit: github-actions
+  install: {pypi: zizmor, mise: pipx:zizmor, aqua: zizmorcore/zizmor}
+- name: actionlint
+  about: GitHub Actions workflow checker
+  configs: [.github/actionlint.yaml, .github/actionlint.yml]
+  ci: \bactionlint\b
+  fitting: actionlint
+  checked: the github-actions kit (actionlint 1.7.12)
+  kit: github-actions
+  note: No SARIF output; the box reads its JSON through the actionlint fitting.
+  install: {mise: aqua:rhysd/actionlint, aqua: rhysd/actionlint}
+- name: semgrep
+  about: Pattern-based static analysis
+  configs: [.semgrep.yml, .semgrep.yaml, .semgrepignore]
+  pypi: [semgrep]
+  ci: \bsemgrep\b
+  sarif: >-
+    semgrep --config <rules> --metrics=off --disable-version-check --sarif
+    --quiet .
+  checked: the semgrep kit on a fork (experiments/standards-ab)
+  kit: semgrep
+  install: {pypi: semgrep, mise: pipx:semgrep}
+- name: golangci-lint
+  about: Go linters
+  configs: [.golangci.yml, .golangci.yaml, .golangci.toml, .golangci.json]
+  ci: golangci-lint
+  sarif: >-
+    golangci-lint run --output.sarif.path stdout --show-stats=false
+    --issues-exit-code=0 ./...
+  checked: golangci-lint 2.5.0 by hand (v1 used --out-format sarif)
+  kit: sarif
+  install: {mise: aqua:golangci/golangci-lint, aqua: golangci/golangci-lint}
+- name: eslint
+  about: JavaScript and TypeScript linter
+  configs: [eslint.config.*, .eslintrc, .eslintrc.*]
+  npm: [eslint]
+  ci: \beslint\b
+  sarif: eslint --format @microsoft/eslint-formatter-sarif {files}
+  kit: sarif
+  note: >-
+    Needs the @microsoft/eslint-formatter-sarif package beside eslint;
+    eslint exits 1 on errors.
+- name: biome
+  about: JavaScript and TypeScript linter and formatter
+  configs: [biome.json, biome.jsonc]
+  npm: ["@biomejs/biome"]
+  ci: \bbiome\s+(check|lint|ci)\b
+  kit: sarif
+  note: >-
+    Check `biome lint --help` for a SARIF reporter in the version the
+    repository pins.
+- name: clippy
+  about: Rust linter
+  configs: [clippy.toml, .clippy.toml]
+  ci: cargo\s+clippy
+  connector: builtin:workspace
+  note: >-
+    The workspace connector runs it per crate (clippy.messages);
+    clippy-sarif converts its JSON.
+- name: rustfmt
+  about: Rust formatter
+  configs: [rustfmt.toml, .rustfmt.toml]
+  ci: cargo\s+fmt|\brustfmt\b
+  note: A formatter; its check mode passes or fails, with no findings per rule.
+- name: shellcheck
+  about: Shell script linter
+  configs: [.shellcheckrc]
+  ci: \bshellcheck\b
+  note: >-
+    No SARIF output in the formats its help lists (json1, checkstyle, gcc);
+    a fitting would read json1.
+- name: hadolint
+  about: Dockerfile linter
+  configs: [.hadolint.yaml, .hadolint.yml]
+  ci: \bhadolint\b
+  sarif: hadolint --format sarif --no-fail {files}
+  kit: sarif
+- name: gitleaks
+  about: Secret scanner
+  configs: [.gitleaks.toml, .gitleaksignore]
+  ci: \bgitleaks\b
+  sarif: gitleaks dir --report-format sarif --report-path - --exit-code 0 .
+  kit: sarif
+  note: Older releases use `detect` in place of `dir`; check the pinned version.
+- name: trivy
+  about: Vulnerability and misconfiguration scanner
+  configs: [trivy.yaml, .trivyignore]
+  ci: \btrivy\b
+  sarif: trivy fs --format sarif --exit-code 0 .
+  kit: sarif
+- name: tflint
+  about: Terraform linter
+  configs: [.tflint.hcl]
+  ci: \btflint\b
+  sarif: tflint --format sarif --force
+  kit: sarif
+- name: markdownlint
+  about: Markdown linter
+  configs:
+  - .markdownlint.json
+  - .markdownlint.jsonc
+  - .markdownlint.yaml
+  - .markdownlint.yml
+  - .markdownlint-cli2.*
+  npm: [markdownlint-cli, markdownlint-cli2]
+  ci: markdownlint
+  note: markdownlint-cli2-formatter-sarif writes SARIF to a file, not stdout.
+- name: yamllint
+  about: YAML linter
+  configs: [.yamllint, .yamllint.yaml, .yamllint.yml]
+  pypi: [yamllint]
+  ci: \byamllint\b
+  note: No SARIF output; its parsable format is one finding per line.
+- name: mypy
+  about: Python type checker
+  configs: [mypy.ini, .mypy.ini]
+  pyproject: mypy
+  pypi: [mypy]
+  ci: \bmypy\b
+- name: prettier
+  about: Formatter for web languages
+  configs: [.prettierrc, .prettierrc.*, prettier.config.*]
+  npm: [prettier]
+  ci: \bprettier\b
+  note: A formatter; its check mode passes or fails, with no findings per rule.
+- name: yamark
+  about: YAML formatter
+  configs: [yamark.toml]
+  ci: \byamark\b
+  note: A formatter; its check mode passes or fails, with no findings per rule.
+- name: cargo-deny
+  about: Rust dependency licences, advisories and bans
+  configs: [deny.toml]
+  ci: cargo[\s-]deny
+- name: codeql
+  about: GitHub code scanning
+  ci: github/codeql-action
+  note: >-
+    Uploads its own SARIF to GitHub code scanning; the box doesn't read
+    those alerts yet.

@@ -11,13 +11,13 @@ author→change.
 
 | Hypothesis | Holds if | Result |
 |---|---|---|
-| **D1. Toolbox cheaper to diagnose+repair** | A fewer calls than B and C over phases 1+2, equal final correctness | **Fail.** A **31**, B **25**, C **25** |
-| **D2. Toolbox diagnosis finds more bugs** | Phase-1 recall strictly higher on A than on B and on C | **Fail.** All arms **3/3** (recall 1.0) |
+| **D1. Seikika cheaper to diagnose+repair** | A fewer calls than B and C over phases 1+2, equal final correctness | **Fail.** A **31**, B **25**, C **25** |
+| **D2. Seikika diagnosis finds more bugs** | Phase-1 recall strictly higher on A than on B and on C | **Fail.** All arms **3/3** (recall 1.0) |
 | **D3. Platforms correct after repair** | Finishing arms fully correct on phase 2 truth+shape, phase 3 truth, phase 4 read | **Hold.** All arms exact; read 5/5 |
 
 ## Cost
 
-| | A Toolbox | B Ocean | C Backstage |
+| | A Seikika | B Ocean | C Backstage |
 |---|---|---|---|
 | Calls phase 1 (diagnose) | 15 | **13** | **13** |
 | Calls phase 2 (repair) | 16 | **12** | **12** |
@@ -57,7 +57,7 @@ author→change.
 
 ## What this means for the claim
 
-Toolbox did **not** win the pre-registered repair-loop cost or diagnosis-recall bar on this run.
+Seikika did **not** win the pre-registered repair-loop cost or diagnosis-recall bar on this run.
 Correctness after repair matched Ocean and Backstage. Authoring wins from connector-ab v3 do not
 automatically transfer to diagnose→repair; the next product work, if any, should target error
 feedback (e.g. dump summaries, clearer mismatch hints) rather than re-tuning this bar.

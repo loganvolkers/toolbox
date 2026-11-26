@@ -1,0 +1,554 @@
+//! `seikika serve` and `seikika push`.
+
+use std::path::Path;
+
+/// Resolve the listen address. An explicit `--listen` or `SEIKIKA_LISTEN` wins. Otherwise
+/// `PORT` binds every interface, which is what Cloud Run and `docker run -e PORT` inject.
+/// The laptop default stays loopback so a bare `seikika serve` is not exposed.
+pub fn listen_addr(explicit: Option<&str>, port: Option<&str>) -> String {
+    if let Some(addr) = explicit.map(str::trim).filter(|s| !s.is_empty()) {
+        return addr.to_owned();
+    }
+    if let Some(port) = port.map(str::trim).filter(|s| !s.is_empty()) {
+        return format!("0.0.0.0:{port}");
+    }
+    "127.0.0.1:8080".to_owned()
+}
+
+/// Whether the database URL came from `--database-url` rather than `DATABASE_URL`. Every local
+/// user, whatever its UID, can read a process's argv in `/proc/<pid>/cmdline`, and non-dumpable
+/// does not hide it; the environment is hidden.
+pub fn url_on_command_line(database_url: Option<&str>, env: Option<&str>) -> bool {
+    database_url.is_some() && database_url != env
+}
+
+/// Whether `listen` (`host:port`) binds only the loopback interface.
+pub fn is_loopback(listen: &str) -> bool {
+    if let Ok(a) = listen.parse::<std::net::SocketAddr>() {
+        return a.ip().is_loopback();
+    }
+    listen
+        .rsplit_once(':')
+        .is_some_and(|(host, _)| host.eq_ignore_ascii_case("localhost"))
+}
+
+/// The auth mode when `SEIKIKA_AUTH_MODE` is unset: `dev` (the `x-seikika-user` header is
+/// trusted) only on loopback, where the caller is on the same machine. Anywhere else a spoofable
+/// header would let any client claim any identity, so the default is `token` (PATs only).
+pub fn default_auth_mode(listen: &str) -> &'static str {
+    if is_loopback(listen) { "dev" } else { "token" }
+}
+
+/// Acknowledges `dev` auth off loopback, where any client that reaches the port can claim any
+/// identity (D01M885TA0R4HCZTVDSG9F0PHDQ). Without it the server refuses to start.
+pub const ALLOW_DEV_OFF_LOOPBACK: &str = "SEIKIKA_ALLOW_DEV_AUTH_OFF_LOOPBACK";
+
+/// The auth mode to serve with: `SEIKIKA_AUTH_MODE` when set, else the default for `listen`.
+/// Explicit `dev` off loopback also needs [`ALLOW_DEV_OFF_LOOPBACK`].
+pub fn auth_mode(
+    listen: &str,
+    explicit: Option<&str>,
+    allow_dev_off_loopback: bool,
+) -> Result<String, String> {
+    let Some(mode) = explicit.map(str::trim).filter(|m| !m.is_empty()) else {
+        return Ok(default_auth_mode(listen).into());
+    };
+    if mode == "dev" && !is_loopback(listen) && !allow_dev_off_loopback {
+        return Err(format!(
+            "SEIKIKA_AUTH_MODE=dev on {listen} would let every client that can reach this address claim any identity with x-seikika-user; refusing to start. Use a real mode (`token`, `oidc`, `iap-google`, `cloudflare-access`), bind loopback, or set {ALLOW_DEV_OFF_LOOPBACK}=1 to accept it"
+        ));
+    }
+    Ok(mode.into())
+}
+
+fn truthy(v: Option<String>) -> bool {
+    v.is_some_and(|v| matches!(v.trim(), "1" | "true" | "yes"))
+}
+use seikika_authz::authn::{AuthConfig, Authenticator, Mode, PatLookup};
+use seikika_store::{SharedMem, Store};
+use std::process::ExitCode;
+use std::sync::Arc;
+
+struct PgPats(seikika_store::PgStore);
+
+#[async_trait::async_trait]
+impl PatLookup for PgPats {
+    async fn subject_for(&self, hash: &str) -> Option<String> {
+        self.0.token_subject(hash).await
+    }
+}
+
+/// Start OpenFGA for the portal's model: on Postgres with the tuple view, else in memory.
+async fn start_authz(
+    root: &Path,
+    manifest: &seikika_model::Manifest,
+    pg: Option<&seikika_store::PgStore>,
+    database_url: Option<&str>,
+) -> Result<Option<Arc<dyn seikika_authz::Authorizer>>, String> {
+    let Some(authz) = &manifest.authz else {
+        return Ok(None);
+    };
+    let dsl = std::fs::read_to_string(root.join(&authz.model))
+        .map_err(|e| format!("{}: {e}", authz.model))?;
+    let model = seikika_authz::fga_dsl::to_json(&dsl)?;
+    let datastore = match database_url {
+        Some(url) => {
+            let uri = std::env::var("SEIKIKA_OPENFGA_DATASTORE_URI").unwrap_or_else(|_| {
+                if url.contains("sslmode=") {
+                    url.to_owned()
+                } else if url.contains('?') {
+                    format!("{url}&sslmode=disable")
+                } else {
+                    format!("{url}?sslmode=disable")
+                }
+            });
+            seikika_authz::Datastore::Postgres(uri)
+        }
+        None => seikika_authz::Datastore::Memory,
+    };
+    let fga = seikika_authz::OpenFga::start(
+        datastore,
+        &format!("seikika-{}", manifest.portal.name),
+        model,
+    )
+    .await?;
+    if let Some(pg) = pg {
+        seikika_authz::openfga::install_tuple_view(&pg.pool, &fga.store).await?;
+    }
+    Ok(Some(Arc::new(fga)))
+}
+
+fn config_from_env(listen: &str) -> Result<seikika_api::Config, String> {
+    let mode = auth_mode(
+        listen,
+        std::env::var("SEIKIKA_AUTH_MODE").ok().as_deref(),
+        truthy(std::env::var(ALLOW_DEV_OFF_LOOPBACK).ok()),
+    )?;
+    if mode == "dev" && !is_loopback(listen) {
+        tracing::warn!(
+            "SEIKIKA_AUTH_MODE=dev on {listen} ({ALLOW_DEV_OFF_LOOPBACK} is set): every client that can reach this address can claim any identity with x-seikika-user"
+        );
+    }
+    let mut c = seikika_api::Config {
+        auth_mode: mode,
+        connector_confinement: seikika_api::confine::Confinement::from_env()?,
+        ..Default::default()
+    };
+    if let Ok(tokens) = std::env::var("SEIKIKA_CONNECTOR_TOKENS") {
+        c.connector_tokens = tokens
+            .split(',')
+            .filter_map(|p| {
+                p.split_once('=')
+                    .map(|(n, t)| (n.trim().to_owned(), t.trim().to_owned()))
+            })
+            .collect();
+    }
+    Ok(c)
+}
+
+fn init_serve_telemetry() -> Result<seikika_telemetry::TelemetryGuard, ExitCode> {
+    seikika_telemetry::init(seikika_telemetry::TelemetryOptions {
+        mode: None,
+        service_name: None,
+        prometheus: Some(true),
+        log_format: None,
+    })
+    .map_err(|e| {
+        eprintln!("error: telemetry: {e}");
+        ExitCode::from(2)
+    })
+}
+
+/// Make the server non-dumpable. In-image connectors run as the server's user, and a same-user
+/// process may read `/proc/<pid>/environ` (`DATABASE_URL`, `SEIKIKA_SECRET_*`) and `/proc/<pid>/mem`
+/// of any dumpable process. A non-dumpable one is readable only by root; it also writes no core
+/// dump. Children reset the flag on exec, so connectors and OpenFGA are unaffected.
+fn harden_process() {
+    #[cfg(target_os = "linux")]
+    if let Err(e) =
+        rustix::process::set_dumpable_behavior(rustix::process::DumpableBehavior::NotDumpable)
+    {
+        tracing::warn!("cannot make the server non-dumpable: {e}");
+    }
+}
+
+pub fn serve(path: &Path, listen: &str, database_url: Option<String>, fixtures: bool) -> ExitCode {
+    harden_process();
+    let report = match seikika_model::validate_portal(path) {
+        Ok(r) => r,
+        Err(e) => {
+            eprintln!("error: {e}");
+            return ExitCode::from(2);
+        }
+    };
+    if !report.ok() {
+        for d in &report.errors {
+            eprintln!("ERROR {d}");
+        }
+        return ExitCode::from(1);
+    }
+    let src = seikika_model::load::load(path).expect("validated above");
+    let manifest = crate::portal::manifest_from(&src).expect("validated above");
+    let rt = tokio::runtime::Runtime::new().expect("tokio runtime");
+    let database_url_for_fga = database_url.clone();
+    rt.block_on(async move {
+        // Init after the runtime exists (OTLP batch exporters need it) and before listen.
+        let _telemetry = match init_serve_telemetry() {
+            Ok(g) => g,
+            Err(code) => return code,
+        };
+        if url_on_command_line(database_url.as_deref(), std::env::var("DATABASE_URL").ok().as_deref()) {
+            tracing::warn!(
+                "--database-url is readable by every local user in /proc/<pid>/cmdline; set DATABASE_URL instead"
+            );
+        }
+        let (store, pg): (Arc<dyn Store>, _) = match database_url {
+            Some(url) => match seikika_store::PgStore::connect(&url).await {
+                Ok(pg) => (Arc::new(pg.clone()), Some(pg)),
+                Err(e) => {
+                    eprintln!("error: Postgres: {e}");
+                    return ExitCode::from(2);
+                }
+            },
+            None => {
+                let mem = if fixtures {
+                    match seikika_store::load_fixtures(&src.root) {
+                        Ok(m) => m,
+                        Err(e) => {
+                            eprintln!("error: {e}");
+                            return ExitCode::from(2);
+                        }
+                    }
+                } else {
+                    seikika_store::MemStore::new()
+                };
+                (Arc::new(SharedMem(std::sync::Mutex::new(mem))), None)
+            }
+        };
+        let mode = if pg.is_some() { "postgres" } else { "in-memory" };
+        let config = match config_from_env(listen) {
+            Ok(c) => c,
+            Err(e) => {
+                eprintln!("error: {e}");
+                return ExitCode::from(2);
+            }
+        };
+        let auth_mode = match Mode::parse(&config.auth_mode) {
+            Ok(m) => m,
+            Err(e) => {
+                eprintln!("error: {e}");
+                return ExitCode::from(2);
+            }
+        };
+        let authn = Authenticator::new(
+            AuthConfig::from_env(auth_mode.clone()),
+            pg.clone().map(|p| Box::new(PgPats(p)) as Box<dyn PatLookup>),
+        );
+        let openfga_available = std::process::Command::new(seikika_authz::openfga::binary()).arg("version").output().is_ok();
+        let authz = if openfga_available {
+            match start_authz(&src.root, &manifest, pg.as_ref(), database_url_for_fga.as_deref()).await {
+                Ok(a) => a,
+                Err(e) => {
+                    eprintln!("error: authorization: {e}");
+                    return ExitCode::from(2);
+                }
+            }
+        } else if auth_mode == Mode::Dev {
+            tracing::warn!(
+                "no `openfga` binary (SEIKIKA_OPENFGA_BIN); running WITHOUT authorization (dev mode only)"
+            );
+            None
+        } else {
+            eprintln!("error: authorization needs the `openfga` binary (SEIKIKA_OPENFGA_BIN); refusing to start in {} mode without it (on {listen}; set SEIKIKA_AUTH_MODE=dev{} to serve without authorization)", config.auth_mode, if is_loopback(listen) { String::new() } else { format!(" and {ALLOW_DEV_OFF_LOOPBACK}=1") });
+            return ExitCode::from(2);
+        };
+        let authz_label = if authz.is_some() { "OpenFGA" } else { "none" };
+        let state = seikika_api::app_state_with(manifest, &src.document, store, pg, config, authn, authz);
+        let listener = match tokio::net::TcpListener::bind(listen).await {
+            Ok(l) => l,
+            Err(e) => {
+                eprintln!("error: listen {listen}: {e}");
+                return ExitCode::from(2);
+            }
+        };
+        // Keep the literal `authorization: …` in the message: m3-acceptance greps server.log for it.
+        tracing::info!(
+            "seikika: serving {} on http://{listen} ({mode} store, {auth:?} auth, authorization: {authorization}, manifest {manifest})",
+            src.manifest_file,
+            listen = listen,
+            mode = mode,
+            auth = format!("{auth_mode:?}"),
+            authorization = authz_label,
+            manifest = state.manifest_hash.as_str(),
+        );
+        tokio::select! {
+            r = seikika_api::serve(state, listener) => {
+                if let Err(e) = r { eprintln!("error: {e}"); return ExitCode::from(1); }
+            }
+            _ = shutdown_signal() => tracing::info!("shutting down"),
+        }
+        ExitCode::SUCCESS
+    })
+}
+
+/// Ctrl-C, or SIGTERM on Unix (how containers and scripts stop a server). Exiting this way drops
+/// the supervised children, so the OpenFGA co-process is killed rather than left running.
+async fn shutdown_signal() {
+    #[cfg(unix)]
+    {
+        use tokio::signal::unix::{SignalKind, signal};
+        match signal(SignalKind::terminate()) {
+            Ok(mut term) => {
+                tokio::select! {
+                    _ = tokio::signal::ctrl_c() => {}
+                    _ = term.recv() => {}
+                }
+            }
+            Err(_) => {
+                let _ = tokio::signal::ctrl_c().await;
+            }
+        }
+    }
+    #[cfg(not(unix))]
+    {
+        let _ = tokio::signal::ctrl_c().await;
+    }
+}
+
+pub fn push(path: &Path, url: &str) -> ExitCode {
+    let root = match seikika_model::load::resolve(path) {
+        Ok((root, _)) => root,
+        Err(e) => {
+            eprintln!("error: {e}");
+            return ExitCode::from(2);
+        }
+    };
+    let (batches, native) = match seikika_store::read_fixtures(&root) {
+        Ok(f) => f,
+        Err(e) => {
+            eprintln!("error: {e}");
+            return ExitCode::from(2);
+        }
+    };
+    let rt = tokio::runtime::Runtime::new().expect("tokio runtime");
+    rt.block_on(async move {
+        let client = reqwest::Client::new();
+        let mut last = 0u64;
+        for (connector, batch) in &batches {
+            let body = batch
+                .iter()
+                .map(|m| m.to_string())
+                .collect::<Vec<_>>()
+                .join("\n");
+            let resp = client
+                .post(format!("{url}/v1/ingest"))
+                .header("x-seikika-connector", connector)
+                .header("content-type", "application/x-ndjson")
+                .body(body)
+                .send()
+                .await;
+            match resp {
+                Ok(r) if r.status().is_success() => {
+                    let v: serde_json::Value = r.json().await.unwrap_or_default();
+                    last = v["input_version"].as_u64().unwrap_or(last);
+                    println!(
+                        "{connector}: {} message(s) → input version {last}",
+                        batch.len()
+                    );
+                }
+                Ok(r) => {
+                    let status = r.status();
+                    eprintln!(
+                        "{connector}: {status} {}",
+                        r.text().await.unwrap_or_default()
+                    );
+                    return ExitCode::from(1);
+                }
+                Err(e) => {
+                    eprintln!("{connector}: {e}");
+                    return ExitCode::from(2);
+                }
+            }
+        }
+        // Native writes need the entity to exist: wait for the snapshot with the records first.
+        let snap = client
+            .get(format!("{url}/v1/snapshot?min_snapshot={last}"))
+            .send()
+            .await;
+        if !snap.map(|r| r.status().is_success()).unwrap_or(false) {
+            eprintln!("snapshot {last} was not published");
+            return ExitCode::from(1);
+        }
+        for n in &native {
+            let r = client
+                .put(format!("{url}/v1/entities/{}/native/{}", n.entity, n.field))
+                .header(
+                    "x-seikika-user",
+                    n.author
+                        .as_deref()
+                        .unwrap_or("user:push")
+                        .trim_start_matches("user:"),
+                )
+                .json(&serde_json::json!({"value": n.value, "reason": n.reason}))
+                .send()
+                .await;
+            match r {
+                Ok(r) if r.status().is_success() => {
+                    let v: serde_json::Value = r.json().await.unwrap_or_default();
+                    last = v["input_version"].as_u64().unwrap_or(last);
+                    println!("native {}.{} → input version {last}", n.entity, n.field);
+                }
+                Ok(r) => {
+                    eprintln!(
+                        "native {}.{}: {}",
+                        n.entity,
+                        n.field,
+                        r.text().await.unwrap_or_default()
+                    );
+                    return ExitCode::from(1);
+                }
+                Err(e) => {
+                    eprintln!("native: {e}");
+                    return ExitCode::from(2);
+                }
+            }
+        }
+        match client
+            .get(format!("{url}/v1/snapshot?min_snapshot={last}"))
+            .send()
+            .await
+        {
+            Ok(r) if r.status().is_success() => {
+                let v: serde_json::Value = r.json().await.unwrap_or_default();
+                println!(
+                    "snapshot {} published ({} entities)",
+                    v["snapshot"].as_str().unwrap_or("?"),
+                    v["entities"]
+                );
+                ExitCode::SUCCESS
+            }
+            _ => {
+                eprintln!("snapshot {last} was not published within 10 s");
+                ExitCode::from(1)
+            }
+        }
+    })
+}
+
+pub fn create_token(user: &str, label: Option<&str>, database_url: &str) -> ExitCode {
+    let rt = tokio::runtime::Runtime::new().expect("tokio runtime");
+    rt.block_on(async move {
+        let pg = match seikika_store::PgStore::connect(database_url).await {
+            Ok(p) => p,
+            Err(e) => {
+                eprintln!("error: Postgres: {e}");
+                return ExitCode::from(2);
+            }
+        };
+        let token = match seikika_authz::authn::new_pat() {
+            Ok(t) => t,
+            Err(e) => {
+                eprintln!("error: {e}");
+                return ExitCode::from(2);
+            }
+        };
+        match pg
+            .create_token(&seikika_authz::authn::pat_hash(&token), user, label)
+            .await
+        {
+            Ok(()) => {
+                println!("{token}");
+                eprintln!("personal access token for {user} (shown once; only its hash is stored)");
+                ExitCode::SUCCESS
+            }
+            Err(e) => {
+                eprintln!("error: {e}");
+                ExitCode::from(1)
+            }
+        }
+    })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{auth_mode, default_auth_mode, listen_addr, url_on_command_line};
+
+    #[test]
+    fn a_database_url_on_the_command_line_is_flagged() {
+        let url = Some("postgres://u:p@h/db");
+        assert!(url_on_command_line(url, None));
+        assert!(url_on_command_line(url, Some("postgres://other")));
+        assert!(!url_on_command_line(url, url));
+        assert!(!url_on_command_line(None, None));
+    }
+
+    #[test]
+    fn header_auth_is_the_default_only_on_loopback() {
+        for a in [
+            "127.0.0.1:8080",
+            "[::1]:8080",
+            "localhost:8080",
+            "127.0.0.2:1",
+        ] {
+            assert_eq!(default_auth_mode(a), "dev", "{a}");
+        }
+        for a in [
+            "0.0.0.0:8080",
+            "[::]:8080",
+            "10.0.0.5:8080",
+            "example.com:80",
+        ] {
+            assert_eq!(default_auth_mode(a), "token", "{a}");
+        }
+    }
+
+    #[test]
+    fn port_binds_every_interface_unless_listen_is_set() {
+        assert_eq!(listen_addr(None, Some("8080")), "0.0.0.0:8080");
+        assert_eq!(listen_addr(None, Some(" 9090 ")), "0.0.0.0:9090");
+        assert_eq!(
+            listen_addr(Some("127.0.0.1:8080"), Some("9090")),
+            "127.0.0.1:8080"
+        );
+        assert_eq!(listen_addr(None, None), "127.0.0.1:8080");
+        assert_eq!(listen_addr(None, Some("")), "127.0.0.1:8080");
+        assert_eq!(listen_addr(Some(""), Some("8080")), "0.0.0.0:8080");
+    }
+
+    #[test]
+    fn explicit_dev_auth_off_loopback_needs_the_acknowledgement() {
+        assert_eq!(
+            auth_mode("127.0.0.1:8080", Some("dev"), false).as_deref(),
+            Ok("dev")
+        );
+        assert_eq!(
+            auth_mode("localhost:8080", Some(" dev "), false).as_deref(),
+            Ok("dev")
+        );
+        let refused = auth_mode("0.0.0.0:8080", Some("dev"), false).unwrap_err();
+        assert!(
+            refused.contains("SEIKIKA_ALLOW_DEV_AUTH_OFF_LOOPBACK=1"),
+            "{refused}"
+        );
+        assert_eq!(
+            auth_mode("0.0.0.0:8080", Some("dev"), true).as_deref(),
+            Ok("dev")
+        );
+        assert_eq!(
+            auth_mode("0.0.0.0:8080", Some("oidc"), false).as_deref(),
+            Ok("oidc")
+        );
+        assert_eq!(
+            auth_mode("0.0.0.0:8080", None, false).as_deref(),
+            Ok("token")
+        );
+        assert_eq!(
+            auth_mode("0.0.0.0:8080", Some(""), false).as_deref(),
+            Ok("token")
+        );
+        assert_eq!(
+            auth_mode("127.0.0.1:8080", None, false).as_deref(),
+            Ok("dev")
+        );
+    }
+}

@@ -1,7 +1,7 @@
 # Arm A prompt (written checklist)
 
-The same rules, goal, SHA note and reply format as [prompt-toolbox.md](prompt-toolbox.md), with
-`<dir>` = `/tmp/claude-0/ab/<repo>-A`, no `toolbox` command, and the standards written out. The
+The same rules, goal, SHA note and reply format as [prompt-seikika.md](prompt-seikika.md), with
+`<dir>` = `/tmp/claude-0/ab/<repo>-A`, no `seikika` command, and the standards written out. The
 checklist is every rule of the portal's scorecards, with its level and fix text, except the six
 run-history rules. Three lines were made self-contained, since the agent couldn't see the
 evidence: `links-resolve` says "every relative link must point at a file that exists",

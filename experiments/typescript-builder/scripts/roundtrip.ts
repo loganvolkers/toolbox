@@ -11,7 +11,7 @@ const norm = (v: unknown): unknown =>
   : Array.isArray(v) ? v.map(norm)
   : v && typeof v === "object" ? Object.fromEntries(Object.entries(v).map(([k, x]) => [k, norm(x)])) : v;
 
-const yaml = parse(readFileSync(new URL("../../../examples/reference-portal/toolbox.yaml", import.meta.url), "utf8"));
+const yaml = parse(readFileSync(new URL("../../../examples/reference-portal/seikika.yaml", import.meta.url), "utf8"));
 const a = canonical(norm(manifest)).split("\n");
 const b = canonical(norm(yaml)).split("\n");
 const diffs = a.map((l, i) => [i, l, b[i]] as const).filter(([, l, r]) => l !== r);
@@ -20,4 +20,4 @@ if (diffs.length || a.length !== b.length) {
   console.log(`DIFFERENT (${diffs.length} lines, ${a.length} vs ${b.length})`);
   process.exit(1);
 }
-console.log(`identical: builder output equals examples/reference-portal/toolbox.yaml (${a.length} canonical lines)`);
+console.log(`identical: builder output equals examples/reference-portal/seikika.yaml (${a.length} canonical lines)`);

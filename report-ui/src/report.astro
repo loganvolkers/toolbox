@@ -1,27 +1,27 @@
 ---
 import { readFile } from "node:fs/promises";
-import { Layout, dataFile } from "virtual:toolbox-report";
-import "@toolbox-dev/ui/theme.css";
+import { Layout, dataFile } from "virtual:seikika-report";
+import "@seikika/ui/theme.css";
 
 const snapshot = JSON.parse(await readFile(dataFile, "utf8"));
 if (!snapshot || typeof snapshot.catalog !== "object" || !snapshot.catalog ||
     typeof snapshot.scorecards !== "object" || !snapshot.scorecards ||
     typeof snapshot.scores !== "object" || !snapshot.scores) {
-  throw new TypeError("The Toolbox report expects a snapshot from toolbox report -o web");
+  throw new TypeError("The Seikika report expects a snapshot from seikika report -o web");
 }
-const title = snapshot.portal || "Toolbox report";
+const title = snapshot.portal || "Seikika report";
 const serialized = JSON.stringify(snapshot).replace(/</g, "\\u003c");
 ---
 <Layout title={title}>
-  <div id="toolbox-report-root"></div>
+  <div id="seikika-report-root"></div>
   <noscript><h1>{title}</h1><p>Enable JavaScript to browse the report.</p></noscript>
-  <script is:inline id="toolbox-report-data" type="application/json" set:html={serialized}></script>
+  <script is:inline id="seikika-report-data" type="application/json" set:html={serialized}></script>
 </Layout>
 <script>
   import { createApp } from "vue";
   import ReportApp from "./ReportApp.vue";
   import "./report.css";
-  const data = document.getElementById("toolbox-report-data");
-  const root = document.getElementById("toolbox-report-root");
+  const data = document.getElementById("seikika-report-data");
+  const root = document.getElementById("seikika-report-root");
   if (data && root) createApp(ReportApp, { data: JSON.parse(data.textContent ?? "null") }).mount(root);
 </script>

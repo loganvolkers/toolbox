@@ -1,5 +1,5 @@
 import { h, ref } from "vue";
-import PageFrame from "@toolbox-dev/ui/components/PageFrame.vue";
+import PageFrame from "@seikika/ui/components/PageFrame.vue";
 import PortalHeader from "../../ui/src/components/PortalHeader.vue";
 import PortalView from "../../ui/src/components/PortalView.vue";
 import type { ApiResult } from "../../ui/src/api";

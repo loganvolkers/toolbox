@@ -5,12 +5,12 @@ sidebar:
   order: 2
 ---
 
-An operator changes a portal in the repository that holds its manifest. The wider job, scoring a repository and serving the catalog, is [Build a portal](/toolbox/operators/). The loop is the same shape as any other change: check it, test it, look at the diff, then deploy.
+An operator changes a portal in the repository that holds its manifest. The wider job, scoring a repository and serving the catalog, is [Build a portal](/operators/). The loop is the same shape as any other change: check it, test it, look at the diff, then deploy.
 
 ```bash
-target/debug/toolbox validate path/to/portal
-target/debug/toolbox test path/to/portal
-target/debug/toolbox plan --local --base path/to/portal
+target/debug/seikika validate path/to/portal
+target/debug/seikika test path/to/portal
+target/debug/seikika plan --local --base path/to/portal
 ```
 
 `validate` checks the manifest. `test` runs the portal's expectations against its fixtures, so a rule means the same thing tomorrow as it does today. `plan --local` recomputes the catalog twice and prints the difference.
@@ -21,4 +21,4 @@ Kinds, fields, the map from connector records, and the scorecard rules. Threshol
 
 ## What this site is not
 
-This site documents Toolbox. It is not a running portal, and it is not the one-file HTML report a repository can publish from `toolbox report`. A portal's own UI is served by `toolbox serve`.
+This site documents Seikika. It is not a running portal, and it is not the one-file HTML report a repository can publish from `seikika report`. A portal's own UI is served by `seikika serve`.

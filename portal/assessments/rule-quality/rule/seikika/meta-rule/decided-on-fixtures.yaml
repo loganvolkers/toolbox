@@ -1,0 +1,52 @@
+apiVersion: seikika.com/assessment/v1
+entity: rule:seikika/meta-rule/decided-on-fixtures
+rubric: rule-quality
+subjectHash: 0a20de0d356a
+assessor: {kind: agent, name: cursor-assessor-02, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: measures-intent
+    verdict: pass
+    reason: >-
+      Only a pass or fail on a fixture entity counts, and those exist only
+      when the check's CEL was evaluated to a boolean
+      (crates/seikika-cli/src/meta.rs:140-146). So the CEL ran in tests, the
+      thing the rationale (portal/standards/meta.yaml:464-466) says lesson L5
+      lacked. The evidence expression is not exercised by a pass. That gap is
+      covered at silver by both-outcomes-on-fixtures (meta.yaml:468-480).
+  - criterion: hard-to-game
+    verdict: pass
+    reason: >-
+      The only way to move `fixture.pass + fixture.fail` off zero is a fixture
+      record of the scorecard's kind carrying the fields the check reads. That
+      is the right thing, and it is how rule:seikika/meta-rule/tested itself
+      is decided on the rule records in portal/fixtures/surfaces.ndjson.
+  - criterion: fix-leads-to-pass
+    verdict: fail
+    reason: >-
+      The evidence is `<n> unknown, no pass or fail on the fixtures`
+      (meta.yaml:460-462). When n > 0, the records already exist and lack the
+      fields the check reads. rule:demo/sprawling/everything is unknown on 3
+      fixture entities (surfaces.ndjson) because they have no `items` or
+      `size`. The fix says only "Add fixture records the rule applies to". It
+      doesn't say to fill the checked fields on existing records, and it names
+      neither those fields nor where fixtures live.
+    suggestion: >-
+      Say: "In the portal's fixtures (fixtures/<connector>.ndjson), add a
+      record of the scorecard's kind, or set on existing ones the fields the
+      check reads". Add `entity.check.fields` to the evidence so it names
+      those fields.
+  - criterion: threshold-justified
+    verdict: pass
+    reason: >-
+      The threshold is "at least one decided outcome", the definition of the
+      property. Bronze is set by the ratchet floor in
+      docs/design/scorecards-for-scorecards.md:117-119: every new rule must be
+      tested, explained and decided on fixtures from its first commit (L10,
+      line 90).
+summary: >-
+  It measures the right thing and can't be gamed cheaply. Its fix misses
+  the common case its own evidence reports: records that exist but are
+  unknown because they lack the checked fields. No live rule fails it
+  today (0 of 272 in portal/results.json), so it guards new rules at the
+  ratchet. Tests pin only fail (portal/tests/standards.test.yaml:242-252).

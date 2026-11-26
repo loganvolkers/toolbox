@@ -1,4 +1,4 @@
-module github.com/loganvolkers/toolbox/experiments/openfga-spicedb-compare/load
+module github.com/seikika/seikika/experiments/openfga-spicedb-compare/load
 
 go 1.27.4
 

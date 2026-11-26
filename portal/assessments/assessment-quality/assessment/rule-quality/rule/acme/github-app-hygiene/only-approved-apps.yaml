@@ -1,4 +1,4 @@
-apiVersion: toolbox.dev/assessment/v1
+apiVersion: seikika.com/assessment/v1
 entity: assessment:rule-quality/rule:acme/github-app-hygiene/only-approved-apps
 rubric: assessment-quality
 subjectHash: 5f06d757c547
@@ -10,33 +10,33 @@ verdicts:
     reason: >-
       The citations in
       portal/assessments/rule-quality/rule/acme/github-app-hygiene/only-approved-apps.yaml
-      hold. In examples/reference-portal/toolbox.yaml the check is at 246, the
+      hold. In examples/reference-portal/seikika.yaml the check is at 246, the
       `eligible` keys at 26 and 32, and the actions at 304-364. The scorecard
       rationale is at 232-236. `rg eligible` over crates/ and the reference
       portal's tools finds nothing that evaluates it, only a test fixture
-      (crates/toolbox-derive/tests/reference.rs:79).
-      crates/toolbox-connector-github/src/main.rs:207-215 calls `GET
+      (crates/seikika-derive/tests/reference.rs:79).
+      crates/seikika-connector-github/src/main.rs:207-215 calls `GET
       /user/installations/{id}/repositories`, the limit that
       docs/examples/approved-github-apps.md:148 and docs/questions.md Q14
       describe. `request-new-app` appears only at design :70. One line is off:
-      app-approval's `appliesTo` is at toolbox.yaml:267, not :268.
+      app-approval's `appliesTo` is at seikika.yaml:267, not :268.
   - criterion: complete
     verdict: fail
     reason: >-
       hard-to-game should be unsure, not pass. A one-line `sketchy-bot: {}`
       under `policies.approvedApps` makes checkout-web pass this rule
-      (toolbox.yaml:246). app-approval would then fail githubapp:sketchy-bot,
+      (seikika.yaml:246). app-approval would then fail githubapp:sketchy-bot,
       but that is a different entity's score, and nothing in it holds this
       repository's level down. Copying the app's current permissions passes
       both. Whether either edit gets a security review depends on who owns the
       inline policy block, which nothing in the portal enforces
-      (toolbox.yaml:13-14, no CODEOWNERS in examples/reference-portal/). The
+      (seikika.yaml:13-14, no CODEOWNERS in examples/reference-portal/). The
       same assessor made the same point for permissions-match-snapshot and
       judged it unsure there
       (portal/assessments/rule-quality/rule/acme/app-approval/permissions-match-snapshot.yaml).
       The other three verdicts are right. The eligibility half of
       measures-intent is arguable, since the rule's name and rationale
-      (toolbox.yaml:244-253) promise only "approved list". The fail stands on
+      (seikika.yaml:244-253) promise only "approved list". The fail stands on
       the incomplete installation listing alone.
     suggestion: >-
       Make hard-to-game unsure, with the same reason as the sibling
@@ -49,7 +49,7 @@ verdicts:
       Two verdicts are judgement calls. On hard-to-game, the assessor reached
       opposite answers here and in the sibling assessment on the same policy
       edit question. On measures-intent, eligibility is read as part of
-      "approved" although the rule never says so (toolbox.yaml:244-253). A
+      "approved" although the rule never says so (seikika.yaml:244-253). A
       second assessor could reasonably differ on both. The listing gap and the
       missing `request-new-app` would reproduce.
     suggestion: >-
@@ -62,7 +62,7 @@ verdicts:
       Each suggestion would change its verdict. Evaluating `eligible` and
       returning unknown on an incomplete listing addresses both
       measures-intent routes. Evidence naming the unapproved apps, plus a fix
-      pointing at `remove-app` (toolbox.yaml:341-364) rather than the missing
+      pointing at `remove-app` (seikika.yaml:341-364) rather than the missing
       `request-new-app`, fixes fix-leads-to-pass.
 summary: >-
   The citations hold and the measures-intent and fix-leads-to-pass fails

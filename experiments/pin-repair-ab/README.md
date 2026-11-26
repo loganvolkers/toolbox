@@ -1,7 +1,7 @@
-# pin-repair-ab: repairing pins the repository already knows, Toolbox vs reviewdog
+# pin-repair-ab: repairing pins the repository already knows, Seikika vs reviewdog
 
-**Status: complete. Toolbox beats reviewdog on this task in round 2 (frozen at `6303a4d`), on
-read.** Toolbox was correct in every run and read a median of 5,794 characters against
+**Status: complete. Seikika beats reviewdog on this task in round 2 (frozen at `6303a4d`), on
+read.** Seikika was correct in every run and read a median of 5,794 characters against
 reviewdog's 18,300 (N7). Calls and gate read were inconclusive. Round 1 (frozen at `25079a6`)
 showed no win under its rule, with a measure that dropped some of reviewdog's results. Round 2
 was registered with a measure that rebuilds them (§4.1). After round 1, only this status line,
@@ -13,11 +13,11 @@ This benchmark is about the box: a ratchet gate that reports what the repository
 Its tools are zizmor and actionlint, the same in both arms.
 
 **Question.** A pull request adds a workflow that writes its actions as tags (`actions/checkout@v6`)
-where the rest of the repository pins them to commit SHAs. Does Toolbox's gate get a coding agent
-to a correct pass for less effort than reviewdog over the same tools? Toolbox's gate names the pin
+where the rest of the repository pins them to commit SHAs. Does Seikika's gate get a coding agent
+to a correct pass for less effort than reviewdog over the same tools? Seikika's gate names the pin
 the repository already uses for each action. reviewdog's tools only say the action is unpinned.
 
-**Why this question.** [gate-repair-ab](../gate-repair-ab/README.md) asked whether Toolbox's gate
+**Why this question.** [gate-repair-ab](../gate-repair-ab/README.md) asked whether Seikika's gate
 beats reviewdog's on a repair of mostly local mistakes. Over five rounds it never did. Every run
 in every arm printed the branch's large changed workflows before editing, which set a floor and a
 noise that the gate's output could not move (L19 in
@@ -32,23 +32,23 @@ measured saving, and B10's next step moves to another question.
 
 ## 0. Results
 
-### 0.2 Round 2: Toolbox beats reviewdog, on read
+### 0.2 Round 2: Seikika beats reviewdog, on read
 
 Ten fresh runs, five per arm, launched together at `6303a4d` with the prompts committed in
 `1465d7d`, and collected with `REPLAY` set, as registered in §4.1. Every run said DONE, and the
 scorer marked all ten correct. Per-run numbers are in [results/r2.tsv](results/r2.tsv), and each
 run's diff, score and replay report are in `results/r2/`.
 
-| Measure | Arm A (Toolbox): median, range | Arm B (reviewdog): median, range | *W* | Label |
+| Measure | Arm A (Seikika): median, range | Arm B (reviewdog): median, range | *W* | Label |
 |---|---|---|---|---|
 | Correct | 5 of 5 | 5 of 5 | | **N5 holds** |
 | Calls | 2, 0 | 5, 7 | 7 | N6 inconclusive |
 | Read | 5,794, 123 | 18,300, 11,433 | 11,433 | **N7 holds** (gap 12,506) |
 | Gate read | 5,794, 123 | 8,299, 4,849 | 4,849 | N8 inconclusive |
 
-**Toolbox beats reviewdog on this task in round 2, under the registered rule**: N5 and N7 hold,
+**Seikika beats reviewdog on this task in round 2, under the registered rule**: N5 and N7 hold,
 and none of N6 to N8 fails. The designer predicted that outcome. In this task, on the registered
-measure, an agent with Toolbox's gate reads about a third of what an agent with reviewdog's reads
+measure, an agent with Seikika's gate reads about a third of what an agent with reviewdog's reads
 (0.32). On the recorded data alone, without the replay, it is 0.40. Every arm A run took
 two calls and read 5,705 to 5,828 characters.
 
@@ -86,7 +86,7 @@ gate run.
 spread. reviewdog-2's editing style sets arm B's median: had it edited with one `sed` instead of
 seven `search_replace` calls, N7 would be inconclusive and N6 would hold instead. Without
 reviewdog-3, no hypothesis holds. Read with the adjudication's threats 1 to 5: this is the
-seventh round, over two benchmarks, to ask whether Toolbox beats reviewdog, and the first to show
+seventh round, over two benchmarks, to ask whether Seikika beats reviewdog, and the first to show
 it, on a task built where the hint should help.
 
 **Friction, triaged (§6).** None changes a label.
@@ -94,8 +94,8 @@ it, on a task built where the hint should help.
 | Arm | Friction | Triage |
 |---|---|---|
 | B | Three round 2 runs (reviewdog-2, -3, -4) ran zizmor or actionlint by hand after their gate passed. reviewdog-4 noted that "the efm parsing might have dropped a finding". Two runs per round also ran `zizmor --format plain` beside their first gate run, about 3,650 characters each | Rival friction, unfixed: reviewdog's pass line doesn't say how many raw findings it parsed. A next round's gate should print that count (P4) |
-| A | On a pass, the gate prints "baseline: no regressions, but .toolbox/results.json is out of date: run with --update and commit it", which the prompt forbids. Five runs over the two rounds deliberated over it | Product friction, unfixed: a passing ratchet should not tell a pull request's author to rewrite the baseline. Candidate for a decision |
-| A | toolbox-3, in both rounds, paused over `maintainer-ci-security · …weekly.yaml: new (none)` | Product friction, unfixed: a `new (none)` line on a pass reads like a failure |
+| A | On a pass, the gate prints "baseline: no regressions, but .seikika/results.json is out of date: run with --update and commit it", which the prompt forbids. Five runs over the two rounds deliberated over it | Product friction, unfixed: a passing ratchet should not tell a pull request's author to rewrite the baseline. Candidate for a decision |
+| A | seikika-3, in both rounds, paused over `maintainer-ci-security · …weekly.yaml: new (none)` | Product friction, unfixed: a `new (none)` line on a pass reads like a failure |
 
 **§2's figures, corrected.** §2 says the gates print 1,827 and 3,728 characters. Those are bytes.
 In characters, the measure's unit, they are 1,800 and 3,688. The 96 characters on stderr are
@@ -106,7 +106,7 @@ call: it is 313. No label changes.
 tests. It changed whitespace only, so both rounds ran the code that `8a76f24` committed.
 
 **Measured against round 1.** Round 1's labels stand, and the rounds are not pooled. Round 2's arm
-A was tighter than round 1's: no run grepped to check the hints, as toolbox-2 did in round 1.
+A was tighter than round 1's: no run grepped to check the hints, as seikika-2 did in round 1.
 With the same replay, round 1 would have shown the same win on read by a narrower margin (§0.1).
 
 ### 0.1 Round 1: no win under the registered rule
@@ -115,24 +115,24 @@ Ten fresh runs, five per arm, launched together at `25079a6` with the prompts co
 `2fd3b8e`. Every run said DONE, and the scorer marked all ten correct. Per-run numbers are in
 [results/r1.tsv](results/r1.tsv), and each run's diff and score are in `results/r1/`.
 
-| Measure | Arm A (Toolbox): median, range | Arm B (reviewdog): median, range | *W* | Label |
+| Measure | Arm A (Seikika): median, range | Arm B (reviewdog): median, range | *W* | Label |
 |---|---|---|---|---|
 | Correct | 5 of 5 | 5 of 5 | | **N1 holds** |
 | Calls | 3, 2 | 4, 1 | 2 | N2 inconclusive |
 | Read | 6,054, 5,614 | 11,605, 10,091 | 10,091 | N3 inconclusive |
 | Gate read | 5,794, 2,358 | 7,850, 6,547 | 6,547 | N4 inconclusive |
 
-**Toolbox does not beat reviewdog on this task in round 1.** N1 holds and none of N2 to N4 fails,
+**Seikika does not beat reviewdog on this task in round 1.** N1 holds and none of N2 to N4 fails,
 but none holds either. The designer predicted that N3 would hold.
 
 **What the runs did.** Both arms took the same path. In one or two calls they printed
 `weekly.yaml` and ran the gate. Arm B also grepped the other workflows for SHA pins. Then they
-rewrote the ten `uses:` lines with one `sed` (two for toolbox-3, whose first `sed` failed on its
+rewrote the ten `uses:` lines with one `sed` (two for seikika-3, whose first `sed` failed on its
 `#` delimiter), and the same command reran the gate.
 
 - Every arm B run found the pins with that one grep and picked no wrong pin. reviewdog-1 and -4
   chained it onto the gate run; reviewdog-2, -3 and -5 made it its own call.
-- Four of five arm A runs copied the hints without looking anything up. toolbox-2 grepped every
+- Four of five arm A runs copied the hints without looking anything up. seikika-2 grepped every
   `uses:` line anyway (5,214 characters), which makes arm A's range.
 - Arm A's gate read is higher than the designer estimated, because three runs printed
   `weekly.yaml` in the same command as the gate (L17: a chained command's whole result counts).
@@ -165,11 +165,11 @@ and nothing else changed.
 
 ## 1. Arms
 
-| | Arm A: Toolbox | Arm B: reviewdog |
+| | Arm A: Seikika | Arm B: reviewdog |
 |---|---|---|
-| Gate | `toolbox report .toolbox --skip github-actions --baseline .toolbox/results.json` | `scripts/quality-gate.sh` |
-| What it compares | Every rule outcome against the committed baseline (`.toolbox/results.json`) | Every finding against the lines `git diff main` added |
-| Portal or script | [harness/toolbox.yaml](harness/toolbox.yaml): the repo-portal starter plus `packages/github-actions`, vendored | [harness/quality-gate.sh](harness/quality-gate.sh): zizmor and actionlint piped into reviewdog 0.21.0 |
+| Gate | `seikika report .seikika --skip github-actions --baseline .seikika/results.json` | `scripts/quality-gate.sh` |
+| What it compares | Every rule outcome against the committed baseline (`.seikika/results.json`) | Every finding against the lines `git diff main` added |
+| Portal or script | [harness/seikika.yaml](harness/seikika.yaml): the repo-portal starter plus `packages/github-actions`, vendored | [harness/quality-gate.sh](harness/quality-gate.sh): zizmor and actionlint piped into reviewdog 0.21.0 |
 | Tools | zizmor 1.32.0 (`--offline`), actionlint 1.7.12 (`-shellcheck= -pyflakes=`) | The same |
 
 Both gates are gate-repair-ab's as they stood after its round 5, including the rival's two fixes
@@ -234,7 +234,7 @@ either gate. A run is **correct** only if all of these hold:
 | `no-new-findings` | For every (tool, file, rule), no more findings in the working tree than on `main` |
 | `intent-weekly` | `weekly.yaml` keeps the planted name, triggers and permissions, and every planted job and step by name. Each step is unchanged except for its `uses:` ref, which still names the same action path (`actions/cache`, not `actions/cache/restore`) |
 | `pins-known` | Each of those `uses:` is pinned to a full SHA that `main` already pins that action's repository to: offline, the only SHAs known to be real commits |
-| `gate-untouched` | The gate's files match `main` (A: `.toolbox/`; B: `scripts/quality-gate.sh`; both: `.github/actionlint.yaml`), and no zizmor config was added |
+| `gate-untouched` | The gate's files match `main` (A: `.seikika/`; B: `scripts/quality-gate.sh`; both: `.github/actionlint.yaml`), and no zizmor config was added |
 | `no-suppressions` | No `zizmor: ignore` comment was added |
 | `gate-passes` | The arm's own gate exits 0 |
 
@@ -256,18 +256,18 @@ unchanged from gate-repair-ab's round 5, where the runtime reported all three fo
 Wall time, gate runs and calls by tool are reported, not in the bar.
 
 **Runs (P2).** Five fresh runs per arm, ten in all, launched together. Workspaces are
-`/tmp/pin-repair-ab/r1/toolbox-1…5` and `reviewdog-1…5`. Medians and ranges are over an arm's five
+`/tmp/pin-repair-ab/r1/seikika-1…5` and `reviewdog-1…5`. Medians and ranges are over an arm's five
 runs. *W* is the wider of the two arms' ranges. A cost hypothesis holds or fails only if the
 medians differ by more than *W*; otherwise it is inconclusive.
 
 | Id | Hypothesis | Holds | Fails |
 |---|---|---|---|
 | N1 | Arm A is correct in every run | 5 of 5 correct | Any run incorrect |
-| N2 | With Toolbox's gate, a repair takes fewer calls than with reviewdog's | med(B) − med(A) > *W*, on calls | med(A) − med(B) > *W*, on calls |
-| N3 | With Toolbox's gate, the agent reads less than with reviewdog's | As N2, on read | As N2, on read |
-| N4 | With Toolbox's gate, the agent reads less gate output than with reviewdog's | As N2, on gate read | As N2, on gate read |
+| N2 | With Seikika's gate, a repair takes fewer calls than with reviewdog's | med(B) − med(A) > *W*, on calls | med(A) − med(B) > *W*, on calls |
+| N3 | With Seikika's gate, the agent reads less than with reviewdog's | As N2, on read | As N2, on read |
+| N4 | With Seikika's gate, the agent reads less gate output than with reviewdog's | As N2, on gate read | As N2, on gate read |
 
-**Toolbox beats reviewdog on this task** only if all of these hold:
+**Seikika beats reviewdog on this task** only if all of these hold:
 
 - N1 holds;
 - at least one of N2, N3 and N4 holds;
@@ -303,7 +303,7 @@ transcripts: each call's result carries about 400 characters of wrapper.
 
 Round 2 asks round 1's question again, with one change: the measure. Everything else is as
 registered for round 1: the arms, the fork, the planted pull request, the prompts template, the
-scorer, the Toolbox binaries (no Rust changed after `8a76f24`), five fresh runs per arm, P2 and
+scorer, the Seikika binaries (no Rust changed after `8a76f24`), five fresh runs per arm, P2 and
 *W*.
 
 **The measure change (P6).** `collect.py` runs with `REPLAY` set. A `run_terminal_cmd` whose result
@@ -322,7 +322,7 @@ missing results, matching all five recorded results it checked. It applies to ev
 | N7 | As N3 (read) | As N6, on read | As N6, on read |
 | N8 | As N4 (gate read) | As N6, on gate read | As N6, on gate read |
 
-**Toolbox beats reviewdog on this task** if, in round 2, N5 holds, at least one of N6 to N8 holds,
+**Seikika beats reviewdog on this task** if, in round 2, N5 holds, at least one of N6 to N8 holds,
 and none of them fails. Round 1's labels stand as they are, and round 2 is not pooled with it. If
 round 2 shows no win, the result is published as it is, and the task is not run a third time.
 
@@ -348,7 +348,7 @@ are launched, and its missing results may fall in either arm.
    repair only.
 2. **One repository and one planted pull request.** The result says nothing about repositories
    that pin little, or about pull requests whose fixes are mostly local (gate-repair-ab's).
-3. **The designer chose the task knowing Toolbox's strength.** That is the point of the question
+3. **The designer chose the task knowing Seikika's strength.** That is the point of the question
    (L19), but the task is not a sample of real pull requests. The share of unpinned-action fixes
    in real pull requests is not measured here.
 4. **Designer and product author are the same agent**, and the hint fix above was made while
@@ -358,16 +358,16 @@ are launched, and its missing results may fall in either arm.
 
 ## 6. Protocol
 
-- **Frozen commit (P3).** The commit that adds this README freezes Toolbox, the harness, the
-  prompts and both arms. The Toolbox binaries are built from it.
+- **Frozen commit (P3).** The commit that adds this README freezes Seikika, the harness, the
+  prompts and both arms. The Seikika binaries are built from it.
 - **Runs (P2).** Five fresh runs per arm, each in its own workspace with its own copies of the
   tools. Each run is a fresh local subagent with the inherited model and only the rendered prompt.
   No run is dropped for its result.
-- **Prompts (P1).** [prompts/toolbox.md](prompts/toolbox.md) and
+- **Prompts (P1).** [prompts/seikika.md](prompts/seikika.md) and
   [prompts/reviewdog.md](prompts/reviewdog.md) differ only in the gate command. The rendered prompts
   are committed under `prompts/rendered/r1/` before the first launch.
 - **Symmetry (P4).** Both gates carry gate-repair-ab's fixes. Rival friction this round shows is
-  triaged like Toolbox's.
+  triaged like Seikika's.
 - **Fit (P5).** The adjudicator audits the hint fix (`fitAudit`).
 - **Adjudication (P7).** A fresh agent that designed no part of this and changed nothing applies
   the bar and writes `ADJUDICATION.md`, with holds, fails, inconclusive or void per hypothesis.

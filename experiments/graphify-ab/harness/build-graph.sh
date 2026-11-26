@@ -8,7 +8,7 @@
 #   build-graph.sh finish    finish-graph.py on both repos: coverage check, merge, cache, build,
 #                            cluster, report, health check
 #
-# Env: TOOLBOX_CHECKOUT (a clone with a8f7e03), OPENFGA_CHECKOUT (a clone of the fork with
+# Env: SEIKIKA_CHECKOUT (a clone with a8f7e03), OPENFGA_CHECKOUT (a clone of the fork with
 # 7d89a566), WORK (default /tmp/graphify-ab).
 set -euo pipefail
 HERE="$(cd "$(dirname "$0")" && pwd)"
@@ -21,12 +21,12 @@ SPEC=$("$PY" -c "import graphify,os;print(os.path.join(os.path.dirname(graphify.
 
 prepare() {
   rm -rf "$B" "$WORK/semantic-prompts"
-  mkdir -p "$B/toolbox" "$B/openfga" "$WORK/semantic-prompts"
-  (cd "${TOOLBOX_CHECKOUT:?}" && git archive a8f7e03) | tar -x -C "$B/toolbox"
+  mkdir -p "$B/seikika" "$B/openfga" "$WORK/semantic-prompts"
+  (cd "${SEIKIKA_CHECKOUT:?}" && git archive a8f7e03) | tar -x -C "$B/seikika"
   (cd "${OPENFGA_CHECKOUT:?}" && git archive 7d89a566) | tar -x -C "$B/openfga"
-  cp "$HERE/graphifyignore.toolbox" "$B/toolbox/.graphifyignore"
+  cp "$HERE/graphifyignore.seikika" "$B/seikika/.graphifyignore"
   cp "$HERE/graphifyignore.openfga" "$B/openfga/.graphifyignore"
-  for r in toolbox openfga; do
+  for r in seikika openfga; do
     cd "$B/$r"
     mkdir -p graphify-out
     printf %s "$PY" > graphify-out/.graphify_python
@@ -96,7 +96,7 @@ EOF
 import json, pathlib, sys
 spec, build, out = pathlib.Path(sys.argv[1]).read_text(), pathlib.Path(sys.argv[2]), pathlib.Path(sys.argv[3])
 tmpl = spec.split('```\n', 1)[1].rsplit('\n```', 1)[0]
-for r in ('toolbox', 'openfga'):
+for r in ('seikika', 'openfga'):
     chunks = json.loads((build / r / 'graphify-out/.chunks.json').read_text())
     for i, c in enumerate(chunks, 1):
         p = (tmpl.replace('FILE_LIST', '\n'.join(c)).replace('CHUNK_NUM', str(i))
@@ -108,7 +108,7 @@ EOF
 }
 
 finish() {
-  for r in toolbox openfga; do
+  for r in seikika openfga; do
     (cd "$B/$r" && "$PY" "$HERE/finish-graph.py" "$SPEC")
   done
 }

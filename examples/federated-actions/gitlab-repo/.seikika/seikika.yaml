@@ -1,0 +1,13 @@
+apiVersion: seikika.com/v1alpha1
+portal: {name: gitlab-repo, owner: group:maintainers, seikika: "0.1"}
+include: [actions/*.yaml]
+# An org portal runs this portal's actions in this project's own CI (type: ci): it starts a
+# pipeline of the project it cloned, on the forge it cloned it from, with its own token. The job
+# in ../.gitlab-ci.yml runs `seikika run` here and keeps the run record for the org portal to
+# read. Approvals the org portal recorded count only with the key pinned below: replace it with
+# the key the org portal prints, then commit and push.
+federation:
+  runner: {type: ci}
+  acceptApprovalsFrom:
+    - portal: org
+      key: ed25519:0000000000000000000000000000000000000000000000000000000000000000

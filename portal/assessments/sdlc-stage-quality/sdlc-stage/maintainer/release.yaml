@@ -1,4 +1,4 @@
-apiVersion: toolbox.dev/assessment/v1
+apiVersion: seikika.com/assessment/v1
 entity: sdlc-stage:maintainer/release
 rubric: sdlc-stage-quality
 subjectHash: 8ba73c94224c
@@ -13,14 +13,14 @@ verdicts:
       assets). The image half has never run: `gh run list --workflow
       image.yml` returns no runs, so no tag has an image
       (portal/sdlc/stages/maintainer.yaml lines 121-124). "Consumers pin them"
-      is checked by nothing: no workflow under .github/ sets toolbox-version,
+      is checked by nothing: no workflow under .github/ sets seikika-version,
       so the download path in actions/report/action.yml (lines 84-91) never
       runs in CI.
     suggestion: >-
-      Add a CI job that runs ./actions/report with toolbox-version set to the
+      Add a CI job that runs ./actions/report with seikika-version set to the
       latest release and fails if it falls back to building; add a step after
       custom-image that runs `gh attestation verify
-      oci://ghcr.io/<owner>/toolbox:<version>`; dispatch image.yml for v0.1.1.
+      oci://ghcr.io/<owner>/seikika:<version>`; dispatch image.yml for v0.1.1.
   - criterion: agent-can-complete
     verdict: pass
     reason: >-

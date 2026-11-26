@@ -2,7 +2,7 @@
 
 **Question:** is a reusable standard (OpenSSF Scorecard) better than
 asking an agent to build a security scorecard from scratch? The box A/B
-([../box-ab](../box-ab/README.md)) found that Toolbox added little over
+([../box-ab](../box-ab/README.md)) found that Seikika added little over
 an agent working alone. This tests the same assumption one level up, on
 the standard rather than the box: if an agent can home-build a scorecard
 as good as OpenSSF's, reusable standards (and a box that carries them)
@@ -13,9 +13,9 @@ and is unchanged since except for this line. Results are in
 [RESULTS.md](./RESULTS.md).
 
 This is about tools and standards, not the box
-([toolbox-and-tools.md](../../docs/design/toolbox-and-tools.md)): both
-arms run without Toolbox. Comparing native Scorecard with Scorecard
-through the Toolbox kit is a later experiment (§7).
+([seikika-and-tools.md](../../docs/design/seikika-and-tools.md)): both
+arms run without Seikika. Comparing native Scorecard with Scorecard
+through the Seikika kit is a later experiment (§7).
 
 ## 1. Repositories
 
@@ -125,15 +125,15 @@ repository *R*:
 
 *S* scores 1.0 recall of itself, zero build cost, zero reuse cost and
 full convergence. The same measures can be computed for any domain
-standard Toolbox carries (observability, quality, architecture) against
+standard Seikika carries (observability, quality, architecture) against
 an agent's home build. That makes OpenSSF the reference point for what a
 good reusable standard achieves.
 
 ## 7. Later
 
-- **Native Scorecard vs the Toolbox kit:** the same B on the same
+- **Native Scorecard vs the Seikika kit:** the same B on the same
   repositories, through `packages/openssf-scorecard` and
-  `toolbox report`. The kit should add the ratchet and the campaign
+  `seikika report`. The kit should add the ratchet and the campaign
   without changing a score.
 - **A + S:** an agent asked to extend Scorecard rather than replace it.
 - **With network:** Vulnerabilities, and the API checks, on GitHub.

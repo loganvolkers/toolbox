@@ -1,8 +1,8 @@
 # GitHub Actions Standards: Security, Reliability and Supply Chain for CI
 
-*Status: research and implementation, 2026-11-20 (D70). Toolbox for Toolbox now catalogues its own
+*Status: research and implementation, 2026-11-20 (D70). Seikika for Seikika now catalogues its own
 workflows and the report action, and scores them with three scorecards. The connectors are generic,
-so any portal can apply the same standards to a fleet. Related: [toolbox-for-toolbox.md](./toolbox-for-toolbox.md),
+so any portal can apply the same standards to a fleet. Related: [seikika-for-seikika.md](./seikika-for-seikika.md),
 [ratchets.md](./ratchets.md), [repo-portals.md](./repo-portals.md).*
 
 ---
@@ -13,7 +13,7 @@ so any portal can apply the same standards to a fleet. Related: [toolbox-for-too
 
 | Card | Kind | What it answers | Built on |
 |---|---|---|---|
-| `maintainer-ci-security` | Workflow (workflows and action metadata) | Can an attacker or a compromised dependency abuse this workflow? | **zizmor** (security audits), **actionlint** (correctness), and Toolbox's own parse (permissions, pinning, risky triggers) |
+| `maintainer-ci-security` | Workflow (workflows and action metadata) | Can an attacker or a compromised dependency abuse this workflow? | **zizmor** (security audits), **actionlint** (correctness), and Seikika's own parse (permissions, pinning, risky triggers) |
 | `maintainer-ci-reliability` | Workflow | Does green mean good, and does red get fixed? | The **GitHub API**'s run history (first-try fail rate, failing streak, workflow state, failed runs) and the parse (timeouts, hidden failures) |
 | `maintainer-ci-speed` | Workflow | Does CI answer quickly, without spending runners on superseded commits? | The parse (concurrency) and the run history (p90 time) |
 | `maintainer-action-deps` | ActionDependency | Which third-party actions do we run, where, and are they pinned everywhere? | The parse, joined across workflows |
@@ -32,7 +32,7 @@ never run on GitHub, and the scale budget fails on 2-vCPU runners ([research-log
 **Key design choices:**
 1. **Use the linters; don't re-implement them.**
    - zizmor (42 audits) and actionlint (35+ checks) are maintained, fast, run offline, and output JSON.
-   - Toolbox adds what they don't cover: an owned standard with levels, an inventory across files and
+   - Seikika adds what they don't cover: an owned standard with levels, an inventory across files and
      repositories, run history, and a ratchet.
 2. **Missing data is `unknown`, not `fail`.**
    - A machine without zizmor reports those rules as unknown, which is never a regression.
@@ -50,13 +50,13 @@ never run on GitHub, and the scale budget fails on 2-vCPU runners ([research-log
 *Primary sources were read from each project's repository on 2026-11-20 unless marked. Versions are
 the latest tags.*
 
-| Tool | What it is | Coverage | Output / fit for Toolbox | Source |
+| Tool | What it is | Coverage | Output / fit for Seikika | Source |
 |---|---|---|---|---|
 | **zizmor** 1.32.0 | Static security analysis for GitHub Actions, Dependabot and pre-commit (Rust) | **42 audits**, e.g. template-injection, dangerous-triggers, excessive-permissions, unpinned-uses, artipacked, cache-poisoning, impostor-commit, known-vulnerable-actions, secrets-inherit. Severity and confidence per finding; personas regular, pedantic and auditor; offline mode; safe and unsafe auto-fixes; experimental workflow-lockfile support since 1.32.0 | `--format json` (versioned v1), SARIF, GitHub annotations; exit codes 11–14 by highest severity. **Adopted** | `zizmorcore/zizmor` `docs/audits.md`, `docs/usage.md` |
 | **actionlint** 1.7.12 | Workflow linter (Go) | Syntax, expression type checking, contexts, `needs`, matrix, webhook events, cron, runner labels, local action inputs, popular action inputs, script injection, shellcheck and pyflakes integration | `-format '{{json .}}'`; exit 1 on problems. Lints workflows, and checks local actions through the workflows that use them. **Adopted** | `rhysd/actionlint` `docs/checks.md`, `docs/usage.md` |
-| **OpenSSF Scorecard** | Repository security posture | 19 default checks, of which Dangerous-Workflow (Critical), Token-Permissions (High), Pinned-Dependencies (Medium; immutable-release tags count as pinned) and CI-Tests are CI-related. "Scans more than 1.3 million repositories every week" | Per repository; REST API and BigQuery. A **complement** (repository-level). Toolbox's rules mirror its CI checks | `ossf/scorecard` `README.md`, `docs/checks.md` |
+| **OpenSSF Scorecard** | Repository security posture | 19 default checks, of which Dangerous-Workflow (Critical), Token-Permissions (High), Pinned-Dependencies (Medium; immutable-release tags count as pinned) and CI-Tests are CI-related. "Scans more than 1.3 million repositories every week" | Per repository; REST API and BigQuery. A **complement** (repository-level). Seikika's rules mirror its CI checks | `ossf/scorecard` `README.md`, `docs/checks.md` |
 | **poutine** (BoostSecurity) | Build-pipeline security scanner | Rules: injection, untrusted checkout exec, default permissions on risky events, unverified creators, unpinnable actions, self-hosted runners on PRs, known vulnerabilities in build components | Overlaps zizmor; a candidate second opinion | `boostsecurityio/poutine` `docs/content/en/rules` |
-| **ghalint** | Policy linter for workflows and actions | 13 policies: job permissions, deny read-all/write-all, deny inherit secrets, full-length SHA, **job timeout-minutes required**, persist-credentials false, GitHub App token scoping | Narrower; its timeout policy is adopted as a Toolbox rule | `suzuki-shunsuke/ghalint` `docs/policies` |
+| **ghalint** | Policy linter for workflows and actions | 13 policies: job permissions, deny read-all/write-all, deny inherit secrets, full-length SHA, **job timeout-minutes required**, persist-credentials false, GitHub App token scoping | Narrower; its timeout policy is adopted as a Seikika rule | `suzuki-shunsuke/ghalint` `docs/policies` |
 | **pinact** | Rewrites `uses:` to full SHAs (with the tag in a comment) | Fixing tool, not a check | The `pinned-to-sha` fix | `suzuki-shunsuke/pinact` README |
 | **StepSecurity Harden-Runner** | Runtime egress monitoring and blocking on runners | Detected the tj-actions/changed-files compromise (CVE-2025-30066) and a compromised axios release, per its README | Runtime, not static; an optional gold-level control (not adopted: a third-party agent in every job) | `step-security/harden-runner` README |
 | **GitHub workflow dependency lockfiles** | `.github/workflows/actions.lock`, generated by `gh actions-lock`; pins every action, including transitive ones, and verifies the source repository's identity at run time | github.com and GHEC, not yet GHES. Doesn't lock reusable workflow calls or composite action definitions | The modern alternative to SHA pinning. **Proposed** as an equivalent of `pinned-to-sha` (§7) | `github/docs` `content/actions/concepts/security/workflow-dependency-lockfiles.md`, `data/features/actions-workflow-lockfiles.yml` |
@@ -69,7 +69,7 @@ the latest tags.*
   guide recommends SHA pinning or the new lockfiles, CODEOWNERS on workflow files, least-privilege
   tokens, care with `pull_request_target`, and Dependabot for action updates.
 - **Every tool scores one repository.** None owns a standard across a fleet, tracks it over time, or
-  tells you which repositories use a compromised action. That is Toolbox's slot again, as with
+  tells you which repositories use a compromised action. That is Seikika's slot again, as with
   baselines ([ratchets.md](./ratchets.md) §6).
 - **Reliability measures exist in GitHub's own UI but not as standards.** Nobody turns "failure rate"
   into "this workflow is below the bar".
@@ -85,9 +85,9 @@ the latest tags.*
 | Don't persist checkout credentials | zizmor `artipacked`; ghalint `checkout_persist_credentials_should_be_false` | `no-medium-findings` (silver) |
 | Set `timeout-minutes` on every job (the default is 360) | ghalint `job_timeout_minutes_is_required` | `every-job-has-timeout` (bronze, reliability) |
 | Cancel superseded runs | GitHub `concurrency` (secondary: common practice) | `cancels-superseded-runs` (bronze, speed) |
-| Keep the default branch green; fix failures before features | GitHub performance metrics expose failure rate per workflow; thresholds are **Toolbox's proposal** (20 / 10 / 5%, 3 failures in a row), not a published standard | `main-not-stuck-red`, `fail-rate-under-*` |
+| Keep the default branch green; fix failures before features | GitHub performance metrics expose failure rate per workflow; thresholds are **Seikika's proposal** (20 / 10 / 5%, 3 failures in a row), not a published standard | `main-not-stuck-red`, `fail-rate-under-*` |
 | Treat re-runs as flakiness | Proxy chosen here (secondary: flaky-test vendors measure retries): a run that passed only on a re-run counts as failed in the fail rate | `fail-rate-under-*` (first-try rate) |
-| Fast feedback | Toolbox's proposal: p90 ≤ 15 minutes | `fast-feedback` (silver, speed) |
+| Fast feedback | Seikika's proposal: p90 ≤ 15 minutes | `fast-feedback` (silver, speed) |
 
 ## 4. How it works
 
@@ -127,7 +127,7 @@ are all unknown is not granted.
   - actionlint reports 0 errors;
   - `workflow-runs` passes end to end against the mock GitHub API (two new endpoints in
     `tools/mock_github.py`).
-- **`toolbox test portal`:** 31/31. Nine of the expectations are new and cover each card, including
+- **`seikika test portal`:** 31/31. Nine of the expectations are new and cover each card, including
   unknown-not-fail and the supply-chain view.
 - **The ratchet:**
   - with both tools installed, `--ci` matches the committed baseline;
@@ -140,7 +140,7 @@ are all unknown is not granted.
 
 ## 6. Generalising to a fleet
 
-The three cards need nothing Toolbox-specific: point `workspace` (with `workflows`), `ci-lint` and
+The three cards need nothing Seikika-specific: point `workspace` (with `workflows`), `ci-lint` and
 `github` (with `actions`) at every repository, and the portal answers fleet questions:
 - "which repositories use `tj-actions/changed-files`, and at which refs?" (ActionDependency `usedBy`
   across repos: the incident question behind CVE-2025-30066);

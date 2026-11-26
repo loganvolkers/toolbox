@@ -1,0 +1,52 @@
+apiVersion: seikika.com/assessment/v1
+entity: assessment:scorecard-quality/scorecard:seikika/maintainer-advisories
+rubric: assessment-quality
+subjectHash: d7f56bbbf6dd
+assessor: {kind: agent, name: cursor-reviewer-24, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: supported
+    verdict: pass
+    reason: >-
+      portal/assessments/scorecard-quality/scorecard/seikika/maintainer-advisories.yaml
+      cites one rule over Lockfile and Cargo.lock at
+      portal/seikika.yaml:414-442. The three npm lockfiles it names exist:
+      ui/package-lock.json, site/package-lock.json and
+      scripts/playwright-ci/package-lock.json. Clean entities are omitted from
+      a card whose floor is its only level: the comment and compact_cards are
+      crates/seikika-cli/src/report.rs:437-452, and the retain of failing rows
+      is compacted at report.rs:456. The cited range stops one function early;
+      the next function is the omit, and the comment at 437-439 already states
+      it. The fixture pass is portal/tests/standards.test.yaml:1107-1110.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      no-obvious-gap is the fail the card's own scope supports. The glob is
+      only Cargo.lock (seikika.yaml:435), and the decision's ignore rule is
+      not a check: osv-scanner.toml is unread, as the paired no-findings
+      assessment says. one-concern passes: track is maintainer and the
+      backstage comparison card is a different file
+      (portal/standards/backstage-comparison.yaml). levels-are-a-ladder passes
+      because packages/sarif/fragments/sarif.yaml:67-68 has the single level
+      clean. actionable passes: the fix at seikika.yaml:437-442 names cargo
+      update and osv-scanner.toml.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      The missing npm lockfiles are three files on disk against one glob. That
+      does not depend on whether npm advisories are in scope for a later
+      decision; the assessment cites the decision's own leftover at
+      docs/design/openssf-template.md:123.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      The suggestion adds a second sarif include for the three npm lockfiles
+      and a rule that each IgnoredVulns entry has a reason and no
+      effectiveUntil. Those are the two gaps the fail names. Either one
+      narrows the gap; both would remove it.
+summary: >-
+  The maintainer-advisories scorecard assessment matches the card: one
+  clean level over Cargo.lock, with the npm lockfiles and the ignore-file
+  check still outside it. The report.rs citation stops at compact_cards;
+  the omit itself is the next function, and the comment in the cited range
+  already says clean rows are not stored. The suggestion names both gaps.

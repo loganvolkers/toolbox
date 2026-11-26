@@ -1,0 +1,63 @@
+apiVersion: seikika.com/assessment/v1
+entity: assessment:rule-quality/rule:seikika/vs-backstage-supply-chain/known-vulnerabilities
+rubric: assessment-quality
+subjectHash: dda8ad8c6dbe
+assessor: {kind: agent, name: cursor-reviewer-31, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: supported
+    verdict: fail
+    reason: >-
+      footprint.py:111-138, the rationale at
+      portal/standards/backstage-comparison.yaml:613-616, the fix at :611-612,
+      RESULTS.md:195-202, README.md:46 and RESULTS.md:261-265 are as
+      portal/assessments/rule-quality/rule/seikika/vs-backstage-supply-chain/known-vulnerabilities.yaml
+      says, and image/Dockerfile:8 pins OpenFGA 1.22.1. The "no such file"
+      claim is not. osv-scanner.toml at the repository root already ignores
+      RUSTSEC-2026-0543 and RUSTSEC-2026-0555, and its header says osv-scanner
+      reads that file. The hypothetical two-entry ignore file is the file that
+      is already there.
+    suggestion: >-
+      Replace "the repo has no such file today" with osv-scanner.toml, which
+      already ignores those two ids. Keep the hard-to-game fail.
+  - criterion: complete
+    verdict: fail
+    reason: >-
+      measures-intent should fail, and the assessment passes it. The rationale
+      says chrono notices count even when not exploitable
+      (backstage-comparison.yaml:613-616) and names those crates.
+      footprint.py:128-129 runs osv-scanner with no --config, and
+      osv-scanner.toml drops RUSTSEC-2026-0543 and RUSTSEC-2026-0555, so the
+      check can omit the advisories the rationale says it measures.
+      hard-to-game, fix-leads-to-pass and threshold-justified are failed
+      correctly: the ignore file is the cheap pass, the fix scans only
+      Cargo.lock while three advisories are in the OpenFGA binary
+      (RESULTS.md:200-202), and knownVulns == 0 was added after the smoke
+      rounds (RESULTS.md:261-265) while README.md:46 only pre-registers high =
+      0.
+    suggestion: >-
+      Fail measures-intent, and point the check at a scan that does not read
+      osv-scanner.toml, or change the rationale so ignored informational
+      notices are out of scope.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      The three fails the assessment got right follow from the fix text,
+      RESULTS.md and the README bar. A second assessor also fails
+      measures-intent once osv-scanner.toml is opened. That miss is a wrong
+      pass, recorded under complete, not a difference of taste.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      Scanning with an explicit empty config would stop the ignore file from
+      passing hard-to-game. Naming the OpenFGA binary and the chrono feature,
+      as the suggestion does, is what the current fix leaves out, so following
+      it can reach zero or the rule changes. Moving the rule to silver, or
+      allowing documented informational notices, would give
+      threshold-justified a source. Each suggestion attaches to its fail.
+summary: >-
+  Three of the four verdicts hold, and the citations for the OpenFGA
+  advisories, the Cargo.lock-only fix and the late zero bar are right.
+  measures-intent should have failed. osv-scanner.toml already ignores the
+  two chrono notices the rationale says are counted, and the assessment
+  says that file does not exist.

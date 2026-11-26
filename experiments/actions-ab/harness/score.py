@@ -8,7 +8,7 @@
 
 **Lines to maintain** are the non-blank lines of code and configuration the run added: whole new
 files, and the added lines of changed ones, in every file under <dest> except the origins (whose
-commits are also in the checkouts), the arm's platform copies (`bin/`, `toolbox-docs/`,
+commits are also in the checkouts), the arm's platform copies (`bin/`, `seikika-docs/`,
 `backstage-docs/`, `backstage/node_modules`), nested `.git` directories, and Markdown (HANDOFF.md, the effect itself).
 A file whose content is already in the baseline, or in a checkout or `org/`, is a copy and is not
 counted again. Data a system wrote at run time (run records, audit logs, databases) is not code:
@@ -23,7 +23,7 @@ import sys
 
 SKIP_DIRS = {".git", "node_modules", "__pycache__", ".yarn", "dist", "dist-types", ".venv", "venv",
              ".cache", "target", ".pytest_cache", ".mypy_cache"}
-SKIP_TOP = {"origins", "bin", "toolbox-docs", "backstage-docs", "gha-docs"}
+SKIP_TOP = {"origins", "bin", "seikika-docs", "backstage-docs", "gha-docs"}
 CODE = {".py", ".js", ".mjs", ".cjs", ".ts", ".tsx", ".jsx", ".go", ".rs", ".sh", ".bash", ".yaml",
         ".yml", ".toml", ".json", ".ini", ".cfg", ".conf", ".env", ".sql", ".tmpl", ".njk", ".j2",
         ".hbs", ".fga", ".cel", ".txt", ""}

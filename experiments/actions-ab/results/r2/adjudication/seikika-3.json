@@ -1,0 +1,91 @@
+{
+ "run": "seikika-3",
+ "C1": "holds",
+ "P1": {
+  "verdict": "holds",
+  "evidence": "score.py check passed before any probe. git --git-dir=origins/<repo>.git log/ls-tree main: .seikika/seikika.yaml is on main of alpha (c987dae 'seikika: add mark-deprecated, owned by alpha's maintainers'), beta (beae3a2) and gamma (1615274), identical to each checkout; each defines mark-deprecated's inputs, approval, change executor and the pinned org approval key. org/seikika.yaml only lists the three origins as federation.children."
+ },
+ "P2": {
+  "verdict": "holds",
+  "evidence": "cwd org/, as ann on portal:alpha: successor 'Acme/Bad Name' (valid reason) -> {\"error\":\"422 invalid-inputs: successor: \\\"Acme/Bad Name\\\" does not match ...\"}, exit 2, as preview and with --yes. successor acme/probe-valid with reason 'short' (5 chars) -> 422 invalid-inputs: reason \"short\" is shorter than 20 characters, exit 2, preview and --yes. --runs still listed the 3 pre-existing runs only. alpha main 516eca27 before and after."
+ },
+ "P3": {
+  "verdict": "holds",
+  "evidence": "As ann, preview on portal:beta with successor acme/probe-preview: exit 0; effects[0] = update file:DEPRECATED.md, unified diff with + lines '# Deprecated: use acme/probe-preview', blank, the reason; effects[1] = push to branch:main (never forced); confirm_token returned; no warnings. beta main 2a3fdcb0 before and after."
+ },
+ "P4": {
+  "verdict": "holds",
+  "evidence": "cwd org/: ann mark-deprecated --entity portal:gamma -i successor=acme/probe-approval --yes -> exit 3, run_2fruf39ul2b5 awaiting_approval, requested_by user:ann. gamma main 94f9b8fb after request. ann --approve -> 403 not-an-approver: a requester cannot approve their own run (exit 2). carol --approve -> 403 not-an-approver: user:carol is not one of the pending approvers (exit 2). --verify: still awaiting_approval; gamma main 94f9b8fb after both refusals."
+ },
+ "P5": {
+  "verdict": "holds",
+  "evidence": "bob --approve run_2fruf39ul2b5 --wait -> exit 0; --verify -> succeeded, exit 0. origins/gamma.git main moved 94f9b8fb -> 783118e8; `git show main:DEPRECATED.md` is '# Deprecated: use acme/probe-approval', blank, the P4 reason; trailers Requested-By: user:ann, Approved-By: user:bob. Record verification: child portal run run_2fruf9bd202g, by: base origin/main, 'fetched origin/main: the commit is on it, and every file it changed has the content the preview showed', DEPRECATED.md matches: true. bin/seikika is byte-identical to seikika-1's (sha256 33da076f...); at the frozen commit ad36c06, run.rs on_base() -> executor::landed()/merged() runs `git fetch -- origin main`, `merge-base --is-ancestor commit origin/main`, and compares each changed file's blob on origin/main before done() sets succeeded."
+ },
+ "P6": {
+  "verdict": "holds",
+  "evidence": "Wrote origins/alpha.git/hooks/pre-receive (exit 1). ann --yes on portal:alpha with successor acme/probe-reject -> run_2fruj1xdna74 awaiting_approval (exit 3); bob --approve --wait -> exit 1; --verify -> exit 1, state failed, error 'the push to origin main was refused, so nothing landed: ... remote: adjudicator P6: every push rejected ... [remote rejected]'; events end in failed, no succeeded. alpha main 516eca27 before and after. Hook removed; only *.sample hooks remain."
+ },
+ "P7": {
+  "verdict": "holds",
+  "evidence": "cwd org/: `seikika run --url http://127.0.0.1:7490 --as ann -o json` returned mark-deprecated for portal alpha, beta and gamma in one call (unreadable: []). P4 was requested (and approved) from org/ against that URL."
+ },
+ "P8": {
+  "verdict": "holds",
+  "evidence": "`seikika run --verify run_2fruf39ul2b5 -o json` and state/served/org/runs/run_2fruf39ul2b5.json: requested_by user:ann; inputs {successor: acme/probe-approval, reason: ...}; approval.approved_by ['user:ann|user:bob=user:bob']; state succeeded, outputs.commit 783118e8, landed true; events previewed/confirmed by user:ann at 11:47:16Z, approved by user:bob at 11:47:16Z (note), succeeded at 11:47:17Z."
+ },
+ "P9": {
+  "verdict": "holds",
+  "evidence": "Every step (start, list, preview, request, approve, verify, --runs, stop) ran non-interactively from a shell with -o json; outputs were JSON (errors as {\"error\": ...}); exit codes 0/1/2/3 as documented."
+ },
+ "P10": {
+  "verdict": "holds",
+  "evidence": "Operated from org/HANDOFF.md alone: started with its nohup org/serve.sh line plus `echo $! > state/serve.pid`; the server printed the approval key the handoff says the repositories pin; then its List/Preview/Request/Approve/Check/Read commands and refusal table; stopped with its `kill $(cat state/serve.pid)`. No fixes. The handoff's setup does `cd` to the workspace root; I ran the same commands from org/ as P4 and P7 require, which they support because every command takes --url. Source read only for P5."
+ },
+ "fixes": [],
+ "strikes": [
+  {
+   "path": "state/runs/run_2frhb8sflhoe.json",
+   "lines": 98,
+   "reason": "repository (child) run record written by Seikika"
+  },
+  {
+   "path": "state/runs/run_2frhcdz3x9da.json",
+   "lines": 98,
+   "reason": "repository (child) run record written by Seikika"
+  },
+  {
+   "path": "state/runs/run_2frhdkf234n3.json",
+   "lines": 98,
+   "reason": "repository (child) run record written by Seikika"
+  },
+  {
+   "path": "state/served/org/runs/run_2frhaymfokv4.json",
+   "lines": 205,
+   "reason": "org run record written by the server"
+  },
+  {
+   "path": "state/served/org/runs/run_2frhc8k3fnqq.json",
+   "lines": 205,
+   "reason": "org run record written by the server"
+  },
+  {
+   "path": "state/served/org/runs/run_2frhdfbg0glg.json",
+   "lines": 205,
+   "reason": "org run record written by the server"
+  },
+  {
+   "path": "state/served/org/runs/spent-tokens",
+   "lines": 3,
+   "reason": "spent confirm tokens written by the server"
+  },
+  {
+   "path": "state/served/org/signing-key",
+   "lines": 1,
+   "reason": "approval signing key generated by `seikika serve` at run time (server state dir)"
+  }
+ ],
+ "linesBeforeStrikes": 1059,
+ "linesAfterStrikes": 146,
+ "fullyPasses": true,
+ "notes": "Kept lines: three .seikika/seikika.yaml (42 each), org/seikika.yaml 10, org/serve.sh 9, org/.gitignore 1. The org files are committed on origins/org.git main. Runtime state lives in the workspace's top-level state/ (outside org/); the run left state/serve.pid behind but its server was no longer running when adjudication began. Defects outside the probes, shared with seikika-1 and seikika-2 (same binary): the server runs without authorization (anyone may request; stated in the handoff); at ad36c06 the post-push `git fetch` result is ignored; approved_by is encoded as 'user:ann|user:bob=user:bob'; commits are authored by 'Seikika' with requester/approver in trailers. The handoff's reject command is marked as not exercised by the agent; no probe needed it. P5 left gamma's DEPRECATED.md at the probe content (783118e8); C1 was checked before any probe."
+}

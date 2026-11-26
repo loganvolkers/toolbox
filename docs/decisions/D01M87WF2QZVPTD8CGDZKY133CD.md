@@ -20,7 +20,7 @@ wherever it counts factors.**
    ([ADJUDICATION.md](../../experiments/openfga-spicedb-compare/ADJUDICATION.md) §5) called the
    lead number accurate under its rule and a poor summary of a pre-registered A/B.
 2. **Why both rules stay.** Behind-on-any suits a comparison used as a ratchet on the subject's
-   own portal, where any loss matters; Toolbox for Toolbox keeps it against Backstage. Majority
+   own portal, where any loss matters; Seikika for Seikika keeps it against Backstage. Majority
    suits an A/B whose authors fixed their tally before the run. The rule is part of the
    comparison's definition, so it is set beside `subject` and `peers` and is reviewed like any
    other bar.

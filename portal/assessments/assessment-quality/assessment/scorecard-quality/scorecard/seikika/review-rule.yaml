@@ -1,0 +1,61 @@
+apiVersion: seikika.com/assessment/v1
+entity: assessment:scorecard-quality/scorecard:seikika/review-rule
+rubric: assessment-quality
+subjectHash: e596442f9db6
+assessor: {kind: agent, name: cursor-reviewer-04, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: supported
+    verdict: fail
+    reason: >-
+      Most citations in
+      portal/assessments/scorecard-quality/scorecard/seikika/review-rule.yaml
+      hold. In portal/standards/meta.yaml, the rules are 927-985 with
+      `appliesTo` at 926 and advisory at 925, and the levels and fixes are at
+      928-985. portal/tests/standards.test.yaml:856-877 reaches none, silver
+      and gold, and none of the four seikika rules in
+      portal/fixtures/surfaces.ndjson is unreviewed, so there is no bronze
+      fixture. Also accurate: crates.yaml:433-450 and 424-428,
+      assessments.yaml:259-282 and assessment.rs:284-295. One claim doesn't
+      hold. no-obvious-gap says "The other judged cards ask for a second
+      assessor; this one never does", and the summary calls it "the only one
+      that never asks". review-scorecard (meta.yaml:988-1074) and
+      review-sdlc-stage (portal/standards/sdlc.yaml:306-395) have no
+      independence rule either. Only review-crate and review-assessment do.
+    suggestion: >-
+      Correct the comparison: say that review-rule, review-scorecard and
+      review-sdlc-stage all lack a second-assessor check, while review-crate
+      and review-assessment have one. Drop "the only one" and "the weakest of
+      the review cards" from the summary, or support them another way.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      The verdicts themselves are right. A self-written, all-pass rule
+      assessment reaches gold on this card (meta.yaml:955-985), which is a gap
+      against decision 2 of D01M831P5QWJQ4A2FT85N5MXJQF, so no-obvious-gap is
+      a fail. The passes-review fix ignores the uncited evidence
+      (meta.yaml:960-966), and the no-doubts fix names no place (977-979), so
+      actionable is a fail. one-concern and the ladder hold.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      A second assessor reading meta.yaml:927-985 next to
+      portal/standards/crates.yaml:433-450 would find the same missing
+      independence rule and the same incomplete gold fixes. The comparison
+      error is about what the other cards contain, not about these verdicts.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      The suggestions in
+      portal/assessments/scorecard-quality/scorecard/seikika/review-rule.yaml
+      add `reviewIndependent` and an `independently-reviewed` gold rule copied
+      from crates.yaml:433-450, which fills the gap no-obvious-gap names. They
+      also reword passes-review's and no-doubts's fixes to name the citation
+      forms, the file and the re-assess command, which repairs both fixes
+      actionable flags.
+summary: >-
+  The verdicts are right and the suggestions would change them. One claim
+  is false: the assessment says review-rule is the only review card with
+  no second-assessor check, but review-scorecard and review-sdlc-stage
+  have none either. That misstates where the gap sits and how widely it
+  should be fixed.

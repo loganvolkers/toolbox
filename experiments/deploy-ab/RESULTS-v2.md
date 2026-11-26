@@ -1,7 +1,7 @@
 # Deploy A/B, rerun (2026-11-23)
 
 > **Superseded verdict (2026-11-23).** This is inconclusive, not a defeat. The bar can't be
-> applied without tokens. The S2 probe authenticates only Toolbox. The Toolbox agent restarted a
+> applied without tokens. The S2 probe authenticates only Seikika. The Seikika agent restarted a
 > container that had been built before the run. The "earlier Backstage launch" mentioned below
 > made 80 tool calls in the same workspace while the scored launch was running. See
 > [ADJUDICATION.md](ADJUDICATION.md) and
@@ -10,19 +10,19 @@
 
 **deploy-usable does not hold. Defeat.** The bar in [README.md](README.md) is unchanged.
 The design is [local simulation](../../docs/design/local-simulation.md).
-The baseline is [RESULTS.md](RESULTS.md). This run changes one thing in Toolbox: the portal
+The baseline is [RESULTS.md](RESULTS.md). This run changes one thing in Seikika: the portal
 image pushes Acme's directory after the SCIM connector is listening. The probes, the scoring,
 and the Backstage arm are the same.
 
-The hold needs three things at once: Toolbox passes S1–S3 and T1–T4, Backstage passes S1–S3,
-and Toolbox uses fewer tokens. Both runs have Toolbox passing every probe it is scored on.
+The hold needs three things at once: Seikika passes S1–S3 and T1–T4, Backstage passes S1–S3,
+and Seikika uses fewer tokens. Both runs have Seikika passing every probe it is scored on.
 Both runs have Backstage failing S2. Both runs have no token counts in the agent runtime.
-A further change to Toolbox does not put `payments-api` and `group:payments` into Backstage's
+A further change to Seikika does not put `payments-api` and `group:payments` into Backstage's
 HTML, and it does not make the runtime return tokens. That is the defeat.
 
 | Arm | S1 | S2 | S3 | T1–T4 | Tool calls | Wall | Tokens | Glue |
 |---|---|---|---|---|---|---|---|---|
-| Toolbox | pass (12) | pass | pass | pass | 46 | 136 s | absent | 0 lines changed in the workspace |
+| Seikika | pass (12) | pass | pass | pass | 46 | 136 s | absent | 0 lines changed in the workspace |
 | Backstage | pass (13) | fail | pass | not required | 82 | 626 s | absent | 207-line catalog module, plus the create-app app |
 
 Tokens were looked for in each Task result and each transcript. Neither object contains
@@ -30,10 +30,10 @@ Tokens were looked for in each Task result and each transcript. Neither object c
 
 ## What the probes saw
 
-Arms ran sequentially, Toolbox then Backstage, model parameter `inherit`. The agent records
+Arms ran sequentially, Seikika then Backstage, model parameter `inherit`. The agent records
 do not store a model name. Wall time is `updatedAtMs - createdAtMs` on each arm's own record.
 
-Toolbox's URL was `http://127.0.0.1:8080`. The process was the `toolbox-acme:local` image,
+Seikika's URL was `http://127.0.0.1:8080`. The process was the `seikika-acme:local` image,
 which logged `provisioned 4 users and 2 groups` on start. S1 matched 12 catalog entities.
 T1's title provenance was `connector:git-files`. T2 was alice 200 and carol 404. T3's failing
 set was `ledger` plus two repositories left by earlier S3 probes. S3 passed on a new name.

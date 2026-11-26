@@ -3,7 +3,7 @@
 *Status: decided 2026-11-24 (D01M85MK7FCRXH2TRMRKXTNA5GT); evidence, probes, panel and stop rule
 revised the same day (D01M87PSM9YQGGW3YQ5X4XCJP63) after a 36-round loop measured one auditor's
 noise ([design-loop-efficiency-2026-11-24.md](../audits/design-loop-efficiency-2026-11-24.md)).
-The agent skill is [`design-audit`](../../plugins/toolbox-operator/skills/design-audit/SKILL.md);
+The agent skill is [`design-audit`](../../plugins/seikika-operator/skills/design-audit/SKILL.md);
 the records are in [docs/audits/](../audits/).*
 
 **About:** the box. It is how the maintainer SDLC's `design-review` stage judges what the box
@@ -64,7 +64,7 @@ intent. Three things were missing:
 ## 3. The rubric
 
 The rubric is in the skill's
-[references/rubric.md](../../plugins/toolbox-operator/skills/design-audit/references/rubric.md). Its
+[references/rubric.md](../../plugins/seikika-operator/skills/design-audit/references/rubric.md). Its
 dimensions:
 
 | Usability | Joy |

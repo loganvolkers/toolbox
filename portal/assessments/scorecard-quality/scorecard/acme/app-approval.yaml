@@ -1,4 +1,4 @@
-apiVersion: toolbox.dev/assessment/v1
+apiVersion: seikika.com/assessment/v1
 entity: scorecard:acme/app-approval
 rubric: scorecard-quality
 subjectHash: db7427a20264
@@ -11,13 +11,13 @@ verdicts:
       One rule, one audience: security, checking that an approved GitHub App
       still has the permissions it was approved with. It is scoped to apps on
       the approved list (`appliesTo`,
-      examples/reference-portal/toolbox.yaml:266-268) and owned by
+      examples/reference-portal/seikika.yaml:266-268) and owned by
       `group:security`.
   - criterion: levels-are-a-ladder
     verdict: pass
     reason: >-
       There is a single bronze level, and the rationale explains why
-      (examples/reference-portal/toolbox.yaml:258-261): an approval either
+      (examples/reference-portal/seikika.yaml:258-261): an approval either
       still describes the app or it doesn't. Bronze is reachable today:
       renovate reaches it and snyk-security doesn't
       (examples/reference-portal/tests/apps.test.yaml). With one rule, no
@@ -26,7 +26,7 @@ verdicts:
     verdict: fail
     reason: >-
       The policy records `reviewed` dates and a `steward` per app
-      (examples/reference-portal/toolbox.yaml:18-19, :29-30). The design names
+      (examples/reference-portal/seikika.yaml:18-19, :29-30). The design names
       a review cadence and grant expiry as part of the policy
       (docs/examples/approved-github-apps.md:64), but no rule reads them, so
       an approval reviewed years ago still scores bronze. The design also
@@ -42,8 +42,8 @@ verdicts:
     verdict: fail
     reason: >-
       Its only rule has no evidence and doesn't name where the snapshot lives
-      (examples/reference-portal/toolbox.yaml:272-274). To raise
-      snyk-security, an agent has to diff `toolbox get
+      (examples/reference-portal/seikika.yaml:272-274). To raise
+      snyk-security, an agent has to diff `seikika get
       githubapp:snyk-security` against `policies.approvedApps.snyk-security`
       itself to find `administration: read`. The raise is a security
       re-approval, which an agent can prepare but not grant.

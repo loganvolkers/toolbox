@@ -3,12 +3,12 @@ id: D01M7Z2ZZ97VZQNTDT4QQHM3HQD
 decided: 2026-11-21T10:30:00Z
 ---
 
-# R3: fix the measured friction, then rerun the Toolbox arm against a fixed bar
+# R3: fix the measured friction, then rerun the Seikika arm against a fixed bar
 
 **R3's second round failed as pre-registered ([experiments/standards-ab](../../experiments/standards-ab/README.md)):
-both arms were exact, and Toolbox cost more in every phase. Phase 4 (reuse) did not test sharing,
+both arms were exact, and Seikika cost more in every phase. Phase 4 (reuse) did not test sharing,
 because no package could express the standards, and most of the extra cost was friction with a
-named fix. So R3 gets one rerun of the Toolbox arm (B′) after those fixes, with its bar set now.**
+named fix. So R3 gets one rerun of the Seikika arm (B′) after those fixes, with its bar set now.**
 
 1. **Fixes first,** from the round's friction table:
    - a numeric ratchet: a rule's `measure`, compared instead of the evidence count (item 1);

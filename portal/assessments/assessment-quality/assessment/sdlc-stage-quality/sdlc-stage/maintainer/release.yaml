@@ -1,4 +1,4 @@
-apiVersion: toolbox.dev/assessment/v1
+apiVersion: seikika.com/assessment/v1
 entity: assessment:sdlc-stage-quality/sdlc-stage:maintainer/release
 rubric: assessment-quality
 subjectHash: e27c5e0f0fe1
@@ -13,8 +13,8 @@ verdicts:
       cites .github/workflows/ci.yml:189-193 and :207-210 as calls to
       ./actions/report. Lines 189-193 are the GitLab job's toolchain and
       cache. Lines 207-210 are the end of that job and the report-action
-      comment. The action is used at ci.yml:110 (toolbox-dir at :114), :225
-      and :247, and none of those pass toolbox-version. The rest holds:
+      comment. The action is used at ci.yml:110 (seikika-dir at :114), :225
+      and :247, and none of those pass seikika-version. The rest holds:
       custom-image needs announce and calls image.yml (release.yml:328-341;
       image.yml:7-15), the stage gap is
       portal/sdlc/stages/maintainer.yaml:90-93, checks are :72, the download
@@ -27,14 +27,14 @@ verdicts:
       dist-workspace.toml:25-28 is the image job.
     suggestion: >-
       Replace ci.yml:189-193 and :207-210 with the three uses at :110, :225
-      and :247, and cite :114 for toolbox-dir.
+      and :247, and cite :114 for seikika-dir.
   - criterion: complete
     verdict: pass
     reason: >-
       The exit criterion includes "consumers pin them"
       (portal/sdlc/stages/maintainer.yaml:68-70), and checks lists only the
       two workflows (maintainer.yaml:72). This repo's three report-action
-      calls never set toolbox-version, so executable-exit fails even with the
+      calls never set seikika-version, so executable-exit fails even with the
       corrected lines. An agent can tag and push from the docs, the image is
       assembled from release archives, and a fork's pipeline does not add a
       crate. Those three passes match the files.
@@ -47,13 +47,13 @@ verdicts:
   - criterion: actionable
     verdict: pass
     reason: >-
-      A CI job that runs ./actions/report with toolbox-version set, and fails
+      A CI job that runs ./actions/report with seikika-version set, and fails
       if it builds from source, would make the pin half of the exit criterion
       something checks can fail. That changes the only fail in
       portal/assessments/sdlc-stage-quality/sdlc-stage/maintainer/release.yaml.
 summary: >-
   The release stage still fails executable-exit: nothing in checks fails
-  when consumers do not pin a toolbox-version, and this repo's
+  when consumers do not pin a seikika-version, and this repo's
   report-action calls do not set it. The assessment points two of those
   calls at the GitLab job. Cite ci.yml:110, :225 and :247 instead. The
   other three verdicts match the docs, the image job and the Dockerfile.

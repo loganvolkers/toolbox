@@ -15,7 +15,7 @@ COMMON = """You are working in a copy of the PostHog repository at {arm_dir}. Wo
 
 - First run `export PATH={path}:$PATH`. That holds the tools CI runs: semgrep 1.163.0, ruff {ruff} ({ruff_note}), actionlint 1.7.12 and zizmor 1.32.0. shellcheck isn't installed, so actionlint runs without it (`-shellcheck= -pyflakes=`).
 - No network and no installs. Budget: 40 tool calls.
-- Don't read anything under {ab_home} (only run the binaries on that PATH), and don't read /home/user/toolbox/experiments/ or /home/user/toolbox/docs/research-log.md.
+- Don't read anything under {ab_home} (only run the binaries on that PATH), and don't read /home/user/seikika/experiments/ or /home/user/seikika/docs/research-log.md.
 
 {arm_block}
 
@@ -53,10 +53,10 @@ When you finish, reply with:
 ARM = {
     "A": """## Your setup
 
-You have the repository, its tools, Python 3 and the shell. Write whatever glue you need: scripts, baseline files, workflow steps. Don't use or read Toolbox (/home/user/toolbox).""",
+You have the repository, its tools, Python 3 and the shell. Write whatever glue you need: scripts, baseline files, workflow steps. Don't use or read Seikika (/home/user/seikika).""",
     "B": """## Your setup
 
-You have the repository, its tools, Python 3, the shell and Toolbox: `export PATH={ab_home}/box-bin:$PATH` gives `toolbox`. Its docs and kits are in /home/user/toolbox, where you may read only `README.md`, `docs/v1-spec.md`, `docs/design/`, `docs/reference/`, `examples/`, `packages/`, `crates/`, `schema/` and `plugins/`. The operator skills in `plugins/toolbox-operator/skills/` are written for agents. There is no network, so bring kits in with `toolbox vendor` (or a relative path to /home/user/toolbox/packages), as a repository without network access would.""",
+You have the repository, its tools, Python 3, the shell and Seikika: `export PATH={ab_home}/box-bin:$PATH` gives `seikika`. Its docs and kits are in /home/user/seikika, where you may read only `README.md`, `docs/v1-spec.md`, `docs/design/`, `docs/reference/`, `examples/`, `packages/`, `crates/`, `schema/` and `plugins/`. The operator skills in `plugins/seikika-operator/skills/` are written for agents. There is no network, so bring kits in with `seikika vendor` (or a relative path to /home/user/seikika/packages), as a repository without network access would.""",
 }
 
 TASKS = {

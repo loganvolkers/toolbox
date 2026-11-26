@@ -1,4 +1,4 @@
-apiVersion: toolbox.dev/assessment/v1
+apiVersion: seikika.com/assessment/v1
 entity: assessment:rule-quality/rule:acme/ownership/claim-verified
 rubric: assessment-quality
 subjectHash: a8f0aa5326e5
@@ -10,13 +10,13 @@ verdicts:
     reason: >-
       The citations in
       portal/assessments/rule-quality/rule/acme/ownership/claim-verified.yaml
-      mostly hold. crates/toolbox-derive/src/lib.rs:957-989 is `authority` and
-      1313-1333 is `codeowners_for`. In examples/reference-portal/toolbox.yaml
+      mostly hold. crates/seikika-derive/src/lib.rs:957-989 is `authority` and
+      1313-1333 is `codeowners_for`. In examples/reference-portal/seikika.yaml
       the rule is at 197-206, its fix at 200-202, the links at 179-183 and the
       scorecard rationale at 173-178. fixtures/github.ndjson:8 gives ledger `*
       @acme/platform`, fixtures/git-files.ndjson gives its claim
       `group:payments`, and fixtures/idp.ndjson gives every group a
-      `githubTeam`. One line is off: `teamField` is at toolbox.yaml:106, not
+      `githubTeam`. One line is off: `teamField` is at seikika.yaml:106, not
       :105 (that line is `path`).
   - criterion: complete
     verdict: fail
@@ -44,7 +44,7 @@ verdicts:
       The pattern misfire is in code a second assessor can read, so once it is
       noticed it isn't a matter of taste. The hard-to-game pass leaves review
       to branch-protected, as the scorecard rationale does
-      (toolbox.yaml:173-178), and would reproduce.
+      (seikika.yaml:173-178), and would reproduce.
   - criterion: actionable
     verdict: pass
     reason: >-

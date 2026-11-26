@@ -5,7 +5,7 @@ the box: running a declared action, remembering its run, and carrying it from re
 design under test is [federated-actions.md](../../docs/design/federated-actions.md). Results are in
 [results/](./results/); the adjudicator's verdict goes in `ADJUDICATION.md`.*
 
-**Outcome: Toolbox passes the bar in round 8, on a held-out task**
+**Outcome: Seikika passes the bar in round 8, on a held-out task**
 ([results/r8/README.md](./results/r8/README.md)). All twelve runs fully pass. H2 holds against
 every rival, and H3 holds against Backstage and is inconclusive against GitHub Actions and
 vanilla. The calls results carry the round 8 fit audit's label.
@@ -14,7 +14,7 @@ vanilla. The calls results carry the round 8 fit audit's label.
 
 **Can a fresh coding agent deliver a self-service action that repositories own, that is validated,
 previewed, approved by someone other than the requester, done only when observed, offered from one
-org-level place and audited, with less to maintain and less work in Toolbox than in GitHub
+org-level place and audited, with less to maintain and less work in Seikika than in GitHub
 Actions, Backstage's scaffolder, or an app written from scratch?**
 
 Layers: the operator SDLC (building the action and the org's place for it) and the user SDLC
@@ -24,7 +24,7 @@ Layers: the operator SDLC (building the action and the org's place for it) and t
 
 | Arm | Platform | What the workspace adds |
 |---|---|---|
-| `toolbox` | Toolbox at the frozen commit | `bin/` (the binaries), `toolbox-docs/` (the operator skills, `examples/federated-actions`, `examples/repo-portal-starter`, the manifest schema) |
+| `seikika` | Seikika at the frozen commit | `bin/` (the binaries), `seikika-docs/` (the operator skills, `examples/federated-actions`, `examples/repo-portal-starter`, the manifest schema) |
 | `gha` | GitHub Actions, run by act 0.2.98 in host mode | `bin/act`; from round 8, `gha-docs/` (GitHub's docs pages for Actions, branch rules and code owners, the REST reference for actions, deployments and repos, act's README and user guide, all at pinned commits). GitHub-hosted features act cannot run count when configured as code and explained (§7, limit 1) |
 | `backstage` | Backstage 1.57 (`@backstage/create-app`, scaffolder backend 4.3, GitHub module) | `backstage/` (the app, its `node_modules`, and an `app-config.local.yaml` giving the run's port and one static token per person), built by `harness/backstage/build-app.sh`; from round 8, its install committed, and `backstage-docs/` (the `docs/` tree of backstage/backstage at v1.57.0 and the scaffolder and catalog backends' OpenAPI specs) |
 | `vanilla` | None: any language | Nothing. Python 3.12, Go 1.22 and Node 24 are installed |
@@ -71,7 +71,7 @@ Three open-source forks, imported at pinned commits as each run's origins (`harn
 | **Tool calls** | `count.py`: tool calls in the run's transcript, also by kind (edit, read, search, shell, other; L18) | Primary |
 | Wall seconds, characters of tool results, dropped results | `count.py` | Reported (L20) |
 
-A dry run (round 0, one Toolbox run, not counted) shows both primary measures before the bar uses
+A dry run (round 0, one Seikika run, not counted) shows both primary measures before the bar uses
 them (L14).
 
 ### 5.2 Probes (adjudicator, per run)
@@ -100,14 +100,14 @@ before and after.
 ## 6. Hypotheses and bar
 
 *W* is the wider of the two arms' ranges (max − min over three runs). A cost hypothesis **holds**
-when Toolbox's median is lower than the rival's by more than *W*; it is **lost** when the rival's
+when Seikika's median is lower than the rival's by more than *W*; it is **lost** when the rival's
 median is lower by more than *W*; otherwise it is **inconclusive** (P2).
 
 | # | Hypothesis |
 |---|---|
-| H1 | **Delivery.** Toolbox's arm fully passes in at least 2 of 3 runs, and in at least as many runs as each rival |
-| H2 | **Lines to maintain.** Against each rival, Toolbox's median is lower by more than *W* |
-| H3 | **Tool calls.** Against each rival, Toolbox's median is lower by more than *W* |
+| H1 | **Delivery.** Seikika's arm fully passes in at least 2 of 3 runs, and in at least as many runs as each rival |
+| H2 | **Lines to maintain.** Against each rival, Seikika's median is lower by more than *W* |
+| H3 | **Tool calls.** Against each rival, Seikika's median is lower by more than *W* |
 
 **The bar: the benchmark passes when H1 holds and, against every rival, H2 or H3 holds and
 neither is lost.** Anything else fails, and the friction behind the failure is triaged into
@@ -122,27 +122,27 @@ product fixes and a new round, which reruns every arm at the new frozen commit (
    identity is a name. Every arm has the same simulation.
 3. **One task.** A day-2 action that edits a repository. Creating a repository, provisioning a
    resource, or calling an external API would weigh the arms differently.
-4. **The Toolbox arm gets a shipped example close to the task.** `examples/federated-actions`
-   has a repo action with approvers and an org portal over repos. It ships with Toolbox, as
+4. **The Seikika arm gets a shipped example close to the task.** `examples/federated-actions`
+   has a repo action with approvers and an org portal over repos. It ships with Seikika, as
    `examples/template` ships with Backstage, so it counts as product documentation, not a leak.
-5. **The designer built Toolbox's actions.** The adjudicator is independent (P7); the designer
+5. **The designer built Seikika's actions.** The adjudicator is independent (P7); the designer
    wrote this file and the harness.
-6. **Agents know GitHub Actions and Backstage from training; they know Toolbox only from its docs.**
-   That is the real situation of a new tool, and it weighs against Toolbox.
+6. **Agents know GitHub Actions and Backstage from training; they know Seikika only from its docs.**
+   That is the real situation of a new tool, and it weighs against Seikika.
 7. **Backstage pays for the local code host.** Its GitHub integration (discovery provider, URL
    reader) would replace the catalog provider and file reads every Backstage run wrote for bare
-   local origins; Toolbox reads git paths natively, and vanilla calls `git`. Decided before round
+   local origins; Seikika reads git paths natively, and vanilla calls `git`. Decided before round
    8: no credit, the primary measure stays as registered, and write-ups list those lines
    separately (triage B4).
 
 ## 8. Round 8: a held-out task
 
 *Pre-registered before round 8's freeze.* Round 7 met the bar on its tally, but the
-[fit audit](results/FIT-AUDIT.md) found the Toolbox docs fitted to the task (P5) and the rivals
+[fit audit](results/FIT-AUDIT.md) found the Seikika docs fitted to the task (P5) and the rivals
 short of fair help (P4), so it is not a pass ([results/r7/README.md](results/r7/README.md)).
 Round 8 keeps §1–§7 and changes three things.
 
-**1. The task is new.** No Toolbox doc, skill or example was written for it.
+**1. The task is new.** No Seikika doc, skill or example was written for it.
 [`prompts/task-notice.md`](prompts/task-notice.md) asks for `add-notice`. It edits an existing
 file rather than adding one: a `> **Info:**` or `> **Warning:**` line at the top of each root
 README, which replaces any earlier notice. Its approvers are a group defined once at the org
@@ -168,7 +168,7 @@ level (R9), which the round 0–7 task did not have:
   they are (B3);
 - §7 limit 7 records B4.
 
-The Toolbox arm runs with the P5 corrections (`7193247`: generic skills, fixtures and `--help`;
+The Seikika arm runs with the P5 corrections (`7193247`: generic skills, fixtures and `--help`;
 `fb5dc3f`: group approvers in a parent's checkout, and a decision on who serverless approvals are
 for). The adjudicator prompt now takes the probe table as a parameter (`{PROBES}`, `{LAST}`).
 

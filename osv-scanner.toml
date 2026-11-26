@@ -1,4 +1,4 @@
-# osv-scanner reads this file with or without Toolbox. Every ignore says why, and has no date:
+# osv-scanner reads this file with or without Seikika. Every ignore says why, and has no date:
 # an expiry would change the result with no change to the repository, which the ratchet can't
 # tell from a regression (D01M885GT32STM506V32XKPP37G). Review each one when the RustSec pin in
 # scripts/ci-tools.sh moves.
@@ -7,7 +7,7 @@
 id = "RUSTSEC-2026-0543"
 reason = """chrono is unmaintained (an informational notice; no vulnerability, no fixed version). \
 It comes only from cel 0.16's default `chrono` feature, which CEL's timestamp and duration types \
-need (crates/toolbox-expr). Upstream's move off chrono is open (cel-rust#461); jiff can't replace \
+need (crates/seikika-expr). Upstream's move off chrono is open (cel-rust#461); jiff can't replace \
 it directly, because its range is shorter than CEL's timestamp range. Drop this when cel releases it."""
 
 [[IgnoredVulns]]

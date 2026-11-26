@@ -1,6 +1,6 @@
 // Negative type tests: every `@ts-expect-error` must correspond to a real compile error, or
 // `tsc --noEmit` fails with "Unused '@ts-expect-error' directive". This measures what the builder's
-// types catch before `toolbox validate` runs.
+// types catch before `seikika validate` runs.
 import { action, cel, connector, field, kind, scorecard } from "../src/index.js";
 
 const gh = connector("github", { package: "builtin:github", runtime: "in-image", records: ["repository"] });

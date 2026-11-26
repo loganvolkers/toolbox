@@ -1,0 +1,56 @@
+apiVersion: seikika.com/assessment/v1
+entity: assessment:rule-quality/rule:seikika/maintainer-benchmark/method-registered
+rubric: assessment-quality
+subjectHash: acf417facf73
+assessor: {kind: agent, name: cursor-reviewer-08, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: supported
+    verdict: pass
+    reason: >-
+      The citations in
+      portal/assessments/rule-quality/rule/seikika/maintainer-benchmark/method-registered.yaml
+      hold. registrationGaps is portal/standards/benchmarks.yaml:117-130. The
+      deterministic branch is 124-126 (the reason says 125-127), and the
+      adjudicator test is 128-130. The fix is 333-337 and the prompts path is
+      portal/seikika.yaml:174. In docs/design/dx-benchmarks.md, the §4.1 table
+      is 159-167, P2 is 162, the deterministic sentence 171-172 and L10-L12
+      98-100. The evidence is pinned at
+      portal/tests/standards.test.yaml:1225-1227. connector-ab's adjudicator
+      reads "before that, the designer"
+      (portal/benchmarks/connector-ab.yaml:58-60). spec-ab is the one live
+      failure (portal/results.json).
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      All four verdicts are right. hard-to-game fails because a self-declared
+      `deterministic: true` and any two different strings both pass
+      (benchmarks.yaml:124-130).
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      Each verdict rests on CEL a second assessor can evaluate by hand. The
+      gaming routes read straight off benchmarks.yaml:124-130.
+  - criterion: actionable
+    verdict: fail
+    reason: >-
+      The suggestion closes the two routes it names, but a cheaper one is left
+      open, so hard-to-game would still fail. The rule applies only while the
+      status is `designed` or `blocked` (benchmarks.yaml:330-332). Changing
+      spec-ab's `status: blocked` (portal/benchmarks/spec-ab.yaml:13) to
+      `complete` therefore passes method-registered vacuously. By my reading
+      of the CEL, it would also keep says-why, which looks at blockedOn only
+      for a blocked entry (benchmarks.yaml:191-192). That lifts spec-ab from
+      bronze to silver with a one-word edit. The edit is the same kind of
+      false claim as the `deterministic: true` the assessment counts as
+      gaming.
+    suggestion: >-
+      Name the status route in the hard-to-game reason, and extend the
+      suggestion so that a `complete` or `archived` entry needs a `ran` date
+      and a results path that exists before this rule stops applying. For
+      example, gate the check on `entity.ran == ''` as well as on the status.
+summary: >-
+  An accurate assessment with correct verdicts and citations, except one
+  off-by-one. Its suggestion closes the two routes it names, but changing
+  the status from blocked to complete passes the rule more cheaply and is
+  not addressed, so following it would leave hard-to-game failing.

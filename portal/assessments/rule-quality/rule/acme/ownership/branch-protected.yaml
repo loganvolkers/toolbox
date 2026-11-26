@@ -1,4 +1,4 @@
-apiVersion: toolbox.dev/assessment/v1
+apiVersion: seikika.com/assessment/v1
 entity: rule:acme/ownership/branch-protected
 rubric: rule-quality
 subjectHash: 6ded12901642
@@ -10,12 +10,12 @@ verdicts:
     reason: >-
       The field is the `protected` flag of `GET
       /repos/{org}/{repo}/branches/{branch}`
-      (crates/toolbox-connector-github/src/main.rs:155-162). It is a single
+      (crates/seikika-connector-github/src/main.rs:155-162). It is a single
       bit for "some protection applies". On 2026-11-25, `gh api` showed
       github/docs and rust-lang/rust `main` as `protected: true` with classic
       `protection.enabled: false`, set by their rulesets. The rule's rationale
       is about unreviewed pushes to CODEOWNERS and catalog-info.yaml
-      (examples/reference-portal/toolbox.yaml:221-224). The flag doesn't say
+      (examples/reference-portal/seikika.yaml:221-224). The flag doesn't say
       whether pull requests or code-owner reviews are required, so a ruleset
       that only blocks deletion counts the same as one that requires review.
     suggestion: >-
@@ -27,10 +27,10 @@ verdicts:
     verdict: fail
     reason: >-
       Because only `protected` is read
-      (crates/toolbox-connector-github/src/main.rs:158-162), the cheapest pass
+      (crates/seikika-connector-github/src/main.rs:158-162), the cheapest pass
       is any ruleset on the default branch, such as "restrict deletions". It
       costs nothing in review friction and leaves the push path the rationale
-      worries about (examples/reference-portal/toolbox.yaml:221-224) open.
+      worries about (examples/reference-portal/seikika.yaml:221-224) open.
     suggestion: >-
       Check the protecting rule types rather than the flag, as above. Then the
       cheapest pass is a ruleset that requires a pull request.
@@ -41,7 +41,7 @@ verdicts:
       github/docs and rust-lang/rust observations above), and the connector
       reads exactly that field. The fix names no file, but the place is the
       repository's default branch settings, which "a ruleset protecting the
-      default branch" (examples/reference-portal/toolbox.yaml:220) makes
+      default branch" (examples/reference-portal/seikika.yaml:220) makes
       clear. docs/research-log.md:59 shows a scoped refresh picking up the
       change.
   - criterion: threshold-justified
@@ -49,7 +49,7 @@ verdicts:
     reason: >-
       There is no number. Silver is justified by the scorecard rationale: a
       claim is only as safe as the branch that holds it
-      (examples/reference-portal/toolbox.yaml:173-178). The rule links
+      (examples/reference-portal/seikika.yaml:173-178). The rule links
       GitHub's rulesets docs (:225-227), and
       examples/reference-portal/tests/ownership.test.yaml pins it capping
       checkout-web at bronze.

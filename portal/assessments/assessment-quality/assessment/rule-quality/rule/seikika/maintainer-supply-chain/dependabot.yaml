@@ -1,0 +1,52 @@
+apiVersion: seikika.com/assessment/v1
+entity: assessment:rule-quality/rule:seikika/maintainer-supply-chain/dependabot
+rubric: assessment-quality
+subjectHash: 7319885e19b0
+assessor: {kind: agent, name: cursor-reviewer-34, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: supported
+    verdict: pass
+    reason: >-
+      The citations in
+      portal/assessments/rule-quality/rule/seikika/maintainer-supply-chain/dependabot.yaml
+      match. portal/standards/repository.yaml:84-95 asks only that
+      dependabotGaps be empty and explains why beside Scorecard.
+      crates/seikika-connector-workspace/src/repo.rs:129-135 wants the three
+      names cargo, npm and github-actions, and :174 is the regex
+      package-ecosystem:\s*["']?([A-Za-z0-9_-]+) over the raw file.
+      .github/dependabot.yml lists npm only for /ui, /site and
+      /experiments/typescript-builder, and has no pip or docker.
+      .github/workflows/ci.yml:36 installs scripts/requirements-yamark.txt
+      with --require-hashes, and :170 copies scripts/playwright-ci, which has
+      a package.json. image/Dockerfile:6 is the digest-pinned base.
+      portal/tests/standards.test.yaml:722-728 pins the three names for
+      acme/unsafe. D01M82E93XAPNE0WFXEPJZ59WG4 §2 is that Scorecard only asks
+      that a tool exist.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      measures-intent and hard-to-game should fail: the check is three fixed
+      names from a regex, so a comment or any directory passes, and pip and
+      docker are never asked for. fix-leads-to-pass is right that one updates
+      entry per listed name empties the gaps. threshold-justified is right
+      that bronze is the decision's placement and there is no number. No other
+      criterion should fail.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      The wanted list and the regex are the code. A second assessor fails the
+      same two criteria and passes the fix and the level from
+      repository.yaml:84-95.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      Deriving wanted ecosystem and directory pairs from tracked manifests and
+      parsing dependabot.yml as YAML would make a comment stop counting and
+      would list the uncovered playwright, pip and docker paths. That flips
+      both fails. The passes have no suggestion.
+summary: >-
+  The dependabot assessment is trustworthy. The check is three names from
+  a regex, this repository's dependabot file covers neither the CI npm
+  tree nor pip or docker, and the suggestion would make the check match
+  the rationale.

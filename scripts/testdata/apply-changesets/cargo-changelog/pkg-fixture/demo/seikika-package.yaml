@@ -1,0 +1,8 @@
+# Fixture package for apply-changesets Cargo+changelog path.
+apiVersion: seikika.com/package/v0
+name: demo
+version: 0.1.0
+description: >-
+  Fixture package used by scripts/test-apply-changesets.py
+  (cargo-changelog).
+fragments: [fragments/*.yaml]

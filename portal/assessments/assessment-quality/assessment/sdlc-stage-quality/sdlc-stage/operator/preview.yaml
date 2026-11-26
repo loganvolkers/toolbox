@@ -1,4 +1,4 @@
-apiVersion: toolbox.dev/assessment/v1
+apiVersion: seikika.com/assessment/v1
 entity: assessment:sdlc-stage-quality/sdlc-stage:operator/preview
 rubric: assessment-quality
 subjectHash: c5201ed38dc6
@@ -13,11 +13,11 @@ verdicts:
       hold. operator/preview has empty commands and checks, status designed,
       and the exit "A preview URL per PR, torn down on merge"
       (portal/sdlc/stages/operator.yaml:69-79). The Command enum in
-      crates/toolbox-cli/src/main.rs:43-322 has no preview subcommand.
-      `toolbox-dev/preview` and `toolbox preview gc` are
-      docs/design/sdlc.md:105, 111 and 178 (§5 and §8). The artifact sentence
-      is sdlc.md:44-45, `toolbox preview up` is line 58, and the image is
-      built from checksum-verified release archives with nothing compiled
+      crates/seikika-cli/src/main.rs:43-322 has no preview subcommand.
+      `seikika/preview` and `seikika preview gc` are docs/design/sdlc.md:105,
+      111 and 178 (§5 and §8). The artifact sentence is sdlc.md:44-45,
+      `seikika preview up` is line 58, and the image is built from
+      checksum-verified release archives with nothing compiled
       (image/Dockerfile:1-4, .github/workflows/image.yml:40-57 and the attest
       step at line 74).
   - criterion: complete
@@ -27,7 +27,7 @@ verdicts:
       the URL is missing (operator.yaml:76), and no command exists, so
       executable-exit and agent-can-complete fail. The design reuses the
       released image (sdlc.md:44-45, Dockerfile:3-4), so reuses-artifacts
-      passes. Meeting the designed exit needs `toolbox-dev/preview`, `toolbox
+      passes. Meeting the designed exit needs `seikika/preview`, `seikika
       preview gc` and a server-side sample export (sdlc.md:103-121), which is
       work in this repository, so decoupled-from-core fails.
   - criterion: reproducible

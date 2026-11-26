@@ -1,0 +1,56 @@
+apiVersion: seikika.com/assessment/v1
+entity: assessment:crate-design/crate:seikika-durable
+rubric: assessment-quality
+subjectHash: 0ba8452ab61d
+assessor: {kind: agent, name: cursor-reviewer-20, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: supported
+    verdict: pass
+    reason: >-
+      The citations in
+      portal/assessments/crate-design/crate/seikika-durable.yaml land.
+      crates/seikika-durable/src/lib.rs is four lines of doc and no code. The
+      Cargo.toml has no [dependencies]. v1-spec.md:93 is the `seikika-durable`
+      row, and v1-spec.md:68 lists "durable steps across instances" under "Not
+      yet". v1-spec.md:432-433 list `seikika_durable.*` apart from `runs`, and
+      the `Durable` trait is at v1-spec.md:273-280. v1-spec.md:450 says that
+      adopting DBOS is a migration. docs/questions.md:12 is Q4, and
+      experiments/durable-schema/README.md:19 names what the experiment
+      doesn't show: the Rust implementation, timers and a crash inside a step.
+      The skip is at portal/standards/crates.yaml:165 and
+      portal/tests/standards.test.yaml:26. rg finds `seikika-durable` only in
+      its own Cargo.toml.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      With no code, no public items and no dependents (crate brief: codeLines
+      0, pubItems 0, dependents []), every criterion passes on the rubric's
+      own guidance. replaceable-defaults passes "when it wraps no third-party
+      default" (crates.yaml:483). One could call the doc stale, since it says
+      "no code until its milestone" while M5 has largely shipped. The
+      assessment answers that with v1-spec.md:68, which keeps durable steps
+      open in M5. The real concern, that runs persist through seikika-store
+      instead (0003_runs.sql), belongs to other crates, and the summary says
+      so.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      Each verdict rests on facts anyone can check: an empty crate, no
+      dependents, no dependencies, a doc that matches the spec row. A second
+      assessor would reach four passes.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      There are no fail or unsure verdicts in
+      portal/assessments/crate-design/crate/seikika-durable.yaml, so no
+      suggestion is needed. The summary still gives one forward-looking check:
+      the `Durable` trait should be the only path to the §8.1 tables, and
+      experiments/durable-schema/test.sql's cases should become its first
+      tests.
+summary: >-
+  An accurate assessment of a placeholder. Every citation lands, the four
+  passes follow from an empty crate with no dependents, and the staleness
+  question is answered from v1-spec.md:68. The assessment also points to
+  the real risk, outside the crate: runs bypass the future `Durable`
+  contract today.

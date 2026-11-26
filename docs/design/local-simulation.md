@@ -1,7 +1,7 @@
 # Local simulation: a customer deploy without a cloud account
 
 *Status: proposal, 2026-11-23 (Q19). Nothing in this document is built. It is about the box
-([toolbox-and-tools.md](./toolbox-and-tools.md)): how an operator SDLC deploy is stood up and how a
+([seikika-and-tools.md](./seikika-and-tools.md)): how an operator SDLC deploy is stood up and how a
 user SDLC session proves the portal is usable. Maintainer SDLC owns the harness.*
 
 ---
@@ -12,7 +12,7 @@ user SDLC session proves the portal is usable. Maintainer SDLC owns the harness.
 (D33) — against a real git server and a live directory, and it passes only when the catalog answers
 a question that was not known when the process started.**
 
-`toolbox serve --fixtures` and `toolbox push` load records straight into the store. That checks the
+`seikika serve --fixtures` and `seikika push` load records straight into the store. That checks the
 derivation pipeline. It does not check the image, the listen address, the connector HTTP client, the
 supervisor, or a person opening an entity page. Those are the gaps this environment closes.
 
@@ -23,9 +23,9 @@ supervisor, or a person opening an entity page. Those are the gaps this environm
 | Kubernetes check | A small Helm chart, installed on kind, scored by the same probes | Customers install a chart (D9). `score-k8s` emits manifests and a local state directory, which is the wrong operator interface |
 | GitHub | Forgejo for the git objects, and a façade that speaks the GitHub REST paths `GITHUB_API_URL` already selects | Forgejo's maintainers say its API will never be the GitHub API. The façade is the impedance mismatch, not a second catalog |
 | Directory | The reference portal's SCIM connector, against a live feed | Backstage's production guide treats checked-in `examples/org.yaml` as demo data |
-| Cloud, first | The Cloud Run container contract: listen on `0.0.0.0:$PORT`, `/readyz`, `SIGTERM` | Google's own local test is `docker run -e PORT`. `toolbox serve` today binds `127.0.0.1:8080` via `TOOLBOX_LISTEN` and does not read `PORT` |
-| Cloud, later | floci-gcp's Cloud Run Admin v2, Docker-backed, after we run it | It does not speak the v1 Knative API `gcloud run` uses. It is a Toolbox-only path, so it is not the Backstage comparison |
-| Inner loop | `toolbox dev` for the manifest. Compose `develop.watch` only when the image itself must rebuild | Tilt's job is many services on Kubernetes, configured in Starlark. D3 left Starlark. One container does not need that control plane |
+| Cloud, first | The Cloud Run container contract: listen on `0.0.0.0:$PORT`, `/readyz`, `SIGTERM` | Google's own local test is `docker run -e PORT`. `seikika serve` today binds `127.0.0.1:8080` via `SEIKIKA_LISTEN` and does not read `PORT` |
+| Cloud, later | floci-gcp's Cloud Run Admin v2, Docker-backed, after we run it | It does not speak the v1 Knative API `gcloud run` uses. It is a Seikika-only path, so it is not the Backstage comparison |
+| Inner loop | `seikika dev` for the manifest. Compose `develop.watch` only when the image itself must rebuild | Tilt's job is many services on Kubernetes, configured in Starlark. D3 left Starlark. One container does not need that control plane |
 | Pass | A harness probe, including a catalog entity pushed after the agent has stopped | A 200 from `/readyz`, or the agent's own "it works", is recorded and is not a pass |
 
 The reference portal's `expected/` outputs and `tools/mock_github.py` stay. They are the fast
@@ -35,21 +35,21 @@ differential check. This environment is the layer below them.
 
 | Loop | Data enters through | What it proves | Where it lives |
 |---|---|---|---|
-| **Authoring** | Fixture NDJSON, or `toolbox push` of those records | The manifest derives the oracle byte for byte | `examples/reference-portal`, `toolbox test` |
-| **Deploy** | Connectors calling a GitHub API and a SCIM feed, writing Postgres, serving HTTP | A customer can host the image and use the portal | This design. `toolbox dev` and `serve --fixtures` do not cover it |
+| **Authoring** | Fixture NDJSON, or `seikika push` of those records | The manifest derives the oracle byte for byte | `examples/reference-portal`, `seikika test` |
+| **Deploy** | Connectors calling a GitHub API and a SCIM feed, writing Postgres, serving HTTP | A customer can host the image and use the portal | This design. `seikika dev` and `serve --fixtures` do not cover it |
 
 The operator SDLC already draws this line as environments ([sdlc.md](./sdlc.md) §2): local and CI
 use fixtures, staging uses real sources. We have no cloud project, so staging's "real sources" are
 processes on the same machine that speak the same protocols. The image, the database, and the
 request path are the ones a customer uses.
 
-Today the server listens on `TOOLBOX_LISTEN`, default `127.0.0.1:8080`
-(`crates/toolbox-cli/src/main.rs`). Cloud Run injects `PORT` and sends traffic to `0.0.0.0` on that
+Today the server listens on `SEIKIKA_LISTEN`, default `127.0.0.1:8080`
+(`crates/seikika-cli/src/main.rs`). Cloud Run injects `PORT` and sends traffic to `0.0.0.0` on that
 port. A container started the way Google documents local testing will not receive a request until
 `serve` binds `0.0.0.0:$PORT` when `PORT` is set. That bind is a prerequisite, not a mock.
 
 The reference `examples/reference-portal/Dockerfile` is a sketch of the one image (D33): it does not
-copy a `toolbox` binary. The stack test uses a locally built binary in that shape until `toolbox
+copy a `seikika` binary. The stack test uses a locally built binary in that shape until `seikika
 build` exists (operator stage `operator/deploy` is still designed, not built).
 
 ## 3. How low the fakes sit
@@ -125,7 +125,7 @@ are the drift check.
 ### 4.2 Compose
 
 The Compose Specification's `develop.watch` (rebuild, restart, sync) is the live-reload Tilt would
-otherwise be for. The portal image changes rarely relative to the manifest. `toolbox dev` remains
+otherwise be for. The portal image changes rarely relative to the manifest. `seikika dev` remains
 the authoring loop (D44): watch the manifest, full recompute, no image rebuild. Watch belongs on
 the deploy loop only.
 
@@ -153,7 +153,7 @@ the Tiltfile in Starlark. `docker_compose()` is supported and is how a team that
 would attach. `tilt get` reads an API, and `UIResource` is documented as a legacy status object.
 
 That solves a problem we do not have on the default path. G1 is one container, not a set of services
-that must reload together. The authoring loop is already specified as `toolbox dev`. A Tiltfile that
+that must reload together. The authoring loop is already specified as `seikika dev`. A Tiltfile that
 calls `docker_compose` on the generated file is an optional adapter for customers who have Tilt. It
 is not the simulator, and Starlark is not added to the box (D3).
 
@@ -174,7 +174,7 @@ contradicts G1.
 | **Knative** | The model Cloud Run came from | A local install is a cluster plus serving plus networking. The contract we must pass is the container contract |
 | **LocalStack, Moto** | AWS APIs | The reference target is Cloud Run (D33), not ECS. An ECS Terraform module, if it is tested later, can use them |
 | **fake-gcs-server** | GCS | Object storage is optional (plan §6.2). Add it when a test writes an object |
-| **floci-gcp** | Cloud Run Admin API v2, and by default it runs the image in Docker, injecting `PORT`, `K_SERVICE`, `K_REVISION`, `K_CONFIGURATION` | MIT, first commit 2026-05-17. Its own docs say `gcloud` is not supported, because `gcloud` uses the v1 API. Not run in this session. Optional, after a hands-on check, for a Toolbox-only "call the admin API" test |
+| **floci-gcp** | Cloud Run Admin API v2, and by default it runs the image in Docker, injecting `PORT`, `K_SERVICE`, `K_REVISION`, `K_CONFIGURATION` | MIT, first commit 2026-05-17. Its own docs say `gcloud` is not supported, because `gcloud` uses the v1 API. Not run in this session. Optional, after a hands-on check, for a Seikika-only "call the admin API" test |
 | **kauche/cloud-run-api-emulator** | A gRPC Cloud Run API | The project calls itself super-experimental. It does not replace the container |
 | **Testcontainers** | Starting Postgres from a Rust test | The artifact under test is the Compose file and the chart, which an agent must also be able to start. The acceptance script is that file |
 | **WireMock, MockServer, MSW** | Stubbed HTTP | Same layer as `mock_github.py`. Right for the connector unit test |
@@ -183,7 +183,7 @@ contradicts G1.
 
 ## 5. The fake GitHub
 
-The GitHub connector calls these paths (`crates/toolbox-connector-github`), and `git-files` calls
+The GitHub connector calls these paths (`crates/seikika-connector-github`), and `git-files` calls
 the contents path. Both send `Accept: application/vnd.github+json`, `X-GitHub-Api-Version`, and a
 bearer token, and both page with `per_page=100` until a page returns fewer than 100 items.
 
@@ -270,7 +270,7 @@ The harness owns the probes. The agent's last message is ignored
 ([dx-benchmarks.md](./dx-benchmarks.md) §2, independent truth). `/readyz` and `/healthz` are
 recorded. A pass requires the catalog.
 
-**Shared probes** (Toolbox and Backstage, each through a harness adapter):
+**Shared probes** (Seikika and Backstage, each through a harness adapter):
 
 | # | Probe | Fail |
 |---|---|---|
@@ -278,14 +278,14 @@ recorded. A pass requires the catalog.
 | S2 | The HTML page for `payments-api` contains its name and its owner | 200 with an empty shell, or a page that never mentions the entity |
 | S3 | After the agent process has exited, the harness pushes a new `catalog-info.yaml` whose component name is a random id the prompt did not contain, using a git credential the agent was not given. A refresh (or the connector's own schedule, bounded) makes that component appear | The name never appears. A static server, a fixture load, and a one-shot import all fail here |
 
-The Backstage adapter reads `/api/catalog/entities`. The Toolbox adapter reads the entity API. The
+The Backstage adapter reads `/api/catalog/entities`. The Seikika adapter reads the entity API. The
 adapter is harness code.
 
-**Toolbox probes** (the stack test and the Toolbox arm; not required of Backstage):
+**Seikika probes** (the stack test and the Seikika arm; not required of Backstage):
 
 | # | Probe |
 |---|---|
-| T1 | `toolbox get` shows the component's fields came from the github or git-files connector, not from a native or fixture source |
+| T1 | `seikika get` shows the component's fields came from the github or git-files connector, not from a native or fixture source |
 | T2 | A principal in `group:payments` can read `payments-api`, and a principal in no group cannot, through the API. OpenFGA is the one in the image (Q11) |
 | T3 | The README scorecard's failing set matches a walk of the repos |
 | T4 | MCP `initialize` and the entity read return the same component S1 saw |
@@ -303,17 +303,17 @@ that tracks the git server without the agent still being in the loop.
 
 | | Name | Run | Pass |
 |---|---|---|---|
-| L0 | Reference portal | `toolbox validate`, `toolbox test`, `tools/reference.py --check` | `expected/` byte for byte. Exists |
-| L1 | Connector contract | `mock_github.py` plus `toolbox connector test` | Records match the NDJSON. Exists in part |
+| L0 | Reference portal | `seikika validate`, `seikika test`, `tools/reference.py --check` | `expected/` byte for byte. Exists |
+| L1 | Connector contract | `mock_github.py` plus `seikika connector test` | Records match the NDJSON. Exists in part |
 | L2 | Stack | Compose: Postgres, portal image, Forgejo, façade, SCIM. No `--fixtures` | S1–S3 and T1–T4 against Acme |
 | L3 | Deploy contract | `docker run -e PORT` as in Google's local Cloud Run doc; then `helm install` on kind | The same probes. A `SIGTERM` test: the process exits without a second signal inside the 10s Cloud Run window |
 | L4 | Usability script | A fixed sequence, no agent: open the entity page, read the owner, read the score, push a file, see it | S2, T3, S3 |
-| L5 | DX Benchmark | Fresh agents, Toolbox against Backstage, on the pinned mirrors | §7 shared probes, plus cost. Catalogued, blocked |
+| L5 | DX Benchmark | Fresh agents, Seikika against Backstage, on the pinned mirrors | §7 shared probes, plus cost. Catalogued, blocked |
 
 L3's optional last step, once floci-gcp has been run and its limits confirmed: create the service
 through the Cloud Run Admin v2 API and hit the URL it returns. That step is not in L5. Backstage's
 golden path deploys a stateless Node container plus external Postgres (image, env, health check,
-public URL), on Compose for a small install. Giving only Toolbox a fake `gcloud` would make the
+public URL), on Compose for a small install. Giving only Seikika a fake `gcloud` would make the
 cheaper arm the one we wrote the fake for.
 
 ## 9. The benchmark
@@ -325,14 +325,14 @@ is the bar.
 
 | | |
 |---|---|
-| Question | Can a fresh agent deploy a usable portal onto a laptop, with Toolbox and with Backstage, when the only services are a local GitHub and Postgres? |
+| Question | Can a fresh agent deploy a usable portal onto a laptop, with Seikika and with Backstage, when the only services are a local GitHub and Postgres? |
 | Layers | Operator SDLC (`operator/deploy`, `operator/verify`) and user SDLC (`user/discover`) |
 | Rival | Backstage, created from `@backstage/create-app` and run as one container plus Postgres, catalog pointed at the same façade. That is the deploy Backstage's own golden path describes for a small install |
 | Repos | `backstage/backstage@feeadd4d4efcbda9f1573b95e356e0f3fc0b5d17`, `openfga/openfga@d67ba7b1d2eaf945cffab3a9129ca1a4c7ad5251` |
-| Bar | **Holds** if the Toolbox arm passes S1–S3 and T1–T4, the Backstage arm passes S1–S3, and Toolbox's token count is lower at that equal shared-probe result. **Fails** if Toolbox misses a shared probe Backstage hits, or if Toolbox passes them with at least as many tokens. **Void** if either arm's only success is `/readyz` |
-| First run | 2026-11-23. Inconclusive: Toolbox passed S1–S3 and T1–T4, Backstage failed S2, and the agent runtime returned no token counts. create-app 0.9.4 ran; it rejected the Node 22.23.5 pin |
-| Rerun | 2026-11-23. The portal image pushes the directory. Toolbox passed again. Backstage failed S2 again, and there were still no token counts. Inconclusive, not the defeat [RESULTS-v2.md](../../experiments/deploy-ab/RESULTS-v2.md) first recorded. The bar above is unchanged |
-| Adjudication | 2026-11-23, by an agent that designed neither arm. The arms were unequal. S2 authenticated only Toolbox. The Toolbox image and container existed before the run, although the prompt said the portal was not running. The Backstage prompt suggested a provider that needs GraphQL, which the facade lacks. Two Backstage launches overlapped in the rerun. Rerun under protocol 2 after those are fixed ([ADJUDICATION.md](../../experiments/deploy-ab/ADJUDICATION.md), D01M83RDWR52WVNER0MV5T84NSX) |
+| Bar | **Holds** if the Seikika arm passes S1–S3 and T1–T4, the Backstage arm passes S1–S3, and Seikika's token count is lower at that equal shared-probe result. **Fails** if Seikika misses a shared probe Backstage hits, or if Seikika passes them with at least as many tokens. **Void** if either arm's only success is `/readyz` |
+| First run | 2026-11-23. Inconclusive: Seikika passed S1–S3 and T1–T4, Backstage failed S2, and the agent runtime returned no token counts. create-app 0.9.4 ran; it rejected the Node 22.23.5 pin |
+| Rerun | 2026-11-23. The portal image pushes the directory. Seikika passed again. Backstage failed S2 again, and there were still no token counts. Inconclusive, not the defeat [RESULTS-v2.md](../../experiments/deploy-ab/RESULTS-v2.md) first recorded. The bar above is unchanged |
+| Adjudication | 2026-11-23, by an agent that designed neither arm. The arms were unequal. S2 authenticated only Seikika. The Seikika image and container existed before the run, although the prompt said the portal was not running. The Backstage prompt suggested a provider that needs GraphQL, which the facade lacks. Two Backstage launches overlapped in the rerun. Rerun under protocol 2 after those are fixed ([ADJUDICATION.md](../../experiments/deploy-ab/ADJUDICATION.md), D01M83RDWR52WVNER0MV5T84NSX) |
 
 The harness starts Forgejo, the façade, the registry and Postgres before the agent. It does not
 start the portal. The agent is told the façade URL, the org, and the Postgres URL, and must leave a
@@ -347,7 +347,7 @@ top of the pin.
 
 | # | Work | Done when |
 |---|---|---|
-| 1 | `serve` binds `0.0.0.0:$PORT` when `PORT` is set, and still honours `TOOLBOX_LISTEN` | `docker run -e PORT=8080 -p 8080:8080` answers `/readyz` from another network namespace, not only from `127.0.0.1` inside the container |
+| 1 | `serve` binds `0.0.0.0:$PORT` when `PORT` is set, and still honours `SEIKIKA_LISTEN` | `docker run -e PORT=8080 -p 8080:8080` answers `/readyz` from another network namespace, not only from `127.0.0.1` inside the container |
 | 2 | `score.yaml` for the reference portal and `score-compose generate` | Compose comes up with Postgres and the image |
 | 3 | Acme seed in Forgejo and the façade | The github and git-files connectors, pointed at the façade, emit the seed's repos, CODEOWNERS and `catalog-info.yaml` |
 | 4 | SCIM feed as a process | The `idp` connector ingests the groups |
@@ -363,7 +363,7 @@ top of the pin.
 - The reference portal's `expected/` files. This environment has its own oracle, derived from the seed.
 - `mock_github.py` and `serve --fixtures`. They remain the fast path.
 - M5 actions, which stay paused (D64). The façade does not implement write endpoints for Actions.
-- A fake GCP as the benchmark's target. It can be a later Toolbox-only L3 step.
+- A fake GCP as the benchmark's target. It can be a later Seikika-only L3 step.
 
 ## Sources
 
@@ -376,4 +376,4 @@ top of the pin.
 - floci-gcp README and `docs/services/cloud-run.md` (read from GitHub): Cloud Run Admin v2, Docker execution injecting `PORT` and `K_*`, `gcloud` unsupported because it uses the v1 API. MIT, repository created 2026-05-17. Not run.
 - Forgejo API usage (forgejo.org docs, search excerpt) and forgejo/forgejo#9285 (search excerpt of the PR body): the API will never be the GitHub API; `Accept: application/vnd.github+json` is a selective shim.
 - Backstage system model, `backstage/backstage` `docs/features/software-catalog/system-model.md`, and root `catalog-info.yaml`, at `feeadd4d4efcbda9f1573b95e356e0f3fc0b5d17` (read from GitHub). Golden-path deploying doc and `app-config.production.yaml` (GitHub; the deploying page via search excerpt): stateless Node container, external Postgres, health checks, and the sample catalog locations marked as demo. Getting started: `npx @backstage/create-app`, local SQLite, not a production install (search excerpt).
-- This repository: [plan.md](../plan.md) §6.1–6.2, [v1-spec.md](../v1-spec.md) §10, [sdlc.md](./sdlc.md), [dx-benchmarks.md](./dx-benchmarks.md), D33, D9, D40, D44, Q11, Q18. Connector paths in `crates/toolbox-connector-github` and `crates/toolbox-connector-git-files`. `examples/reference-portal/tools/mock_github.py`.
+- This repository: [plan.md](../plan.md) §6.1–6.2, [v1-spec.md](../v1-spec.md) §10, [sdlc.md](./sdlc.md), [dx-benchmarks.md](./dx-benchmarks.md), D33, D9, D40, D44, Q11, Q18. Connector paths in `crates/seikika-connector-github` and `crates/seikika-connector-git-files`. `examples/reference-portal/tools/mock_github.py`.

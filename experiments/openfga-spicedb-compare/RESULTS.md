@@ -1,6 +1,6 @@
 # Results: OpenFGA v1.23.0 against SpiceDB v1.57.1
 
-The experiment is about the box: it is the comparison Toolbox's report shows for
+The experiment is about the box: it is the comparison Seikika's report shows for
 [examples/openfga-portal](../../examples/openfga-portal/README.md). The two products are the tools
 measured. Method and bars: [README.md](./README.md), pre-registered before the run, with
 clarifications under its *Deviations* heading. The run was on 2026-11-24 and took 1,774 s of wall
@@ -67,10 +67,10 @@ Per factor:
   against 15, and CNCF governance against vendor ownership. SpiceDB has one more official SDK (6
   against 5).
 
-**The report first showed a harsher headline than this tally.** Toolbox's derive step counted a
+**The report first showed a harsher headline than this tally.** Seikika's derive step counted a
 factor as behind if OpenFGA was behind on any one of its rules (D01M857ZB468ZM2YS6GNSEG6YB9), so
 only footprint and supply chain were ahead. The 30 per-rule standings are identical under both
-rules: `toolbox report` on the portal agreed with `snapshot.py` on every rule. The gap was a
+rules: `seikika report` on the portal agreed with `snapshot.py` on every rule. The gap was a
 finding about the box, not about either product. A comparison now declares its rule
 (D01M87WF2QZVPTD8CGDZKY133CD), and the vs-spicedb scorecards declare the pre-registered majority,
 so the report leads with this verdict.

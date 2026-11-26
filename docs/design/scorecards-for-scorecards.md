@@ -1,6 +1,6 @@
 # Scorecards for Scorecards: What Makes a Standard Good, and Where the Recursion Stops
 
-*Status: built, 2026-11-20 (D71, D79, D80). Toolbox for Toolbox ([portal/](../../portal/README.md))
+*Status: built, 2026-11-20 (D71, D79, D80). Seikika for Seikika ([portal/](../../portal/README.md))
 catalogues every part of three portals: itself, the
 [repo-portal starter](../../examples/repo-portal-starter/README.md) and the
 [reference portal](../../examples/reference-portal/README.md). Deterministic meta scorecards cover
@@ -25,11 +25,11 @@ everything else:
 The other four properties need judgement: whether the check measures the intent, whether it can be
 gamed, whether the fix matches the check, and whether thresholds are justified.
 
-**Judgement is pushed, not pulled (D79).** Every developer already runs a coding agent, so Toolbox
+**Judgement is pushed, not pulled (D79).** Every developer already runs a coding agent, so Seikika
 holds no model keys and calls no model. It gives the agent a **rubric** (in the manifest), a **brief**
-(`toolbox assess brief`, or the `assessment_brief` MCP tool) and a skill
-([`assess-entity`](../../plugins/toolbox-operator/skills/assess-entity/SKILL.md)). The agent writes an
-**assessment**: a file in `assessments/`, or a record pushed to Postgres with `toolbox assess
+(`seikika assess brief`, or the `assessment_brief` MCP tool) and a skill
+([`assess-entity`](../../plugins/seikika-operator/skills/assess-entity/SKILL.md)). The agent writes an
+**assessment**: a file in `assessments/`, or a record pushed to Postgres with `seikika assess
 submit`. Scorecards read assessments as data, keyed to a **content hash** of what was assessed, so an
 assessment goes stale the moment its subject changes. Assessments are less real-time than checks, but
 they are stored, visualised, queried and referenced like any other entity. `review-*` scorecards
@@ -38,7 +38,7 @@ report them, and they are **advisory** (`ratchet.advisory`): a stale review neve
 **Rules and scorecards are not the only parts of a portal that can be good or bad (§4).** Kinds,
 fields and connectors are standards too: they are what every rule reads. They now have meta
 scorecards (`meta-kind`, `meta-field`, `meta-connector`; §5). Relations, map rules, tests,
-authorization and actions are covered through those, or by `toolbox validate`, rather than by
+authorization and actions are covered through those, or by `seikika validate`, rather than by
 scorecards of their own.
 
 **The recursion stops at one meta level, by self-application, not by more configuration.**
@@ -48,10 +48,10 @@ scorecards of their own.
 | L0 | Entities: crates, docs, workflows, MCP tools … | L1 scorecards | — |
 | L1 | Scorecards and rules (ours, the starter's, the reference portal's) | L2 | the portals' manifests |
 | L1′ | Kinds, fields, connectors (the model those rules read) | L2 | the portals' manifests |
-| L2 | `meta-rule`, `meta-scorecard`, `meta-kind`, `meta-field`, `meta-connector`, `review-*` | **L2 itself**: they are rules, scorecards, kinds and fields, so they appear in their own input | the same `portal/toolbox.yaml` |
+| L2 | `meta-rule`, `meta-scorecard`, `meta-kind`, `meta-field`, `meta-connector`, `review-*` | **L2 itself**: they are rules, scorecards, kinds and fields, so they appear in their own input | the same `portal/seikika.yaml` |
 | — | Assessments (judgement) | `review-*` (advisory) | files in `portal/assessments/` |
 
-There is no T4T4T. Two things keep L2 a fixed point:
+Seikika for Seikika stops at two levels. Two things keep L2 a fixed point:
 - **Self-application.** The meta rules are tested by the same expectations they demand, and decide
   both ways on fixtures they ship with.
 - **Determinism.** Meta rules read only the manifest, the CEL, the tests and the fixtures. Live
@@ -78,11 +78,11 @@ everyone else is held to wasn't itself held to anything.
 
 | # | What happened | Property of a good standard |
 |---|---|---|
-| L1 | The fresh agent took `user-mcp` from 4 silver + 7 bronze to 11 gold using only the portal; fix texts that named the file and field were praised ([toolbox-for-toolbox.md](./toolbox-for-toolbox.md) §6.1) | **Actionable**: a fix that says what and where |
+| L1 | The fresh agent took `user-mcp` from 4 silver + 7 bronze to 11 gold using only the portal; fix texts that named the file and field were praised ([seikika-for-seikika.md](./seikika-for-seikika.md) §6.1) | **Actionable**: a fix that says what and where |
 | L2 | The same agent needed one `explain` call per rule per entity to find *what* failed (F11); evidence (D66) fixed it | **Explained**: failing rules name the failing items |
 | L3 | `contract-tested` passed for a tool merely *mentioned* in a test (F9); `documented` accepted any doc with a backticked common word (F14) | **Valid**: the check measures the intent, not a proxy an agent can satisfy |
 | L4 | First run: a numbered `## 5. Sources` and a quoted "SDLC" were false positives; a time-estimate regex was dropped (F8) | **Tested**: expectations pin both outcomes over fixtures |
-| L5 | `join` and `flatten` passed `toolbox validate` and failed only when scores were computed, twice | **Well-formed**: functions exist, fields exist, types fit (now: `cel.function` in validate) |
+| L5 | `join` and `flatten` passed `seikika validate` and failed only when scores were computed, twice | **Well-formed**: functions exist, fields exist, types fit (now: `cel.function` in validate) |
 | L6 | Without zizmor, rules first came out `fail`, which looked like regressions | **Honest about missing data**: unknown ≠ fail (D70) |
 | L7 | CI fail rates change every run; putting them in the ratchet would make it flap | **Deterministic where it gates**; observational signals are reported, not ratcheted |
 | L8 | The 100k-entity budget fails on 2-vCPU runners (24.4 s vs 10 s); rules are evaluated once per entity | **Cheap**: no nested loops over unbounded lists; small checks |
@@ -95,7 +95,7 @@ everyone else is held to wasn't itself held to anything.
 
 ### 3.1 Built (deterministic, in the ratchet)
 
-| Scorecard | Level | Rule | Lesson | Check (over `toolbox describe scorecards` facts) |
+| Scorecard | Level | Rule | Lesson | Check (over `seikika describe scorecards` facts) |
 |---|---|---|---|---|
 | `meta-rule` | bronze | `explains-fix` | L1 | fix ≥ 5 words |
 | | bronze | `tested` | L4 | a test expectation pins `score('<card>', …).rules['<rule>']` to a literal outcome, or compares its evidence |
@@ -119,7 +119,7 @@ every *new* rule or scorecard must be tested, explained and decided on fixtures 
 commit (L10).
 
 **Made possible by (also built):**
-- **`toolbox describe scorecards PORTAL… [--results PORTAL=FILE]`** emits `scorecard` and `rule`
+- **`seikika describe scorecards PORTAL… [--results PORTAL=FILE]`** emits `scorecard` and `rule`
   records with:
   - the manifest facts;
   - CEL analysis: nodes, depth, comprehension nesting, fields read, functions called, undeclared
@@ -127,7 +127,7 @@ commit (L10).
   - test mentions;
   - outcomes over the portal's own fixtures;
   - optionally, live outcomes from a results file.
-- **`toolbox_expr::analysis`**: the CEL walker. `toolbox validate` now rejects functions the runtime
+- **`seikika_expr::analysis`**: the CEL walker. `seikika validate` now rejects functions the runtime
   doesn't declare (`cel.function`; L5).
 - **`ratchet.newEntitiesAtLeast`**: a scorecard property. A scorecard new to the baseline baselines
   everything first, as Betterer's first run does.
@@ -143,11 +143,11 @@ commit (L10).
 | `within-budget` | L8 | Per-rule evaluation time measured by `derive` (sampled), with a budget per rule. Nodes and loops are the deterministic proxy until then |
 | `evidence-names-items` | L2 | The evidence expression returns a list derived from entity data (a comprehension or a list field), not a constant sentence |
 
-### 3.3 Superseded: LLM assessment pulled by Toolbox
+### 3.3 Superseded: LLM assessment pulled by Seikika
 
 The first proposal had a `runner` job call a model with an API key, cached by content hash in a
 committed `portal/assessments.json`. D79 replaced it with the push model in §6: the same rubric and
-the same content-hash staleness, but the developer's own agent does the judging. Toolbox needs no key,
+the same content-hash staleness, but the developer's own agent does the judging. Seikika needs no key,
 no model choice and no egress, and assessments become entities rather than a cache.
 
 ### 3.4 Proposed: agent trials (the strongest signal)
@@ -177,10 +177,10 @@ tests and fixtures, and is it already covered?
 | **Connectors** | Declared records nothing maps; no fixtures; no freshness, so stale data looks current; no refresh, so an agent can't see its fix land | **Scorecard** | `meta-connector`: mapped, fixtures, freshness, refreshable |
 | Field usage | 59 of 190 fields are read by no CEL | **Information, not a rule** | `Field.readBy`: display fields (titles, descriptions) are legitimately read by no rule |
 | Relations | Edges to nothing; relations nothing reads | Covered | `relation.dropped` diagnostics, `unresolved: report`; `Kind.relationsIn/Out` for information |
-| Map rules | Wrong ids, CEL errors | Covered | `toolbox validate` (CEL, xrefs) and `meta-field` `populated-in-fixtures` |
+| Map rules | Wrong ids, CEL errors | Covered | `seikika validate` (CEL, xrefs) and `meta-field` `populated-in-fixtures` |
 | Computed fields | Errors on real data | Covered | `computed.error` diagnostics; computed fields are fields, so `meta-field` applies |
 | Tests | Too few, one-sided | Covered | `meta-rule` `tested`/`both-outcomes`, `meta-kind` `tested`; a test kind would score the scorers of the scorers |
-| Rubrics | Vague questions; criteria a check could answer | `toolbox validate` + review | Kind and subject field exist, unique criteria; a rubric is reviewed with its portal change |
+| Rubrics | Vague questions; criteria a check could answer | `seikika validate` + review | Kind and subject field exist, unique criteria; a rubric is reviewed with its portal change |
 | Authorization model | Wrong access | Covered elsewhere | `fga model test` ([authorization.md](../authorization.md)) and the plan's authz diff |
 | Actions | Unsafe self-service | Not yet | M5 is built after the self-service review (D01M86BY3YQX3SA1W99QXF1QA1H); `meta-action` is not |
 | Crates, workflows, docs | Design that a check can't see | Rubric | `crate-design` (D79); workflows and docs can follow the same pattern |
@@ -192,7 +192,7 @@ Everything else is a diagnostic, a validate error or information.
 
 ## 5. The rest of the model: kinds, fields, connectors
 
-`toolbox describe portal PORTAL…` (formerly `describe scorecards`, still an alias) adds three record
+`seikika describe portal PORTAL…` (formerly `describe scorecards`, still an alias) adds three record
 kinds to `scorecard` and `rule`. Every record carries a content `hash` of its definition, which is
 what an assessment is versioned by.
 
@@ -211,13 +211,13 @@ what an assessment is versioned by.
 All three use `ratchet: {newEntitiesAtLeast: bronze}`: a new kind, field or connector must arrive
 exercised by fixtures. **First run, over 20 kinds, 190 fields and 9 connectors:**
 - **Kinds:** three are in no test (`File`; the reference portal's `User` and
-  `GitHubAppInstallation`), and 16 have undescribed fields. T4T's own kinds went to described on the
+  `GitHubAppInstallation`), and 16 have undescribed fields. S4S's own kinds went to described on the
   same day.
 - **Fields:** 129 have no description, including every field of the reference portal and the
   starter, and 20 are opaque objects (e.g. `Crate.tests`, `Rule.check`). Two have no value in any
   fixture: the live-only `Scorecard.liveEntities` and `Rule.live`.
 - **Connectors:** the starter declared `repo` and `doc` with no freshness and no refresh, so pilots
-  copying it would have shown stale data as current. Fixed in the same change. T4T's `workspace`
+  copying it would have shown stale data as current. Fixed in the same change. S4S's `workspace`
   lacked freshness for `workflow` and `action-ref`; fixed too.
 
 ## 6. Judgement, pushed by coding agents (D79)
@@ -225,26 +225,26 @@ exercised by fixtures. **First run, over 20 kinds, 190 fields and 9 connectors:*
 **The loop:**
 
 1. A portal declares **rubrics**: a kind, the criteria (each a question with optional guidance), and
-   a `subject` field that versions what is assessed (default `hash`). `toolbox validate` checks the
+   a `subject` field that versions what is assessed (default `hash`). `seikika validate` checks the
    kind, the subject field and unique criterion names.
-2. **`toolbox assess brief <entity> --portal <dir>`**, or the read-only **`assessment_brief`** MCP
+2. **`seikika assess brief <entity> --portal <dir>`**, or the read-only **`assessment_brief`** MCP
    tool, gives the agent the rubric, the entity's facts (authorization applies, as for `get`), the
    subject hash, the file path and a YAML template.
 3. The agent reads the sources, judges each criterion `pass`, `fail` or `unsure` with a reason and a
    suggestion, and writes the file. The
-   [`assess-entity`](../../plugins/toolbox-operator/skills/assess-entity/SKILL.md) skill is the
+   [`assess-entity`](../../plugins/seikika-operator/skills/assess-entity/SKILL.md) skill is the
    procedure.
-4. **`toolbox assess check <dir>`** validates every file against
+4. **`seikika assess check <dir>`** validates every file against
    [`schema/assessment.schema.json`](../../schema/assessment.schema.json) and the rubric (every
    criterion answered, none invented, the entity exists), and lists entities as fresh, stale or
    missing. CI runs it.
 5. **Storage**, either:
    - **as a file**: the workspace connector reads `assessments` globs into `assessment` records
      (repository portals);
-   - **in Postgres**: **`toolbox assess submit <file> --url …`** validates the file and pushes it to
+   - **in Postgres**: **`seikika assess submit <file> --url …`** validates the file and pushes it to
      `/v1/ingest` as a remote connector's record (server portals).
 
-   Both paths produce the same record (`toolbox_connect::assessment`), so a portal maps it once.
+   Both paths produce the same record (`seikika_connect::assessment`), so a portal maps it once.
 6. The portal maps `assessment` records to an `Assessment` kind related to what it assesses. Computed
    fields compare `subjectHash` with the entity's hash (`reviewState`: fresh, stale or missing).
    Advisory `review-*` scorecards turn that into levels (since D01M831P5QWJQ4A2FT85N5MXJQF):
@@ -254,9 +254,9 @@ exercised by fixtures. **First run, over 20 kinds, 190 fields and 9 connectors:*
 
 **Why push:**
 
-| | Pull (Toolbox calls a model) | Push (the developer's agent assesses) |
+| | Pull (Seikika calls a model) | Push (the developer's agent assesses) |
 |---|---|---|
-| Keys, egress, model choice | Toolbox's problem, per portal | None |
+| Keys, egress, model choice | Seikika's problem, per portal | None |
 | Context | What the job sends | Whatever the agent can read: code, docs, history |
 | Cost | Every changed entity, every run | When someone asks, or a review card shows it stale |
 | Determinism in CI | Needs a committed cache | Files are data; CI only validates them |
@@ -268,7 +268,7 @@ for agents (the skill says so), but it is the wrong thing to block a person on.
 `ratchet: {advisory: true}` keeps such cards out of the baseline and the comparison: reported, never
 gating.
 
-Routine `toolbox assess check` reports fresh, stale and missing subjects. It fails on invalid
+Routine `seikika assess check` reports fresh, stale and missing subjects. It fails on invalid
 files, including missing verdicts for criteria. Land rubric additions with verdicts for the
 affected assessments. Use `--require-fresh` for release preflight and high-risk review gates.
 
@@ -281,7 +281,7 @@ affected assessments. Use `--require-fresh` for release preflight and high-risk 
 | `maintainer-crate/has-tests` | fail | Any `#[test]` passes, so it over-claims "tested" |
 | `meta-rule/readable` | unsure | 30 nodes is unexplained; moving logic into a computed field escapes it |
 | `maintainer-ci-reliability` (scorecard) | fail | No rule on `continue-on-error`, which undermines all three fail-rate rules |
-| `crate:toolbox-expr` | fail | `cel::Value` leaks through its public API, so cel-rust isn't replaceable (charter goal 3); crate docs are stale |
+| `crate:seikika-expr` | fail | `cel::Value` leaks through its public API, so cel-rust isn't replaceable (charter goal 3); crate docs are stale |
 
 Four of the six found something no deterministic rule could. The crate assessment went stale within
 the hour, when this change made lazy lists indexable, and was re-assessed. That is the staleness
@@ -301,7 +301,7 @@ one level, the same way §1's does.
 | Assessments made with other rubrics | **`review-assessment`**, from an agent's assessment against **`assessment-quality`**: supported by its citations, complete, reproducible by a second assessor, suggestions that would change the verdict | `Assessment` | No (advisory) |
 | Assessments made with `assessment-quality` | Only `meta-assessment` | — | **The stop:** `review-assessment` skips them (`appliesTo`) |
 
-The assessment record carries what the deterministic card needs (`toolbox_connect::assessment`):
+The assessment record carries what the deterministic card needs (`seikika_connect::assessment`):
 - `unsuggested`;
 - `uncited`, from a citation pattern;
 - a content `hash`, which is what a review of the assessment is versioned by, so editing an
@@ -316,11 +316,11 @@ The assessment record carries what the deterministic card needs (`toolbox_connec
   behaviour without a path or a number (e.g. "`continue-on-error` lowers the fail rate"). The check
   is a proxy, since a path is not proof, but it is the cheap half; `assessment-quality`'s `supported`
   is the expensive half.
-- **Three `assessment-quality` reviews, of the `has-tests`, `toolbox-expr` and
+- **Three `assessment-quality` reviews, of the `has-tests`, `seikika-expr` and
   `maintainer-ci-reliability` assessments:**
   - **`has-tests`, fail on `actionable`:** its suggestions add a companion rule but leave `has-tests`
     itself failing.
-  - **`toolbox-expr`, fail on `complete`:** it passed `one-responsibility` although the crate docs
+  - **`seikika-expr`, fail on `complete`:** it passed `one-responsibility` although the crate docs
     describe only M0, which its own suggestion admits.
   - **`reproducible` is `unsure` in all three,** because the same session wrote the assessments and
     the reviews. The rubric says to review someone else's assessment. Independence can't be checked
@@ -335,7 +335,7 @@ The assessment record carries what the deterministic card needs (`toolbox_connec
 
 ## 7. Predictions
 
-| As Toolbox grows… | The meta standard will need |
+| As Seikika grows… | The meta standard will need |
 |---|---|
 | **Fleets accumulate hundreds of rules across team packages** ([federation.md](./federation.md)) | Redundancy across packages, an owner per rule, and retirement: a rule passing on every entity for a long time becomes a guardrail (ratchet-only) or is removed |
 | **Agents write rules** (they already write fixes) | `ratchet.newEntitiesAtLeast` on `meta-rule` as the merge gate: an agent-authored rule must arrive tested, explained and decided on fixtures, and a `rule-quality` assessment flags gameable ones |
@@ -348,12 +348,12 @@ The assessment record carries what the deterministic card needs (`toolbox_connec
 
 - **Unit tests:**
   - CEL analysis: size, fields, loops, `join` and `flatten` undeclared, common functions declared;
-  - `toolbox validate` rejects an undeclared function (`cel.function`) and still accepts all three
+  - `seikika validate` rejects an undeclared function (`cel.function`) and still accepts all three
     real portals;
   - the ratchet's new-entity floor, including the bootstrap case;
   - meta describe, run against three portals: 83 records (68 rules, 15 scorecards).
-- **`toolbox test portal`:** 40/40. Nine expectations are new; they cover every meta rule, including
-  self-application: `meta-rule` scores `rule:toolbox/meta-rule/tested`.
+- **`seikika test portal`:** 40/40. Nine expectations are new; they cover every meta rule, including
+  self-application: `meta-rule` scores `rule:seikika/meta-rule/tested`.
 - **The ratchet:**
   - `--update` twice is stable, and `--ci` matches (a fixed point);
   - with the floor in force, adding the meta scorecards baselined every existing rule and
@@ -363,10 +363,10 @@ The assessment record carries what the deterministic card needs (`toolbox_connec
 - **The ratchet caught this change, twice:** `compare` grew past 80 lines and complexity 15, and the
   CEL walker reached complexity 17. Both were split into named steps; the baseline was not loosened.
 - **D79: the model and assessments:**
-  - `toolbox test portal`: 53/53. Thirteen new expectations cover every rule of `meta-kind`,
+  - `seikika test portal`: 53/53. Thirteen new expectations cover every rule of `meta-kind`,
     `meta-field`, `meta-connector` and the three `review-*` cards, both ways: fresh, stale, missing,
     failing and unsure.
-  - An end-to-end CLI test (`crates/toolbox-cli/tests/assess.rs`) covers `describe portal`, `assess
+  - An end-to-end CLI test (`crates/seikika-cli/tests/assess.rs`) covers `describe portal`, `assess
     brief`, `assess check` (valid and invalid files) and `assess submit` into a running server, where
     a scorecard reads the pushed assessment.
   - An MCP contract test covers `assessment_brief`, including an unknown rubric.
@@ -380,16 +380,16 @@ The assessment record carries what the deterministic card needs (`toolbox_connec
 
 ## Sources
 
-- Lessons: [toolbox-for-toolbox.md](./toolbox-for-toolbox.md) §5–7 (F1–F14 and the fresh-agent run),
+- Lessons: [seikika-for-seikika.md](./seikika-for-seikika.md) §5–7 (F1–F14 and the fresh-agent run),
   [ratchets.md](./ratchets.md), [github-actions-standards.md](./github-actions-standards.md),
   [research-log.md](../research-log.md), [decisions.md](../decisions/README.md) D65–D70.
 - Prior art for self-application: a compiler compiling itself; the
   [meta-catalog](./meta-catalog.md) design (a portal catalogues its own configuration, "including the
   scorecards that score scorecards").
-- Implementation: `crates/toolbox-expr/src/analysis.rs`, `crates/toolbox-cli/src/meta.rs` and
-  `model.rs` (`describe portal`), `crates/toolbox-cli/src/report.rs` (`newEntitiesAtLeast`,
-  `advisory`), `crates/toolbox-cli/src/assess.rs`, `crates/toolbox-api/src/assess.rs`
-  (`assessment_brief`), `crates/toolbox-connect/src/assessment.rs`,
-  [`schema/assessment.schema.json`](../../schema/assessment.schema.json), `portal/toolbox.yaml`
+- Implementation: `crates/seikika-expr/src/analysis.rs`, `crates/seikika-cli/src/meta.rs` and
+  `model.rs` (`describe portal`), `crates/seikika-cli/src/report.rs` (`newEntitiesAtLeast`,
+  `advisory`), `crates/seikika-cli/src/assess.rs`, `crates/seikika-api/src/assess.rs`
+  (`assessment_brief`), `crates/seikika-connect/src/assessment.rs`,
+  [`schema/assessment.schema.json`](../../schema/assessment.schema.json), `portal/seikika.yaml`
   (`Kind`, `Field`, `Connector`, `Assessment`, the meta and review scorecards, the rubrics),
   `portal/assessments/`.

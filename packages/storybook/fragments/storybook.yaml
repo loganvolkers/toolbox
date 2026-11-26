@@ -45,7 +45,7 @@ scorecards:
       checks only warn lets violations ship.
     links:
     - title: Storybook package decision
-      url: https://github.com/loganvolkers/toolbox/blob/main/docs/decisions/D01M7YNZFP68W0DR24PEA6T3FVM.md
+      url: https://github.com/seikika/seikika/blob/main/docs/decisions/D01M7YNZFP68W0DR24PEA6T3FVM.md
     - title: 'Storybook: accessibility tests'
       url: https://storybook.js.org/docs/writing-tests/accessibility-testing
     kind: Storybook

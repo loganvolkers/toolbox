@@ -1,4 +1,4 @@
-apiVersion: toolbox.dev/assessment/v1
+apiVersion: seikika.com/assessment/v1
 entity: assessment:scorecard-quality/scorecard:repo/repo-hygiene
 rubric: assessment-quality
 subjectHash: 5d6f382a9a8c
@@ -11,12 +11,12 @@ verdicts:
       The no-obvious-gap reason in
       portal/assessments/scorecard-quality/scorecard/repo/repo-hygiene.yaml
       says the rationale promises files that tell a newcomer "how to work in
-      the repository", citing examples/repo-portal-starter/toolbox.yaml:77-79.
+      the repository", citing examples/repo-portal-starter/seikika.yaml:77-79.
       Those lines say the files tell "what the repository is, who reviews
       changes to it, and whether its code may be reused". Nothing there is
       about contributing or build instructions. The summary repeats the
       misquote ("which its own rationale promises"). The other citations hold.
-      In toolbox.yaml the description and rationale are at 72-81, the rules at
+      In seikika.yaml the description and rationale are at 72-81, the rules at
       90-153 and has-license at 141-153. docs/design/repo-portals.md:140
       states the no-build constraint. tests/standards.test.yaml:17-25 shows
       payments-api at bronze with `@alice` and no licence. portal/results.json
@@ -24,7 +24,7 @@ verdicts:
       (docs/decisions/D01M7W4Y2K00000000000000000.md) is maintainer-agent-doc.
     suggestion: >-
       Ground the gap in what the sources do say. has-readme's fix asks for
-      "how to run it" (toolbox.yaml:96-97). GitHub's community profile lists
+      "how to run it" (seikika.yaml:96-97). GitHub's community profile lists
       CONTRIBUTING, so cite its docs. Drop the claim that the rationale
       promises it.
   - criterion: complete
@@ -41,7 +41,7 @@ verdicts:
     reason: >-
       The levels fail would reproduce on the cheaper-than-bronze ground. The
       "unrelated rules" ground is weaker, because bronze also pairs unrelated
-      files (README and CODEOWNERS, toolbox.yaml:90-110) and the assessment
+      files (README and CODEOWNERS, seikika.yaml:90-110) and the assessment
       doesn't flag it. Its own suggestion would make bronze a three-way mix. A
       second assessor would still fail the levels criterion, but perhaps for
       the cost reason alone.
@@ -56,7 +56,7 @@ verdicts:
       suggestion.
 summary: >-
   The verdicts are defensible, but the no-obvious-gap reason and the
-  summary misquote the rationale at toolbox.yaml:77-79 as promising "how
+  summary misquote the rationale at seikika.yaml:77-79 as promising "how
   to work in the repository". The cited lines say nothing like it. The
   levels fail holds because silver's licence is cheaper than bronze's
   README, though its "unrelated rules" argument applies to bronze too.

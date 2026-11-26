@@ -1,0 +1,56 @@
+apiVersion: seikika.com/assessment/v1
+entity: assessment:rule-quality/rule:seikika/review-sdlc-stage/no-doubts
+rubric: assessment-quality
+subjectHash: c91f34337ace
+assessor: {kind: agent, name: cursor-reviewer-05, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: supported
+    verdict: pass
+    reason: >-
+      Every citation in
+      portal/assessments/rule-quality/rule/seikika/review-sdlc-stage/no-doubts.yaml
+      holds. portal/standards/sdlc.yaml has the check at 381, reviewUnsure at
+      110-116, the fix at 385-387 and the rationale at 388-391, and its rules
+      (331-392) have no independence rule.
+      portal/tests/standards.test.yaml:1088-1091 has demo-gap/plan, which has
+      no fixture review, failing and demo-done/plan passing.
+      operator/build-connector's live review has `agent-can-complete` unsure
+      (portal/assessments/sdlc-stage-quality/sdlc-stage/operator/build-connector.yaml:15-16).
+      The stage hash covers only the entry
+      (crates/seikika-connector-workspace/src/data.rs:250), and
+      portal/standards/crates.yaml:424-428 and 433-436 are as described.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      hard-to-game fails correctly, with a live instance of the flip it
+      invites. fix-leads-to-pass fails correctly. The fix (sdlc.yaml:385-387)
+      names no file or re-assessment, and a fix made in a check script or doc
+      doesn't change data.rs:250's hash. measures-intent and
+      threshold-justified are right.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      Both fails follow from the rule text and data.rs:250. The flip is
+      demonstrable on the cited build-connector file.
+  - criterion: actionable
+    verdict: unsure
+    reason: >-
+      The fix-leads-to-pass suggestion names the assessment file, the stage
+      entry and the brief command, so following it makes the rule passable.
+      The hard-to-game suggestion adds a sibling gold rule,
+      independently-reviewed, and leaves this rule's check (sdlc.yaml:381)
+      passing on a flipped verdict. Whether that flips hard-to-game depends on
+      whether a sibling rule counts, which the sources don't settle. The same
+      assessor also found that sibling cheap to forge
+      (portal/assessments/rule-quality/rule/seikika/review-crate/independently-reviewed.yaml:26-36).
+    suggestion: >-
+      Attach a hard-to-game suggestion that changes this rule's own check. For
+      example, keep a criterion unsure when a later assessment at the same
+      subjectHash, by the same assessor, turned it from `unsure` to `pass`.
+summary: >-
+  Trustworthy on its verdicts. Every citation holds, and the
+  fix-leads-to-pass finding is concrete: a fix outside the YAML entry
+  leaves the fresh unsure in place. The hard-to-game suggestion only adds
+  a sibling rule, and the same assessor found that rule forgeable, so it
+  may not flip this rule's verdict.

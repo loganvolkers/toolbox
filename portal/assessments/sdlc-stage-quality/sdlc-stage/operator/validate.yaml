@@ -1,4 +1,4 @@
-apiVersion: toolbox.dev/assessment/v1
+apiVersion: seikika.com/assessment/v1
 entity: sdlc-stage:operator/validate
 rubric: sdlc-stage-quality
 subjectHash: 1f1c4770cc7e
@@ -8,9 +8,9 @@ verdicts:
   - criterion: executable-exit
     verdict: pass
     reason: >-
-      "toolbox validate reports 0 errors" is the command's exit code: 0 when
-      valid, 1 on errors, 2 when the manifest can't be loaded (`toolbox
-      --help`; plugins/toolbox-operator/skills/validate/SKILL.md). I saw exit
+      "seikika validate reports 0 errors" is the command's exit code: 0 when
+      valid, 1 on errors, 2 when the manifest can't be loaded (`seikika
+      --help`; plugins/seikika-operator/skills/validate/SKILL.md). I saw exit
       1 on a broken copy of the starter. The listed check,
       scripts/validate-parity.py, guards the validator itself against
       examples/reference-portal/tools/validate.py, and CI runs it
@@ -26,7 +26,7 @@ verdicts:
   - criterion: reuses-artifacts
     verdict: pass
     reason: >-
-      Validation runs the released `toolbox` binary
+      Validation runs the released `seikika` binary
       (scripts/install-release.sh lines 6-12), with the JSON Schemas compiled
       into it (AGENTS.md repository layout, `schema/`). Nothing is built or
       installed beyond the CLI.
@@ -41,7 +41,7 @@ verdicts:
   - criterion: fast-feedback
     verdict: fail
     reason: >-
-      portal/sdlc/stages/operator.yaml lists toolbox validate. docs/v1-spec.md
+      portal/sdlc/stages/operator.yaml lists seikika validate. docs/v1-spec.md
       gives no measured local time to the stage exit.
     suggestion: >-
       Measure and record the fastest local check that demonstrates this stage
@@ -49,7 +49,7 @@ verdicts:
   - criterion: beyond-one-reference
     verdict: pass
     reason: >-
-      The reference portal and starter portal both run through toolbox
+      The reference portal and starter portal both run through seikika
       validate in .github/workflows/ci.yml.
 summary: >-
   The cleanest operator stage. The exit criterion is the command's exit

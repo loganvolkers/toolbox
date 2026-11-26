@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Score a running portal against the live Git server.
 
-Shared probes S1–S3 and Toolbox probes T1–T4, as pre-registered in
+Shared probes S1–S3 and Seikika probes T1–T4, as pre-registered in
 docs/design/local-simulation.md §7 and experiments/deploy-ab/README.md.
 The truth is the catalog-info.yaml files on the Git server at score time.
 A static catalog, a fixture load, and a one-shot import fail S3.
@@ -39,7 +39,7 @@ READER = os.environ.get("READER_USER", "alice")
 OUTSIDER = os.environ.get("OUTSIDER_USER", "carol")
 GIT_USER = os.environ.get("GIT_USER", "harness")
 GIT_PASSWORD = os.environ.get("GIT_PASSWORD", "")
-ARM = "toolbox"
+ARM = "seikika"
 SUITE = "l2"
 
 
@@ -144,22 +144,22 @@ def truth():
     return found
 
 
-def toolbox_get(user, path):
-    status, raw = http("GET", PORTAL + path, headers={"x-toolbox-user": user, "accept": "application/json"})
+def seikika_get(user, path):
+    status, raw = http("GET", PORTAL + path, headers={"x-seikika-user": user, "accept": "application/json"})
     body = json.loads(raw) if raw else {}
     return status, body
 
 
-def toolbox_entities(user):
+def seikika_entities(user):
     out = []
     for kind in KINDS:
-        status, body = toolbox_get(user, f"/v1/entities?kind={kind}&limit=500")
+        status, body = seikika_get(user, f"/v1/entities?kind={kind}&limit=500")
         if status != 200:
             raise RuntimeError(f"list {kind} HTTP {status}: {body}")
         out.extend(body.get("items") or [])
     detailed = []
     for item in out:
-        status, body = toolbox_get(user, "/v1/entities/" + urllib.parse.quote(item["id"], safe=""))
+        status, body = seikika_get(user, "/v1/entities/" + urllib.parse.quote(item["id"], safe=""))
         if status != 200:
             raise RuntimeError(f"get {item['id']} HTTP {status}")
         detailed.append(body)
@@ -180,9 +180,9 @@ def s1(failures):
     if not expected:
         failures.append("S1: the Git server has no catalog entities")
         return
-    if ARM == "toolbox":
+    if ARM == "seikika":
         actual = {}
-        for entity in toolbox_entities(ADMIN):
+        for entity in seikika_entities(ADMIN):
             kind = entity.get("kind")
             fields = entity.get("fields") or {}
             name = fields.get("title") or entity["id"].split(":", 1)[-1]
@@ -247,9 +247,9 @@ def render(url):
 
 
 def s2(failures):
-    if ARM == "toolbox":
+    if ARM == "seikika":
         url = PORTAL + "/e/" + urllib.parse.quote("component:payments-api", safe="") + "?as=" + READER
-        headers = {"x-toolbox-user": READER}
+        headers = {"x-seikika-user": READER}
     else:
         url = PORTAL + "/catalog/default/component/payments-api"
         headers = {}
@@ -296,8 +296,8 @@ def push_catalog(name):
 
 
 def seen(name):
-    if ARM == "toolbox":
-        status, body = toolbox_get(ADMIN, "/v1/entities?kind=Component&limit=500&q=" + urllib.parse.quote(name))
+    if ARM == "seikika":
+        status, body = seikika_get(ADMIN, "/v1/entities?kind=Component&limit=500&q=" + urllib.parse.quote(name))
         if status != 200:
             return False
         return any((item.get("fields") or {}).get("title") == name or item.get("id", "").endswith(":" + name) for item in body.get("items") or [])
@@ -317,7 +317,7 @@ def s3(failures):
 
 
 def t1(failures):
-    status, body = toolbox_get(ADMIN, "/v1/entities/" + urllib.parse.quote("component:payments-api", safe=""))
+    status, body = seikika_get(ADMIN, "/v1/entities/" + urllib.parse.quote("component:payments-api", safe=""))
     provenance = (body.get("provenance") or {}) if status == 200 else {}
     source = str(provenance.get("title") or "")
     if status == 200 and ("git-files" in source or "github" in source) and "native" not in source and "fixture" not in source:
@@ -327,8 +327,8 @@ def t1(failures):
 
 
 def t2(failures):
-    allowed, _ = toolbox_get(READER, "/v1/entities/" + urllib.parse.quote("component:payments-api", safe=""))
-    denied, _ = toolbox_get(OUTSIDER, "/v1/entities/" + urllib.parse.quote("component:payments-api", safe=""))
+    allowed, _ = seikika_get(READER, "/v1/entities/" + urllib.parse.quote("component:payments-api", safe=""))
+    denied, _ = seikika_get(OUTSIDER, "/v1/entities/" + urllib.parse.quote("component:payments-api", safe=""))
     if allowed == 200 and denied in (401, 403, 404):
         print("T2 pass")
     else:
@@ -337,7 +337,7 @@ def t2(failures):
 
 def t3(failures):
     missing = sorted(repo for repo in git_repos() if git_file(repo, "README.md") is None)
-    status, body = toolbox_get(ADMIN, "/v1/scorecards/readme?rule=has-readme&outcome=fail&limit=500")
+    status, body = seikika_get(ADMIN, "/v1/scorecards/readme?rule=has-readme&outcome=fail&limit=500")
     if status != 200:
         failures.append(f"T3: scorecard HTTP {status}")
         return
@@ -353,7 +353,7 @@ def t3(failures):
 
 
 def t4(failures):
-    headers = {"content-type": "application/json", "x-toolbox-user": ADMIN}
+    headers = {"content-type": "application/json", "x-seikika-user": ADMIN}
     status, raw = http(
         "POST",
         PORTAL + "/mcp",

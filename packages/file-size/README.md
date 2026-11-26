@@ -1,19 +1,19 @@
-# file-size: a Toolbox package
+# file-size: a Seikika package
 
 **Files over a line limit are violations.** One `include` gives a repository the standard, a
 ratchet and a campaign:
 
-- `toolbox report` lists every file over the limit, with its line count and the fix;
+- `seikika report` lists every file over the limit, with its line count and the fix;
 - the ratchet fails a pull request that grows a violating file, or brings a new or renamed file
   over the limit, and reports the files that shrank;
 - the campaign `<name>-zero` counts files over the limit, and lines over it, from the day the
   baseline first records it.
 
-It needs nothing but the `toolbox` binaries: the files are read by `builtin:workspace`, without a
+It needs nothing but the `seikika` binaries: the files are read by `builtin:workspace`, without a
 build or the network. Include it once per standard, with that standard's files and limit.
 
-**Box or tool:** this package is a **jig**, a quick tool made from Toolbox's own primitives
-([toolbox-and-tools.md](../../docs/design/toolbox-and-tools.md) §4). It suits a proof of concept in
+**Box or tool:** this package is a **jig**, a quick tool made from Seikika's own primitives
+([seikika-and-tools.md](../../docs/design/seikika-and-tools.md) §4). It suits a proof of concept in
 one repository. For a standard many repositories share, prefer a tool that counts lines on its own (`wc -l`, tokei, scc) in the box.
 
 | Brings | Named |
@@ -25,13 +25,13 @@ one repository. For a standard many repositories share, prefer a tool that count
 
 ## Use it
 
-`.toolbox/toolbox.yaml`, for TypeScript components of at most 400 lines, tests excluded:
+`.seikika/seikika.yaml`, for TypeScript components of at most 400 lines, tests excluded:
 
 ```yaml
-apiVersion: toolbox.dev/v1alpha1
-portal: {name: my-repo, owner: group:maintainers, toolbox: "0.1"}
+apiVersion: seikika.com/v1alpha1
+portal: {name: my-repo, owner: group:maintainers, seikika: "0.1"}
 include:
-  - package: github:loganvolkers/toolbox/packages/file-size@<tag>   # or a relative path
+  - package: github:seikika/seikika/packages/file-size@<tag>   # or a relative path
     with:
       name: component-size
       kind: Component
@@ -44,13 +44,13 @@ include:
 Then, from the repository root:
 
 ```bash
-toolbox vendor <toolbox checkout>/packages/file-size --portal .toolbox    # offline: copy the package in (or include github:…@tag)
-toolbox report .toolbox -o failures                                     # every violation, as JSON
-toolbox report .toolbox --baseline .toolbox/results.json --update      # record the baseline; commit it
-toolbox report .toolbox --baseline .toolbox/results.json               # the gate: exit 1 on a regression
-toolbox report .toolbox --against origin/main                          # what this branch changed, no baseline needed
-toolbox campaign --portal .toolbox --baseline .toolbox/results.json    # campaign progress since its start
-toolbox report .toolbox -o standard --out .toolbox/STANDARD.md         # the standard's docs, from the manifest
+seikika vendor <seikika checkout>/packages/file-size --portal .seikika    # offline: copy the package in (or include github:…@tag)
+seikika report .seikika -o failures                                     # every violation, as JSON
+seikika report .seikika --baseline .seikika/results.json --update      # record the baseline; commit it
+seikika report .seikika --baseline .seikika/results.json               # the gate: exit 1 on a regression
+seikika report .seikika --against origin/main                          # what this branch changed, no baseline needed
+seikika campaign --portal .seikika --baseline .seikika/results.json    # campaign progress since its start
+seikika report .seikika -o standard --out .seikika/STANDARD.md         # the standard's docs, from the manifest
 ```
 
 The baseline records only files that violate, so adding clean files never makes it stale. In CI,
@@ -69,7 +69,7 @@ The baseline records only files that violate, so adding clean files never makes 
 | `name` | `file-size` | Names the connector, scorecard and campaign |
 | `kind` | `SizedFile` | The kind (PascalCase). Include the package twice with different `name` and `kind` for two standards |
 | `title`, `owner`, `fix` | | The scorecard's heading, owner and fix text |
-| `root` | `.` | The checkout, relative to where `toolbox report` runs |
+| `root` | `.` | The checkout, relative to where `seikika report` runs |
 | `track` | none | The portal track its scorecard and campaign belong to; leave unset if the portal has no tracks |
 
 ## What a pull request sees
@@ -87,7 +87,7 @@ has to move.
 ## Changing the standard
 
 - **Tighten the limit** (400 → 300): change `limit`, then
-  `toolbox report .toolbox --baseline .toolbox/results.json --update --accept component-size`. The
+  `seikika report .seikika --baseline .seikika/results.json --update --accept component-size`. The
   newly failing files are recorded and listed, regressions in other scorecards still fail, and
   the campaign restarts from the new state. Review the list, then commit the manifest and
   `results.json` together.

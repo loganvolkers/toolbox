@@ -1,8 +1,8 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://toolbox.dev/schemas/connector-messages/v1.json",
-  "title": "Toolbox connector API v1 messages",
-  "description": "Ingest and control messages between Toolbox and connectors (docs/design/connector-control.md, docs/v1-spec.md §7.4). Identical over stdio (NDJSON), POST /v1/ingest bodies, and the long-poll command stream.",
+  "$id": "https://seikika.com/schemas/connector-messages/v1.json",
+  "title": "Seikika connector API v1 messages",
+  "description": "Ingest and control messages between Seikika and connectors (docs/design/connector-control.md, docs/v1-spec.md §7.4). Identical over stdio (NDJSON), POST /v1/ingest bodies, and the long-poll command stream.",
   "oneOf": [
     {"$ref": "#/$defs/register"},
     {"$ref": "#/$defs/command"},
@@ -112,7 +112,7 @@
         "status": {"enum": ["succeeded", "partial", "failed", "cancelled"]},
         "counts": {"type": "object", "additionalProperties": {"type": "integer"}},
         "errors": {"type": "array", "items": {"type": "object", "required": ["code", "message"], "properties": {"code": {"type": "string"}, "message": {"type": "string"}, "externalId": {"type": "string"}}}},
-        "snapshot_id": {"type": "string", "description": "Set by Toolbox when it reports completion to requesters, never by the connector."}
+        "snapshot_id": {"type": "string", "description": "Set by Seikika when it reports completion to requesters, never by the connector."}
       }
     },
     "log": {

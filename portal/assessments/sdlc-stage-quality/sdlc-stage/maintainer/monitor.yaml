@@ -1,4 +1,4 @@
-apiVersion: toolbox.dev/assessment/v1
+apiVersion: seikika.com/assessment/v1
 entity: sdlc-stage:maintainer/monitor
 rubric: sdlc-stage-quality
 subjectHash: 6aa12ec382ac
@@ -18,20 +18,20 @@ verdicts:
     verdict: pass
     reason: >-
       portal/README.md:80-99 gives the check and the `--update` command, and
-      the linters the ratchet needs are installed at their pins by `toolbox
-      tools install portal --via pip` and confirmed by `toolbox doctor portal`
+      the linters the ratchet needs are installed at their pins by `seikika
+      tools install portal --via pip` and confirmed by `seikika doctor portal`
       (ci.yml:78-82). OpenSSF refreshes run Scorecard with `--local`, which
       needs no GitHub token (packages/openssf-scorecard/README.md:32, 51-55).
       The stage's own doc lags: maintainer-sdlc.md:64 still calls the
-      standards "report, not yet a gate", while toolbox-for-toolbox.md:223
+      standards "report, not yet a gate", while seikika-for-seikika.md:223
       says the ratchet is built and gating.
   - criterion: reuses-artifacts
     verdict: pass
     reason: >-
-      The ratchet step passes `toolbox-dir: target/debug` (ci.yml:108-112), so
+      The ratchet step passes `seikika-dir: target/debug` (ci.yml:108-112), so
       it reuses the binary the same job already built instead of compiling the
       action's own copy. zizmor, ruff and actionlint come from the pins in the
-      portal's `tools:` (ruff 0.14.0 at portal/toolbox.yaml:390-391) and the
+      portal's `tools:` (ruff 0.14.0 at portal/seikika.yaml:390-391) and the
       SHA-256-pinned scripts/ci-tools.sh.
   - criterion: decoupled-from-core
     verdict: pass
@@ -44,7 +44,7 @@ verdicts:
   - criterion: fast-feedback
     verdict: fail
     reason: >-
-      portal/sdlc/stages/maintainer.yaml lists toolbox report portal --skip
+      portal/sdlc/stages/maintainer.yaml lists seikika report portal --skip
       runner,github-actions --baseline portal/results.json --ci.
       docs/design/maintainer-sdlc.md gives no measured local time to the stage
       exit.

@@ -22,7 +22,7 @@ Keep the `Env` seam (clock, randomness, network, store, process spawning behind 
 so the deferred deterministic simulation stays possible without a rewrite.
 
 **When the deferred stack comes back:** multi-instance concurrency beyond workflow recovery appears
-(Phase 3 automations, leases), or a concurrency bug escapes the property tests. Then `toolbox-sim`,
+(Phase 3 automations, leases), or a concurrency bug escapes the property tests. Then `seikika-sim`,
 turmoil and the campaigns in the appendix apply.
 
 ---
@@ -37,7 +37,7 @@ contributes properties to check. The WarpStream post could not be fetched direct
 environment; its details come from the post's indexed excerpts, the Antithesis case study and
 secondary coverage.*
 
-> **Goal.** Confidence that Toolbox behaves as specified across the space of portal configurations,
+> **Goal.** Confidence that Seikika behaves as specified across the space of portal configurations,
 > deployment shapes, faults and time. "Absolute" confidence is not achievable by any technique;
 > even AWS's lightweight formal methods "accept weaker guarantees… we can still miss bugs". The
 > achievable goal is **layered, measurable assurance with explicit oracles**. Every layer has a release
@@ -62,12 +62,12 @@ secondary coverage.*
 | Mutation testing | **cargo-mutants** | Measures whether tests would notice a broken function | Thoughtworks Radar (cost: build time) |
 | **Combinatorial (t-way) testing** | NIST ACTS | Covering arrays over configuration parameters. Most failures involve 1–2 parameters; **4–6-way coverage found all faults found by exhaustive testing** in NIST studies; size grows like vᵗ·log n | NIST CSRC |
 
-**Five lessons for Toolbox:**
+**Five lessons for Seikika:**
 1. DST must be **designed in from day one**. Every team that has it (FDB, TigerBeetle, S2, Turso)
    built the abstraction seams first. Retrofitting is the expensive path.
 2. The power of DST comes from its **oracles** (invariants plus a model of the expected state), not
    from fault injection alone.
-3. **Reference models** make oracles cheap. Toolbox's core is largely *pure derivation* (merge →
+3. **Reference models** make oracles cheap. Seikika's core is largely *pure derivation* (merge →
    entities → tuples → scores → shaped responses), so a slow, obviously-correct reference
    implementation of the whole pipeline is feasible. This is our biggest structural advantage.
 4. **External oracles** exist for several of our semantics, and we should use them: real OpenFGA for
@@ -76,7 +76,7 @@ secondary coverage.*
 5. Configuration spaces are tamed by **generation** (random valid portals) plus **covering arrays**
    (deployment knobs) plus **corpora** (real portals), not by hand-picked matrices.
 
-### 2. What must be true: Toolbox's properties
+### 2. What must be true: Seikika's properties
 
 Every property gets an id and lives in `spec/properties.md`. Each one maps to checks: `always`
 assertions in code, simulation checkers, property tests, differential tests.
@@ -139,7 +139,7 @@ liveness phase):**
    - an `Ext` boundary for WASM/TCP extensions
 
    `clippy.toml` `disallowed-methods` bans `SystemTime::now`, `Instant::now`, `thread_rng`,
-   `std::env::var` and raw `tokio::spawn` outside `toolbox-env`.
+   `std::env::var` and raw `tokio::spawn` outside `seikika-env`.
 3. **Deterministic iteration** wherever order is observable: `BTreeMap`/`IndexMap`, or a seeded hasher
    under `cfg(sim)`.
 4. **Three `Store` implementations behind one conformance suite:** Postgres (production), SQLite
@@ -154,7 +154,7 @@ liveness phase):**
    randomness unless injected from `Env`.
 8. **Language hosts stay at the edge.** Simulation consumes *manifests*. The TS/Python program →
    manifest path is tested separately (golden manifests + determinism checks).
-9. **`MemStore` fidelity:** `MemStore` models the **isolation level Toolbox actually runs at**,
+9. **`MemStore` fidelity:** `MemStore` models the **isolation level Seikika actually runs at**,
    including permitted anomalies, serialization failures and **commit reordering**, not an idealised
    serializable store. Critical transactions run at `SERIALIZABLE` with retry. Elle-style history
    checks run against **real Postgres** in container tests on every PR that touches the store, and
@@ -178,12 +178,12 @@ liveness phase):**
 |---|---|---|---|---|
 | L0 | Types, `forbid(unsafe)` in core, clippy bans (§3), `cargo-deny`, **`cargo-semver-checks`** on SDK/IR crates, JSON-Schema compatibility checks on the manifest IR and MCP tool schemas | All crates | Compiler/linters | Every commit |
 | L1 | **TDD unit tests + snapshot tests** (insta), golden manifests, MCP tool-surface snapshots | All | Expected values / reviewed snapshots | Every commit |
-| L2 | **Property-based tests against executable reference models** (ShardStore approach) using `proptest`/`bolero` | Merge, identity matching, derivation, scoring, response shaping, native store, plan diff | `toolbox-ref` crate: slow, obviously-correct models | Every commit (bounded); continuous campaign on `main` (deep) |
+| L2 | **Property-based tests against executable reference models** (ShardStore approach) using `proptest`/`bolero` | Merge, identity matching, derivation, scoring, response shaping, native store, plan diff | `seikika-ref` crate: slow, obviously-correct models | Every commit (bounded); continuous campaign on `main` (deep) |
 | L3 | **Differential and conformance testing vs. external oracles** | Embedded OpenFGA datastore adapter vs the stock OpenFGA server with its own storage (conformance corpus of ~1,200 checks + random model/tuple fuzzing); DBSP incremental vs batch evaluation of the same circuit (E1); CEL vs the **cel-spec conformance suite**; Backstage descriptor parsing vs Backstage; read-only GQL subset vs Neo4j (later); stores vs each other (E5) | The external implementation | Per PR (corpora + random) |
 | L4 | **Fuzzing** (cargo-fuzz/bolero, structure-aware), enrolled in OSS-Fuzz | Parsers (OpenFGA DSL, YAML/catalog-info, CEL, manifest JSON, connector-protocol NDJSON, MCP JSON-RPC, AuthZEN), the WASM host boundary, the OpenFGA C ABI | Crash-freedom, sanitizers, round-trip properties | Continuous |
 | L5 | **Bounded proofs** (Kani via bolero harnesses) | Small critical pure functions: ref/alias normalisation, C ABI buffer encode/decode, CEL cost accounting (no overflow, bounded), the facet-redaction function (totality, never emits a disallowed path) | Model checker | Per PR (changed harnesses) |
 | L6 | **Concurrency checking** (shuttle randomized/PCT; loom for tiny primitives) | Index swap on circuit step, permission result cache, lease/job claiming logic, revision CAS | Linearizability against the reference model | Per PR (bounded) |
-| L7 | **In-process DST** (`toolbox-sim`, turmoil + `Env`, S2-style) | **The whole server cluster:** N API replicas, M workers, scheduler leader, `MemStore`+faults, simulated connectors/executors/IdP/agents, simulated time | **Safety invariants continuously; liveness phase then L1–L4; full-state oracle `Reference(...)`** | Per PR: ~1k seeds. Continuously on `main`: millions of seeds. Every failing seed becomes a permanent regression test |
+| L7 | **In-process DST** (`seikika-sim`, turmoil + `Env`, S2-style) | **The whole server cluster:** N API replicas, M workers, scheduler leader, `MemStore`+faults, simulated connectors/executors/IdP/agents, simulated time | **Safety invariants continuously; liveness phase then L1–L4; full-state oracle `Reference(...)`** | Per PR: ~1k seeds. Continuously on `main`: millions of seeds. Every failing seed becomes a permanent regression test |
 | L8 | **Whole-system DST** (Antithesis, optional but recommended) | Real binaries + **real Postgres** + connector containers + preview of the GitHub Action flow | Same `always`/`sometimes` assertions + an external checker container | Continuous on `main`; release gate |
 | L9 | **Configuration-space testing** (§6) | Generated portals × covering-array deployments × the corpus | All oracles above | Per PR (sampled) + continuous on `main` |
 | L10 | **Upgrade and migration simulation** | N−2 → N upgrades under load; mixed-version rolling clusters; model and source-ownership migrations | L1 + E8 + no data loss | Release |
@@ -193,10 +193,10 @@ liveness phase):**
 | L14 | **Lightweight formal models** | Distributed protocols: changefeed → replica readiness, leases, run state machine + approvals + idempotency, native-store concurrency, plan/apply | **Stateright** (Rust) or TLA+/P model checking at small scope, plus **trace validation**: simulation histories replayed against the model | Per change to a protocol; trace checks per PR |
 | L15 | **Production verification** | Background "auditors": recompute a sample of scores from scratch (E1), compare cached permission results vs Check (E2), checksum replica indexes vs the database (E3), validate revision chains (S5) | The same oracles, online | Continuous; exported as metrics and alerts |
 
-### 5. `toolbox-sim`: the deterministic world
+### 5. `seikika-sim`: the deterministic world
 
 **Actors in a simulation run** (all driven by one seed):
-- **Toolbox:** 1–5 API replicas, 1–4 workers, a scheduler leader, and optionally a plan worker, all
+- **Seikika:** 1–5 API replicas, 1–4 workers, a scheduler leader, and optionally a plan worker, all
   real code on simulated `Env`.
 - **Store:** `MemStore` with a fault wrapper. Postgres-specific behaviour (SKIP LOCKED, LISTEN/NOTIFY,
   serialization failures) is modelled and kept honest by E5 conformance.
@@ -223,7 +223,7 @@ liveness phase):**
    and principal-visible outputs are compared.
 2. **Quiescence phase:** faults stop, workload drains.
 3. **Liveness phase:** within a simulated time bound, L1–L4 must hold. The full state is compared with
-   `toolbox-ref::expected(world_truth, manifest, native_history)`.
+   `seikika-ref::expected(world_truth, manifest, native_history)`.
 
 **Coverage proof.** `sometimes!` assertions must each be hit across the continuous seed campaign, for
 example:
@@ -237,7 +237,7 @@ example:
 A `sometimes!` that is never hit fails the campaign gate, because it means the simulation isn't
 exploring that state.
 
-**Reproduction:** `toolbox-sim --seed <n> --commit <sha>` replays exactly. Failing seeds are minimised
+**Reproduction:** `seikika-sim --seed <n> --commit <sha>` replays exactly. Failing seeds are minimised
 (shrinking the workload and fault schedule) and committed to `sim/regressions/`.
 
 ### 6. Testing across configurations
@@ -246,13 +246,13 @@ The configuration space has four axes, and each gets its own technique:
 
 | Axis | Examples | Technique |
 |---|---|---|
-| **Portal configuration** (the customer's program) | Kinds, fields, facets, `sources` precedence, relations, authz model, derivation rules, scorecards and CEL rules, actions, canvases, notification policies, gates | **Generative:** `toolbox-gen` produces random *valid* manifests: random kinds and relation graphs, random OpenFGA models (seeded from OpenFGA's own corpus and mutated), random CEL rules type-checked against the generated schema, random facet assignments and source precedences. Each generated portal comes with a matching generated world and runs through L2/L3/L7. A small fraction goes through the TS/Python SDK path to cover language hosts |
+| **Portal configuration** (the customer's program) | Kinds, fields, facets, `sources` precedence, relations, authz model, derivation rules, scorecards and CEL rules, actions, canvases, notification policies, gates | **Generative:** `seikika-gen` produces random *valid* manifests: random kinds and relation graphs, random OpenFGA models (seeded from OpenFGA's own corpus and mutated), random CEL rules type-checked against the generated schema, random facet assignments and source precedences. Each generated portal comes with a matching generated world and runs through L2/L3/L7. A small fraction goes through the TS/Python SDK path to cover language hosts |
 | **Deployment configuration** | Store (SQLite / PG 15/16/17), topology (all-in-one / split roles), replicas (1/3), embeddings (on/off), auth mode (identity-aware proxy / OIDC), notification mode (shadow/pilot/on), telemetry sinks, preview data mode, arch (x86/arm) | **Covering arrays:** a 3-way array (≈ dozens of configurations) on every PR; 4-way before releases. NIST's evidence is that 4–6-way coverage matches exhaustive testing's fault detection |
-| **Real portals** | Reference portals (startup, mid-size, regulated, multi-team, Backstage-migrated); public portal repos; opt-in anonymised customer manifests | **Corpus runs, "crater for portals":** every release candidate runs every corpus portal through `toolbox test`, remote-plan equivalence (E4) and DST |
-| **Versions** | Toolbox N−2…N, SDK versions, connector protocol versions | Upgrade simulations (L10); protocol version-negotiation fuzzing |
+| **Real portals** | Reference portals (startup, mid-size, regulated, multi-team, Backstage-migrated); public portal repos; opt-in anonymised customer manifests | **Corpus runs, "crater for portals":** every release candidate runs every corpus portal through `seikika test`, remote-plan equivalence (E4) and DST |
+| **Versions** | Seikika N−2…N, SDK versions, connector protocol versions | Upgrade simulations (L10); protocol version-negotiation fuzzing |
 
-**For customers: `toolbox simulate`.** The same harness runs *their* portal configuration with their
-fixtures, `toolbox-synth` data and simulated sources. It reports:
+**For customers: `seikika simulate`.** The same harness runs *their* portal configuration with their
+fixtures, `seikika-synth` data and simulated sources. It reports:
 - invariant violations
 - non-converging derivations (e.g. source-precedence cycles)
 - flapping rules
@@ -261,12 +261,12 @@ fixtures, `toolbox-synth` data and simulated sources. It reports:
 - performance budget breaches
 
 This turns "simulation-tested" into a property of each customer's portal, not just of the engine. It
-runs in their CI through the `toolbox-dev/test` Action.
+runs in their CI through the `seikika/test` Action.
 
 ### 7. Test-driven development workflow
 
 1. **Spec first.** A feature PR starts by adding or adjusting the property ids it affects
-   (`spec/properties.md`) and the **reference model** change (`toolbox-ref`).
+   (`spec/properties.md`) and the **reference model** change (`seikika-ref`).
 2. **Red:** write property tests and simulation workload steps that fail against the current
    implementation (or `todo!()`).
 3. **Green:** implement until L1–L3 pass and per-PR simulation seeds are clean.
@@ -280,7 +280,7 @@ runs in their CI through the `toolbox-dev/test` Action.
    - snapshots are reviewed
 6. **For AI-authored code** (likely much of it), strong oracles matter even more. Reference models,
    differential tests and simulation make "the agent says it works" checkable. Agents get
-   `toolbox-sim --seed` as a debugging tool.
+   `seikika-sim --seed` as a debugging tool.
 
 ### 7b. Tiers for speed
 
@@ -331,8 +331,8 @@ status. This makes the assurance claim auditable rather than rhetorical.
 
 | Phase | Verification scope |
 |---|---|
-| **0** | `Env` seam + clippy bans; `buggify!` and assertion facade; `MemStore` + fault wrapper + store conformance suite; `toolbox-ref` skeleton (merge + scoring); `toolbox-sim` minimal (1 replica, 1 simulated source, chaos → liveness phases); OpenFGA corpus harness; CEL conformance harness. **Exit:** a planted bug (e.g. deleting without `SNAPSHOT_COMPLETE`) is found by simulation within 1,000 seeds |
-| 1 | Reference models for merge, identity, derivation, shaping; S1 paired-world checks; multi-replica simulation with changefeed + readiness; covering array v1 (3-way); fuzzing of parsers; `toolbox simulate` preview |
+| **0** | `Env` seam + clippy bans; `buggify!` and assertion facade; `MemStore` + fault wrapper + store conformance suite; `seikika-ref` skeleton (merge + scoring); `seikika-sim` minimal (1 replica, 1 simulated source, chaos → liveness phases); OpenFGA corpus harness; CEL conformance harness. **Exit:** a planted bug (e.g. deleting without `SNAPSHOT_COMPLETE`) is found by simulation within 1,000 seeds |
+| 1 | Reference models for merge, identity, derivation, shaping; S1 paired-world checks; multi-replica simulation with changefeed + readiness; covering array v1 (3-way); fuzzing of parsers; `seikika simulate` preview |
 | 2 | Scoring E1, plan/apply E4; simulated GitHub App + Actions flows; Kani harnesses; mutation testing on core crates |
 | 3 | Action runs S4/S10 (Stateright model + trace validation); executor fault simulation; native store S5 + history checker |
 | 4 | Knowledge/search E3 + S9; operator views S1; Antithesis whole-system runs |

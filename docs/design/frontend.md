@@ -5,8 +5,8 @@
 ## Current architecture
 
 The box's first-party UI uses Astro and Vue under one PNPM workspace. The hosted portal builds into
-the Rust release. The static report is the `@toolbox-dev/astro-report` integration. Both use
-`@toolbox-dev/ui` for the theme, page frame, entity overview, and scorecard presentation. Customize
+the Rust release. The static report is the `@seikika/astro-report` integration. Both use
+`@seikika/ui` for the theme, page frame, entity overview, and scorecard presentation. Customize
 through slots and props. Publish the component and page stories with the Astro docs.
 
 Operators compose the shared components in their own Astro builds. The hosted UI gets
@@ -19,7 +19,7 @@ superseded by [the Astro and Vue decision](../decisions/D01M8A5518E6GYEY9EG8Z7FP
 
 ## 1. Designer's view: the ideal "add an approved GitHub App" experience
 
-*Written as if knowing nothing about Toolbox: what should this feel like?*
+*Written as if knowing nothing about Seikika: what should this feel like?*
 
 **Principles:**
 - **Start from where the user is.**
@@ -94,7 +94,7 @@ superseded by [the Astro and Vue decision](../decisions/D01M8A5518E6GYEY9EG8Z7FP
 | **Live consequence preview** (dry-run panel) | Not a form concept | ✗ |
 | Conditional reveal (justification only when needed) | Port `visible` + jq; JSON Schema `if/then`. Possible but awkward, and it can't depend on a server dry-run | ◐ |
 | Progress timeline, undo, multi-select rollouts with per-repo status | Outside form scope | ✗ |
-| Validation enforced server-side | Port has a public roadmap request saying dataset filters and required fields are **UI-side only** | Toolbox enforces everything server-side regardless |
+| Validation enforced server-side | Port has a public roadmap request saying dataset filters and required fields are **UI-side only** | Seikika enforces everything server-side regardless |
 
 **Conclusion:**
 - **Generated forms are the right *baseline*.** Every action gets a decent, accessible form for free,
@@ -106,11 +106,11 @@ superseded by [the Astro and Vue decision](../decisions/D01M8A5518E6GYEY9EG8Z7FP
 
 | Tier | What the operator writes | Result |
 |---|---|---|
-| **1. Generated** | Nothing beyond the action's input schema | A form built from `@toolbox/ui` widgets. `enumFrom` fields automatically become **rich entity comboboxes** with server-side search and disabled reasons. The dry-run panel is included by default |
+| **1. Generated** | Nothing beyond the action's input schema | A form built from `@seikika/ui` widgets. `enumFrom` fields automatically become **rich entity comboboxes** with server-side search and disabled reasons. The dry-run panel is included by default |
 | **2. Field widgets** | `ui: { app: AppPickerOption }`: a TSX component for one field's option rendering or input | Custom option cards and chips inside the generated layout |
 | **3. Custom action UI** | `ui: "./ui/install-approved-app.tsx"`: a full React component | Any layout and interaction, built from the same hooks and components |
 
-### 3.1 Design system and hooks (`@toolbox/ui`, maintained in this repo)
+### 3.1 Design system and hooks (`@seikika/ui`, maintained in this repo)
 
 - **React 19 + TypeScript.**
 - **React Aria Components** provide behaviour and accessibility. Their ComboBox supports async
@@ -132,7 +132,7 @@ superseded by [the Astro and Vue decision](../decisions/D01M8A5518E6GYEY9EG8Z7FP
 
 ```tsx
 // portal repo: ui/install-approved-app.tsx (tier 3, operator-owned, reviewed like any code)
-import { useAction, EntityCombobox, AppOptionCard, DryRunPanel, ApprovalPath, RunTimeline, Button } from "@toolbox/ui";
+import { useAction, EntityCombobox, AppOptionCard, DryRunPanel, ApprovalPath, RunTimeline, Button } from "@seikika/ui";
 
 export default function InstallApprovedApp({ entity }: { entity?: string }) {
   const a = useAction("install-approved-app", { entity });
@@ -153,7 +153,7 @@ export default function InstallApprovedApp({ entity }: { entity?: string }) {
 
 ### 3.2 Packaging, loading and security
 - Operator UI code lives in the portal repo (`ui/`).
-- `toolbox build` bundles it with **Vite 8**, whose default bundler since March 2026 is Rolldown,
+- `seikika build` bundles it with **Vite 8**, whose default bundler since March 2026 is Rolldown,
   Rust-based. The bundle is code-split per action and view, and embedded in the image.
 - There is **no runtime loading of remote code**, so the CSP stays strict.
 - **Trust:** the code is operator-authored and reviewed, so it runs same-origin in the SPA. Users
@@ -180,7 +180,7 @@ metadata, a dry-run latency SLO, the `ui` field on actions, and committing to Re
 
 ## 4. Framework choice: why not be framework-agnostic?
 
-| Option | Benefits | Costs for Toolbox |
+| Option | Benefits | Costs for Seikika |
 |---|---|---|
 | **Astro with framework islands** | Ships little JS; mix React, Vue, Svelte per island; excellent for content sites | Islands aren't one component tree, so React context (router, auth, query cache, theming) doesn't cross islands, and Astro's docs point to a separate store library (nanostores, with per-framework adapters) for shared state. **Every framework doubles** the runtime, the design-system implementation, Storybook renderers, tests, and agent context. Partial hydration helps content pages, but the portal is an authenticated, highly interactive app |
 | **Web Components as the extension contract** | Framework-neutral boundary; React 19 supports custom elements | Form participation (ElementInternals), shadow-DOM styling and SSR add friction. The design system would be built twice (WC + React) or as WCs that every operator wraps. Agents write React far more fluently |
@@ -188,7 +188,7 @@ metadata, a dry-run latency SLO, the `ui` field on actions, and committing to Re
 
 **Decision:**
 - **React (TSX) is the single first-party and operator UI framework.**
-- **Escape hatch:** a `<toolbox-island>` mount that can host a Web Component, for teams with existing
+- **Escape hatch:** a `<seikika-island>` mount that can host a Web Component, for teams with existing
   non-React widgets. It's documented as outside design-system guarantees, for interop rather than
   primary use.
 - This refines earlier wording ("Web Components / TSX"). The Lightning Web Components lesson was
@@ -216,15 +216,15 @@ metadata, a dry-run latency SLO, the `ui` field on actions, and committing to Re
 
 ### 5.2 Fixture data with real semantics, without a backend
 
-- `toolbox ui fixtures` runs the **real engine** in process over the portal's fixtures and
-  `toolbox-synth` data:
+- `seikika ui fixtures` runs the **real engine** in process over the portal's fixtures and
+  `seikika-synth` data:
   - per persona
   - for every view endpoint, action option search and preview
   - recording the JSON responses
 - Stories serve those recordings through generated request handlers (MSW-style).
 - **Effect:** stories render **real permission shaping and REDACTED markers** with zero backend at
   story time. Recordings regenerate incrementally when the manifest or fixtures change.
-- For exploratory work, stories can instead point at a live `toolbox dev` backend.
+- For exploratory work, stories can instead point at a live `seikika dev` backend.
 
 ### 5.3 Tests from stories
 
@@ -255,14 +255,14 @@ export const NeedsSecurityApproval = {
 
 ## 6. Fast loops for maintainers and operators (SDLC layers 1–2)
 
-| Loop | Maintainers (Toolbox repo) | Operators (portal repo) |
+| Loop | Maintainers (Seikika repo) | Operators (portal repo) |
 |---|---|---|
-| Edit → see | Vite HMR with React Fast Refresh in Storybook and the app | `toolbox dev` runs Vite as a child of the daemon; API calls go to the in-process engine; HMR for `ui/` |
+| Edit → see | Vite HMR with React Fast Refresh in Storybook and the app | `seikika dev` runs Vite as a child of the daemon; API calls go to the in-process engine; HMR for `ui/` |
 | Type check | TypeScript 7 native `tsc` (8–12× faster) in the background | Same, against **generated portal types** (kinds, actions, view endpoints) |
-| Tests | Vitest browser mode, **affected stories only** (Vitest's module graph + changed files), in parallel | `toolbox test --affected` includes affected stories and generated action-form stories |
-| Visual and a11y | Affected stories on PR; all on the merge queue | Same, via the `toolbox-dev/test` Action |
-| Fixtures | `toolbox ui fixtures` incremental regeneration | Same, from portal fixtures |
-| Agents | Storybook MCP (component reuse, story writing, focused tests) + `toolbox mcp --dev` | Both exposed through the operator agent plugin. The `add-action-ui` skill: write the story first, then the component |
+| Tests | Vitest browser mode, **affected stories only** (Vitest's module graph + changed files), in parallel | `seikika test --affected` includes affected stories and generated action-form stories |
+| Visual and a11y | Affected stories on PR; all on the merge queue | Same, via the `seikika/test` Action |
+| Fixtures | `seikika ui fixtures` incremental regeneration | Same, from portal fixtures |
+| Agents | Storybook MCP (component reuse, story writing, focused tests) + `seikika mcp --dev` | Both exposed through the operator agent plugin. The `add-action-ui` skill: write the story first, then the component |
 
 **Additional dev-loop SLOs** ([developer-velocity.md](./developer-velocity.md) §6):
 
@@ -278,8 +278,8 @@ export const NeedsSecurityApproval = {
 
 1. **Commit to React + TypeScript** for first-party and operator UI. A Web Component island is the
    documented escape hatch.
-2. **`@toolbox/ui`** design system (React Aria + tokens + domain components + typed hooks) and
-   **Storybook 10** in this repo. They are released with Toolbox and consumed by portals.
+2. **`@seikika/ui`** design system (React Aria + tokens + domain components + typed hooks) and
+   **Storybook 10** in this repo. They are released with Seikika and consumed by portals.
 3. **Actions gain `ui`:**
    - generated (default)
    - field widgets
@@ -288,11 +288,11 @@ export const NeedsSecurityApproval = {
    `enumFrom` gains rich option metadata (`label`, `description`, `icon`, `badges`, `group`,
    `searchOn`, `disabledWhen`).
 4. **New option-search API** and MCP `action_options` tool. Dry-run latency SLO and caching.
-5. **`toolbox dev` runs Vite**; `toolbox storybook` and `toolbox ui fixtures`; generated stories per
+5. **`seikika dev` runs Vite**; `seikika storybook` and `seikika ui fixtures`; generated stories per
    action and per persona.
 6. **Operator agent plugin:** an `add-action-ui` skill; the Storybook MCP alongside the authoring MCP.
 7. **Phasing:**
-   - **Phase 1:** `@toolbox/ui` primitives, Storybook, generated action forms, page stories for the
+   - **Phase 1:** `@seikika/ui` primitives, Storybook, generated action forms, page stories for the
      minimal UI.
    - **Phase 3 (actions):** option-search API, rich `enumFrom`, field widgets, custom action UIs,
      RunTimeline, the install-approved-app reference UI.

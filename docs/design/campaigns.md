@@ -43,7 +43,7 @@ tracks:
   - name: maintainer
     title: Maintainer quality
     owner: group:maintainers
-    description: Long-term standards for building Toolbox itself.
+    description: Long-term standards for building Seikika itself.
 
 scorecards:
   - name: maintainer-skill
@@ -101,7 +101,7 @@ Raw `inScope` and `meeting` counts are always emitted (deterministic for tests a
 
 A percentage of entities meeting the goal hides paydown inside entities that still fail: 120
 violations in 40 files going to 114 in 39 files is 2.5% fewer files and 5.0% fewer violations.
-So `toolbox report --baseline` records each campaign's starting point in the baseline file the
+So `seikika report --baseline` records each campaign's starting point in the baseline file the
 first time the campaign is active (`campaigns.<name>: {start, recorded, inScope, short,
 measure?}`) and keeps it while the campaign's `start` is unchanged. The summary and `-o json`
 then show `sinceStart`: entities short of the goal, and the measure, from the recorded start to
@@ -154,11 +154,11 @@ Progress fields are independent of status: an `ended` campaign still reports its
 
 | Surface | Behaviour |
 |---|---|
-| `toolbox validate` | Unique track/campaign names; track refs; scorecard/level/rule refs; dates `YYYY-MM-DD`; each include has `atLeast` and/or `rules` |
-| `toolbox derive` / serve snapshot | Fills `Derived.campaigns` after scorecards |
-| `toolbox report` JSON/HTML/web | `tracks`, `campaigns` (defs + progress, and `sinceStart` with `--baseline`, §3.4), without a server; Campaigns mode in `<toolbox-report>`; Overview lists active campaigns |
-| `toolbox report --baseline` summary | One line per campaign with a recorded start: entities short and measure, from the start to now |
-| `toolbox campaign [name]` | List or one campaign's progress and non-meeting entities (MCP `campaign_report`). With `--portal DIR [--baseline FILE]`, from one local run without a server, with the paydown since the recorded start |
+| `seikika validate` | Unique track/campaign names; track refs; scorecard/level/rule refs; dates `YYYY-MM-DD`; each include has `atLeast` and/or `rules` |
+| `seikika derive` / serve snapshot | Fills `Derived.campaigns` after scorecards |
+| `seikika report` JSON/HTML/web | `tracks`, `campaigns` (defs + progress, and `sinceStart` with `--baseline`, §3.4), without a server; Campaigns mode in `<seikika-report>`; Overview lists active campaigns |
+| `seikika report --baseline` summary | One line per campaign with a recorded start: entities short and measure, from the start to now |
+| `seikika campaign [name]` | List or one campaign's progress and non-meeting entities (MCP `campaign_report`). With `--portal DIR [--baseline FILE]`, from one local run without a server, with the paydown since the recorded start |
 | `GET /v1/campaigns` · `/v1/campaigns/{name}` | Same data, facet-visible entities only |
 | `GET /v1/views/campaign/{name}` | Composite for the minimal UI |
 | Minimal UI | `/cgn` list via home; `/cgn/{name}` detail |
@@ -169,7 +169,7 @@ Progress fields are independent of status: an `ended` campaign still reports its
 |---|---|
 | Owner notifications / reminders | Lives under [notifications.md](./notifications.md) |
 | Historical progress time series | Needs archived snapshots (Phase 2 facts/history) |
-| Promote campaign checks into a "rubric" / org rollup | OpsLevel pattern; Toolbox keeps campaigns off `repoRollup` |
+| Promote campaign checks into a "rubric" / org rollup | OpsLevel pattern; Seikika keeps campaigns off `repoRollup` |
 | Campaign-specific CEL `appliesTo` | Scope comes from included scorecards' `appliesTo` |
 | Admin UI / DB-held campaigns | Charter: config as code (D2, D33) |
 

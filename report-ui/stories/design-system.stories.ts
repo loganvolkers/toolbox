@@ -1,9 +1,9 @@
 import { h } from "vue";
-import DataValue from "@toolbox-dev/ui/components/DataValue.vue";
-import LevelBadge from "@toolbox-dev/ui/components/LevelBadge.vue";
-import PageFrame from "@toolbox-dev/ui/components/PageFrame.vue";
-import PageHeader from "@toolbox-dev/ui/components/PageHeader.vue";
-import SectionCard from "@toolbox-dev/ui/components/SectionCard.vue";
+import DataValue from "@seikika/ui/components/DataValue.vue";
+import LevelBadge from "@seikika/ui/components/LevelBadge.vue";
+import PageFrame from "@seikika/ui/components/PageFrame.vue";
+import PageHeader from "@seikika/ui/components/PageHeader.vue";
+import SectionCard from "@seikika/ui/components/SectionCard.vue";
 
 export default { title: "Design system" };
 

@@ -2,7 +2,7 @@
  * Build-time CLI catalog loader for the Starlight CLI reference.
  * Copy to site/src/lib/cli-describe.ts
  *
- * Invokes `toolbox describe` (+ optional --help enrichment) from the repo root.
+ * Invokes `seikika describe` (+ optional --help enrichment) from the repo root.
  */
 import { spawnSync } from 'node:child_process';
 import { existsSync } from 'node:fs';
@@ -17,37 +17,37 @@ function repoRoot(start: string): string {
     if (existsSync(join(directory, "Cargo.toml")) && existsSync(join(directory, "site/package.json"))) return directory;
     directory = dirname(directory);
   }
-  throw new Error("Could not locate the Toolbox repository for the CLI reference");
+  throw new Error("Could not locate the Seikika repository for the CLI reference");
 }
 export const REPO_ROOT = repoRoot(dirname(fileURLToPath(import.meta.url)));
 
-function resolveToolbox(): string {
-  const env = process.env.TOOLBOX_BIN;
+function resolveSeikika(): string {
+  const env = process.env.SEIKIKA_BIN;
   if (env && existsSync(env)) return env;
   for (const c of [
-    join(REPO_ROOT, 'target/debug/toolbox'),
-    join(REPO_ROOT, 'target/release/toolbox'),
+    join(REPO_ROOT, 'target/debug/seikika'),
+    join(REPO_ROOT, 'target/release/seikika'),
   ]) {
     if (existsSync(c)) return c;
   }
-  const which = spawnSync('which', ['toolbox'], { encoding: 'utf8' });
+  const which = spawnSync('which', ['seikika'], { encoding: 'utf8' });
   if (which.status === 0 && which.stdout.trim()) return which.stdout.trim();
-  const build = spawnSync('cargo', ['build', '-p', 'toolbox-cli', '--locked'], {
+  const build = spawnSync('cargo', ['build', '-p', 'seikika-cli', '--locked'], {
     cwd: REPO_ROOT,
     encoding: 'utf8',
   });
   if (build.status !== 0) {
     throw new Error(`cargo build failed:\n${build.error?.message ?? build.stderr}`);
   }
-  const bin = join(REPO_ROOT, 'target/debug/toolbox');
-  if (!existsSync(bin)) throw new Error('toolbox binary missing after build');
+  const bin = join(REPO_ROOT, 'target/debug/seikika');
+  if (!existsSync(bin)) throw new Error('seikika binary missing after build');
   return bin;
 }
 
-function runToolbox(toolbox: string, args: string[]): string {
-  const r = spawnSync(toolbox, args, { cwd: REPO_ROOT, encoding: 'utf8' });
+function runSeikika(seikika: string, args: string[]): string {
+  const r = spawnSync(seikika, args, { cwd: REPO_ROOT, encoding: 'utf8' });
   if (r.status !== 0) {
-    throw new Error(`toolbox ${args.join(' ')} failed:\n${r.stderr || r.stdout}`);
+    throw new Error(`seikika ${args.join(' ')} failed:\n${r.stderr || r.stdout}`);
   }
   return r.stdout;
 }
@@ -60,8 +60,8 @@ function parseUsage(help: string): string | null {
 /** Load catalog from live CLI. Call only at build / check time (Node). */
 export function loadCliCatalog(opts: { enrichHelp?: boolean } = {}): CliCatalog {
   const enrichHelp = opts.enrichHelp !== false;
-  const toolbox = resolveToolbox();
-  const raw = runToolbox(toolbox, ['describe']);
+  const seikika = resolveSeikika();
+  const raw = runSeikika(seikika, ['describe']);
   const commands: CliCommand[] = [];
   const mcpTools: McpTool[] = [];
 
@@ -96,7 +96,7 @@ export function loadCliCatalog(opts: { enrichHelp?: boolean } = {}): CliCatalog 
 
   if (enrichHelp) {
     for (const cmd of commands) {
-      const r = spawnSync(toolbox, [...cmd.name.split(/\s+/), '--help'], {
+      const r = spawnSync(seikika, [...cmd.name.split(/\s+/), '--help'], {
         cwd: REPO_ROOT,
         encoding: 'utf8',
       });

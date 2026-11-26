@@ -1,4 +1,4 @@
-apiVersion: toolbox.dev/assessment/v1
+apiVersion: seikika.com/assessment/v1
 entity: assessment:rule-quality/rule:repo/docs/links-resolve
 rubric: assessment-quality
 subjectHash: 419ef570f03e
@@ -10,9 +10,9 @@ verdicts:
     reason: >-
       The citations in
       portal/assessments/rule-quality/rule/repo/docs/links-resolve.yaml hold.
-      `links_in` is crates/toolbox-connector-workspace/src/main.rs:297-318.
+      `links_in` is crates/seikika-connector-workspace/src/main.rs:297-318.
       Its regex at 298 matches only inline `](target)` and drops `#...`, and
-      309-311 skip `://` targets. In examples/repo-portal-starter/toolbox.yaml
+      309-311 skip `://` targets. In examples/repo-portal-starter/seikika.yaml
       the evidence is at 174, the fix at 175 and the rationale at 176-178.
       tests/standards.test.yaml:36-39 shows `docs/runbook.md`. The README
       table and docs/design/repo-portals.md:140 describe the starter's single
@@ -31,7 +31,7 @@ verdicts:
     verdict: pass
     reason: >-
       The fail rests on a regex a second assessor can read and test. The
-      passes rest on the fix text (toolbox.yaml:175) and the evidence
+      passes rest on the fix text (seikika.yaml:175) and the evidence
       expression (:174).
   - criterion: actionable
     verdict: pass

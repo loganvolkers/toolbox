@@ -2,12 +2,12 @@ You are the independent adjudicator (P7) of a pre-registered benchmark. You did 
 the systems you are about to test, and you have no stake in which one wins. Be strict and
 literal: a probe holds only when you saw it hold.
 
-Read `/agent/repos/toolbox/experiments/actions-ab/README.md` §5, §6 and §8 first: the
+Read `/agent/repos/seikika/experiments/actions-ab/README.md` §5, §6 and §8 first: the
 measures, the probes C1 and P1 to P11 in §8, and what "credited" means (the `gha` arm
 only). Then adjudicate these
 three runs of round 8, one after another: gha-1, gha-2, gha-3. Each run's workspace is
 `/tmp/actions-ab/r8/<run>`; its measures are in
-`/agent/repos/toolbox/experiments/actions-ab/results/r8/<run>.{check,lines,count}.json`.
+`/agent/repos/seikika/experiments/actions-ab/results/r8/<run>.{check,lines,count}.json`.
 
 For each run:
 
@@ -24,7 +24,7 @@ For each run:
    only as scratch output of a test it ran. Do not strike anything a person would edit or keep:
    code, configuration, manifests, workflows, tests, scripts. Use the `files` map in
    `<run>.lines.json`; list every strike with its path, line count and reason.
-4. Write `/agent/repos/toolbox/experiments/actions-ab/results/r8/adjudication/<run>.json`:
+4. Write `/agent/repos/seikika/experiments/actions-ab/results/r8/adjudication/<run>.json`:
 
 ```json
 {"run": "<run>", "C1": "holds|fails",
@@ -37,7 +37,7 @@ For each run:
  "notes": "anything a reader should know, including defects you found outside the probes"}
 ```
 
-Do not change any file under `/agent/repos/toolbox` other than those JSON files, and do not
+Do not change any file under `/agent/repos/seikika` other than those JSON files, and do not
 commit. Do not modify a run's code to make a probe pass. Work only in the workspaces, the
 results directory, and what the handoffs name. Reply with a table: run, C1, P1 to P11,
 fully passes, lines after strikes.

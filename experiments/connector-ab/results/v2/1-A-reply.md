@@ -1,8 +1,8 @@
 ## What built
 - `forge-connector` (`src/main.rs`) as a stdio `Source` via `run_stdio`: syncs Forge tenant A `project` + `issue`.
 - `OUT/entities.ndjson`: 2 projects + 3 issues (sorted by kind, then id).
-- `toolbox connector test`: 11/11 pass.
-- Resync via `RUN.md` (`cargo build` → `toolbox connector drive` → map into `OUT/entities.ndjson`).
+- `seikika connector test`: 11/11 pass.
+- Resync via `RUN.md` (`cargo build` → `seikika connector drive` → map into `OUT/entities.ndjson`).
 
 ## Could not do
 - Nothing required for this phase. Components intentionally omitted (phase 3).

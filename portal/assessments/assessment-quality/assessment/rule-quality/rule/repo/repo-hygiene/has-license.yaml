@@ -1,4 +1,4 @@
-apiVersion: toolbox.dev/assessment/v1
+apiVersion: seikika.com/assessment/v1
 entity: assessment:rule-quality/rule:repo/repo-hygiene/has-license
 rubric: assessment-quality
 subjectHash: bd96c10d1509
@@ -10,9 +10,9 @@ verdicts:
     reason: >-
       The citations in
       portal/assessments/rule-quality/rule/repo/repo-hygiene/has-license.yaml
-      hold. crates/toolbox-connector-workspace/src/repo.rs:65 matches names
+      hold. crates/seikika-connector-workspace/src/repo.rs:65 matches names
       starting `license` or `copying`, so LICENCE fails and an empty LICENSE
-      passes. In examples/repo-portal-starter/toolbox.yaml the README-note
+      passes. In examples/repo-portal-starter/seikika.yaml the README-note
       alternative is at 145-146, the rationale using "licence" at 148-150 and
       the link at 151-153. One description is inaccurate. The reason says root
       "or .github/" files, but `first` tests the full lowercased path
@@ -23,13 +23,13 @@ verdicts:
     reason: >-
       The verdicts are right. A file-name check passes an empty file, rejects
       the British spelling and can't see a README note. So measures-intent,
-      hard-to-game and fix-leads-to-pass fail (toolbox.yaml:143-146,
+      hard-to-game and fix-leads-to-pass fail (seikika.yaml:143-146,
       repo.rs:65). There is no number.
   - criterion: reproducible
     verdict: pass
     reason: >-
       Each verdict follows from one line of code (repo.rs:65) and the fix text
-      (toolbox.yaml:145-146), which a second assessor would read the same way.
+      (seikika.yaml:145-146), which a second assessor would read the same way.
   - criterion: actionable
     verdict: pass
     reason: >-

@@ -1,0 +1,61 @@
+apiVersion: seikika.com/assessment/v1
+entity: rule:seikika/vs-backstage-extensibility/any-language
+rubric: rule-quality
+subjectHash: f6c1bb7be4ff
+assessor: {kind: agent, name: cursor-assessor-17, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: measures-intent
+    verdict: pass
+    reason: >-
+      The check reads `extensionAnyLanguage`, "an extension can be written in
+      any language" (portal/standards/backstage-comparison.yaml:123-125). For
+      Seikika it's demonstrably true. The harness itself is a Python client
+      that pushes the catalog to /v1/ingest with a connector token
+      (experiments/backstage-compare/measure.py:158-163), and
+      scripts/m3-acceptance.sh:57 does the same with curl. The protocol is
+      JSON over stdio or HTTP (schema/connector-messages.schema.json).
+      Backstage's `false` cites plugins being TypeScript packages
+      (facts.yaml:150-154). The adjudication notes that URL locations let any
+      language feed its catalog (ADJUDICATION.md:290-292), but a pull of
+      static files isn't an extension in the sense the rationale means
+      (:886-888).
+  - criterion: hard-to-game
+    verdict: fail
+    reason: >-
+      The `true` is typed into experiments/backstage-compare/facts.yaml:60-64,
+      and snapshot.py copies it into portal/comparisons/ (snapshot.py:85). The
+      harness's own Python ingest proves the claim on every run, yet the fact
+      isn't taken from it. Editing facts.yaml and rerunning snapshot.py passes
+      the rule whatever the protocol becomes.
+    suggestion: >-
+      Set the fact from the run: measure.py already ingests through Python, so
+      record `extensionAnyLanguage = true` when that ingest returns 200/202,
+      ideally from a tiny non-Rust connector that speaks the stdio protocol
+      under `seikika serve`.
+  - criterion: fix-leads-to-pass
+    verdict: fail
+    reason: >-
+      The fix says to keep the protocol language-neutral, "as
+      schema/connector-messages.schema.json defines it"
+      (backstage-comparison.yaml:883-884). The schema is the right place. But
+      when the evidence reads `extensionAnyLanguage is false`, making the
+      protocol neutral again changes nothing until someone edits facts.yaml
+      and reruns snapshot.py, which the fix doesn't mention.
+    suggestion: >-
+      Add the record step to the fix ("then rerun
+      experiments/backstage-compare/snapshot.py"), and make the fact measured
+      as suggested above, so the step is meaningful.
+  - criterion: threshold-justified
+    verdict: pass
+    reason: >-
+      The rule is boolean and has no number. The README registered "extension
+      cost" inside capabilities, with a bar of true
+      (experiments/backstage-compare/README.md:53). RESULTS.md:269-270
+      discloses the split into its own scorecard, and RESEARCH.md F11 makes
+      languages a factor (RESEARCH.md:67).
+summary: >-
+  A true claim with an honest definition, input by hand. Seikika's harness
+  is itself a non-Rust client of the ingest protocol, so the measurement
+  exists but isn't used: the fact comes from facts.yaml, which the fix
+  doesn't name.

@@ -1,4 +1,4 @@
-# Out-of-box: Toolbox on Repositories We Didn't Write
+# Out-of-box: Seikika on Repositories We Didn't Write
 
 **Question** ([repo-value.md](../../docs/design/repo-value.md) R2): with no tuning, are the
 starter's and the packages' findings true and worth fixing on real repositories?
@@ -16,8 +16,8 @@ Two portals, the setup a pilot copies:
 
 | Portal | Includes | For |
 |---|---|---|
-| [portal/](portal/toolbox.yaml) | The starter's `repo-hygiene` and `docs`, and [packages/github-actions](../../packages/github-actions/README.md) | Any repository |
-| [portal-pnpm/](portal-pnpm/toolbox.yaml) | The same, plus [packages/pnpm-expo](../../packages/pnpm-expo/README.md) | pnpm workspaces |
+| [portal/](portal/seikika.yaml) | The starter's `repo-hygiene` and `docs`, and [packages/github-actions](../../packages/github-actions/README.md) | Any repository |
+| [portal-pnpm/](portal-pnpm/seikika.yaml) | The same, plus [packages/pnpm-expo](../../packages/pnpm-expo/README.md) | pnpm workspaces |
 
 Run history (`github-actions`) is skipped: it needs a token and changes over time.
 
@@ -28,13 +28,13 @@ cargo build
 git clone --depth 1 https://github.com/openfga/openfga /tmp/openfga
 cd /tmp/openfga
 PATH=/path/to/zizmor-and-actionlint:$PATH \
-  /path/to/toolbox/target/debug/toolbox report /path/to/toolbox/experiments/out-of-box/portal \
+  /path/to/seikika/target/debug/seikika report /path/to/seikika/experiments/out-of-box/portal \
   --skip github-actions -o md
 ```
 
-`toolbox validate experiments/out-of-box/portal` and `toolbox validate
+`seikika validate experiments/out-of-box/portal` and `seikika validate
 experiments/out-of-box/portal-pnpm` check the portals themselves. Both need zizmor 1.32.0 and
-actionlint 1.7.12 on the `PATH` (`toolbox doctor` lists them), or their rules are `unknown`.
+actionlint 1.7.12 on the `PATH` (`seikika doctor` lists them), or their rules are `unknown`.
 
 ## Replaying history (R4)
 

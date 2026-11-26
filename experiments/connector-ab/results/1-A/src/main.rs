@@ -1,13 +1,13 @@
 //! Forge (mock Jira Cloud) stdio connector.
 //!
-//! `TOOLBOX_CONNECTOR_CONFIG`: `{"baseUrl":"http://127.0.0.1:9743","token":"tenant-a-token"}`.
+//! `SEIKIKA_CONNECTOR_CONFIG`: `{"baseUrl":"http://127.0.0.1:9743","token":"tenant-a-token"}`.
 //! Record kinds: `project`, `issue` (phase 1). External ids: `forge:<key>`.
 //! With `FORGE_WRITE_ENTITIES=1`, a resync also writes mapped catalog entities to
 //! `OUT/entities.ndjson` (or `FORGE_ENTITIES_PATH`), sorted by kind then id.
 
 use serde_json::{Value, json};
 use std::path::PathBuf;
-use toolbox_connect::sdk::{Out, Source, run_stdio};
+use seikika_connect::sdk::{Out, Source, run_stdio};
 
 struct Forge {
     base_url: String,
@@ -20,9 +20,9 @@ struct Forge {
 impl Forge {
     fn from_env() -> Result<Self, String> {
         let cfg: Value = serde_json::from_str(
-            &std::env::var("TOOLBOX_CONNECTOR_CONFIG").unwrap_or_else(|_| "{}".into()),
+            &std::env::var("SEIKIKA_CONNECTOR_CONFIG").unwrap_or_else(|_| "{}".into()),
         )
-        .map_err(|e| format!("TOOLBOX_CONNECTOR_CONFIG: {e}"))?;
+        .map_err(|e| format!("SEIKIKA_CONNECTOR_CONFIG: {e}"))?;
         let s = |k: &str| cfg.get(k).and_then(Value::as_str).map(str::to_owned);
         Ok(Forge {
             base_url: s("baseUrl")

@@ -1,0 +1,46 @@
+apiVersion: seikika.com/assessment/v1
+entity: rule:seikika/vs-backstage-capabilities/kubernetes
+rubric: rule-quality
+subjectHash: 0d3627f9d60a
+assessor: {kind: agent, name: cursor-assessor-15, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: measures-intent
+    verdict: pass
+    reason: >-
+      "Show a component's Kubernetes workloads"
+      (backstage-comparison.yaml:151-153) is the brief's "Kubernetes view"
+      scenario (RESEARCH.md:120); Backstage passes on plugin-kubernetes
+      (experiments/backstage-compare/facts.yaml:176) and Seikika fails with
+      "no Kubernetes connector or view"
+      (experiments/backstage-compare/facts.yaml:88).
+  - criterion: hard-to-game
+    verdict: fail
+    reason: >-
+      The fact is the one-line `capKubernetes` in
+      experiments/backstage-compare/facts.yaml:88, merged by snapshot.py:85;
+      the harness runs no cluster, so neither arm is ever asked to show a
+      workload.
+    suggestion: >-
+      Run a kind (Kubernetes-in-Docker) cluster in the harness with one
+      Deployment labelled for component:c1, and set `capKubernetes` only when
+      each product's entity read or page lists it.
+  - criterion: fix-leads-to-pass
+    verdict: pass
+    reason: >-
+      A connector is the extension point Seikika already has for new data
+      (docs/design/connector-control.md, linked from the rule), and workload
+      records it ingests would show on the generic entity read. The fix does
+      not say how a workload is matched to its component (for example by a
+      label), which an implementer will have to decide.
+  - criterion: threshold-justified
+    verdict: pass
+    reason: >-
+      Boolean with no threshold; pre-registered "true" in
+      experiments/backstage-compare/README.md:53 and confirmed in
+      ADJUDICATION.md:114.
+summary: >-
+  A fair capability loss with a fix that points at the right extension
+  point, a connector. It would be stronger if the fix named the
+  workload-to-component mapping and the fact came from a probe rather than
+  experiments/backstage-compare/facts.yaml.

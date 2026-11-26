@@ -1,0 +1,54 @@
+{
+  "run": "seikika-3",
+  "C1": "holds",
+  "P1": {
+    "verdict": "holds",
+    "evidence": "Admin read of GET /projects/acme-w15%2F{alpha,beta,gamma}/repository/tree?ref=main&path=.seikika&recursive=true: each project has .seikika/seikika.yaml, .seikika/actions/set-codeowners.yaml and .seikika/tests/set-codeowners.test.yaml on its own main. `seikika run -o json` lists each action 'from portal <p>' with verified:true, read from clones of each project's main under SEIKIKA_STATE_DIR/federation/org-e6929820/<p>/.seikika."
+  },
+  "P2": {
+    "verdict": "holds",
+    "evidence": "From org/, as ann (--identity-token-file people/ann.token --yes): `seikika run set-codeowners --entity portal:alpha -i pattern='docs folder' -i owners='@acme/probe'` -> exit 2, errors ['pattern: \"docs folder\" does not match \"^[/*][^\\\\s#]*$\"']; `-i pattern=/probe-invalid/ -i owners='@a @b @c @d'` -> exit 2, owners does not match; `-i owners='carol'` -> exit 2, owners does not match. No run record created (runs/ count 6 before and after). alpha main 44eefced before and after."
+  },
+  "P3": {
+    "verdict": "holds",
+    "evidence": "As ann, no --yes: `seikika run set-codeowners --entity portal:beta -i pattern=/probe-preview/ -i owners='@acme/probe' --identity-token-file $P/ann.token -o json` -> exit 0, effects[0] file:CODEOWNERS update with diff '@@ -1 +1,2 @@ /docs/ @acme/docs @carol +/probe-preview/ @acme/probe', effects[1] push branch:main once approved, approvers group:acme-w15/release, a confirm token. No run recorded; beta main a6c84cda before and after."
+  },
+  "P4": {
+    "verdict": "holds",
+    "evidence": "From org/, as dave: `seikika run set-codeowners --entity portal:gamma -i pattern=/probe-approval/ -i owners='@acme/probe' --identity-token-file $P/dave.token --yes -o json` -> exit 3, run_2g0seezrcigs awaiting_approval, requested_by user:dave, diff adds the probe line. gamma main 4e83f0ab unchanged. `seikika run --approve run_2g0seezrcigs --identity-token-file <tok> --wait -o json`: dave -> exit 2 'a requester cannot approve their own run'; ann -> exit 2 'user:ann is not one of the pending approvers [\"group:acme-w15/release\"]'; carol -> exit 2 same. `--verify` -> still awaiting_approval; gamma main 4e83f0ab after."
+  },
+  "P5": {
+    "verdict": "holds",
+    "evidence": "As erin: `seikika run --approve run_2g0seezrcigs --identity-token-file $P/erin.token --note 'release sign-off' --wait -o json` -> exit 0, state succeeded, approved_by user:erin, verification.child {base origin/main, commit 54db0a58, files [CODEOWNERS matches:true], checked 'fetched origin/main: the commit is on it, and every file it changed has the content the preview showed'}. Admin read of gamma CODEOWNERS on main (54db0a58): '/graphify/security.py @acme/security\\n/probe-approval/ @acme/probe\\n'. Source (crates/seikika-exec/src/run.rs execute/on_base, executor.rs merged/landed; the message string is in the frozen binary): after the push the child runs `git fetch origin main`, `git merge-base --is-ancestor <commit> origin/main`, then compares each written blob with origin/main's; on mismatch the run fails. The org run is 'succeeded' only when the child's state is 'succeeded', else 'unverified'."
+  },
+  "P6": {
+    "verdict": "holds",
+    "evidence": "Old protection recorded via admin GET protected_branches: main push [40], merge [40], allow_force_push false. Admin DELETE + POST name=main push_access_level=0 merge_access_level=0. As ann: request alpha /probe-reject/ @acme/probe --yes -> run_2g0sxmdmi0dc awaiting_approval. As dave: `--approve ... --wait` -> exit 1, state failed, error 'the push to origin main was refused, so nothing landed: ... You are not allowed to push code to protected branches ... (pre-receive hook declined)'; `--verify` -> failed, events previewed..approved, dispatched, running, failed (no succeeded). alpha main 44eefced before and after. Protection restored to push 40, merge 40, allow_force_push false (verified). A later preview on alpha diffed against the real main (no stale local commit)."
+  },
+  "P7": {
+    "verdict": "holds",
+    "evidence": "From org/: `seikika run -o json` -> one JSON listing set-codeowners for portal:alpha, portal:beta and portal:gamma with inputs schema and approval. P4's request was `seikika run set-codeowners --entity portal:gamma ...` from the org checkout."
+  },
+  "P8": {
+    "verdict": "holds",
+    "evidence": "`seikika run --verify run_2g0seezrcigs --identity-token-file $P/ann.token -o json` -> requested_by user:dave with events previewed/confirmed by user:dave at 19:55:38Z; inputs {pattern:'/probe-approval/', owners:'@acme/probe'}; approval.approved_by [user:erin], event approved by user:erin at 19:55:48Z (and approval_refused events for dave, ann, carol with times and reasons); state succeeded with event at 19:55:49Z; verification with the main commit."
+  },
+  "P9": {
+    "verdict": "holds",
+    "evidence": "Admin DELETE groups/acme-w15%2Frelease/members/6 (erin) -> 204; members [dave]. Nothing in the system changed. As ann: request beta /probe-group/ @acme/probe --yes -> run_2g0t4qljht1z awaiting_approval. As erin: `--approve` -> exit 2 'user:erin is not one of the pending approvers [\"group:acme-w15/release\"]'. As dave: `--approve --wait` -> exit 0, succeeded, approved_by user:dave, verified on origin/main. beta main a6c84cda -> fb0f0aa5; CODEOWNERS '/docs/ @acme/docs @carol\\n/probe-group/ @acme/probe\\n'. Afterwards erin re-added as Developer (30) with the admin token."
+  },
+  "P10": {
+    "verdict": "holds",
+    "evidence": "Every probe step was a single `seikika run ... -o json` with stdin from /dev/null and identity from --identity-token-file; JSON output and exit codes 0 succeeded, 1 failed, 2 invalid/refused, 3 awaiting approval. --wait blocked without prompts."
+  },
+  "P11": {
+    "verdict": "holds",
+    "evidence": "Used the handoff's 'Setup for every shell' block verbatim (HOME, PATH, SEIKIKA_STATE_DIR, GITLAB_TOKEN=ops token, P, cd org) and its Commands section. Nothing to start. No fixes needed; source read only for P5."
+  },
+  "fixes": [],
+  "strikes": [],
+  "linesBeforeStrikes": 154,
+  "linesAfterStrikes": 154,
+  "fullyPasses": true,
+  "notes": "Every file in the lines map is a portal manifest, action definition, test file, authorization model or the task's CODEOWNERS; the runtime state (signing key, clones, run records under home/.local/state/seikika) and the agent's scratch home/alpha-req.json and home/alpha-done.json are under home/, which the measure already skips, so no strike was needed. One GitLab setting changed outside files (org main protected). Observed outside the probes: (1) the awaiting_approval event note says 'approve with seikika run --as <approver>', which this portal refuses (the handoff warns about it). (2) Trust boundary: approvals are signed with a key stored in SEIKIKA_STATE_DIR and run records are local files, so anyone who can write to that directory on this host can forge approvals; requests and approvals must share one host and state directory (stated in the handoff). (3) Pushes to main use ops-w15's stored git credentials (an Owner), not the approver's identity. (4) Membership is read live on every command: P9 took effect with no system change. P5's source evidence was read at the repository's current HEAD (ce5b733); the binary contains the same verification message."
+}

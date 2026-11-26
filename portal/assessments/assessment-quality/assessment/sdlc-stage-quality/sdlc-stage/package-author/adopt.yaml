@@ -1,4 +1,4 @@
-apiVersion: toolbox.dev/assessment/v1
+apiVersion: seikika.com/assessment/v1
 entity: assessment:sdlc-stage-quality/sdlc-stage:package-author/adopt
 rubric: assessment-quality
 subjectHash: e1c6723f84c8
@@ -14,21 +14,21 @@ verdicts:
       and verdict step. action.yml:51 and 85-91 download a released version,
       and lines 92-130 hold the source build. plan.rs:25-26 and 94-106 are the
       level diff. The only plan tests are in
-      crates/toolbox-derive/tests/reference.rs (lines 73 and 111), and no
-      workflow runs `toolbox plan`. Two claims in agent-can-complete do not
-      hold. docs/design/federation.md:84-85 promises that `toolbox plan` shows
+      crates/seikika-derive/tests/reference.rs (lines 73 and 111), and no
+      workflow runs `seikika plan`. Two claims in agent-can-complete do not
+      hold. docs/design/federation.md:84-85 promises that `seikika plan` shows
       level drops on an upgrade. It does not promise a rollout workflow, and
       federation.md never mentions one-PR-per-repo rollout; that is
       docs/design/packages.md §8 (lines 348-359). "Nothing installs the base
-      version" is also wrong. `toolbox install [PATH]` accepts a manifest file
-      and clones its git packages (crates/toolbox-cli/src/install.rs:194-218),
-      so `toolbox install old.yaml` caches the base version.
+      version" is also wrong. `seikika install [PATH]` accepts a manifest file
+      and clones its git packages (crates/seikika-cli/src/install.rs:194-218),
+      so `seikika install old.yaml` caches the base version.
     suggestion: >-
       Cite packages.md:348-359 or the stage gap
       (portal/sdlc/stages/package-author.yaml:121) for the missing rollout
-      workflow. Replace "nothing installs the base version" with the `toolbox
+      workflow. Replace "nothing installs the base version" with the `seikika
       install old.yaml` route and its side effect: it pins the old spec in
-      toolbox.lock.
+      seikika.lock.
   - criterion: complete
     verdict: pass
     reason: >-
@@ -37,8 +37,8 @@ verdicts:
       upgrade. The fleet half of the exit criterion
       (package-author.yaml:113-114) has no workflow, which the stage's own gap
       at line 121 admits. reuses-artifacts passes: the stage command is the
-      released `toolbox plan`, and the action README recommends
-      `toolbox-version` (actions/report/README.md:35, 112).
+      released `seikika plan`, and the action README recommends
+      `seikika-version` (actions/report/README.md:35, 112).
       decoupled-from-core passes because main.rs:880-905 plans any two
       manifests through the package loader (load.rs:325-360).
   - criterion: reproducible
@@ -47,7 +47,7 @@ verdicts:
       Each verdict rests on readable facts. `checks:` is a ratchet action
       (action.yml:154). No plan test covers a package bump (reference.rs:73,
       111). There is no rollout workflow under .github/workflows. The source
-      build only runs when `toolbox-version` is empty (action.yml:94).
+      build only runs when `seikika-version` is empty (action.yml:94).
   - criterion: actionable
     verdict: pass
     reason: >-
@@ -60,5 +60,5 @@ summary: >-
   The fail, fail, pass, pass verdicts are right and the suggestions would
   flip the fails. Two supporting claims do not hold. federation.md:84-85
   promises the plan half, not a rollout workflow (that is packages.md §8),
-  and `toolbox install old.yaml` does install the base version
+  and `seikika install old.yaml` does install the base version
   (install.rs:194-218).

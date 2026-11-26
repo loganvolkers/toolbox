@@ -1,4 +1,4 @@
-apiVersion: toolbox.dev/assessment/v1
+apiVersion: seikika.com/assessment/v1
 entity: sdlc-stage:operator/monitor
 rubric: sdlc-stage-quality
 subjectHash: b7ece568fc20
@@ -13,7 +13,7 @@ verdicts:
       (lines 44-60). It does not touch /metrics or OTLP; that half is gated by
       experiments/otel-testbed/scripts/score.sh in the otel-testbed job of
       .github/workflows/ci.yml (lines 114-127), which fails when
-      toolbox_snapshot_lag_seconds or the catalog is missing from either. The
+      seikika_snapshot_lag_seconds or the catalog is missing from either. The
       stage's checks should list score.sh.
   - criterion: agent-can-complete
     verdict: pass
@@ -27,12 +27,12 @@ verdicts:
     verdict: fail
     reason: >-
       The collector is SHA-256-pinned (experiments/otel-testbed/pin.env), but
-      no released Toolbox can be monitored: toolbox-telemetry
-      (crates/toolbox-telemetry) landed on 2026-11-22 in 28f1cf6, after
+      no released Seikika can be monitored: seikika-telemetry
+      (crates/seikika-telemetry) landed on 2026-11-22 in 28f1cf6, after
       v0.1.1, and no image has been built, so /metrics and OTLP need a source
-      build. score.sh runs `cargo build` when TOOLBOX is unset (lines 43-48).
+      build. score.sh runs `cargo build` when SEIKIKA is unset (lines 43-48).
     suggestion: >-
-      Cut a release that includes toolbox-telemetry and build its image, and
+      Cut a release that includes seikika-telemetry and build its image, and
       let score.sh take a released binary through scripts/install-release.sh
       before it falls back to cargo.
   - criterion: decoupled-from-core

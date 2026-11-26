@@ -1,0 +1,44 @@
+apiVersion: seikika.com/assessment/v1
+entity: rule:seikika/vs-backstage-agent-surface/tools-list-size
+rubric: rule-quality
+subjectHash: 7b1be9c466e0
+assessor: {kind: agent, name: cursor-assessor-15, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: measures-intent
+    verdict: pass
+    reason: >-
+      surface.py:166-189 serialises the `tools` array each server returns,
+      compactly, and counts its bytes: the fixed context cost the rationale
+      names (portal/standards/backstage-comparison.yaml:838-840). Bytes stand
+      in for the o200k tokens RESEARCH.md:276 asked for, a close proxy for
+      JSON text. Note the record lags HEAD: it measured 14 tools
+      (results/r3/surface-seikika.json), and builtin_tools() in
+      crates/seikika-api/src/mcp.rs:20-98 now lists 17.
+  - criterion: hard-to-game
+    verdict: pass
+    reason: >-
+      The response is read from the running server, not a facts file, and the
+      only lever is the tool definitions in mcp.rs:20-98. Shortening them is
+      the intended remedy; deleting tools would also pass, but it is a product
+      regression, and surface.py:185-188 records the tool count and names
+      beside the bytes, so it would show in the raw results.
+  - criterion: fix-leads-to-pass
+    verdict: pass
+    reason: >-
+      Every description and input schema in Seikika's tools/list is a JSON
+      literal in builtin_tools() (crates/seikika-api/src/mcp.rs:20-98), the
+      file the fix names, and `tools/list` returns it unchanged (mcp.rs:1023).
+  - criterion: threshold-justified
+    verdict: pass
+    reason: >-
+      "≤ 32 KB" was pre-registered in
+      experiments/backstage-compare/README.md:52 and the adjudication
+      confirmed 32,768 B as implemented (ADJUDICATION.md:113). Both products
+      pass (6,473 vs 20,500 B in portal/comparisons/), so the value standing,
+      not the bar, decides.
+summary: >-
+  A measured, hard-to-fake rule whose fix points at the one function that
+  builds the response. Its bar is generous and its record predates the
+  three action tools added since round 3, so a rerun is due before the
+  6,473 B figure is quoted again.

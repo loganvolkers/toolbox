@@ -1,6 +1,6 @@
-# Toolbox against Backstage, beyond DX (docs/design/backstage-comparison.md). Comparative
+# Seikika against Backstage, beyond DX (docs/design/backstage-comparison.md). Comparative
 # scorecards (D01M857ZB468ZM2YS6GNSEG6YB9): each scores both products on the same rules and says,
-# rule by rule, where Toolbox stands. Products are the records experiments/backstage-compare
+# rule by rule, where Seikika stands. Products are the records experiments/backstage-compare
 # writes into portal/comparisons/; rerun the harness rather than editing them.
 
 kinds:
@@ -14,8 +14,8 @@ kinds:
       version:
         type: string
         description: >-
-          The build measured: for Toolbox a commit of a release build, for
-          Backstage the create-app and Backstage releases. Toolbox's install size
+          The build measured: for Seikika a commit of a release build, for
+          Backstage the create-app and Backstage releases. Seikika's install size
           and provenance are read from its published v0.1.1 release download,
           because an adopter installs a release, not a commit.
       harness:
@@ -205,22 +205,22 @@ scorecards:
     kind: Product
     description: >-
       Start, read and recover on a 10k-component catalog, with every read
-      authorized (Toolbox through OpenFGA, Backstage under allow-all). ISO
+      authorized (Seikika through OpenFGA, Backstage under allow-all). ISO
       25010 performance efficiency and reliability.
     rationale: >-
       Every page load, agent call and CI job reads the portal, so a slow
       start, slow reads or a slow recovery cost all of its users at once. The
-      pass thresholds were fixed before the run; Toolbox authorizes every read
+      pass thresholds were fixed before the run; Seikika authorizes every read
       while Backstage runs allow-all, which favours Backstage.
     links:
     - title: Performance results
-      url: https://github.com/loganvolkers/toolbox/blob/main/experiments/backstage-compare/RESULTS.md#performance-and-memory
+      url: https://github.com/seikika/seikika/blob/main/experiments/backstage-compare/RESULTS.md#performance-and-memory
     - title: 'Factor definitions: footprint, read latency, freshness and recovery'
-      url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/backstage-comparison.md#2-factors
+      url: https://github.com/seikika/seikika/blob/main/docs/design/backstage-comparison.md#2-factors
     owner: group:maintainers
     track: vs-backstage
     levels: [bronze]
-    compare: {subject: product:toolbox, peers: [product:backstage]}
+    compare: {subject: product:seikika, peers: [product:backstage]}
     rules:
     - name: ready
       level: bronze
@@ -231,7 +231,7 @@ scorecards:
       tolerance: 0.1
       evidence: "['ready after ' + string(entity.readyS) + ' s']"
       fix: >-
-        Profile startup with `RUST_LOG=debug toolbox serve`, then rerun
+        Profile startup with `RUST_LOG=debug seikika serve`, then rerun
         experiments/backstage-compare/run.sh.
       rationale: >-
         Start time bounds how soon a crashed or rescheduled instance, a preview
@@ -248,7 +248,7 @@ scorecards:
         ['every component readable after ' + string(entity.catalogReadableS) + '
         s']
       fix: >-
-        Time ingest and recompute in `toolbox serve` logs and the derive laps,
+        Time ingest and recompute in `seikika serve` logs and the derive laps,
         then rerun experiments/backstage-compare/run.sh.
       rationale: >-
         Until ingest finishes, the portal answers from a partial catalog, and
@@ -263,7 +263,7 @@ scorecards:
       tolerance: 0.1
       evidence: "['p95 ' + string(entity.getP95Ms) + ' ms to read one entity']"
       fix: >-
-        Profile GET /v1/entities/{id} in crates/toolbox-api/src/routes.rs, then
+        Profile GET /v1/entities/{id} in crates/seikika-api/src/routes.rs, then
         rerun experiments/backstage-compare/run.sh.
       rationale: >-
         An entity page fans out into many reads, so the per-call tail becomes
@@ -278,11 +278,11 @@ scorecards:
       tolerance: 0.1
       evidence: "[string(entity.getRps) + ' entity reads per second']"
       fix: >-
-        Profile GET /v1/entities/{id} in crates/toolbox-api/src/routes.rs, then
+        Profile GET /v1/entities/{id} in crates/seikika-api/src/routes.rs, then
         rerun experiments/backstage-compare/run.sh.
       rationale: >-
         Throughput decides how many people, agents and CI jobs one instance
-        serves before it needs replicas. Toolbox's reads here are mostly
+        serves before it needs replicas. Seikika's reads here are mostly
         authorization-cache hits, and the load shares the CPUs: a ceiling, not a
         capacity.
     - name: list-latency
@@ -294,12 +294,12 @@ scorecards:
       tolerance: 0.1
       evidence: "['p95 ' + string(entity.listP95Ms) + ' ms to list 100 components']"
       fix: >-
-        Profile the filtered list in crates/toolbox-api/src/routes.rs
+        Profile the filtered list in crates/seikika-api/src/routes.rs
         (list_entities), then rerun experiments/backstage-compare/run.sh.
       rationale: >-
         Filtered lists back the catalog filter, ownership views and the MCP
         query tool, so a slow filter slows every "what does this team own"
-        question. Toolbox lost here in round 1, before the field index.
+        question. Seikika lost here in round 1, before the field index.
     - name: list-throughput
       level: bronze
       check: entity.listRps >= 20.0
@@ -309,7 +309,7 @@ scorecards:
       tolerance: 0.1
       evidence: "[string(entity.listRps) + ' filtered lists per second']"
       fix: >-
-        Profile the filtered list in crates/toolbox-api/src/routes.rs
+        Profile the filtered list in crates/seikika-api/src/routes.rs
         (list_entities), then rerun experiments/backstage-compare/run.sh.
       rationale: >-
         A filter that scans every entity gets slower as the catalog grows, so a
@@ -317,7 +317,7 @@ scorecards:
         about 2.4× behind, is published as written.
       links:
       - title: Round 1 list loss
-        url: https://github.com/loganvolkers/toolbox/blob/main/experiments/backstage-compare/RESULTS.md#round-1-toolbox-at-5ef6263-backstage-lists-empty
+        url: https://github.com/seikika/seikika/blob/main/experiments/backstage-compare/RESULTS.md#round-1-seikika-at-5ef6263-backstage-lists-empty
     - name: recovery
       level: bronze
       check: entity.recoveredS <= 60.0
@@ -327,7 +327,7 @@ scorecards:
       tolerance: 0.1
       evidence: "['readable again ' + string(entity.recoveredS) + ' s after kill -9']"
       fix: >-
-        Time the restart path in crates/toolbox-api/src/state.rs (the first
+        Time the restart path in crates/seikika-api/src/state.rs (the first
         recompute from Postgres), then rerun
         experiments/backstage-compare/run.sh.
       rationale: >-
@@ -345,18 +345,18 @@ scorecards:
     rationale: >-
       Memory, disk and the files an adopter keeps are paid for on every
       instance, preview environment and upgrade, and they decide the smallest
-      machine and team that can run a portal. Toolbox promises a deployment of
+      machine and team that can run a portal. Seikika promises a deployment of
       one container image plus Postgres; a heavy footprint would break that
       promise.
     links:
     - title: Static facts
-      url: https://github.com/loganvolkers/toolbox/blob/main/experiments/backstage-compare/RESULTS.md#static-facts-and-single-run-probes
+      url: https://github.com/seikika/seikika/blob/main/experiments/backstage-compare/RESULTS.md#static-facts-and-single-run-probes
     - title: 'Factor definitions: installability and footprint'
-      url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/backstage-comparison.md#2-factors
+      url: https://github.com/seikika/seikika/blob/main/docs/design/backstage-comparison.md#2-factors
     owner: group:maintainers
     track: vs-backstage
     levels: [bronze]
-    compare: {subject: product:toolbox, peers: [product:backstage]}
+    compare: {subject: product:seikika, peers: [product:backstage]}
     rules:
     - name: idle-memory
       level: bronze
@@ -383,7 +383,7 @@ scorecards:
       evidence: "[string(entity.rssLoadedMb) + ' MB resident with the catalog loaded']"
       fix: >-
         Measure with experiments/backstage-compare/measure.py and shrink the
-        derived state's copies in crates/toolbox-api/src/state.rs.
+        derived state's copies in crates/seikika-api/src/state.rs.
       rationale: >-
         Memory that grows with the catalog decides when an instance runs out as
         the organisation adds services; a portal that fits at 1k components can
@@ -416,7 +416,7 @@ scorecards:
       rationale: >-
         Every file an adopter keeps is theirs to merge on each upgrade, so a
         portal that starts as a generated app makes the adopter its maintainer.
-        Toolbox counts its repo starter; its served portal gives the same
+        Seikika counts its repo starter; its served portal gives the same
         standing.
     - name: adopter-lines
       level: bronze
@@ -450,13 +450,13 @@ scorecards:
       to change counts as a fail.
     links:
     - title: 'Factor definitions: secure defaults and extension isolation'
-      url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/backstage-comparison.md#2-factors
+      url: https://github.com/seikika/seikika/blob/main/docs/design/backstage-comparison.md#2-factors
     - title: Static facts
-      url: https://github.com/loganvolkers/toolbox/blob/main/experiments/backstage-compare/RESULTS.md#static-facts-and-single-run-probes
+      url: https://github.com/seikika/seikika/blob/main/experiments/backstage-compare/RESULTS.md#static-facts-and-single-run-probes
     owner: group:maintainers
     track: vs-backstage
     levels: [bronze]
-    compare: {subject: product:toolbox, peers: [product:backstage]}
+    compare: {subject: product:seikika, peers: [product:backstage]}
     rules:
     - name: anonymous-read
       level: bronze
@@ -464,7 +464,7 @@ scorecards:
       evidence: "['anonymousReadRefused is ' + string(entity.anonymousReadRefused)]"
       fix: >-
         Refuse a read without credentials outside dev mode in
-        crates/toolbox-authz/src/authn.rs.
+        crates/seikika-authz/src/authn.rs.
       rationale: >-
         A catalog readable without credentials hands the organisation's service
         map, owners and internal links to anyone who can reach the port.
@@ -474,21 +474,21 @@ scorecards:
       evidence: "['forgedIdentityRefused is ' + string(entity.forgedIdentityRefused)]"
       fix: >-
         Trust identity headers only in dev mode, in
-        crates/toolbox-authz/src/authn.rs.
+        crates/seikika-authz/src/authn.rs.
       rationale: >-
         If the server believes an identity header, any client that reaches it
-        can act as anyone, an operator included. Toolbox's image did this until
+        can act as anyone, an operator included. Seikika's image did this until
         the comparison found it.
       links:
       - title: No trusted header off loopback
-        url: https://github.com/loganvolkers/toolbox/blob/main/docs/decisions/D01M857ZB3FZJZWX8G3BF5W1RNR.md
+        url: https://github.com/seikika/seikika/blob/main/docs/decisions/D01M857ZB3FZJZWX8G3BF5W1RNR.md
     - name: anonymous-mcp
       level: bronze
       check: entity.anonymousMcpRefused
       evidence: "['anonymousMcpRefused is ' + string(entity.anonymousMcpRefused)]"
       fix: >-
         Authenticate /mcp as the REST API does, in
-        crates/toolbox-api/src/mcp.rs.
+        crates/seikika-api/src/mcp.rs.
       rationale: >-
         MCP reads the same catalog as the API, so an unauthenticated MCP
         endpoint is a side door around every access rule the API enforces.
@@ -498,21 +498,21 @@ scorecards:
       evidence: "['clientCannotDelete is ' + string(entity.clientCannotDelete)]"
       fix: >-
         Keep entity writes to connectors' ingest; offer no DELETE in
-        crates/toolbox-api/src/routes.rs.
+        crates/seikika-api/src/routes.rs.
       rationale: >-
         A read client's token ends up in scripts and agent configs; if it can
         delete entities, a leaked token becomes lost data. Backstage is scored
         on its read-only REST token; its MCP-capable token can still delete.
       links:
       - title: Two-token adjudication
-        url: https://github.com/loganvolkers/toolbox/blob/main/experiments/backstage-compare/ADJUDICATION.md#r35-is-the-two-token-arrangement-fair-to-backstage-p4
+        url: https://github.com/seikika/seikika/blob/main/experiments/backstage-compare/ADJUDICATION.md#r35-is-the-two-token-arrangement-fair-to-backstage-p4
     - name: loopback-by-default
       level: bronze
       check: entity.loopbackByDefault
       evidence: "['loopbackByDefault is ' + string(entity.loopbackByDefault)]"
       fix: >-
         Bind 127.0.0.1 unless `--listen` says otherwise, in
-        crates/toolbox-cli/src/main.rs.
+        crates/seikika-cli/src/main.rs.
       rationale: >-
         A server bound to every interface is reachable from the whole network
         before anyone has configured its auth. Both products' shipped images
@@ -522,8 +522,8 @@ scorecards:
       check: entity.ownerOnlyFields
       evidence: "['ownerOnlyFields is ' + string(entity.ownerOnlyFields)]"
       fix: >-
-        Keep facets and their filter guard in crates/toolbox-api/src/access.rs,
-        pinned by crates/toolbox-api/tests/authz.rs.
+        Keep facets and their filter guard in crates/seikika-api/src/access.rs,
+        pinned by crates/seikika-api/tests/authz.rs.
       rationale: >-
         Without field-level access, a sensitive field is either shown to every
         signed-in user or kept out of the catalog; a filter that can test a
@@ -549,7 +549,7 @@ scorecards:
         string(entity.extensionCredentialIsolated)]
       fix: >-
         Start connectors with a cleared environment and an allowlist, in
-        crates/toolbox-api/src/connectors.rs.
+        crates/seikika-api/src/connectors.rs.
       rationale: >-
         An extension that holds the server's database or authorization
         credentials can read and rewrite everything, so one compromised
@@ -557,9 +557,9 @@ scorecards:
         same-user connector read OpenFGA's memory on a host without Yama.
       links:
       - title: Credential isolation round 3
-        url: https://github.com/loganvolkers/toolbox/blob/main/experiments/backstage-compare/RESULTS.md#credential-isolation-round-3
+        url: https://github.com/seikika/seikika/blob/main/experiments/backstage-compare/RESULTS.md#credential-isolation-round-3
       - title: Adjudication R3.3
-        url: https://github.com/loganvolkers/toolbox/blob/main/experiments/backstage-compare/ADJUDICATION.md#r33-credential-isolation-f7-against-581be50
+        url: https://github.com/seikika/seikika/blob/main/experiments/backstage-compare/ADJUDICATION.md#r33-credential-isolation-f7-against-581be50
     facets: {summary: public, details: public}
 
   - name: vs-backstage-supply-chain
@@ -576,13 +576,13 @@ scorecards:
       published source.
     links:
     - title: Static facts
-      url: https://github.com/loganvolkers/toolbox/blob/main/experiments/backstage-compare/RESULTS.md#static-facts-and-single-run-probes
+      url: https://github.com/seikika/seikika/blob/main/experiments/backstage-compare/RESULTS.md#static-facts-and-single-run-probes
     - title: 'Factor definition: supply chain'
-      url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/backstage-comparison.md#2-factors
+      url: https://github.com/seikika/seikika/blob/main/docs/design/backstage-comparison.md#2-factors
     owner: group:maintainers
     track: vs-backstage
     levels: [bronze]
-    compare: {subject: product:toolbox, peers: [product:backstage]}
+    compare: {subject: product:seikika, peers: [product:backstage]}
     rules:
     - name: packages
       level: bronze
@@ -612,7 +612,7 @@ scorecards:
         replace the listed packages.
       rationale: >-
         Each known advisory is a finding the adopter's scanner raises and
-        someone must triage, even when, like Toolbox's unmaintained chrono
+        someone must triage, even when, like Seikika's unmaintained chrono
         crates, it is not exploitable.
       links:
       - {title: osv-scanner, url: https://github.com/google/osv-scanner}
@@ -667,20 +667,20 @@ scorecards:
       database surgery shortens recovery (DORA).
     links:
     - title: 'Factor definitions: upgrade cost, analysability and recoverability'
-      url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/backstage-comparison.md#2-factors
+      url: https://github.com/seikika/seikika/blob/main/docs/design/backstage-comparison.md#2-factors
     - title: Static facts
-      url: https://github.com/loganvolkers/toolbox/blob/main/experiments/backstage-compare/RESULTS.md#static-facts-and-single-run-probes
+      url: https://github.com/seikika/seikika/blob/main/experiments/backstage-compare/RESULTS.md#static-facts-and-single-run-probes
     owner: group:maintainers
     track: vs-backstage
     levels: [bronze]
-    compare: {subject: product:toolbox, peers: [product:backstage]}
+    compare: {subject: product:seikika, peers: [product:backstage]}
     rules:
     - name: offline-validate
       level: bronze
       check: entity.offlineValidate
       evidence: "['offlineValidate is ' + string(entity.offlineValidate)]"
       fix: >-
-        Keep `toolbox validate` and `toolbox test` working with no server or
+        Keep `seikika validate` and `seikika test` working with no server or
         database.
       rationale: >-
         If validation needs a running instance, CI and pre-commit checks need
@@ -691,7 +691,7 @@ scorecards:
       check: entity.changePreview
       evidence: "['changePreview is ' + string(entity.changePreview)]"
       fix: >-
-        Keep `toolbox plan --local --base <manifest>` diffing entities, scores
+        Keep `seikika plan --local --base <manifest>` diffing entities, scores
         and tuples.
       rationale: >-
         Without a preview, production is the first place a change shows that it
@@ -706,17 +706,17 @@ scorecards:
       tolerance: 0.1
       evidence: "[string(entity.upgradeLinesPerRelease) + ' lines to change per release']"
       fix: >-
-        Keep examples/repo-portal-starter passing `toolbox validate` and
-        `toolbox test` across releases
+        Keep examples/repo-portal-starter passing `seikika validate` and
+        `seikika test` across releases
         (experiments/backstage-compare/upgrade.py).
       rationale: >-
         Lines an adopter edits per release are a cost paid on every release for
         the portal's life, and adopters who skip it stay on unpatched releases.
-        Unlike measures: Toolbox counts required lines, Backstage its suggested
+        Unlike measures: Seikika counts required lines, Backstage its suggested
         template diff.
       links:
       - title: Unlike measures
-        url: https://github.com/loganvolkers/toolbox/blob/main/experiments/backstage-compare/ADJUDICATION.md#43-measures-that-compare-unlike-things
+        url: https://github.com/seikika/seikika/blob/main/experiments/backstage-compare/ADJUDICATION.md#43-measures-that-compare-unlike-things
     - name: rollback-steps
       level: bronze
       check: entity.rollbackManualStepsPerRelease == 0.0
@@ -753,20 +753,20 @@ scorecards:
       cannot join portals cannot grow past one.
     links:
     - title: 'Factor definition: org fit'
-      url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/backstage-comparison.md#2-factors
+      url: https://github.com/seikika/seikika/blob/main/docs/design/backstage-comparison.md#2-factors
     - title: DORA loosely coupled teams
       url: https://dora.dev/capabilities/loosely-coupled-teams/
     owner: group:maintainers
     track: vs-backstage
     levels: [bronze]
-    compare: {subject: product:toolbox, peers: [product:backstage]}
+    compare: {subject: product:seikika, peers: [product:backstage]}
     rules:
     - name: repo-scoped
       level: bronze
       check: entity.repoScopedWithoutServer
       evidence: "['repoScopedWithoutServer is ' + string(entity.repoScopedWithoutServer)]"
       fix: >-
-        Keep `toolbox report` scoring a repository with no server, as
+        Keep `seikika report` scoring a repository with no server, as
         actions/report does.
       rationale: >-
         A team that can score its own repository in CI, with no server, gets
@@ -774,9 +774,9 @@ scorecards:
         operate for it.
       links:
       - title: Repo value
-        url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/repo-value.md
+        url: https://github.com/seikika/seikika/blob/main/docs/design/repo-value.md
       - title: 'Decision: the report as a GitHub Action'
-        url: https://github.com/loganvolkers/toolbox/blob/main/docs/decisions/D01M7VXK0480000000000000000.md
+        url: https://github.com/seikika/seikika/blob/main/docs/decisions/D01M7VXK0480000000000000000.md
     - name: federation
       level: bronze
       check: entity.federates
@@ -788,9 +788,9 @@ scorecards:
         Neither product federates, so this rule is parity.
       links:
       - title: Federation design
-        url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/federation.md
+        url: https://github.com/seikika/seikika/blob/main/docs/design/federation.md
       - title: 'Decision: federation is designed, not built'
-        url: https://github.com/loganvolkers/toolbox/blob/main/docs/decisions/D01M7VWS4ZJ0000000000000000.md
+        url: https://github.com/seikika/seikika/blob/main/docs/decisions/D01M7VWS4ZJ0000000000000000.md
     facets: {summary: public, details: public}
 
   - name: vs-backstage-agent-surface
@@ -806,19 +806,19 @@ scorecards:
       integration.
     links:
     - title: 'Factor definition: agent surface'
-      url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/backstage-comparison.md#2-factors
+      url: https://github.com/seikika/seikika/blob/main/docs/design/backstage-comparison.md#2-factors
     - title: Static facts
-      url: https://github.com/loganvolkers/toolbox/blob/main/experiments/backstage-compare/RESULTS.md#static-facts-and-single-run-probes
+      url: https://github.com/seikika/seikika/blob/main/experiments/backstage-compare/RESULTS.md#static-facts-and-single-run-probes
     owner: group:maintainers
     track: vs-backstage
     levels: [bronze]
-    compare: {subject: product:toolbox, peers: [product:backstage]}
+    compare: {subject: product:seikika, peers: [product:backstage]}
     rules:
     - name: mcp-by-default
       level: bronze
       check: entity.mcpByDefault
       evidence: "['mcpByDefault is ' + string(entity.mcpByDefault)]"
-      fix: Serve /mcp from `toolbox serve` and stdio from `toolbox mcp`.
+      fix: Serve /mcp from `seikika serve` and stdio from `seikika mcp`.
       rationale: >-
         If MCP is an add-on, each adopter must install, configure and secure it
         before an agent can read the catalog. Both products serve it by default,
@@ -833,7 +833,7 @@ scorecards:
       evidence: "[string(entity.mcpToolsListBytes) + ' bytes in tools/list']"
       fix: >-
         Shorten tool descriptions and schemas in
-        crates/toolbox-api/src/mcp.rs.
+        crates/seikika-api/src/mcp.rs.
       rationale: >-
         An agent loads tools/list before it does anything, so its size is a
         fixed token cost on every session and crowds out the task's context.
@@ -847,7 +847,7 @@ scorecards:
       tolerance: 0.1
       evidence: "[string(entity.mcpGetEntityBytes) + ' bytes to read one entity']"
       fix: >-
-        Trim the get tool's response in crates/toolbox-api/src/mcp.rs to the
+        Trim the get tool's response in crates/seikika-api/src/mcp.rs to the
         fields an agent asks for.
       rationale: >-
         Reading an entity is an agent's routine call, so a bloated response
@@ -868,13 +868,13 @@ scorecards:
       counts it inside capabilities.
     links:
     - title: 'Factor definition: extensibility'
-      url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/backstage-comparison.md#2-factors
+      url: https://github.com/seikika/seikika/blob/main/docs/design/backstage-comparison.md#2-factors
     - title: Connector control
-      url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/connector-control.md
+      url: https://github.com/seikika/seikika/blob/main/docs/design/connector-control.md
     owner: group:maintainers
     track: vs-backstage
     levels: [bronze]
-    compare: {subject: product:toolbox, peers: [product:backstage]}
+    compare: {subject: product:seikika, peers: [product:backstage]}
     rules:
     - name: any-language
       level: bronze
@@ -911,23 +911,23 @@ scorecards:
     rationale: >-
       Functional completeness is the first question in a portal evaluation: a
       team will not adopt a portal that lacks what its developers use every
-      day. Toolbox is expected to lose here, and each missing capability is
+      day. Seikika is expected to lose here, and each missing capability is
       published as a loss rather than dropped.
     links:
     - title: Verdict
-      url: https://github.com/loganvolkers/toolbox/blob/main/experiments/backstage-compare/RESULTS.md#verdict
+      url: https://github.com/seikika/seikika/blob/main/experiments/backstage-compare/RESULTS.md#verdict
     - title: 'Decision: the Backstage parity audit'
-      url: https://github.com/loganvolkers/toolbox/blob/main/docs/decisions/D01M7V8P2VY0000000000000000.md
+      url: https://github.com/seikika/seikika/blob/main/docs/decisions/D01M7V8P2VY0000000000000000.md
     owner: group:maintainers
     track: vs-backstage
     levels: [bronze]
-    compare: {subject: product:toolbox, peers: [product:backstage]}
+    compare: {subject: product:seikika, peers: [product:backstage]}
     rules:
     - name: catalog-browse
       level: bronze
       check: entity.capCatalogBrowse
       evidence: "['capCatalogBrowse is ' + string(entity.capCatalogBrowse)]"
-      fix: Keep the catalog pages in the UI and `toolbox query`.
+      fix: Keep the catalog pages in the UI and `seikika query`.
       rationale: >-
         Browsing and filtering the catalog is a portal's base job; without it,
         people and agents cannot find a service or the team behind it.
@@ -935,7 +935,7 @@ scorecards:
       level: bronze
       check: entity.capOwnership
       evidence: "['capOwnership is ' + string(entity.capOwnership)]"
-      fix: Keep `toolbox owner` and the owner_of MCP tool.
+      fix: Keep `seikika owner` and the owner_of MCP tool.
       rationale: >-
         Incident response, reviews and access requests start from who owns a
         service; a portal that cannot answer through teams leaves people asking
@@ -944,7 +944,7 @@ scorecards:
       level: bronze
       check: entity.capGraph
       evidence: "['capGraph is ' + string(entity.capGraph)]"
-      fix: Keep `toolbox graph` and /v1/entities/{id}/graph.
+      fix: Keep `seikika graph` and /v1/entities/{id}/graph.
       rationale: >-
         Relations show what a change or an outage affects; without a graph,
         impact analysis means reading descriptors one by one.
@@ -953,7 +953,7 @@ scorecards:
       check: entity.capDocsSearch
       evidence: "['capDocsSearch is ' + string(entity.capDocsSearch)]"
       fix: >-
-        Index documentation text with the entities, so `toolbox search` finds
+        Index documentation text with the entities, so `seikika search` finds
         answers inside documents as well as names and titles.
       rationale: >-
         Developers search for answers in documentation, not only for entity
@@ -961,7 +961,7 @@ scorecards:
         another tool.
       links:
       - title: Search in the v1 scope
-        url: https://github.com/loganvolkers/toolbox/blob/main/docs/v1-spec.md#2-scope
+        url: https://github.com/seikika/seikika/blob/main/docs/v1-spec.md#2-scope
     - name: docs
       level: bronze
       check: entity.capDocs
@@ -975,7 +975,7 @@ scorecards:
         about a service.
       links:
       - title: The box and the tools it carries
-        url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/toolbox-and-tools.md
+        url: https://github.com/seikika/seikika/blob/main/docs/design/seikika-and-tools.md
     - name: templates
       level: bronze
       check: entity.capTemplates
@@ -985,13 +985,13 @@ scorecards:
         decision that paused them is lifted.
       rationale: >-
         Templates are how a platform spreads its defaults to new services;
-        without them, each service starts as a copy of an old one. Toolbox's
+        without them, each service starts as a copy of an old one. Seikika's
         self-service actions are paused while their coordination is reviewed.
       links:
       - title: 'Decision: self-service actions are paused'
-        url: https://github.com/loganvolkers/toolbox/blob/main/docs/decisions/D01M7VTP0HG0000000000000000.md
+        url: https://github.com/seikika/seikika/blob/main/docs/decisions/D01M7VTP0HG0000000000000000.md
       - title: How an action run would work
-        url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/action-runs.md
+        url: https://github.com/seikika/seikika/blob/main/docs/design/action-runs.md
     - name: scorecards
       level: bronze
       check: entity.capScorecards
@@ -1012,7 +1012,7 @@ scorecards:
         repository.
       links:
       - title: UI extensions
-        url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/frontend.md#3-the-architecture-three-tiers-of-action-ui-one-design-system
+        url: https://github.com/seikika/seikika/blob/main/docs/design/frontend.md#3-the-architecture-three-tiers-of-action-ui-one-design-system
     - name: kubernetes
       level: bronze
       check: entity.capKubernetes
@@ -1024,7 +1024,7 @@ scorecards:
         kubectl at the first question.
       links:
       - title: How connectors run
-        url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/connector-control.md
+        url: https://github.com/seikika/seikika/blob/main/docs/design/connector-control.md
     - name: notifications
       level: bronze
       check: entity.capNotifications
@@ -1037,7 +1037,7 @@ scorecards:
         noticed only when someone happens to open the portal.
       links:
       - title: Campaigns, which would send them
-        url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/campaigns.md
+        url: https://github.com/seikika/seikika/blob/main/docs/design/campaigns.md
     - name: permission-rule
       level: bronze
       check: entity.capPermissionRule

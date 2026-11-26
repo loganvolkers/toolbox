@@ -1,4 +1,4 @@
-.toolbox-ui {
+.seikika-ui {
   color-scheme: light dark;
   --bg: #f7f6f2;
   --fg: #1d1d1b;
@@ -34,7 +34,7 @@
   font: 15px/1.55 system-ui, -apple-system, "Segoe UI", sans-serif;
 }
 @media (prefers-color-scheme: dark) {
-  .toolbox-ui {
+  .seikika-ui {
     --bg: #141413;
     --fg: #ecebe7;
     --muted: #b0afa8;
@@ -62,24 +62,24 @@
     --shadow: none;
   }
 }
-:where(.toolbox-ui) *, :where(.toolbox-ui) *::before, :where(.toolbox-ui) *::after { box-sizing: border-box; }
-:where(.toolbox-ui) input::placeholder { color: var(--muted); opacity: 1; }
-:where(.toolbox-ui) a { color: var(--accent); text-underline-offset: 3px; }
-:where(.toolbox-ui) :is(a, button, input, select, summary):focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-:where(.toolbox-ui) .tb-frame { max-width: 1120px; margin: 0 auto; padding: 24px 20px 56px; }
-:where(.toolbox-ui) .tb-page-header { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: 8px 16px; margin-block-end: 12px; }
-:where(.toolbox-ui) .tb-page-header :is(h1, h2) { margin: 0; overflow-wrap: anywhere; }
-:where(.toolbox-ui) .tb-page-heading { min-width: 0; }
-:where(.toolbox-ui) .tb-page-description, :where(.toolbox-ui) .tb-meta { color: var(--muted); margin: 4px 0; overflow-wrap: anywhere; }
-:where(.toolbox-ui) .tb-section { padding: 16px; border: 1px solid var(--line); border-radius: 12px; background: var(--card); margin-block: 12px; }
-:where(.toolbox-ui) .tb-section h3 { margin-block-start: 0; }
-:where(.toolbox-ui) .tb-entity-meta { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 20px; margin-block: 8px; }
-:where(.toolbox-ui) .tb-entity-meta a { display: inline-flex; align-items: center; min-block-size: 24px; }
-:where(.toolbox-ui) .tb-entity-meta p, :where(.toolbox-ui) .tb-entity-meta ul { margin: 0; }
-:where(.toolbox-ui) .tb-entity-meta ul { display: flex; flex-wrap: wrap; gap: 6px 16px; list-style: none; padding: 0; }
-:where(.toolbox-ui) .tb-level { display: inline-block; font-weight: 650; text-transform: capitalize; color: var(--level-color, var(--muted)); }
-:where(.toolbox-ui) .tb-level[data-level="none"] { --level-color: var(--none-ink); }
-:where(.toolbox-ui) .tb-level[data-level="bronze"] { --level-color: var(--bronze-ink); }
-:where(.toolbox-ui) .tb-level[data-level="silver"] { --level-color: var(--silver-ink); }
-:where(.toolbox-ui) .tb-level[data-level="gold"] { --level-color: var(--gold-ink); }
-@media (max-width: 600px) { :where(.toolbox-ui) .tb-frame { padding-inline: 12px; } }
+:where(.seikika-ui) *, :where(.seikika-ui) *::before, :where(.seikika-ui) *::after { box-sizing: border-box; }
+:where(.seikika-ui) input::placeholder { color: var(--muted); opacity: 1; }
+:where(.seikika-ui) a { color: var(--accent); text-underline-offset: 3px; }
+:where(.seikika-ui) :is(a, button, input, select, summary):focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+:where(.seikika-ui) .seikika-frame { max-width: 1120px; margin: 0 auto; padding: 24px 20px 56px; }
+:where(.seikika-ui) .seikika-page-header { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: 8px 16px; margin-block-end: 12px; }
+:where(.seikika-ui) .seikika-page-header :is(h1, h2) { margin: 0; overflow-wrap: anywhere; }
+:where(.seikika-ui) .seikika-page-heading { min-width: 0; }
+:where(.seikika-ui) .seikika-page-description, :where(.seikika-ui) .seikika-meta { color: var(--muted); margin: 4px 0; overflow-wrap: anywhere; }
+:where(.seikika-ui) .seikika-section { padding: 16px; border: 1px solid var(--line); border-radius: 12px; background: var(--card); margin-block: 12px; }
+:where(.seikika-ui) .seikika-section h3 { margin-block-start: 0; }
+:where(.seikika-ui) .seikika-entity-meta { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 20px; margin-block: 8px; }
+:where(.seikika-ui) .seikika-entity-meta a { display: inline-flex; align-items: center; min-block-size: 24px; }
+:where(.seikika-ui) .seikika-entity-meta p, :where(.seikika-ui) .seikika-entity-meta ul { margin: 0; }
+:where(.seikika-ui) .seikika-entity-meta ul { display: flex; flex-wrap: wrap; gap: 6px 16px; list-style: none; padding: 0; }
+:where(.seikika-ui) .seikika-level { display: inline-block; font-weight: 650; text-transform: capitalize; color: var(--level-color, var(--muted)); }
+:where(.seikika-ui) .seikika-level[data-level="none"] { --level-color: var(--none-ink); }
+:where(.seikika-ui) .seikika-level[data-level="bronze"] { --level-color: var(--bronze-ink); }
+:where(.seikika-ui) .seikika-level[data-level="silver"] { --level-color: var(--silver-ink); }
+:where(.seikika-ui) .seikika-level[data-level="gold"] { --level-color: var(--gold-ink); }
+@media (max-width: 600px) { :where(.seikika-ui) .seikika-frame { padding-inline: 12px; } }

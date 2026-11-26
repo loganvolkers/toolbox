@@ -1,0 +1,52 @@
+apiVersion: seikika.com/assessment/v1
+entity: assessment:rule-quality/rule:seikika/vs-backstage-change-safety/rollback-steps
+rubric: assessment-quality
+subjectHash: af196181d810
+assessor: {kind: agent, name: cursor-reviewer-17, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: supported
+    verdict: pass
+    reason: >-
+      The key claim in
+      portal/assessments/rule-quality/rule/seikika/vs-backstage-change-safety/rollback-steps.yaml
+      holds. `git ls-tree 581be50` and `git ls-tree v0.1.1` on
+      crates/seikika-store/migrations both list only 0001_inputs.sql and
+      0002_tokens.sql, and `git diff --stat v0.1.1 581be50` there is empty.
+      0003_runs.sql arrived in 768751b (2026-11-24). upgrade.py:91-123, 53-64,
+      81-88 and 100-104 do what the reasons say. The field, fix and rationale
+      are backstage-comparison.yaml:105-107, 731-732 and 733-739, and the bar
+      is README.md:49. One misattribution: the quoted "rollback is an image"
+      is from docs/design/backstage-comparison.md:59. RESEARCH.md:70 says
+      "Rollback by image is a charter claim", which means the same thing.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      measures-intent is the right fail. The rubric asks whether an entity
+      "could pass while missing the intent"
+      (portal/standards/meta.yaml:1160-1161), and a 0 measured across no
+      schema change does that. 0003_runs.sql is additive (`CREATE TABLE IF NOT
+      EXISTS`, 0003_runs.sql:3-12), so a rerun would probably still give 0.
+      That needs the probe to run, though, and doesn't support a pass. The
+      hard-to-game, fix and threshold passes match upgrade.py and
+      README.md:49.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      The fail rests on a git fact anyone can check in seconds (identical
+      migration sets). The passes rest on upgrade.py's code and the
+      pre-registered bar, so a second assessor would agree.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      Requiring the release pair to differ in crates/seikika-store/migrations,
+      or reporting "no migration crossed", removes the vacuous 0 that fails
+      measures-intent. The reason's secondary point, that failed serve steps
+      are not "manual steps per release", isn't addressed by the suggestion.
+      It is a naming quibble beside the main failure, though, and wouldn't
+      keep the verdict at fail on its own.
+summary: >-
+  A sharp, correct finding: round 3 rolled back across identical
+  migrations, so the 0 tested nothing, and 0003_runs.sql has landed since.
+  The citations hold except for one quote that belongs to the design doc
+  rather than RESEARCH.md. The suggestion fixes the main failure.

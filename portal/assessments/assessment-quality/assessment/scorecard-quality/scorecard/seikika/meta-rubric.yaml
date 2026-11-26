@@ -1,0 +1,58 @@
+apiVersion: seikika.com/assessment/v1
+entity: assessment:scorecard-quality/scorecard:seikika/meta-rubric
+rubric: assessment-quality
+subjectHash: 4549d6e1cd36
+assessor: {kind: agent, name: cursor-reviewer-34, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: supported
+    verdict: fail
+    reason: >-
+      The rule and design citations in
+      portal/assessments/scorecard-quality/scorecard/seikika/meta-rubric.yaml
+      hold. portal/standards/meta.yaml:1079-1081 cites D80, :1095 is the
+      bronze ratchet, :1097-1144 are the four rules, and :1139-1140 is
+      "sharpen or drop". crates/seikika-cli/src/model.rs:257-262 matches
+      verdicts by criterion name.
+      docs/design/scorecards-for-scorecards.md:236-240 rejects invented
+      criteria, and :326-330 lists assessor agreement as not built.
+      docs/design/thresholds.md:45 and
+      docs/design/meta-standards-review.md:163 ask for that agreement.
+      portal/results.json has all five rubrics at silver or above, with
+      sdlc-stage-quality at gold. The count does not: "threshold-justified had
+      passed all 19 assessments" is not the tracked set of 15, all of which
+      pass it, nor the larger working tree, which has fails.
+    suggestion: >-
+      Drop "all 19" or replace it with the assessments actually counted. The
+      sharpen-versus-verdict point already stands on model.rs:257-262.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      one-concern and levels-are-a-ladder should pass: the four rules are one
+      audience, and each level needs the one below (meta.yaml:1095-1144).
+      no-obvious-gap should fail: the design's own next step is two assessors
+      and Cohen's kappa, and it says that is not built. actionable should
+      fail: sharpening the question leaves the old all-pass verdicts, and
+      dropping the criterion makes existing assessments fail assess check. The
+      wrong count is not what those verdicts rest on.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      Agreement-not-built is a labelled gap in the design, and the fix text
+      does not mention re-assessment. A second assessor fails those two
+      criteria and passes the concern and the ladder without using the number
+      19.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      Rewriting discriminates' fix so it says to re-assess after sharpening,
+      and to assess more entities when there are fewer than three, would make
+      the gold fix change the verdicts the rule reads. Keeping assessments per
+      assessor and adding an agreement rule would close the
+      missing-calibration gap. Both suggestions move the fails they are
+      attached to.
+summary: >-
+  The meta-rubric assessment is right that assessor agreement is unbuilt
+  and that "sharpen or drop" does not change stored verdicts. Its "all 19
+  assessments" count does not match the 15 tracked rule-quality files or
+  the tree as it stands.

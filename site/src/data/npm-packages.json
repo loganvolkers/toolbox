@@ -1,14 +1,14 @@
 [
   {
-    "name": "@toolbox-dev/astro-report",
-    "description": "Astro integration for publishing Toolbox catalog and scorecard snapshots.",
+    "name": "@seikika/astro-report",
+    "description": "Astro integration for publishing Seikika catalog and scorecard snapshots.",
     "source": "report-ui",
-    "registry": "https://www.npmjs.com/package/@toolbox-dev/astro-report"
+    "registry": "https://www.npmjs.com/package/@seikika/astro-report"
   },
   {
-    "name": "@toolbox-dev/ui",
-    "description": "Vue design system, entity pages, and scorecard components for Toolbox Astro portals.",
+    "name": "@seikika/ui",
+    "description": "Vue design system, entity pages, and scorecard components for Seikika Astro portals.",
     "source": "ui-kit",
-    "registry": "https://www.npmjs.com/package/@toolbox-dev/ui"
+    "registry": "https://www.npmjs.com/package/@seikika/ui"
   }
 ]

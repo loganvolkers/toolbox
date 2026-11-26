@@ -1,0 +1,56 @@
+apiVersion: seikika.com/assessment/v1
+entity: rule:seikika/maintainer-agent-doc/within-budget
+rubric: rule-quality
+subjectHash: cf2d520451a5
+assessor: {kind: agent, name: cursor-assessor-11, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: measures-intent
+    verdict: fail
+    reason: >-
+      The rationale is the context cost paid on every task
+      (portal/standards/agent-docs.yaml:110-113), but the check counts
+      newline-separated lines
+      (crates/seikika-connector-workspace/src/agentsmd.rs:24). This repo's
+      AGENTS.md shows the gap: 194 lines but 18,140 bytes, and AGENTS.md:59
+      alone is one 2,748-character line. A file of 400 unwrapped paragraphs
+      passes with several times the context of a wrapped 600-line one. Each
+      file is also measured alone, though CLAUDE.md imports AGENTS.md with
+      `@AGENTS.md`, so Claude Code loads both.
+    suggestion: >-
+      Have agentsmd.rs also report bytes or words (or an estimate of tokens).
+      Check `entity.lines <= 500 && entity.bytes <= N`, with N chosen and
+      labelled in docs/design/thresholds.md. Alternatively, count lines after
+      soft-wrapping at a fixed width.
+  - criterion: hard-to-game
+    verdict: fail
+    reason: >-
+      The cheapest way to bring a 600-line file under 500 lines is to unwrap
+      its paragraphs into single lines. That changes the line count the check
+      reads (agent-docs.yaml:104) and leaves the context cost untouched.
+      Moving detail into a linked document, which the fix asks for, costs
+      more.
+    suggestion: >-
+      Same change as for measures-intent: bound a size that unwrapping doesn't
+      change (bytes or words).
+  - criterion: fix-leads-to-pass
+    verdict: pass
+    reason: >-
+      The evidence is the line count, e.g. ['600 lines'] on the partial
+      fixture (portal/tests/standards.test.yaml:478-489). The fix gives the
+      number and how to reduce it: move detail into a linked document
+      (agent-docs.yaml:105-109).
+  - criterion: threshold-justified
+    verdict: pass
+    reason: >-
+      500 lines is the agents.md v1.1 proposal's "aim for under 500 lines".
+      The proposal is cited (agent-docs.yaml:115-116) and labelled as not
+      ratified, both in the rationale and in
+      docs/design/agents-md-standards.md:25-27,35. Silver is D75's placement
+      (docs/decisions/D01M7W4Y2K00000000000000000.md). I read the proposal
+      only through the design doc's summary, not the GitHub issue itself.
+summary: >-
+  The number is honestly sourced and labelled, but lines are a proxy for
+  context that unwrapping defeats. This repo's own AGENTS.md has a
+  2,748-character line and is about 18 KB at 194 lines. Adding a byte or
+  word bound would make "within budget" mean what the rationale says.

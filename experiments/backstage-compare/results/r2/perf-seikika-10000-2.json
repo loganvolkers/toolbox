@@ -1,0 +1,40 @@
+{
+  "arm": "seikika",
+  "components": 10000,
+  "readyS": 0.96,
+  "catalogReadableS": 2.24,
+  "rssIdleMb": 89.7,
+  "rssLoadedMb": 179.3,
+  "rssAfterLoadMb": 206.7,
+  "recoveredS": 1.13,
+  "reads": [
+    {
+      "url": "http://127.0.0.1:18090/v1/entities/component:c5000",
+      "rps": 53246.2,
+      "p50ms": 0.26,
+      "p95ms": 0.53,
+      "p99ms": 1.58,
+      "ok": 1.0,
+      "codes": {
+        "200": 532727
+      },
+      "errors": {
+        "aborted due to deadline": 15
+      }
+    },
+    {
+      "url": "http://127.0.0.1:18090/v1/entities?kind=Component&limit=100&filter=entity.owner%3D%3D%27group%3Ag3%27",
+      "rps": 3487.6,
+      "p50ms": 4.22,
+      "p95ms": 6.55,
+      "p99ms": 7.63,
+      "ok": 1.0,
+      "codes": {
+        "200": 34872
+      },
+      "errors": {
+        "aborted due to deadline": 16
+      }
+    }
+  ]
+}

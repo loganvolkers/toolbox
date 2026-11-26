@@ -1,0 +1,81 @@
+apiVersion: seikika.com/assessment/v1
+entity: crate:seikika-telemetry
+rubric: crate-design
+subjectHash: 5f26911e4658
+assessor: {kind: agent, name: cursor-assessor-20, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: one-responsibility
+    verdict: pass
+    reason: >-
+      The crate docs state one job and a boundary. It is "the sole place that
+      installs exporters, builds the resource, owns the SemVer metric catalog,
+      and bridges `tracing` to OTLP logs", and other crates emit through
+      `tracing` and catalog helpers only
+      (crates/seikika-telemetry/src/lib.rs:3-5). That matches its spec row
+      (docs/v1-spec.md:97). The product-analytics trait is a small, separate
+      sink kept apart from operational telemetry by D6
+      (src/analytics.rs:1-15). One part of the catalog is stale:
+      METRIC_CATALOG.md:22 and :27 still call the run metrics "Stub until M5".
+      M5 runs are built, but no crate records `run_transitions_total` or
+      `action_runs_total` (a search outside the crate finds no caller).
+  - criterion: small-contract
+    verdict: pass
+    reason: >-
+      Callers use a handful of documented entry points: - `init` and
+      `TelemetryOptions` (crates/seikika-cli/src/server.rs: 122-123,
+      client.rs:64); - the `record_*` and `set_snapshot_lag` helpers
+      (seikika-api state.rs: 183, routes.rs:173, mcp.rs:1032, access.rs:194,
+      connectors.rs:86); - `metrics_text` (routes.rs:174) and
+      `current_trace_id` (http_trace.rs:21). No caller touches the `Catalog`
+      struct, which lives in a private module (lib.rs:17). Two rough edges
+      remain: - `TelemetryOptions.prometheus` and `SEIKIKA_METRICS_PROMETHEUS`
+      are read and then discarded (`let _ = prometheus_on;`, src/init.rs:105-
+      114), though README.md:30 documents them as a toggle; - doc coverage is
+      44%: the getters and name constants in src/catalog.rs are undocumented.
+  - criterion: replaceable-defaults
+    verdict: fail
+    reason: >-
+      Only this crate depends on opentelemetry*, prometheus and
+      tracing-opentelemetry (crates/seikika-telemetry/Cargo.toml:11-19; no
+      other Cargo.toml names them). The helpers callers actually use take
+      plain strings and numbers (src/catalog.rs:115-166). But the public
+      getters `ingest_records()` … `index_freshness_seconds()` return
+      prometheus types such as IntCounter, Gauge, HistogramVec and
+      IntCounterVec (src/catalog.rs:59-113). They also panic if `init` has not
+      run (catalog.rs:47-49). No caller uses them today, but any caller that
+      did would bind itself to the prometheus crate. That contradicts the
+      crate's own "helpers only" contract.
+    suggestion: >-
+      Make the getters in src/catalog.rs:59-113 `pub(crate)`, or remove them,
+      so that the public surface is the `record_*` helpers. Add Seikika-typed
+      helpers, such as `record_run_transition(state)`, for the metrics that M5
+      now needs.
+  - criterion: tests-match-risk
+    verdict: fail
+    reason: >-
+      The end-to-end export path is well covered. The CI job `otel-testbed`
+      (.github/workflows/ci.yml:114-127) runs a pinned collector against
+      `seikika serve`. It checks spans, catalog metrics, service.name and
+      log-to-trace correlation (experiments/otel-testbed/rubric.yaml).
+      tests/prom_catalog.rs asserts every required name is scraped. The risky
+      branches inside the crate are not tested: - `scrub_value` slices
+      `&value[..MAX]` at byte 256 (src/scrub.rs:19). That panics when the byte
+      falls inside a multi-byte UTF-8 character, and the only test uses short
+      values (scrub.rs:29-33). - The CI/prod failure on a missing service name
+      is untested. The test named prod_rejects_explicit_empty_when_forced only
+      builds a Local resource (src/resource.rs:125-131). - Fail-fast in CI
+      mode when OTLP init fails (init.rs) has no test.
+    suggestion: >-
+      Truncate on a char boundary (for example with `value.char_indices()`)
+      and test a long multi-byte value. Make the resource test use
+      TelemetryMode::Ci with an empty OTEL_SERVICE_NAME and assert
+      MissingServiceName. Add a test that `init` in Ci mode returns an error
+      for an unreachable or invalid OTLP endpoint.
+summary: >-
+  The crate is clearly scoped, sits behind a small helper API, and is the
+  only crate that names OpenTelemetry or Prometheus. A pinned-collector CI
+  job checks the export path end to end. The weak spots are inside: public
+  getters still hand out prometheus types, the Prometheus toggle is a
+  no-op, the run metrics are still stubs after M5, and scrub_value can
+  panic on multi-byte input with no test to catch it.

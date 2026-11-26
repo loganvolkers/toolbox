@@ -1,0 +1,63 @@
+apiVersion: seikika.com/assessment/v1
+entity: rule:seikika/review-sdlc-stage/assessed
+rubric: rule-quality
+subjectHash: 58731f333662
+assessor: {kind: agent, name: cursor-assessor-05, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: measures-intent
+    verdict: fail
+    reason: >-
+      A stage's hash is the hash of its YAML entry alone
+      (crates/seikika-connector-workspace/src/data.rs:250). The
+      sdlc-stage-quality rubric, however, judges what the entry points at:
+      "its docs and checks", and "try its commands"
+      (portal/standards/sdlc.yaml:396-399). Its `executable-exit` criterion
+      asks whether the `checks:` would fail (sdlc.yaml:401-405). For
+      operator/validate, that check is scripts/validate-parity.py
+      (portal/sdlc/stages/operator.yaml:41). Rewriting that script so it no
+      longer compares anything leaves the review `fresh`. The rationale scopes
+      freshness to "the current declaration" (sdlc.yaml:359-362), so silver
+      says less than the rubric that defines the review.
+    suggestion: >-
+      Fold into the stage hash the content of each `checks:` path that exists,
+      and of each `commands:` script that resolves to a file in the
+      repository, since those are what executable-exit and agent-can-complete
+      judge. Leave the shared design docs out (one edit to docs/design/sdlc.md
+      would stale five operator stages), and say so in the rationale.
+  - criterion: hard-to-game
+    verdict: fail
+    reason: >-
+      Silver accepts any schema-valid file with a verdict for each of the four
+      criteria and reasons of at least 10 characters
+      (schema/assessment.schema.json:32-36,
+      crates/seikika-api/src/assess.rs:157-166). The rubric asks the assessor
+      to try the stage's commands, but nothing records whether anyone did.
+      Four `pass` verdicts saying "Commands look right." reach silver for
+      operator/plan, whose `checks:` list is empty
+      (portal/sdlc/stages/operator.yaml:65).
+    suggestion: >-
+      Have silver require that the review cites the stage's own sources. Use
+      the connector's `cited` list
+      (crates/seikika-connect/src/assessment.rs:220-228) and require at least
+      one path from the stage's `checks:` or `docs:`, or its stage file.
+  - criterion: fix-leads-to-pass
+    verdict: pass
+    reason: >-
+      The fix gives the brief command with the stage id shape
+      `sdlc-stage:<layer>/<stage>` and the check (sdlc.yaml:355-358). The
+      brief's subjectHash makes the review fresh. The fixture shows fresh and
+      stale apart: demo-done/plan passes and demo-gap/release (stale) fails
+      (portal/tests/standards.test.yaml:1081-1085).
+  - criterion: threshold-justified
+    verdict: pass
+    reason: >-
+      No number. Silver for a current review is the review-* row, which lists
+      sdlc-stage (docs/design/thresholds.md:55), and change C1 in
+      docs/design/meta-standards-review.md:136. The card is advisory
+      (sdlc.yaml:330), per D79.
+summary: >-
+  Fails. "Current" here means the YAML declaration is unchanged, but the
+  review judges the checks and commands that declaration points at, so a
+  rewritten check script leaves an old verdict fresh. Silver also accepts
+  a review that cites nothing from the stage.

@@ -2,12 +2,12 @@
 # Box A/B setup: the pinned tools and clean copies of the PostHog fork, rebuilt from nothing, so a
 # reclaimed container costs one rerun of this script. Idempotent.
 #
-#   experiments/box-ab/harness/setup.sh            # tools, toolbox, the reference checkout
+#   experiments/box-ab/harness/setup.sh            # tools, seikika, the reference checkout
 #   AB_HOME=/somewhere experiments/box-ab/harness/setup.sh
 #
 # Layout under $AB_HOME (default /tmp/box-ab):
 #   bin/          what both arms get on PATH: semgrep, ruff (PostHog's pin), zizmor, actionlint
-#   box-bin/      arm B only: toolbox and its connectors
+#   box-bin/      arm B only: seikika and its connectors
 #   upgrade/      ruff 0.15.0, for phase 4
 #   posthog/      the fork at $COMMIT, never edited (truth runs here)
 set -euo pipefail
@@ -52,9 +52,9 @@ pin ruff "$RUFF_UP" "$AB_HOME/upgrade/ruff-$RUFF_UP"
 pin zizmor "$ZIZMOR" "$AB_HOME/venv/zizmor-$ZIZMOR" && ln -sf "$AB_HOME/venv/zizmor-$ZIZMOR/bin/zizmor" "$AB_HOME/bin/zizmor"
 [ -x "$AB_HOME/bin/actionlint" ] || "$REPO/scripts/ci-tools.sh" "$AB_HOME/bin" actionlint
 
-# Toolbox for arm B, from this checkout (release build: --against and report rerun connectors).
+# Seikika for arm B, from this checkout (release build: --against and report rerun connectors).
 (cd "$REPO" && cargo build -q --release --locked)
-for b in toolbox toolbox-connector-github toolbox-connector-git-files; do
+for b in seikika seikika-connector-github seikika-connector-git-files; do
   [ -x "$REPO/target/release/$b" ] && ln -sf "$REPO/target/release/$b" "$AB_HOME/box-bin/$b"
 done
 
@@ -72,5 +72,5 @@ fi
 PATH="$AB_HOME/bin:$PATH"
 semgrep --version | sed 's/^/semgrep /'; ruff --version; zizmor --version; actionlint -version | head -1
 "$AB_HOME/upgrade/ruff-$RUFF_UP/bin/ruff" --version | sed 's/^/upgrade: /'
-"$AB_HOME/box-bin/toolbox" --version 2>/dev/null || echo "toolbox built"
+"$AB_HOME/box-bin/seikika" --version 2>/dev/null || echo "seikika built"
 echo "ready: $AB_HOME"

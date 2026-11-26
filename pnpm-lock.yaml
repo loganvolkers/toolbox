@@ -13,7 +13,7 @@ importers:
       '@astrojs/vue':
         specifier: 7.1.6
         version: 7.1.6(@types/node@26.6.7)(astro@7.4.13(@types/node@26.6.7)(esbuild@0.28.2)(yaml@2.9.1))(esbuild@0.28.2)(vue@3.5.46(typescript@5.9.3))(yaml@2.9.1)
-      '@toolbox-dev/ui':
+      '@seikika/ui':
         specifier: workspace:^
         version: link:../ui-kit
     devDependencies:
@@ -53,7 +53,7 @@ importers:
       '@astrojs/starlight':
         specifier: ^0.43.1
         version: 0.43.1(astro@7.4.13(@types/node@26.6.7)(esbuild@0.28.2)(yaml@2.9.1))(typescript@5.9.3)
-      '@toolbox-dev/astro-report':
+      '@seikika/astro-report':
         specifier: workspace:^
         version: link:../report-ui
       astro:
@@ -71,7 +71,7 @@ importers:
       '@astrojs/vue':
         specifier: 7.1.6
         version: 7.1.6(@types/node@26.6.7)(astro@7.4.13(@types/node@26.6.7)(esbuild@0.28.2)(yaml@2.9.1))(esbuild@0.28.2)(vue@3.5.46(typescript@5.9.3))(yaml@2.9.1)
-      '@toolbox-dev/ui':
+      '@seikika/ui':
         specifier: workspace:^
         version: link:../ui-kit
       astro:

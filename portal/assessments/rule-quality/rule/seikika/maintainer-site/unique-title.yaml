@@ -1,0 +1,51 @@
+apiVersion: seikika.com/assessment/v1
+entity: rule:seikika/maintainer-site/unique-title
+rubric: rule-quality
+subjectHash: 1a746149ea34
+assessor: {kind: agent, name: cursor-assessor-13, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: measures-intent
+    verdict: pass
+    reason: >-
+      `duplicateTitle` compares the page's trimmed top-level title, ignoring
+      case, with every other .md/.mdx under site/src/content/docs
+      (crates/seikika-connector-workspace/src/site.rs:21, 57-74). That covers
+      the title Starlight shows in search, browser tabs and the default
+      sidebar label. Drafts are included, so a draft sharing a title marks
+      both pages, as in the fixtures draft.md and index.md
+      (portal/tests/standards.test.yaml:737-740). That is a little strict for
+      unpublished pages, but it still serves the intent.
+  - criterion: hard-to-game
+    verdict: pass
+    reason: >-
+      To pass, a page needs a title no other page has
+      (portal/standards/site.yaml:144). Retitling is the work the rule asks
+      for. A meaningless suffix like "Secrets 2" would pass, but it is no
+      cheaper than a descriptive title such as "Secrets for operators", and it
+      would show in review. An empty title never counts as a duplicate
+      (crates/seikika-connector-workspace/src/site.rs:21), but deleting the
+      title fails bronze `titled` (site.yaml:79-81). No suppression or field
+      bypasses the comparison.
+  - criterion: fix-leads-to-pass
+    verdict: pass
+    reason: >-
+      The fix says to give the page a `title:` no other page in
+      site/src/content/docs uses (portal/standards/site.yaml:147-149).
+      Renaming either duplicate clears both. The evidence quotes the shared
+      title but not the other page's path (site.yaml:145-146), so the agent
+      has to search for it. That is one step, and the fix names the directory
+      to search.
+  - criterion: threshold-justified
+    verdict: pass
+    reason: >-
+      docs/design/thresholds.md:40 places it at gold on principle: duplicate
+      titles can't be told apart in search or the sidebar, and that is
+      "polish, not access". That fits the gold principle at
+      thresholds.md:24-25: neither bronze nor silver implies distinct titles.
+      site-standards.md's ladder (lines 23-25) doesn't mention the rule yet.
+summary: >-
+  A sound gold rule: the fact is exact, the cheapest way to pass is a
+  better title, and thresholds.md justifies the level. Its evidence could
+  name the other page to save a search, and the site design doc's ladder
+  should list it.

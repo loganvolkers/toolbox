@@ -1,0 +1,59 @@
+apiVersion: seikika.com/assessment/v1
+entity: rule:seikika/maintainer-plugin/stdio-command
+rubric: rule-quality
+subjectHash: 3099fb959f5c
+assessor: {kind: agent, name: cursor-assessor-06, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: measures-intent
+    verdict: fail
+    reason: >-
+      Agent Plugins 1.0.0 §7.2.1 says `command` "MUST be either a bare
+      executable name or a plugin-relative path beginning with `./`" and
+      "Clients MUST NOT perform placeholder expansion in `command`"
+      (https://github.com/agentplugins/agent-plugins-spec/blob/main/spec/1.0.0.md).
+      `command_token_ok` also accepts `${PLUGIN_ROOT}/…` and
+      `${PLUGIN_DATA}/…` and slash paths without `./` such as `bin/tool`
+      (crates/seikika-connector-workspace/src/plugins.rs:110-115). A scratch
+      server with `"command": "${PLUGIN_ROOT}/bin/tool"` reported
+      `commandToken: true`, so a command a conforming client cannot resolve
+      passes. docs/design/agent-plugins.md:22 has the same misreading.
+    suggestion: >-
+      Accept only `^[A-Za-z0-9][A-Za-z0-9._-]*$` (bare) or
+      `^\./[A-Za-z0-9._/-]+$` (plugin-relative), and correct
+      agent-plugins.md:22 and the fix text.
+  - criterion: hard-to-game
+    verdict: fail
+    reason: >-
+      The rationale is that a shell string "lets one field chain extra
+      commands" (portal/standards/plugins.yaml:136-139). `"command": "sh",
+      "args": ["-c", "curl … | sh"]` passes, because only `command` is read
+      (plugins.rs:81-84); the scratch run reported `commandToken: true` for
+      it. Moving the shell string into `args` is cheaper than writing a
+      launcher.
+    suggestion: >-
+      Flag a stdio server whose command is a shell (`sh`, `bash`, `zsh`,
+      `cmd`, `powershell`, `pwsh`) with a `-c`/`/c`/`-Command` argument.
+  - criterion: fix-leads-to-pass
+    verdict: pass
+    reason: >-
+      Setting `command` to `./bin/seikika-mcp` passes, as
+      plugins/seikika-operator/mcp.json does. The fix's second example,
+      `${PLUGIN_ROOT}/bin/tool` (plugins.yaml:133-134), also passes the rule,
+      though the spec forbids it (above). The evidence is a fixed sentence
+      (plugins.yaml:132) that does not name the server, which costs a search
+      when mcp.json has several, but mcp.json is the only place a command can
+      be.
+  - criterion: threshold-justified
+    verdict: pass
+    reason: >-
+      No threshold. Silver comes from D81
+      (docs/decisions/D01M7WMSMS00000000000000000.md: "whose stdio command is
+      one token") and docs/design/plugin-standards.md:47. A bad command makes
+      only that server entry invalid (spec §7.2.2), not the package, which is
+      why it sits above the bronze installability rules.
+summary: >-
+  It enforces a looser grammar than the spec and its own fix recommends a
+  form the spec forbids (`${PLUGIN_ROOT}/bin/tool`). `sh -c` with the
+  shell string in `args` passes. Tighten the token grammar to bare or `./`
+  and flag shells with `-c`.

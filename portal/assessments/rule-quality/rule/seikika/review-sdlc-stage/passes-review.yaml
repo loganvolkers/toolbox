@@ -1,0 +1,57 @@
+apiVersion: seikika.com/assessment/v1
+entity: rule:seikika/review-sdlc-stage/passes-review
+rubric: rule-quality
+subjectHash: 75d72991906d
+assessor: {kind: agent, name: cursor-assessor-05, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: measures-intent
+    verdict: pass
+    reason: >-
+      The check is "fresh, nothing failing, nothing uncited"
+      (portal/standards/sdlc.yaml:365-367). The rationale claims "a reviewer
+      found the stage sound and every reason cites something that resolves"
+      (sdlc.yaml:375-378), and the check measures exactly that, leaving unsure
+      to no-doubts. The fixture pins both outcomes: demo-done/plan passes, and
+      demo-partial/ship's evidence is `reuses-artifacts`
+      (portal/tests/standards.test.yaml:1075-1080, 1086-1087).
+  - criterion: hard-to-game
+    verdict: fail
+    reason: >-
+      Over the lower levels, the rule adds only "every reason cites something
+      that resolves". `cites` accepts any path that exists or any decision id
+      (crates/seikika-connect/src/assessment.rs:10-45). A stage review whose
+      reasons each mention the stage file portal/sdlc/stages/operator.yaml
+      passes, whether or not the assessor tried a command, which the rubric
+      asks for (sdlc.yaml:396-399). docs/design/meta-standards-review.md:113
+      already calls the passes-review rules redundant at gold.
+    suggestion: >-
+      Ground the citations in what the criteria judge. For `executable-exit`,
+      require the reason to cite one of the stage's `checks:` paths or a
+      workflow that runs it. For the other criteria, require a `commands:`
+      script or one of the stage's `docs:`. Check this against the `cited`
+      list the connector already builds (assessment.rs:220-228).
+  - criterion: fix-leads-to-pass
+    verdict: pass
+    reason: >-
+      The fix says to act on the failing criteria's suggestions in
+      portal/assessments/ and re-assess (sdlc.yaml:372-374). The evidence
+      lists the failing criteria and "<criterion> cites nothing that resolves"
+      (sdlc.yaml:369-371). A re-assessment that follows the assess-entity
+      skill's "cite what you read"
+      (plugins/seikika-operator/skills/assess-entity/SKILL.md:20-22) clears
+      both.
+  - criterion: threshold-justified
+    verdict: pass
+    reason: >-
+      No number. Gold for "a current review that passes, cites what resolves"
+      is in docs/design/thresholds.md:55, whose review-* row names sdlc-stage,
+      and change C1 in docs/design/meta-standards-review.md:136. M8 at line
+      167 there proposes dropping this rule, so the level is justified today
+      but under review.
+summary: >-
+  Fails on hard-to-game. The check matches its rationale, but its only
+  addition over silver and bronze is a citation that resolves, and any
+  path counts. A stage reaches gold without anyone having run its
+  commands, which is the thing the sdlc-stage-quality rubric most wants
+  checked.

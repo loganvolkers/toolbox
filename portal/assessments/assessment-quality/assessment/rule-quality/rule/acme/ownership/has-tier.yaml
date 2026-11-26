@@ -1,4 +1,4 @@
-apiVersion: toolbox.dev/assessment/v1
+apiVersion: seikika.com/assessment/v1
 entity: assessment:rule-quality/rule:acme/ownership/has-tier
 rubric: assessment-quality
 subjectHash: 84db4d4e364f
@@ -10,7 +10,7 @@ verdicts:
     reason: >-
       Every citation in
       portal/assessments/rule-quality/rule/acme/ownership/has-tier.yaml lands.
-      examples/reference-portal/toolbox.yaml:27 is the tier expression that
+      examples/reference-portal/seikika.yaml:27 is the tier expression that
       requires security for "0" and "1", :95 is the "0"-"3" enum, :99-106 is
       ownership's CODEOWNERS authority, :116 is tier from catalog-info or a
       native edit with no authority, :176-177 and :213-216 are the silver and
@@ -22,10 +22,10 @@ verdicts:
     verdict: pass
     reason: >-
       measures-intent passes because the check is has(entity.tier)
-      (toolbox.yaml:209) and the name and fix are "set a tier". hard-to-game
+      (seikika.yaml:209) and the name and fix are "set a tier". hard-to-game
       fails correctly: catalog-info is a source with no authority
-      (toolbox.yaml:116 versus :99-106), and tier "2" or "3" both satisfies
-      the check and selects approval 'none' (toolbox.yaml:27).
+      (seikika.yaml:116 versus :99-106), and tier "2" or "3" both satisfies
+      the check and selects approval 'none' (seikika.yaml:27).
       fix-leads-to-pass and threshold-justified match the fix text and the
       scorecard rationale. The summary's note that no fixture fails the rule
       is outside the rubric (portal/standards/meta.yaml:1148-1180).

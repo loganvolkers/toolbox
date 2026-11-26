@@ -1,4 +1,4 @@
-apiVersion: toolbox.dev/assessment/v1
+apiVersion: seikika.com/assessment/v1
 entity: sdlc-stage:operator/build-connector
 rubric: sdlc-stage-quality
 subjectHash: 2a5ee852aa40
@@ -8,16 +8,16 @@ verdicts:
   - criterion: executable-exit
     verdict: pass
     reason: >-
-      `toolbox connector test` runs the kit in
-      crates/toolbox-connect/src/conformance.rs and exits non-zero on a
+      `seikika connector test` runs the kit in
+      crates/seikika-connect/src/conformance.rs and exits non-zero on a
       protocol violation (here 30 of 30 checks passed for the workspace
-      connector), and crates/toolbox-cli/tests/install.rs fails when a pinned
+      connector), and crates/seikika-cli/tests/install.rs fails when a pinned
       release archive is tampered with or doctor cannot resolve it.
   - criterion: agent-can-complete
     verdict: pass
     reason: >-
       examples/connector-scaffold/README.md and the author-connector skill
-      (plugins/toolbox-operator/skills/author-connector/SKILL.md) take an
+      (plugins/seikika-operator/skills/author-connector/SKILL.md) take an
       agent from copy to a passing conformance run, and in connector-ab every
       arm's connector was correct (C3 held,
       portal/benchmarks/connector-ab.yaml). The stage's own docs do not point
@@ -26,26 +26,26 @@ verdicts:
     verdict: fail
     reason: >-
       Installing a connector reuses releases (`github:owner/repo@v`
-      checksum-verified by crates/toolbox-api/src/artifacts.rs), but building
-      one compiles Toolbox source: examples/connector-scaffold/Cargo.toml
-      path-depends on crates/toolbox-connect, which is not published
-      (site/src/content/docs/authors/connectors.md), and `toolbox connector
+      checksum-verified by crates/seikika-api/src/artifacts.rs), but building
+      one compiles Seikika source: examples/connector-scaffold/Cargo.toml
+      path-depends on crates/seikika-connect, which is not published
+      (site/src/content/docs/authors/connectors.md), and `seikika connector
       drive`, which the skill relies on, is not in v0.1.1.
     suggestion: >-
-      Publish toolbox-connect with each release (crates.io, or point the
+      Publish seikika-connect with each release (crates.io, or point the
       scaffold at a git tag instead of a path), and cut a release that
       contains `connector drive`.
   - criterion: decoupled-from-core
     verdict: pass
     reason: >-
-      binary_for in crates/toolbox-api/src/connectors.rs resolves `github:`
+      binary_for in crates/seikika-api/src/connectors.rs resolves `github:`
       packages from the install cache (D90), and a remote connector pushes to
       the ingest API, so an operator adds no crate or builtin; builtin: is
       only for the connectors that ship in the image.
   - criterion: fast-feedback
     verdict: fail
     reason: >-
-      The gate is local and quick: `toolbox connector test --name workspace
+      The gate is local and quick: `seikika connector test --name workspace
       --portal portal` took 8.7 s here. But no doc measures it:
       docs/design/connector-control.md, docs/design/maintainer-sdlc.md §3 and
       docs/research-log.md record that conformance passed, not how long it
@@ -60,8 +60,8 @@ verdicts:
       The kit runs over several connectors: workspace and runner (as surfaces
       and ci-lint) in .github/workflows/ci.yml (lines 99-105), and github and
       git-files in scripts/m4-acceptance.sh (lines 33-34). All are Rust
-      connectors built on toolbox-connect; no non-Rust connector is tested.
+      connectors built on seikika-connect; no non-Rust connector is tested.
 summary: >-
   An agent can build a connector that passes the conformance kit, and
-  installing one reuses releases. Building one still needs a Toolbox
+  installing one reuses releases. Building one still needs a Seikika
   checkout for the unpublished SDK, and the gate's time is not recorded.

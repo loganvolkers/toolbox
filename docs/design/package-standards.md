@@ -1,10 +1,10 @@
 # Package Standards: Cataloguing npm Manifests
 
 *Status: deterministic catalog and scorecard built, 2026-11-20 (D76); pnpm workspace lockfiles and
-frozen installs recognised 2026-11-21 (D01M7Y57FVX0XYNGMX0A0XJ4GK9). Toolbox for Toolbox catalogues
+frozen installs recognised 2026-11-21 (D01M7Y57FVX0XYNGMX0A0XJ4GK9). Seikika for Seikika catalogues
 each `package.json` and scores it with `maintainer-package`. A licence field is not required by the scorecard (D76); manifests use MIT (D88).
 Advisory databases are not a gate. Related: [dependency-standards.md](./dependency-standards.md),
-[toolbox-for-toolbox.md](./toolbox-for-toolbox.md).*
+[seikika-for-seikika.md](./seikika-for-seikika.md).*
 
 ---
 

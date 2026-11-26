@@ -1,0 +1,50 @@
+apiVersion: seikika.com/assessment/v1
+entity: rule:seikika/maintainer-example/has-a-heading
+rubric: rule-quality
+subjectHash: d67547c9e5a8
+assessor: {kind: agent, name: cursor-assessor-08, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: measures-intent
+    verdict: fail
+    reason: >-
+      The title is the first line anywhere in the file that starts with `# `
+      (crates/seikika-connector-workspace/src/examples.rs:14-19). Code fences
+      aren't skipped. So a write-up with no heading, whose first fenced shell
+      block has a comment like `# install deps`, gets the title "install deps"
+      and passes. The fix and design both say the file *starts* with a level-1
+      heading (portal/standards/examples.yaml:58-60,
+      docs/design/example-standards.md:58), and position isn't checked. A
+      Setext heading (`Name` underlined with `===`), a real level-1 heading,
+      fails. All 47 live entries have a real `# ` heading as their first
+      non-blank line, so these misreadings are latent.
+    suggestion: >-
+      Take the title only from the first non-blank line outside front matter,
+      accept a Setext `===` underline, and skip lines inside ``` fences. A
+      unit test with a fenced `# comment` before any heading would pin it.
+  - criterion: hard-to-game
+    verdict: pass
+    reason: >-
+      Adding a `# Name` line costs the same as adding a meaningful one, and it
+      is the fix. No suppression or empty value passes: a bare `# ` trims to
+      "" and fails (examples.rs:18, examples.yaml:56).
+  - criterion: fix-leads-to-pass
+    verdict: pass
+    reason: >-
+      The evidence is `no heading` (examples.yaml:57, pinned at
+      portal/tests/standards.test.yaml:641-643). Starting the file with `#
+      Name` as the fix says gives a non-empty title, which the check
+      `entity.title != ''` accepts.
+  - criterion: threshold-justified
+    verdict: pass
+    reason: >-
+      There is no number. Bronze is set by D78
+      (docs/decisions/D01M7W5G0T00000000000000000.md:9) and the design's table
+      (docs/design/example-standards.md:22, :58). The rationale, that a reader
+      choosing an example to copy can't tell what it demonstrates
+      (examples.yaml:61-64), explains why it is the floor.
+summary: >-
+  A cheap floor that is hard to game and decided at bronze by D78. The
+  extractor takes any `# ` line anywhere as the title, fenced shell
+  comments included, and misses Setext headings, so "starts with a
+  heading" isn't what passes. Nothing live trips it.

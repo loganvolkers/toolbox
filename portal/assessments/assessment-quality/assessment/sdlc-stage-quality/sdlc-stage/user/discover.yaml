@@ -1,4 +1,4 @@
-apiVersion: toolbox.dev/assessment/v1
+apiVersion: seikika.com/assessment/v1
 entity: assessment:sdlc-stage-quality/sdlc-stage:user/discover
 rubric: assessment-quality
 subjectHash: 9401a9eccbcd
@@ -32,7 +32,7 @@ verdicts:
       criterion breaks: mcp.rs fails if a read breaks over MCP, and m4:84-86
       fails if CLI/MCP authorization stops redacting. The UI authorization gap
       is named in the reason. I reproduced agent-can-complete with
-      target/debug/toolbox serve examples/reference-portal --fixtures. `search
+      target/debug/seikika serve examples/reference-portal --fixtures. `search
       ledger`, `owner repository:ledger` and `get repository:ledger` answered
       with `--as alice`. Without OpenFGA, the server warned "running WITHOUT
       authorization" and erin saw rule details.
@@ -43,7 +43,7 @@ verdicts:
       partial coverage. No check asserts that the UI, or erin's reads, redact,
       and the stated basis (an erin assertion at m4:66-77) is not in the
       script. A second assessor could call it unsure. Also, the hands-on reads
-      need `--as alice` on loopback: without it, `toolbox search ledger`
+      need `--as alice` on loopback: without it, `seikika search ledger`
       returned 401 in my run, and the reason doesn't say so.
     suggestion: >-
       Rest the executable-exit pass on m4:84-86 and mcp.rs, or mark it unsure

@@ -1,5 +1,5 @@
 # Package author SDLC stages (docs/design/package-author-sdlc.md, D87). Like the maintainer SDLC
-# until test, then it forks: a package is tested against released Toolbox versions and distributed
+# until test, then it forks: a package is tested against released Seikika versions and distributed
 # to consumers instead of merged into one repository.
 records:
   - id: package-author/author
@@ -12,11 +12,11 @@ records:
     exitCriterion: >-
       A package manifest validates and its fragments validate against the
       manifest schema.
-    commands: [toolbox validate]
-    checks: [packages/github-actions/toolbox-package.yaml]
+    commands: [seikika validate]
+    checks: [packages/github-actions/seikika-package.yaml]
     docs: [docs/design/packages.md, packages/github-actions/README.md]
     status: partial
-    gaps: [no scaffold (toolbox package new)]
+    gaps: [no scaffold (seikika package new)]
   - id: package-author/build-connector
     layer: package-author
     name: build-connector
@@ -27,10 +27,10 @@ records:
     exitCriterion: >-
       The connector passes the conformance kit as a standalone executable or
       WASM component.
-    commands: [toolbox connector test, toolbox connector drive, toolbox install]
+    commands: [seikika connector test, seikika connector drive, seikika install]
     checks:
-    - crates/toolbox-connect/src/conformance.rs
-    - crates/toolbox-cli/tests/install.rs
+    - crates/seikika-connect/src/conformance.rs
+    - crates/seikika-cli/tests/install.rs
     docs:
     - examples/connector-scaffold/README.md
     - docs/design/connector-control.md
@@ -39,9 +39,9 @@ records:
     status: partial
     gaps:
     - >-
-      the Rust SDK (toolbox-connect) is not published; no SDK for other
+      the Rust SDK (seikika-connect) is not published; no SDK for other
       languages
-    - no `toolbox connector new` generator (directory scaffold exists)
+    - no `seikika connector new` generator (directory scaffold exists)
     - no workflow builds or tests examples/connector-scaffold
     - no WASM component connectors yet
   - id: package-author/test
@@ -49,14 +49,14 @@ records:
     name: test
     order: 3
     intent: >-
-      Prove the package's rules both ways on its fixtures, on every Toolbox
+      Prove the package's rules both ways on its fixtures, on every Seikika
       version it claims to support.
     exitCriterion: >-
-      toolbox test passes for each supported Toolbox release and platform;
+      seikika test passes for each supported Seikika release and platform;
       meta bronze for every exported rule.
     commands:
-    - toolbox test packages/github-actions/tests
-    - toolbox connector test
+    - seikika test packages/github-actions/tests
+    - seikika connector test
     checks:
     - packages/github-actions/tests/standards.test.yaml
     - .github/workflows/ci.yml
@@ -64,9 +64,9 @@ records:
     status: partial
     gaps:
     - >-
-      no released Toolbox versions to test against (maintainer/release is
+      no released Seikika versions to test against (maintainer/release is
       missing)
-    - no compatibility matrix or `toolbox` version range in a package
+    - no compatibility matrix or `seikika` version range in a package
   - id: package-author/package
     layer: package-author
     name: package
@@ -110,9 +110,9 @@ records:
       Show a consumer what an upgrade changes before it lands, and roll it out
       across a fleet.
     exitCriterion: >-
-      toolbox plan shows entities whose level changes for a package upgrade; a
+      seikika plan shows entities whose level changes for a package upgrade; a
       fleet rollout opens one PR per repository.
-    commands: [toolbox plan --local]
+    commands: [seikika plan --local]
     checks: [actions/report/action.yml]
     docs: [docs/design/federation.md]
     status: designed

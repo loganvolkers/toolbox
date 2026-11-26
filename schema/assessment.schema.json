@@ -1,16 +1,16 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://toolbox.dev/schema/assessment.schema.json",
-  "title": "Toolbox assessment",
+  "$id": "https://seikika.com/schema/assessment.schema.json",
+  "title": "Seikika assessment",
   "description": "One agent's (or person's) judgement of one entity against one rubric (docs/design/scorecards-for-scorecards.md §6). Written as a file in the portal's assessments/ directory or pushed to a server; read by scorecards as records. Stale when subjectHash no longer matches the entity.",
   "type": "object",
   "additionalProperties": false,
   "required": ["apiVersion", "entity", "rubric", "subjectHash", "assessor", "at", "verdicts"],
   "properties": {
-    "apiVersion": {"const": "toolbox.dev/assessment/v1"},
+    "apiVersion": {"const": "seikika.com/assessment/v1"},
     "entity": {"type": "string", "minLength": 1, "description": "The entity id, e.g. rule:portal/user-mcp/contract-tested."},
     "rubric": {"type": "string", "pattern": "^[a-z][a-z0-9-]*$"},
-    "subjectHash": {"type": "string", "pattern": "^[0-9a-f]{12}$", "description": "The entity's subject field (the rubric's `subject`, default `hash`) when it was assessed, as `toolbox assess brief` prints it."},
+    "subjectHash": {"type": "string", "pattern": "^[0-9a-f]{12}$", "description": "The entity's subject field (the rubric's `subject`, default `hash`) when it was assessed, as `seikika assess brief` prints it."},
     "assessor": {
       "type": "object",
       "additionalProperties": false,

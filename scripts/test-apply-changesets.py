@@ -58,7 +58,7 @@ def test_package_yaml() -> None:
         work = Path(tmp) / "repo"
         shutil.copytree(src, work)
         run_apply(work)
-        yaml_text = (work / "pkg-fixture" / "demo" / "toolbox-package.yaml").read_text(
+        yaml_text = (work / "pkg-fixture" / "demo" / "seikika-package.yaml").read_text(
             encoding="utf-8"
         )
         assert "version: 0.1.1" in yaml_text
@@ -74,8 +74,8 @@ def test_dynamic_includes_glob_discovery_lockstep() -> None:
         shutil.copytree(src, work)
 
         listed = run_apply(work, "--list-registry").stdout
-        assert "alpha\ttoolbox-package\tpackages/alpha/toolbox-package.yaml" in listed
-        assert "beta\ttoolbox-package\tpackages/beta/toolbox-package.yaml" in listed
+        assert "alpha\tseikika-package\tpackages/alpha/seikika-package.yaml" in listed
+        assert "beta\tseikika-package\tpackages/beta/seikika-package.yaml" in listed
         assert "actions/demo\taction\tactions/demo/action.yml" in listed
         assert "decoy" not in listed
         assert "pkg-fixture" not in listed
@@ -83,15 +83,15 @@ def test_dynamic_includes_glob_discovery_lockstep() -> None:
         run_apply(work)
         data = tomllib.loads((work / "Cargo.toml").read_text(encoding="utf-8"))
         assert data["workspace"]["package"]["version"] == "0.4.0", data
-        alpha = (work / "packages" / "alpha" / "toolbox-package.yaml").read_text(
+        alpha = (work / "packages" / "alpha" / "seikika-package.yaml").read_text(
             encoding="utf-8"
         )
-        beta = (work / "packages" / "beta" / "toolbox-package.yaml").read_text(
+        beta = (work / "packages" / "beta" / "seikika-package.yaml").read_text(
             encoding="utf-8"
         )
         assert "version: 0.4.0" in alpha
         assert "version: 0.4.0" in beta  # lockstep even though not named in frontmatter
-        decoy = (work / "pkg-fixture" / "decoy" / "toolbox-package.yaml").read_text(
+        decoy = (work / "pkg-fixture" / "decoy" / "seikika-package.yaml").read_text(
             encoding="utf-8"
         )
         assert "version: 9.9.9" in decoy
@@ -101,15 +101,15 @@ def test_dynamic_includes_glob_discovery_lockstep() -> None:
 
 
 def test_new_package_discovered_without_config_edit() -> None:
-    """Adding packages/<name>/toolbox-package.yaml is enough; no registry edit."""
+    """Adding packages/<name>/seikika-package.yaml is enough; no registry edit."""
     src = FIXTURES / "dynamic-includes"
     with tempfile.TemporaryDirectory() as tmp:
         work = Path(tmp) / "repo"
         shutil.copytree(src, work)
-        new_pkg = work / "packages" / "gamma" / "toolbox-package.yaml"
+        new_pkg = work / "packages" / "gamma" / "seikika-package.yaml"
         new_pkg.parent.mkdir(parents=True)
         new_pkg.write_text(
-            "apiVersion: toolbox.dev/package/v0\n"
+            "apiVersion: seikika.com/package/v0\n"
             "name: gamma\n"
             "version: 0.3.0\n"
             "description: newly added package\n"
@@ -118,33 +118,33 @@ def test_new_package_discovered_without_config_edit() -> None:
         )
         # Point a changeset at the new package name
         (work / ".changeset" / "demo-minor.md").write_text(
-            '---\n"toolbox": patch\n"gamma": patch\n---\n\nnew package gamma\n',
+            '---\n"seikika": patch\n"gamma": patch\n---\n\nnew package gamma\n',
             encoding="utf-8",
         )
         listed = run_apply(work, "--list-registry").stdout
-        assert "gamma\ttoolbox-package\tpackages/gamma/toolbox-package.yaml" in listed
+        assert "gamma\tseikika-package\tpackages/gamma/seikika-package.yaml" in listed
         run_apply(work)
         gamma = new_pkg.read_text(encoding="utf-8")
         assert "version: 0.3.1" in gamma
-        beta = (work / "packages" / "beta" / "toolbox-package.yaml").read_text(
+        beta = (work / "packages" / "beta" / "seikika-package.yaml").read_text(
             encoding="utf-8"
         )
         assert "version: 0.3.1" in beta
 
 
 def test_fixtures_not_under_packages_glob() -> None:
-    """Regression: applicator fixtures must not use packages/**/toolbox-package.yaml."""
-    under_packages = sorted(FIXTURES.glob("**/packages/**/toolbox-package.yaml"))
+    """Regression: applicator fixtures must not use packages/**/seikika-package.yaml."""
+    under_packages = sorted(FIXTURES.glob("**/packages/**/seikika-package.yaml"))
     # Only the intentional dynamic-includes live packages/ tree is allowed in fixtures;
     # decoys and demo packages for other cases use pkg-fixture/.
-    for path in FIXTURES.rglob("toolbox-package.yaml"):
+    for path in FIXTURES.rglob("seikika-package.yaml"):
         rel = path.relative_to(FIXTURES)
         parts = rel.parts
         if parts[0] == "dynamic-includes" and "packages" in parts:
             continue
         assert "packages" not in parts, (
             f"fixture {rel} must use pkg-fixture/ (or dynamic-includes/packages/), "
-            "not a discoverable packages/** path that would confuse T4T"
+            "not a discoverable packages/** path that would confuse S4S"
         )
     # And decoys stay on pkg-fixture/
     decoy = (
@@ -152,7 +152,7 @@ def test_fixtures_not_under_packages_glob() -> None:
         / "dynamic-includes"
         / "pkg-fixture"
         / "decoy"
-        / "toolbox-package.yaml"
+        / "seikika-package.yaml"
     )
     assert decoy.is_file()
     assert under_packages  # dynamic-includes has packages/alpha, beta
@@ -164,14 +164,14 @@ def test_live_repo_includes_resolve() -> None:
     config = mod.load_config(REPO_ROOT)
     assert "includes" in config
     registry = mod.resolve_registry(REPO_ROOT, config)
-    assert registry["toolbox"]["kind"] == "cargo-workspace"
+    assert registry["seikika"]["kind"] == "cargo-workspace"
     assert "github-actions" in registry
     assert "file-size" in registry
     assert "semgrep" in registry
     assert "storybook" in registry
     assert "actions/report" in registry
     assert registry["actions/report"]["kind"] == "action"
-    assert registry["file-size"]["path"] == "packages/file-size/toolbox-package.yaml"
+    assert registry["file-size"]["path"] == "packages/file-size/seikika-package.yaml"
     # No fixture decoy leaked into live discovery
     assert "decoy" not in registry
     for name, meta in registry.items():
@@ -186,7 +186,7 @@ def test_unknown_changeset_name_errors() -> None:
         work = Path(tmp) / "repo"
         shutil.copytree(src, work)
         (work / ".changeset" / "demo-minor.md").write_text(
-            '---\n"toolbox": patch\n"does-not-exist": patch\n---\n\nbad name\n',
+            '---\n"seikika": patch\n"does-not-exist": patch\n---\n\nbad name\n',
             encoding="utf-8",
         )
         proc = subprocess.run(

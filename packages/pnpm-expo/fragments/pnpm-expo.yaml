@@ -96,9 +96,9 @@ scorecards:
       that way as the repository ages.
     links:
     - title: pnpm-expo package decision
-      url: https://github.com/loganvolkers/toolbox/blob/main/docs/decisions/D01M7Y6X38AERPBT0YH1AG5TBRD.md
+      url: https://github.com/seikika/seikika/blob/main/docs/decisions/D01M7Y6X38AERPBT0YH1AG5TBRD.md
     - title: Monorepo semantics
-      url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/package-standards.md#6-monorepo-semantics--do-not-reuse-this-scorecard-blindly
+      url: https://github.com/seikika/seikika/blob/main/docs/design/package-standards.md#6-monorepo-semantics--do-not-reuse-this-scorecard-blindly
     - {title: pnpm install, url: https://pnpm.io/cli/install}
     kind: JsWorkspace
     description: >-
@@ -218,7 +218,7 @@ scorecards:
       files, packages out of step with the SDK.
     links:
     - title: pnpm-expo package decision
-      url: https://github.com/loganvolkers/toolbox/blob/main/docs/decisions/D01M7Y6X38AERPBT0YH1AG5TBRD.md
+      url: https://github.com/seikika/seikika/blob/main/docs/decisions/D01M7Y6X38AERPBT0YH1AG5TBRD.md
     - {title: 'Expo: monorepos', url: https://docs.expo.dev/guides/monorepos/}
     - {title: 'Expo: eas.json', url: https://docs.expo.dev/build/eas-json/}
     kind: ExpoApp

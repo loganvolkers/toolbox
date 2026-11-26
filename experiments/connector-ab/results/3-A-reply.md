@@ -1,5 +1,5 @@
 ## What changed
-Added `component` sync: GET /rest/api/3/project/{key}/components, catalog id `{project}:{name}`. Updated portal + RUN.md. OUT/entities.ndjson: 8 lines. `toolbox connector test` 12/12.
+Added `component` sync: GET /rest/api/3/project/{key}/components, catalog id `{project}:{name}`. Updated portal + RUN.md. OUT/entities.ndjson: 8 lines. `seikika connector test` 12/12.
 
 ## Could not do
 Nothing required.

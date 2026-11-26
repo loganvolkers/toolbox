@@ -1,18 +1,18 @@
 # Reference Portal: "acme" on GitHub
 
-The reference implementation anchor for Toolbox v1. It is a complete, small portal for a fictional
-organisation, with GitHub, a git catalog and an IdP. **An implementation of Toolbox is correct for
+The reference implementation anchor for Seikika v1. It is a complete, small portal for a fictional
+organisation, with GitHub, a git catalog and an IdP. **An implementation of Seikika is correct for
 v1 when it runs this portal and produces the outputs and behaviours described here**
 ([docs/v1-spec.md](../../docs/v1-spec.md) §11).
 
 Everything here that can run today has been run (see [Validation](#validation)). The parts that
-need the Toolbox binary are specified precisely enough to implement against.
+need the Seikika binary are specified precisely enough to implement against.
 
 ## What it demonstrates
 
 | Capability | Where | Decisions |
 |---|---|---|
-| Manifest as the only configuration | [`toolbox.yaml`](./toolbox.yaml), validated by [`schema/manifest.schema.json`](../../schema/manifest.schema.json) and by `toolbox validate` | D2, D41 |
+| Manifest as the only configuration | [`seikika.yaml`](./seikika.yaml), validated by [`schema/manifest.schema.json`](../../schema/manifest.schema.json) and by `seikika validate` | D2, D41 |
 | Raw records mapped to entities with CEL (object construction) | `kinds[].map` | D24 |
 | Field-level sources and precedence, native values | `kinds[].sources`, [`fixtures/native.json`](./fixtures/native.json) | D13 |
 | Entities created only by identity sources; orphans reported | `identityFrom`; the `ghost-service` fixture | D13 |
@@ -59,7 +59,7 @@ The Rust implementation must produce byte-identical JSON from the same manifest 
 hand-written expectations in [`tests/`](./tests) are independent of the generator: they state the
 intended behaviour, and the generator is only trusted because they pass.
 
-## Acceptance scenarios (with the Toolbox binary)
+## Acceptance scenarios (with the Seikika binary)
 
 Each scenario is a **user SDLC** task (layer 3, [docs/sdlc.md](../../docs/sdlc.md)) that the
 **maintainer SDLC** (layer 1) runs as an acceptance check. Status on 2026-11-20 (M0–M4 done):
@@ -71,7 +71,7 @@ Each scenario is a **user SDLC** task (layer 3, [docs/sdlc.md](../../docs/sdlc.m
 | A6–A9, A10 (runs) | Pending | M5 (actions) |
 | A12 | Pending | M6 (ship) |
 
-The scripts need Postgres 16; M3 and M4 also need `TOOLBOX_OPENFGA_BIN`, and M4 needs Node with
+The scripts need Postgres 16; M3 and M4 also need `SEIKIKA_OPENFGA_BIN`, and M4 needs Node with
 Playwright. Run them from the repo root, for example `scripts/m4-acceptance.sh`.
 
 | # | Interface | Scenario | Expected |
@@ -96,7 +96,7 @@ Run from this directory (Python 3.11+):
 ```bash
 python -m venv .venv && .venv/bin/pip install -r tools/requirements.txt
 .venv/bin/python tools/validate.py          # manifest + 40 messages against ../../schema
-cargo run -q -p toolbox-cli -- validate .   # the same checks in Rust, plus CEL, files and fixtures (from the repo root: toolbox validate examples/reference-portal)
+cargo run -q -p seikika-cli -- validate .   # the same checks in Rust, plus CEL, files and fixtures (from the repo root: seikika validate examples/reference-portal)
 .venv/bin/python tools/reference.py --check # pipeline, 20 hand-written assertions, committed outputs
 fga model test --tests authz/model.fga.yaml # OpenFGA over the derived tuples
 ```
@@ -107,12 +107,12 @@ Results on 2026-11-20 (recorded in [docs/research-log.md](../../docs/research-lo
 - OpenFGA: 3/3 tests, 16/16 checks, 3/3 ListObjects
 
 Each check was also shown to fail when an expectation is wrong. Not run yet: the Dockerfile and the
-workflow (they need `toolbox build` and actions, M5–M6); the workflow YAML parses.
+workflow (they need `seikika build` and actions, M5–M6); the workflow YAML parses.
 
 ## Layout
 
 ```
-toolbox.yaml                       the manifest
+seikika.yaml                       the manifest
 fixtures/*.ndjson, native.json     connector records (valid connector messages) and native values
 tests/*.test.yaml                  hand-written expectations (CEL over entity/score/options/orphans)
 expected/, authz/tuples.expected.json   generated oracle outputs

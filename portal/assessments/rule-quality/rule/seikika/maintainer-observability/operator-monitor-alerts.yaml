@@ -1,0 +1,54 @@
+apiVersion: seikika.com/assessment/v1
+entity: rule:seikika/maintainer-observability/operator-monitor-alerts
+rubric: rule-quality
+subjectHash: c35f9c3fbdb2
+assessor: {kind: agent, name: cursor-assessor-09, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: measures-intent
+    verdict: fail
+    reason: >-
+      The rationale is that snapshot lag and index freshness get alerted on
+      (portal/standards/observability.yaml:182-184). The check is that the two
+      alert files exist. ops/alerts/index-freshness.yaml:6 alerts on
+      `seikika_index_freshness_seconds > 300`, but that gauge is only ever
+      initialised to 0 with label `default`
+      (crates/seikika-telemetry/src/metrics_prom.rs:152), and no crate outside
+      seikika-telemetry sets it. So this alert can never fire, yet the rule
+      passes.
+    suggestion: >-
+      Require every metric an alert expression names to be one the code
+      actually updates: for example, a test that loads ops/alerts/*.yaml and
+      checks that each metric has a setter called outside seikika-telemetry.
+      Or wire index freshness before counting its alert.
+  - criterion: hard-to-game
+    verdict: fail
+    reason: >-
+      `missingAlerts` is `alerts.filter(a, a in missingPaths)`
+      (observability.yaml:63-66), so `alerts: []` in
+      portal/observability/runtime.yaml passes with no alerts at all. The
+      files that do exist are not validated as Prometheus rule groups either:
+      no workflow runs `promtool check rules`.
+    suggestion: >-
+      Fail when `alerts` is empty, or require the two named alert files, and
+      validate them in CI with `promtool check rules ops/alerts/*.yaml`,
+      declared under the data source's `ci:` option so the rule sees it.
+  - criterion: fix-leads-to-pass
+    verdict: pass
+    reason: >-
+      The evidence lists each missing alert path (`ops/alerts/missing.yaml` in
+      the demo-partial fixture, portal/fixtures/workspace.ndjson:82), and the
+      fix names the directory and the two signals. Adding the files passes.
+  - criterion: threshold-justified
+    verdict: pass
+    reason: >-
+      The rule itself has no threshold. Silver follows the scorecard's ladder
+      ("silver adds logs, alerts and a reviewed monitor stage",
+      observability.yaml:102-103). The alert numbers (60s for 5m, 300s for
+      10m, in ops/alerts/*.yaml) belong to the stubs, not the rule, though no
+      doc justifies them either.
+summary: >-
+  Alerting on snapshot lag and index freshness is the right silver ask,
+  but the check is only whether files exist, so an empty list passes. One
+  of the two alerts watches a gauge that no code ever updates, so the rule
+  passes while that alert can't fire.

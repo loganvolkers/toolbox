@@ -1,11 +1,11 @@
-# The Meta Catalog: Toolbox Catalogs, Owns and Scores Itself
+# The Meta Catalog: Seikika Catalogs, Owns and Scores Itself
 
 *Status: design. A cornerstone of the default model. Related: [plan.md](../plan.md),
 [authorization.md](../authorization.md), [identity-resolution.md](./identity-resolution.md),
 [notifications.md](./notifications.md), [sdlc.md](./sdlc.md), [dashboards.md](./dashboards.md).*
 
 > **Thesis.** A portal that asks every team to own, document and score its software must hold itself
-> to the same standard. Every Toolbox portal ships a **meta catalog**. Its entity types, connectors,
+> to the same standard. Every Seikika portal ships a **meta catalog**. Its entity types, connectors,
 > scorecards, rules, actions, views, authorization modules and packages are themselves catalog
 > entities, with **owners**, **relations** and **default scorecards**. This includes the scorecards
 > that score scorecards.
@@ -40,7 +40,7 @@
 
 ## 2. What competitors do
 
-| Product | Meta / self-modelling | Ownership of portal objects | Gap Toolbox fills |
+| Product | Meta / self-modelling | Ownership of portal objects | Gap Seikika fills |
 |---|---|---|---|
 | **Backstage** | `Template` and `Location` are catalog entities. A Template has `spec.owner` ("the singular entity (commonly a team) that bears ultimate responsibility"); entities record `backstage.io/source-template`. Plugins, processors, config and Tech Insights checks are code, **not** entities | Templates only | No meta scorecards; checks have no owners; no dependency graph of the portal itself |
 | **Port** | **"Scorecards as blueprints"**: `_scorecard`, `_rule` and `_rule_result` system blueprints (protected, extensible; up to 5M rule results), enabling relations, permissions, history and automations on scorecard data | Possible via extension properties | Rules and results as entities, but configuration lives in Port's DB; no owner-routing of data-quality problems documented; integrations/actions as entities not verified |
@@ -56,7 +56,7 @@ already exists.
 
 ## 3. Industry practice on ownership, and the principles we adopt
 
-| Source | Finding / practice | Principle for Toolbox |
+| Source | Finding / practice | Principle for Seikika |
 |---|---|---|
 | Bird et al., *Don't Touch My Code!* (ESEC/FSE 2011, Windows); replicated by Greiler et al. (MSR 2013, four Microsoft products: median precision 0.74 for flagging buggy files); weaker in open source (Foucault et al.; Eclipse/Firefox follow-up) | Strong ownership and few low-expertise contributors correlate with fewer defects in closed, team-based processes | **P2:** measure *observed* ownership (contributions), not only declared ownership. Treat it as a signal, not dogma |
 | Backstage descriptor format | Owner = "singular entity (commonly a team)" with authority and capability to maintain | **P1:** exactly one owner, and it should be a team |
@@ -66,7 +66,7 @@ already exists.
 | Cortex (owners verify entity data) | Periodic human verification | **P3:** a verification cadence with a `verified_at` fact |
 | Industry generally | Ownership drives on-call, reviews, notifications | **P4:** one ownership source of truth drives review routing, notifications, approvals *and* permissions (ReBAC derives from it) |
 
-**Toolbox ownership principles:**
+**Seikika ownership principles:**
 - **P1 – One accountable team.** Every entity, including every config object, has exactly one owning
   team. An optional **accountable individual** is derived (the owner team's lead) or set explicitly.
 - **P2 – Declared, then verified.** Ownership is declared in code, next to the thing, and continuously
@@ -82,14 +82,14 @@ already exists.
 
 ## 4. The meta model
 
-Built-in kinds in the `toolbox` namespace, **derived from the manifest at build time and from
+Built-in kinds in the `seikika` namespace, **derived from the manifest at build time and from
 runtime state**. They are never hand-authored as YAML: the definition in code *is* the entity.
 
 | Kind | Source of truth | Key relations | Key facts |
 |---|---|---|---|
 | `Portal` | Portal program | `hasPart` → everything below | version, deployed digest, environments |
 | `Module` | Portal program (folder/package grouping) | `contains` → definitions; `ownedBy` | path, CODEOWNERS teams |
-| `Package` | `toolbox.lock` | `provides` → definitions; `publishedBy`; `stewardedBy` (local team) | version, digest, signature status, license |
+| `Package` | `seikika.lock` | `provides` → definitions; `publishedBy`; `stewardedBy` (local team) | version, digest, signature status, license |
 | `Kind` | Manifest | `governedBy` → AuthzModule; `fedBy` ← Connector; `scoredBy` ← Scorecard | entity count, field doc coverage, facets |
 | `Connector` | Manifest + runtime | `feeds` → Kind; `provides` → Fact types; `uses` → credential scope | lag, error rate, link coverage, permission probe, last sync |
 | `Scorecard` | Manifest | `appliesTo` → Kind; `hasRule` → Rule; `hasInitiative` | entities in scope, level distribution |
@@ -103,7 +103,7 @@ runtime state**. They are never hand-authored as YAML: the definition in code *i
 | `AgentClient` | Registered OAuth clients | `actsFor` → users; `ceiling` | activity, failures |
 
 The portal's own runtime is cataloged as ordinary software:
-- `system:toolbox/portal`
+- `system:seikika/portal`
 - the server `Component`
 - its `Resource`s (Postgres, object storage)
 - its `API`s (REST, MCP)
@@ -111,7 +111,7 @@ The portal's own runtime is cataloged as ordinary software:
 These are scored by the same production-readiness scorecard as every other service.
 
 **Why rule results aren't entities (vs. Port's `_rule_result`):** 100 rules × 100k entities = 10M
-results. Port documents a 5M rule-result limit. Toolbox keeps outcomes in a columnar outcome store,
+results. Port documents a 5M rule-result limit. Seikika keeps outcomes in a columnar outcome store,
 with the history archive from [incremental-computation.md](./incremental-computation.md) §3. It exposes them as a **virtual
 `RuleResult` kind**: queryable, relatable and permission-faceted like entities, without paying entity
 overhead.
@@ -122,9 +122,9 @@ Each definition gets an owner from the first source that applies:
 
 1. Explicit `owner:` on the definition (the SDKs require it for new definitions unless a module
    default exists).
-2. **Module default:** `new tb.Module("security", { owner: "group:default/security" })`.
+2. **Module default:** `new seikika.Module("security", { owner: "group:default/security" })`.
 3. **Package steward:** definitions from third-party packages have `publishedBy` (upstream, e.g.
-   `toolbox-dev`) and a required **local steward** team (the team accountable for adopting and
+   `seikika-dev`) and a required **local steward** team (the team accountable for adopting and
    upgrading it).
 4. **CODEOWNERS** of the defining file, mapped from GitHub team to Group via external ids.
 5. The `Portal` owner, as a fallback. The entity is then flagged `owner: inherited-fallback`, which
@@ -149,7 +149,7 @@ rule and by `plan`.
 ## 7. Default scorecards shipped with every portal
 
 All of these are owned by the portal's platform team by default (reassignable), and are overridable
-or extendable in code. CEL shown is illustrative. "Facts" are maintained by Toolbox from the manifest,
+or extendable in code. CEL shown is illustrative. "Facts" are maintained by Seikika from the manifest,
 analytics and runtime health.
 
 ### 7.1 `ownership` (applies to **every** kind, meta included)
@@ -172,7 +172,7 @@ analytics and runtime health.
 | bronze | Last successful sync within the freshness SLO (`lag < 2 × schedule`) |
 | silver | Permission probe green **and not over-privileged** |
 | silver | Identity link coverage ≥ 90% (no unresolved conflicts) |
-| gold | Error rate < 1% over 7 days; runbook linked; contract tests (`toolbox connector test`) pass in CI |
+| gold | Error rate < 1% over 7 days; runbook linked; contract tests (`seikika connector test`) pass in CI |
 
 ### 7.3 `scorecard-quality` (Scorecard, Rule)
 
@@ -217,14 +217,14 @@ cycles* (≤ t−1), never the outcome being computed.
 ### 7.7 `production-readiness` applied to the portal itself
 
 The same default scorecard every service gets: on-call, runbook, SLOs, backups verified, alerts
-linked. It is applied to `system:toolbox/portal`. The portal's operators get the same dashboard issue
+linked. It is applied to `system:seikika/portal`. The portal's operators get the same dashboard issue
 and notifications as any team.
 
 ## 8. Distributed ownership: a reference layout
 
 ```
 acme-portal/
-├── Toolbox.yaml
+├── Seikika.yaml
 ├── CODEOWNERS
 │     /modules/core/        @acme/platform
 │     /modules/security/    @acme/security
@@ -247,10 +247,10 @@ acme-portal/
 
 ## 9. API, MCP and CLI
 
-- Meta entities are ordinary entities under `kind:toolbox/...`. There is no special API, so every
+- Meta entities are ordinary entities under `kind:seikika/...`. There is no special API, so every
   existing tool works on them.
 - Shortcuts:
-  - `toolbox meta` (CLI)
+  - `seikika meta` (CLI)
   - the MCP prompt `portal_overview`
   - `GET /v1/meta/summary` (counts, ownership coverage, health)
 - `explain` on any outcome includes the meta chain: rule owner, data sources, connector health.

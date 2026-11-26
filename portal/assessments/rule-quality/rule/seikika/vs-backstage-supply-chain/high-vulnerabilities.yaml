@@ -1,0 +1,59 @@
+apiVersion: seikika.com/assessment/v1
+entity: rule:seikika/vs-backstage-supply-chain/high-vulnerabilities
+rubric: rule-quality
+subjectHash: 0fcc214f0ba3
+assessor: {kind: agent, name: cursor-assessor-17, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: measures-intent
+    verdict: fail
+    reason: >-
+      "High" means `max_severity >= 7.0` on an advisory group
+      (footprint.py:134-136). The docstring admits that "an advisory without a
+      score (Go's own database rates none) counts as known, not high"
+      (:112-113). OpenFGA is a Go binary that ships in the image, and its
+      three advisories are unrated (RESULTS.md:200-202). So a critical Go
+      standard library or golang.org/x/net vulnerability in it would never
+      count as high, and Seikika would pass "0 high or critical" while
+      shipping it. The rationale says this rule is the one a security review
+      blocks on (portal/standards/backstage-comparison.yaml:630-633).
+    suggestion: >-
+      Take severity for unrated advisories from their aliases (the CVE or GHSA
+      entry osv-scanner returns), or count an unrated advisory in a shipped
+      binary as high until it's triaged.
+  - criterion: hard-to-game
+    verdict: fail
+    reason: >-
+      The same suppression route as known-vulnerabilities applies. osv-scanner
+      runs with no explicit config (footprint.py:128-129), so an
+      osv-scanner.toml beside Cargo.lock with `[[IgnoredVulns]]` would drop a
+      high advisory from the count (documented osv-scanner behaviour, not
+      tried here). The rubric fails a rule that a suppression would pass.
+    suggestion: >-
+      Run osv-scanner with a harness-owned config so repository ignores don't
+      apply, and list any ignores found as evidence.
+  - criterion: fix-leads-to-pass
+    verdict: fail
+    reason: >-
+      The fix scans only Cargo.lock (`osv-scanner scan source --lockfile
+      Cargo.lock`, backstage-comparison.yaml:628-629). footprint.py also scans
+      the OpenFGA binary and ui/package-lock.json (:156), so a high advisory
+      in either is counted but would never appear when the fix is followed.
+    suggestion: >-
+      Use the same targets as footprint.py: `osv-scanner scan source -L
+      Cargo.lock -L ui/package-lock.json`, plus `--experimental-plugins
+      go/binary` on the OpenFGA binary. Name the OpenFGA pin
+      (image/Dockerfile:8-10, `OPENFGA_VERSION` and its SHA-256s) as the place
+      to upgrade.
+  - criterion: threshold-justified
+    verdict: pass
+    reason: >-
+      "High = 0" is the one supply-chain bar registered before the run
+      (experiments/backstage-compare/README.md:46), and the adjudication
+      confirms it (ADJUDICATION.md:110). RESEARCH.md F8 grounds it in SSDF
+      PW.4 and SLSA (RESEARCH.md:64).
+summary: >-
+  The bar is right and pre-registered, but the measure has a blind spot
+  that matters. Go's unrated advisories never count as high, so OpenFGA,
+  the one Go binary in the image, can't fail this rule. A repo-level
+  ignore file could suppress findings, and the fix scans only Cargo.lock.

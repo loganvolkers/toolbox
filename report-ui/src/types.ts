@@ -1,5 +1,5 @@
-// The report document `toolbox report` inlines into the page (report_json in
-// crates/toolbox-cli/src/report.rs). Fields the Rust side writes as null are optional here.
+// The report document `seikika report` inlines into the page (report_json in
+// crates/seikika-cli/src/report.rs). Fields the Rust side writes as null are optional here.
 
 export type Level = string;
 export type Outcome = "pass" | "fail" | "unknown" | string;

@@ -2,8 +2,8 @@
 # Copy it to .gitlab-ci.yml. In a project that has one, put the spec: block at the top of it
 # (pipeline inputs are read only from that file, not from an include) and add the job.
 # A parent whose federation.children lists this project, with `federation.runner: {type: ci}`
-# in .toolbox/toolbox.yaml here, starts a pipeline with these inputs. The job runs
-# `toolbox run` with the parent's signed grant and keeps the run record for the parent to read.
+# in .seikika/seikika.yaml here, starts a pipeline with these inputs. The job runs
+# `seikika run` with the parent's signed grant and keeps the run record for the parent to read.
 # Every input reaches the script as a job variable (expand: false), never as script text.
 spec:
   inputs:
@@ -15,26 +15,26 @@ spec:
     requested_by:
       description: Who asked, as the parent recorded them.
       default: ""
-    toolbox_run: {description: "The parent's run id.", default: ""}
+    seikika_run: {description: "The parent's run id.", default: ""}
     parent_run: {description: <parent portal>/<run id>., default: ""}
     grant:
       description: The parent's signed approvals, empty when there are none.
       default: ""
 ---
-toolbox:
+seikika:
   rules: [{if: '"$[[ inputs.action ]]" != ""'}]
   variables:
-    TOOLBOX_ACTION: $[[ inputs.action ]]
-    TOOLBOX_INPUTS: {value: '$[[ inputs.inputs ]]', expand: false}
-    TOOLBOX_REQUESTED_BY: {value: '$[[ inputs.requested_by ]]', expand: false}
-    TOOLBOX_PARENT_RUN: {value: '$[[ inputs.parent_run ]]', expand: false}
-    TOOLBOX_GRANT: {value: '$[[ inputs.grant ]]', expand: false}
+    SEIKIKA_ACTION: $[[ inputs.action ]]
+    SEIKIKA_INPUTS: {value: '$[[ inputs.inputs ]]', expand: false}
+    SEIKIKA_REQUESTED_BY: {value: '$[[ inputs.requested_by ]]', expand: false}
+    SEIKIKA_PARENT_RUN: {value: '$[[ inputs.parent_run ]]', expand: false}
+    SEIKIKA_GRANT: {value: '$[[ inputs.grant ]]', expand: false}
   script:
     - >-
-      toolbox run "$TOOLBOX_ACTION" --portal .toolbox --inputs
-      "$TOOLBOX_INPUTS" --as "$TOOLBOX_REQUESTED_BY" --parent-run
-      "$TOOLBOX_PARENT_RUN" --grant "$TOOLBOX_GRANT" --yes --record
-      toolbox-run.json -o json
+      seikika run "$SEIKIKA_ACTION" --portal .seikika --inputs
+      "$SEIKIKA_INPUTS" --as "$SEIKIKA_REQUESTED_BY" --parent-run
+      "$SEIKIKA_PARENT_RUN" --grant "$SEIKIKA_GRANT" --yes --record
+      seikika-run.json -o json
   # 4 is an unverified run (done, with no postcondition to check): a warning, not a failure.
   allow_failure: {exit_codes: [4]}
-  artifacts: {when: always, paths: [toolbox-run.json], expire_in: 30 days}
+  artifacts: {when: always, paths: [seikika-run.json], expire_in: 30 days}

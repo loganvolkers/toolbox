@@ -9,9 +9,9 @@ harness (`harness/measure.sh`), not by the agents; nobody probed these runs.*
 
 Both arms delivered: the three CODEOWNERS rules are on `main` of alpha, beta and gamma (probe C1
 passes in both). Neither touched another group or round, and the GitLab arm never reached for
-Toolbox (isolation all zero).
+Seikika (isolation all zero).
 
-| Measure | `toolbox-1` | `gitlab-1` | Source |
+| Measure | `seikika-1` | `gitlab-1` | Source |
 |---|---|---|---|
 | C1, the rules on every project's `main` | pass | pass | `*.check.json` |
 | Lines to maintain, as counted | 1,725 | 1,182 | `*.lines.json` |
@@ -22,10 +22,10 @@ Toolbox (isolation all zero).
 | GitLab settings changed | 5 | 22 | `*.settings.json` |
 | Prompt as rendered | identical | identical | `*.prompt.json` |
 
-The agents' own accounts are [toolbox-1.HANDOFF.md](./toolbox-1.HANDOFF.md) and
+The agents' own accounts are [seikika-1.HANDOFF.md](./seikika-1.HANDOFF.md) and
 [gitlab-1.HANDOFF.md](./gitlab-1.HANDOFF.md).
 
-**The Toolbox arm** followed `examples/federated-actions/gitlab-org`: an org portal with the
+**The Seikika arm** followed `examples/federated-actions/gitlab-org`: an org portal with the
 `gitlab` connector, the three projects as children by URL, a `change` with `land: push` per
 project and `['group:acme-w1/release']` as approvers. Of its 361 lines, 107 are glue:
 `bin/setup-service` (42, a group access token for the bot, a `HOME` with its git credentials, a
@@ -47,8 +47,8 @@ meets it.
 | # | Arm | Friction | Fix |
 |---|---|---|---|
 | G1 | both (harness) | Auto DevOps started a pipeline on every imported project with no `.gitlab-ci.yml`; on this runner they fail and hold a slot, and the GitLab arm spent calls telling them from its own | `prepare.sh` turns Auto DevOps off instance-wide, so the only pipelines are the ones a run starts |
-| T1 | toolbox (product) | A checkout takes `--as` on trust, so the agent wrote a 65-line wrapper to bind each request and approval to the person GitLab says owns the token. Any team approving in a shared checkout or a CI job needs it; the GitLab arm got it from GitLab | `forges[].identity: true` and `toolbox run --identity-token-file` (D01M87FMCVSQCQJMGDSN2MCTH5W): Toolbox asks the forge who owns the token, refuses `--as` alone or against another's token; acceptance step 9 checks it on the real GitLab. The `run` and `add-action` skills say when to use it |
-| T2 | toolbox (product) | The bot's git credentials had to go in a separate `HOME`, because Toolbox's clones and pushes use git's own credential helpers | Not changed. Putting the forge token in git's configuration was rejected in D01M87AXG095Q0Z0DGGTKYYAM7Y (it would reach action commands through `GIT_CONFIG_*`); an askpass helper that only Toolbox's own git calls see is the candidate, recorded as a caveat in [forges.md](../../../../docs/design/forges.md) §7 |
+| T1 | seikika (product) | A checkout takes `--as` on trust, so the agent wrote a 65-line wrapper to bind each request and approval to the person GitLab says owns the token. Any team approving in a shared checkout or a CI job needs it; the GitLab arm got it from GitLab | `forges[].identity: true` and `seikika run --identity-token-file` (D01M87FMCVSQCQJMGDSN2MCTH5W): Seikika asks the forge who owns the token, refuses `--as` alone or against another's token; acceptance step 9 checks it on the real GitLab. The `run` and `add-action` skills say when to use it |
+| T2 | seikika (product) | The bot's git credentials had to go in a separate `HOME`, because Seikika's clones and pushes use git's own credential helpers | Not changed. Putting the forge token in git's configuration was rejected in D01M87AXG095Q0Z0DGGTKYYAM7Y (it would reach action commands through `GIT_CONFIG_*`); an askpass helper that only Seikika's own git calls see is the candidate, recorded as a caveat in [forges.md](../../../../docs/design/forges.md) §7 |
 
 The GitLab arm met no friction of its own beyond G1: its prompt names the Premium features it
 lacks and how they are credited, and it said which steps Premium would have performed.
@@ -63,6 +63,6 @@ GitLab the harness started; the product fix T1 is checked by the acceptance scri
 [forges.md](../../../../docs/design/forges.md) §4.6):
 
 ```sh
-bash experiments/actions-gitlab/harness/measure.sh 0 toolbox-1 <transcript-dir>
+bash experiments/actions-gitlab/harness/measure.sh 0 seikika-1 <transcript-dir>
 scripts/gitlab-acceptance.sh
 ```

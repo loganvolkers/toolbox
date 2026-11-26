@@ -1,0 +1,56 @@
+apiVersion: seikika.com/assessment/v1
+entity: rule:seikika/maintainer-skill/links-resolve
+rubric: rule-quality
+subjectHash: abf5b789dcd1
+assessor: {kind: agent, name: cursor-assessor-01, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: measures-intent
+    verdict: fail
+    reason: >-
+      missingFiles is built from SKILL.md's body alone
+      (crates/seikika-connector-workspace/src/skills.rs:51), and only from
+      inline `](target)` links (skills.rs:453-458). Through
+      target/debug/seikika-connector-workspace on a scratch skill, three
+      kinds of broken link were not reported:
+      - a reference-style `[guide][g]` whose `[g]:` points at a missing file;
+      - a missing link inside references/NOTES.md, the file the agent opens next;
+      - `../../../../docs/x.md`, which escapes the skill directory. It
+        resolves in the checkout (skills.rs:460-491) but not after the
+        plugin is installed elsewhere.
+      The rationale is about links an agent follows mid-task
+      (portal/standards/skills.yaml:164-167), so these are in scope. No live
+      skill has such a link today; only design-audit has a link at all.
+    suggestion: >-
+      Resolve reference-style definitions too, and check every .md file the
+      skill ships, as link_depth already walks them (skills.rs:515-548).
+      Report a target outside the skill's directory as missing, since an
+      installed plugin carries only its own tree. Add fixtures for each case.
+  - criterion: hard-to-game
+    verdict: pass
+    reason: >-
+      The cheapest pass is to delete the broken link, and the fix allows that
+      (skills.yaml:161-163). A link to a missing file gives the agent nothing,
+      so removing it costs nothing real. Turning it into a reference-style
+      link would also evade the check, but that is more work than fixing the
+      path.
+  - criterion: fix-leads-to-pass
+    verdict: pass
+    reason: >-
+      The evidence is the resolved target path, e.g.
+      `['references/missing.md']` for the partial fixture
+      (portal/tests/standards.test.yaml:356-357). The fix says paths are
+      relative to the file that contains them, which matches resolve()
+      (skills.rs:460-476). Creating that file or correcting the link passes.
+  - criterion: threshold-justified
+    verdict: pass
+    reason: >-
+      The rule has no number: no missing target. Silver, "an agent can follow
+      it", is set in docs/design/skill-standards.md:93 and D72, with the
+      spec's file-references section as its source (skills.yaml:168-170).
+summary: >-
+  The fix and evidence lead to a pass, and silver suits the rule. But the
+  check reads only SKILL.md's inline links. Reference-style links, broken
+  links in the reference files, and links that escape the skill directory
+  (and break once the plugin is installed) all pass. The rule's rationale
+  says these matter.

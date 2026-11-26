@@ -1,16 +1,16 @@
 # Operator SDLC (Layer 3): Local → CI → PR → Ephemeral → Production
 
 > **Layer 3 of [the four SDLC layers](../sdlc.md) (D63, D87):** how operators build and change a portal.
-> Building Toolbox itself is the [maintainer SDLC](./maintainer-sdlc.md); building apps on a portal
+> Building Seikika itself is the [maintainer SDLC](./maintainer-sdlc.md); building apps on a portal
 > is the [user SDLC](./user-sdlc.md). Section numbers are stable because other documents cite them.
 >
 > **Implementation status (M0–M4 done):**
 >
 > | Command / capability | State |
 > |---|---|
-> | `toolbox validate`, `toolbox test` (expectations + `.fga.yaml`), `plan --local --base`, `derive` | ✅ |
-> | `toolbox serve --fixtures` / `--database-url`, `push`, `token create`, `connector test` | ✅ |
-> | `toolbox dev` (watch mode) | Not yet: rerun `test` / restart `serve` |
+> | `seikika validate`, `seikika test` (expectations + `.fga.yaml`), `plan --local --base`, `derive` | ✅ |
+> | `seikika serve --fixtures` / `--database-url`, `push`, `token create`, `connector test` | ✅ |
+> | `seikika dev` (watch mode) | Not yet: rerun `test` / restart `serve` |
 > | `plan --remote` (§4), preview portals (§5), gates (§6), `build`, deploy, `verify`, rollback (§7) | M6 |
 > | GitHub Actions for the portal repo (§8) | M6 |
 
@@ -35,13 +35,13 @@ Related: [plan.md](../plan.md) §2 and §6, [authorization.md](../authorization.
 
 | Env | Purpose | Data | Identity |
 |---|---|---|---|
-| **local** (`toolbox dev`) | Author and iterate | Fixtures and/or a synthetic org (in-memory store) | Dev user, or the developer's real IdP login |
+| **local** (`seikika dev`) | Author and iterate | Fixtures and/or a synthetic org (in-memory store) | Dev user, or the developer's real IdP login |
 | **CI** | Test everything without a cluster | Fixtures + synthetic | Fixture principals |
 | **PR preview** (ephemeral) | Humans and agents click around the change | Fixtures / synthetic / **redacted prod sample** (§5) | Real IdP login; ReBAC applies |
 | **staging** (long-lived, optional) | Integration with real connectors in read-only mode | Real sources, read-only credentials | Real IdP |
 | **production** | — | Real | Real |
 
-**One artifact flows through all of them.** `toolbox build` produces an image (digest-pinned, signed,
+**One artifact flows through all of them.** `seikika build` produces an image (digest-pinned, signed,
 with SBOM and provenance), and promotion is by digest.
 
 ## 3. Local
@@ -49,18 +49,18 @@ with SBOM and provenance), and promotion is by digest.
 The inner loop is designed for speed; see [developer-velocity.md](./developer-velocity.md).
 
 ```bash
-toolbox dev                      # watch → TS builder (if any) → validate → full recompute over fixtures → tests; API/MCP/UI at :7000
-toolbox check                    # changed definitions only: manifest, CEL types, authz model (≤ 300 ms target)
-toolbox test --affected          # tests whose inputs changed, in parallel, with a content-addressed result cache
-toolbox test --all               # everything, no cache (what CI runs on merge)
-toolbox plan --local             # full plan sections against fixtures/synthetic data
-toolbox plan --remote prod       # remote plan (§4) using *your* identity; details redacted to your permissions
-toolbox preview up               # docker compose: the built image + Postgres + fixtures
+seikika dev                      # watch → TS builder (if any) → validate → full recompute over fixtures → tests; API/MCP/UI at :7000
+seikika check                    # changed definitions only: manifest, CEL types, authz model (≤ 300 ms target)
+seikika test --affected          # tests whose inputs changed, in parallel, with a content-addressed result cache
+seikika test --all               # everything, no cache (what CI runs on merge)
+seikika plan --local             # full plan sections against fixtures/synthetic data
+seikika plan --remote prod       # remote plan (§4) using *your* identity; details redacted to your permissions
+seikika preview up               # docker compose: the built image + Postgres + fixtures
 ```
 
 That block is the authoring loop: fixtures in, a recompute, a local API. The deploy loop, which
 runs the image against a GitHub API and a SCIM feed instead of `--fixtures`, is
-[local-simulation.md](./local-simulation.md) (Q19). `toolbox dev` stays the inner loop. Tilt is an
+[local-simulation.md](./local-simulation.md) (Q19). `seikika dev` stays the inner loop. Tilt is an
 optional adapter for customers who already use it, not the simulator.
 
 ## 4. Remote plan: Git is the access boundary
@@ -91,8 +91,8 @@ no secrets) to the production portal. The portal computes the plan **server-side
 **Who sees what: the portal repo is the boundary (the Terraform model).**
 - Plan output is posted in full to the PR, as a sticky comment and check run, like `terraform plan`.
 - Anyone who can read the portal repo can read plan output. **The portal repo is therefore a
-  privileged repository**, with access managed in Git like an infrastructure repo. `toolbox init`
-  documents this, and `toolbox verify` warns when the repo is public.
+  privileged repository**, with access managed in Git like an infrastructure repo. `seikika init`
+  documents this, and `seikika verify` warns when the repo is public.
 - **Fork PRs never trigger plans.**
 - *Considered and rejected:* per-viewer redaction, aggregate-only output and k-anonymity floors for
   plans. They are complex, and they duplicate controls Git already provides.
@@ -102,17 +102,17 @@ portal repository's workflows.
 
 ## 5. Ephemeral PR environments (preview portals)
 
-- `toolbox-dev/preview` creates the environment on PR open or update and destroys it on close. It
+- `seikika/preview` creates the environment on PR open or update and destroys it on close. It
   registers a **GitHub Deployment** (environment `pr-<n>` with a URL), so the link shows on the PR.
 - Adapters:
   - **Kubernetes:** a namespace per PR, via the Helm chart, with TTL labels.
   - **docker-compose on the runner:** for e2e tests without a cluster.
   - **Fly / Cloud Run:** later.
-- **Orphan protection:** previews carry an expiry. A scheduled `toolbox preview gc` workflow deletes
+- **Orphan protection:** previews carry an expiry. A scheduled `seikika preview gc` workflow deletes
   any preview whose PR is closed or whose TTL passed, avoiding Pulumi's documented orphan problem.
 - **Data options**, chosen per portal in code:
   1. Fixtures, the default.
-  2. Synthetic organisation via `toolbox-synth`.
+  2. Synthetic organisation via `seikika-synth`.
   3. **Redacted production sample:** production exports a sample containing only kinds and facets marked
      `preview: allowed` in code. PII is pseudonymised and secrets are never included. The export runs
      server-side and goes directly to the preview's database. Previews still enforce ReBAC using the
@@ -123,7 +123,7 @@ portal repository's workflows.
 ## 6. Gates (policy as code)
 
 ```ts
-new tb.PlanGates("default", {
+new seikika.PlanGates("default", {
   owner: "group:default/platform",
   gates: {
     deletionRatio:       { max: 0.10 },             // entities deleted by mapping changes
@@ -134,7 +134,7 @@ new tb.PlanGates("default", {
     agentSurface:        { allowToolRemoval: false },
     ownership:           { requireOwnerOnNewMetaEntities: true },
   },
-  acknowledge: "label:toolbox-ack/<gate>",   // must be applied by an owner of the affected module
+  acknowledge: "label:seikika-ack/<gate>",   // must be applied by an owner of the affected module
 });
 ```
 
@@ -147,13 +147,13 @@ new tb.PlanGates("default", {
 
 ## 7. Build, deploy, verify, roll back
 
-- `toolbox build`:
+- `seikika build`:
   - Produces one OCI image with the canonical `manifest.json`, UI bundles, in-image executors and connectors, and the generated OpenAPI (D33, D53).
   - Adds an SBOM, a **build provenance attestation** (`actions/attest-build-provenance`) and a
     cosign/sigstore signature.
-- **Deploy** uses the customer's tooling (Helm, Argo CD, Terraform, ECS…). Toolbox provides the chart
+- **Deploy** uses the customer's tooling (Helm, Argo CD, Terraform, ECS…). Seikika provides the chart
   and modules rather than a deploy service.
-- `toolbox verify --against <url>` runs post-deploy checks:
+- `seikika verify --against <url>` runs post-deploy checks:
   - an operator-access probe (C2)
   - MCP tool list = the plan's expected list
   - connectors healthy
@@ -166,17 +166,17 @@ new tb.PlanGates("default", {
 
 ## 8. GitHub Actions for the portal repo
 
-All logic lives in the `toolbox` CLI, and the Actions are thin wrappers. A **reusable workflow** wires
+All logic lives in the `seikika` CLI, and the Actions are thin wrappers. A **reusable workflow** wires
 them together, so adoption is one file.
 
 | Action | Inputs | Outputs |
 |---|---|---|
-| `toolbox-dev/setup-toolbox` | version (default from `toolbox.lock`) | CLI on PATH; caches language hosts and connector images |
-| `toolbox-dev/test` | test globs, shards | JUnit + job summary; view snapshot artifacts |
-| `toolbox-dev/plan` | portal URL, gates | Sticky PR comment (aggregates), check run with link to detailed plan, gate status |
-| `toolbox-dev/build` | registry, tags | Image digest, SBOM, provenance attestation, signature |
-| `toolbox-dev/preview` | adapter (`k8s`/`compose`), data mode | GitHub Deployment + URL; teardown on close |
-| `toolbox-dev/verify` | URL, expected plan | Pass/fail; triggers rollback in the calling workflow |
+| `seikika/setup-seikika` | version (default from `seikika.lock`) | CLI on PATH; caches language hosts and connector images |
+| `seikika/test` | test globs, shards | JUnit + job summary; view snapshot artifacts |
+| `seikika/plan` | portal URL, gates | Sticky PR comment (aggregates), check run with link to detailed plan, gate status |
+| `seikika/build` | registry, tags | Image digest, SBOM, provenance attestation, signature |
+| `seikika/preview` | adapter (`k8s`/`compose`), data mode | GitHub Deployment + URL; teardown on close |
+| `seikika/verify` | URL, expected plan | Pass/fail; triggers rollback in the calling workflow |
 
 ```yaml
 # .github/workflows/portal.yml in the customer's portal repo
@@ -187,7 +187,7 @@ on:
 permissions: { id-token: write, contents: read, pull-requests: write, checks: write, deployments: write, packages: write, attestations: write }
 jobs:
   portal:
-    uses: toolbox-dev/workflows/.github/workflows/portal.yml@v1
+    uses: seikika/workflows/.github/workflows/portal.yml@v1
     with:
       portal-url: https://portal.acme.dev
       preview: k8s                 # or: compose | none
@@ -202,11 +202,11 @@ What the reusable workflow does:
 | **PR** | test → remote plan (gates) → build (unpublished tag) → preview up → surface/e2e tests against the preview (Playwright, MCP smoke) |
 | **PR closed** | preview down |
 | **main** | test → build → attest + sign → deploy hook (customer's) → verify → rollback on failure |
-| **schedule** | `preview gc`, `toolbox upgrade --check` (opens a PR for new Toolbox versions with codemods applied) |
+| **schedule** | `preview gc`, `seikika upgrade --check` (opens a PR for new Seikika versions with codemods applied) |
 
 ## 9. Agents in the loop
 
-- The authoring MCP server (`toolbox mcp --dev`) exposes `test`, `plan` (remote, as the developer),
+- The authoring MCP server (`seikika mcp --dev`) exposes `test`, `plan` (remote, as the developer),
   `preview_url` and `explain_plan`. An agent can therefore iterate on a portal change exactly like a
   human: edit, test, plan, open PR, read the plan check, fix.
 - Plan output is machine-readable (`--format json`), with stable section ids for agents.
@@ -215,7 +215,7 @@ What the reusable workflow does:
 
 | Phase | Scope |
 |---|---|
-| 1 | `toolbox dev/test/build`; `setup-toolbox`, `test`, `build` Actions; signing + provenance; `verify` + rollback |
+| 1 | `seikika dev/test/build`; `setup-seikika`, `test`, `build` Actions; signing + provenance; `verify` + rollback |
 | 2 | Remote plan as a durable workflow (portal repo is the access boundary); `plan` Action with sticky comment and gates (deletion, authz, operator access, notifications); detailed plan pages |
 | 3 | Preview environments (compose, k8s), GitHub Deployments, GC; fixture/synthetic data modes; ownership-aware review |
 | 4 | Redacted production sample mode; `upgrade --check` PRs; agent authoring tools for plan and preview |

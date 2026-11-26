@@ -1,0 +1,43 @@
+apiVersion: seikika.com/assessment/v1
+entity: rule:seikika/meta-connector/records-mapped
+rubric: rule-quality
+subjectHash: 1d2d20727a35
+assessor: {kind: agent, name: cursor-cloud-agent, model: claude-opus-5.5}
+at: 2026-11-24
+verdicts:
+  - criterion: measures-intent
+    verdict: pass
+    reason: >-
+      connector_record (crates/seikika-cli/src/model.rs:204-234) lists
+      declared records that no map rule names as `<connector>/<record>`, over
+      the resolved manifest, and now counts a rule only if its `set` or a
+      relation reads `record`, so the empty-set mapping the last review found
+      no longer counts. That is what "records mapped" means.
+  - criterion: hard-to-game
+    verdict: pass
+    reason: >-
+      The cheapest pass is a map rule whose `set` copies one field, e.g.
+      `{'path': record.path}`, which is a real, if minimal, mapping. The test
+      is a substring match (model.rs:211-212), so `set: "{'note': 'record'}"`
+      would also pass, but that costs the same as mapping a field and only
+      fools the check on purpose. MapRule has no filter to switch a rule off
+      (crates/seikika-model/src/manifest.rs:127-134).
+  - criterion: fix-leads-to-pass
+    verdict: pass
+    reason: >-
+      The evidence lists the record kinds, and the fix
+      (portal/standards/meta.yaml:813-826) gives the exact `map: - from:
+      <connector>/<record>` shape and the alternative of not declaring it.
+  - criterion: threshold-justified
+    verdict: pass
+    reason: >-
+      No number. Bronze is stated in
+      docs/design/scorecards-for-scorecards.md:205 (meta-connector:
+      records-mapped and has-fixtures at bronze).
+summary: >-
+  Re-assessed after the rule gained a rationale: its check, evidence, fix
+  and level are the same as on main, as is the code the reasons cite, so
+  the verdicts stand; line numbers are updated for the rationale lines
+  inserted above them. The rationale states the why without claiming more
+  than the check sees. The empty-set loophole is closed; what remains
+  takes deliberate deception at the cost of a real mapping.

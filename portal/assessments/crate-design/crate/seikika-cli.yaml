@@ -1,0 +1,71 @@
+apiVersion: seikika.com/assessment/v1
+entity: crate:seikika-cli
+rubric: crate-design
+subjectHash: c5b5f17c77d4
+assessor: {kind: agent, name: cursor-assessor-19, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: one-responsibility
+    verdict: pass
+    reason: >-
+      It is the `seikika` binary, docs/v1-spec.md:97, and each module opens
+      with the command it implements: `report`, `run`, `assess`, `install`
+      and `doctor`, `tools`, `serve`/`push`, `describe`, the read commands
+      and the MCP bridge (crates/seikika-cli/src/*.rs, first lines). The
+      command set tracks the §7.7 table (docs/v1-spec.md:390-416). Two
+      caveats, neither a second unrelated job:
+      - The ratchet and report engine (src/report.rs at 2,406 lines, plus
+      src/causes.rs and src/judged.rs) lives only in the binary, so
+      neither the server nor MCP can reuse it.
+      - §7.7 still lists `dev`, `build`, `verify`, `login` and
+      `serve --role`, which the `Command` enum doesn't define
+      (src/main.rs:46-314).
+
+      The crate doc itself is one line (src/main.rs:1).
+  - criterion: small-contract
+    verdict: pass
+    reason: >-
+      Nothing depends on it. It is a `bin` target, so no crate can reach its
+      internals. Coupling runs the other way: it calls seikika-api's
+      `connectors::resolve_config`, `binary_for` and `actions::signing_seed`
+      (crates/seikika-cli/src/report.rs:162-166;
+      crates/seikika-cli/src/run.rs:687). That coupling is judged against
+      seikika-api, whose surface it exposes. Read commands go through the
+      server's MCP tools rather than re-implementing them (src/client.rs:1-3),
+      which keeps CLI and agents on one contract.
+  - criterion: replaceable-defaults
+    verdict: pass
+    reason: >-
+      It is the composition root, and the only place defaults are chosen:
+      - `start_authz` starts OpenFGA and returns
+      `Arc<dyn seikika_authz::Authorizer>` (src/server.rs:56-92);
+      - `serve` picks PgStore or MemStore (src/server.rs:179-196);
+      - `report` uses MemStore (src/report.rs:179).
+
+      It has no sqlx, OpenFGA or DBOS dependency of its own
+      (crates/seikika-cli/Cargo.toml). One leak: it passes PgStore's public
+      `pool` field to `install_tuple_view` (src/server.rs:89-90).
+  - criterion: tests-match-risk
+    verdict: pass
+    reason: >-
+      The commands whose mistakes cost most are tested directly. The ratchet
+      gate, CI's merge check (D66), has seven integration tests: falling
+      levels, root causes, judged rules, unknown tools and campaign restarts
+      (tests/ratchet.rs:78-479). `install` verifies pins and refuses a
+      tampered archive (tests/install.rs:92-330). `serve` keeps its
+      environment from same-user processes, and `--detach` starts and stops
+      (tests/serve.rs:37-79). `assess` brief, check and submit are covered
+      (tests/assess.rs:133-228). Comparative scorecards are covered
+      (tests/compare.rs:78-163). `seikika run` has one unit test
+      (src/run.rs:1347). Its lifecycle is exercised in CI by
+      scripts/m5-acceptance.sh (.github/workflows/ci.yml:143), and `validate`
+      and `test` run there on four portals (ci.yml:39-70). One gap is minor:
+      `push` (src/server.rs:285, 119 lines) is only exercised by
+      scripts/m2-acceptance.sh.
+summary: >-
+  A large but orderly binary: each module is one command, defaults are
+  chosen in one place behind traits, and reads reuse the server's MCP
+  tools. The ratchet, install and serve paths have strong integration
+  tests, and `run` is covered by the M5 acceptance script. What stands out
+  is the report engine living only in the binary, and §7.7 listing
+  commands that don't exist yet.

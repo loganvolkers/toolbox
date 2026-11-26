@@ -1,5 +1,5 @@
 ---
-import "@toolbox-dev/ui/theme.css";
+import "@seikika/ui/theme.css";
 import "../app.css";
 ---
 <!doctype html>
@@ -7,17 +7,17 @@ import "../app.css";
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Toolbox</title>
+    <title>Seikika</title>
   </head>
   <body>
-    <!-- toolbox:entity -->
+    <!-- seikika:entity -->
     <div id="root"></div>
-    <noscript><p>Enable JavaScript to browse the Toolbox portal.</p></noscript>
+    <noscript><p>Enable JavaScript to browse the Seikika portal.</p></noscript>
   </body>
 </html>
 <script>
   import { createApp } from "vue";
   import PortalApp from "../components/PortalApp.vue";
   createApp(PortalApp).mount("#root");
-  document.getElementById("toolbox-initial-entity")?.remove();
+  document.getElementById("seikika-initial-entity")?.remove();
 </script>

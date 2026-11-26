@@ -13,7 +13,7 @@ path when trying it from a checkout.
 
 ```yaml
 include:
-  - package: github:loganvolkers/toolbox/packages/sre@<tag>
+  - package: github:seikika/seikika/packages/sre@<tag>
     with:
       service: checkout
       owner: group:checkout
@@ -54,13 +54,13 @@ drill artifact. Scope the incident record to qualifying incidents under
 the team's policy.
 
 ```sh
-toolbox validate packages/sre/tests
-toolbox test packages/sre/tests
+seikika validate packages/sre/tests
+seikika test packages/sre/tests
 
 # In the adopting repository, review the initial verdict before committing a baseline.
-toolbox report .toolbox --skip checkout-production-sre-health -o failures
-toolbox report .toolbox --skip checkout-production-sre-health --baseline .toolbox/results.json --update
-toolbox report .toolbox --skip checkout-production-sre-health --baseline .toolbox/results.json
+seikika report .seikika --skip checkout-production-sre-health -o failures
+seikika report .seikika --skip checkout-production-sre-health --baseline .seikika/results.json --update
+seikika report .seikika --skip checkout-production-sre-health --baseline .seikika/results.json
 ```
 
 A launch reviewer should require a current bronze result or a documented
@@ -89,4 +89,4 @@ independent verification of customer recovery.
 [Google SRE Workbook](https://sre.google/workbook/table-of-contents/) ·
 [Microsoft post-incident report, public mirror](
   https://www.365fanatic.com/wp-content/uploads/2026/11/postincidentreport-mo1550821.pdf
-) · [Toolbox package model](../../docs/design/packages.md)
+) · [Seikika package model](../../docs/design/packages.md)

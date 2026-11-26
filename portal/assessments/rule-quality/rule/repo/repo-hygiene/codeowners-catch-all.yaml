@@ -1,4 +1,4 @@
-apiVersion: toolbox.dev/assessment/v1
+apiVersion: seikika.com/assessment/v1
 entity: rule:repo/repo-hygiene/codeowners-catch-all
 rubric: rule-quality
 subjectHash: 178261b17680
@@ -9,9 +9,9 @@ verdicts:
     verdict: fail
     reason: >-
       The check is a literal `r.pattern == '*'`
-      (examples/repo-portal-starter/toolbox.yaml:113-115). `parse_codeowners`
+      (examples/repo-portal-starter/seikika.yaml:113-115). `parse_codeowners`
       keeps rules with no owners
-      (crates/toolbox-connector-workspace/src/repo.rs:37-51), and in GitHub a
+      (crates/seikika-connector-workspace/src/repo.rs:37-51), and in GitHub a
       bare `*` line clears ownership. So `*` alone passes while no path has an
       owner. Equivalent catch-alls such as `/**` or `**` fail while meeting
       the intent. The check also ignores order: GitHub applies the last
@@ -36,7 +36,7 @@ verdicts:
     verdict: pass
     reason: >-
       The evidence lists the CODEOWNERS patterns in order
-      (examples/repo-portal-starter/toolbox.yaml:116), and the fix says to
+      (examples/repo-portal-starter/seikika.yaml:116), and the fix says to
       start with a `*` rule "so every path has an owner" (:117). Followed as
       written, with an owner, it passes, and it is also GitHub's recommended
       placement.
@@ -44,7 +44,7 @@ verdicts:
     verdict: pass
     reason: >-
       There is no number. Silver is where the scorecard says ownership becomes
-      complete (examples/repo-portal-starter/toolbox.yaml:79-81), and the rule
+      complete (examples/repo-portal-starter/seikika.yaml:79-81), and the rule
       rationale (:118-121) explains why a default owner matters.
 summary: >-
   The fix is right, but the check is weaker than it. A literal `*`

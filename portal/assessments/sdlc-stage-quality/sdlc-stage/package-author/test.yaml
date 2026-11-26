@@ -1,4 +1,4 @@
-apiVersion: toolbox.dev/assessment/v1
+apiVersion: seikika.com/assessment/v1
 entity: sdlc-stage:package-author/test
 rubric: sdlc-stage-quality
 subjectHash: e35f1feceea9
@@ -8,34 +8,34 @@ verdicts:
   - criterion: executable-exit
     verdict: fail
     reason: >-
-      CI runs `toolbox test` on each packages/*/tests portal, but with
-      target/debug/toolbox built at HEAD (.github/workflows/ci.yml:67-71) on
+      CI runs `seikika test` on each packages/*/tests portal, but with
+      target/debug/seikika built at HEAD (.github/workflows/ci.yml:67-71) on
       one platform. No workflow installs a released version: no
-      `toolbox-version` or install-release.sh appears in .github/workflows/.
+      `seikika-version` or install-release.sh appears in .github/workflows/.
       The "each supported release and platform" half of the exit criterion is
-      therefore unchecked. Meta bronze is covered only for packages T4T
-      includes (portal/toolbox.yaml:361-384), through its ratchet.
+      therefore unchecked. Meta bronze is covered only for packages S4S
+      includes (portal/seikika.yaml:361-384), through its ratchet.
     suggestion: >-
       Add a matrix job that installs each supported release with
       scripts/install-release.sh, on Linux, macOS and Windows, and runs
-      `toolbox test packages/<name>/tests`.
+      `seikika test packages/<name>/tests`.
   - criterion: agent-can-complete
     verdict: fail
     reason: >-
-      An agent can run `toolbox test packages/github-actions/tests`, but it
-      cannot learn which releases a package supports. toolbox-package.yaml has
-      no Toolbox range (crates/toolbox-model/src/package.rs:9-10). The test
-      portal's `portal.toolbox: "0.1"`
-      (packages/github-actions/tests/toolbox.yaml:8) is only parsed
-      (crates/toolbox-model/src/manifest.rs:114) and never compared against
+      An agent can run `seikika test packages/github-actions/tests`, but it
+      cannot learn which releases a package supports. seikika-package.yaml has
+      no Seikika range (crates/seikika-model/src/package.rs:9-10). The test
+      portal's `portal.seikika: "0.1"`
+      (packages/github-actions/tests/seikika.yaml:8) is only parsed
+      (crates/seikika-model/src/manifest.rs:114) and never compared against
       the running binary.
     suggestion: >-
-      Add a `toolbox:` version range to toolbox-package.yaml, enforced at
+      Add a `seikika:` version range to seikika-package.yaml, enforced at
       load, so the matrix is derived from the package rather than guessed.
   - criterion: reuses-artifacts
     verdict: fail
     reason: >-
-      The only package tests in this repository compile Toolbox from source
+      The only package tests in this repository compile Seikika from source
       first (ci.yml:67-71 use target/debug). Releases v0.1.0 and v0.1.1 exist
       (git tags) with installers (scripts/install-release.sh:6-8), yet no
       package test uses them.
@@ -47,12 +47,12 @@ verdicts:
     reason: >-
       A package's tests are fixtures plus a mini-portal
       (package-author-sdlc.md §6.1 and §6.3, lines 222-254). Any author runs
-      them with the released `toolbox test`, without a crate change.
+      them with the released `seikika test`, without a crate change.
 # Codex evaluated the two added criteria. Earlier verdicts retain their original attribution.
   - criterion: fast-feedback
     verdict: fail
     reason: >-
-      portal/sdlc/stages/package-author.yaml lists toolbox test
+      portal/sdlc/stages/package-author.yaml lists seikika test
       packages/github-actions/tests. docs/design/package-author-sdlc.md gives
       no measured local time to the stage exit.
     suggestion: >-

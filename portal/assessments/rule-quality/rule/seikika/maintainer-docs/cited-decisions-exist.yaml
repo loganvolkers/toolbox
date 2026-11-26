@@ -1,0 +1,57 @@
+apiVersion: seikika.com/assessment/v1
+entity: rule:seikika/maintainer-docs/cited-decisions-exist
+rubric: rule-quality
+subjectHash: 308a1620f879
+assessor: {kind: agent, name: cursor-assessor-11, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: measures-intent
+    verdict: pass
+    reason: >-
+      The intent is that a cited id names a file
+      (portal/standards/docs.yaml:133-136). The check is exactly that set
+      comparison. Citations match `D` plus 1-4 digits or a 26-character ULID
+      (crates/seikika-connector-workspace/src/main.rs:276-289). They are
+      compared with the `id` and `legacy` frontmatter of docs/decisions/*.md
+      (main.rs:235-272), as docs/design/decision-citations.md:14-16 specifies.
+      The regex is case-insensitive, so "d3" is read as a citation. That
+      passes because legacy D1-D98 all exist; it is harmless noise, not a
+      missed citation.
+  - criterion: hard-to-game
+    verdict: fail
+    reason: >-
+      The cheapest pass for a citation of an unwritten decision is a stub
+      file. `decision_file_ids` reads only the `id`/`legacy` keys
+      (crates/seikika-connector-workspace/src/main.rs:234-255), and decision
+      files are excluded from every docs rule
+      (portal/standards/docs.yaml:98-100). So `---\nid: D…\n---` with no
+      title, status or body passes, and nothing else scores it. A citation can
+      also be changed to any existing id, related or not.
+    suggestion: >-
+      Count a decision file as known only when it has a `# ` title and a
+      non-empty body after the frontmatter (every D*.md under docs/decisions/
+      has a title today). Or add a small card for decision records (id matches
+      filename, title, a bold statement of the decision) so a stub fails
+      somewhere.
+  - criterion: fix-leads-to-pass
+    verdict: pass
+    reason: >-
+      The evidence lists the missing ids (e.g. ['D999'],
+      portal/tests/standards.test.yaml:651-659), and the fix says to cite one
+      that exists or add the file, minting the id with scripts/decision-id.py
+      (docs.yaml:129-132). Citing an existing id passes. Minting yields a
+      ULID, so for a legacy-style id the citation must also be replaced; the
+      fix implies this rather than saying it.
+  - criterion: threshold-justified
+    verdict: pass
+    reason: >-
+      There is no number. Bronze is decided by D84
+      (docs/decisions/D01M7WMSMS30000000000000000.md) and kept when ids became
+      ULIDs (D01M7XKEXQH4HG5371629M50E2G,
+      docs/design/decision-citations.md:20-24). It is the same class of defect
+      as a dead link (decision-citations.md:31).
+summary: >-
+  A precise check of what it claims: every cited id resolves against the
+  decision files' frontmatter. Its weak point is what counts as a file: a
+  frontmatter-only stub satisfies it, and no rule looks at decision files.
+  Requiring a title and a status line would close that.

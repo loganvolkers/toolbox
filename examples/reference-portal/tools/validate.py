@@ -2,7 +2,7 @@
 """Validate the reference portal (or the portal directory given as the first argument) against the
 JSON Schemas in the repo-root schema/ directory.
 
-- toolbox.yaml against schema/manifest.schema.json
+- seikika.yaml against schema/manifest.schema.json
 - every fixture line against schema/connector-messages.schema.json
 - every protocol transcript message against the connector or executor message schema
 - cross-references: map rules name declared connectors/records, scorecards and actions name declared
@@ -32,8 +32,8 @@ def check(validator, doc, where):
     for e in validator.iter_errors(doc):
         errors.append(f"{where}: {'/'.join(map(str, e.absolute_path))}: {e.message}")
 
-manifest = load_yaml(os.path.join(ROOT, "toolbox.yaml"))
-check(schema("manifest.schema.json"), manifest, "toolbox.yaml")
+manifest = load_yaml(os.path.join(ROOT, "seikika.yaml"))
+check(schema("manifest.schema.json"), manifest, "seikika.yaml")
 
 conn = schema("connector-messages.schema.json")
 exe = schema("executor-messages.schema.json")
@@ -83,7 +83,7 @@ for a in manifest.get("actions", []):
 SCALAR = {"string", "integer", "number", "boolean"}
 KEYS = {"type", "title", "description", "default", "examples", "enum", "enumFrom", "minLength", "maxLength",
         "pattern", "format", "minimum", "maximum", "items", "minItems", "maxItems", "uniqueItems",
-        "properties", "required", "x-toolbox-widget"}
+        "properties", "required", "x-seikika-widget"}
 def form_ok(schema, where, depth=0):
     # A form never sends fields it doesn't show, so closing an object is within the subset.
     closed = schema.get("type") == "object" and schema.get("additionalProperties") is False
@@ -102,5 +102,5 @@ for a in manifest.get("actions", []):
     form_ok(a["inputs"], f"action {a['name']} inputs")
 
 for e in errors: print("ERROR", e)
-print(f"validated toolbox.yaml + {n} messages: {len(errors)} error(s)")
+print(f"validated seikika.yaml + {n} messages: {len(errors)} error(s)")
 sys.exit(1 if errors else 0)

@@ -1,10 +1,10 @@
 # Connector Standards: Cataloguing and Scoring the Connectors We Ship
 
-*Status: deterministic catalog and scorecard built, 2026-11-20 (D73). Toolbox for Toolbox catalogues
+*Status: deterministic catalog and scorecard built, 2026-11-20 (D73). Seikika for Seikika catalogues
 every first-party connector crate and scores it with `maintainer-connector`. Runtime health (lag,
 error rate, permission probes) stays in the meta-catalog design and is not gated. Related:
 [connector-control.md](./connector-control.md), [meta-catalog.md](./meta-catalog.md),
-[toolbox-for-toolbox.md](./toolbox-for-toolbox.md).*
+[seikika-for-seikika.md](./seikika-for-seikika.md).*
 
 ---
 
@@ -12,7 +12,7 @@ error rate, permission probes) stays in the meta-catalog design and is not gated
 
 **Catalogue every connector we ship, and gate the checks a reader of the source can make.**
 
-A connector is a process that speaks Toolbox's control channel and emits records of named kinds.
+A connector is a process that speaks Seikika's control channel and emits records of named kinds.
 The questions worth separating:
 
 | Question | What answers it | In this repo |
@@ -22,16 +22,16 @@ The questions worth separating:
 | Does CI actually run it, and is a credential pasted into the tree? | A `connector test` line, or an acceptance script for a push connector; secret shapes | gold |
 | Is it healthy in production? | Lag, error rate, a permission probe | **Not gated.** That is `connector-health` in [meta-catalog.md](./meta-catalog.md), and it needs a live portal |
 
-The workspace connector emits one `connector` record per `crates/toolbox-connector-*/Cargo.toml`.
-It reports facts. `portal/toolbox.yaml` holds the thresholds. A connector added after this baseline
+The workspace connector emits one `connector` record per `crates/seikika-connector-*/Cargo.toml`.
+It reports facts. `portal/seikika.yaml` holds the thresholds. A connector added after this baseline
 must reach bronze.
 
 **What we did not adopt, and why:**
 
 | Proposal | Why it is not the gate |
 |---|---|
-| Airbyte's connection specification and acceptance-test credentials | Airbyte's spec is a JSON Schema a user fills in, and the acceptance suite needs sandbox credentials. Toolbox connectors are configured by the portal manifest. The part we take is the same idea: one protocol, one test suite, secrets not pasted into the tree |
-| Singer's SCHEMA message and `key_properties` | A tap describes streams at runtime. Our kinds are declared in `capabilities()` and checked by `toolbox connector test` against the manifest. Requiring a second schema document would duplicate that |
+| Airbyte's connection specification and acceptance-test credentials | Airbyte's spec is a JSON Schema a user fills in, and the acceptance suite needs sandbox credentials. Seikika connectors are configured by the portal manifest. The part we take is the same idea: one protocol, one test suite, secrets not pasted into the tree |
+| Singer's SCHEMA message and `key_properties` | A tap describes streams at runtime. Our kinds are declared in `capabilities()` and checked by `seikika connector test` against the manifest. Requiring a second schema document would duplicate that |
 | Ocean's `spec.yaml` plus `@ocean.on_resync` | The same contract (kinds, config, a resync per kind), expressed in Python. We check the Rust shape of that contract instead of adopting Ocean's files |
 | Meta-catalog `connector-health` bronze through gold as written | Owner, digest pin, lag, permission probe, identity-link coverage and a 7-day error rate are runtime facts. This portal has no running connector to measure. The gold line "contract tests pass in CI" is the part that is a property of the tree, so it is the gold rule here |
 
@@ -41,8 +41,8 @@ Read 2026-11-20. "Primary" means the repository or the spec text.
 
 | Source | What it decides | What is deterministic | What needs a run |
 |---|---|---|---|
-| **Toolbox conformance kit** (`toolbox connector test`) | Register first. Capabilities name only kinds the manifest declares. A resync of each kind emits records, `snapshot_complete` and a completion. A refresh returns exactly the requested ids. An unknown id is `not_found` | The source either contains those calls or it does not. CI either invokes the binary or it does not | The kit itself, against a built binary |
-| **Toolbox control channel** | `run_stdio` for an in-image connector, `run_remote` for long-poll. Push connectors register without refresh or resync. A refresh never deletes by omission | Which entry point the crate calls; whether the crate doc says push-only | Delivery, coalescing, deadlines |
+| **Seikika conformance kit** (`seikika connector test`) | Register first. Capabilities name only kinds the manifest declares. A resync of each kind emits records, `snapshot_complete` and a completion. A refresh returns exactly the requested ids. An unknown id is `not_found` | The source either contains those calls or it does not. CI either invokes the binary or it does not | The kit itself, against a built binary |
+| **Seikika control channel** | `run_stdio` for an in-image connector, `run_remote` for long-poll. Push connectors register without refresh or resync. A refresh never deletes by omission | Which entry point the crate calls; whether the crate doc says push-only | Delivery, coalescing, deadlines |
 | **Airbyte protocol and acceptance tests** | `connectionSpecification` is JSON Schema. Spec tests check backward compatibility and that secret fields are marked `airbyte_secret`. CI runs the acceptance suite when credentials exist | Spec file present; secret fields marked | `check`, `discover`, `read` against a sandbox |
 | **Singer spec 0.3.0** | A tap writes SCHEMA then RECORD. SCHEMA requires `stream`, `schema` and `key_properties`. Discovery mode writes a catalog of streams | The message shape | A sync against the source |
 | **Port Ocean** | `.port/spec.yaml` lists kinds and config (secrets marked `sensitive`). Each kind has an `@ocean.on_resync` handler | Spec and handlers agree | `ocean sail` against the API |
@@ -55,13 +55,13 @@ for the pull connectors.
 
 ## 3. The catalog
 
-`workspace` grows an opt-in `connectors` glob (this portal: `crates/toolbox-connector-*/Cargo.toml`).
+`workspace` grows an opt-in `connectors` glob (this portal: `crates/seikika-connector-*/Cargo.toml`).
 One `connector` record per manifest. The id is `connector:<crate directory>`.
 
 | Fact | What it is |
 |---|---|
 | `name`, `description`, `descriptionChars`, `path`, `dir` | Package name and the `description` field of `[package]` |
-| `crateDoc`, `configDocumented` | A `//!` block on `src/main.rs` (or `src/lib.rs`). Config is documented when that block names `TOOLBOX_CONNECTOR_CONFIG`, `--toolbox` or `--listen` |
+| `crateDoc`, `configDocumented` | A `//!` block on `src/main.rs` (or `src/lib.rs`). Config is documented when that block names `SEIKIKA_CONNECTOR_CONFIG`, `--seikika` or `--listen` |
 | `transport` | `stdio` if the source calls `run_stdio`, `remote` if it calls `run_remote`, `both` or `none` |
 | `pushOnly` | The crate doc says push-only, or the crate calls `run_remote` and not `run_stdio` |
 | `documentedKinds`, `genericKinds` | Kinds from `record("…")`, `snapshot_complete("…")`, `"kind": "…"`, and doc bullets. `genericKinds` is set when the doc says kinds come from job config (`kind \`<\`` or `declares their \`kinds\``), which is how the runner works |
@@ -93,25 +93,25 @@ rule names the gap.
 
 ## 5. This repository
 
-Measured with `toolbox report portal --skip runner,github-actions` after the connector change.
+Measured with `seikika report portal --skip runner,github-actions` after the connector change.
 
 | Connector | Level | What fails above bronze |
 |---|---|---|
-| `toolbox-connector-github` | gold | — |
-| `toolbox-connector-gitlab` | gold | — (conformance runs in `scripts/gitlab-acceptance.sh` step 8, against a real GitLab) |
-| `toolbox-connector-runner` | gold | Kinds come from job config, which the rule allows |
-| `toolbox-connector-workspace` | gold | — |
-| `toolbox-connector-git-files` | bronze | No `#[test]` (silver). Conformance runs in `scripts/m4-acceptance.sh` |
-| `toolbox-connector-scim` | bronze | No `#[test]`. Push-only, so the snapshot and `not_found` rules do not apply. `scripts/m4-acceptance.sh` starts the binary; the conformance kit does not, because a push connector has no resync |
+| `seikika-connector-github` | gold | — |
+| `seikika-connector-gitlab` | gold | — (conformance runs in `scripts/gitlab-acceptance.sh` step 8, against a real GitLab) |
+| `seikika-connector-runner` | gold | Kinds come from job config, which the rule allows |
+| `seikika-connector-workspace` | gold | — |
+| `seikika-connector-git-files` | bronze | No `#[test]` (silver). Conformance runs in `scripts/m4-acceptance.sh` |
+| `seikika-connector-scim` | bronze | No `#[test]`. Push-only, so the snapshot and `not_found` rules do not apply. `scripts/m4-acceptance.sh` starts the binary; the conformance kit does not, because a push connector has no resync |
 
-`toolbox test portal` pins three fixture connectors: `crates/demo/focused` at gold,
+`seikika test portal` pins three fixture connectors: `crates/demo/focused` at gold,
 `crates/demo/partial` at bronze, `crates/demo/unsafe` at none. Every rule passes on one fixture and
 fails on another, so the new rules and the scorecard clear `meta-rule` / `meta-scorecard` from
 this commit (D71).
 
 ## Sources
 
-- Toolbox conformance kit, `crates/toolbox-connect/src/conformance.rs` (the five checks). Control
+- Seikika conformance kit, `crates/seikika-connect/src/conformance.rs` (the five checks). Control
   channel: [connector-control.md](./connector-control.md). The runtime scorecard this one does not
   implement: [meta-catalog.md](./meta-catalog.md) §7.2.
 - Airbyte protocol, `docs.airbyte.com/platform/understanding-airbyte/airbyte-protocol`, and the

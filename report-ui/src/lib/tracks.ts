@@ -251,7 +251,7 @@ export function factorChip(v, counts, total) {
   return v === "ahead" && counts.ahead * 2 < total ? "narrowly ahead" : null;
 }
 
-// "Toolbox is behind Backstage", in words that read as a sentence.
+// "Seikika is behind Backstage", in words that read as a sentence.
 export function standingPhrase(a, s, b) {
   if (s === "ahead") return a + " ahead of " + b;
   if (s === "behind") return a + " behind " + b;

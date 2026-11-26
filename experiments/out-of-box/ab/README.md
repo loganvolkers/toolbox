@@ -1,27 +1,27 @@
-# A/B: Do Agents Raise Standards Further With Toolbox?
+# A/B: Do Agents Raise Standards Further With Seikika?
 
 **Question** ([repo-value.md](../../../docs/design/repo-value.md) R3): does a coding agent raise a
-repository's standards further with `toolbox report` and its ratchet than with the same standards
+repository's standards further with `seikika report` and its ratchet than with the same standards
 written down?
 
 **Answer (2026-11-21, two repositories, one run per arm): not on this sample.** The checklist arm
 fixed as much or more: 86% against 83% on OpenFGA, and 100% against 82% on Codex. R3's bar was 15
-points more with Toolbox. The Toolbox arm introduced no new failures and suppressed nothing. The
+points more with Seikika. The Seikika arm introduced no new failures and suppressed nothing. The
 checklist arm introduced one new failure and, on Codex, reached 100% partly through a config file
 that ignores 31 zizmor findings, with reasons.
 
 ## Method
 
-| | Arm A: checklist | Arm B: Toolbox |
+| | Arm A: checklist | Arm B: Seikika |
 |---|---|---|
-| Prompt | [prompt-checklist.md](prompt-checklist.md): the rules and fix texts, written out | [prompt-toolbox.md](prompt-toolbox.md): `toolbox report`, with evidence, and the ratchet |
-| Tools | zizmor 1.32.0 and actionlint 1.7.12 (the checklist names both) | The same, plus `toolbox` |
+| Prompt | [prompt-checklist.md](prompt-checklist.md): the rules and fix texts, written out | [prompt-seikika.md](prompt-seikika.md): `seikika report`, with evidence, and the ratchet |
+| Tools | zizmor 1.32.0 and actionlint 1.7.12 (the checklist names both) | The same, plus `seikika` |
 | Budget | 40 tool calls; no network, commits or deleted functionality | The same |
 | Agent | The same general-purpose agent and model | The same |
 
-Each arm worked on its own copy of a fork: OpenFGA with [../portal](../portal/toolbox.yaml), and
-Codex with [../portal-pnpm](../portal-pnpm/toolbox.yaml). Afterwards every copy was scored with
-`toolbox report`, leaving out the six run-history rules, which can't be met offline. The diffs are
+Each arm worked on its own copy of a fork: OpenFGA with [../portal](../portal/seikika.yaml), and
+Codex with [../portal-pnpm](../portal-pnpm/seikika.yaml). Afterwards every copy was scored with
+`seikika report`, leaving out the six run-history rules, which can't be met offline. The diffs are
 here as patches.
 
 ## Results
@@ -41,12 +41,12 @@ have caught. The two OpenFGA arms made nearly the same changes. Arm A also restr
 ## Reading it
 
 - **Most of these rules wrap two linters, and the checklist named them.** An agent that can run
-  zizmor and actionlint gets much the same evidence that Toolbox shows. That comparison is fair,
-  and it is where Toolbox adds the least. Its own facts (CODEOWNERS, docs links, pnpm, action
+  zizmor and actionlint gets much the same evidence that Seikika shows. That comparison is fair,
+  and it is where Seikika adds the least. Its own facts (CODEOWNERS, docs links, pnpm, action
   pinning across workflows) were mostly passing already: 2 of OpenFGA's 42 failures and 1 of Codex's 67. Both arms
   added Codex's CODEOWNERS catch-all, and neither could pin OpenFGA's `@main` action offline. So
   this test barely exercised them.
-- **What Toolbox did add here was a guardrail, not speed:** no regressions and no suppressions.
+- **What Seikika did add here was a guardrail, not speed:** no regressions and no suppressions.
   Whether that matters is R4's question, the ratchet on real pull requests, not R3's.
 - **A second A/B tests the rest of the lifecycle:** writing, sharing, changing and reading a
   standard, not moving one linter's count ([../../standards-ab](../../standards-ab/README.md)).
@@ -54,6 +54,6 @@ have caught. The two OpenFGA arms made nearly the same changes. Arm A also restr
 
 ## Sources
 
-- [prompt-checklist.md](prompt-checklist.md), [prompt-toolbox.md](prompt-toolbox.md), and the
+- [prompt-checklist.md](prompt-checklist.md), [prompt-seikika.md](prompt-seikika.md), and the
   four patches here
 - [../README.md](../README.md): the out-of-box portals

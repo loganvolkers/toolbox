@@ -16,13 +16,13 @@
   "graphifyCalls": 0,
   "graphifyCommands": {},
   "graphifyChars": 0,
-  "toolboxCalls": 3,
-  "toolboxCommands": {
+  "seikikaCalls": 3,
+  "seikikaCommands": {
     "get": 1,
     "query": 1,
     "search": 1
   },
-  "toolboxChars": 10777,
+  "seikikaChars": 10777,
   "outsidePaths": [],
   "wallSeconds": 277
 }

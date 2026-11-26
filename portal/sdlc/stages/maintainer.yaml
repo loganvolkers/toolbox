@@ -30,12 +30,12 @@ records:
     order: 3
     intent: Run the check pyramid, from unit tests to the reference portal oracle.
     exitCriterion: >-
-      fmt, clippy -D warnings, cargo test and toolbox test pass; reference
+      fmt, clippy -D warnings, cargo test and seikika test pass; reference
       outputs match byte for byte.
     commands:
     - cargo test
     - cargo clippy --all-targets -- -D warnings
-    - toolbox test portal
+    - seikika test portal
     - python scripts/validate-parity.py
     checks: [.github/workflows/ci.yml, scripts/validate-parity.py]
     docs: [docs/design/maintainer-sdlc.md, docs/design/verification.md]
@@ -115,7 +115,7 @@ records:
       edited by hand
     - >-
       This repository's CI still builds actions/report from source; external
-      callers should set toolbox-version to a release (e.g. 0.1.0)
+      callers should set seikika-version to a release (e.g. 0.1.0)
     - >-
       The release run builds the image (custom-image calls image.yml), but no
       tag has gone through it yet; v0.1.0 and v0.1.1 have no image until
@@ -126,15 +126,15 @@ records:
     order: 7
     intent: >-
       Score this repository against its own standards and stop regressions
-      (Toolbox for Toolbox).
+      (Seikika for Seikika).
     exitCriterion: >-
       The ratchet passes in CI and improvements are recorded in
       portal/results.json.
     commands:
     - >-
-      toolbox report portal --skip runner,github-actions --baseline
+      seikika report portal --skip runner,github-actions --baseline
       portal/results.json --ci
     checks: [.github/workflows/ci.yml, portal/results.json]
-    docs: [docs/design/maintainer-sdlc.md, docs/design/toolbox-for-toolbox.md]
+    docs: [docs/design/maintainer-sdlc.md, docs/design/seikika-for-seikika.md]
     status: built
     gaps: []

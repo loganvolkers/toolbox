@@ -39,7 +39,7 @@ Dependencies are taken from each workspace member's `Cargo.toml` under `codex-rs
 | `codex-utils-oss` | `codex-core`, `codex-lmstudio`, `codex-ollama` |
 | `codex-utils-sandbox-summary` | `codex-core` |
 
-The Toolbox portal's `crate:codex-tools` entity gives the same 7 direct dependents (`dependents`, `dependentCount: 7`).
+The Seikika portal's `crate:codex-tools` entity gives the same 7 direct dependents (`dependents`, `dependentCount: 7`).
 
 ## Q2
 

@@ -2,7 +2,7 @@
 
 ## Q1
 
-Dependencies counted here are normal ones only, between packages of the `codex-rs/` workspace. Each fact comes from the crate's `Cargo.toml` (`codex-tools = { workspace = true }`; the workspace entry is `codex-tools = { path = "tools" }` in `codex-rs/Cargo.toml`). The Toolbox portal entity `crate:codex-tools` (field `dependents`) and `cargo metadata` agree.
+Dependencies counted here are normal ones only, between packages of the `codex-rs/` workspace. Each fact comes from the crate's `Cargo.toml` (`codex-tools = { workspace = true }`; the workspace entry is `codex-tools = { path = "tools" }` in `codex-rs/Cargo.toml`). The Seikika portal entity `crate:codex-tools` (field `dependents`) and `cargo metadata` agree.
 
 **Direct dependents (7):**
 

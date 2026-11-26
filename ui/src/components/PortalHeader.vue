@@ -10,7 +10,7 @@ function search() {
 
 <template>
   <nav class="top" aria-label="Portal">
-    <a href="/"><strong>Toolbox</strong></a>
+    <a href="/"><strong>Seikika</strong></a>
     <form role="search" @submit.prevent="search">
       <input v-model="query" aria-label="Search" placeholder="Search entities" />
     </form>

@@ -1,4 +1,4 @@
-apiVersion: toolbox.dev/assessment/v1
+apiVersion: seikika.com/assessment/v1
 entity: assessment:sdlc-stage-quality/sdlc-stage:maintainer/test
 rubric: assessment-quality
 subjectHash: 443b5b6e95e6
@@ -11,11 +11,11 @@ verdicts:
       The citations in
       portal/assessments/sdlc-stage-quality/sdlc-stage/maintainer/test.yaml
       hold. In .github/workflows/ci.yml, fmt, clippy and test are at 22-24,
-      TOOLBOX_REQUIRE_OPENFGA at 47-52, parity at 38-39, the `cmp` loop at
-      53-60 and `toolbox test portal` within 61-71.
+      SEIKIKA_REQUIRE_OPENFGA at 47-52, parity at 38-39, the `cmp` loop at
+      53-60 and `seikika test portal` within 61-71.
       docs/design/maintainer-sdlc.md §5 is a table at lines 81-88, with `go
       install …openfga@v1.22.1` at line 85. scripts/ci-tools.sh:17-18 is the
-      SHA-256-pinned OpenFGA fetch. crates/toolbox-authz/tests/fga.rs:65-67 is
+      SHA-256-pinned OpenFGA fetch. crates/seikika-authz/tests/fga.rs:65-67 is
       the assert message and the `eprintln!("skipping…")`, with the `return`
       at line 68.
   - criterion: complete
@@ -28,8 +28,8 @@ verdicts:
       agents compile OpenFGA. The rubric fails a stage when tools are
       installed by hand (portal/standards/sdlc.yaml:417-418). The skip trap is
       real in three places: fga.rs:61-68,
-      crates/toolbox-api/tests/authz.rs:21-26 and
-      crates/toolbox-authz/src/openfga.rs:543-546. The assessment names it.
+      crates/seikika-api/tests/authz.rs:21-26 and
+      crates/seikika-authz/src/openfga.rs:543-546. The assessment names it.
   - criterion: reproducible
     verdict: pass
     reason: >-

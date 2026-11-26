@@ -1,9 +1,9 @@
 # DX Benchmark catalog entry (docs/design/dx-benchmarks.md §6), scored by maintainer-benchmark.
 records:
   - id: checklist-ab
-    title: Checklist or toolbox report (R3, first round)
+    title: Checklist or seikika report (R3, first round)
     question: >-
-      Does a coding agent raise a repository's standards further with toolbox
+      Does a coding agent raise a repository's standards further with seikika
       report and its ratchet than with the same standards written down?
     layers: [operator]
     stages: [operator/monitor]

@@ -2,9 +2,9 @@
 
 You are taking part in a timed experiment. Work only in /tmp/claude-0/ab3/B/openfga (a git checkout of OpenFGA, a Go project). Budget: at most 40 tool calls. No network access, no package installs.
 
-Tools: Toolbox is installed. Run `export PATH=/tmp/claude-0/ab3/bin:$PATH` first; it provides `toolbox`, `toolbox-connector-workspace` and `toolbox-connector-runner`. Toolbox's docs are in /home/user/toolbox (read-only for you; read only README.md, docs/v1-spec.md, docs/design/, docs/reference/, examples/, packages/, crates/, schema/ and plugins/ there): README.md, docs/v1-spec.md, packages/ (shared standards that portals include with `include: [{package: ..., with: ...}]`), and examples/repo-portal-starter.
+Tools: Seikika is installed. Run `export PATH=/tmp/claude-0/ab3/bin:$PATH` first; it provides `seikika`, `seikika-connector-workspace` and `seikika-connector-runner`. Seikika's docs are in /home/user/seikika (read-only for you; read only README.md, docs/v1-spec.md, docs/design/, docs/reference/, examples/, packages/, crates/, schema/ and plugins/ there): README.md, docs/v1-spec.md, packages/ (shared standards that portals include with `include: [{package: ..., with: ...}]`), and examples/repo-portal-starter.
 
-Context: another team already wrote and enforces a module-size standard for a Rust repository with Toolbox. Their artifacts are in /tmp/claude-0/ab3/B/codex/.toolbox/ (including STANDARD.md) and their CI workflow is under /tmp/claude-0/ab3/B/codex/.github/workflows/. Read them; do not modify anything under /tmp/claude-0/ab3/B/codex.
+Context: another team already wrote and enforces a module-size standard for a Rust repository with Seikika. Their artifacts are in /tmp/claude-0/ab3/B/codex/.seikika/ (including STANDARD.md) and their CI workflow is under /tmp/claude-0/ab3/B/codex/.github/workflows/. Read them; do not modify anything under /tmp/claude-0/ab3/B/codex.
 
 Task: apply the same standard to this Go repository, reusing as much of their work as is sensible:
 - Target: Go files under 600 lines. A non-test `.go` file over 1,000 lines is a violation. `_test.go` files are exempt.

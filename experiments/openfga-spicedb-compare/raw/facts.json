@@ -63,17 +63,17 @@
    "provenance": true,
    "provenanceChecks": [
     {
-     "command": "gh attestation verify /agent/repos/toolbox/experiments/openfga-spicedb-compare/downloads/openfga/openfga_1.23.0_linux_amd64.tar.gz -R openfga/openfga",
+     "command": "gh attestation verify /agent/repos/seikika/experiments/openfga-spicedb-compare/downloads/openfga/openfga_1.23.0_linux_amd64.tar.gz -R openfga/openfga",
      "exit": 1,
      "output": "Error: HTTP 404: Not Found (https://api.github.com/repos/openfga/openfga/attestations/sha256:06a02dc0034188eb35004aed0a010f41d332e31a6b4db4c75e1d89de05fc1441?per_page=30&predicate_type=https%3A%2F%2Fslsa.dev%2Fprovenance%2Fv1)"
     },
     {
-     "command": "slsa-verifier verify-artifact /agent/repos/toolbox/experiments/openfga-spicedb-compare/downloads/openfga/openfga_1.23.0_linux_amd64.tar.gz --provenance-path /agent/repos/toolbox/experiments/openfga-spicedb-compare/downloads/openfga/openfga.intoto.jsonl --source-uri github.com/openfga/openfga --source-tag v1.23.0",
+     "command": "slsa-verifier verify-artifact /agent/repos/seikika/experiments/openfga-spicedb-compare/downloads/openfga/openfga_1.23.0_linux_amd64.tar.gz --provenance-path /agent/repos/seikika/experiments/openfga-spicedb-compare/downloads/openfga/openfga.intoto.jsonl --source-uri github.com/openfga/openfga --source-tag v1.23.0",
      "exit": 0,
-     "output": "Verified build using builder \"https://github.com/slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@refs/tags/v2.1.0\" at commit d67ba7b1d2eaf945cffab3a9129ca1a4c7ad5251\nVerifying artifact /agent/repos/toolbox/experiments/openfga-spicedb-compare/downloads/openfga/openfga_1.23.0_linux_amd64.tar.gz: PASSED\n\nPASSED: SLSA verification passed"
+     "output": "Verified build using builder \"https://github.com/slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@refs/tags/v2.1.0\" at commit d67ba7b1d2eaf945cffab3a9129ca1a4c7ad5251\nVerifying artifact /agent/repos/seikika/experiments/openfga-spicedb-compare/downloads/openfga/openfga_1.23.0_linux_amd64.tar.gz: PASSED\n\nPASSED: SLSA verification passed"
     },
     {
-     "command": "cosign verify-blob /agent/repos/toolbox/experiments/openfga-spicedb-compare/downloads/openfga/checksums.txt --signature /agent/repos/toolbox/experiments/openfga-spicedb-compare/downloads/openfga/checksums.txt.sig --certificate /agent/repos/toolbox/experiments/openfga-spicedb-compare/downloads/openfga/checksums.txt.pem --certificate-identity-regexp ^https://github.com/openfga/openfga/ --certificate-oidc-issuer https://token.actions.githubusercontent.com",
+     "command": "cosign verify-blob /agent/repos/seikika/experiments/openfga-spicedb-compare/downloads/openfga/checksums.txt --signature /agent/repos/seikika/experiments/openfga-spicedb-compare/downloads/openfga/checksums.txt.sig --certificate /agent/repos/seikika/experiments/openfga-spicedb-compare/downloads/openfga/checksums.txt.pem --certificate-identity-regexp ^https://github.com/openfga/openfga/ --certificate-oidc-issuer https://token.actions.githubusercontent.com",
      "exit": 0,
      "output": "Verified OK"
     }
@@ -170,32 +170,32 @@
      },
      "modelTests": {
       "value": true,
-      "detail": "/agent/repos/toolbox/experiments/openfga-spicedb-compare/downloads/cli/fga model test --tests model.fga.yaml: exit 0; with assertions flipped: exit 1",
+      "detail": "/agent/repos/seikika/experiments/openfga-spicedb-compare/downloads/cli/fga model test --tests model.fga.yaml: exit 0; with assertions flipped: exit 1",
       "passing": {
-       "command": "/agent/repos/toolbox/experiments/openfga-spicedb-compare/downloads/cli/fga model test --tests model.fga.yaml",
+       "command": "/agent/repos/seikika/experiments/openfga-spicedb-compare/downloads/cli/fga model test --tests model.fga.yaml",
        "exit": 0,
        "output": "# Test Summary #\nTests 1/1 passing\nChecks 3/3 passing"
       },
       "flipped": {
-       "command": "/agent/repos/toolbox/experiments/openfga-spicedb-compare/downloads/cli/fga model test --tests .flipped-b0533evjmodel.fga.yaml",
+       "command": "/agent/repos/seikika/experiments/openfga-spicedb-compare/downloads/cli/fga model test --tests .flipped-b0533evjmodel.fga.yaml",
        "exit": 1,
        "output": "(FAILING) inherited and public: Checks (0/3 passing)\n\u2179 Check(user=user:anne,relation=viewer,object=document:spec): expected=false, got=true\n\u2179 Check(user=user:bob,relation=viewer,object=document:spec): expected=true, got=false\n\u2179 Check(user=user:bob,relation=viewer,object=document:pub): expected=false, got=true\n---\n# Test Summary #\nTests 0/1 passing\nChecks 0/3 passing"
       }
      },
      "migrateCommand": {
       "value": true,
-      "detail": "/agent/repos/toolbox/experiments/openfga-spicedb-compare/bin/openfga migrate --help: exit 0; The migrate command is used to migrate the database schema needed for OpenFGA."
+      "detail": "/agent/repos/seikika/experiments/openfga-spicedb-compare/bin/openfga migrate --help: exit 0; The migrate command is used to migrate the database schema needed for OpenFGA."
      }
     },
     "readyS": 0.083,
     "server": [
-     "/agent/repos/toolbox/experiments/openfga-spicedb-compare/bin/openfga",
+     "/agent/repos/seikika/experiments/openfga-spicedb-compare/bin/openfga",
      "run",
      "--datastore-engine",
      "memory"
     ],
     "traceServer": [
-     "/agent/repos/toolbox/experiments/openfga-spicedb-compare/bin/openfga",
+     "/agent/repos/seikika/experiments/openfga-spicedb-compare/bin/openfga",
      "run",
      "--datastore-engine",
      "memory",
@@ -337,7 +337,7 @@
    "provenance": false,
    "provenanceChecks": [
     {
-     "command": "gh attestation verify /agent/repos/toolbox/experiments/openfga-spicedb-compare/downloads/spicedb/spicedb_1.57.1_linux_amd64.tar.gz -R authzed/spicedb",
+     "command": "gh attestation verify /agent/repos/seikika/experiments/openfga-spicedb-compare/downloads/spicedb/spicedb_1.57.1_linux_amd64.tar.gz -R authzed/spicedb",
      "exit": 1,
      "output": "Error: HTTP 404: Not Found (https://api.github.com/repos/authzed/spicedb/attestations/sha256:2dcce08149b432448fe4d0093e630c360134c289ac824a34b3023acbe28f4c61?per_page=30&predicate_type=https%3A%2F%2Fslsa.dev%2Fprovenance%2Fv1)"
     }
@@ -419,26 +419,26 @@
      },
      "modelTests": {
       "value": true,
-      "detail": "/agent/repos/toolbox/experiments/openfga-spicedb-compare/downloads/cli/zed validate schema.validation.yaml: exit 0; with assertions flipped: exit 1",
+      "detail": "/agent/repos/seikika/experiments/openfga-spicedb-compare/downloads/cli/zed validate schema.validation.yaml: exit 0; with assertions flipped: exit 1",
       "passing": {
-       "command": "/agent/repos/toolbox/experiments/openfga-spicedb-compare/downloads/cli/zed validate schema.validation.yaml",
+       "command": "/agent/repos/seikika/experiments/openfga-spicedb-compare/downloads/cli/zed validate schema.validation.yaml",
        "exit": 0,
        "output": "warning: Arrow `owner->member` under permission \"view\" references relation \"member\" on definition \"group\"; it is recommended to point to a permission (arrow-references-relation)\n  8 |   document:pub#viewer@user:*\n  9 | assertions:\n 10 |   assertTrue: [document:spec#view@user:anne, document:pub#view@user:bob]\n 11 >   assertFalse: [document:spec#view@user:bob]\n 12 | \n\ncomplete - 5 relationships loaded, 3 assertions run, 0 expected relations validated"
       },
       "flipped": {
-       "command": "/agent/repos/toolbox/experiments/openfga-spicedb-compare/downloads/cli/zed validate .flipped-s3na6e_dschema.validation.yaml",
+       "command": "/agent/repos/seikika/experiments/openfga-spicedb-compare/downloads/cli/zed validate .flipped-s3na6e_dschema.validation.yaml",
        "exit": 1,
        "output": "error: parse error in `document:spec#view@user:bob`, line 13, column 5: Expected relation or permission document:spec#view@user:bob to exist            \n 10 |   document:pub#viewer@user:*'\n 11 | assertions:\n 12 |   assertTrue:\n 13 >   - document:spec#view@user:bob\n    >     ^~~~~~~~~~~~~~~~~~~~~~~~~~~\n 14 |   assertFalse:\n 15 |   - document:spec#view@user:anne\n\n  Explanation:\n  \u2a09 document:spec view (562.934\u00b5s)\n  \u251c\u2500\u2500 \u2a09 document:spec viewer (27.523\u00b5s)\n  \u251c\u2500\u2500 \u2a09 document:spec owner (39.471\u00b5s)\n  \u2514\u2500\u2500 \u2a09 folder:child view (373.52\u00b5s)\n      \u251c\u2500\u2500 \u2a09 folder:child viewer (3.503\u00b5s)\n      \u2514\u2500\u2500 \u2a09 folder:root view (133.715\u00b5s)\n          \u251c\u2500\u2500 \u2a09 folder:root viewer (13.378\u00b5s)\n          \u2514\u2500\u2500 \u2a09 group:eng member (23.931\u00b5s)\n  \n\n\nerror: parse error in `document:spec#view@user:anne`, line 15, column 5: Expected relation or permission document:spec#view@user:anne to not exist       \n 12 |   assertTrue:\n 13 |   - document:spec#view@user:bob\n 14 |   assertFalse:\n 15 >   - document:spec#view@user:anne\n    >     ^~~~~~~~~~~~~~~~~~~~~~~~~~~~\n 16 |   - document:pub#view@user:bob\n 17 | \n\n  Explanation:\n  \u2713 document:spec view (301.097\u00b5s)\n  \u251c\u2500\u2500 \u2a09 document:spec viewer (8.015\u00b5s)\n  \u251c\u2500\u2500 \u2a09 document:spec owner (15.841\u00b5s)\n  \u2514\u2500\u2500 \u2713 folder:child view (172.358\u00b5s)\n      \u251c\u2500\u2500 \u2a09 folder:child viewer (5.687\u00b5s)\n      \u2514\u2500\u2500 \u2713 folder:root view (79.69\u00b5s)\n          \u251c\u2500\u2500 \u2a09 folder:root viewer (3.162\u00b5s)\n          \u2514\u2500\u2500 \u2713 group:eng member (20.217\u00b5s)\n              \u2514\u2500\u2500 user:anne \n  \n\n\nerror: parse error in `document:pub#view@user:bob`, line 16, column 5: Expected relation or permission document:pub#view@user:bob to not exist         \n 13 |   - document:spec#view@user:bob\n 14 |   assertFalse:\n 15 |   - document:spec#view@user:anne\n 16 >   - document:pub#view@user:bob\n    >     ^~~~~~~~~~~~~~~~~~~~~~~~~~\n 17 | \n\n  Explanation:\n  \u2713 document:pub view (33.464\u00b5s)\n  \u2514\u2500\u2500 \u2713 document:pub viewer (3.989\u00b5s)\n      \u2514\u2500\u2500 user:bob"
       }
      },
      "migrateCommand": {
       "value": true,
-      "detail": "/agent/repos/toolbox/experiments/openfga-spicedb-compare/bin/spicedb datastore migrate --help: exit 0; Executes datastore schema migrations for the datastore."
+      "detail": "/agent/repos/seikika/experiments/openfga-spicedb-compare/bin/spicedb datastore migrate --help: exit 0; Executes datastore schema migrations for the datastore."
      }
     },
     "readyS": 0.133,
     "server": [
-     "/agent/repos/toolbox/experiments/openfga-spicedb-compare/bin/spicedb",
+     "/agent/repos/seikika/experiments/openfga-spicedb-compare/bin/spicedb",
      "serve",
      "--datastore-engine",
      "memory",
@@ -446,7 +446,7 @@
      "facts-probe-key"
     ],
     "traceServer": [
-     "/agent/repos/toolbox/experiments/openfga-spicedb-compare/bin/spicedb",
+     "/agent/repos/seikika/experiments/openfga-spicedb-compare/bin/spicedb",
      "serve",
      "--datastore-engine",
      "memory",

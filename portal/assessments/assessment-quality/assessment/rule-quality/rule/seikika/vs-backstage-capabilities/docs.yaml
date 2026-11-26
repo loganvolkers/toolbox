@@ -1,0 +1,45 @@
+apiVersion: seikika.com/assessment/v1
+entity: assessment:rule-quality/rule:seikika/vs-backstage-capabilities/docs
+rubric: assessment-quality
+subjectHash: 92a26c1da275
+assessor: {kind: agent, name: cursor-reviewer-15, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: supported
+    verdict: fail
+    reason: >-
+      measures-intent cites RESEARCH.md:115 for "TechDocs page render". In
+      experiments/backstage-compare/RESEARCH.md, line 115 is "full-text
+      search", and TechDocs is 116. The fix-leads-to-pass reason quotes
+      docs/v1-spec.md:68 "Not yet: ... the UI pages" for the UI extension
+      contract, but those are the action, run and approval pages. The contract
+      is unbuilt because §7.6 is not in that line's "Built" list. The rest
+      holds: backstage-comparison.yaml:141-143, facts.yaml:80 and 167,
+      README.md:53 and ADJUDICATION.md:114.
+    suggestion: >-
+      Cite RESEARCH.md:116. Support "unbuilt" with §7.6's absence from
+      "Built:" in docs/v1-spec.md:68.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      Both fails are right. The fact is the one-line facts.yaml:80. The fix
+      (backstage-comparison.yaml:970-971) names a principle, not a connector,
+      route or page. measures-intent and threshold-justified match the
+      sources.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      Neither fail rests on taste. No harness step opens a component's docs,
+      and the fix text names no code. A second assessor would reach the same
+      verdicts.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      The suggested fix names the connector, a route in
+      crates/seikika-api/src/routes.rs and the rerun. The hard-to-game
+      suggestion adds a surface.py fetch. Each would change its verdict.
+summary: >-
+  The verdicts and suggestions are right. supported fails on a citation
+  that points at the wrong scenario: RESEARCH.md:115 is full-text search,
+  and TechDocs is 116. The quote meant to show the UI extension contract
+  unbuilt is also about other pages.

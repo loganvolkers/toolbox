@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref, watch } from "vue";
-import PageFrame from "@toolbox-dev/ui/components/PageFrame.vue";
+import PageFrame from "@seikika/ui/components/PageFrame.vue";
 import { api, devUser, type ApiResult } from "../api";
 import { portalRoute } from "../routes";
 import PortalHeader from "./PortalHeader.vue";

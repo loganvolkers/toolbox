@@ -1,10 +1,10 @@
 # Example Standards: Cataloguing the Write-ups Agents Copy
 
-*Status: deterministic catalog and scorecard built, 2026-11-20 (D78). Toolbox for Toolbox catalogues
+*Status: deterministic catalog and scorecard built, 2026-11-20 (D78). Seikika for Seikika catalogues
 each example and experiment write-up and scores it with `maintainer-example`. The reference
 portal's `expected/` outputs are not regenerated. Related:
 [schema-standards.md](./schema-standards.md),
-[toolbox-for-toolbox.md](./toolbox-for-toolbox.md).*
+[seikika-for-seikika.md](./seikika-for-seikika.md).*
 
 ---
 
@@ -21,17 +21,17 @@ example:
 | Question | What answers it | In this repo |
 |---|---|---|
 | Does it have a heading, and do its relative links exist? | The first heading, the link targets | bronze |
-| Does it name a command that checks it? | `cargo`, `npm`, `python`, `fga`, `toolbox validate`/`test`/`report`, or `./run` | silver |
+| Does it name a command that checks it? | `cargo`, `npm`, `python`, `fga`, `seikika validate`/`test`/`report`, or `./run` | silver |
 | Does it point at the design or a decision, and is there no secret in it? | `docs/`, a `D` number, or a `D` plus ULID, secret shapes | gold |
 
-The product name "Toolbox" in a sentence is not a command. A directory link counts when the
+The product name "Seikika" in a sentence is not a command. A directory link counts when the
 directory exists.
 
 ## 2. What the field says
 
 | Source | What it decides | Adopted |
 |---|---|---|
-| **This repository's reference portal** | Correctness for v1 is reproducing `expected/` via the three checks named in its README | The README is gold: it names `toolbox validate`, `tools/reference.py --check` and `fga model test`, and its links resolve. The outputs are left byte for byte |
+| **This repository's reference portal** | Correctness for v1 is reproducing `expected/` via the three checks named in its README | The README is gold: it names `seikika validate`, `tools/reference.py --check` and `fga model test`, and its links resolve. The outputs are left byte for byte |
 | **The experiments** | Each README states a question, a command and the result, and points at the design doc that cites it | A command line and a design link are the silver and gold rules |
 | **Worked examples** | `docs/examples/approved-github-apps.md` is the narrative; the runnable form is the reference portal | The narrative links at the portal and at the design, so it reaches gold. The executor specification names no check command, so it stays bronze |
 
@@ -44,7 +44,7 @@ Globs: `examples/**/README.md`, `experiments/**/README.md`, `docs/examples/*.md`
 |---|---|
 | `title`, `lines` | The level-1 heading and the length |
 | `missingFiles` | Relative link targets that are neither a file nor a directory |
-| `commandLines` | Lines that invoke `cargo`, `npm`, `pnpm`, `yarn`, `pytest`, `python`, `fga`, `toolbox` with a subcommand, or `./run` |
+| `commandLines` | Lines that invoke `cargo`, `npm`, `pnpm`, `yarn`, `pytest`, `python`, `fga`, `seikika` with a subcommand, or `./run` |
 | `citesDesign` | The body contains `docs/`, or a decision id such as `D40` or a `D` plus ULID |
 | `secretHits` | High-precision secret shapes |
 
@@ -66,7 +66,7 @@ shows its own contracts.
 | Write-up | Level | Notes |
 |---|---|---|
 | `examples/reference-portal/README.md` | gold | Names the three checks and links `expected/` |
-| `examples/repo-portal-starter/README.md` | gold | Names `toolbox report` and `toolbox test` |
+| `examples/repo-portal-starter/README.md` | gold | Names `seikika report` and `seikika test` |
 | `examples/reference-portal/ui/install-approved-app/README.md` | gold | Names `npm run build` and links the spec |
 | `examples/reference-portal/executors/github-apps/README.md` | bronze | Links resolve and it cites D40. It names no command that checks the executor |
 | `experiments/README.md` and the four experiment READMEs | gold | Each names a run command and a design doc |

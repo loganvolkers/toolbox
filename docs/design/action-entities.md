@@ -1,6 +1,6 @@
 # Action-Created Entities, Lifecycles (TTL) and Day-2 Actions
 
-> **Status 2026-11-20 (D40):** action code can ship **inside the Toolbox image** as in-image executors (child processes over the stdio transport, any language), alongside external executors such as GitHub Actions. Isolation for in-image executors is Q12. Run lifecycle, preview/confirm and verification: [action-runs.md](./action-runs.md) (D49). See [decisions.md](../decisions/README.md).
+> **Status 2026-11-20 (D40):** action code can ship **inside the Seikika image** as in-image executors (child processes over the stdio transport, any language), alongside external executors such as GitHub Actions. Isolation for in-image executors is Q12. Run lifecycle, preview/confirm and verification: [action-runs.md](./action-runs.md) (D49). See [decisions.md](../decisions/README.md).
 
 *Status: design. Addresses red-team gaps B4 (self-service results must exist immediately and expire)
 and B3 (visible pending state for PR-based changes).
@@ -27,11 +27,11 @@ repo, and records it with `backstage.io/source-template`.
 | `global` | Actions page | — | `portal` |
 
 ```ts
-new tb.Action("extend-env-ttl", {
+new seikika.Action("extend-env-ttl", {
   scope: { day2: env },                                   // binds to kind Environment
   owner: "group:default/platform",
-  inputs: tb.schema.object({ hours: tb.schema.int({ min: 1, max: 72 }) }),
-  executor: tb.executor.builtin("lifecycle.extend"),
+  inputs: seikika.schema.object({ hours: seikika.schema.int({ min: 1, max: 72 }) }),
+  executor: seikika.executor.builtin("lifecycle.extend"),
   policy: { permission: "can_run_actions" },
   annotations: { destructive: false, idempotent: true },
 });
@@ -62,12 +62,12 @@ Executors (or their callbacks) may return **fragments**. These enter the catalog
 ## 4. Lifecycles and TTL
 
 ```ts
-new tb.Kind("Environment", {
-  props: { url: tb.prop.string(), service: tb.prop.ref(service) },
+new seikika.Kind("Environment", {
+  props: { url: seikika.prop.string(), service: seikika.prop.ref(service) },
   lifecycle: {
     ttl: { default: "72h", max: "14d" },
     warnBefore: ["24h", "2h"],                         // → notifications to owner/requester
-    onExpire: tb.actionRef("destroy-env"),             // automation runs the destroy action
+    onExpire: seikika.actionRef("destroy-env"),             // automation runs the destroy action
     gracePeriod: "1h",
   },
 });

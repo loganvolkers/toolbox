@@ -1,6 +1,6 @@
-# Phase 1 diagnosis — Toolbox arm A (Forge connector)
+# Phase 1 diagnosis — Seikika arm A (Forge connector)
 
-Compared `toolbox connector drive --format catalog` (tenant A) to FORGE.md + target schema and live Forge JSON on `127.0.0.1:9743`.
+Compared `seikika connector drive --format catalog` (tenant A) to FORGE.md + target schema and live Forge JSON on `127.0.0.1:9743`.
 
 ## Bugs
 

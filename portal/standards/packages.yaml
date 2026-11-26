@@ -1,5 +1,5 @@
 # npm manifests (docs/design/package-standards.md).
-# Included by portal/toolbox.yaml; see portal/README.md for the layout.
+# Included by portal/seikika.yaml; see portal/README.md for the layout.
 
 kinds:
   # npm manifests (docs/design/package-standards.md).
@@ -62,9 +62,9 @@ scorecards:
       the package self-describing and has CI install exactly the lockfile.
     links:
     - title: Package standards
-      url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/package-standards.md
+      url: https://github.com/seikika/seikika/blob/main/docs/design/package-standards.md
     - title: 'Decision: npm manifests are catalogued'
-      url: https://github.com/loganvolkers/toolbox/blob/main/docs/decisions/D01M7W56B7R0000000000000000.md
+      url: https://github.com/seikika/seikika/blob/main/docs/decisions/D01M7W56B7R0000000000000000.md
     owner: group:maintainers
     track: maintainer
     levels: [bronze, silver, gold]

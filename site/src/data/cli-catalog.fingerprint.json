@@ -31,7 +31,7 @@
           "positional": false
         }
       ],
-      "usage": "toolbox actions [OPTIONS] <ID>"
+      "usage": "seikika actions [OPTIONS] <ID>"
     },
     {
       "name": "assess brief",
@@ -69,7 +69,7 @@
           "positional": false
         }
       ],
-      "usage": "toolbox assess brief [OPTIONS] <ENTITY>"
+      "usage": "seikika assess brief [OPTIONS] <ENTITY>"
     },
     {
       "name": "assess check",
@@ -102,7 +102,7 @@
           "positional": false
         }
       ],
-      "usage": "toolbox assess check [OPTIONS] [PORTAL]"
+      "usage": "seikika assess check [OPTIONS] [PORTAL]"
     },
     {
       "name": "assess submit",
@@ -135,7 +135,7 @@
           "positional": false
         }
       ],
-      "usage": "toolbox assess submit [OPTIONS] <FILES>..."
+      "usage": "seikika assess submit [OPTIONS] <FILES>..."
     },
     {
       "name": "campaign",
@@ -183,11 +183,11 @@
           "positional": false
         }
       ],
-      "usage": "toolbox campaign [OPTIONS] [NAME]"
+      "usage": "seikika campaign [OPTIONS] [NAME]"
     },
     {
       "name": "connector drive",
-      "about": "Drive a connector binary over stdio: one `resync` of the named kinds, print each `record` as NDJSON (`kind`, `externalId`, `data`). No portal required — for local dumps while authoring. Pass config with --config (JSON) or rely on TOOLBOX_CONNECTOR_CONFIG in the environment. Use `--format catalog` to emit harness-shaped `{kind,id,data}` lines (catalog `id` = `externalId` with a leading `{kind}:` stripped) and `--out` to write a file",
+      "about": "Drive a connector binary over stdio: one `resync` of the named kinds, print each `record` as NDJSON (`kind`, `externalId`, `data`). No portal required — for local dumps while authoring. Pass config with --config (JSON) or rely on SEIKIKA_CONNECTOR_CONFIG in the environment. Use `--format catalog` to emit harness-shaped `{kind,id,data}` lines (catalog `id` = `externalId` with a leading `{kind}:` stripped) and `--out` to write a file",
       "mcpTool": null,
       "args": [
         {
@@ -216,7 +216,7 @@
           "positional": true
         }
       ],
-      "usage": "toolbox connector drive [OPTIONS] -- <PROGRAM>..."
+      "usage": "seikika connector drive [OPTIONS] -- <PROGRAM>..."
     },
     {
       "name": "connector records",
@@ -234,7 +234,7 @@
           "positional": false
         }
       ],
-      "usage": "toolbox connector records [OPTIONS] --name <NAME>"
+      "usage": "seikika connector records [OPTIONS] --name <NAME>"
     },
     {
       "name": "connector test",
@@ -262,7 +262,7 @@
           "positional": true
         }
       ],
-      "usage": "toolbox connector test [OPTIONS] --name <NAME> -- <PROGRAM>..."
+      "usage": "seikika connector test [OPTIONS] --name <NAME> -- <PROGRAM>..."
     },
     {
       "name": "derive",
@@ -280,7 +280,7 @@
           "positional": false
         }
       ],
-      "usage": "toolbox derive [OPTIONS] [PATH]"
+      "usage": "seikika derive [OPTIONS] [PATH]"
     },
     {
       "name": "describe portal",
@@ -298,7 +298,7 @@
           "positional": false
         }
       ],
-      "usage": "toolbox describe portal [OPTIONS] <PORTALS>..."
+      "usage": "seikika describe portal [OPTIONS] <PORTALS>..."
     },
     {
       "name": "doctor",
@@ -316,7 +316,7 @@
           "positional": false
         }
       ],
-      "usage": "toolbox doctor [OPTIONS] [PATH]"
+      "usage": "seikika doctor [OPTIONS] [PATH]"
     },
     {
       "name": "explain",
@@ -359,7 +359,7 @@
           "positional": false
         }
       ],
-      "usage": "toolbox explain [OPTIONS] <ID>"
+      "usage": "seikika explain [OPTIONS] <ID>"
     },
     {
       "name": "get",
@@ -397,7 +397,7 @@
           "positional": false
         }
       ],
-      "usage": "toolbox get [OPTIONS] <ID>"
+      "usage": "seikika get [OPTIONS] <ID>"
     },
     {
       "name": "graph",
@@ -445,11 +445,11 @@
           "positional": false
         }
       ],
-      "usage": "toolbox graph [OPTIONS] <ID>"
+      "usage": "seikika graph [OPTIONS] <ID>"
     },
     {
       "name": "install",
-      "about": "Download the portal's released executable connectors (`github:owner/repo[/app]@version`) for this platform, verify them against toolbox.lock (pinning them the first time), and unpack them into the cache",
+      "about": "Download the portal's released executable connectors (`github:owner/repo[/app]@version`) for this platform, verify them against seikika.lock (pinning them the first time), and unpack them into the cache",
       "mcpTool": null,
       "args": [
         {
@@ -463,7 +463,7 @@
           "positional": false
         }
       ],
-      "usage": "toolbox install [OPTIONS] [PATH]"
+      "usage": "seikika install [OPTIONS] [PATH]"
     },
     {
       "name": "mcp",
@@ -491,7 +491,7 @@
           "positional": false
         }
       ],
-      "usage": "toolbox mcp [OPTIONS]"
+      "usage": "seikika mcp [OPTIONS]"
     },
     {
       "name": "owner",
@@ -524,7 +524,7 @@
           "positional": false
         }
       ],
-      "usage": "toolbox owner [OPTIONS] <ID>"
+      "usage": "seikika owner [OPTIONS] <ID>"
     },
     {
       "name": "plan",
@@ -552,7 +552,7 @@
           "positional": false
         }
       ],
-      "usage": "toolbox plan [OPTIONS] --base <BASE> [PATH]"
+      "usage": "seikika plan [OPTIONS] --base <BASE> [PATH]"
     },
     {
       "name": "push",
@@ -570,7 +570,7 @@
           "positional": false
         }
       ],
-      "usage": "toolbox push [OPTIONS] [PATH]"
+      "usage": "seikika push [OPTIONS] [PATH]"
     },
     {
       "name": "query",
@@ -613,7 +613,7 @@
           "positional": false
         }
       ],
-      "usage": "toolbox query [OPTIONS] --kind <KIND>"
+      "usage": "seikika query [OPTIONS] --kind <KIND>"
     },
     {
       "name": "refresh",
@@ -646,7 +646,7 @@
           "positional": false
         }
       ],
-      "usage": "toolbox refresh [OPTIONS] <ID>"
+      "usage": "seikika refresh [OPTIONS] <ID>"
     },
     {
       "name": "report",
@@ -729,11 +729,11 @@
           "positional": false
         }
       ],
-      "usage": "toolbox report [OPTIONS] [PATH]"
+      "usage": "seikika report [OPTIONS] [PATH]"
     },
     {
       "name": "run",
-      "about": "Preview and run a self-service action without a server, in a repo or parent portal: `toolbox run` lists the actions, `toolbox run <action> --input k=v` previews (effects and a confirm token), `--confirm <token>` runs it and verifies its postcondition, and a child portal's actions are dispatched to the child (federation)",
+      "about": "Preview and run a self-service action without a server, in a repo or parent portal: `seikika run` lists the actions, `seikika run <action> --input k=v` previews (effects and a confirm token), `--confirm <token>` runs it and verifies its postcondition, and a child portal's actions are dispatched to the child (federation)",
       "mcpTool": null,
       "args": [
         {
@@ -857,7 +857,7 @@
           "positional": false
         }
       ],
-      "usage": "toolbox run [OPTIONS] [ACTION]"
+      "usage": "seikika run [OPTIONS] [ACTION]"
     },
     {
       "name": "score",
@@ -890,7 +890,7 @@
           "positional": false
         }
       ],
-      "usage": "toolbox score [OPTIONS] <ID>"
+      "usage": "seikika score [OPTIONS] <ID>"
     },
     {
       "name": "scorecard",
@@ -938,7 +938,7 @@
           "positional": false
         }
       ],
-      "usage": "toolbox scorecard [OPTIONS] [NAME]"
+      "usage": "seikika scorecard [OPTIONS] [NAME]"
     },
     {
       "name": "search",
@@ -971,7 +971,7 @@
           "positional": false
         }
       ],
-      "usage": "toolbox search [OPTIONS] <QUERY>"
+      "usage": "seikika search [OPTIONS] <QUERY>"
     },
     {
       "name": "serve",
@@ -1009,7 +1009,7 @@
           "positional": false
         }
       ],
-      "usage": "toolbox serve [OPTIONS] [PATH]"
+      "usage": "seikika serve [OPTIONS] [PATH]"
     },
     {
       "name": "test",
@@ -1027,7 +1027,7 @@
           "positional": false
         }
       ],
-      "usage": "toolbox test [OPTIONS] [PATH]"
+      "usage": "seikika test [OPTIONS] [PATH]"
     },
     {
       "name": "token create",
@@ -1050,7 +1050,7 @@
           "positional": false
         }
       ],
-      "usage": "toolbox token create [OPTIONS] --user <USER> --database-url <DATABASE_URL>"
+      "usage": "seikika token create [OPTIONS] --user <USER> --database-url <DATABASE_URL>"
     },
     {
       "name": "tools config",
@@ -1068,7 +1068,7 @@
           "positional": false
         }
       ],
-      "usage": "toolbox tools config --for <INSTALLER> [PATH]"
+      "usage": "seikika tools config --for <INSTALLER> [PATH]"
     },
     {
       "name": "tools find",
@@ -1091,11 +1091,11 @@
           "positional": false
         }
       ],
-      "usage": "toolbox tools find [OPTIONS] [PATH]"
+      "usage": "seikika tools find [OPTIONS] [PATH]"
     },
     {
       "name": "tools install",
-      "about": "Install every tool the portal pins that isn't already on the PATH at its version, by running an installer: mise, uv, pipx or pip (auto: the first available that the tool declares an id for). Then run `toolbox doctor`",
+      "about": "Install every tool the portal pins that isn't already on the PATH at its version, by running an installer: mise, uv, pipx or pip (auto: the first available that the tool declares an id for). Then run `seikika doctor`",
       "mcpTool": null,
       "args": [
         {
@@ -1114,7 +1114,7 @@
           "positional": false
         }
       ],
-      "usage": "toolbox tools install [OPTIONS] [PATH]"
+      "usage": "seikika tools install [OPTIONS] [PATH]"
     },
     {
       "name": "validate",
@@ -1132,11 +1132,11 @@
           "positional": false
         }
       ],
-      "usage": "toolbox validate [OPTIONS] [PATH]"
+      "usage": "seikika validate [OPTIONS] [PATH]"
     },
     {
       "name": "vendor",
-      "about": "Copy a package into the portal (`<portal>/packages/<name>`, without its tests) so the portal needs no network: from a directory, or a `github:` package `toolbox install` cached",
+      "about": "Copy a package into the portal (`<portal>/packages/<name>`, without its tests) so the portal needs no network: from a directory, or a `github:` package `seikika install` cached",
       "mcpTool": null,
       "args": [
         {
@@ -1150,7 +1150,7 @@
           "positional": false
         }
       ],
-      "usage": "toolbox vendor [OPTIONS] <SPEC>"
+      "usage": "seikika vendor [OPTIONS] <SPEC>"
     }
   ],
   "mcpTools": [

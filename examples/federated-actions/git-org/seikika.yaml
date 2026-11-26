@@ -1,0 +1,10 @@
+apiVersion: seikika.com/v1alpha1
+portal: {name: org, title: Org portal, owner: group:platform, seikika: "0.1"}
+# Each child is a repository with a .seikika/seikika.yaml. Seikika keeps a clone of each, at its
+# branch (default main), and reads them again before it lists, previews or runs their actions.
+# `git` takes anything `git clone` does: a URL, or a path relative to this file.
+federation:
+  children:
+    - git: https://github.com/acme/alpha.git
+    - git: https://github.com/acme/beta.git
+    - git: https://github.com/acme/gamma.git

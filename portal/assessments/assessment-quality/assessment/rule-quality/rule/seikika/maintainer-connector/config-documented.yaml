@@ -1,0 +1,44 @@
+apiVersion: seikika.com/assessment/v1
+entity: assessment:rule-quality/rule:seikika/maintainer-connector/config-documented
+rubric: assessment-quality
+subjectHash: 94bc464d7bd1
+assessor: {kind: agent, name: cursor-reviewer-10, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: supported
+    verdict: pass
+    reason: >-
+      Each citation in
+      portal/assessments/rule-quality/rule/seikika/maintainer-connector/config-documented.yaml
+      lands. connectors.yaml:92, 93-96 and 97-100 are the evidence, fix and
+      rationale. connectors.rs:119-123 is the three-token `contains`.
+      crates/seikika-connector-github/src/main.rs:3 lists the config keys.
+      crates/seikika-connector-scim/src/main.rs:5-6 has the `--seikika` and
+      `--listen` usage line and `SEIKIKA_SCIM_TOKEN`.
+      standards.test.yaml:416-417 pins the unsafe fixture. A scratch crate
+      whose doc said only "Unlike `--seikika` flag ones, it reads nothing"
+      gave configDocumented true.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      The check (connectors.rs:119-123) cannot tell a documented config shape
+      from a passing mention, so the measures-intent and hard-to-game fails
+      are right. The fix names the crate doc and the tokens, so
+      fix-leads-to-pass holds. threshold-justified holds as a yes/no rule
+      placed by connector-standards.md:20 and D73.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      Every verdict rests on a three-line function (connectors.rs:119-123) and
+      a reproducible scratch run. The scim aside in measures-intent is
+      incidental; the stale-keys route alone carries the fail.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      Requiring a `SEIKIKA_CONNECTOR_CONFIG` JSON object whose keys match the
+      config parsing, or a usage line, would reject the stale-keys doc and the
+      "reads nothing" sentence. That changes both fails.
+summary: >-
+  A sound assessment. The citations hold, the token check is as weak as
+  the assessment says (a denying sentence passes on a scratch crate), and
+  the suggested usage-line or config-object match would change both fails.

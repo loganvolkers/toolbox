@@ -1,5 +1,5 @@
 # Direct library dependencies (docs/design/dependency-standards.md).
-# Included by portal/toolbox.yaml; see portal/README.md for the layout.
+# Included by portal/seikika.yaml; see portal/README.md for the layout.
 
 kinds:
   # Direct Cargo dependencies (docs/design/dependency-standards.md).
@@ -48,9 +48,9 @@ scorecards:
       and licences need a database and a policy, so they don't gate.
     links:
     - title: 'Decision: Cargo dependencies are scored'
-      url: https://github.com/loganvolkers/toolbox/blob/main/docs/decisions/D01M7W4P0S00000000000000000.md
+      url: https://github.com/seikika/seikika/blob/main/docs/decisions/D01M7W4P0S00000000000000000.md
     - title: Dependency standards design
-      url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/dependency-standards.md
+      url: https://github.com/seikika/seikika/blob/main/docs/design/dependency-standards.md
     owner: group:maintainers
     track: maintainer
     levels: [bronze, silver, gold]

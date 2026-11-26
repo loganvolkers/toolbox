@@ -1,4 +1,4 @@
-apiVersion: toolbox.dev/assessment/v1
+apiVersion: seikika.com/assessment/v1
 entity: assessment:sdlc-stage-quality/sdlc-stage:package-author/build-connector
 rubric: assessment-quality
 subjectHash: 0ef8bd8a1617
@@ -10,12 +10,12 @@ verdicts:
     reason: >-
       Every citation in
       portal/assessments/sdlc-stage-quality/sdlc-stage/package-author/build-connector.yaml
-      holds. crates/toolbox-connect/src/conformance.rs:72 is `pub async fn
+      holds. crates/seikika-connect/src/conformance.rs:72 is `pub async fn
       run`, and `connector test` returns exit code 1 on any failed check
-      (crates/toolbox-cli/src/main.rs:1144-1162). ci.yml:103-105 runs it on
-      workspace, surfaces and ci-lint. crates/toolbox-cli/tests/install.rs:92
+      (crates/seikika-cli/src/main.rs:1144-1162). ci.yml:103-105 runs it on
+      workspace, surfaces and ci-lint. crates/seikika-cli/tests/install.rs:92
       is install_pins_verifies_and_doctor_reports, which asserts that a
-      tampered archive "doesn't match" toolbox.lock (lines 174-180).
+      tampered archive "doesn't match" seikika.lock (lines 174-180).
       examples/connector-scaffold/Cargo.toml:13 is the path dependency, and
       Cargo.toml:11 sets `publish = false` for the workspace. The
       author-connector skill and the scaffold README give the
@@ -29,7 +29,7 @@ verdicts:
       enforced by a kit that exits non-zero, and both listed checks are real
       tests. reuses-artifacts fails correctly: an outside Rust author must
       build this repository's unpublished SDK, which the scaffold README
-      admits ("point `toolbox-connect` at a released Toolbox checkout or path
+      admits ("point `seikika-connect` at a released Seikika checkout or path
       dep"). Nothing in the steps needs a secret, and remote connectors and
       `github:` installs need no crate here.
   - criterion: reproducible
@@ -43,7 +43,7 @@ verdicts:
     verdict: pass
     reason: >-
       The one fail's suggestion (build-connector.yaml lines 38-40) is to
-      publish toolbox-connect and switch the scaffold to a version dependency.
+      publish seikika-connect and switch the scaffold to a version dependency.
       That removes the source build that failed reuses-artifacts.
 summary: >-
   A sound assessment. Every citation lands, including the tamper assertion

@@ -1,5 +1,5 @@
 # JSON Schema documents (docs/design/schema-standards.md).
-# Included by portal/toolbox.yaml; see portal/README.md for the layout.
+# Included by portal/seikika.yaml; see portal/README.md for the layout.
 
 kinds:
   # JSON Schema documents (docs/design/schema-standards.md).
@@ -48,9 +48,9 @@ scorecards:
       self-contained.
     links:
     - title: Schema standards
-      url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/schema-standards.md
+      url: https://github.com/seikika/seikika/blob/main/docs/design/schema-standards.md
     - title: 'Decision: JSON Schemas are catalogued'
-      url: https://github.com/loganvolkers/toolbox/blob/main/docs/decisions/D01M7W5BEAG0000000000000000.md
+      url: https://github.com/seikika/seikika/blob/main/docs/decisions/D01M7W5BEAG0000000000000000.md
     owner: group:maintainers
     track: maintainer
     levels: [bronze, silver, gold]
@@ -105,7 +105,7 @@ scorecards:
       check: entity.wired
       evidence: "['not compiled by schema.rs or applied by the reference validator']"
       fix: >-
-        Compile the document from crates/toolbox-model/src/schema.rs, or apply
+        Compile the document from crates/seikika-model/src/schema.rs, or apply
         it from the reference portal validator. A schema file nothing loads is
         not a contract.
       rationale: >-

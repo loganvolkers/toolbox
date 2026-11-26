@@ -220,7 +220,7 @@ export const scorecardsViews = {
       el("div", { className: "head" }, el("h2", { textContent: "Scorecards" }), el("span", { className: "sub", textContent: plural(standards.length, "scorecard") + (groups.length > 1 ? " in " + plural(groups.length, "group") : "") })),
       debtSummary,
       el("p", { className: "lede" }, "Each scorecard rates every entity of one kind against levels of rules; the medal is its weakest entity's level, and the bar shows where the rest stand. " + (Object.keys(D.tracks || {}).length ? "They are grouped by track, the line of work each one serves. " : "") + "Open one for its failures, entities and what each level needs.", factors ? el("span", {}, " The " + plural(factors, "comparison factor") + " against a rival are on ", link("compare", "", "the Compare tab"), ".") : null),
-      noFacts(S) ? el("div", { className: "next", style: "margin:8px 0" }, el("b", { textContent: "Nothing is scored yet. Next: " }), "run ", el("code", { textContent: "toolbox doctor" }), " to see which connector or tool is missing, then ", el("code", { textContent: "toolbox report" }), " again.") : null,
+      noFacts(S) ? el("div", { className: "next", style: "margin:8px 0" }, el("b", { textContent: "Nothing is scored yet. Next: " }), "run ", el("code", { textContent: "seikika doctor" }), " to see which connector or tool is missing, then ", el("code", { textContent: "seikika report" }), " again.") : null,
       anyScored ? el("details", { className: "keyd", open: !matchMedia("(max-width:640px)").matches }, el("summary", { textContent: "How to read the bars" }), levelLegend(D, standards)) : null,
       el("label", { className: "sc-search" }, el("span", { className: "sub" }, "Filter scorecards"), search),
       mixedBases ? basisPick : null,
@@ -456,7 +456,7 @@ export const scorecardsViews = {
         return offBy(pair[1]) > 0;
       });
       if (!rows.length) {
-        list.replaceChildren(el("div", { className: "empty" }, "No " + kindTitle(D, sc.kind).toLowerCase() + " has been collected yet. Run ", el("code", { textContent: "toolbox doctor" }), " to see whether a connector for it is listed under ", el("code", { textContent: "connectors:" }), " in the portal's ", el("code", { textContent: "toolbox.yaml" }), " and installed, then ", el("code", { textContent: "toolbox report" }), " again."));
+        list.replaceChildren(el("div", { className: "empty" }, "No " + kindTitle(D, sc.kind).toLowerCase() + " has been collected yet. Run ", el("code", { textContent: "seikika doctor" }), " to see whether a connector for it is listed under ", el("code", { textContent: "connectors:" }), " in the portal's ", el("code", { textContent: "seikika.yaml" }), " and installed, then ", el("code", { textContent: "seikika report" }), " again."));
         return;
       }
       if (!shown.length) {

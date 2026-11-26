@@ -1,0 +1,70 @@
+apiVersion: seikika.com/assessment/v1
+entity: scorecard:seikika/meta-scorecard
+rubric: scorecard-quality
+subjectHash: 76e001a81dcf
+assessor: {kind: agent, name: cursor-cloud-agent, model: claude-opus-5.5}
+at: 2026-11-24
+verdicts:
+  - criterion: one-concern
+    verdict: pass
+    reason: >-
+      Its seven rules (portal/standards/meta.yaml:593-680) all ask whether a
+      scorecard is well-formed: tested, no empty level, described, explained,
+      and a fixture ladder that is exercised. One audience, standard authors;
+      the description limits gold to "well-formed, not good"
+      (meta.yaml:570-573, D01M831P5QWJQ4A2FT85N5MXJQF). The new `explains-why`
+      reads whether `rationale:` is filled
+      (crates/seikika-cli/src/meta.rs:241), a fact about form; whether the
+      reason is right is review-scorecard's.
+  - criterion: levels-are-a-ladder
+    verdict: pass
+    reason: >-
+      Bronze (tested, every level has rules), silver (described, explained, a
+      fixture ladder with a real level, every rule tested) and gold (fixtures
+      reach every level, meta.yaml:667-680) build on each other, as
+      docs/design/thresholds.md:47-48 and :60 set out. `explains-why` sits at
+      silver beside `described` (meta.yaml:614-640): a reason belongs with the
+      description, above the bronze floor the ratchet holds new cards to
+      (meta.yaml:591). A ladder of one real level plus `skipped` fails silver
+      (meta.yaml:641-657). In the report the 53 cards spread 11 bronze, 22
+      silver and 20 gold, and none fails explains-why, so silver is reachable
+      and each level separates cards.
+  - criterion: no-obvious-gap
+    verdict: fail
+    reason: >-
+      Lesson L12, "achievable in context"
+      (docs/design/scorecards-for-scorecards.md:92), still has no rule; its
+      proposed `ratchetable` is listed as next at line 142. An all-unknown
+      level stops the climb (crates/seikika-derive/src/lib.rs:1261-1263), so a
+      level whose rules all read a connector the ratchet skips is never
+      granted where it gates. maintainer-ci-reliability gold
+      (fail-rate-under-5) and maintainer-ci-speed silver (fast-feedback) are
+      each one `dataFrom: github-actions` rule
+      (packages/github-actions/fragments/github-actions.yaml:455-473).
+      thresholds.md:71-74 argues those levels are reachable in the published
+      report, which runs the connector, but no meta-scorecard rule tells a
+      card that is reachable somewhere from one that is reachable nowhere.
+    suggestion: >-
+      Emit, per scorecard level, whether every rule in it reads a volatile or
+      skipped connector (`dataFrom`), and add a silver `levels-decidable` rule
+      that fails on such a level unless the card names where it is decided,
+      with evidence naming the level and the connector.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      The new rule's fix names the field and what to write in it
+      (meta.yaml:629-632), its evidence names the card, and the fixture test
+      pins both outcomes (portal/tests/standards.test.yaml:264-272). Earlier I
+      raised scorecard:seikika/maintainer-ci-security's untested rules to
+      tested in a scratch worktree: the evidence `untestedRules`
+      (meta.yaml:658-662) named least-privilege-token and zizmor-clean, I
+      added one expectation each to portal/tests/standards.test.yaml, and
+      `seikika test portal` passed once I corrected one guessed outcome. That
+      fix names no file ("Add an expectation for each untested rule"), but the
+      manifest's `tests:` list gives it and `seikika test` catches a wrong
+      guess.
+summary: >-
+  Re-assessed after the scorecard gained a rationale, links, a track and a
+  silver `explains-why` rule, which every card now passes. The ladder
+  holds and its fixes work. Still missing is a check that each level can
+  be decided where it is read.

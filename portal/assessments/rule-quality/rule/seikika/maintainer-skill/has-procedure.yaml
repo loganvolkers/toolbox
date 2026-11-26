@@ -1,0 +1,60 @@
+apiVersion: seikika.com/assessment/v1
+entity: rule:seikika/maintainer-skill/has-procedure
+rubric: rule-quality
+subjectHash: 7b3edb38505e
+assessor: {kind: agent, name: cursor-assessor-01, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: measures-intent
+    verdict: fail
+    reason: >-
+      numberedSteps counts every body line shaped like `N. text`
+      (crates/seikika-connector-workspace/src/skills.rs:294-307), including
+      lines inside code fences and numbered lists that are not steps. A
+      scratch skill whose only numbered lines were "1. one / 2. two / 3.
+      three" inside a ``` block reported numberedSteps 3. Nothing checks order
+      or that the steps are separate actions. Of the 43 live skills, 28 have
+      exactly three numbered lines, the threshold
+      (plugins/seikika-operator/skills/*/SKILL.md; e.g. get/SKILL.md:9-11,
+      where the steps wrap one invocation). That suggests the bar shapes the
+      text rather than measuring a procedure.
+    suggestion: >-
+      Skip lines inside fenced blocks, and count only one list: the longest
+      run of consecutive numbers starting at 1. Add a fixture whose three
+      numbered lines are inside a code fence and must fail.
+  - criterion: hard-to-game
+    verdict: fail
+    reason: >-
+      The cheapest pass for a one-command skill is to split a sentence into
+      three numbered lines, or to number any list (options, notes). For the
+      CLI skills (D94), many of which wrap one invocation, that is less work
+      than deciding whether the task has steps.
+    suggestion: >-
+      Let a skill pass with fewer steps when it is a single-command skill: a
+      body with one fenced invocation that names one `seikika` command. Or
+      move the three-step bar to the authoring skills only, using `appliesTo`.
+  - criterion: fix-leads-to-pass
+    verdict: pass
+    reason: >-
+      The evidence states the count and the target ("N numbered step(s); want
+      at least 3", portal/standards/skills.yaml:133), and the fix names
+      SKILL.md and the number. Writing three `1.`-style lines passes
+      (skills.rs:298-307).
+  - criterion: threshold-justified
+    verdict: unsure
+    reason: >-
+      The rationale argues for numbered steps (skills.yaml:137-139), but
+      neither its link (Anthropic's "use workflows for complex tasks") nor
+      docs/design/skill-standards.md:91 gives the number three.
+      docs/design/thresholds.md:13-16 says every number is measured or
+      labelled as chosen, and it has no row for this rule. Silver itself is
+      justified by "an agent can follow it" (skills.yaml:52, D72).
+    suggestion: >-
+      Add a row to docs/design/thresholds.md §2 that labels "three" as chosen
+      and gives the reason, or measure it on the catalog. Say why a
+      one-command skill needs three steps.
+summary: >-
+  The fix and evidence work and silver is the right level. But the count
+  includes numbered lines inside code fences, and 28 of 43 live skills sit
+  exactly on the bar. So the rule counts list markers rather than a
+  procedure. The number three has no labelled source in thresholds.md.

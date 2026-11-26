@@ -1,0 +1,70 @@
+apiVersion: seikika.com/assessment/v1
+entity: rule:seikika/maintainer-example/says-how-to-check
+rubric: rule-quality
+subjectHash: af304b223dd8
+assessor: {kind: agent, name: cursor-assessor-08, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: measures-intent
+    verdict: fail
+    reason: >-
+      commandLines counts any line where a tool name is followed by
+      whitespace, case-insensitive
+      (crates/seikika-connector-workspace/src/examples.rs:31-36), so prose
+      counts as a command. experiments/actions-ab/README.md passes only on
+      line 30 ("Python 3.12, Go 1.22 and Node 24 are installed") and line 44
+      (a `Python` language column). experiments/security-ab/README.md passes
+      on prose at :136 ("`seikika report`. The kit should add..."). In the
+      other direction, real checks don't count: `seikika run`, `seikika assess
+      check`, `seikika connector test`, `npx`, `node` and `bash scripts/*.sh`
+      all fail the pattern; I ran each through it. The design excludes the
+      word "Seikika" in a sentence (docs/design/example-standards.md:27) but
+      not "Python" or "npm".
+    suggestion: >-
+      Count only lines inside fenced code blocks or inline code spans whose
+      first word is a known program or a path under the root. Reuse the
+      sdlc-stage PROGRAMS list and its resolution
+      (crates/seikika-connector-workspace/src/data.rs:107-148), which already
+      covers `npx`, `node`, `bash` and every `seikika` subcommand.
+  - criterion: hard-to-game
+    verdict: fail
+    reason: >-
+      Adding a sentence like "No npm packages are needed" or "a Cargo
+      workspace" passes silver; I checked both against the pattern
+      (crates/seikika-connector-workspace/src/examples.rs:31-36). That is
+      cheaper than naming and verifying a real check.
+      experiments/actions-ab/README.md:30 and :44 show a write-up reaching
+      silver by accident this way.
+    suggestion: >-
+      The code-span restriction above makes a prose mention fail. Optionally
+      also flag a command that no workflow or script runs, with the existing
+      `not_in_ci` detector (data.rs:150-171).
+  - criterion: fix-leads-to-pass
+    verdict: fail
+    reason: >-
+      The fix lists "seikika, cargo, npm, python, fga, or a ./run script"
+      (portal/standards/examples.yaml:80-81), but only six seikika subcommands
+      count (validate, test, report, plan, build, derive; examples.rs:33). An
+      agent that names `seikika run deploy --verify` or `seikika assess check
+      portal` for an actions or assessment example follows the fix and still
+      sees `0 command lines`. So would one that names `bash
+      scripts/m5-acceptance.sh` or `npx playwright test`.
+    suggestion: >-
+      Either accept every `seikika <subcommand>`, `npx`, `node`, `bash`/`sh`
+      and paths to scripts under the root, or make the fix list exactly what
+      counts.
+  - criterion: threshold-justified
+    verdict: pass
+    reason: >-
+      The threshold is one command line, the least that "names the command
+      that checks it" can mean. Silver is set by D78
+      (docs/decisions/D01M7W5G0T00000000000000000.md:9) and
+      docs/design/example-standards.md:24, :60, with the reference portal's
+      three checks as the model (example-standards.md:14-16).
+summary: >-
+  The right silver idea, but the check counts words rather than commands.
+  The actions-ab README passes on "Python 3.12" and a language column,
+  while `seikika run`, `seikika assess check`, `npx` and `bash` scripts
+  don't count, despite the fix saying "seikika". Counting only code spans
+  that start with a resolvable program would fix the check, the gaming and
+  the fix together.

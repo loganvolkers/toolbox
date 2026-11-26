@@ -1,0 +1,19 @@
+apiVersion: seikika.com/v1alpha1
+portal: {name: sre-package, owner: group:maintainers, seikika: "0.1"}
+include:
+  - package: ..
+    with:
+      service: checkout
+      owner: group:checkout
+      command:
+        - cat
+        - packages/sre/tests/fixtures/checkout-production-sre-readiness.ndjson
+  - package: ..
+    with:
+      service: catalog
+      kind: CatalogSre
+      owner: group:catalog
+      command:
+        - cat
+        - packages/sre/tests/fixtures/catalog-production-sre-readiness.ndjson
+tests: [standards.test.yaml]

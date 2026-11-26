@@ -1,0 +1,56 @@
+apiVersion: seikika.com/assessment/v1
+entity: rule:seikika/maintainer-observability/otlp-export-tested
+rubric: rule-quality
+subjectHash: 4125d8fd23f0
+assessor: {kind: agent, name: cursor-assessor-09, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: measures-intent
+    verdict: fail
+    reason: >-
+      "Tested" should mean a trace really reaches a pinned otelcol-contrib
+      (portal/standards/observability.yaml:204-207). That proof exists: the
+      ci.yml `otel-testbed` job runs experiments/otel-testbed/scripts/score.sh
+      (.github/workflows/ci.yml:114-127). But the rule checks only that
+      experiments/otel-testbed/README.md exists. The repository's own passing
+      fixture shows the gap: demo-focused reaches gold with `otlpTestbed:
+      docs/design/observability.md` (portal/fixtures/workspace.ndjson:81).
+    suggestion: >-
+      Point `otlpTestbed` at experiments/otel-testbed/scripts/score.sh and
+      declare it under the observability data source's `ci:` fields
+      (portal/seikika.yaml:175-185;
+      crates/seikika-connector-workspace/src/data.rs:150-200), so the rule
+      fails when no workflow runs it. Then fix the fixture to use a real
+      testbed path.
+  - criterion: hard-to-game
+    verdict: fail
+    reason: >-
+      Writing a README in experiments/otel-testbed/, or declaring any existing
+      file, earns gold. Deleting the `otel-testbed` job from ci.yml would
+      leave the rule green. A gold rule this cheap is as easy as any bronze
+      one on the card.
+    suggestion: >-
+      Gate on CI executing score.sh (`notInCi` empty), or ingest the testbed's
+      rubric result (experiments/otel-testbed/rubric.yaml) as a runner record
+      and check that it passed.
+  - criterion: fix-leads-to-pass
+    verdict: pass
+    reason: >-
+      The evidence names the missing testbed path (demo-partial's
+      `experiments/otel-testbed/README.md`,
+      portal/fixtures/workspace.ndjson:82), and the fix names the directory,
+      the collector and the scoring script. Creating them passes.
+  - criterion: threshold-justified
+    verdict: pass
+    reason: >-
+      There is no threshold. Gold fits docs/design/thresholds.md §1's
+      principle that "gold asks for what lower levels don't already imply":
+      unit tests at bronze and silver can pass while nothing reaches a
+      collector (observability.yaml:204-207). docs/design/observability.md:33,
+      39-40 makes the testbed a CI requirement and the gold rule.
+summary: >-
+  The right gold ask, an exported trace proven against a pinned collector,
+  and the repository really does run it in CI, but the rule checks only
+  that a README exists. The repository's own gold fixture passes it with a
+  design doc as the "testbed". Checking that CI runs score.sh would close
+  the gap with the connector's existing `ci:` option.

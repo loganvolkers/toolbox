@@ -1,0 +1,48 @@
+apiVersion: seikika.com/assessment/v1
+entity: assessment:rule-quality/rule:seikika/maintainer-example/says-how-to-check
+rubric: assessment-quality
+subjectHash: 51e339c19385
+assessor: {kind: agent, name: cursor-reviewer-37, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: supported
+    verdict: pass
+    reason: >-
+      The regex in
+      portal/assessments/rule-quality/rule/seikika/maintainer-example/says-how-to-check.yaml
+      is crates/seikika-connector-workspace/src/examples.rs:31-36. It matches
+      experiments/actions-ab/README.md:30 ("Python 3.12") and :44 (the
+      Language column "Python"), and those are the only two hits in that file.
+      experiments/security-ab/README.md:136 is "`seikika report`" in a
+      sentence, and it is that file's only hit. The fix lists seikika, cargo,
+      npm, python, fga and ./run (portal/standards/examples.yaml:80-81), while
+      seikika is limited to six subcommands (examples.rs:33). Silver is D78
+      line 9 and example-standards.md:24 and :60; line 27 excludes the word
+      "Seikika", not "Python".
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      Prose that matches the pattern passes, and seikika run, seikika assess,
+      npx, node and bash do not, so measures-intent, hard-to-game and
+      fix-leads-to-pass all fail for the reason given. "No npm packages" and
+      "a Cargo workspace" match the same regex. One command line is the
+      threshold the design states, so threshold-justified passes.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      The pattern is case-insensitive and counts lines, so the two READMEs
+      reproduce the false passes and the missing programs without a judgement
+      call.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      Counting only a code span whose first word resolves, as the suggestion
+      in
+      portal/assessments/rule-quality/rule/seikika/maintainer-example/says-how-to-check.yaml
+      says, would drop the prose hits and accept seikika run, npx and bash.
+      That changes all three fails together. The silver level needs no change.
+summary: >-
+  Trustworthy. The pattern, the two accidental README hits, and the
+  programs the fix names but the regex drops are all in the cited lines.
+  The three fails are the ones those sources support, and restricting the
+  count to a resolvable command span would change them.

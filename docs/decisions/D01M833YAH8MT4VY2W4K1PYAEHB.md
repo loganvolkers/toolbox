@@ -7,7 +7,7 @@ decided: 2026-11-23T02:30:00Z
 
 **A DX Benchmark (D01M82X2K0DYWTCA23MQJ4CKR0Z) measures the package-author connector
 lifecycle: author → build-connector → test → change → reuse → read. Fresh agents author a
-cloud/SaaS connector against a mock Jira-shaped issue-tracker API ("Forge"), once with Toolbox's
+cloud/SaaS connector against a mock Jira-shaped issue-tracker API ("Forge"), once with Seikika's
 connector protocol, once with Port Ocean, and once with a Backstage entity provider. The bar is
 set before the run in [experiments/connector-ab/README.md](../../experiments/connector-ab/README.md).
 The rivals are the strongest alternatives a team would use for SaaS catalog connectors, not local

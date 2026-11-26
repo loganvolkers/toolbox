@@ -1,0 +1,64 @@
+apiVersion: seikika.com/assessment/v1
+entity: scorecard:seikika/vs-backstage-org-fit
+rubric: scorecard-quality
+subjectHash: 70fd8b3d65a4
+assessor: {kind: agent, name: cursor-assessor-17, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: one-concern
+    verdict: pass
+    reason: >-
+      Both rules ask whether the portal's shape fits the organisation's: one
+      repository with no server first, then many portals joined
+      (portal/standards/backstage-comparison.yaml:742-753, F12 at
+      docs/design/backstage-comparison.md:57). They serve the same platform
+      decision, and the description orders them as stages of one path, the
+      bottom-up and top-down ends D01M80Y0XEK069GD08VCCNF0WB8 says meet in
+      federation.
+  - criterion: levels-are-a-ladder
+    verdict: fail
+    reason: >-
+      Both rules are bronze, and one of them is unbuilt by design. Repo scope
+      works today (ci.yml:87). Federation of catalogs isn't built: D68 said no
+      implementation "until repo portals are used by a few teams", and
+      D01M86BY3YQX3SA1W99QXF1QA1H has built only actions up and runs down. So
+      bronze puts a roadmap feature on the same rung as a shipped one, and
+      portal/results.json has Seikika at none on this card. The description
+      itself orders them "first, then".
+    suggestion: >-
+      Put repo-scoped at bronze and federation at silver (or gold), matching
+      the description's "first, then" and federation.md's sequencing. Keep the
+      standing comparison unchanged.
+  - criterion: no-obvious-gap
+    verdict: fail
+    reason: >-
+      RESEARCH.md F12 measures repo scope as services needed, CI wall time and
+      secrets needed, and federation as entities propagated, staleness and
+      tolerated version skew (experiments/backstage-compare/RESEARCH.md:68).
+      The scorecard reduces each to one boolean. It also omits the org-fit
+      flow Seikika has already built: standards shared across repositories as
+      versioned packages (D89; packages/ and the starter's `include:`
+      examples). That is federation.md's "standards down", and Backstage has
+      no equivalent in facts.yaml.
+    suggestion: >-
+      Add `repo-ci-cost` (services and secrets needed by the report action,
+      read from actions/report) and `shared-standards` (a standard included by
+      many repos at a pinned version, D89). Split federation into the flows
+      federation.md names.
+  - criterion: actionable
+    verdict: fail
+    reason: >-
+      Try raising Seikika from none to bronze. The failing rule's evidence is
+      `federates is false`, and its fix is "Build federation as its design
+      describes" (backstage-comparison.yaml:783). That names no flow, section
+      or code, in a 201-line design that is now partly built. Both facts are
+      hand-written in facts.yaml:48-54, and the fixes don't name that file.
+    suggestion: >-
+      Define which federation flow sets `federates`, name its design section
+      and code in the fix, and add a two-portal probe to the harness so that
+      building it changes the record.
+summary: >-
+  The right concern, but a broken ladder. Federation, unbuilt by design,
+  shares bronze with shipped repo scope, which keeps Seikika at none. Each
+  side of F12 is reduced to a boolean, the built standards-down flow is
+  left out, and the federation fix gives an agent nowhere to start.

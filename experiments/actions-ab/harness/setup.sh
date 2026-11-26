@@ -2,9 +2,9 @@
 # One workspace for one run of one arm (README §4): an org of three open-source repositories, each
 # a bare origin plus a checkout, an empty org directory, and the arm's platform.
 #
-#   setup.sh <arm: toolbox|gha|backstage|vanilla> <dest> <src-dir> [port]
+#   setup.sh <arm: seikika|gha|backstage|vanilla> <dest> <src-dir> [port]
 #
-# <src-dir> holds the pinned tarballs (fetch.sh). The toolbox arm takes TOOLBOX_BIN_DIR (default:
+# <src-dir> holds the pinned tarballs (fetch.sh). The seikika arm takes SEIKIKA_BIN_DIR (default:
 # target/debug of this checkout) and copies the operator skills and two shipped examples; the gha
 # arm copies act ($ACT, default /tmp/tools/act) and the GitHub and act docs (fetch.sh); the backstage arm copies the create-app app
 # ($BACKSTAGE_APP, default /tmp/bs/app, built by backstage/build-app.sh), commits its install as it
@@ -48,17 +48,17 @@ git -C "$dest/org" config user.email ann@acme.example
 local_git "$dest/org"
 
 case $arm in
-  toolbox)
-    bin=$(cd "${TOOLBOX_BIN_DIR:-$repo_root/target/debug}" && pwd)
+  seikika)
+    bin=$(cd "${SEIKIKA_BIN_DIR:-$repo_root/target/debug}" && pwd)
     mkdir -p "$dest/bin"
-    for b in "$bin"/toolbox "$bin"/toolbox-connector-*; do
+    for b in "$bin"/seikika "$bin"/seikika-connector-*; do
       [ -f "$b" ] && [ -x "$b" ] && cp "$b" "$dest/bin/"
     done
-    mkdir -p "$dest/toolbox-docs/examples"
-    cp -r "$repo_root/plugins/toolbox-operator/skills" "$dest/toolbox-docs/skills"
+    mkdir -p "$dest/seikika-docs/examples"
+    cp -r "$repo_root/plugins/seikika-operator/skills" "$dest/seikika-docs/skills"
     cp -r "$repo_root/examples/federated-actions" "$repo_root/examples/repo-portal-starter" \
-      "$dest/toolbox-docs/examples/"
-    cp "$repo_root/schema/manifest.schema.json" "$dest/toolbox-docs/"
+      "$dest/seikika-docs/examples/"
+    cp "$repo_root/schema/manifest.schema.json" "$dest/seikika-docs/"
     ;;
   gha)
     mkdir -p "$dest/bin" && cp "${ACT:-/tmp/tools/act}" "$dest/bin/act"

@@ -13,7 +13,7 @@ echo "=== Arm A: build + drive ==="
 (
   cd "$REPAIR_HOME/arms/A"
   cargo build -q
-  toolbox connector drive --kinds project,issue,component --format catalog \
+  seikika connector drive --kinds project,issue,component --format catalog \
     --out OUT/entities.ndjson \
     --config '{"baseUrl":"http://127.0.0.1:9743","token":"tenant-a-token"}' \
     -- target/debug/forge-connector

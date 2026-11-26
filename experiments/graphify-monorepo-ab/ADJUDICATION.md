@@ -7,10 +7,10 @@ M12 and M13. M10 and M11 hold.
 | Verdict (§5) | Result |
 |---|---|
 | Graphify helps / hurts / neither | **Neither shown.** No hypothesis from M1 to M3 holds or fails. |
-| Toolbox helps / hurts / neither | **Neither shown.** No hypothesis from M4 to M6 holds or fails. |
-| Graphify vs Toolbox | **Neither beats the other.** No hypothesis from M7 to M9 holds or fails. |
+| Seikika helps / hurts / neither | **Neither shown.** No hypothesis from M4 to M6 holds or fails. |
+| Graphify vs Seikika | **Neither beats the other.** No hypothesis from M7 to M9 holds or fails. |
 | M10 (every B run calls `graphify`) | **Holds**: 5, 4, 3, 3 and 4 calls. |
-| M11 (every C run calls `toolbox`) | **Holds**: 2, 3, 3, 1 and 4 calls. |
+| M11 (every C run calls `seikika`) | **Holds**: 2, 3, 3, 1 and 4 calls. |
 
 The §1 table's "Otherwise" branch applies: D01M84ZW6K2V9CV2SD644DE5M0S stands for large monorepos
 too, and the friction found is triaged into fixes.
@@ -24,14 +24,14 @@ and M3: arm B's medians were lower than arm A's on both read and calls, not high
 - **Who.** One fresh agent did all of it. It designed no part of the benchmark.
 - **Phase 1, blind.** The agent read only README §4, the gold, and the 15 answers in
   `/tmp/graphify-monorepo-ab/blind-r1/`. The answers sat under random three-digit labels, with
-  "graphify" and "toolbox" replaced by "[tool]" and the `crate:` prefix dropped. It graded every
+  "graphify" and "seikika" replaced by "[tool]" and the `crate:` prefix dropped. It graded every
   answer and wrote [results/r1/grades-r1.md](results/r1/grades-r1.md) before opening any of these: the
   label key, `prompts/rendered/r1/arms.tsv`, `results/r1.tsv`, the per-run JSON and the per-run
   answers. Where an answer disputed a gold item, it checked the claim in the code at
   `/tmp/graphify-monorepo-ab/src/codex`.
 - **Phase 2, unblinded.** The agent then read the whole README, the key (copied to
   [results/r1/blind-key.tsv](results/r1/blind-key.tsv)), the arm map, `results/r1.tsv`, the per-run
-  JSON and the Toolbox server logs. It applied §5 and §6. As an extra contamination check, it scanned
+  JSON and the Seikika server logs. It applied §5 and §6. As an extra contamination check, it scanned
   the 15 runtime transcripts.
 - **Gold hash check.** `sha256sum /tmp/graphify-monorepo-ab/gold/codex.md` gives
   `d597a2fb17109f6a92981fa936eaf9981b3c9694e7ba6f5a80d40e1c687823a2`. That matches the hash
@@ -45,7 +45,7 @@ and M3: arm B's medians were lower than arm A's on both read and calls, not high
 | Extra check: relative paths and names in the transcripts | Clean (see below) |
 | Void runs | **None** |
 | Runs ending without `ANSWERS.md` | None; `answered` = true for all 15 |
-| Toolbox servers serving all 120 crates at run start | Yes, for all 5 arm C servers (see below) |
+| Seikika servers serving all 120 crates at run start | Yes, for all 5 arm C servers (see below) |
 | Harness faults, reruns | **None** |
 
 **Extra contamination check.** `count.py` catches only absolute paths in tool arguments. A
@@ -63,11 +63,11 @@ Nothing matched. The only `../` paths are two levels deep, such as `../../otel/s
 `codex-rs/core/src`, so they stay inside the workspace. No run set a working directory outside its
 workspace.
 
-**Toolbox servers.** `serve.sh` polls each server until `toolbox query --kind Crate` returns 120
+**Seikika servers.** `serve.sh` polls each server until `seikika query --kind Crate` returns 120
 items, for at most 240 s. The logs (`/tmp/graphify-monorepo-ab/serve-r1-codex-{1,2,10,12,14}.log`)
 show all five servers starting at 21:44:20 and the polling ending by 21:44:43, well short of the
 timeout. That means each server reached 120 crates. Every run made its first tool call between
-21:47:37 and 21:47:42. The first `toolbox get crate:codex-tools` in each C run returned the full
+21:47:37 and 21:47:42. The first `seikika get crate:codex-tools` in each C run returned the full
 entity. `serve.sh`'s per-server "n crates" line isn't saved, so this ruling rests on the poll timing
 rather than on a logged count.
 
@@ -81,7 +81,7 @@ The amounts are small next to the ranges, and they fall in all three arms.
 
 The score is the mean of Q1 to Q4. The code subscore is the mean of Q2 to Q4, and the structure
 subscore is Q1. Calls are `toolCalls`, and read is `resultCharsImputed`. The tool calls column shows
-the shell calls that ran `graphify` or `toolbox`, with their subcommands (§9). The grade detail is in
+the shell calls that ran `graphify` or `seikika`, with their subcommands (§9). The grade detail is in
 [results/r1/grades-r1.md](results/r1/grades-r1.md).
 
 | Run | Arm | Label | Score | Q1 | Q2 | Q3 | Q4 | Code | Calls | Read | Tool calls | Wall (s) |
@@ -96,11 +96,11 @@ the shell calls that ran `graphify` or `toolbox`, with their subcommands (§9). 
 | codex-11 | B | 478 | 0.988 | 0.950 | 1.000 | 1.000 | 1.000 | 1.000 | 54 | 200,296 | `graphify` 3 (`query` 2, `explain` 2) | 315 |
 | codex-13 | B | 210 | 0.994 | 1.000 | 1.000 | 0.974 | 1.000 | 0.991 | 58 | 204,870 | `graphify` 3 (`explain` 2, `query`, `path`) | 266 |
 | codex-15 | B | 283 | 0.981 | 0.950 | 1.000 | 0.974 | 1.000 | 0.991 | 59 | 256,203 | `graphify` 4 (`query` 2, `explain` 2) | 287 |
-| codex-1 | C | 855 | 0.981 | 0.950 | 1.000 | 0.974 | 1.000 | 0.991 | 73 | 275,061 | `toolbox` 2 (`get` 2, `search`) | 327 |
-| codex-2 | C | 476 | 0.994 | 1.000 | 1.000 | 0.974 | 1.000 | 0.991 | 63 | 206,872 | `toolbox` 3 (`get`, `query`, `search`) | 277 |
-| codex-10 | C | 565 | 1.000 | 1.000 | 1.000 | 1.000 | 1.000 | 1.000 | 52 | 230,325 | `toolbox` 3 (`get` 2, `search`) | 263 |
-| codex-12 | C | 154 | 0.981 | 0.950 | 1.000 | 0.974 | 1.000 | 0.991 | 45 | 183,831 | `toolbox` 1 (`get`) | 250 |
-| codex-14 | C | 833 | 1.000 | 1.000 | 1.000 | 1.000 | 1.000 | 1.000 | 54 | 199,292 | `toolbox` 4 (`get` 3, `query` 2, `describe`) | 273 |
+| codex-1 | C | 855 | 0.981 | 0.950 | 1.000 | 0.974 | 1.000 | 0.991 | 73 | 275,061 | `seikika` 2 (`get` 2, `search`) | 327 |
+| codex-2 | C | 476 | 0.994 | 1.000 | 1.000 | 0.974 | 1.000 | 0.991 | 63 | 206,872 | `seikika` 3 (`get`, `query`, `search`) | 277 |
+| codex-10 | C | 565 | 1.000 | 1.000 | 1.000 | 1.000 | 1.000 | 1.000 | 52 | 230,325 | `seikika` 3 (`get` 2, `search`) | 263 |
+| codex-12 | C | 154 | 0.981 | 0.950 | 1.000 | 0.974 | 1.000 | 0.991 | 45 | 183,831 | `seikika` 1 (`get`) | 250 |
+| codex-14 | C | 833 | 1.000 | 1.000 | 1.000 | 1.000 | 1.000 | 1.000 | 54 | 199,292 | `seikika` 4 (`get` 3, `query` 2, `describe`) | 273 |
 
 Only two things separate the answers, and the rest are perfect:
 
@@ -162,7 +162,7 @@ they can only fail or be inconclusive (§8 of the README).
 | M8 | read, C vs B | C 206,872, B 204,870 | max(91,230, 58,043) = 91,230 | med(C) − med(B) = 2,002 ≤ 91,230 | **Inconclusive** |
 | M9 | calls, C vs B | C 54, B 54 | max(28, 10) = 28 | 0 | **Inconclusive** |
 | M10 | `graphifyCalls` in B runs | — | — | 5, 4, 3, 3, 4; minimum 3 ≥ 1 | **Holds** |
-| M11 | `toolboxCalls` in C runs | — | — | 2, 3, 3, 1, 4; minimum 1 ≥ 1 | **Holds** |
+| M11 | `seikikaCalls` in C runs | — | — | 2, 3, 3, 1, 4; minimum 1 ≥ 1 | **Holds** |
 | M12 | code subscore, A vs B | A 1.0000, B 0.9915 | max(1/117, 1/117) = 0.0085 | med(A) − med(B) = 1/117, **exactly *W*** | **Inconclusive** (did not fail) |
 | M13 | structure subscore, A vs C | A 1.000, C 1.000 | max(0.05, 0.05) = 0.05 | 0 | **Inconclusive** (did not fail) |
 
@@ -185,20 +185,20 @@ would give A a median of 0.9915 too.
 | **Graphify helps** | None of M1–M3 fails, and M2 or M3 holds | No: none of M2 or M3 holds |
 | **Graphify hurts** | M1 fails, or both M2 and M3 fail | No: M1 did not fail, and M2 and M3 did not fail |
 | → Graphify | | **Neither shown** |
-| **Toolbox helps** | None of M4–M6 fails, and M5 or M6 holds | No: none of M5 or M6 holds |
-| **Toolbox hurts** | M4 fails, or both M5 and M6 fail | No |
-| → Toolbox | | **Neither shown** |
-| **Graphify beats Toolbox** | None of M7–M9 fails, and one holds | No: none holds |
-| **Toolbox beats Graphify** | None of M7–M9 holds, and one fails | No: none fails |
-| → Graphify vs Toolbox | | **Neither beats the other** |
+| **Seikika helps** | None of M4–M6 fails, and M5 or M6 holds | No: none of M5 or M6 holds |
+| **Seikika hurts** | M4 fails, or both M5 and M6 fail | No |
+| → Seikika | | **Neither shown** |
+| **Graphify beats Seikika** | None of M7–M9 fails, and one holds | No: none holds |
+| **Seikika beats Graphify** | None of M7–M9 holds, and one fails | No: none fails |
+| → Graphify vs Seikika | | **Neither beats the other** |
 | M10, M11 | If either fails, that arm's verdict is "not shown" whatever the others say | Both hold, so that override doesn't apply |
 
 **What follows from §1:**
 
 - "Graphify helps, with M1 holding" is not met.
 - "Graphify helps on cost only" is not met.
-- "Toolbox helps" is not met.
-- "Graphify over Toolbox on score (M7)" is not met.
+- "Seikika helps" is not met.
+- "Graphify over Seikika on score (M7)" is not met.
 - **The "Otherwise" branch applies.** D01M84ZW6K2V9CV2SD644DE5M0S stands for large monorepos too,
   and the friction is triaged into fixes (§10).
 
@@ -245,13 +245,13 @@ hypotheses don't depend on grading.
   hard parts didn't separate the arms. The separation is two boundary conventions, one per question,
   and the arms split on them about evenly.
 - **Arm C used the portal for Q1's direct set only.** All five C runs began with
-  `toolbox get crate:codex-tools`, and four of the five answers cite the portal's `dependents` field
+  `seikika get crate:codex-tools`, and four of the five answers cite the portal's `dependents` field
   for the 7 direct dependents. The portal holds no transitive closure (declared in §2), so every C run
   computed the indirect set some other way. The three C runs that also ran `cargo metadata` (codex-2,
   codex-10, codex-14) listed all 22. The two that didn't (codex-1, codex-12) listed 18. In arms A and
   B the link is looser: A's codex-6 ran `cargo metadata` and still listed 18, while A's codex-8 and
   B's codex-13 didn't and listed 22. After Q1, C runs used the portal little: `search "read_thread"`,
-  and `get` on `codex-thread-store`. Toolbox results were 1–10% of each C run's read.
+  and `get` on `codex-thread-store`. Seikika results were 1–10% of each C run's read.
 - **Arm B oriented with the graph, then read the code.** Every B run asked `graphify query` which
   crates depend on `codex-tools`. It then used `explain` on `read_thread` / `ThreadStore` /
   `get_git_repo_root` and `query` (one run used `path`) for the `exec_command` trace. Then it did what A
@@ -263,9 +263,9 @@ hypotheses don't depend on grading.
   (M2 at 88% of *W*).
 - **Wall time** is reported but is not in the bar. The medians are 287 s (A), 287 s (B) and 273 s
   (C).
-- **Counting tool calls.** `graphifyCalls` and `toolboxCalls` count shell calls, and M10 and M11 use
-  those. `graphifyCommands` and `toolboxCommands` count subcommands, and one shell call can hold
-  several. For example, codex-1 made 2 `toolbox` calls holding 3 subcommands, and codex-4 made 5
+- **Counting tool calls.** `graphifyCalls` and `seikikaCalls` count shell calls, and M10 and M11 use
+  those. `graphifyCommands` and `seikikaCommands` count subcommands, and one shell call can hold
+  several. For example, codex-1 made 2 `seikika` calls holding 3 subcommands, and codex-4 made 5
   `graphify` calls holding 6.
 
 ## 10. Friction found while adjudicating

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Start one Toolbox server per arm C run of a round, each on its own workspace and port
+# Start one Seikika server per arm C run of a round, each on its own workspace and port
 # (README §2), in the tmux session `gm-serve-<round>`, and wait until each serves every crate.
 #
 #   serve.sh <round>         start
@@ -20,13 +20,13 @@ while IFS=$'\t' read -r run arm port; do
   [[ "$arm" == C ]] || continue
   dest="$WORK/r$RND/$run"
   "${TMUX_CMD[@]}" new-window -t "$SESSION" -n "$run" -c "$dest" \
-    "toolbox serve .toolbox --listen 127.0.0.1:$port > $WORK/serve-r$RND-$run.log 2>&1"
+    "seikika serve .seikika --listen 127.0.0.1:$port > $WORK/serve-r$RND-$run.log 2>&1"
 done < "$HERE/../prompts/rendered/r$RND/arms.tsv"
 while IFS=$'\t' read -r run arm port; do
   [[ "$arm" == C ]] || continue
   for _ in $(seq 1 120); do
-    n=$(cd "$WORK/r$RND/$run" && TOOLBOX_URL="http://127.0.0.1:$port" TOOLBOX_AS=agent \
-      toolbox query --kind Crate --fields path -o json 2>/dev/null |
+    n=$(cd "$WORK/r$RND/$run" && SEIKIKA_URL="http://127.0.0.1:$port" SEIKIKA_AS=agent \
+      seikika query --kind Crate --fields path -o json 2>/dev/null |
       python3 -c 'import json,sys; print(len(json.load(sys.stdin)["items"]))' 2>/dev/null || echo 0)
     [[ "$n" == 120 ]] && break
     sleep 2

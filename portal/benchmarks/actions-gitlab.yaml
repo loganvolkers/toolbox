@@ -2,13 +2,13 @@
 records:
   - id: actions-gitlab
     title: >-
-      Self-service actions on a GitLab-only organisation: Toolbox vs GitLab CE
+      Self-service actions on a GitLab-only organisation: Seikika vs GitLab CE
     question: >-
       Can a fresh coding agent give three GitLab projects and their org one
       governed self-service action (validated inputs, preview, approval by a
       direct member of a GitLab group other than the requester, verified
       effect, a record, one place to find it) with less code to maintain and
-      fewer tool calls on Toolbox than on GitLab itself, its pipelines, runner
+      fewer tool calls on Seikika than on GitLab itself, its pipelines, runner
       and API?
     layers: [operator, user]
     stages: [operator/author, operator/deploy, user/build]
@@ -25,15 +25,15 @@ records:
     ran: 2026-11-24
     outcome: >-
       Passes in round 1. All six runs fully pass (C1 and P1 to P11) with no
-      fixes, strikes or Premium credit, so H1 holds. H2 holds (Toolbox 247
+      fixes, strikes or Premium credit, so H1 holds. H2 holds (Seikika 247
       lines to maintain against 1076, W 642) and H3 holds (38 tool calls
-      against 78, W 19). Toolbox changed 1 to 3 GitLab settings, the rival 14
-      to 19. Labelled: forges[].identity, which the Toolbox runs used, was
+      against 78, W 19). Seikika changed 1 to 3 GitLab settings, the rival 14
+      to 19. Labelled: forges[].identity, which the Seikika runs used, was
       built from round 0's friction on this task.
     changed:
     - D01M87FMCVSQCQJMGDSN2MCTH5W
     - >-
-      round 0: Auto DevOps off in the harness; forges[].identity and toolbox
+      round 0: Auto DevOps off in the harness; forges[].identity and seikika
       run --identity-token-file
     - >-
       after round 1: a dev server refuses run writes on an identity: true
@@ -54,12 +54,12 @@ records:
       round 1: 8c8ea2c, with the six run prompts rendered and committed before
       the first launch
     designer: >-
-      the agent that built Toolbox's forges and GitLab driver and wrote the
+      the agent that built Seikika's forges and GitLab driver and wrote the
       README
     adjudicator: >-
       two fresh agents that designed no part of it and changed nothing, each
       with runs from both arms
     spread: >-
-      round 1, lines (min, median, max): Toolbox 154, 247, 271; GitLab 900,
-      1076, 1542. Calls: Toolbox 35, 38, 54; GitLab 76, 78, 82. Every run's
+      round 1, lines (min, median, max): Seikika 154, 247, 271; GitLab 900,
+      1076, 1542. Calls: Seikika 35, 38, 54; GitLab 76, 78, 82. Every run's
       measures are in results/r1/

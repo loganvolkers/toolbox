@@ -3,12 +3,12 @@
 # each with its own GitLab group, and the rendered prompts under prompts/rendered/r<round>/ (commit
 # them before the first launch).
 #
-#   [RUNS=n] [ARMS="toolbox gitlab"] [PORT_BASE=7300] round.sh <round> <src-dir>
+#   [RUNS=n] [ARMS="seikika gitlab"] [PORT_BASE=7300] round.sh <round> <src-dir>
 #
 # Run i of round r gets the group acme-w<10r+i>, its engineer ops-w<10r+i>, and port PORT_BASE+10i.
 set -euo pipefail
 round=$1 src=$2
-runs_per_arm=${RUNS:-3} arms=${ARMS:-toolbox gitlab}
+runs_per_arm=${RUNS:-3} arms=${ARMS:-seikika gitlab}
 here=$(cd "$(dirname "$0")" && pwd)
 runs=/tmp/actions-gitlab/r$round
 rendered="$here/../prompts/rendered/r$round"

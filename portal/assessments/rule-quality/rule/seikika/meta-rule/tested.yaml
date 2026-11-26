@@ -1,0 +1,47 @@
+apiVersion: seikika.com/assessment/v1
+entity: rule:seikika/meta-rule/tested
+rubric: rule-quality
+subjectHash: 8d24206a113c
+assessor: {kind: agent, name: cursor-assessor-02, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: measures-intent
+    verdict: pass
+    reason: >-
+      Only an expectation on the rule's own scorecard counts, and only if it
+      compares the outcome with a literal or uses the evidence
+      (crates/seikika-cli/src/meta.rs:28-35, 68-98). A bare mention or a
+      self-comparison doesn't count (unit test meta.rs:306-327, per
+      D01M831P5QWJQ4A2FT85N5MXJQF point 3). Honest tests that pass this would
+      catch a flip of the pinned outcome, which is what the rationale asks
+      (portal/standards/meta.yaml:453-456).
+  - criterion: hard-to-game
+    verdict: fail
+    reason: >-
+      The match is textual (meta.rs:31-35, 84-93), so `score('c',
+      'e').rules['r'] == 'fail' || true` counts as tested and pins nothing. It
+      costs less than a real pin and still passes `seikika test`. The unit
+      test covers self-comparison and `!=`, but not disjunction
+      (meta.rs:306-327).
+    suggestion: >-
+      Evaluate structure, not text: parse the expectation and count only
+      comparisons reachable through top-level `&&` conjuncts, not under `||`,
+      `!` or a ternary. Add that case to the unit test.
+  - criterion: fix-leads-to-pass
+    verdict: pass
+    reason: >-
+      The fix names the file glob (tests/*.test.yaml) and the two forms that
+      count (meta.yaml:448-452). It warns that a bare mention doesn't count,
+      and the evidence names the card/rule pair to pin.
+  - criterion: threshold-justified
+    verdict: pass
+    reason: >-
+      Bronze is the ratchet floor: every new rule must be tested from its
+      first commit (docs/design/scorecards-for-scorecards.md:117-119, lesson
+      L10 at line 90). The rationale cites L4's false positives (line 84).
+summary: >-
+  A carefully scoped detector: own scorecard only, literal outcomes only,
+  bare mentions refused. Its fix is precise and both outcomes are pinned
+  (portal/tests/standards.test.yaml:235-241, 285-289). Because detection
+  is textual, a disjunction with `true` games it. Live it fails 21 of 272
+  rules (portal/results.json).

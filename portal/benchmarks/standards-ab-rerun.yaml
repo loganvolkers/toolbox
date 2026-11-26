@@ -3,7 +3,7 @@ records:
   - id: standards-ab-rerun
     title: Standards lifecycle rerun after the fixes (B')
     question: >-
-      After the measured friction is fixed, does Toolbox cost fewer tokens
+      After the measured friction is fixed, does Seikika cost fewer tokens
       than bespoke scripts over a standard's lifecycle?
     layers: [package-author, operator]
     stages: [package-author/author, package-author/package, operator/monitor]

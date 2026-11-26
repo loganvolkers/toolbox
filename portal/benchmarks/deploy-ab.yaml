@@ -1,9 +1,9 @@
 # DX Benchmark catalog entry (docs/design/dx-benchmarks.md §6), scored by maintainer-benchmark.
 records:
   - id: deploy-ab
-    title: 'Deploy a usable portal: Toolbox or Backstage, on a laptop'
+    title: 'Deploy a usable portal: Seikika or Backstage, on a laptop'
     question: >-
-      Can a fresh agent deploy a usable portal onto a laptop, with Toolbox and
+      Can a fresh agent deploy a usable portal onto a laptop, with Seikika and
       with Backstage, when the only services are a local GitHub and Postgres?
     layers: [operator, user]
     stages: [operator/deploy, operator/verify, user/discover]
@@ -17,16 +17,16 @@ records:
     status: complete
     ran: 2026-11-23
     outcome: >-
-      Inconclusive on both runs, not a defeat. Toolbox passed S1–S3 and T1–T4,
+      Inconclusive on both runs, not a defeat. Seikika passed S1–S3 and T1–T4,
       Backstage passed S1 and S3 and failed S2, and the runtime recorded no
       tokens, so neither the hold nor the fail applies. The arms were unequal:
-      S2 authenticated only Toolbox, the Toolbox image and container existed
+      S2 authenticated only Seikika, the Seikika image and container existed
       before the run, and two Backstage launches overlapped in the rerun
       (ADJUDICATION.md, D01M83RDWR52WVNER0MV5T84NSX)
     changed:
     - >-
       OpenFGA's tuple view follows the connection search_path, so a role named
-      toolbox is not an empty authorization table
+      seikika is not an empty authorization table
     - >-
       The Acme portal image pushes the directory after the SCIM connector is
       listening. The rerun still failed S2 for Backstage and still had no

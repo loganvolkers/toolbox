@@ -1,7 +1,7 @@
 # Inner-loop audit: 36 rounds of design review on the hosted report, 2026-11-24
 
 *Status: audit of the maintainer SDLC's design-review stage, as run on the hosted report's second
-design loop ([toolbox-report-2026-11-24-2.md](./toolbox-report-2026-11-24-2.md)). Its
+design loop ([seikika-report-2026-11-24-2.md](./seikika-report-2026-11-24-2.md)). Its
 recommendation is decided in [D01M87PSM9YQGGW3YQ5X4XCJP63](../decisions/D01M87PSM9YQGGW3YQ5X4XCJP63.md).
 About the box: how the maintainers change the way it reports.*
 
@@ -20,22 +20,22 @@ About the box: how the maintainers change the way it reports.*
    rendered, because a rule of equal specificity later in the stylesheet won. Only round 36's blind
    auditor found it, 17 minutes later, as a severity-3 finding. Defects like this are mechanical:
    rendering one component in its states and checking it takes seconds.
-4. **The monolith is a real cost, but not the main one.** `toolbox-report.js` grew from 2,058 to
+4. **The monolith is a real cost, but not the main one.** `seikika-report.js` grew from 2,058 to
    5,632 lines during the loop and was touched by 61 of the loop's 161 commits. It has one global
    stylesheet in the shadow root, no linter, no types and no component tests, and the specificity
    bug above came from that. Editing speed was not the bottleneck, though. A fix took minutes, while
    the loop spent its hours waiting on, and reacting to, a noisy signal.
 5. **One portal hid one portal's assumptions.** Every task, route and fixture in 36 rounds was
-   Toolbox's own portal. The first render of a second portal, an OpenFGA repository, showed three
+   Seikika's own portal. The first render of a second portal, an OpenFGA repository, showed three
    defects in the first minute (see *Second-portal check*).
 
 ## Hypotheses
 
 | Hypothesis | Verdict | Evidence |
 |---|---|---|
-| A standard web framework such as Vue would speed up development | **Not supported as stated.** Split the file into modules and bundle them. If a framework is wanted, it is React, which D31 already chose, adopted one view at a time. | Edit-to-preview took 10 s: a 1.6 s build and an 8.5 s report. That is not where the hours went. Vue would add a second framework next to the React minimal UI and `@toolbox/ui`, against the sprawl budget (D45). The custom-element contract (D01M7X0RYD20000000000000000) is framework-agnostic, so modules keep it intact. |
+| A standard web framework such as Vue would speed up development | **Not supported as stated.** Split the file into modules and bundle them. If a framework is wanted, it is React, which D31 already chose, adopted one view at a time. | Edit-to-preview took 10 s: a 1.6 s build and an 8.5 s report. That is not where the hours went. Vue would add a second framework next to the React minimal UI and `@seikika/ui`, against the sprawl budget (D45). The custom-element contract (D01M7X0RYD20000000000000000) is framework-agnostic, so modules keep it intact. |
 | Storybook stories for pages and components would speed up the loop | **Supported**, for the reason the loop lacked: fixtures and fast checks | Each story is a fixture an agent can render, capture and probe in seconds, without regenerating a portal. The round 35 to 36 defect would have failed a story probe. Storybook 10 is already the default kit (D31, D01M7YNZFP68W0DR24PEA6T3FVM). |
-| A second reference portal (OpenFGA) would show the design is not fitted to one portal | **Supported** | Three defects appeared on its first render, none visible on Toolbox's own portal, and two of them are in the box (see *Second-portal check*). |
+| A second reference portal (OpenFGA) would show the design is not fitted to one portal | **Supported** | Three defects appeared on its first render, none visible on Seikika's own portal, and two of them are in the box (see *Second-portal check*). |
 
 ## Where the time went
 
@@ -87,19 +87,19 @@ Adopted as [D01M87PSM9YQGGW3YQ5X4XCJP63](../decisions/D01M87PSM9YQGGW3YQ5X4XCJP6
 
 1. **Modules, not a framework switch.** Split the report into ES modules under `report-ui/`, with
    one module per view and per shared component. esbuild bundles them into the committed
-   `toolbox-report.js`, so the binary still embeds one file, and CI fails when the bundle is stale.
+   `seikika-report.js`, so the binary still embeds one file, and CI fails when the bundle is stale.
    The modules later moved to TypeScript bundled by Vite, on the same pins as `ui/`
    ([D01M880QMWD7Z7FTGKJT99AHWBX](../decisions/D01M880QMWD7Z7FTGKJT99AHWBX.md)); the embedded
    file and the freshness check are unchanged.
 2. **Stories over fixtures.** Write Storybook 10 stories for every page and shared component, over
-   committed report fixtures: Toolbox's own portal, the OpenFGA portal, and states the two lack
+   committed report fixtures: Seikika's own portal, the OpenFGA portal, and states the two lack
    (a comparison not measured yet, a portal with no data).
 3. **Probes in CI.** A story probe renders every story at 1280 and 390 px and fails on serious axe
    violations (WCAG 2.2 AA, which includes 24 px targets) and horizontal overflow. It replaces most per-round scripts.
 4. **A noise-aware stop rule.** A round passes when its probes pass, no severity-3 or 4 finding is
    open, and the median of a small panel of blind auditors does not fall on any dimension the
    round targeted. The loop stops when two rounds in a row move no targeted dimension.
-5. **Two reference portals.** Every design-review round renders Toolbox's own portal and the
+5. **Two reference portals.** Every design-review round renders Seikika's own portal and the
    OpenFGA portal, and the reader tasks include at least one about the second.
 
 ## Measured after the change
@@ -108,21 +108,21 @@ Adopted as [D01M87PSM9YQGGW3YQ5X4XCJP63](../decisions/D01M87PSM9YQGGW3YQ5X4XCJP6
 |---|---|---|
 | See one page in one state after an edit | 1.6 s build + 8.5 s report for the one portal | Storybook dev server hot reload; a static build of all 53 stories takes 1.5 s |
 | Mechanical checks per round | 53 s capture of 14 routes on one portal, then the auditor | 33 s probe of 212 checks (53 stories × 4 views) on three portals and two synthetic states, in CI on every push |
-| States an auditor can see | Whatever T4T's data happened to contain | Fixtures for a comparison not measured yet and a portal with no data, beside the real ones |
+| States an auditor can see | Whatever S4S's data happened to contain | Fixtures for a comparison not measured yet and a portal with no data, beside the real ones |
 | Defects found mechanically | None by a probe; WCAG 2.2 target size was found by an auditor in round 7 | 46 of 212 checks failed on the first probe: a WCAG 2.5.3 name mismatch on all three portals, an unnamed empty bar, and sideways scroll on two pages of the second and third portals only. All fixed in one commit |
 
 The second portal kept paying for itself after the first render: it also showed that the
-`github-actions` package named its scorecards with Toolbox's own `maintainer-` prefix (fixed in
+`github-actions` package named its scorecards with Seikika's own `maintainer-` prefix (fixed in
 0.3.0 with a `prefix` parameter) and that the starter's two scorecards had no titles.
 
 ## Sources
 
-- [toolbox-report-2026-11-24-2.md](./toolbox-report-2026-11-24-2.md): the scores, findings and
+- [seikika-report-2026-11-24-2.md](./seikika-report-2026-11-24-2.md): the scores, findings and
   fixes of all 36 rounds; the statistics above are computed from its table.
 - `git log` of `cursor/report-ux-loop-2-8dda` (07:50 to 21:13 UTC, 161 commits; squash-merged as
   b15820e): commit counts and the file's growth.
 - [design-audit.md](../design/design-audit.md) and the
-  [`design-audit` skill](../../plugins/toolbox-operator/skills/design-audit/SKILL.md): the loop
+  [`design-audit` skill](../../plugins/seikika-operator/skills/design-audit/SKILL.md): the loop
   and its stop rule as run.
 - [maintainer-sdlc.md](../design/maintainer-sdlc.md): the check pyramid this stage joins.
 - Decisions D31 (`D01M7TCJ32P0000000000000000`), D45, `D01M7X0RYD20000000000000000` and

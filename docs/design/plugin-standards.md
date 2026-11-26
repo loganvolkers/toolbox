@@ -1,10 +1,10 @@
 # Plugin Standards: Cataloguing Agent Plugin Packages
 
-*Status: deterministic catalog and scorecard built, 2026-11-20 (D81). Toolbox for Toolbox catalogues
+*Status: deterministic catalog and scorecard built, 2026-11-20 (D81). Seikika for Seikika catalogues
 each `plugin.json` and scores it with `maintainer-plugin`. Loading the package in a harness is not
 a gate. Related: [agent-plugins.md](./agent-plugins.md),
 [agents-md-standards.md](./agents-md-standards.md),
-[toolbox-for-toolbox.md](./toolbox-for-toolbox.md).*
+[seikika-for-seikika.md](./seikika-for-seikika.md).*
 
 ---
 
@@ -12,7 +12,7 @@ a gate. Related: [agent-plugins.md](./agent-plugins.md),
 
 **A plugin package is a directory a plugin manager can load, not a promise that every harness behaves the same.**
 
-The maintainer SDLC ships one package, `plugins/toolbox-operator`. Agent Plugins 1.0.0 says what
+The maintainer SDLC ships one package, `plugins/seikika-operator`. Agent Plugins 1.0.0 says what
 that directory must contain. Skills inside it stay on `maintainer-skill`. The checks that do not
 need a harness:
 
@@ -30,7 +30,7 @@ harnesses loading the same package is not a gate.
 | Source | What it decides | Adopted |
 |---|---|---|
 | **Agent Plugins 1.0.0** | `plugin.json` and `mcp.json` schemas, a name of 1–64 characters, skills only at `skills/<name>/SKILL.md` | Those are the bronze and silver rules. The schema URLs are exact |
-| **This repository's package** | `plugins/toolbox-operator` names `./bin/toolbox-mcp` and keeps skills under `skills/` | The live package is the gold example |
+| **This repository's package** | `plugins/seikika-operator` names `./bin/seikika-mcp` and keeps skills under `skills/` | The live package is the gold example |
 | **Q1** | The project licence is undecided | A missing `license` field does not fail |
 
 ## 3. The catalog
@@ -53,7 +53,7 @@ when it exists. The facts are `schemaOk`, `nameOk`, `descriptionChars`, `misplac
 
 | Package | Level | Notes |
 |---|---|---|
-| `plugins/toolbox-operator` | gold | Schema, name and description match 1.0.0. `mcp.json` names `./bin/toolbox-mcp`. Skills sit under `skills/` |
+| `plugins/seikika-operator` | gold | Schema, name and description match 1.0.0. `mcp.json` names `./bin/seikika-mcp`. Skills sit under `skills/` |
 
 Fixtures: `plugin:plugins/demo/focused` at gold, `plugin:plugins/demo/partial` at bronze (no
 `mcp.json`), `plugin:plugins/demo/unsafe` at none (a bad name, a shell command, a path escape, a
@@ -63,4 +63,4 @@ secret). Every rule passes on one fixture and fails on another (D71).
 
 - Agent Plugins 1.0.0 `plugin.schema.json` and `mcp.schema.json` at `agent-plugins.org`, the schema
   URLs this package already declares.
-- This repository's `plugins/toolbox-operator/plugin.json` and `mcp.json`.
+- This repository's `plugins/seikika-operator/plugin.json` and `mcp.json`.

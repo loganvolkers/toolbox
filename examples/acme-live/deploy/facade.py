@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """GitHub REST façade in front of Forgejo.
 
-The Toolbox GitHub and git-files connectors speak GitHub's REST API. Forgejo's API is a
+The Seikika GitHub and git-files connectors speak GitHub's REST API. Forgejo's API is a
 different API with a partial compatibility shim, so this process reads Forgejo and answers
 the six calls those connectors make, in GitHub's shape. A push to Forgejo is visible on the
 next GET. It does not serve fixtures.

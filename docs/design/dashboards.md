@@ -5,18 +5,18 @@ A2 (dashboards, reports, trends).*
 
 ## 1. Decision
 
-1. **No user-authored dashboards inside Toolbox.** Personal and ad-hoc dashboards are built in the
+1. **No user-authored dashboards inside Seikika.** Personal and ad-hoc dashboards are built in the
    tools agents and people already use, such as **Claude Artifacts** or **Cursor Canvas**, connected
-   to the **Toolbox MCP server**.
+   to the **Seikika MCP server**.
    - Those runtimes already provide sandboxed generated UI, sharing and iteration.
-   - Toolbox provides the data, with permissions enforced by its MCP and API layer.
+   - Seikika provides the data, with permissions enforced by its MCP and API layer.
    - This removes the confused-deputy risks of user-authored canvases running inside the portal
      ([principal-review.md](../principal-review.md) §1.5).
-2. **UI customisation is for Toolbox operators only, in code.** Operators extend the portal UI with
-   **Vue views** on `@toolbox-dev/ui` ([frontend.md](./frontend.md)) in the portal repo. Those
+2. **UI customisation is for Seikika operators only, in code.** Operators extend the portal UI with
+   **Vue views** on `@seikika/ui` ([frontend.md](./frontend.md)) in the portal repo. Those
    views are reviewed, tested (Storybook page stories) and versioned like every other part of the
    program.
-3. **Toolbox ships good built-in views:**
+3. **Seikika ships good built-in views:**
    - portal home and team home
    - scorecard overview
    - initiative burndown
@@ -25,7 +25,7 @@ A2 (dashboards, reports, trends).*
    - connector freshness
    - agent activity
 
-## 2. What Toolbox provides so external dashboards are good
+## 2. What Seikika provides so external dashboards are good
 
 - **A history store, so trends exist** *(Phase 2; v1 keeps per-snapshot summary counts)*. It is an append-only archive of derived-output deltas
   ([incremental-computation.md](./incremental-computation.md) §3):
@@ -56,10 +56,10 @@ A2 (dashboards, reports, trends).*
 ```ts
 // views/security-overview.tsx (operator-owned, in the portal repo)
 export const meta = { title: "Security posture", owner: "group:default/security", slots: ["nav:security", "team-home"] };
-export default function SecurityOverview() { /* uses @toolbox/ui-sdk hooks; same permission shaping as the API */ }
+export default function SecurityOverview() { /* uses @seikika/ui-sdk hooks; same permission shaping as the API */ }
 ```
 
-- Views are built by `toolbox build`, snapshot-tested with fixtures as two different principals, and
+- Views are built by `seikika build`, snapshot-tested with fixtures as two different principals, and
   are meta-catalog entities with owners.
 - Views read data through the same typed hooks as the API (`useEntities`, `useScores`,
   `useScoreHistory`, `useGraph`). They have no extra privileges.

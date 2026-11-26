@@ -1,7 +1,7 @@
-# pnpm-expo: a Toolbox package
+# pnpm-expo: a Seikika package
 
 pnpm workspace and Expo app hygiene for monorepos (Expo SDK 53+ era). Built on
-`builtin:workspace` facts (`js-workspace`, `expo-app`) — not on T4T's
+`builtin:workspace` facts (`js-workspace`, `expo-app`) — not on S4S's
 `maintainer-package`, which scores each `package.json` as an application and is
 the wrong shape for workspace / Expo standards
 ([package-standards.md](../../docs/design/package-standards.md) §6).
@@ -11,7 +11,7 @@ the wrong shape for workspace / Expo standards
 | Kinds | `JsWorkspace`, `ExpoApp` |
 | Scorecards | `pnpm-workspace`, `expo-app` |
 | Connector config | Consumer must enable `jsWorkspace: true` and `expoApps` globs on `builtin:workspace` |
-| Minimum Toolbox binary | **≥ 0.1.1** (first release that emits `js-workspace` / `expo-app`) |
+| Minimum Seikika binary | **≥ 0.2.0** (first release under the Seikika name) |
 
 ## Consumer diff
 
@@ -22,24 +22,21 @@ Adopting this package is not “add one include line”. Diff against a starter-
 
 ```yaml
 include:
-  - package: github:loganvolkers/toolbox/packages/pnpm-expo@0.1.1
+  - package: github:seikika/seikika/packages/pnpm-expo@0.2.0
     with: {requireHoisted: true}   # RN/Expo monorepos that document hoisted node_modules
 ```
 
-| Pin | Safe value (as of Toolbox `v0.1.1`) |
+| Pin | Safe value (as of Seikika `v0.2.0`) |
 |---|---|
-| Package include | `github:loganvolkers/toolbox/packages/pnpm-expo@0.1.1` (or `@v0.1.1`) |
-| `actions/report` | `loganvolkers/toolbox/actions/report@v0.1.1` |
-| Binary | `toolbox-version: "0.1.1"` |
+| Package include | `github:seikika/seikika/packages/pnpm-expo@0.2.0` (or `@v0.2.0`) |
+| `actions/report` | `seikika/seikika/actions/report@v0.2.0` |
+| Binary | `seikika-version: "0.2.0"` |
 
-**Version vs git tag.** This package’s `toolbox-package.yaml` may still say `version: 0.1.0`
-while consumers must pin **`@0.1.1`** because `toolbox install` clones `--branch v<ver>`. The
-YAML `version:` and the Toolbox release tag that first *contains* `packages/pnpm-expo` can
-differ; **pins follow the git tag**, not only the YAML field. Tag `v0.1.0` does **not** contain
-this package — do not pin `@0.1.0`.
-
-An older `toolbox-version: "0.1.0"` binary will not emit `js-workspace` / `expo-app`; scorecards
-look empty.
+**Version vs git tag.** This package’s `seikika-package.yaml` may still say `version: 0.1.0`
+while consumers must pin **`@0.2.0`** because `seikika install` clones `--branch v<ver>`. The
+YAML `version:` and the Seikika release tag that first *contains* `packages/pnpm-expo` can
+differ. **Pins follow the git tag.** The workspace connector in Seikika 0.2.0 emits
+`js-workspace` and `expo-app` entities for these scorecards.
 
 ### 2. Workspace connector config delta
 
@@ -62,29 +59,29 @@ connectors:
 ### 3. Install, then report
 
 ```bash
-toolbox install
-toolbox doctor
-toolbox report . --baseline .toolbox/results.json
+seikika install
+seikika doctor
+seikika report . --baseline .seikika/results.json
 ```
 
-In CI, run `toolbox install` (or otherwise populate the package cache for the pinned tag) **before**
-`actions/report` / `toolbox report` when `toolbox.lock` lists packages.
+In CI, run `seikika install` (or otherwise populate the package cache for the pinned tag) **before**
+`actions/report` / `seikika report` when `seikika.lock` lists packages.
 
 ### Publishing path
 
 | Step | Required? |
 |---|---|
-| Merge this package + connector facts to `loganvolkers/toolbox` `main` | **Yes** — consumers that `include` a git path need the commit |
-| Tag / GitHub Release that includes this directory **and** a Toolbox build with the new workspace facts | **Yes for external CI** — pin package tag + `toolbox-version` together (see handoff) |
+| Merge this package + connector facts to `seikika/seikika` `main` | **Yes** — consumers that `include` a git path need the commit |
+| Tag / GitHub Release that includes this directory **and** a Seikika build with the new workspace facts | **Yes for external CI** — pin package tag + `seikika-version` together (see handoff) |
 | Separate npm/OCI publish of the package YAML | **No** — packages are git-first (`github:…/packages/pnpm-expo@<tag>`) per D89 |
 
-Same pattern as `packages/github-actions`: `toolbox install` pins the package in `toolbox.lock`.
+Same pattern as `packages/github-actions`: `seikika install` pins the package in `seikika.lock`.
 
-Parameters (see `toolbox-package.yaml`):
+Parameters (see `seikika-package.yaml`):
 - `requireHoisted` (boolean, default `false`); set `true` when the repo documents hoisted deps (Gradle/RN).
 - `expoAppGlobs` documents the usual glob; the consumer's connector `expoApps` list is the live config.
 
-Test the package with `toolbox test packages/pnpm-expo/tests`.
+Test the package with `seikika test packages/pnpm-expo/tests`.
 
 ## Operator notes (toolchain gold)
 

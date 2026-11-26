@@ -1,0 +1,46 @@
+apiVersion: seikika.com/assessment/v1
+entity: assessment:rule-quality/rule:seikika/maintainer-supply-chain/code-scanning-pinned
+rubric: assessment-quality
+subjectHash: b8b2fbc1f390
+assessor: {kind: agent, name: cursor-reviewer-12, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: supported
+    verdict: pass
+    reason: >-
+      The citations in
+      portal/assessments/rule-quality/rule/seikika/maintainer-supply-chain/code-scanning-pinned.yaml
+      land. The text regex is repo.rs:143-145, matching any workflow's raw
+      text including comments, and workflows.rs:243-251 reads the `uses:`.
+      codeql.yml:2 is the comment naming the action, and repository.yaml:120
+      holds the fixed evidence. In repository.yaml, 99-102 and 126-127 hold
+      the stay condition. acme/unsafe has codeScanning false
+      (portal/fixtures/workspace.ndjson:61). openssf-template.md:73 and O1 at
+      112 match, and results.json records
+      maintainer-openssf:Pinned-Dependencies at `ten`.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      All four fails match the sources. threshold-justified is the strongest:
+      the rule's own rationale says it stays until Pinned-Dependencies reaches
+      10 (repository.yaml:126-127), and that has happened. The cross-card
+      "implied by pinned-to-sha" point stretches thresholds.md:24-25, which is
+      about a card's own levels, but it isn't needed.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      Each fail rests on code (a regex over text), a fixed evidence string, or
+      a recorded score against a stated condition. A second assessor would
+      agree.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      Setting codeScanningPinned from the parsed `uses:` flips measures-intent
+      and hard-to-game. Split evidence for a missing workflow flips
+      fix-leads-to-pass. Retiring the rule under a decision resolves
+      threshold-justified.
+summary: >-
+  Trustworthy. Every citation lands, including Pinned-Dependencies at ten
+  in results.json, which ends the rule's own stated reason to exist. The
+  text-regex and missing-CodeQL fails are real, and the suggestions would
+  fix them.

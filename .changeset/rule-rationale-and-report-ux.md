@@ -1,5 +1,5 @@
 ---
-"toolbox": minor
+"seikika": minor
 "file-size": minor
 "github-actions": minor
 "openssf-scorecard": minor

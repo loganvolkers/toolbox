@@ -37,7 +37,7 @@ marked as such. Related: [plan.md](../plan.md) §4.1 and §4.4, [identity-resolu
 - **The market is converging from both sides.** Wiz launched a **Service Catalog** with ownership,
   owner suggestions and **Backstage owner import**. Wiz Code maps cloud risks back to repos, commits and
   owners. Meanwhile IDPs integrate Wiz. Ownership is the contested asset.
-- **Recommendation:** make Toolbox's context lake a **layered, catalog-anchored, permission-aware
+- **Recommendation:** make Seikika's context lake a **layered, catalog-anchored, permission-aware
   lake**:
   1. A **raw layer** (bronze).
   2. A **two-tier graph**: curated catalog plus a bounded *inventory* tier for bridge resources.
@@ -46,7 +46,7 @@ marked as such. Related: [plan.md](../plan.md) §4.1 and §4.4, [identity-resolu
   4. A **derived layer** (gold): scores, findings, context packs.
   5. **Federation instead of replication** for deep security graphs: import findings and toxic
      combinations, query attack paths live.
-  6. **Export ownership** to security tools, so Toolbox becomes the **ownership system of record**.
+  6. **Export ownership** to security tools, so Seikika becomes the **ownership system of record**.
 
 ---
 
@@ -97,11 +97,11 @@ SubImage):
 - `cartography-rules` for security rules evaluated over the graph. These are effectively scorecards over
   a security graph.
 
-**Takeaways for Toolbox:**
+**Takeaways for Seikika:**
 1. Security graphs are *path-reasoning* engines over high-cardinality, high-churn infrastructure. That's
    a different workload from a curated catalog. **Don't rebuild one; federate.**
 2. Their value multiplies when joined with *ownership and business criticality*, which they lack and
-   keep trying to import (Wiz from Backstage). **Toolbox should be the source they import from.**
+   keep trying to import (Wiz from Backstage). **Seikika should be the source they import from.**
 3. "Rules over a graph" (Cartography) and "toxic combinations" (Wiz) map naturally onto **scorecards
    with graph predicates**, which our rule language should support (§6.4).
 
@@ -131,7 +131,7 @@ SubImage):
 | API | `API` (OpenAPI) | API gateway exposure | API docs | spec URL / gateway id |
 | Datastore | `Resource` | DB, sensitive-data findings | Data docs | ARN / connection id |
 
-## 5. Design: Toolbox's context lake
+## 5. Design: Seikika's context lake
 
 ```
                          ┌──────────────── interfaces: API · MCP · CLI · UI (operator views) ────────────────┐
@@ -178,7 +178,7 @@ SubImage):
 
 ### 5.3 Knowledge layer: catalog-anchored, not full GraphRAG
 Full GraphRAG (LLM extraction over everything plus community detection) is expensive, must be re-run on
-updates, and is only as good as its entity resolution. Toolbox has an advantage: **the catalog is a
+updates, and is only as good as its entity resolution. Seikika has an advantage: **the catalog is a
 high-precision entity dictionary, and its hierarchy (Domain → System → Component, teams) already
 provides human-curated "communities".**
 
@@ -207,23 +207,23 @@ provides human-curated "communities".**
   - knowledge (relevant ADRs, runbooks, incidents)
 
 ### 5.5 Federation, not replication
-- **Code intelligence** stays federated. Toolbox doesn't build or ingest a code knowledge graph
+- **Code intelligence** stays federated. Seikika doesn't build or ingest a code knowledge graph
   (Graphify and the tools like it): [knowledge-graphs.md](./knowledge-graphs.md) and
   [D01M84ZW6K2V9CV2SD644DE5M0S](../decisions/D01M84ZW6K2V9CV2SD644DE5M0S.md) and
   [D01M85G2ZXXPQRXWKQF7TWV2RTP](../decisions/D01M85G2ZXXPQRXWKQF7TWV2RTP.md), after
   [graphify-ab](../../experiments/graphify-ab/README.md) found no coverage gain and a cost gain
-  on Toolbox that is unmeasured in billed tokens.
+  on Seikika that is unmeasured in billed tokens.
 - **Security graph:** connector packages for Wiz (GraphQL) and Cartography (Neo4j/Cypher).
   - `source` imports *findings* and *bridge resources* (bounded).
   - `resolve` answers live, deep questions ("attack paths reaching `service:payments-api`") by
     translating to the tool's query language with the caller's identity mapped to a scoped token.
     Results are cached briefly and shown as a live panel.
-- **Exporting ownership (strategic):** Toolbox exposes ownership in the formats security tools already
+- **Exporting ownership (strategic):** Seikika exposes ownership in the formats security tools already
   ingest.
   - A **Backstage-compatible catalog API** (`/api/catalog/entities`), which Wiz's documented Backstage
     owner import can consume.
   - Push connectors that set owner/project tags in Wiz and Cartography.
-  - Toolbox then becomes the **ownership system of record**: security, cost and observability tools
+  - Seikika then becomes the **ownership system of record**: security, cost and observability tools
     route their issues to the owners the portal defines.
 
 ### 5.6 Querying the lake
@@ -283,7 +283,7 @@ rule("internet-exposed-critical-without-oncall", {
 | Raw layer becomes a sensitive-data honeypot | Ops-only facet, short default retention, secret scanning on ingest, never embedded |
 | LLM extraction noise pollutes the graph | Only declared relation types; confidence + proposals; provenance; per-document incremental re-extraction |
 | Live federation latency and outages | `resolve` results cached and degraded gracefully; imported findings remain as the offline view |
-| Permission mismatch between Toolbox and source systems (Wiz Projects, Confluence spaces) | Import source ACLs as tuples where APIs allow; otherwise owner-only default for imported details |
+| Permission mismatch between Seikika and source systems (Wiz Projects, Confluence spaces) | Import source ACLs as tuples where APIs allow; otherwise owner-only default for imported details |
 
 ## 8. Phasing
 

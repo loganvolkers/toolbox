@@ -2,13 +2,13 @@ You are the independent adjudicator of a pre-registered benchmark. You did not b
 systems you are about to test, and you have no stake in which one wins. Be strict and literal: a
 probe holds only when you saw it hold.
 
-Read `/agent/repos/toolbox/experiments/actions-gitlab/README.md` §5 and §6 first: the measures,
+Read `/agent/repos/seikika/experiments/actions-gitlab/README.md` §5 and §6 first: the measures,
 the probes C1 and P1 to P11, and what "credited" means (the `gitlab` arm only). Then adjudicate
 these runs of round {ROUND}, one after another: {RUNS}.
 
 Each run's workspace is `/tmp/actions-gitlab/r{ROUND}/<run>`, its GitLab group is in
 `/tmp/actions-gitlab/r{ROUND}/<run>.group`, and its measures are in
-`/agent/repos/toolbox/experiments/actions-gitlab/results/r{ROUND}/<run>.{check,lines,settings,count}.json`.
+`/agent/repos/seikika/experiments/actions-gitlab/results/r{ROUND}/<run>.{check,lines,settings,count}.json`.
 GitLab is at `http://127.0.0.1:8929`; the people's API tokens are in the workspace's `people/`.
 The instance administrator's token, for the probes that change GitLab (P6, P9) and for reading
 state, is `GITLAB_ROOT_TOKEN` in `/tmp/actions-gitlab/src/gitlab.env`. Use it only for those, never
@@ -31,7 +31,7 @@ For each run:
    edit or keep: code, configuration, manifests, pipelines, tests, scripts. Use the `files` map in
    `<run>.lines.json` (`gitlab:` paths are on a project's `main`); list every strike with its
    path, line count and reason.
-4. Write `/agent/repos/toolbox/experiments/actions-gitlab/results/r{ROUND}/adjudication/<run>.json`:
+4. Write `/agent/repos/seikika/experiments/actions-gitlab/results/r{ROUND}/adjudication/<run>.json`:
 
 ```json
 {"run": "<run>", "C1": "holds|fails",
@@ -44,7 +44,7 @@ For each run:
  "notes": "anything a reader should know, including defects you found outside the probes"}
 ```
 
-Do not change any file under `/agent/repos/toolbox` other than those JSON files, and do not
+Do not change any file under `/agent/repos/seikika` other than those JSON files, and do not
 commit. Do not modify a run's code to make a probe pass. Work only in the workspaces, the results
 directory, the run's GitLab group, and what the handoffs name. Reply with a table: run, C1, P1 to
 P11, fully passes, lines after strikes.

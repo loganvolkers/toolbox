@@ -1,7 +1,7 @@
 # Thresholds and Levels: Why Each Number Is Where It Is
 
 *Status: reference, 2026-11-23 (D01M83G9F4EEGN1GTP14HEYB8B6). About the box
-([toolbox-and-tools.md](./toolbox-and-tools.md)): how this portal's standards pick their numbers
+([seikika-and-tools.md](./seikika-and-tools.md)): how this portal's standards pick their numbers
 and levels. Maintainer SDLC. The `rule-quality` rubric asks whether each threshold and level is
 justified (`threshold-justified`); this page is where the justification lives, so a fix text or
 an assessment can cite it.*
@@ -34,8 +34,8 @@ an assessment can cite it.*
 | `cancels-superseded-runs`, `fast-feedback` (maintainer-ci-speed) | Bronze, and silver at a p90 of 15 minutes | They save runner time and queue latency; they aren't correctness or security properties, so they live on their own card rather than holding a reliable workflow back. 15 minutes is a chosen bound, the point where developers switch task while waiting | Principle; the 15 minutes chosen |
 | `no-hardcoded-secrets` (10 scorecards), `no-hidden-instructions` (skills, agent docs) | Bronze | They are killer items. Before D01M83G9F4EEGN1GTP14HEYB8B6 they sat at gold, so a skill or connector carrying a credential or a hidden instruction still read silver and passed the bronze ratchet. SkillBench grades hidden Unicode as a hard F ([skill-standards.md](./skill-standards.md)) | Principle |
 | `has-tests` (maintainer-crate) | Bronze: at least one test, and every test asserts something that can fail | A test with no assert, `unwrap`, `expect` or `?` passes whatever the code does, and so does `assert!(true)` or `assert_eq!(x, x)`. A call to a helper in the same file that asserts counts, so table-driven tests aren't flagged. On 2026-11-23 two tests in this repository asserted nothing; both now assert | Principle, with a measurement |
-| `tests-scale-with-code` (maintainer-crate) | Silver: at least 2 tests per 1,000 code lines | On 2026-11-23 crates here ranged from 0 to 14 tests per 1,000 lines, with a median near 6. A floor of 2 flags crates that are untested or nearly so; the three below it (`toolbox-connector-git-files` and `toolbox-connector-scim` at 0, `toolbox-store` at 1.9) gained unit tests in the same change. It is not a coverage target | Measured |
-| `tests-pass` (maintainer-crate) | Bronze, no ignored or compiled-out test | An ignored test never runs, nor does one under `#[cfg(any())]`. Tests that need OpenFGA fail instead of returning early, in CI and in the portal's runner job (`TOOLBOX_REQUIRE_OPENFGA`) | Principle |
+| `tests-scale-with-code` (maintainer-crate) | Silver: at least 2 tests per 1,000 code lines | On 2026-11-23 crates here ranged from 0 to 14 tests per 1,000 lines, with a median near 6. A floor of 2 flags crates that are untested or nearly so; the three below it (`seikika-connector-git-files` and `seikika-connector-scim` at 0, `seikika-store` at 1.9) gained unit tests in the same change. It is not a coverage target | Measured |
+| `tests-pass` (maintainer-crate) | Bronze, no ignored or compiled-out test | An ignored test never runs, nor does one under `#[cfg(any())]`. Tests that need OpenFGA fail instead of returning early, in CI and in the portal's runner job (`SEIKIKA_REQUIRE_OPENFGA`) | Principle |
 | `titled` (maintainer-site) | A top-level title of at least 3 characters | The shortest real page titles are words such as "Run". Two characters is a placeholder, and a blank or nested title isn't a title | Chosen |
 | `unique-title` (maintainer-site) | Gold | Two pages with one title can't be told apart in search or the sidebar. It is polish, not access | Principle |
 | `readable` (meta-rule) | Silver: at most 30 CEL nodes in a check | Over 219 rules in three portals on 2026-11-23, the median was 5 nodes, the 95th percentile 16 and the maximum 25. 30 leaves headroom without hiding logic. Every rule meets it, so it is a guard at silver, not what makes gold | Measured |
@@ -43,10 +43,10 @@ an assessment can cite it.*
 | `computed-readable` (meta-field) | At most 60 nodes and no nested loops | Computed fields are where logic belongs, so they get twice a check's budget. Over 59 computed fields, the median was 12 and the 90th percentile 36; the one at 65 was split | Measured |
 | `explains-fix` (meta-rule) | At least 5 words | Five words is the shortest instruction that says what and where ("Set `timeout-minutes` on each job") | Chosen |
 | `guided` (meta-rubric) | At least 10 words, an outcome as a word (fail, pass or unsure) and a condition (when, if, unless, "and name") | The shortest real guidance was 13 words, bar one of 7 that didn't say when to fail and was rewritten. "Fail when the answer is no." names an outcome and says nothing. A lexical check is only a floor: whether guidance is good is what assessors' agreement measures (meta-standards-review.md, M2) | Chosen, with a measurement |
-| `evidence-tracks-check`, `fix-names-a-place` (meta-rule) | Gold. A fixed evidence sentence counts only for a yes/no check of at most 8 CEL nodes, no loop and no list that must be empty | Lessons L1 and L2 ([scorecards-for-scorecards.md](./scorecards-for-scorecards.md) §2): agents fixed what the evidence named and the fix located. The first version (evidence must read a field the check reads) failed 68 of 219 rules, most of them falsely: `no-huge-functions` checks `maxFnLines` and lists `functions`, and for `has(entity.license)` a fixed sentence is the whole answer. Every constant-evidence rule in our portals was a check of 8 nodes or fewer. After narrowing, and after evidence and code spans were added to 19 toolbox rules, 213 and 217 of 219 rules met each on 2026-11-23; the rest are the reference portal's, left as written | Principle, with a measurement |
+| `evidence-tracks-check`, `fix-names-a-place` (meta-rule) | Gold. A fixed evidence sentence counts only for a yes/no check of at most 8 CEL nodes, no loop and no list that must be empty | Lessons L1 and L2 ([scorecards-for-scorecards.md](./scorecards-for-scorecards.md) §2): agents fixed what the evidence named and the fix located. The first version (evidence must read a field the check reads) failed 68 of 219 rules, most of them falsely: `no-huge-functions` checks `maxFnLines` and lists `functions`, and for `has(entity.license)` a fixed sentence is the whole answer. Every constant-evidence rule in our portals was a check of 8 nodes or fewer. After narrowing, and after evidence and code spans were added to 19 seikika rules, 213 and 217 of 219 rules met each on 2026-11-23; the rest are the reference portal's, left as written | Principle, with a measurement |
 | `described` (meta-scorecard) | Silver | Agents read a scorecard's description before its rules. It sits at silver, not bronze, so that adding the rule didn't require editing the reference portal's byte-exact oracle | Principle |
 | `fixtures-reach-every-level` (meta-scorecard) | Gold | A level no fixture reaches is untested; the silver ladder only needs two outcomes | Principle |
-| `contract-tested` (user-mcp) | Gold: a successful observed call, or, where the runner is skipped (as in CI), a `tools/call` body with `name` and `arguments` outside a comment | An observed call shows the tool answers over MCP end to end; the contract tests' helper only checks the response shape (`crates/toolbox-api/tests/mcp.rs`, `call`), and what each test asserts beyond that is per test, so this rule is about reach, not depth. A call that errors proves nothing. The static mode is weaker: it sees that a test sends the call, not that the call succeeds | Principle |
+| `contract-tested` (user-mcp) | Gold: a successful observed call, or, where the runner is skipped (as in CI), a `tools/call` body with `name` and `arguments` outside a comment | An observed call shows the tool answers over MCP end to end; the contract tests' helper only checks the response shape (`crates/seikika-api/tests/mcp.rs`, `call`), and what each test asserts beyond that is per test, so this rule is about reach, not depth. A call that errors proves nothing. The static mode is weaker: it sees that a test sends the call, not that the call succeeds | Principle |
 
 ## 3. The ladders
 
@@ -79,8 +79,8 @@ an assessment can cite it.*
 ## Sources
 
 - This repository, 2026-11-23:
-  - `toolbox describe scorecards` over three portals;
-  - `toolbox connector records --name workspace`;
+  - `seikika describe scorecards` over three portals;
+  - `seikika connector records --name workspace`;
   - GitHub Actions runs of `ci` on main, the last 100.
 - Gawande, *The Checklist Manifesto* (2009), secondary summaries
 - DORA, *Accelerate: State of DevOps* (change failure rate bands), secondary

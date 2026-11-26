@@ -3,13 +3,13 @@
 # and the rendered prompts under prompts/rendered/r<round>/ (P1: commit them before the first
 # launch). Each run gets its own ports, so a batch can run every arm at once.
 #
-#   [RUNS=n] [ARMS="toolbox gha backstage vanilla"] [TASK=task] [PORT_BASE=7100] round.sh <round> <src-dir>
+#   [RUNS=n] [ARMS="seikika gha backstage vanilla"] [TASK=task] [PORT_BASE=7100] round.sh <round> <src-dir>
 #
 # TASK names the task prompt, prompts/<TASK>.md; it is written to <dest>.task for score.py check.
 set -euo pipefail
 round=$1 src=$2
 runs_per_arm=${RUNS:-3} task=${TASK:-task}
-arms=${ARMS:-toolbox gha backstage vanilla}
+arms=${ARMS:-seikika gha backstage vanilla}
 here=$(cd "$(dirname "$0")" && pwd)
 runs=${RUNS_DIR:-/tmp/actions-ab}/r$round
 rendered="$here/../prompts/rendered/r$round"

@@ -1,4 +1,4 @@
-# Source of Truth: When Toolbox Owns the Data
+# Source of Truth: When Seikika Owns the Data
 
 *Status: research + recommendation. Research date 2026-11-18. Related: [plan.md](../plan.md) §1
 (config vs. state), §4.1; [identity-resolution.md](./identity-resolution.md);
@@ -16,7 +16,7 @@ Port's value proposition includes **mixed sources of truth**:
 - Some are **owned by the portal** (teams).
 - Some *fields* on mirrored entities are owned by the portal (e.g. a repo's owner or tier).
 
-Should Toolbox be the canonical store for some entities and fields?
+Should Seikika be the canonical store for some entities and fields?
 
 **Short answer: yes, but only for *data*, never for *configuration*.** Each field's source of truth
 should be **declared in code** and enforced per field, so conflicts are rejected and explained instead
@@ -41,21 +41,21 @@ of silently overwritten.
 2. **Silent last-writer-wins is the failure mode to avoid.** Reject, explain, and offer the right
    path, the way Kubernetes SSA does.
 3. **Arbitration rules belong somewhere reviewable.** ServiceNow keeps them as admin configuration with
-   no preview. We can keep them **in code, with `toolbox plan`** previewing their effect.
+   no preview. We can keep them **in code, with `seikika plan`** previewing their effect.
 4. **Write-back closes the loop.** Port pushing owner and tier into GitHub custom properties makes the
    portal the system of record that other tools consume. This matches our "ownership system of record"
    goal ([context-lake.md](./context-lake.md) §5.5).
 
-## 3. Pros and cons for Toolbox
+## 3. Pros and cons for Seikika
 
 | Pros | Cons |
 |---|---|
 | **Data with no natural home gets one:** team charter, notification channels, business criticality, data classification, compliance scope, cost centre, vendor SaaS entries, Systems and Domains curated by architects | **Drift and conflicts** with git and connectors, unless field ownership is enforced (the Port problem) |
-| **Low-friction edits** for non-engineers and **bulk edits** without PR latency (red-team B3) | Weakens "everything is reviewed in git": approvals, history and audit move into Toolbox for those fields |
-| **Agent-first writes:** agents can update facts directly through MCP, within ReBAC and approval guardrails, instead of opening PRs for trivial data | `toolbox plan` can't preview runtime data writes. **Changesets** with their own preview are needed (§4.5) |
+| **Low-friction edits** for non-engineers and **bulk edits** without PR latency (red-team B3) | Weakens "everything is reviewed in git": approvals, history and audit move into Seikika for those fields |
+| **Agent-first writes:** agents can update facts directly through MCP, within ReBAC and approval guardrails, instead of opening PRs for trivial data | `seikika plan` can't preview runtime data writes. **Changesets** with their own preview are needed (§4.5) |
 | **Transactional workflows:** ownership verification, attestations, acknowledgements and exception requests are natural state, not code | **Backups matter more:** native data is irreplaceable state, not rebuildable from sources |
 | **Market expectation** (Port, OpsLevel, Compass); removes a sales objection | **Slippery slope** toward "config in the DB" ("let me edit the scorecard threshold in the UI") unless the line is explicit and enforced |
-| **Write-back:** Toolbox can own repo owner and tier and push them to GitHub custom properties and security tools, becoming the ownership system of record | Previews and staging need native data too (redacted samples; [sdlc.md](./sdlc.md) §5) |
+| **Write-back:** Seikika can own repo owner and tier and push them to GitHub custom properties and security tools, becoming the ownership system of record | Previews and staging need native data too (redacted samples; [sdlc.md](./sdlc.md) §5) |
 | Concurrency, validation, history and undo are well-understood database problems | Portability: data can't be locked in, so export and import are required |
 
 ## 4. Recommendation
@@ -78,26 +78,26 @@ database. Catalog data may be, when the schema declares it."**
 Every kind declares, per field (or field group), **who owns the value**, in precedence order:
 
 ```ts
-new tb.Kind("Repository", {
+new seikika.Kind("Repository", {
   sources: {
-    default: ["connector:github"],                         // mirrored: read-only in Toolbox
+    default: ["connector:github"],                         // mirrored: read-only in Seikika
     fields: {
-      "spec.owner": ["git:catalog-info", "native"],        // catalog-info wins if present, else Toolbox
-      "spec.tier":  ["native"],                            // Toolbox is the source of truth
+      "spec.owner": ["git:catalog-info", "native"],        // catalog-info wins if present, else Seikika
+      "spec.tier":  ["native"],                            // Seikika is the source of truth
     },
   },
   writeBack: { "spec.owner": "github:custom-property/owner", "spec.tier": "github:custom-property/tier" },
 });
 
-new tb.Kind("Group", {
+new seikika.Kind("Group", {
   sources: {
-    default: ["native"],                                   // teams are owned by Toolbox…
+    default: ["native"],                                   // teams are owned by Seikika…
     fields: { "spec.members": ["connector:okta"],          // …except membership, owned by the IdP
               "metadata.name": ["connector:okta", "native"] },  // IdP teams named by IdP; ad-hoc teams native
   },
 });
 
-new tb.Kind("Service", {
+new seikika.Kind("Service", {
   sources: {
     default: ["git:catalog-info"],
     fields: { "spec.businessCriticality": ["native"], "spec.dataClassification": ["native"] },
@@ -109,7 +109,7 @@ new tb.Kind("Service", {
 **Source types:**
 - `git:<pattern>` (catalog-info, catalog-data repo)
 - `connector:<name>`
-- `native` (Toolbox database)
+- `native` (Seikika database)
 - `computed` (calc/mirror/aggregate)
 - `action` (action-sourced fragments, [action-entities.md](./action-entities.md))
 
@@ -144,20 +144,20 @@ reviewed and visible in `plan`.
 - **Validation:** against the kind schema at write time. Bad writes are rejected, not stored as
   errors (unlike soft errors from external sources).
 - **Write-back:** declared `writeBack` targets are pushed through connectors' `act` capability, with
-  retries and drift detection. If someone edits the GitHub custom property directly, Toolbox flags the
+  retries and drift detection. If someone edits the GitHub custom property directly, Seikika flags the
   drift and re-asserts or alerts, per policy.
 
 ### 4.5 Changesets for bulk and agent writes
 
 Large writes (bulk re-tiering, an agent reclassifying 300 services) go through a **changeset**:
 1. **Preview** (`dry_run`): score deltas, authz deltas, notification volume, write-back targets.
-   These are the same sections and gates as `toolbox plan` ([sdlc.md](./sdlc.md) §4, §6).
+   These are the same sections and gates as `seikika plan` ([sdlc.md](./sdlc.md) §4, §6).
 2. **Approval** if gates trip (e.g. > 50 entities, or any data-classification change).
 3. **Atomic apply** and **one-click revert** of the whole changeset.
 
 ### 4.6 Portability and git escape hatches
 
-- `toolbox data export|import`: native data as `catalog-info`-compatible YAML. This avoids lock-in and
+- `seikika data export|import`: native data as `catalog-info`-compatible YAML. This avoids lock-in and
   supports seeding previews and migrations between portals.
 - **Optional git mirror:** native data is continuously committed (bot commits) to a read-only data repo
   for diffing, backup and review culture. Teams that want git as the *storage* can declare a field
@@ -167,7 +167,7 @@ Large writes (bulk re-tiering, an agent reclassifying 300 services) go through a
   `native → git:catalog-info`), it requires a migration. Options: export native values into PRs, or
   seed native values from the current source on the reverse move.
 
-### 4.7 Defaults Toolbox ships
+### 4.7 Defaults Seikika ships
 
 | Kind / field | Default source of truth | Why |
 |---|---|---|
@@ -179,11 +179,11 @@ Large writes (bulk re-tiering, an agent reclassifying 300 services) go through a
 | Identity links for entities without a repo | `native` (with proposal review) | Avoids a PR per link for no-repo entities |
 | Ownership verification, acknowledgements | `native` | Transactional |
 | Waivers / exceptions | Code by default (reviewed by rule owner); `native` with rule-owner approval as an option | Some orgs want PR review, others want speed |
-| Mirrored infrastructure (repos, pods, cloud resources) | Connectors | Never edited in Toolbox |
+| Mirrored infrastructure (repos, pods, cloud resources) | Connectors | Never edited in Seikika |
 
 ### 4.8 Meta catalog and operations
 
-- **Meta catalog:** native-owned fields become visible in the meta graph ("which fields does Toolbox
+- **Meta catalog:** native-owned fields become visible in the meta graph ("which fields does Seikika
   own, and who can edit them?"). The new default scorecard `native-data-hygiene` checks:
   - native fields have owners and write permissions
   - stale native values are re-verified on a cadence

@@ -1,0 +1,51 @@
+apiVersion: seikika.com/assessment/v1
+entity: assessment:rule-quality/rule:seikika/maintainer-benchmark/closes-the-loop
+rubric: assessment-quality
+subjectHash: 81169adad500
+assessor: {kind: agent, name: cursor-reviewer-08, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: supported
+    verdict: pass
+    reason: >-
+      Every citation in
+      portal/assessments/rule-quality/rule/seikika/maintainer-benchmark/closes-the-loop.yaml
+      lands. changeGaps is portal/standards/benchmarks.yaml:203-209 and its
+      evidence string 208-209. §4 step 10 names `changed` at
+      docs/design/dx-benchmarks.md:142-143, and step 11 is 144-146. The §6
+      gold row is 226, and L2/L3 are 90-91. The fail is pinned at
+      portal/tests/standards.test.yaml:1246, and the fixture's passing value
+      is "a DX fix" (portal/fixtures/workspace.ndjson:84).
+      D01M833YAH8MT4VY2W4K1PYAEHB is in
+      portal/benchmarks/connector-ab.yaml:38. portal/results.json lists no
+      closes-the-loop failure among the 19 entries, which matches "all 19
+      pass".
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      hard-to-game rightly fails. Any non-empty list clears
+      `entity.changed.size() == 0` (benchmarks.yaml:207-208), so `changed:
+      [nothing]` passes. The other three verdicts hold: blocked spec-ab, which
+      has nothing in `changed`, passes because the rule is vacuous before a
+      run (benchmarks.yaml:207); the fix names the field through step 10; and
+      there is no number to justify.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      Each verdict follows from CEL and design text a second assessor can
+      read. The gaming routes can be checked straight from the check at
+      benchmarks.yaml:207-209.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      An `unknownDecisions` fact plus a minimum length for free text closes
+      both routes the reason names: `[nothing]` and an id that has no file. I
+      checked the length rule against the live catalog. Every decision id
+      cited in a live `changed` has a file under docs/decisions/. Only one
+      free-text item has fewer than four words: standards-ab-rerun's
+      "packages/file-size and packages/pattern-count". That entry lists other
+      changes, so it would still pass.
+summary: >-
+  A trustworthy assessment. Every line it cites is right, the hard-to-game
+  fail follows from the size-only check, and the suggestion closes the
+  routes it names without failing any honest live entry.

@@ -1,4 +1,4 @@
-apiVersion: toolbox.dev/assessment/v1
+apiVersion: seikika.com/assessment/v1
 entity: sdlc-stage:operator/test
 rubric: sdlc-stage-quality
 subjectHash: 16badcd9c8c5
@@ -8,17 +8,17 @@ verdicts:
   - criterion: executable-exit
     verdict: pass
     reason: >-
-      `toolbox test` exits 1 when any expectation fails (`toolbox --help`). On
+      `seikika test` exits 1 when any expectation fails (`seikika --help`). On
       a scratch copy of examples/repo-portal-starter, I prefixed one
       expectation with `false &&`: the run printed one FAIL and exited 1. The
       listed check, portal/tests/standards.test.yaml, runs in CI through
-      `toolbox test portal` (.github/workflows/ci.yml:64).
+      `seikika test portal` (.github/workflows/ci.yml:64).
   - criterion: agent-can-complete
     verdict: pass
     reason: >-
       The test-file format is specified in docs/v1-spec.md:547 (`name` plus
       `assert[] {name, expect}` in CEL with `entity()` and `score()`). The
-      test skill (plugins/toolbox-operator/skills/test/SKILL.md) covers
+      test skill (plugins/seikika-operator/skills/test/SKILL.md) covers
       expectations and action cases under `runs:`, and
       portal/tests/standards.test.yaml gives many worked examples. Everything
       runs over local fixtures, with no secret.
@@ -35,12 +35,12 @@ verdicts:
       (tests/*.test.yaml, fixtures/). The starter
       (examples/repo-portal-starter) and every package (packages/*/tests, run
       by .github/workflows/ci.yml:68) test themselves this way, with no change
-      to Toolbox's crates.
+      to Seikika's crates.
 # Codex evaluated the two added criteria. Earlier verdicts retain their original attribution.
   - criterion: fast-feedback
     verdict: fail
     reason: >-
-      portal/sdlc/stages/operator.yaml lists toolbox test. docs/v1-spec.md
+      portal/sdlc/stages/operator.yaml lists seikika test. docs/v1-spec.md
       gives no measured local time to the stage exit.
     suggestion: >-
       Measure and record the fastest local check that demonstrates this stage
@@ -48,7 +48,7 @@ verdicts:
   - criterion: beyond-one-reference
     verdict: pass
     reason: >-
-      The starter portal and Toolbox self-portal both run through toolbox test
+      The starter portal and Seikika self-portal both run through seikika test
       in .github/workflows/ci.yml.
 summary: >-
   Operators can pin rule meaning with CEL expectations over fixtures, and

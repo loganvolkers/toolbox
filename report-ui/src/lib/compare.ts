@@ -5,7 +5,7 @@ import { title } from "./rings";
 import { ruleTitle } from "./rules";
 import { blockers } from "./status";
 
-// The setup facts no rule reads, as one line: "corpus 10,000 · runs 5 · version Toolbox … vs Backstage …".
+// The setup facts no rule reads, as one line: "corpus 10,000 · runs 5 · version Seikika … vs Backstage …".
 export var TIMED_UNITS = ["ms", "s", "rps", "seconds", "minutes", "req/s"];
 
 export function setupBrief(context, ids, facts, who) {

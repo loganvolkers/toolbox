@@ -6,7 +6,7 @@ decided: 2026-11-25T00:30:00Z
 # The report UI is TypeScript, bundled by Vite, on the same toolchain as the minimal UI
 
 **`report-ui/src` is TypeScript, checked by `tsc` under `strict` and bundled by Vite in library
-mode (IIFE) into the same embedded `crates/toolbox-cli/src/toolbox-report.js`. Vite and TypeScript
+mode (IIFE) into the same embedded `crates/seikika-cli/src/seikika-report.js`. Vite and TypeScript
 are pinned to the versions `ui/` uses.** This replaces the bundler half of point 1 of
 D01M87PSM9YQGGW3YQ5X4XCJP63 (esbuild); the rest of that decision stands, including point 2: the
 report stays framework-free.
@@ -15,8 +15,8 @@ report stays framework-free.
    builder for the report's stories is Vite. The report's bundle now uses the same Vite, so the
    repository has one bundler for its two UIs instead of two (D45). esbuild leaves `report-ui`'s
    direct dependencies; it remains a transitive one of Storybook.
-2. **The data contract is a type.** `src/types.ts` declares `ReportData`, the JSON `toolbox
-   report` writes (`report_json` in `crates/toolbox-cli/src/report.rs`), and every view and helper
+2. **The data contract is a type.** `src/types.ts` declares `ReportData`, the JSON `seikika
+   report` writes (`report_json` in `crates/seikika-cli/src/report.rs`), and every view and helper
    that takes the report is typed with it. A field renamed on one side and not the other now fails
    `tsc` on the UI side, where before it rendered `undefined`.
 3. **Strict, with one exception.** `strict` is on, including strict null checks. `noImplicitAny`

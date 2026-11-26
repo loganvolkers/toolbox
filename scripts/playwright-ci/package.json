@@ -1,5 +1,5 @@
 {
-  "name": "toolbox-playwright-ci",
+  "name": "seikika-playwright-ci",
   "private": true,
   "description": "Pinned Playwright install for M4 A11 CI (OpenSSF npm ci).",
   "engines": {

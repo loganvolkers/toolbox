@@ -1,0 +1,52 @@
+apiVersion: seikika.com/assessment/v1
+entity: rule:seikika/vs-backstage-security/forged-identity
+rubric: rule-quality
+subjectHash: f9faf553bc1f
+assessor: {kind: agent, name: cursor-assessor-16, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: measures-intent
+    verdict: pass
+    reason: >-
+      The probe sends `x-seikika-user: admin` to Seikika's entity route
+      (experiments/backstage-compare/surface.py:76, 157-158). For Backstage it
+      asks the guest provider for a token, as anyone who can reach the port
+      could (surface.py:114-124). Each product is probed through its own way
+      to claim an identity without proving it, which is the rule's intent.
+      authn.rs trusts no other unverified header: IAP and OIDC tokens are
+      signature-checked (crates/seikika-authz/src/authn.rs:230-246, 270-278).
+  - criterion: hard-to-game
+    verdict: pass
+    reason: >-
+      With SEIKIKA_* removed (surface.py:59), the server picks its own mode
+      for 0.0.0.0. The forged request is answered by the shipped default, so
+      passing requires that default to refuse the header. This is the defect
+      that D01M857ZB3FZJZWX8G3BF5W1RNR records the image having before this
+      comparison.
+  - criterion: fix-leads-to-pass
+    verdict: fail
+    reason: >-
+      The fix names authn.rs, but authn.rs already trusts the header only in
+      `Mode::Dev` (crates/seikika-authz/src/authn.rs:284-291). The regression
+      this rule caught was the default mode off loopback being `dev`. That
+      choice lives in crates/seikika-cli/src/server.rs:35-40
+      (`default_auth_mode`) and :95-109, where `SEIKIKA_AUTH_MODE` overrides
+      it. D01M857ZB3FZJZWX8G3BF5W1RNR §2 changed exactly that. Following the
+      fix in authn.rs would not repair a server that defaults to dev off
+      loopback.
+    suggestion: >-
+      Rewrite the fix as: "Default to token mode off loopback in
+      crates/seikika-cli/src/server.rs (default_auth_mode), and trust
+      x-seikika-user only in dev mode in crates/seikika-authz/src/authn.rs."
+  - criterion: threshold-justified
+    verdict: pass
+    reason: >-
+      The rule is boolean, with no threshold. It corresponds to RESEARCH.md F6
+      probe P3, sign-in without an IdP (RESEARCH.md:183), and to
+      D01M857ZB3FZJZWX8G3BF5W1RNR, which the rule links. Single bronze level
+      per D01M857ZB468ZM2YS6GNSEG6YB9.
+summary: >-
+  A well-aimed probe that meets each product's forging path at its shipped
+  default, and it has already caught a real defect. Its fix names the
+  wrong file: the header check is already right in authn.rs, and the
+  decision that regressed is the default auth mode in the CLI's server.rs.

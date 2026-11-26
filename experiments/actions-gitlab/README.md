@@ -1,4 +1,4 @@
-# actions-gitlab: a governed self-service action on a GitLab-only org, Toolbox vs GitLab
+# actions-gitlab: a governed self-service action on a GitLab-only org, Seikika vs GitLab
 
 *Pre-registered 2026-11-24, before the first counted run (dx-benchmarks §4.1, protocol 2). About
 the box: running a declared action on a forge it doesn't own, remembering its run, and carrying it
@@ -7,7 +7,7 @@ from project to org. The designs under test are [forges.md](../../docs/design/fo
 [actions-ab](../actions-ab/README.md), which ran on local bare origins, to a real GitLab. Results
 are in [results/](./results/).*
 
-**Result (round 1): the bar passes.** All six runs fully pass; Toolbox's medians are 247 lines to
+**Result (round 1): the bar passes.** All six runs fully pass; Seikika's medians are 247 lines to
 maintain against 1,076 and 38 tool calls against 78, each lower by more than *W*. Read the labels
 in [results/r1](./results/r1/README.md) before quoting the numbers.
 
@@ -16,20 +16,20 @@ in [results/r1](./results/r1/README.md) before quoting the numbers.
 **On an org whose code lives only on GitLab, can a fresh coding agent deliver a self-service action
 that projects own, that is validated, previewed, approved by a GitLab group other than the
 requester, done only when observed on `main`, offered from one org-level place and audited, with
-less to maintain and less work in Toolbox than in GitLab's own CI/CD, groups and API?**
+less to maintain and less work in Seikika than in GitLab's own CI/CD, groups and API?**
 
 Layers: the operator SDLC (building the action and the org's place for it) and the user SDLC
 (requesting, approving and checking runs as an agent). Stages: build, test, deploy, operate.
 
 If the bar passes, GitLab support stands beside GitHub as a default, and forges.md's claim that
-Toolbox is not coupled to one forge has a benchmark behind it. If it fails, the friction is triaged
+Seikika is not coupled to one forge has a benchmark behind it. If it fails, the friction is triaged
 into fixes and a new round, and forges.md says GitLab is supported but not yet better than GitLab.
 
 ## 2. Arms
 
 | Arm | Platform | What the workspace adds |
 |---|---|---|
-| `toolbox` | Toolbox at the frozen commit, with GitLab as its forge | `bin/toolbox*` (the binaries, also on the runner's `PATH`), `toolbox-docs/` (the operator skills, `examples/federated-actions` with its GitLab portals, `examples/repo-portal-starter`, the manifest schema) |
+| `seikika` | Seikika at the frozen commit, with GitLab as its forge | `bin/seikika*` (the binaries, also on the runner's `PATH`), `seikika-docs/` (the operator skills, `examples/federated-actions` with its GitLab portals, `examples/repo-portal-starter`, the manifest schema) |
 | `gitlab` | GitLab CE 19.6.1 itself: pipelines with `spec:inputs`, manual jobs, environments, groups, protected branches, merge requests, the REST API | Nothing beyond the shared environment. Premium and Ultimate features CE lacks (approval rules, deployment approvals, code owner approvals) count when configured as code and explained (§7, limit 1) |
 
 The rival is the strongest for the category: an org that is GitLab-only already has GitLab's CI/CD,
@@ -60,7 +60,7 @@ one commit on a project's `main`:
 ## 4. Procedure
 
 1. `harness/prepare.sh /tmp/actions-gitlab/src` downloads the forks and glab, copies the frozen
-   Toolbox binaries, starts GitLab and the runner, copies GitLab's docs and creates the people
+   Seikika binaries, starts GitLab and the runner, copies GitLab's docs and creates the people
    (ann, bob, carol, dave, erin). `harness/round.sh <n> /tmp/actions-gitlab/src` builds three
    workspaces per arm under `/tmp/actions-gitlab/r<n>/<arm>-<k>`, each with its own group, and
    renders `prompts/task.md` with the arm's `prompts/platform-<arm>.md` into
@@ -116,14 +116,14 @@ before and after. Each probe rule is a line `<pattern> <owners>`.
 ## 6. Hypotheses and bar
 
 *W* is the wider of the two arms' ranges (max − min over three runs). A cost hypothesis **holds**
-when Toolbox's median is lower than the rival's by more than *W*; it is **lost** when the rival's
+when Seikika's median is lower than the rival's by more than *W*; it is **lost** when the rival's
 median is lower by more than *W*; otherwise it is **inconclusive** (P2).
 
 | # | Hypothesis |
 |---|---|
-| H1 | **Delivery.** Toolbox's arm fully passes in at least 2 of 3 runs, and in at least as many runs as the gitlab arm |
-| H2 | **Lines to maintain.** Toolbox's median is lower by more than *W* |
-| H3 | **Tool calls.** Toolbox's median is lower by more than *W* |
+| H1 | **Delivery.** Seikika's arm fully passes in at least 2 of 3 runs, and in at least as many runs as the gitlab arm |
+| H2 | **Lines to maintain.** Seikika's median is lower by more than *W* |
+| H3 | **Tool calls.** Seikika's median is lower by more than *W* |
 
 **The bar: the benchmark passes when H1 holds, and H2 or H3 holds, and neither is lost.** Anything
 else fails, and the friction behind the failure is triaged into product fixes and a new round,
@@ -135,25 +135,25 @@ which reruns both arms at the new frozen commit (L11, L15).
    approvals. The gitlab arm gets them by configuration, which favours it, as actions-ab's credit
    for GitHub-only features favoured GitHub Actions. A Premium org could also run them.
 2. **The designer chose the task, its people and its probes**, after building GitLab support. The
-   task is held out from the Toolbox docs: no skill, example or doc has an action that edits
+   task is held out from the Seikika docs: no skill, example or doc has an action that edits
    `CODEOWNERS` or a rule file like it. They do mention `CODEOWNERS`, as an ownership source
-   Toolbox reads (the `owner` and `add-permission` skills, `repo-portal-starter`). Its shape (a project-owned action, group approvers, an org place) is
+   Seikika reads (the `owner` and `add-permission` skills, `repo-portal-starter`). Its shape (a project-owned action, group approvers, an org place) is
    actions-ab's round 8 shape, which the shipped `examples/federated-actions/gitlab-org` portal
    and `scripts/gitlab-acceptance.sh` step 8 already show on GitLab. That example ships with
-   Toolbox, so it counts as product documentation, as in actions-ab limit 4. R9 is not held out:
+   Seikika, so it counts as product documentation, as in actions-ab limit 4. R9 is not held out:
    GitLab group approvers were built for the acceptance script before this benchmark.
-3. **Agents know GitLab from training; they know Toolbox only from its docs.** That weighs against
-   Toolbox.
+3. **Agents know GitLab from training; they know Seikika only from its docs.** That weighs against
+   Seikika.
 4. **GitLab group inheritance is a trap for both arms.** Owners and Maintainers of the parent group
-   are inherited members of `release`; R9 says direct members. Toolbox's connector reports direct
+   are inherited members of `release`; R9 says direct members. Seikika's connector reports direct
    members; the gitlab arm must choose the right API.
 5. **Settings are not lines.** What the gitlab arm sets through the API (protected branches,
    variables, tokens) is maintained too but is not in the primary measure; `settings.py` reports
    it, and the write-up gives it beside lines.
 6. **Runs share one GitLab and one runner.** The people are global users, and each person's token
    can see every run's group they belong to. `isolation.py` reports any call that names another
-   group or another workspace, and any gitlab-arm call that names the runner's Toolbox binaries.
-7. **The runner has the Toolbox binaries on its `PATH` in both arms.** The gitlab arm's prompt
+   group or another workspace, and any gitlab-arm call that names the runner's Seikika binaries.
+7. **The runner has the Seikika binaries on its `PATH` in both arms.** The gitlab arm's prompt
    doesn't mention them.
 8. **One task, one forge version, one host.** A self-managed CE on loopback, with no TLS and no
    SSO; gitlab.com, GitLab Dedicated and Premium are not run.

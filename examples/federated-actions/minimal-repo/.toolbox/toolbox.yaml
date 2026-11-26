@@ -1,5 +1,0 @@
-apiVersion: toolbox.dev/v1alpha1
-portal: {name: minimal-repo, owner: group:maintainers, toolbox: "0.1"}
-# The action and its tests are a standard: the same files, byte for byte, in every repository that
-# offers it. Only the two lines above are this repository's own.
-include: [actions/*.yaml]

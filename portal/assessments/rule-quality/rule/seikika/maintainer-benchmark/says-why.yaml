@@ -1,0 +1,43 @@
+apiVersion: seikika.com/assessment/v1
+entity: rule:seikika/maintainer-benchmark/says-why
+rubric: rule-quality
+subjectHash: d11ed79f28da
+assessor: {kind: agent, name: cursor-assessor-08, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: measures-intent
+    verdict: pass
+    reason: >-
+      reasonGaps fires only for `archived` without servedValue or `blocked`
+      without blockedOn (benchmarks.yaml:183-192). Those are exactly the two
+      cases where §6 says the entry must keep a reason
+      (docs/design/dx-benchmarks.md:208-218). Designed and complete entries
+      pass vacuously, which is right, since they owe no reason. The live
+      values carry real content, for example spec-ab's "Q17 (write the spec)
+      and Q18 (approve the Backstage spike)" (portal/benchmarks/spec-ab.yaml).
+  - criterion: hard-to-game
+    verdict: pass
+    reason: >-
+      Whoever archives or blocks a benchmark knows why, so writing the real
+      reason costs the same as a placeholder. The only way to skip it is to
+      give a false status, which other rules then catch: a `complete` entry
+      owes an outcome and results (benchmarks.yaml:193-202), and a `designed`
+      one owes registration (benchmarks.yaml:327-341).
+  - criterion: fix-leads-to-pass
+    verdict: pass
+    reason: >-
+      The evidence is `archived without servedValue` or `blocked without
+      blockedOn` (benchmarks.yaml:190-192, pinned at
+      portal/tests/standards.test.yaml:1241-1243). The fix names both fields
+      (benchmarks.yaml:320-322), so filling the named field clears it.
+  - criterion: threshold-justified
+    verdict: pass
+    reason: >-
+      There is no number. Silver matches dx-benchmarks.md §6 ("an archived
+      benchmark says why", docs/design/dx-benchmarks.md:225). The archive
+      criteria at :213-218 make the reason the record of which criterion
+      applied.
+summary: >-
+  A good rule. It fires only on the two statuses that owe a reason, names
+  the exact field to fill, and gives a false status no advantage, because
+  neighbouring rules check what each status implies.

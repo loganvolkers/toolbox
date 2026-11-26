@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 """Provision the reference portal's IdP fixtures (fixtures/idp.ndjson) into a SCIM endpoint, the
-way an identity provider would: users first, then groups with the Toolbox extension.
+way an identity provider would: users first, then groups with the Seikika extension.
 Usage: python tools/scim_feed.py http://127.0.0.1:9100/scim/v2 [TOKEN]"""
 import json, os, sys, urllib.request
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-EXT = "urn:ietf:params:scim:schemas:extension:toolbox:2.0:Group"
+EXT = "urn:ietf:params:scim:schemas:extension:seikika:2.0:Group"
 base, token = sys.argv[1], (sys.argv[2] if len(sys.argv) > 2 else None)
 recs = [json.loads(l) for l in open(os.path.join(ROOT, "fixtures", "idp.ndjson")) if l.strip()]
 

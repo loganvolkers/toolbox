@@ -28,4 +28,4 @@ for name, want, change in cases:
     got = "pass" if r.returncode == 0 else "fail"
     out = (r.stdout + r.stderr).strip().splitlines()
     print(json.dumps({"case": name, "want": want, "got": got, "exit": r.returncode, "ok": got == want, "tail": out[-4:]}))
-    subprocess.run(["git", "-C", repo, "checkout", "-q", "--", "."]); subprocess.run(["git", "-C", repo, "clean", "-fdq", "-e", ".toolbox", "-e", ".standards"])
+    subprocess.run(["git", "-C", repo, "checkout", "-q", "--", "."]); subprocess.run(["git", "-C", repo, "clean", "-fdq", "-e", ".seikika", "-e", ".standards"])

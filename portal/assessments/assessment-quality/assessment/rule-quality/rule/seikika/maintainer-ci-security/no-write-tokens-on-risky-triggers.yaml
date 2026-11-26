@@ -1,0 +1,54 @@
+apiVersion: seikika.com/assessment/v1
+entity: assessment:rule-quality/rule:seikika/maintainer-ci-security/no-write-tokens-on-risky-triggers
+rubric: assessment-quality
+subjectHash: 8de8089fb4af
+assessor: {kind: agent, name: cursor-reviewer-12, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: supported
+    verdict: pass
+    reason: >-
+      The citations in
+      portal/assessments/rule-quality/rule/seikika/maintainer-ci-security/no-write-tokens-on-risky-triggers.yaml
+      hold. jobsWithWrite reads only job-level scopes (workflows.rs:255, 286),
+      and topWriteScopes is computed but unmapped. The cited lines also land:
+      waivers.yaml:8-11, github-actions.yaml:287-297 and
+      standards.test.yaml:132-143. zizmor 1.32.0 `--offline` does report `on:
+      issue_comment` as high dangerous-triggers, as claimed.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      measures-intent and hard-to-game fail rightly. Hoisting `contents:
+      write` to the top empties jobsWithWrite and also passes
+      least-privilege-token. fix-leads-to-pass is right. threshold-justified
+      is the open question, covered under reproducible.
+  - criterion: reproducible
+    verdict: unsure
+    reason: >-
+      The threshold-justified fail rests on a reading the sources don't
+      settle. The reason says nothing explains silver, but the card's
+      rationale gives the ladder: "Bronze closes the direct routes, silver
+      removes write access where untrusted events arrive"
+      (github-actions.yaml:184-185), and D70 places it there. Bronze's
+      no-high-findings already fails these triggers, and a waiver is a
+      decision-backed acceptance (waivers.yaml:1-2) that still shows this rule
+      failing at silver (standards.test.yaml:132-143). So a second assessor
+      could pass threshold-justified.
+    suggestion: >-
+      Engage github-actions.yaml:184-185. Either argue why the card's ladder
+      reason doesn't justify silver for a defence-in-depth rule behind a
+      bronze rule that already fails the trigger, or say unsure.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      The suggested check `entity.riskyTriggers.size() == 0 ||
+      (entity.topWriteScopes.size() == 0 && entity.jobsWithWrite.size() == 0)`
+      fails a top-level write-all on issue_comment, which flips
+      measures-intent and hard-to-game. Moving the rule to bronze, or adding a
+      thresholds.md row, would settle threshold-justified either way.
+summary: >-
+  The two code-based fails are right and reproduce: a workflow-level write
+  token on a risky trigger passes. The threshold-justified fail doesn't
+  engage the card rationale's explanation of silver
+  (github-actions.yaml:184-185), so it rests on taste and another assessor
+  could pass it.

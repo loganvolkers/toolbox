@@ -8,7 +8,7 @@
 > **Implementation status (D01M86BY3YQX3SA1W99QXF1QA1H):** built, with federation, as
 > [federated-actions.md](./federated-actions.md) describes: run states, confirm tokens, the
 > `command`, `change`, `github-workflow`, `in-image` and federated executors, approvals and
-> postcondition verification, in `toolbox run` and `toolbox serve`. The independent review that
+> postcondition verification, in `seikika run` and `seikika serve`. The independent review that
 > D64 asked for is [self-service-review.md](../self-service-review.md); its fixes are folded in
 > here and in v1-spec §6.6 and §7.5. Built differently from this design: confirm tokens also bind
 > the requester and entity and are single-use in a server; approvals are refused over MCP and from
@@ -20,7 +20,7 @@
 
 ## 1. Conclusion
 
-**An action run succeeds only when Toolbox has observed its effect.** Handing a message to an executor,
+**An action run succeeds only when Seikika has observed its effect.** Handing a message to an executor,
 a queue or a workflow is *dispatch*, not completion. The maintainer's Port experience was the
 opposite: a Kafka message was posted and the run counted as complete, even though the work hadn't
 succeeded and might still fail.
@@ -40,7 +40,7 @@ Three mechanisms make this work:
 2. **A real executor contract:** `preview`, `run` with progress, `cancel` and an optional `verify`
    (§5), so executors report outcomes instead of accepting messages.
 3. **Verification against the catalog:** each action declares postconditions in CEL. After the
-   executor reports success, Toolbox asks the relevant connector for a scoped refresh, recomputes, and
+   executor reports success, Seikika asks the relevant connector for a scoped refresh, recomputes, and
    checks the postcondition (§4).
 
 ## 2. Run states
@@ -57,7 +57,7 @@ Three mechanisms make this work:
 | **`succeeded`** | **Postconditions hold at a snapshot after the run** | Success, with the snapshot "as of" time |
 | `failed` | The executor failed, or a postcondition is false | The error or the unmet postcondition, with links |
 | `timed_out` | No terminal executor status or verification within the deadline | Explicit, never shown as success |
-| `unverified` | The executor reported success but Toolbox could not observe the effect (no postcondition, no refresh capability) | A distinct warning state; never rendered as plain success |
+| `unverified` | The executor reported success but Seikika could not observe the effect (no postcondition, no refresh capability) | A distinct warning state; never rendered as plain success |
 | `cancelled` / `compensated` | Stopped by a user, or undone by a declared compensation | — |
 
 Runs are durable workflows (D39): every transition is checkpointed in Postgres, with idempotency keys,
@@ -66,7 +66,7 @@ deadlines and recovery after restarts.
 ## 3. Preview and confirm
 
 - **Two preview layers:**
-  - **Toolbox preview (always, fast):** schema validation, `enumFrom` eligibility, policy, approval
+  - **Seikika preview (always, fast):** schema validation, `enumFrom` eligibility, policy, approval
     path, blast radius from the catalog. Target p95 ≤ 150 ms ([frontend.md](./frontend.md) §6).
   - **Executor preview (when supported):** the executor computes the concrete effects with read-only
     calls, for example "Renovate will get `contents:write` on 1 repository". It streams into the panel
@@ -74,7 +74,7 @@ deadlines and recovery after restarts.
 - **Structured effects:** a preview is a list of intended changes (resource, operation, before → after,
   permissions granted), plus blockers and warnings. UI, MCP and CLI render the same structure.
 - **Confirmation token:** `hash(action version, inputs, preview effects, snapshot id)`, short-lived. Run
-  creation requires it. If the catalog or the executor preview changed meanwhile, Toolbox returns
+  creation requires it. If the catalog or the executor preview changed meanwhile, Seikika returns
   `preview_stale` with the new preview instead of running.
 - **Agents:** the MCP tool returns the preview and a token on the first call. The client shows it to the
   user (MCP elicitation where the client supports it) and calls again with the token. Destructive
@@ -85,10 +85,10 @@ deadlines and recovery after restarts.
 Actions declare what must be true afterwards:
 
 ```ts
-tb.action("install-approved-app", {
+seikika.action("install-approved-app", {
   scope: "day2", on: "repository",
-  inputs: { app: tb.schema.enumFrom("approvedApps(entity)") },
-  executor: tb.executor.inImage("./executors/github-apps"),
+  inputs: { app: seikika.schema.enumFrom("approvedApps(entity)") },
+  executor: seikika.executor.inImage("./executors/github-apps"),
   expect: {
     // CEL over the catalog after the run
     postcondition: "entity.installedApps.exists(a, a.slug == inputs.app)",
@@ -100,7 +100,7 @@ tb.action("install-approved-app", {
 
 After `executor_succeeded`:
 
-1. Toolbox issues the declared `refresh` commands with `verification` priority
+1. Seikika issues the declared `refresh` commands with `verification` priority
    ([connector-control.md](./connector-control.md) §5).
 2. It waits for `complete`, then for the snapshot that contains the results.
 3. It evaluates the postcondition at that snapshot: true → `succeeded`; false → `failed` with the
@@ -110,7 +110,7 @@ After `executor_succeeded`:
 Verification also fixes the stale-page problem: when the run ends, the catalog already shows the
 effect, because the run waited for the snapshot that contains it.
 
-`toolbox plan` flags actions with no postcondition, and the meta catalog's action scorecard penalises
+`seikika plan` flags actions with no postcondition, and the meta catalog's action scorecard penalises
 them, so `unverified` is a visible, deliberate choice.
 
 ## 5. Executor contract and fidelity tiers
@@ -130,8 +130,8 @@ Executors differ in how much of this they can do, and the UI shows the differenc
 |---|---|---|---|---|---|
 | **In-image executor** (child process over stdio, D40) | Native | Native, streamed | Yes | Refresh + postcondition, or `verify` | **Best** (default for rich actions) |
 | **HTTP executor** (same contract over HTTP) | Native | Callbacks + polling | Yes | Same | Best |
-| **GitHub Actions** (`workflow_dispatch`) | Toolbox preview only, or a separate dry-run workflow (slow) | Run id from dispatch (`return_run_details`, GitHub changelog 2026-02-19 [S]); status via the Runs API and `workflow_run` webhooks | Yes (cancel run API) | Refresh + postcondition | Good; previews are coarser |
-| **Webhook / queue (fire-and-forget)** | Toolbox preview only | None until a callback | No | **Required:** refresh + postcondition, or the action must declare `unverified: true` | Acceptable only with verification |
+| **GitHub Actions** (`workflow_dispatch`) | Seikika preview only, or a separate dry-run workflow (slow) | Run id from dispatch (`return_run_details`, GitHub changelog 2026-02-19 [S]); status via the Runs API and `workflow_run` webhooks | Yes (cancel run API) | Refresh + postcondition | Good; previews are coarser |
+| **Webhook / queue (fire-and-forget)** | Seikika preview only | None until a callback | No | **Required:** refresh + postcondition, or the action must declare `unverified: true` | Acceptable only with verification |
 
 A webhook or queue publish is never treated as completion: without a postcondition, its runs end as
 `unverified`.
@@ -140,7 +140,7 @@ A webhook or queue publish is never treated as completion: without a postconditi
 executor speaks them over either transport:
 
 - **`in-image`** runs `command`, or the binary of a released `package`
-  (`github:owner/repo[/app]@version`, installed and pinned in `toolbox.lock` by `toolbox install`,
+  (`github:owner/repo[/app]@version`, installed and pinned in `seikika.lock` by `seikika install`,
   D90; `command` is then its arguments). One message goes to stdin per call; the replies come back on
   stdout, one per line.
 - **`http`** POSTs the same message to `url`, with a bearer token from the variable named by
@@ -163,7 +163,7 @@ executor speaks them over either transport:
   token; `GET /v1/runs/{id}` with SSE events.
 - **MCP:** `preview_action` / `run_action` (or a per-action tool with `confirm_token`); long runs are MCP
   tasks; the final result includes the verification outcome and snapshot id.
-- **CLI:** `toolbox run <action> --preview`, then `--confirm <token>`; `toolbox runs watch <id>`.
+- **CLI:** `seikika run <action> --preview`, then `--confirm <token>`; `seikika runs watch <id>`.
 - **UI:** the live preview panel and run timeline from [frontend.md](./frontend.md), with
   "checking the result" as a visible step and the final page rendered at the verified snapshot.
 - **Notifications** fire on terminal states only ([notifications.md](./notifications.md)).

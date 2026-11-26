@@ -13,7 +13,7 @@ import re
 import statistics
 import sys
 
-ARMS = ["toolbox", "gha", "backstage", "vanilla"]
+ARMS = ["seikika", "gha", "backstage", "vanilla"]
 PROBES = ["C1"]
 
 
@@ -39,11 +39,11 @@ def load(d: pathlib.Path):
     return runs
 
 
-def compare(tb: list, rival: list) -> str:
-    w = max(max(tb) - min(tb), max(rival) - min(rival))
-    diff = statistics.median(rival) - statistics.median(tb)
+def compare(seikika_times: list, rival: list) -> str:
+    w = max(max(seikika_times) - min(seikika_times), max(rival) - min(rival))
+    diff = statistics.median(rival) - statistics.median(seikika_times)
     state = "holds" if diff > w else "lost" if -diff > w else "inconclusive"
-    return f"{state} (Toolbox {statistics.median(tb):g}, rival {statistics.median(rival):g}, W {w:g})"
+    return f"{state} (Seikika {statistics.median(seikika_times):g}, rival {statistics.median(rival):g}, W {w:g})"
 
 
 def main() -> None:
@@ -60,15 +60,15 @@ def main() -> None:
         print("\n".join(out))
         return
     passes = {a: sum(r["passes"] for r in v) for a, v in by.items()}
-    h1 = passes["toolbox"] >= 2 and all(passes["toolbox"] >= passes[a] for a in ARMS[1:])
+    h1 = passes["seikika"] >= 2 and all(passes["seikika"] >= passes[a] for a in ARMS[1:])
     out += ["", f"**H1 (delivery):** {'holds' if h1 else 'fails'}. Fully passing runs: "
             + ", ".join(f"{a} {passes[a]}/3" for a in ARMS) + ".", "",
             "| Rival | H2 lines to maintain | H3 tool calls | Bar against this rival |",
             "|---|---|---|---|"]
     bar = h1
     for a in ARMS[1:]:
-        h2 = compare([r["lines"] for r in by["toolbox"]], [r["lines"] for r in by[a]])
-        h3 = compare([r["calls"] for r in by["toolbox"]], [r["calls"] for r in by[a]])
+        h2 = compare([r["lines"] for r in by["seikika"]], [r["lines"] for r in by[a]])
+        h3 = compare([r["calls"] for r in by["seikika"]], [r["calls"] for r in by[a]])
         ok = (h2.startswith("holds") or h3.startswith("holds")) and "lost" not in h2 + h3
         bar = bar and ok
         out.append(f"| {a} | {h2} | {h3} | {'met' if ok else 'not met'} |")

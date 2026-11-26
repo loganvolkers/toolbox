@@ -1,8 +1,8 @@
-// Prototype of `@toolbox/manifest`: a typed builder whose only output is the v1 manifest JSON
+// Prototype of `@seikika/manifest`: a typed builder whose only output is the v1 manifest JSON
 // (docs/design/typescript-builder.md). No runtime, no I/O except printing; the server never runs it.
 
 // ------------------------------------------------------------------------------------------- CEL
-/** A CEL expression. Kept as a string (CEL is checked by `toolbox validate`, not by tsc). */
+/** A CEL expression. Kept as a string (CEL is checked by `seikika validate`, not by tsc). */
 export type Cel = string & { readonly __cel?: true };
 /** Tagged template for CEL, so editors and the LSP can find expressions. Interpolations must be
  *  `FieldRef`s (typed field paths) or other CEL fragments. */
@@ -140,7 +140,7 @@ export function uiBundle(b: UiBundle): UiBundle { return b; }
 
 // ----------------------------------------------------------------------------------------- portal
 export interface PortalSpec {
-  portal: { name: string; title?: string; owner: string; toolbox: string };
+  portal: { name: string; title?: string; owner: string; seikika: string };
   policies?: Record<string, unknown>;
   connectors: Connector<string, string>[];
   kinds: Kind<string, any>[];
@@ -153,7 +153,7 @@ export interface PortalSpec {
   tests?: string[];
 }
 
-/** Lower the typed objects to the manifest JSON (apiVersion toolbox.dev/v1alpha1). */
+/** Lower the typed objects to the manifest JSON (apiVersion seikika.com/v1alpha1). */
 export function toManifest(p: PortalSpec): Record<string, unknown> {
   const clean = (o: any): any =>
     Array.isArray(o) ? o.map(clean)
@@ -161,7 +161,7 @@ export function toManifest(p: PortalSpec): Record<string, unknown> {
       ? Object.fromEntries(Object.entries(o).filter(([k, v]) => v !== undefined && !k.startsWith("_")).map(([k, v]) => [k, clean(v)]))
       : o;
   return clean({
-    apiVersion: "toolbox.dev/v1alpha1",
+    apiVersion: "seikika.com/v1alpha1",
     portal: p.portal,
     policies: p.policies,
     connectors: p.connectors.map((c) => ({ name: c.name, ...c.spec })),
@@ -184,7 +184,7 @@ export function toManifest(p: PortalSpec): Record<string, unknown> {
   });
 }
 
-/** Canonical JSON: keys sorted, two-space indent. What `toolbox build` would embed and hash. */
+/** Canonical JSON: keys sorted, two-space indent. What `seikika build` would embed and hash. */
 export function canonical(v: unknown): string {
   const sort = (o: any): any =>
     Array.isArray(o) ? o.map(sort)

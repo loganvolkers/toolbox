@@ -1,0 +1,44 @@
+apiVersion: seikika.com/assessment/v1
+entity: assessment:rule-quality/rule:seikika/maintainer-connector/exercised-in-ci
+rubric: assessment-quality
+subjectHash: d3d0ac3dc029
+assessor: {kind: agent, name: cursor-reviewer-10, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: supported
+    verdict: pass
+    reason: >-
+      Every citation in
+      portal/assessments/rule-quality/rule/seikika/maintainer-connector/exercised-in-ci.yaml
+      checks out. connectors.rs:204-208 is `is_ci_script`, which covers any
+      scripts/*.sh or workflow, and 196-199 counts lines that name the package
+      and "connector test". connectors.yaml:162-163 is the push-only branch.
+      .github/workflows/image.yml:50 is the loop that names
+      seikika-connector-scim. scripts/m4-acceptance.sh:33-34 and 41 run under
+      ci.yml:177, scripts/gitlab-acceptance.sh:217 runs under ci.yml:200, and
+      ci.yml:103-105 are the three conformance lines.
+      standards.test.yaml:406-407 pins "0 connector-test lines, 0 CI files". A
+      scratch scripts/notes.sh holding only a `#` comment gave
+      conformanceMentions 1.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      Both fails are right: no workflow need call the script, and comment
+      lines count (connectors.rs:196-208). The fix names the command and the
+      push-only alternative (connectors.yaml:167-169), and gold meets
+      thresholds.md:24 because the kit runs what silver only infers.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      The verdicts follow from a dozen lines of connectors.rs and a scratch
+      run, and the gold placement is D73's own wording.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      Counting only scripts a workflow `run:` invokes, skipping `#` comments,
+      and requiring a line that starts a push-only binary would reject the
+      notes.sh comment and the image.yml mention. That changes both fails.
+summary: >-
+  An accurate assessment. Every workflow and script line it cites is the
+  one it names, the comment-only route reproduces on a scratch repo, and
+  the suggestions target exactly the counting that makes it work.

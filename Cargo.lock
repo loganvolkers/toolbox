@@ -3229,7 +3229,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "toolbox-api"
+name = "seikika-api"
 version = "0.1.1"
 dependencies = [
  "axum",
@@ -3239,21 +3239,21 @@ dependencies = [
  "serde_json",
  "sha2",
  "tokio",
- "toolbox-authz",
- "toolbox-connect",
- "toolbox-derive",
- "toolbox-exec",
- "toolbox-expr",
- "toolbox-model",
- "toolbox-secrets",
- "toolbox-store",
- "toolbox-telemetry",
+ "seikika-authz",
+ "seikika-connect",
+ "seikika-derive",
+ "seikika-exec",
+ "seikika-expr",
+ "seikika-model",
+ "seikika-secrets",
+ "seikika-store",
+ "seikika-telemetry",
  "tower",
  "tracing",
 ]
 
 [[package]]
-name = "toolbox-authz"
+name = "seikika-authz"
 version = "0.1.1"
 dependencies = [
  "async-trait",
@@ -3268,7 +3268,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "toolbox-cli"
+name = "seikika-cli"
 version = "0.1.1"
 dependencies = [
  "async-trait",
@@ -3282,21 +3282,21 @@ dependencies = [
  "serde_norway",
  "sha2",
  "tokio",
- "toolbox-api",
- "toolbox-authz",
- "toolbox-connect",
- "toolbox-derive",
- "toolbox-exec",
- "toolbox-expr",
- "toolbox-model",
- "toolbox-store",
- "toolbox-telemetry",
+ "seikika-api",
+ "seikika-authz",
+ "seikika-connect",
+ "seikika-derive",
+ "seikika-exec",
+ "seikika-expr",
+ "seikika-model",
+ "seikika-store",
+ "seikika-telemetry",
  "tracing",
  "walkdir",
 ]
 
 [[package]]
-name = "toolbox-connect"
+name = "seikika-connect"
 version = "0.1.1"
 dependencies = [
  "regex",
@@ -3305,64 +3305,64 @@ dependencies = [
  "serde_json",
  "sha2",
  "tokio",
- "toolbox-model",
+ "seikika-model",
  "walkdir",
 ]
 
 [[package]]
-name = "toolbox-connector-git-files"
+name = "seikika-connector-git-files"
 version = "0.1.1"
 dependencies = [
  "reqwest",
  "serde_json",
  "serde_norway",
  "tokio",
- "toolbox-connect",
+ "seikika-connect",
 ]
 
 [[package]]
-name = "toolbox-connector-github"
+name = "seikika-connector-github"
 version = "0.1.1"
 dependencies = [
  "jsonwebtoken",
  "reqwest",
  "serde_json",
  "tokio",
- "toolbox-connect",
+ "seikika-connect",
 ]
 
 [[package]]
-name = "toolbox-connector-gitlab"
+name = "seikika-connector-gitlab"
 version = "0.1.1"
 dependencies = [
  "reqwest",
  "serde_json",
  "tokio",
- "toolbox-connect",
+ "seikika-connect",
 ]
 
 [[package]]
-name = "toolbox-connector-runner"
+name = "seikika-connector-runner"
 version = "0.1.1"
 dependencies = [
  "regex",
  "serde_json",
  "tokio",
- "toolbox-connect",
+ "seikika-connect",
 ]
 
 [[package]]
-name = "toolbox-connector-scim"
+name = "seikika-connector-scim"
 version = "0.1.1"
 dependencies = [
  "axum",
  "serde_json",
  "tokio",
- "toolbox-connect",
+ "seikika-connect",
 ]
 
 [[package]]
-name = "toolbox-connector-workspace"
+name = "seikika-connector-workspace"
 version = "0.1.1"
 dependencies = [
  "proc-macro2",
@@ -3372,13 +3372,13 @@ dependencies = [
  "sha2",
  "syn 3.0.10",
  "tokio",
- "toolbox-connect",
- "toolbox-model",
+ "seikika-connect",
+ "seikika-model",
  "walkdir",
 ]
 
 [[package]]
-name = "toolbox-derive"
+name = "seikika-derive"
 version = "0.1.1"
 dependencies = [
  "mimalloc",
@@ -3386,17 +3386,17 @@ dependencies = [
  "serde",
  "serde_json",
  "serde_norway",
- "toolbox-expr",
- "toolbox-model",
- "toolbox-store",
+ "seikika-expr",
+ "seikika-model",
+ "seikika-store",
 ]
 
 [[package]]
-name = "toolbox-durable"
+name = "seikika-durable"
 version = "0.1.1"
 
 [[package]]
-name = "toolbox-exec"
+name = "seikika-exec"
 version = "0.1.1"
 dependencies = [
  "aws-lc-rs",
@@ -3405,14 +3405,14 @@ dependencies = [
  "serde_json",
  "sha2",
  "tokio",
- "toolbox-connect",
- "toolbox-derive",
- "toolbox-expr",
- "toolbox-model",
+ "seikika-connect",
+ "seikika-derive",
+ "seikika-expr",
+ "seikika-model",
 ]
 
 [[package]]
-name = "toolbox-expr"
+name = "seikika-expr"
 version = "0.1.1"
 dependencies = [
  "cel",
@@ -3420,7 +3420,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "toolbox-model"
+name = "seikika-model"
 version = "0.1.1"
 dependencies = [
  "jsonschema",
@@ -3429,11 +3429,11 @@ dependencies = [
  "serde_norway",
  "sha2",
  "thiserror",
- "toolbox-expr",
+ "seikika-expr",
 ]
 
 [[package]]
-name = "toolbox-secrets"
+name = "seikika-secrets"
 version = "0.1.1"
 dependencies = [
  "reqwest",
@@ -3448,7 +3448,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "toolbox-store"
+name = "seikika-store"
 version = "0.1.1"
 dependencies = [
  "async-trait",
@@ -3459,7 +3459,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "toolbox-telemetry"
+name = "seikika-telemetry"
 version = "0.1.1"
 dependencies = [
  "opentelemetry",

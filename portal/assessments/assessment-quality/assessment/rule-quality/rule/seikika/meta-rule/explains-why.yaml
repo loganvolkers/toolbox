@@ -1,0 +1,58 @@
+apiVersion: seikika.com/assessment/v1
+entity: assessment:rule-quality/rule:seikika/meta-rule/explains-why
+rubric: assessment-quality
+subjectHash: 6cb065fa2e1c
+assessor: {kind: agent, name: cursor-reviewer-02, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: supported
+    verdict: pass
+    reason: >-
+      The citations in
+      portal/assessments/rule-quality/rule/seikika/meta-rule/explains-why.yaml
+      resolve. filled() is model.rs:283-285, and `explained` is meta.rs:263.
+      The fix is meta.yaml:431-433, the rubric 1148-1180 and `guided`'s floor
+      model.rs:287-289. The tests at standards.test.yaml:253-263 pin pass on
+      no-medium-findings and fail on sprawling/everything. The ratchet floor
+      is scorecards-for-scorecards.md:117-119. One claim overreaches.
+      meta.yaml:434-438 says a reviewer can't judge a proxy without the goal,
+      but it doesn't "warn about" a rationale that restates the fix. The
+      hard-to-game fail stands on `rationale: TODO` alone.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      I found no failure the sources show was missed. hard-to-game fails on a
+      placeholder, the rubric's "empty doc comment" case
+      (meta.yaml:1164-1165). The fix and threshold passes follow from
+      meta.yaml:431-433 and the bronze floor. results.json has all 272 rules
+      passing.
+  - criterion: reproducible
+    verdict: unsure
+    reason: >-
+      The measures-intent pass rests on reconciling two sentences of
+      D01M868BY0KJNEYE9WBFZYEYFYH. Lines 8-10 say S4S "requires both"
+      rationale and links through explains-why on meta-rule. Line 20 says a
+      rule without its own links shows its scorecard's. The check reads only
+      `explained` (meta.yaml:428). The assessor reads line 20 as making rule
+      links optional, which is defensible. A second assessor could read lines
+      8-10 literally and fail measures-intent, as the same assessor did for
+      the scorecard twin
+      (portal/assessments/rule-quality/rule/seikika/meta-scorecard/explains-why.yaml).
+    suggestion: >-
+      State the reading as a choice between the two sentences, and cite a
+      source that says rule links are optional. Without one, mark
+      measures-intent unsure, with the suggestion to check `entity.links > 0`
+      or to amend the decision.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      The hard-to-game suggestion, a 10-word floor and no copy of the fix or
+      description, would reject `rationale: TODO`. The alternative it offers
+      is a rule-quality criterion on the rationale, which would flag a
+      placeholder in review. Either changes the verdict.
+summary: >-
+  Mostly trustworthy. The citations resolve and the placeholder route is
+  real, but one supporting claim about the rationale's own text
+  overreaches. The measures-intent pass hinges on how one reads
+  D01M868BY0KJNEYE9WBFZYEYFYH's "requires both" next to its fallback
+  sentence. A second assessor could fail it, so reproducible is unsure.

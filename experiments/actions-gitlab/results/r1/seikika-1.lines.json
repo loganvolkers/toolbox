@@ -1,0 +1,18 @@
+{
+ "linesToMaintain": 271,
+ "files": {
+  "gitlab:alpha/.seikika/actions/set-codeowners.yaml": 39,
+  "gitlab:alpha/.seikika/scripts/set-codeowners.py": 42,
+  "gitlab:alpha/.seikika/scripts/test_set_codeowners.py": 54,
+  "gitlab:alpha/.seikika/tests/set-codeowners.test.yaml": 63,
+  "gitlab:alpha/.seikika/seikika.yaml": 4,
+  "gitlab:alpha/CODEOWNERS": 1,
+  "gitlab:beta/.seikika/seikika.yaml": 4,
+  "gitlab:beta/CODEOWNERS": 1,
+  "gitlab:gamma/.seikika/seikika.yaml": 4,
+  "gitlab:gamma/CODEOWNERS": 1,
+  "gitlab:org/env.sh": 10,
+  "gitlab:org/groups.fga": 6,
+  "gitlab:org/seikika.yaml": 42
+ }
+}

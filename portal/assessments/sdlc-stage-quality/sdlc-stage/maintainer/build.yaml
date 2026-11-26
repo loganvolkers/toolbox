@@ -1,4 +1,4 @@
-apiVersion: toolbox.dev/assessment/v1
+apiVersion: seikika.com/assessment/v1
 entity: sdlc-stage:maintainer/build
 rubric: sdlc-stage-quality
 subjectHash: f09419482056
@@ -23,26 +23,26 @@ verdicts:
     reason: >-
       Third-party tools come from SHA-pinned releases (scripts/ci-tools.sh)
       and cargo is cached (Swatinem/rust-cache), but .github/workflows/ci.yml
-      compiles Toolbox separately in the rust, otel-testbed (line 125),
+      compiles Seikika separately in the rust, otel-testbed (line 125),
       acceptance (line 139) and report-action jobs; report-action builds from
-      the action's source because it sets neither toolbox-dir nor
-      toolbox-version (lines 193-199, actions/report/action.yml lines
+      the action's source because it sets neither seikika-dir nor
+      seikika-version (lines 193-199, actions/report/action.yml lines
       119-129).
     suggestion: >-
       Build once in the rust job, upload target/debug's binaries as an
       artifact, and have otel-testbed, acceptance and report-action download
-      it (report-action through toolbox-dir).
+      it (report-action through seikika-dir).
   - criterion: decoupled-from-core
     verdict: pass
     reason: >-
-      Building Toolbox is the maintainer's own job
+      Building Seikika is the maintainer's own job
       (docs/design/maintainer-sdlc.md); it adds no crate, builtin or schema
       and needs nothing outside this repository.
   - criterion: fast-feedback
     verdict: pass
     reason: >-
       docs/design/maintainer-sdlc.md §3 measures a rebuild after editing
-      toolbox-api at 1.4 s and toolbox-derive at 2.1 s on 4 vCPU with warm
+      seikika-api at 1.4 s and seikika-derive at 2.1 s on 4 vCPU with warm
       caches, so a local `cargo build` answers in seconds before CI.
   - criterion: beyond-one-reference
     verdict: fail
@@ -58,5 +58,5 @@ verdicts:
       windows-latest to ci.yml, or set dist's pr-run-mode to upload, so a
       second platform builds before a tag.
 summary: >-
-  Correct, agent-runnable and fast locally. Toolbox is still compiled in
+  Correct, agent-runnable and fast locally. Seikika is still compiled in
   four CI jobs, and only Linux x86_64 is built before a release.

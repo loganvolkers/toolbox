@@ -1,4 +1,4 @@
-apiVersion: toolbox.dev/assessment/v1
+apiVersion: seikika.com/assessment/v1
 entity: assessment:sdlc-stage-quality/sdlc-stage:package-author/test
 rubric: assessment-quality
 subjectHash: 016325482703
@@ -11,13 +11,13 @@ verdicts:
       Every citation in
       portal/assessments/sdlc-stage-quality/sdlc-stage/package-author/test.yaml
       holds. .github/workflows/ci.yml:67-71 tests packages/*/tests with
-      target/debug/toolbox, and every ci.yml job is `runs-on: ubuntu-latest`.
-      No workflow mentions `toolbox-version` or install-release.sh.
-      portal/toolbox.yaml:361-384 includes github-actions, openssf-scorecard
-      and sarif. crates/toolbox-model/src/package.rs:9-10 lists the
-      toolbox-package.yaml fields, with no Toolbox range.
-      packages/github-actions/tests/toolbox.yaml:8 is `toolbox: "0.1"`, and
-      manifest.rs:114 is a bare `pub toolbox: String`. rg finds no code that
+      target/debug/seikika, and every ci.yml job is `runs-on: ubuntu-latest`.
+      No workflow mentions `seikika-version` or install-release.sh.
+      portal/seikika.yaml:361-384 includes github-actions, openssf-scorecard
+      and sarif. crates/seikika-model/src/package.rs:9-10 lists the
+      seikika-package.yaml fields, with no Seikika range.
+      packages/github-actions/tests/seikika.yaml:8 is `seikika: "0.1"`, and
+      manifest.rs:114 is a bare `pub seikika: String`. rg finds no code that
       compares it with CARGO_PKG_VERSION. package-author-sdlc.md:222-254
       covers §6.1 to §6.3.
   - criterion: complete
@@ -25,9 +25,9 @@ verdicts:
     reason: >-
       The verdicts match the stage
       (portal/sdlc/stages/package-author.yaml:48-69). The exit criterion asks
-      for "each supported Toolbox release and platform". No check installs a
+      for "each supported Seikika release and platform". No check installs a
       release or runs off Linux, so executable-exit fails. With no version
-      range, agent-can-complete fails. The only package tests build Toolbox at
+      range, agent-can-complete fails. The only package tests build Seikika at
       HEAD, so reuses-artifacts fails, and the stage's intent is testing
       released versions. decoupled-from-core passes, because an author can run
       a release matrix in their own repository with no crate change.
@@ -35,10 +35,10 @@ verdicts:
     verdict: pass
     reason: >-
       Each fail rests on a grep a second assessor can repeat: no
-      `toolbox-version` in .github/workflows, ubuntu-latest only, and no
+      `seikika-version` in .github/workflows, ubuntu-latest only, and no
       comparison against manifest.rs:114. reuses-artifacts could read as a
       taste call, since author.yaml passes the same criterion on a released
-      `toolbox`. Here, though, the stage's own exit criterion
+      `seikika`. Here, though, the stage's own exit criterion
       (package-author.yaml:54-56) is about released versions, which settles
       it.
   - criterion: actionable
@@ -46,11 +46,11 @@ verdicts:
     reason: >-
       Each suggestion would change its verdict. A release-by-OS matrix using
       install-release.sh is the missing check (test.yaml lines 18-21). A
-      `toolbox:` range enforced at load tells an agent which releases to run
+      `seikika:` range enforced at load tells an agent which releases to run
       (lines 32-34). Testing this repository's packages on the pinned release
       removes the source build (lines 42-44).
 summary: >-
   Accurate and complete. Every citation checks out, including the absence
   of any release install or non-Linux runner in CI and the unenforced
-  `portal.toolbox` field. The three fails follow from the stage's exit
+  `portal.seikika` field. The three fails follow from the stage's exit
   criterion, and each suggestion would flip its verdict.

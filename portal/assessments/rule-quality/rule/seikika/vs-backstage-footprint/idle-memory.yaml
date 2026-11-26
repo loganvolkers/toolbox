@@ -1,0 +1,60 @@
+apiVersion: seikika.com/assessment/v1
+entity: rule:seikika/vs-backstage-footprint/idle-memory
+rubric: rule-quality
+subjectHash: 4779e429e23e
+assessor: {kind: agent, name: cursor-assessor-17, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: measures-intent
+    verdict: pass
+    reason: >-
+      `rssIdleMb` is the summed VmRSS of the server's whole process tree
+      (experiments/backstage-compare/measure.py:53-73), sampled once when
+      /readyz first answers 200 (:260-263). For Seikika that tree is the
+      server plus the OpenFGA co-process. For Backstage it's Node with every
+      template plugin. The record's 89.4 MB is the median of the five round 3
+      runs (results/r3/perf-seikika-10000-*.json: 89.1, 89.4, 90.4, 89.3,
+      89.9). One caveat: the bench portal has only a remote connector
+      (experiments/backstage-compare/portal/seikika.yaml:11-15), so no
+      supervised connector process is counted, as one would be in a typical
+      deployment. Against a 512 MB bar that doesn't change the outcome.
+  - criterion: hard-to-game
+    verdict: pass
+    reason: >-
+      Work deferred until after /readyz would lower this sample, and the fix's
+      "trim what starts eagerly" even invites that. But the sibling
+      loaded-memory rule samples the same tree after the full catalog is
+      readable (measure.py:265-269), so deferred allocation shows up there.
+      The record could be hand-edited, but it carries the harness commit, and
+      the raw runs are committed in experiments/backstage-compare/results/r3
+      to check it against.
+  - criterion: fix-leads-to-pass
+    verdict: fail
+    reason: >-
+      "Measure the server and its co-processes with
+      experiments/backstage-compare/measure.py and trim what starts eagerly"
+      (portal/standards/backstage-comparison.yaml:369-371) names the measuring
+      script but no code. measure.py reports one total for the tree, so it
+      doesn't show whether the server or OpenFGA holds the memory. The fix
+      also doesn't say that the record changes only when snapshot.py reruns,
+      which the performance rules' fixes do ("then rerun run.sh", :233-235).
+    suggestion: >-
+      Have measure.py report RSS per process (server, OpenFGA, each
+      connector), and name the startup paths: crates/seikika-cli/src/server.rs
+      for the server and crates/seikika-authz/src/openfga.rs for the
+      co-process. End with "then rerun run.sh and snapshot.py".
+  - criterion: threshold-justified
+    verdict: pass
+    reason: >-
+      The 512 MB bar was registered before the run
+      (experiments/backstage-compare/README.md:41), and the adjudication
+      confirms the rule implements it as written
+      (experiments/backstage-compare/ADJUDICATION.md:108). Neither document
+      says why 512, and RESEARCH.md F3's bar is only comparative (Seikika ≤
+      Backstage, RESEARCH.md:59). A source does state the number before the
+      run, which meets the rubric.
+summary: >-
+  A sound measure with a pre-registered bar, but a fix that doesn't lead
+  anywhere. The tree RSS at ready is what the name says, and loaded-memory
+  catches deferred allocation. The fix names a script but no code, and the
+  script reports one number, so an agent couldn't tell what to trim.

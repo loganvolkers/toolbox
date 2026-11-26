@@ -1,8 +1,8 @@
-//! Minimal stdio connector. Config: `TOOLBOX_CONNECTOR_CONFIG` JSON `{"seed":"…"}`.
-//! Emits one `example-item` record per resync so `toolbox connector test` / `drive` work.
+//! Minimal stdio connector. Config: `SEIKIKA_CONNECTOR_CONFIG` JSON `{"seed":"…"}`.
+//! Emits one `example-item` record per resync so `seikika connector test` / `drive` work.
 
 use serde_json::{Value, json};
-use toolbox_connect::sdk::{Out, Source, run_stdio};
+use seikika_connect::sdk::{Out, Source, run_stdio};
 
 struct Example {
     seed: String,
@@ -11,9 +11,9 @@ struct Example {
 impl Example {
     fn from_env() -> Result<Self, String> {
         let cfg: Value = serde_json::from_str(
-            &std::env::var("TOOLBOX_CONNECTOR_CONFIG").unwrap_or_else(|_| "{}".into()),
+            &std::env::var("SEIKIKA_CONNECTOR_CONFIG").unwrap_or_else(|_| "{}".into()),
         )
-        .map_err(|e| format!("TOOLBOX_CONNECTOR_CONFIG: {e}"))?;
+        .map_err(|e| format!("SEIKIKA_CONNECTOR_CONFIG: {e}"))?;
         Ok(Example {
             seed: cfg
                 .get("seed")

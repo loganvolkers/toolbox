@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-# Exercise toolbox serve against a pinned otelcol-contrib and score the rubric.
+# Exercise seikika serve against a pinned otelcol-contrib and score the rubric.
 # Usage (from repo root): experiments/otel-testbed/scripts/score.sh
-# Optional: TOOLBOX=target/debug/toolbox  OTEL_TESTBED_PORT=18180
+# Optional: SEIKIKA=target/debug/seikika  OTEL_TESTBED_PORT=18180
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/../../.." && pwd)"
@@ -10,7 +10,7 @@ BED="$ROOT/experiments/otel-testbed"
 # shellcheck disable=SC1091
 source "$BED/pin.env"
 
-TOOLBOX="${TOOLBOX:-$ROOT/target/debug/toolbox}"
+SEIKIKA="${SEIKIKA:-$ROOT/target/debug/seikika}"
 PORT="${OTEL_TESTBED_PORT:-18180}"
 API="127.0.0.1:${PORT}"
 URL="http://${API}"
@@ -40,11 +40,11 @@ trap cleanup EXIT
 ok() { echo "  PASS: $1"; PASS=$((PASS + 1)); }
 bad() { echo "  FAIL: $1"; FAIL=$((FAIL + 1)); }
 
-need_toolbox() {
-  if [ ! -x "$TOOLBOX" ]; then
-    echo "building toolbox-cli…"
-    cargo build --locked -p toolbox-cli
-    TOOLBOX="$ROOT/target/debug/toolbox"
+need_seikika() {
+  if [ ! -x "$SEIKIKA" ]; then
+    echo "building seikika-cli…"
+    cargo build --locked -p seikika-cli
+    SEIKIKA="$ROOT/target/debug/seikika"
   fi
 }
 
@@ -63,14 +63,14 @@ install_otelcol() {
   printf '%s\n' "$bin"
 }
 
-need_toolbox
+need_seikika
 COL="$(install_otelcol)"
 
 rm -rf "$OUT"
 mkdir -p "$OUT"
 
 # Render collector config (placeholders; avoids confmap env-syntax drift).
-sed -e "s|__TOOLBOX_SCRAPE_TARGET__|${API}|g" \
+sed -e "s|__SEIKIKA_SCRAPE_TARGET__|${API}|g" \
     -e "s|__OTEL_OUT__|${OUT}|g" \
     "$BED/otelcol.yaml" >"$WORK/otelcol.yaml"
 
@@ -84,13 +84,13 @@ done
 
 echo "2. serve reference portal with OTLP → collector"
 export OTEL_EXPORTER_OTLP_ENDPOINT="$OTLP"
-export OTEL_SERVICE_NAME=toolbox
+export OTEL_SERVICE_NAME=seikika
 export OTEL_METRIC_EXPORT_INTERVAL=500
-export TOOLBOX_TELEMETRY=ci
-export TOOLBOX_LOG_FORMAT=json
-export TOOLBOX_CONNECTORS=off
+export SEIKIKA_TELEMETRY=ci
+export SEIKIKA_LOG_FORMAT=json
+export SEIKIKA_CONNECTORS=off
 export RUST_LOG=info
-"$TOOLBOX" serve examples/reference-portal --fixtures --listen "$API" \
+"$SEIKIKA" serve examples/reference-portal --fixtures --listen "$API" \
   >"$OUT/server.stdout" 2>"$OUT/server.log" & SRV_PID=$!
 
 for _ in $(seq 200); do
@@ -106,12 +106,12 @@ curl -fs "$URL/readyz" >/dev/null
 
 echo "3. exercise HTTP + metrics scrape surface"
 curl -fs "$URL/healthz" >/dev/null
-curl -fs "$URL/v1/snapshot" -H 'x-toolbox-user: dave' -o "$OUT/snapshot.json"
+curl -fs "$URL/v1/snapshot" -H 'x-seikika-user: dave' -o "$OUT/snapshot.json"
 curl -fs "$URL/metrics" -o "$OUT/metrics.prom"
 # Wait for OTLP metric export interval + collector batch flush.
 sleep 3
 
-echo "4. stop toolbox (flush OTLP batches) then collector"
+echo "4. stop seikika (flush OTLP batches) then collector"
 kill -TERM "$SRV_PID" 2>/dev/null || true
 for _ in $(seq 50); do kill -0 "$SRV_PID" 2>/dev/null || break; sleep 0.1; done
 SRV_PID=""
@@ -124,10 +124,10 @@ echo "5. score rubric"
 # --- service.name ---
 if grep -Rqs '"service.name"' "$OUT"/*.json 2>/dev/null \
   || grep -Rqs 'service.name' "$OUT"/traces.json "$OUT"/logs.json 2>/dev/null; then
-  if grep -Rqs 'toolbox' "$OUT"/traces.json "$OUT"/logs.json "$OUT"/metrics.json 2>/dev/null; then
-    ok "service.name present (toolbox)"
+  if grep -Rqs 'seikika' "$OUT"/traces.json "$OUT"/logs.json "$OUT"/metrics.json 2>/dev/null; then
+    ok "service.name present (seikika)"
   else
-    bad "service.name resource missing toolbox value"
+    bad "service.name resource missing seikika value"
   fi
 else
   bad "service.name not found in exported files"
@@ -141,15 +141,15 @@ else
 fi
 
 # --- catalog metrics in file exporter ---
-if grep -Rqs 'toolbox_snapshot_lag_seconds' "$OUT"/metrics.json 2>/dev/null; then
-  ok "metrics file has toolbox_snapshot_lag_seconds"
+if grep -Rqs 'seikika_snapshot_lag_seconds' "$OUT"/metrics.json 2>/dev/null; then
+  ok "metrics file has seikika_snapshot_lag_seconds"
 else
-  bad "metrics file missing toolbox_snapshot_lag_seconds"
+  bad "metrics file missing seikika_snapshot_lag_seconds"
 fi
-if grep -Rqs 'toolbox_ingest_records_total' "$OUT"/metrics.json 2>/dev/null; then
-  ok "metrics file has toolbox_ingest_records_total"
+if grep -Rqs 'seikika_ingest_records_total' "$OUT"/metrics.json 2>/dev/null; then
+  ok "metrics file has seikika_ingest_records_total"
 else
-  bad "metrics file missing toolbox_ingest_records_total"
+  bad "metrics file missing seikika_ingest_records_total"
 fi
 
 # --- log / trace_id correlation ---
@@ -172,8 +172,8 @@ else
 fi
 
 # --- /metrics scrape catalog ---
-if grep -qs '# TYPE toolbox_snapshot_lag_seconds' "$OUT/metrics.prom" \
-  && grep -qs 'toolbox_ingest_records_total' "$OUT/metrics.prom"; then
+if grep -qs '# TYPE seikika_snapshot_lag_seconds' "$OUT/metrics.prom" \
+  && grep -qs 'seikika_ingest_records_total' "$OUT/metrics.prom"; then
   ok "/metrics scrape returns catalog types"
 else
   bad "/metrics scrape missing catalog types"

@@ -1,4 +1,4 @@
-apiVersion: toolbox.dev/assessment/v1
+apiVersion: seikika.com/assessment/v1
 entity: rule:repo/repo-hygiene/has-codeowners
 rubric: rule-quality
 subjectHash: 7cc56ad2e1fe
@@ -9,11 +9,11 @@ verdicts:
     verdict: fail
     reason: >-
       The fix and rationale promise that changes are routed to an owning team
-      (examples/repo-portal-starter/toolbox.yaml:106-110). The check is
+      (examples/repo-portal-starter/seikika.yaml:106-110). The check is
       `has(entity.codeowners)` (:105). The connector sets `codeowners`
       whenever one of the three files exists, even an empty or comment-only
       one, with `rules: []`
-      (crates/toolbox-connector-workspace/src/repo.rs:66-72, :37-51). Such a
+      (crates/seikika-connector-workspace/src/repo.rs:66-72, :37-51). Such a
       file routes nothing, and GitHub requests no reviewer.
     suggestion: >-
       Check `has(entity.codeowners) && entity.codeowners.rules.exists(r,
@@ -33,7 +33,7 @@ verdicts:
     verdict: pass
     reason: >-
       The evidence names the three locations searched
-      (examples/repo-portal-starter/toolbox.yaml:105), which are GitHub's, in
+      (examples/repo-portal-starter/seikika.yaml:105), which are GitHub's, in
       GitHub's order (repo.rs:10-11). The fix names .github/CODEOWNERS. Adding
       that file passes.
   - criterion: threshold-justified
@@ -41,7 +41,7 @@ verdicts:
     reason: >-
       There is no number. Bronze ("a README and a CODEOWNERS file") is set by
       the scorecard rationale
-      (examples/repo-portal-starter/toolbox.yaml:79-80) and the starter's
+      (examples/repo-portal-starter/seikika.yaml:79-80) and the starter's
       README table (examples/repo-portal-starter/README.md).
 summary: >-
   A fine bronze floor, but it tests that the file exists, not that it

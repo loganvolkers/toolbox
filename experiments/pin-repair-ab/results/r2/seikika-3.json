@@ -1,0 +1,48 @@
+{
+  "run": "seikika-3",
+  "arm": "seikika",
+  "bcId": "bc-cf990c02-0e09-5bd1-bfe7-7d9ad22b703d",
+  "toolCalls": 2,
+  "byTool": {
+    "run_terminal_cmd": 2
+  },
+  "gateRuns": 2,
+  "resultChars": 5815,
+  "missingResults": [],
+  "readImputed": 0,
+  "replayedChars": 0,
+  "resultCharsImputed": 5815,
+  "gateChars": 5815,
+  "wallSeconds": 7,
+  "score": {
+    "arm": "seikika",
+    "dest": "/tmp/pin-repair-ab/r2/seikika-3",
+    "correct": true,
+    "checks": {
+      "no-new-findings": {
+        "ok": true,
+        "grew": {}
+      },
+      "intent-weekly": {
+        "ok": true,
+        "lost": []
+      },
+      "pins-known": {
+        "ok": true,
+        "unknown": []
+      },
+      "gate-untouched": {
+        "ok": true,
+        "changed": []
+      },
+      "no-suppressions": {
+        "ok": true,
+        "added": []
+      },
+      "gate-passes": {
+        "ok": true,
+        "exit": 0
+      }
+    }
+  }
+}

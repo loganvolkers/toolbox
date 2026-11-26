@@ -1,22 +1,22 @@
-# Toolbox report action
+# Seikika report action
 
-Score a repository against its Toolbox standards on every push and pull request, and fail when
+Score a repository against its Seikika standards on every push and pull request, and fail when
 anything gets worse than the committed baseline: a ratchet, in the manner of Betterer
 ([docs/design/ratchets.md](../../docs/design/ratchets.md)). It needs no server, no database and no
 secrets ([docs/design/repo-portals.md](../../docs/design/repo-portals.md)).
 
 ## Adopt it in a repository
 
-1. Copy [`examples/repo-portal-starter/toolbox.yaml`](../../examples/repo-portal-starter/toolbox.yaml)
-   to `.toolbox/toolbox.yaml`. It scores README, CODEOWNERS (a catch-all rule; teams **or** only
+1. Copy [`examples/repo-portal-starter/seikika.yaml`](../../examples/repo-portal-starter/seikika.yaml)
+   to `.seikika/seikika.yaml`. It scores README, CODEOWNERS (a catch-all rule; teams **or** only
    personal handles), and LICENSE, and checks the docs' relative links. Edit or add scorecards as
-   the team likes. In JS/TS repos, ignore `.toolbox/**` in ESLint so fixture YAML is not parsed as
+   the team likes. In JS/TS repos, ignore `.seikika/**` in ESLint so fixture YAML is not parsed as
    code (see the [starter README](../../examples/repo-portal-starter/README.md)).
 2. Add the workflow:
 
    ```yaml
-   # .github/workflows/toolbox.yml
-   name: toolbox
+   # .github/workflows/seikika.yml
+   name: seikika
    on:
      push: {branches: [main]}
      pull_request:
@@ -30,22 +30,22 @@ secrets ([docs/design/repo-portals.md](../../docs/design/repo-portals.md)).
        runs-on: ubuntu-latest
        steps:
          - uses: actions/checkout@v4
-         - uses: loganvolkers/toolbox/actions/report@v0.1.1
+         - uses: seikika/seikika/actions/report@v0.2.0
            with:
-             toolbox-version: "0.1.1"   # download attested binaries (D90)
+             seikika-version: "0.2.0"   # download attested binaries (D90)
              mode: ${{ inputs.mode || 'ci' }}
    ```
 
 3. **First run:** start the workflow by hand with `mode: update`. It uploads `results.json` in the
-   `toolbox-report` artifact; commit it as `.toolbox/results.json`. Or, with the release
+   `seikika-report` artifact; commit it as `.seikika/results.json`. Or, with the release
    installed ([Install a release](../../site/src/content/docs/start/install.md)), run
-   `toolbox report .toolbox --baseline .toolbox/results.json --update`.
-4. **Git packages:** if `.toolbox/toolbox.yaml` includes a `github:…@…` package, run
-   `toolbox install .toolbox` locally, commit `.toolbox/toolbox.lock`, and keep the action's
-   `toolbox-version` new enough to understand the package's facts. The action runs
-   `toolbox install --frozen` whenever that lock file is present, so a clean CI runner populates
-   `~/.cache/toolbox/packages` before `report` (without this, the lock check sees the empty-hash
-   `e3b0c442…`). Package refs may be a semver tag (`@0.1.1` → `v0.1.1`), a branch (`@main`), or a
+   `seikika report .seikika --baseline .seikika/results.json --update`.
+4. **Git packages:** if `.seikika/seikika.yaml` includes a `github:…@…` package, run
+   `seikika install .seikika` locally, commit `.seikika/seikika.lock`, and keep the action's
+   `seikika-version` new enough to understand the package's facts. The action runs
+   `seikika install --frozen` whenever that lock file is present, so a clean CI runner populates
+   `~/.cache/seikika/packages` before `report` (without this, the lock check sees the empty-hash
+   `e3b0c442…`). Package refs may be a semver tag (`@0.2.0` → `v0.2.0`), a branch (`@main`), or a
    commit SHA.
 
 From then on:
@@ -61,14 +61,14 @@ The job summary says which, and how to update the baseline.
 | Input | Default | Meaning |
 |---|---|---|
 | `working-directory` | `.` | The checkout to score; `portal` and `baseline` are relative to it |
-| `portal` | `.toolbox` | Directory with `toolbox.yaml` |
+| `portal` | `.seikika` | Directory with `seikika.yaml` |
 | `baseline` | `<portal>/results.json` | The ratchet's results file |
 | `mode` | `ci` | `ci`: fail on regressions and on a stale or missing baseline. `check`: fail on regressions only. `update`: write improvements (or create the file) and upload it. `report`: no baseline |
 | `skip` | | Connectors not to run, comma-separated (e.g. a slow test runner) |
 | `html` | `true` | Also produce the one-page HTML report |
-| `artifact-name` | `toolbox-report` | Name of the uploaded artifact (Markdown and HTML reports; the baseline in `update` mode) |
-| `toolbox-dir` | | A directory with prebuilt `toolbox` and `toolbox-connector-*` binaries. When empty, the action builds them from its own source at the pinned commit and caches them, so the first run per commit compiles and later runs restore |
-| `toolbox-version` | — | A released Toolbox version (e.g. `0.1.1`): download its binaries, SHA-256-verified, instead of building from source (D90) |
+| `artifact-name` | `seikika-report` | Name of the uploaded artifact (Markdown and HTML reports; the baseline in `update` mode) |
+| `seikika-dir` | | A directory with prebuilt `seikika` and `seikika-connector-*` binaries. When empty, the action builds them from its own source at the pinned commit and caches them, so the first run per commit compiles and later runs restore |
+| `seikika-version` | — | A released Seikika version (e.g. `0.2.0`): download its binaries, SHA-256-verified, instead of building from source (D90) |
 
 **Outputs:**
 - `result`: `pass`, `regressed`, `stale`, `missing-baseline`, `unknown` or `error`;
@@ -87,12 +87,12 @@ The action is a thin wrapper. Any pipeline gets the same gate from the CLI and i
 (D96):
 
 ```bash
-toolbox report .toolbox --baseline .toolbox/results.json --ci --verdict verdict.json
-# exit 0: pass. 1: the ratchet failed (see .result). 2: toolbox couldn't run (see .message)
+seikika report .seikika --baseline .seikika/results.json --ci --verdict verdict.json
+# exit 0: pass. 1: the ratchet failed (see .result). 2: seikika couldn't run (see .message)
 jq -r '.regressions[] | "\(.scorecard) · \(.entity): \(.message)"' verdict.json
 ```
 
-`verdict.json` (`toolbox-verdict/v1`) holds:
+`verdict.json` (`seikika-verdict/v1`) holds:
 
 | Field | Meaning |
 |---|---|
@@ -109,21 +109,21 @@ system's format (for example a GitLab Code Quality report, or a comment).
 
 ## Notes
 
-- Prefer `toolbox-version: "0.1.1"` (or later) so the action downloads attested binaries (D90).
+- Prefer `seikika-version: "0.2.0"` (or later) so the action downloads attested binaries (D90).
   When that input is empty it still builds from the action's source (Linux runners; cold start is
-  slow). If the Toolbox repository is private, the job token needs `contents: read` on it.
-- **`toolbox.lock`:** when the file exists, the action runs `toolbox install --frozen` before
-  `toolbox report`. That installs git packages and released connectors pinned in the lock. A
+  slow). If the Seikika repository is private, the job token needs `contents: read` on it.
+- **`seikika.lock`:** when the file exists, the action runs `seikika install --frozen` before
+  `seikika report`. That installs git packages and released connectors pinned in the lock. A
   pre-seeded cache directory still skips the clone (install leaves an existing checkout alone).
 - **Security:**
   - Connectors run on the runner with the job's permissions. The `workspace` connector only reads
     files.
-  - A `runner` connector executes the commands in `toolbox.yaml`, so treat the manifest like any
+  - A `runner` connector executes the commands in `seikika.yaml`, so treat the manifest like any
     other CI script.
   - Use `pull_request`, not `pull_request_target`, so code from forks never runs with write tokens.
 - **Monorepos:** run several steps with different `portal` directories, or one portal whose
   connectors cover the whole tree.
 - **This repository** uses the action on itself (`.github/workflows/ci.yml`): the
-  Toolbox-for-Toolbox ratchet with prebuilt binaries, and a `report-action` job that builds from
+  Seikika-for-Seikika ratchet with prebuilt binaries, and a `report-action` job that builds from
   source and scores a pilot set up from the starter: it creates the baseline, passes, then adds an
   individual to CODEOWNERS and checks that the job fails with that regression in the verdict.

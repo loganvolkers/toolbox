@@ -1,0 +1,24 @@
+{
+ "linesToMaintain": 1757,
+ "files": {
+  "alpha/.seikika/seikika.yaml": 46,
+  "beta/.seikika/seikika.yaml": 46,
+  "gamma/.seikika/seikika.yaml": 46,
+  "org/env.sh": 6,
+  "org/seikika.yaml": 10,
+  "state/req.json": 58,
+  "state/runs/run_2fs8ip0zfy7c.json": 77,
+  "state/runs/run_2fs8n0slid6a.json": 92,
+  "state/runs/run_2fs8qpz2vlrs.json": 104,
+  "state/runs/run_2fs8rvxtg8ao.json": 104,
+  "state/runs/run_2fs8t2xh858x.json": 104,
+  "state/served/org/runs/run_2fs8h3r68z56.json": 159,
+  "state/served/org/runs/run_2fs8mp80qigb.json": 185,
+  "state/served/org/runs/run_2fs8qeqxykn4.json": 217,
+  "state/served/org/runs/run_2fs8rmzf8s6g.json": 217,
+  "state/served/org/runs/run_2fs8sx49n01o.json": 217,
+  "state/served/org/runs/run_2fs9jcuvc1d7.json": 62,
+  "state/served/org/runs/spent-tokens": 6,
+  "state/served/org/signing-key": 1
+ }
+}

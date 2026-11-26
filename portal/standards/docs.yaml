@@ -1,5 +1,5 @@
 # Design docs, scripts and tests (docs/design/maintainer-sdlc.md).
-# Included by portal/toolbox.yaml; see portal/README.md for the layout.
+# Included by portal/seikika.yaml; see portal/README.md for the layout.
 
 kinds:
   - name: Doc
@@ -88,10 +88,10 @@ scorecards:
       reader trust a design doc: what is decided and built, and where its
       claims come from.
     links:
-    - title: Toolbox for Toolbox standards
-      url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/toolbox-for-toolbox.md
+    - title: Seikika for Seikika standards
+      url: https://github.com/seikika/seikika/blob/main/docs/design/seikika-for-seikika.md
     - title: Maintainer SDLC
-      url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/maintainer-sdlc.md
+      url: https://github.com/seikika/seikika/blob/main/docs/design/maintainer-sdlc.md
     owner: group:maintainers
     track: docs
     levels: [bronze, silver]
@@ -117,11 +117,11 @@ scorecards:
         Say which SDLC you mean: maintainer, operator or user (docs/sdlc.md,
         D63).
       rationale: >-
-        Toolbox has four SDLC layers with different builders and checks, so a
+        Seikika has four SDLC layers with different builders and checks, so a
         bare "SDLC" leaves the reader to guess whose loop the doc is about.
       links:
       - title: The four SDLC layers
-        url: https://github.com/loganvolkers/toolbox/blob/main/docs/sdlc.md
+        url: https://github.com/seikika/seikika/blob/main/docs/sdlc.md
     - name: cited-decisions-exist
       level: bronze
       check: entity.missingDecisions.size() == 0
@@ -136,9 +136,9 @@ scorecards:
         if anything, was decided.
       links:
       - title: Decision citations
-        url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/decision-citations.md
+        url: https://github.com/seikika/seikika/blob/main/docs/design/decision-citations.md
       - title: 'Decision: cited decisions exist'
-        url: https://github.com/loganvolkers/toolbox/blob/main/docs/decisions/D01M7WMSMS30000000000000000.md
+        url: https://github.com/seikika/seikika/blob/main/docs/decisions/D01M7WMSMS30000000000000000.md
     - name: status-banner
       level: silver
       check: entity.area != 'design' || entity.hasStatus
@@ -163,5 +163,5 @@ scorecards:
         of taking them on trust.
       links:
       - title: AGENTS.md working rules
-        url: https://github.com/loganvolkers/toolbox/blob/main/AGENTS.md#working-rules-maintainer-sdlc
+        url: https://github.com/seikika/seikika/blob/main/AGENTS.md#working-rules-maintainer-sdlc
     facets: {summary: public, details: public}

@@ -3,7 +3,7 @@
 # Run reports from inside the checkout: connector roots resolve against the working directory.
 #
 #   examples/openfga-portal/fetch.sh
-#   cd examples/openfga-portal/checkout && toolbox report .. --skip runner,github-actions
+#   cd examples/openfga-portal/checkout && seikika report .. --skip runner,github-actions
 set -euo pipefail
 cd "$(dirname "$0")"
 COMMIT=d67ba7b1d2eaf945cffab3a9129ca1a4c7ad5251

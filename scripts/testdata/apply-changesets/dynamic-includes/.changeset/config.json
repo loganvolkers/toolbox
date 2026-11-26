@@ -2,17 +2,17 @@
   "changelog": "CHANGELOG.md",
   "includes": [
     {
-      "kind": "toolbox-package",
-      "globs": ["packages/*/toolbox-package.yaml"]
+      "kind": "seikika-package",
+      "globs": ["packages/*/seikika-package.yaml"]
     },
     {
       "kind": "action",
       "globs": ["actions/*/action.yml"],
-      "lockstepWith": "toolbox"
+      "lockstepWith": "seikika"
     }
   ],
   "registry": {
-    "toolbox": {
+    "seikika": {
       "kind": "cargo-workspace",
       "path": "Cargo.toml",
       "changelog": "CHANGELOG.md"

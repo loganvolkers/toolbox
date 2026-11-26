@@ -1,4 +1,4 @@
-apiVersion: toolbox.dev/assessment/v1
+apiVersion: seikika.com/assessment/v1
 entity: assessment:rule-quality/rule:acme/ownership/branch-protected
 rubric: assessment-quality
 subjectHash: 88d6ac23ff55
@@ -10,8 +10,8 @@ verdicts:
     reason: >-
       The citations in
       portal/assessments/rule-quality/rule/acme/ownership/branch-protected.yaml
-      hold. crates/toolbox-connector-github/src/main.rs:155-162 reads only
-      `protected`. In examples/reference-portal/toolbox.yaml the fix is at
+      hold. crates/seikika-connector-github/src/main.rs:155-162 reads only
+      `protected`. In examples/reference-portal/seikika.yaml the fix is at
       220, the rationale at 221-224, the links at 225-227 and the scorecard
       rationale at 173-178. ownership.test.yaml:31-35 pins checkout-web at
       bronze on branch-protected. I re-ran `gh api` today. github/docs and
@@ -26,11 +26,11 @@ verdicts:
     verdict: pass
     reason: >-
       The verdicts are right. A single flag can't say whether review is
-      required, which is the rationale's concern (toolbox.yaml:221-224). So
+      required, which is the rationale's concern (seikika.yaml:221-224). So
       measures-intent fails. hard-to-game fails without the deletion-only
       inference too, because a pull_request rule with zero approvals also sets
       the flag. The fix's "ruleset protecting the default branch"
-      (toolbox.yaml:220) does lead to a pass, and there is no number.
+      (seikika.yaml:220) does lead to a pass, and there is no number.
   - criterion: reproducible
     verdict: pass
     reason: >-

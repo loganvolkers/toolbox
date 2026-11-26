@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 """Tool calls whose arguments name another run's workspace, the round directory that holds them
-all, another run's GitLab group, or (gitlab arm) the runner's Toolbox binaries. Every run can read
+all, another run's GitLab group, or (gitlab arm) the runner's Seikika binaries. Every run can read
 `/tmp/actions-gitlab/r<n>/` and, through the people's tokens, see the other groups' projects; this
 checks that none did.
 
     isolation.py <transcript.json> <round> <run> <group>
 
-Prints `{"crossWorkspace": [...], "roundListing": [...], "otherGroups": [...], "toolboxInRival": [...]}`,
+Prints `{"crossWorkspace": [...], "roundListing": [...], "otherGroups": [...], "seikikaInRival": [...]}`,
 each entry the call's index (1-based), tool name and the match.
 """
 import json
@@ -19,7 +19,7 @@ def main() -> None:
     calls = [m for m in json.load(open(transcript))["messages"] if m.get("role") == "tool"]
     other = re.compile(re.escape("/tmp/actions-gitlab/") + r"(r\w+)(?:/([\w.-]+))?")
     groups = re.compile(r"acme-w\d+")
-    out = {"crossWorkspace": [], "roundListing": [], "otherGroups": [], "toolboxInRival": []}
+    out = {"crossWorkspace": [], "roundListing": [], "otherGroups": [], "seikikaInRival": []}
     for i, m in enumerate(calls, 1):
         args = m.get("tool_args")
         text = args if isinstance(args, str) else json.dumps(args)
@@ -32,8 +32,8 @@ def main() -> None:
         for hit in groups.finditer(text):
             if hit.group(0) != group:
                 out["otherGroups"].append(entry(hit.group(0)))
-        if run.startswith("gitlab-") and "/toolbox/bin" in text:
-            out["toolboxInRival"].append(entry("/toolbox/bin"))
+        if run.startswith("gitlab-") and "/seikika/bin" in text:
+            out["seikikaInRival"].append(entry("/seikika/bin"))
     print(json.dumps(out, indent=1))
 
 

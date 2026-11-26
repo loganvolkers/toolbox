@@ -1,0 +1,52 @@
+apiVersion: seikika.com/assessment/v1
+entity: assessment:rule-quality/rule:seikika/vs-backstage-capabilities/docs-search
+rubric: assessment-quality
+subjectHash: 00cc37494b52
+assessor: {kind: agent, name: cursor-reviewer-15, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: supported
+    verdict: fail
+    reason: >-
+      Two citations don't hold.
+      - measures-intent cites RESEARCH.md:114 for "full-text search". Line
+        114 is "relation graph", and full-text search is 115.
+      - fix-leads-to-pass places "the `q` filter behind /v1/entities" in
+        crates/seikika-api/src/reads.rs. The only `q` there (reads.rs:399)
+        filters action options. Entity search is `list_candidates` in
+        crates/seikika-api/src/routes.rs:206-210, which matches id or title
+        at :262-269, behind `list_entities` (routes.rs:329).
+      The rest holds: mcp.rs:26, facts.yaml:75-80 and 164-166,
+      docs/v1-spec.md:48 and README.md:53.
+    suggestion: >-
+      Cite RESEARCH.md:115, and name list_candidates in
+      crates/seikika-api/src/routes.rs as the search code.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      Both fails are right. The fact is a typed boolean (facts.yaml:75-79),
+      and the fix (backstage-comparison.yaml:955-957) names neither code nor a
+      source of document text, which v1 does not carry (docs/v1-spec.md:48).
+      measures-intent and threshold-justified match the sources.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      Both fails rest on readable facts: a typed boolean, and a fix with no
+      code or data source. A second assessor would agree.
+  - criterion: actionable
+    verdict: fail
+    reason: >-
+      The fix-leads-to-pass suggestion says to "include it in the entity
+      search in crates/seikika-api/src/reads.rs". That file holds no entity
+      search (reads.rs:399 is the options filter; search is
+      routes.rs:206-270). A fix rewritten as suggested would name the wrong
+      place. The rubric fails that (portal/standards/meta.yaml:1172), so the
+      verdict would not change. The hard-to-game suggestion is sound.
+    suggestion: >-
+      Point the suggested fix at list_candidates in
+      crates/seikika-api/src/routes.rs.
+summary: >-
+  The verdicts are right, but the assessment puts entity search in
+  reads.rs when it is in routes.rs (list_candidates), and its suggested
+  fix carries the same wrong place. It also cites the wrong RESEARCH.md
+  line for the scenario: 114 is the graph, and search is 115.

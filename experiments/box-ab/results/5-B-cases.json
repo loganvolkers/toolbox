@@ -8,7 +8,7 @@
   "tail": [
    "campaign semgrep-zero since 2026-11-22: entities short 63 \u2192 59 (6.3% of the way); measure 209 \u2192 199 (4.8% of the way)",
    "campaign zizmor-zero since 2026-11-22: entities short 88 \u2192 88 (0.0% of the way); measure 336 \u2192 336 (0.0% of the way)",
-   "baseline: matches .toolbox/results.json"
+   "baseline: matches .seikika/results.json"
   ]
  },
  {
@@ -22,7 +22,7 @@
   "tail": [
    "campaign semgrep-zero since 2026-11-22: entities short 63 \u2192 59 (6.3% of the way); measure 209 \u2192 200 (4.3% of the way)",
    "campaign zizmor-zero since 2026-11-22: entities short 88 \u2192 88 (0.0% of the way); measure 336 \u2192 336 (0.0% of the way)",
-   "baseline: 1 regression(s) against .toolbox/results.json"
+   "baseline: 1 regression(s) against .seikika/results.json"
   ]
  },
  {
@@ -36,7 +36,7 @@
   "tail": [
    "campaign semgrep-zero since 2026-11-22: entities short 63 \u2192 59 (6.3% of the way); measure 209 \u2192 199 (4.8% of the way)",
    "campaign zizmor-zero since 2026-11-22: entities short 88 \u2192 88 (0.0% of the way); measure 336 \u2192 336 (0.0% of the way)",
-   "baseline: 1 regression(s) against .toolbox/results.json"
+   "baseline: 1 regression(s) against .seikika/results.json"
   ]
  },
  {
@@ -50,7 +50,7 @@
   "tail": [
    "campaign semgrep-zero since 2026-11-22: entities short 63 \u2192 59 (6.3% of the way); measure 209 \u2192 199 (4.8% of the way)",
    "campaign zizmor-zero since 2026-11-22: entities short 88 \u2192 88 (0.0% of the way); measure 336 \u2192 336 (0.0% of the way)",
-   "baseline: 1 regression(s) against .toolbox/results.json"
+   "baseline: 1 regression(s) against .seikika/results.json"
   ]
  },
  {
@@ -62,7 +62,7 @@
   "tail": [
    "campaign semgrep-zero since 2026-11-22: entities short 63 \u2192 59 (6.3% of the way); measure 209 \u2192 199 (4.8% of the way)",
    "campaign zizmor-zero since 2026-11-22: entities short 88 \u2192 88 (0.0% of the way); measure 336 \u2192 336 (0.0% of the way)",
-   "baseline: matches .toolbox/results.json"
+   "baseline: matches .seikika/results.json"
   ]
  },
  {
@@ -74,7 +74,7 @@
   "tail": [
    "campaign semgrep-zero since 2026-11-22: entities short 63 \u2192 59 (6.3% of the way); measure 209 \u2192 198 (5.3% of the way)",
    "campaign zizmor-zero since 2026-11-22: entities short 88 \u2192 88 (0.0% of the way); measure 336 \u2192 336 (0.0% of the way)",
-   "baseline: no regressions, but .toolbox/results.json is out of date: run with --update and commit it"
+   "baseline: no regressions, but .seikika/results.json is out of date: run with --update and commit it"
   ]
  },
  {
@@ -88,7 +88,7 @@
   "tail": [
    "campaign semgrep-zero since 2026-11-22: entities short 63 \u2192 59 (6.3% of the way); measure 209 \u2192 199 (4.8% of the way)",
    "campaign zizmor-zero since 2026-11-22: entities short 88 \u2192 88 (0.0% of the way); measure 336 \u2192 338 (-0.6% of the way)",
-   "baseline: 1 regression(s) against .toolbox/results.json"
+   "baseline: 1 regression(s) against .seikika/results.json"
   ]
  },
  {
@@ -102,7 +102,7 @@
   "tail": [
    "campaign semgrep-zero since 2026-11-22: entities short 63 \u2192 59 (6.3% of the way); measure 209 \u2192 199 (4.8% of the way)",
    "campaign zizmor-zero since 2026-11-22: entities short 88 \u2192 88 (0.0% of the way); measure 336 \u2192 336 (0.0% of the way)",
-   "baseline: 1 regression(s) against .toolbox/results.json"
+   "baseline: 1 regression(s) against .seikika/results.json"
   ]
  },
  {
@@ -116,7 +116,7 @@
   "tail": [
    "campaign semgrep-zero since 2026-11-22: entities short 63 \u2192 59 (6.3% of the way); measure 209 \u2192 199 (4.8% of the way)",
    "campaign zizmor-zero since 2026-11-22: entities short 88 \u2192 88 (0.0% of the way); measure 336 \u2192 336 (0.0% of the way)",
-   "baseline: 1 regression(s) against .toolbox/results.json"
+   "baseline: 1 regression(s) against .seikika/results.json"
   ]
  },
  {
@@ -128,7 +128,7 @@
   "tail": [
    "campaign semgrep-zero since 2026-11-22: entities short 63 \u2192 59 (6.3% of the way); measure 209 \u2192 199 (4.8% of the way)",
    "campaign zizmor-zero since 2026-11-22: entities short 88 \u2192 88 (0.0% of the way); measure 336 \u2192 336 (0.0% of the way)",
-   "baseline: matches .toolbox/results.json"
+   "baseline: matches .seikika/results.json"
   ]
  }
 ]

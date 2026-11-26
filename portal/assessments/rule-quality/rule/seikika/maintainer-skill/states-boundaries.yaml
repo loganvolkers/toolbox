@@ -1,0 +1,60 @@
+apiVersion: seikika.com/assessment/v1
+entity: rule:seikika/maintainer-skill/states-boundaries
+rubric: rule-quality
+subjectHash: c8710f926ff6
+assessor: {kind: agent, name: cursor-assessor-01, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: measures-intent
+    verdict: fail
+    reason: >-
+      boundaryCues is a word list
+      (crates/seikika-connector-workspace/src/skills.rs:323-356). It fails in
+      both directions:
+      - "Do not hesitate to ask." gave ["do not"] on a scratch skill and
+        passed, though it names no limit.
+      - tools-install states a prerequisite and an error path in prose ("A
+        tool marked SKIP declares no id for any available installer: add
+        one…", plugins/seikika-operator/skills/tools-install/SKILL.md:18)
+        but has no listed word, so it fails.
+      - tools-config does the same (tools-config/SKILL.md:17).
+      Two of the three live failures in portal/results.json are these
+      skills.
+    suggestion: >-
+      Count a cue only at the start of a sentence or a list item ("Do not …",
+      "Never …", "If it fails, …"), and add "requires", "needs", "only when",
+      "skip" and "if … fails" forms. Pin the tools-install wording as a
+      passing fixture and "do not hesitate" as a failing one.
+  - criterion: hard-to-game
+    verdict: fail
+    reason: >-
+      The cheapest pass is one closing sentence with "Do not" or "If it
+      fails". 28 of the 43 live skills contain a templated "If it fails, …"
+      closing line (e.g. plugins/seikika-operator/skills/get/SKILL.md:17,
+      push/SKILL.md:17). That shows a template can satisfy gold without the
+      author thinking about this skill's own limits.
+    suggestion: >-
+      Require the cue in a dedicated section (`## Limits`, `## When not to
+      use`, `## Troubleshooting`), or require at least one cue sentence that
+      names something specific to the skill: a flag, file or command the body
+      also mentions.
+  - criterion: fix-leads-to-pass
+    verdict: pass
+    reason: >-
+      The evidence says what is missing ("no error, limit, or prerequisite cue
+      in the body", portal/tests/standards.test.yaml:364-365). The fix lists
+      the exact words the check accepts and names `SKILL.md`, so following it
+      passes.
+  - criterion: threshold-justified
+    verdict: pass
+    reason: >-
+      The rule has no number. Gold is "it states its limits", set in
+      portal/standards/skills.yaml:52-53 and docs/design/skill-standards.md:23
+      and 96 (D72). That fits thresholds.md's principle that gold asks for
+      what lower levels do not imply (docs/design/thresholds.md:24-25).
+summary: >-
+  The level and fix are reasonable, but the check is a word list. "Do not
+  hesitate" passes, and tools-install and tools-config, which state real
+  prerequisites in prose, fail. A templated "If it fails, …" line clears
+  gold for 28 skills, so the rule measures whether a phrase is present,
+  not whether limits are stated.

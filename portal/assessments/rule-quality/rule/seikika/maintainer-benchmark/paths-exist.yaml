@@ -1,0 +1,63 @@
+apiVersion: seikika.com/assessment/v1
+entity: rule:seikika/maintainer-benchmark/paths-exist
+rubric: rule-quality
+subjectHash: de6395faf98c
+assessor: {kind: agent, name: cursor-assessor-08, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: measures-intent
+    verdict: fail
+    reason: >-
+      missingPaths only lists non-empty values that don't exist. `missing()`
+      skips an empty string
+      (crates/seikika-connector-workspace/src/data.rs:87) and accepts a
+      directory, because it uses `exists()`. So an entry with `readme: ''`
+      passes. The fix and rationale say the entry must point at the
+      pre-registration (benchmarks.yaml:275-281), and pre-registered at silver
+      only checks a list of hypothesis ids (benchmarks.yaml:166-172). So an
+      entry can reach silver with no pre-registration document at all. All 19
+      live entries do set readme, so this is latent.
+    suggestion: >-
+      Add `readme == ''` to the gaps (for example `entity.readme == '' ? ['no
+      readme'] : []`). Make `results` required once status is complete or
+      archived. Count a path as existing only when it is a file, or a
+      directory that holds a README.
+  - criterion: hard-to-game
+    verdict: fail
+    reason: >-
+      Any file that exists passes: `readme: README.md` or `results: AGENTS.md`
+      clears the rule for a benchmark whose own write-up was deleted or never
+      written. The connector already has a detector for a linked document that
+      never mentions its entry (`not_naming`, data.rs:220-233, used for
+      sdlc-stage docs at portal/seikika.yaml:170). Benchmarks don't use it:
+      their source declares only `paths: [readme, results, prompts]`
+      (portal/seikika.yaml:172-174).
+    suggestion: >-
+      Add `naming: [readme, results]` to the benchmark data source in
+      portal/seikika.yaml so each document has to name the benchmark, and put
+      `namelessDocs` in this rule's check and evidence.
+  - criterion: fix-leads-to-pass
+    verdict: fail
+    reason: >-
+      The rule also checks `prompts` (portal/seikika.yaml:174, set on
+      connector-ab and actions-ab), but the fix only mentions readme and
+      results (benchmarks.yaml:275-277). When the dead value is
+      `experiments/x/prompts`, the evidence shows it, but the fix doesn't say
+      which field holds it or that a committed prompts directory is expected.
+    suggestion: >-
+      Extend the fix: "...and prompts at the committed prompts directory, as
+      paths that exist in the repository; clear a field rather than leave a
+      dead path."
+  - criterion: threshold-justified
+    verdict: pass
+    reason: >-
+      There is no number. Bronze matches dx-benchmarks.md §6 ("every declared
+      path exists", docs/design/dx-benchmarks.md:224). A dead link to the bar
+      or the result breaks the §2 publication requirement
+      (dx-benchmarks.md:75).
+summary: >-
+  The rule checks only that declared paths exist. An empty or generic path
+  passes, so silver can be reached without a pre-registration document,
+  and the fix leaves out the `prompts` field the check also reads. Making
+  readme required and adding the existing `naming` detector would make
+  "the entry is the index to its bar and result" true.

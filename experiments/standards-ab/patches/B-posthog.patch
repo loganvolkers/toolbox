@@ -1,12 +1,12 @@
-diff --git a/.github/workflows/toolbox-standards.yml b/.github/workflows/toolbox-standards.yml
+diff --git a/.github/workflows/seikika-standards.yml b/.github/workflows/seikika-standards.yml
 new file mode 100644
 index 00000000..aeb76aa5
 --- /dev/null
-+++ b/.github/workflows/toolbox-standards.yml
++++ b/.github/workflows/seikika-standards.yml
 @@ -0,0 +1,53 @@
-+# Enforces coding standards recorded in .toolbox/ (see .toolbox/STANDARD.md).
++# Enforces coding standards recorded in .seikika/ (see .seikika/STANDARD.md).
 +# S1: no new direct ORM queries on person tables; existing ones are ratcheted down.
-+name: Toolbox standards
++name: Seikika standards
 +
 +on:
 +  pull_request:
@@ -18,7 +18,7 @@ index 00000000..aeb76aa5
 +  contents: read
 +
 +concurrency:
-+  group: toolbox-standards-${{ github.ref }}
++  group: seikika-standards-${{ github.ref }}
 +  cancel-in-progress: true
 +
 +jobs:
@@ -31,37 +31,37 @@ index 00000000..aeb76aa5
 +        with:
 +          persist-credentials: false
 +
-+      # Installs released, checksum-verified toolbox binaries and runs Toolbox's own ratchet
++      # Installs released, checksum-verified seikika binaries and runs Seikika's own ratchet
 +      # (`check` mode: fail on regressions only; a stale baseline is reported, not failed).
 +      # It annotates the PR with each file whose violation count grew and uploads the HTML report.
-+      - name: Toolbox report (ratchet)
++      - name: Seikika report (ratchet)
 +        # TODO(platform): pin to the commit SHA of v0.1.1, as the other workflows here pin actions.
-+        uses: loganvolkers/toolbox/actions/report@v0.1.1
++        uses: seikika/seikika/actions/report@v0.1.1
 +        with:
-+          toolbox-version: "0.1.1"
-+          portal: .toolbox
-+          baseline: .toolbox/results.json
++          seikika-version: "0.1.1"
++          portal: .seikika
++          baseline: .seikika/results.json
 +          mode: check
 +
-+      # The S1 gate: the ratchet above plus new files with violations (which Toolbox reports
++      # The S1 gate: the ratchet above plus new files with violations (which Seikika reports
 +      # as a change, not a regression). Also says when the baseline can be tightened.
 +      - name: S1 gate
 +        if: always()
 +        run: |
-+          export PATH="$RUNNER_TEMP/toolbox-bin:$PATH"
-+          .toolbox/s1.sh gate
++          export PATH="$RUNNER_TEMP/seikika-bin:$PATH"
++          .seikika/s1.sh gate
 +
 +      - name: S1 campaign progress
 +        if: always()
 +        run: |
-+          export PATH="$RUNNER_TEMP/toolbox-bin:$PATH"
++          export PATH="$RUNNER_TEMP/seikika-bin:$PATH"
 +          { echo '### S1 campaign: person-table ORM queries to zero'; echo '```json'
-+            .toolbox/s1.sh campaign; echo '```'; } | tee -a "$GITHUB_STEP_SUMMARY"
-diff --git a/.toolbox/STANDARD.md b/.toolbox/STANDARD.md
++            .seikika/s1.sh campaign; echo '```'; } | tee -a "$GITHUB_STEP_SUMMARY"
+diff --git a/.seikika/STANDARD.md b/.seikika/STANDARD.md
 new file mode 100644
 index 00000000..070084ab
 --- /dev/null
-+++ b/.toolbox/STANDARD.md
++++ b/.seikika/STANDARD.md
 @@ -0,0 +1,94 @@
 +# S1: no direct ORM queries on person tables
 +
@@ -74,53 +74,53 @@ index 00000000..070084ab
 +|---|---|
 +| **Violation** | Each occurrence of `Person.objects`, `PersonDistinctId.objects`, `CohortPeople.objects`, `Group.objects` or `GroupTypeMapping.objects` in a Python file (comments and strings included: the check is textual) |
 +| **Exempt** | Test files: anything under a `test/` or `tests/` directory, `test_*.py`, `*_test.py`, `conftest.py`. The routed helpers: `posthog/models/person/util.py`, `posthog/models/group_type_mapping.py`. The model module `posthog/models/person/person.py`: its managers back the routed helpers |
-+| **Enforced by** | A ratchet: the violations recorded in `.toolbox/results.json` may only go down. A new file with violations, or more violations in a file than recorded, fails CI (`.github/workflows/toolbox-standards.yml`) |
++| **Enforced by** | A ratchet: the violations recorded in `.seikika/results.json` may only go down. A new file with violations, or more violations in a file than recorded, fails CI (`.github/workflows/seikika-standards.yml`) |
 +| **Goal** | Zero. Progress is the `person-orm-zero` campaign |
 +
-+It is a [Toolbox](https://github.com/loganvolkers/toolbox) repo portal: `toolbox report` scores every
-+Python file against the `person-orm` scorecard in `.toolbox/toolbox.yaml`, and `.toolbox/s1.sh` shapes
++It is a [Seikika](https://github.com/seikika/seikika) repo portal: `seikika report` scores every
++Python file against the `person-orm` scorecard in `.seikika/seikika.yaml`, and `.seikika/s1.sh` shapes
 +that into the commands below.
 +
 +## Commands
 +
-+Run from the repository root, with `toolbox` (0.1.1) and `jq` on `PATH`. Each takes about 40 s
++Run from the repository root, with `seikika` (0.1.1) and `jq` on `PATH`. Each takes about 40 s
 +(it reads every Python file).
 +
 +| What | Command | Output / exit code |
 +|---|---|---|
-+| **Report** | `.toolbox/s1.sh report` | JSON `[{"file": "<path>", "count": <n>}, ...]`, most violations first |
-+| **Gate** | `.toolbox/s1.sh gate` | Exit 1 on a new file with violations or a file with more than recorded; exit 0 otherwise. Says when violations went down |
-+| **Campaign** | `.toolbox/s1.sh campaign` | JSON: `baseline` (count when the campaign started), `current`, `percentDone`, and the same per file |
-+| Update the baseline | `.toolbox/s1.sh update` | Rewrites `.toolbox/results.json`; refuses if anything regressed |
-+| Full scorecard (Markdown or HTML) | `toolbox report .toolbox` / `toolbox report .toolbox -o html --out s1.html` | Every file's level with evidence for failing ones; the HTML page also shows the campaign |
++| **Report** | `.seikika/s1.sh report` | JSON `[{"file": "<path>", "count": <n>}, ...]`, most violations first |
++| **Gate** | `.seikika/s1.sh gate` | Exit 1 on a new file with violations or a file with more than recorded; exit 0 otherwise. Says when violations went down |
++| **Campaign** | `.seikika/s1.sh campaign` | JSON: `baseline` (count when the campaign started), `current`, `percentDone`, and the same per file |
++| Update the baseline | `.seikika/s1.sh update` | Rewrites `.seikika/results.json`; refuses if anything regressed |
++| Full scorecard (Markdown or HTML) | `seikika report .seikika` / `seikika report .seikika -o html --out s1.html` | Every file's level with evidence for failing ones; the HTML page also shows the campaign |
 +
 +## After fixing violations
 +
-+1. Run `.toolbox/s1.sh gate`. It prints `✓ better … evidence shrank 10 → 9` for each improved file and
++1. Run `.seikika/s1.sh gate`. It prints `✓ better … evidence shrank 10 → 9` for each improved file and
 +   `S1 violations went down. Tighten the baseline`.
-+2. Run `.toolbox/s1.sh update` and commit `.toolbox/results.json` with the fix.
++2. Run `.seikika/s1.sh update` and commit `.seikika/results.json` with the fix.
 +
 +`results.json` is generated: never hand-edit or hand-merge it. On a merge conflict, take the target
-+branch's copy and rerun `.toolbox/s1.sh update`. Review its diff: `update` also records any new file's
-+violations as allowed (Toolbox treats a new file as a change, not a regression), so run `gate` first
++branch's copy and rerun `.seikika/s1.sh update`. Review its diff: `update` also records any new file's
++violations as allowed (Seikika treats a new file as a change, not a regression), so run `gate` first
 +and only update on a tree that passes it.
 +
-+The campaign's starting point is `.toolbox/s1-campaign-start.json` (102 violations in 37 files on
++The campaign's starting point is `.seikika/s1-campaign-start.json` (102 violations in 37 files on
 +2026-11-21, recorded after the Group/GroupTypeMapping change, see *History*). Don't change it during
 +the campaign. To start a new campaign, run
-+`.toolbox/s1.sh campaign-start` and update the `start` date of `person-orm-zero` in `toolbox.yaml`.
++`.seikika/s1.sh campaign-start` and update the `start` date of `person-orm-zero` in `seikika.yaml`.
 +
 +## Changing the standard
 +
-+All of it lives in `.toolbox/toolbox.yaml`; after any change run `toolbox validate .toolbox`, then
-+`.toolbox/s1.sh update`, and commit both files (plus this one) in one change that the owning team reviews.
++All of it lives in `.seikika/seikika.yaml`; after any change run `seikika validate .seikika`, then
++`.seikika/s1.sh update`, and commit both files (plus this one) in one change that the owning team reviews.
 +
 +- **Add a model** (e.g. `PersonOverride`): add it to the alternation in the connector's `counts.personOrm`
 +  regex, `'\b(?:Person|PersonDistinctId|CohortPeople|Group|GroupTypeMapping|PersonOverride)\.objects\b'`,
 +  to the rule's `evidence` label and `fix`, the campaign `description`, the gate message in `s1.sh`,
 +  and the *Violation* row above. Existing uses then count as regressions (a file that passed now
 +  fails, a violating file's count grows), so `s1.sh update` refuses. To record them, reset the
-+  baseline: `rm .toolbox/results.json && .toolbox/s1.sh update`, run `gate` (it must pass) and review
++  baseline: `rm .seikika/results.json && .seikika/s1.sh update`, run `gate` (it must pass) and review
 +  the diff: it must change only files that use the new model, or that you exempted. Then decide the
 +  campaign's starting point (see *History*). New uses after the change fail the gate.
 +- **Add an exempt file** (a new routed helper): add its path to the `entity.path in [...]` list in the
@@ -134,10 +134,10 @@ index 00000000..070084ab
 +## Limits
 +
 +- One evidence item is generated per occurrence, up to 200 per file (a CEL list literal, because
-+  Toolbox captures are de-duplicated). A file with more than 200 occurrences would be counted as 200.
-+- The baseline records every Python file (about 9,000 entries, ~1 MB), because Toolbox records every
++  Seikika captures are de-duplicated). A file with more than 200 occurrences would be counted as 200.
++- The baseline records every Python file (about 9,000 entries, ~1 MB), because Seikika records every
 +  scored entity. A new file without violations does not fail the gate, but makes `results.json`
-+  out of date; refresh it with `.toolbox/s1.sh update` whenever convenient.
++  out of date; refresh it with `.seikika/s1.sh update` whenever convenient.
 +
 +## History
 +
@@ -148,8 +148,8 @@ index 00000000..070084ab
 +80 violations in 28 files became 102 in 37: +32 new-model uses (10 newly violating files, 4 files
 +with more), and -10 from exempting `person.py`.
 +
-+The campaign was restarted from this state (`.toolbox/s1-campaign-start.json` rewritten with
-+`s1.sh campaign-start`; the `start` date in `toolbox.yaml` stays 2026-11-21). Why: the campaign had
++The campaign was restarted from this state (`.seikika/s1-campaign-start.json` rewritten with
++`s1.sh campaign-start`; the `start` date in `seikika.yaml` stays 2026-11-21). Why: the campaign had
 +started the same day and nothing was fixed yet (80 of 80 left), so nothing was lost. Keeping the old
 +starting point would have mixed two definitions: `campaign` compares today's total (new models
 +included, `person.py` excluded) with the old start total, so it would have shown -27.5 % done, and
@@ -157,11 +157,11 @@ index 00000000..070084ab
 +old starting point was 80 violations in 28 files. Note that `posthog/models/group/util.py` (5) and
 +`posthog/models/group/group.py` (1) now count as violations: if they are the routed helpers for
 +groups, exempt them like `person/util.py` (a decision for the owning team).
-diff --git a/.toolbox/s1-campaign-start.json b/.toolbox/s1-campaign-start.json
+diff --git a/.seikika/s1-campaign-start.json b/.seikika/s1-campaign-start.json
 new file mode 100644
 index 00000000..0ec55a5b
 --- /dev/null
-+++ b/.toolbox/s1-campaign-start.json
++++ b/.seikika/s1-campaign-start.json
 @@ -0,0 +1,153 @@
 +{
 +  "started": "2026-11-21",
@@ -316,38 +316,38 @@ index 00000000..0ec55a5b
 +    }
 +  ]
 +}
-diff --git a/.toolbox/s1.sh b/.toolbox/s1.sh
+diff --git a/.seikika/s1.sh b/.seikika/s1.sh
 new file mode 100755
 index 00000000..361c6de4
 --- /dev/null
-+++ b/.toolbox/s1.sh
++++ b/.seikika/s1.sh
 @@ -0,0 +1,98 @@
 +#!/usr/bin/env bash
 +# S1 (no direct ORM queries on person tables): report, gate, campaign and baseline update.
-+# The rule itself lives in .toolbox/toolbox.yaml and is scored by `toolbox report`; this script
-+# only runs it and shapes the output. Run from the repository root. See .toolbox/STANDARD.md.
++# The rule itself lives in .seikika/seikika.yaml and is scored by `seikika report`; this script
++# only runs it and shapes the output. Run from the repository root. See .seikika/STANDARD.md.
 +#
-+#   .toolbox/s1.sh report     every violation by file, as JSON [{"file", "count"}]
-+#   .toolbox/s1.sh gate       exit 1 on a violation the baseline doesn't allow; says what went down
-+#   .toolbox/s1.sh campaign   baseline (campaign start) count, current count, percent done
-+#   .toolbox/s1.sh update     record improvements in .toolbox/results.json (refuses on regressions)
-+#   .toolbox/s1.sh campaign-start   once per campaign: record its starting point
++#   .seikika/s1.sh report     every violation by file, as JSON [{"file", "count"}]
++#   .seikika/s1.sh gate       exit 1 on a violation the baseline doesn't allow; says what went down
++#   .seikika/s1.sh campaign   baseline (campaign start) count, current count, percent done
++#   .seikika/s1.sh update     record improvements in .seikika/results.json (refuses on regressions)
++#   .seikika/s1.sh campaign-start   once per campaign: record its starting point
 +set -euo pipefail
 +
-+PORTAL=.toolbox
-+BASELINE=.toolbox/results.json
++PORTAL=.seikika
++BASELINE=.seikika/results.json
 +CARD=person-orm
 +RULE=no-direct-person-orm
-+START=.toolbox/s1-campaign-start.json
++START=.seikika/s1-campaign-start.json
 +
-+command -v toolbox >/dev/null || { echo "toolbox not on PATH" >&2; exit 2; }
++command -v seikika >/dev/null || { echo "seikika not on PATH" >&2; exit 2; }
 +command -v jq >/dev/null || { echo "jq not on PATH" >&2; exit 2; }
-+[ -f "$PORTAL/toolbox.yaml" ] || { echo "run from the repository root ($PORTAL/toolbox.yaml not found)" >&2; exit 2; }
++[ -f "$PORTAL/seikika.yaml" ] || { echo "run from the repository root ($PORTAL/seikika.yaml not found)" >&2; exit 2; }
 +
 +tmp=$(mktemp -d)
 +trap 'rm -rf "$tmp"' EXIT
 +
-+# {"file": count} for a toolbox-report/v1 document (a report or the baseline).
++# {"file": count} for a seikika-report/v1 document (a report or the baseline).
 +by_file='(.results[$card] // {}) | to_entries
 +  | map(select(.value.failing[$rule] != null)
 +        | {file: (.key | ltrimstr("file:")), count: .value.failing[$rule]})
@@ -355,18 +355,18 @@ index 00000000..361c6de4
 +
 +case "${1:-}" in
 +  report)
-+    toolbox report "$PORTAL" -o json --out "$tmp/current.json" >/dev/null
++    seikika report "$PORTAL" -o json --out "$tmp/current.json" >/dev/null
 +    jq --arg card "$CARD" --arg rule "$RULE" "$by_file" "$tmp/current.json"
 +    ;;
 +
 +  gate)
 +    rc=0
-+    # Toolbox's ratchet: more violations in a file than recorded is a regression (exit 1).
-+    toolbox report "$PORTAL" --baseline "$BASELINE" --verdict "$tmp/verdict.json" \
++    # Seikika's ratchet: more violations in a file than recorded is a regression (exit 1).
++    seikika report "$PORTAL" --baseline "$BASELINE" --verdict "$tmp/verdict.json" \
 +      -o json --out "$tmp/current.json" >"$tmp/ratchet.log" 2>&1 || rc=$?
 +    grep -E '^(✗|✓|·|baseline:)' "$tmp/ratchet.log" || true
 +    [ -f "$tmp/verdict.json" ] || { cat "$tmp/ratchet.log" >&2; exit 2; }
-+    # Toolbox reports a new failing entity as a change, not a regression, so files the baseline
++    # Seikika reports a new failing entity as a change, not a regression, so files the baseline
 +    # does not record as violating (new files, files that were passing or exempt) are checked here.
 +    jq -n --arg card "$CARD" --arg rule "$RULE" \
 +      --slurpfile b "$BASELINE" --slurpfile c "$tmp/current.json" '
@@ -377,11 +377,11 @@ index 00000000..361c6de4
 +      ' -r >"$tmp/new.txt"
 +    if [ -s "$tmp/new.txt" ]; then cat "$tmp/new.txt"; rc=1; fi
 +    if [ "$(jq '.improvements | length' "$tmp/verdict.json")" -gt 0 ]; then
-+      echo "S1 violations went down. Tighten the baseline: .toolbox/s1.sh update, then commit $BASELINE"
++      echo "S1 violations went down. Tighten the baseline: .seikika/s1.sh update, then commit $BASELINE"
 +    fi
 +    if [ "$rc" -ne 0 ]; then
 +      echo "S1 gate FAILED: direct Person/PersonDistinctId/CohortPeople/Group/GroupTypeMapping .objects queries added." \
-+        "Use the routed helpers in posthog/models/person/util.py (see .toolbox/STANDARD.md)."
++        "Use the routed helpers in posthog/models/person/util.py (see .seikika/STANDARD.md)."
 +    else
 +      echo "S1 gate passed."
 +    fi
@@ -389,9 +389,9 @@ index 00000000..361c6de4
 +    ;;
 +
 +  campaign)
-+    # Progress is measured from the campaign's start (.toolbox/s1-campaign-start.json, written once
++    # Progress is measured from the campaign's start (.seikika/s1-campaign-start.json, written once
 +    # when the campaign began), not from results.json, which tightens with every fix.
-+    toolbox report "$PORTAL" -o json --out "$tmp/current.json" >/dev/null
++    seikika report "$PORTAL" -o json --out "$tmp/current.json" >/dev/null
 +    jq -n --arg card "$CARD" --arg rule "$RULE" \
 +      --slurpfile s "$START" --slurpfile c "$tmp/current.json" "
 +      (\$c[0] | $by_file) as \$cf
@@ -405,14 +405,14 @@ index 00000000..361c6de4
 +
 +  campaign-start)
 +    # Once, when a campaign begins: record today's violations as its starting point.
-+    toolbox report "$PORTAL" -o json --out "$tmp/current.json" >/dev/null
++    seikika report "$PORTAL" -o json --out "$tmp/current.json" >/dev/null
 +    jq --arg card "$CARD" --arg rule "$RULE" --arg today "$(date -u +%F)" \
 +      "{started: \$today, files: ($by_file)}" "$tmp/current.json" >"$START"
 +    echo "wrote $START"
 +    ;;
 +
 +  update)
-+    toolbox report "$PORTAL" --baseline "$BASELINE" --update -o json --out "$tmp/current.json"
++    seikika report "$PORTAL" --baseline "$BASELINE" --update -o json --out "$tmp/current.json"
 +    ;;
 +
 +  *)
@@ -420,21 +420,21 @@ index 00000000..361c6de4
 +    exit 2
 +    ;;
 +esac
-diff --git a/.toolbox/toolbox.yaml b/.toolbox/toolbox.yaml
+diff --git a/.seikika/seikika.yaml b/.seikika/seikika.yaml
 new file mode 100644
 index 00000000..ec69a1ca
 --- /dev/null
-+++ b/.toolbox/toolbox.yaml
++++ b/.seikika/seikika.yaml
 @@ -0,0 +1,86 @@
 +# S1: no direct ORM queries on person tables (see STANDARD.md).
-+# Scored by `toolbox report .toolbox`; ratcheted against .toolbox/results.json.
-+apiVersion: toolbox.dev/v1alpha1
++# Scored by `seikika report .seikika`; ratcheted against .seikika/results.json.
++apiVersion: seikika.com/v1alpha1
 +
 +portal:
 +  name: posthog-standards
 +  title: PostHog coding standards
 +  owner: group:maintainers
-+  toolbox: "0.1"
++  seikika: "0.1"
 +
 +connectors:
 +  - name: workspace

@@ -1,6 +1,6 @@
-# Deploy A/B: Toolbox and Backstage on a laptop
+# Deploy A/B: Seikika and Backstage on a laptop
 
-**Question:** can a fresh agent deploy a usable portal, with Toolbox and with Backstage, when the
+**Question:** can a fresh agent deploy a usable portal, with Seikika and with Backstage, when the
 only services on the machine are a local GitHub and Postgres?
 
 **Status: rerun 2026-11-23; inconclusive.** The bar below is the bar. It changes only if the design
@@ -11,7 +11,7 @@ recorded, and the arms were not given equal conditions, so the rerun is not a de
 The prompts are in [prompts/](prompts/README.md).
 
 This tests the box's deploy contract, not a tool
-([toolbox-and-tools.md](../../docs/design/toolbox-and-tools.md)). The environment is
+([seikika-and-tools.md](../../docs/design/seikika-and-tools.md)). The environment is
 [local-simulation.md](../../docs/design/local-simulation.md) (Q19). Operator SDLC deploy and
 verify, and user SDLC discover.
 
@@ -22,9 +22,9 @@ design. The portal is not started for them. Neither arm gets a GCP, AWS or Azure
 arm gets the probe source, this file's expected-value section (there is none: values are computed
 at score time), or `docs/research-log.md`.
 
-| | Toolbox | Backstage |
+| | Seikika | Backstage |
 |---|---|---|
-| Given | The `toolbox` CLI, the Score file, the Helm chart, and the operator docs | `@backstage/create-app` at the pin recorded when the run is unblocked, Node and Yarn at the pins in [spec-ab](../spec-ab/README.md) §2, and Backstage's deployment docs |
+| Given | The `seikika` CLI, the Score file, the Helm chart, and the operator docs | `@backstage/create-app` at the pin recorded when the run is unblocked, Node and Yarn at the pins in [spec-ab](../spec-ab/README.md) §2, and Backstage's deployment docs |
 | Leaves | A base URL whose process is the portal image | A base URL whose process is the Backstage backend image |
 | Catalog | github and git-files connectors aimed at the façade, SCIM aimed at the feed | The GitHub catalog provider, or locations, aimed at the same façade. Sample `examples/entities.yaml` does not satisfy the probes |
 
@@ -32,7 +32,7 @@ The harness stops the agent before scoring.
 
 ## 2. What is scored
 
-Shared probes S1–S3 and Toolbox probes T1–T4, as defined in
+Shared probes S1–S3 and Seikika probes T1–T4, as defined in
 [local-simulation.md](../../docs/design/local-simulation.md) §7. The Backstage arm is scored on
 S1–S3 only. `/readyz` is recorded and is not a pass.
 
@@ -52,7 +52,7 @@ would be the failure this benchmark exists to catch.
 
 | Hypothesis | Holds if | Fails if |
 |---|---|---|
-| **deploy-usable** | Toolbox passes S1–S3 and T1–T4, Backstage passes S1–S3, and Toolbox uses fewer tokens | Toolbox misses a shared probe that Backstage passes, or Toolbox passes the shared probes with at least as many tokens |
+| **deploy-usable** | Seikika passes S1–S3 and T1–T4, Backstage passes S1–S3, and Seikika uses fewer tokens | Seikika misses a shared probe that Backstage passes, or Seikika passes the shared probes with at least as many tokens |
 
 A run where the only green check is `/readyz` is void: it is not evidence for either side.
 
@@ -81,7 +81,7 @@ of OpenFGA, which has none, and records that commit in the run notes.
 ## 6. Limits, written before the run
 
 - One fresh agent per arm.
-- floci-gcp is not part of this benchmark. It is a later Toolbox-only check of the Cloud Run Admin
+- floci-gcp is not part of this benchmark. It is a later Seikika-only check of the Cloud Run Admin
   API, and it was not executed while this was written.
 - The comparison is a laptop deploy (Compose or the chart on kind). It is not a comparison of
   `gcloud run deploy`.

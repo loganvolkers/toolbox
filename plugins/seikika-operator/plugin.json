@@ -1,0 +1,18 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "seikika-operator",
+  "version": "0.0.0",
+  "license": "MIT",
+  "description": "Pre-release skeleton. Skills and a local MCP server for operators building, testing, planning and running a Seikika internal developer portal as code.",
+  "homepage": "https://github.com/seikika/seikika",
+  "repository": "https://github.com/seikika/seikika",
+  "keywords": [
+    "seikika",
+    "internal-developer-portal",
+    "idp",
+    "catalog",
+    "scorecards",
+    "openfga",
+    "cel"
+  ]
+}

@@ -18,7 +18,7 @@ import sys
 HERE = pathlib.Path(__file__).resolve().parent
 PROMPTS = HERE.parent / "prompts"
 WORK = pathlib.Path("/tmp/graphify-ab")
-REPOS = {"toolbox": "Toolbox", "openfga": "OpenFGA"}
+REPOS = {"seikika": "Seikika", "openfga": "OpenFGA"}
 BUILD_ONLY = (".graphify_detect.json", ".graphify_extract.json", ".graphify_ast.json", ".graphify_semantic*.json",
               ".graphify_analysis.json", ".graphify_partial.txt", ".graphify_chunk_*.json", ".graphify_cached.json",
               ".graphify_uncached.txt", ".chunks.json", ".needs_update")

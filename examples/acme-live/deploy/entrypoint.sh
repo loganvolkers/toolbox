@@ -3,19 +3,19 @@
 # SIGTERM reaches the server, which exits on its own (the Cloud Run window).
 set -eu
 port="${PORT:-8080}"
-toolbox serve /portal &
+seikika serve /portal &
 pid=$!
 trap 'kill -TERM "$pid"; wait "$pid"' TERM INT
 (
   i=0
   while [ "$i" -lt 90 ]; do
     if curl -sf "http://127.0.0.1:${port}/readyz" >/dev/null; then
-      toolbox-connector-scim --toolbox "http://127.0.0.1:${port}" --listen 0.0.0.0:9100 &
+      seikika-connector-scim --seikika "http://127.0.0.1:${port}" --listen 0.0.0.0:9100 &
       scim=$!
       j=0
       while [ "$j" -lt 30 ]; do
         code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 2 \
-          -H "Authorization: Bearer ${TOOLBOX_SCIM_TOKEN:-}" \
+          -H "Authorization: Bearer ${SEIKIKA_SCIM_TOKEN:-}" \
           "http://127.0.0.1:9100/scim/v2/Users/u-alice" || true)
         if [ -n "$code" ] && [ "$code" != "000" ]; then
           break

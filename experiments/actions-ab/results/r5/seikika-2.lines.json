@@ -1,0 +1,21 @@
+{
+ "linesToMaintain": 1317,
+ "files": {
+  "alpha/.seikika/tests/mark-deprecated.test.yaml": 64,
+  "alpha/.seikika/seikika.yaml": 46,
+  "beta/.seikika/tests/mark-deprecated.test.yaml": 64,
+  "beta/.seikika/seikika.yaml": 46,
+  "gamma/.seikika/tests/mark-deprecated.test.yaml": 64,
+  "gamma/.seikika/seikika.yaml": 46,
+  "org/env.sh": 9,
+  "org/seikika.yaml": 11,
+  ".seikika-state/runs/run_2ft9i1gnilm1.json": 104,
+  ".seikika-state/runs/run_2ft9ivadwdvo.json": 104,
+  ".seikika-state/runs/run_2ft9jr1zknz0.json": 104,
+  ".seikika-state/served/org/runs/run_2ft9dukkmzph.json": 217,
+  ".seikika-state/served/org/runs/run_2ft9e1ruumyp.json": 217,
+  ".seikika-state/served/org/runs/run_2ft9e8udqvey.json": 217,
+  ".seikika-state/served/org/runs/spent-tokens": 3,
+  ".seikika-state/served/org/signing-key": 1
+ }
+}

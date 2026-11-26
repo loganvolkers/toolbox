@@ -289,7 +289,7 @@
       }
     }
   },
-  "format": "toolbox-report/v1",
+  "format": "seikika-report/v1",
   "portal": "openfga",
   "results": {
     "action-deps": {

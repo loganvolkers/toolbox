@@ -1,5 +1,5 @@
 # Rust crates: maintainer SDLC (docs/design/maintainer-sdlc.md).
-# Included by portal/toolbox.yaml; see portal/README.md for the layout.
+# Included by portal/seikika.yaml; see portal/README.md for the layout.
 
 kinds:
   - name: Crate
@@ -144,25 +144,25 @@ scorecards:
     description: >-
       Each Rust crate: documented, tested with assertions and enough tests for
       its size, passing, clippy-clean, and kept small and simple (D65,
-      docs/design/toolbox-for-toolbox.md).
+      docs/design/seikika-for-seikika.md).
     rationale: >-
-      Crates are the code Toolbox ships, and a person or an agent can only
+      Crates are the code Seikika ships, and a person or an agent can only
       change one safely if it says what it is, has tests that can fail, passes
       them, and is made of functions small enough to read. Bronze is what
       makes a change checkable at all; silver and gold tighten documentation,
       size and complexity in steps, with the numbers in the manifest so
       raising them is a reviewed change.
     links:
-    - title: Toolbox for Toolbox design
-      url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/toolbox-for-toolbox.md
+    - title: Seikika for Seikika design
+      url: https://github.com/seikika/seikika/blob/main/docs/design/seikika-for-seikika.md
     - title: Thresholds and levels
-      url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/thresholds.md
-    - title: 'Decision: Toolbox for Toolbox'
-      url: https://github.com/loganvolkers/toolbox/blob/main/docs/decisions/D01M7VTP0HH0000000000000000.md
+      url: https://github.com/seikika/seikika/blob/main/docs/design/thresholds.md
+    - title: 'Decision: Seikika for Seikika'
+      url: https://github.com/seikika/seikika/blob/main/docs/decisions/D01M7VTP0HH0000000000000000.md
     owner: group:maintainers
     track: maintainer
     levels: [bronze, silver, gold]
-    appliesTo: entity.codeLines >= 50 # placeholder crates (toolbox-durable, toolbox-exec) are skipped
+    appliesTo: entity.codeLines >= 50 # placeholder crates (seikika-durable, seikika-exec) are skipped
     rules:
     - name: crate-docs
       level: bronze
@@ -207,7 +207,7 @@ scorecards:
         untested or nearly so. It is a floor, not a coverage target.
       links:
       - title: Thresholds and levels
-        url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/thresholds.md
+        url: https://github.com/seikika/seikika/blob/main/docs/design/thresholds.md
     - name: tests-pass
       level: bronze
       dataFrom: runner
@@ -224,8 +224,8 @@ scorecards:
         Run `cargo test -p <crate>` and fix the failures in the evidence. Remove
         `#[ignore]` from ignored tests, and the always-false `#[cfg(...)]` from
         listed tests, and make them pass: a test that doesn't run checks
-        nothing. Tests that need OpenFGA run with TOOLBOX_REQUIRE_OPENFGA set,
-        so install it (TOOLBOX_OPENFGA_BIN) rather than letting them skip.
+        nothing. Tests that need OpenFGA run with SEIKIKA_REQUIRE_OPENFGA set,
+        so install it (SEIKIKA_OPENFGA_BIN) rather than letting them skip.
       rationale: >-
         A failing, ignored or compiled-out test checks nothing, and an ignored
         one hides its failure from everyone; an authorization test that quietly
@@ -361,11 +361,11 @@ scorecards:
       change must not gate the ratchet.
     links:
     - title: D79 judgement is pushed
-      url: https://github.com/loganvolkers/toolbox/blob/main/docs/decisions/D01M7WHQA9G0000000000000000.md
+      url: https://github.com/seikika/seikika/blob/main/docs/decisions/D01M7WHQA9G0000000000000000.md
     - title: Independent reviews decision
-      url: https://github.com/loganvolkers/toolbox/blob/main/docs/decisions/D01M831P5QWJQ4A2FT85N5MXJQF.md
+      url: https://github.com/seikika/seikika/blob/main/docs/decisions/D01M831P5QWJQ4A2FT85N5MXJQF.md
     - title: Meta-standards review
-      url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/meta-standards-review.md
+      url: https://github.com/seikika/seikika/blob/main/docs/design/meta-standards-review.md
     owner: group:maintainers
     track: maintainer
     levels: [bronze, silver, gold]
@@ -392,9 +392,9 @@ scorecards:
       evidence: |-
         [entity.reviewState == 'stale' ? 'the crate\'s sources changed since it was assessed' : 'not assessed against crate-design']
       fix: >-
-        Have an agent review the crate's current sources: `toolbox assess brief
+        Have an agent review the crate's current sources: `seikika assess brief
         crate:<name> --portal portal` names the assessment file to write, and
-        `toolbox assess check portal` checks it.
+        `seikika assess check portal` checks it.
       rationale: >-
         A review's verdict holds for the sources it read; once src/, tests/ or
         Cargo.toml change it may no longer be true, so only a review of the
@@ -423,7 +423,7 @@ scorecards:
         assessment']
       fix: >-
         Resolve what the assessor was unsure of (cite the source the verdict
-        needs, in portal/assessments/), then re-assess with `toolbox assess
+        needs, in portal/assessments/), then re-assess with `seikika assess
         brief crate:<name> --portal portal`. An open question in
         docs/questions.md doesn't pass this rule by itself.
       rationale: >-
@@ -440,7 +440,7 @@ scorecards:
         entity.reviewIndependent]
       fix: >-
         Have another agent or person review the crate-design assessment:
-        `toolbox assess brief assessment:crate-design/crate:<name> --portal
+        `seikika assess brief assessment:crate-design/crate:<name> --portal
         portal`, with reasons that cite the assessment file or the sources it
         cites; act on what that review fails.
       rationale: >-
@@ -450,14 +450,14 @@ scorecards:
         agent's opinion.
       links:
       - title: Independent reviews decision
-        url: https://github.com/loganvolkers/toolbox/blob/main/docs/decisions/D01M831P5QWJQ4A2FT85N5MXJQF.md
+        url: https://github.com/seikika/seikika/blob/main/docs/decisions/D01M831P5QWJQ4A2FT85N5MXJQF.md
     facets: {summary: public, details: public}
 
 rubrics:
   - name: crate-design
     kind: Crate
     description: >-
-      Is this crate well designed for its place in Toolbox? Read its crate
+      Is this crate well designed for its place in Seikika? Read its crate
       docs, public API and tests, and docs/v1-spec.md §4.
     criteria:
     - name: one-responsibility
@@ -477,7 +477,7 @@ rubrics:
     - name: replaceable-defaults
       question: >-
         If it wraps a default (cel-rust, OpenFGA, DBOS, Postgres, React), could
-        that default be swapped behind a Toolbox-owned contract (charter goal
+        that default be swapped behind a Seikika-owned contract (charter goal
         3)?
       guidance: >-
         Pass when it wraps no third-party default. Fail when a public signature

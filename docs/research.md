@@ -1,4 +1,4 @@
-# Toolbox — Landscape Research & Validation
+# Seikika — Landscape Research & Validation
 
 *Research date: 2026-11-18. Primary sources were read where the network allowed (Backstage docs from the
 `backstage/backstage` repo, Port's Terraform provider schemas, Port Ocean and MCP READMEs, competitor
@@ -95,7 +95,7 @@ new backend system is now the default, and legacy backend support was removed in
   2020 value (a head start on UI) has evaporated. This bears directly on our thesis: **agents should
   generate the portal, and the framework should make that safe and upgradable.**
 
-### Lessons for Toolbox
+### Lessons for Seikika
 | Keep | Fix |
 |---|---|
 | `catalog-info.yaml` envelope and entity refs (a de facto standard; import it unchanged) | Allow **multiple sources per entity** (fragments + precedence), not one provider per entity |
@@ -165,8 +165,8 @@ new backend system is now the default, and legacy backend support was removed in
   be managed in the UI, CLI or API, and can import from Backstage or Compass.
 - **Lesson:**
   - SQL is the most agent-familiar language for *aggregate, cross-entity* checks, e.g. "% of services
-    on the latest base image". Toolbox should support SQL rules after CEL.
-  - Metrics and DORA analytics are DX's territory. Toolbox should *ingest* such facts, not compete on
+    on the latest base image". Seikika should support SQL rules after CEL.
+  - Metrics and DORA analytics are DX's territory. Seikika should *ingest* such facts, not compete on
     analytics.
 
 ### OpsLevel
@@ -190,7 +190,7 @@ new backend system is now the default, and legacy backend support was removed in
 - **Lesson:**
   - `skip` (not applicable) as a first-class outcome, and a remark explaining *why*, are both important
     for agent explanations.
-  - Telemetry-derived dependencies beat hand-maintained ones. Toolbox connectors should emit relations
+  - Telemetry-derived dependencies beat hand-maintained ones. Seikika connectors should emit relations
     with provenance and confidence.
 
 ### Others
@@ -203,7 +203,7 @@ new backend system is now the default, and legacy backend support was removed in
   - Harness IDP (Backstage-based).
   All of them inherit Backstage's model and its upgrade economics, managed for you.
 - **Platform orchestrators** (not portals, but adjacent): Humanitec, Kratix (Promises on Kubernetes),
-  OpenChoreo (WSO2, CNCF Sandbox, Go, Backstage UI, MCP and agents), Radius, KusionStack, Score. Toolbox
+  OpenChoreo (WSO2, CNCF Sandbox, Go, Backstage UI, MCP and agents), Radius, KusionStack, Score. Seikika
   should *integrate* with these as action executors and connectors, not replace them.
 
 ---
@@ -227,7 +227,7 @@ new backend system is now the default, and legacy backend support was removed in
 
 ## 5. Open-source alternatives (searched GitHub topics and search, 2026-11)
 
-| Project | Stack / license | What it covers | Gap vs. Toolbox thesis |
+| Project | Stack / license | What it covers | Gap vs. Seikika thesis |
 |---|---|---|---|
 | **Frontkeep** (`glemmestad/frontkeep`) | Rust single binary, SQLite/Postgres, Cedar, MCP/CLI/REST/GraphQL/UI; open core | "Agent control plane": manifest-driven *provisionable-service* catalog, project registry gate, LLM gateway + budgets, cost, knowledge (standards/guidance/recipes) | Closest in spirit (Rust, agents-first, Cedar). Focused on provisioning, LLM spend and governance, not an ownership/dependency catalog, scorecards or a config-as-code portal. Tiny community (single digits of stars). |
 | **OpsCat** (`sumant1122/opscat`) | Go single binary, SQLite, Apache-2.0 | Auto-discovered catalog from code scan, dependency graph, fixed health scorecards, MCP server | Zero-config discovery rather than config as code; fixed scorecards; early. |
@@ -249,11 +249,11 @@ is not yet an incumbent in it.
 
 ## 6. Prior art for "configuration as code" and polyglot extension
 
-| Tool | Pattern | Take for Toolbox |
+| Tool | Pattern | Take for Seikika |
 |---|---|---|
-| **Terraform** | HCL config → `plan` (diff vs. state) → `apply`. Providers are separate binaries speaking gRPC via `hashicorp/go-plugin`, pinned in `.terraform.lock.hcl`. Modules come from registries or git. | `toolbox plan` previewing the *effect* of config changes on live data; provider-style connectors pinned by digest in `toolbox.lock`; reusable modules. |
+| **Terraform** | HCL config → `plan` (diff vs. state) → `apply`. Providers are separate binaries speaking gRPC via `hashicorp/go-plugin`, pinned in `.terraform.lock.hcl`. Modules come from registries or git. | `seikika plan` previewing the *effect* of config changes on live data; provider-style connectors pinned by digest in `seikika.lock`; reusable modules. |
 | **Pulumi** | Programs in TS/Python/Go/C#/Java/YAML run by per-language **language hosts**. Thin SDKs send `RegisterResource` gRPC calls to the Go engine's **resource monitor**; the engine diffs against state (`preview`/`up`). Providers and multi-language components are plugins behind a language-neutral protocol; per-language SDKs are **generated from one package schema**. | **Chosen config model.** Language hosts + config monitor → manifest IR; schema-generated SDKs; portal packages shareable across languages; YAML for zero-runtime setups. |
-| **Tilt** | Tiltfile in **Starlark**, evaluated into objects registered in an embedded **Kubernetes-style API server**. Query with `tilt get` / `tilt describe` / `tilt explain`. `tilt up` live-reloads. Extensions via `load('ext://…')` from git repos. | Starlark entrypoint; evaluated config becomes typed objects inspectable through the same API; `toolbox dev` live reload; `load()` of shared modules from git. |
+| **Tilt** | Tiltfile in **Starlark**, evaluated into objects registered in an embedded **Kubernetes-style API server**. Query with `tilt get` / `tilt describe` / `tilt explain`. `tilt up` live-reloads. Extensions via `load('ext://…')` from git repos. | Starlark entrypoint; evaluated config becomes typed objects inspectable through the same API; `seikika dev` live reload; `load()` of shared modules from git. |
 | **starlark-rust** (Meta) | Deterministic, hermetic Python dialect used by Buck2; Rust-native; LSP and DAP; optional types; **no API-stability promise**. | Considered as the single config DSL, then superseded by the Pulumi model (real languages). Could return later as another "language" emitting the same manifest. |
 | **Pkl / CUE / KCL / Nickel** | Typed configuration languages. KCL and Nickel are Rust-implemented; Pkl's Rust support is community IPC wrappers; CUE is Go. | Strong typing is attractive, but agents know Python syntax far better than any of these. Starlark + JSON Schema validation gives most of the benefit. Revisit KCL/Nickel if typing pain appears. |
 | **hashicorp/go-plugin** | Subprocess + gRPC, crash isolation, protocol versioning, local-only. | The model for out-of-process connectors (we use JSON-lines over stdio; see plan). |
@@ -274,14 +274,14 @@ is not yet an incumbent in it.
 |---|---|---|
 | **Agents are the primary audience** | Every vendor added MCP in 2025–26; Port's Context Lake and Cortex's Context Graph target coding agents; Backstage added `AiResource` and MCP actions. The current offerings are thin (CRUD tools, per-action permission checks, static tokens). | Agents still need humans for approvals and trust. Keep a solid read-mostly UI. |
 | **Config only in code, never in DB** | Cortex locks the UI under GitOps; Terraform/Pulumi providers exist for Port, Cortex and Datadog because customers want code. Backstage's code-centric design is its most loved trait, and its *scaffold ownership* is its most hated. | Non-engineers lose UI editing. **Amend: "Edit" in UI/MCP opens a pull request** against the portal repo or the entity's repo. Agents prefer PRs anyway. |
-| **Toolbox as a dependency** | Upgrades are Backstage's #1 pain. Backline's pitch ("just update go.mod") and Frontkeep's single binary target the same thing. | We need a stable, versioned config IR and codemods (`toolbox upgrade`). |
+| **Seikika as a dependency** | Upgrades are Backstage's #1 pain. Backline's pitch ("just update go.mod") and Frontkeep's single binary target the same thing. | We need a stable, versioned config IR and codemods (`seikika upgrade`). |
 | **Rust core** | Scale (Backstage's catalog loop, stitching and query-planner issues), single-binary ops, a memory-safe sandbox host (wasmtime), and a mature ecosystem (axum, sqlx, tantivy, rmcp, cedar, starlark-rust). New entrants (Frontkeep, Lekton, engrams) chose Rust. | Fewer contributors know Rust than TS. Mitigated because *customers never write Rust*. |
 | **Polyglot extensions** | Platform teams write Go, Python and YAML ("TypeScript tax"). Port's Ocean (Python) and Airbyte prove process-protocol connectors. | WASM tooling maturity varies by language. **Amend: tiered extension model**, with the process protocol as the universal fallback. |
 | **Scale to thousands of services** | Roadie runs tens of thousands of entities on Backstage only after tuning. | Needs explicit SLOs and a synthetic-org benchmark from week 1. |
 | **Four interfaces** | Frontkeep, OpsCat and Lekton all converge on CLI+MCP+REST+UI from one binary. | Generate all four from one definition to avoid drift. |
 
 **Conclusion: proceed.** The differentiator is not "another catalog". It is *a portal that agents can
-author, test, plan and safely operate*: `toolbox plan` shows score and permission deltas before merge,
+author, test, plan and safely operate*: `seikika plan` shows score and permission deltas before merge,
 every capability is an MCP tool with consistent authorization, and upgrades are a version bump.
 
 ---

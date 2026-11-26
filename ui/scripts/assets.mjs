@@ -10,7 +10,7 @@ const manifest = files.sort().map(file => {
   return `    ("/assets/${file}", "${type}", include_str!("assets/${file}")),`;
 });
 const html = await readFile(new URL("index.html", dist), "utf8");
-if (!html.includes('<!-- toolbox:entity -->') || !/<script type="module" src="\/assets\//.test(html)) {
+if (!html.includes('<!-- seikika:entity -->') || !/<script type="module" src="\/assets\//.test(html)) {
   throw new Error("The server requires an entity placeholder and an external Astro client script");
 }
 await writeFile(new URL("assets.rs", dist),

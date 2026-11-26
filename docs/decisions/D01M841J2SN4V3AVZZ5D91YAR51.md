@@ -5,7 +5,7 @@ decided: 2026-11-23T11:10:00Z
 
 # A ratchet check prints its verdict, and the baseline remembers which evidence it has seen
 
-**`toolbox report --baseline` (and `--against`) without `-o` or `--out` is a gate. It now prints
+**`seikika report --baseline` (and `--against`) without `-o` or `--out` is a gate. It now prints
 only the verdict, on stdout, not every scorecard followed by the verdict on stderr. The baseline
 also records a key for each evidence item of each failing rule, in an `evidence` section beside
 `results`. When a rule's evidence grows, the verdict lists only the new items, marked `+`, and
@@ -15,7 +15,7 @@ list.** This closes root-causes C1 ([root-causes.md](../design/root-causes.md)),
 row ([results-spec.md](../design/results-spec.md)).
 
 1. **Why.** The [gate-repair-ab](../../experiments/gate-repair-ab/README.md) benchmark, round 1,
-   timed agents repairing a pull request that the gate rejects. In every Toolbox run the first gate
+   timed agents repairing a pull request that the gate rejects. In every Seikika run the first gate
    output was about 16k characters of report (every scorecard, old findings included), and the
    regressions came after it, on stderr. Every agent then reasoned about whether a finding already
    on `main` was new, because the grown list mixed old and new items without marking them. Two

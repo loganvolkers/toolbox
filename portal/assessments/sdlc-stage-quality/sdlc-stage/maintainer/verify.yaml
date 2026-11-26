@@ -1,4 +1,4 @@
-apiVersion: toolbox.dev/assessment/v1
+apiVersion: seikika.com/assessment/v1
 entity: sdlc-stage:maintainer/verify
 rubric: sdlc-stage-quality
 subjectHash: dd86b7032794
@@ -20,7 +20,7 @@ verdicts:
       API and a local checkout (scripts/m4-acceptance.sh:2-6). M5 needs no
       network or Postgres (scripts/m5-acceptance.sh:3-4). The scripts say what
       is missing: no initdb at m2-acceptance.sh:11, and
-      `${TOOLBOX_OPENFGA_BIN:?...}` at m3-acceptance.sh:14. The setup
+      `${SEIKIKA_OPENFGA_BIN:?...}` at m3-acceptance.sh:14. The setup
       (Postgres 16 from PGDG, Playwright with NODE_PATH) is in ci.yml:148-173
       and maintainer-sdlc.md §5 rather than in docs/v1-spec.md, which is the
       only doc the stage lists.
@@ -31,7 +31,7 @@ verdicts:
       release (ci.yml:144-147). Postgres 16 is a PGDG package
       (ci.yml:148-158). Playwright and Chromium come from the lockfile in
       scripts/playwright-ci (ci.yml:167-173). The acceptance job does compile
-      Toolbox again (ci.yml:139), with rust-cache, instead of reusing the rust
+      Seikika again (ci.yml:139), with rust-cache, instead of reusing the rust
       job's binary.
   - criterion: decoupled-from-core
     verdict: pass

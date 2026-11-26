@@ -1,0 +1,20 @@
+[package]
+name = "seikika-model"
+description = "Seikika: manifest types, loading, JSON Schema validation and cross-reference checks (docs/v1-spec.md §4, §5)."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+
+[dependencies]
+jsonschema.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+serde_norway.workspace = true
+sha2.workspace = true
+thiserror.workspace = true
+seikika-expr.workspace = true
+
+[lints]
+workspace = true

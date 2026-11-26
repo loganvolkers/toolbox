@@ -1,0 +1,47 @@
+apiVersion: seikika.com/assessment/v1
+entity: assessment:rule-quality/rule:seikika/vs-backstage-capabilities/catalog-browse
+rubric: assessment-quality
+subjectHash: ab9cae7667cf
+assessor: {kind: agent, name: cursor-reviewer-15, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: supported
+    verdict: pass
+    reason: >-
+      The citations in
+      portal/assessments/rule-quality/rule/seikika/vs-backstage-capabilities/catalog-browse.yaml
+      hold:
+      - RESEARCH.md:112 is "catalog browse and filter".
+      - ui/src/main.tsx:166 is `Catalog` with its filter form, and :382
+        routes to it.
+      - experiments/backstage-compare/facts.yaml:70-72 is the fact.
+      - snapshot.py:85 overlays it.
+      - README.md:53 and ADJUDICATION.md:114 are the bar.
+      The equivalence-gate paragraph is README.md:55-57, not 54-56, but the
+      cited range covers the claim. measure.py:287 does record
+      `ownersDigest`, which the suggestion relies on.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      hard-to-game fails correctly: one line in
+      experiments/backstage-compare/facts.yaml:71 passes, even though
+      measure.py already exercises a filtered list on both arms. The fix names
+      the UI pages and `seikika query`, and the value is true. So
+      fix-leads-to-pass, measures-intent and threshold-justified are right.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      Each verdict rests on code and a pre-registered row that a second
+      assessor can read. The hard-to-game route is a one-line edit in
+      experiments/backstage-compare/facts.yaml.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      Deriving `capCatalogBrowse` from the `ownersDigest` gate
+      (measure.py:287, README.md:55-57) and dropping it from
+      experiments/backstage-compare/facts.yaml would make the fact measured.
+      That changes hard-to-game.
+summary: >-
+  A sound assessment with accurate citations, apart from a README range
+  one line early. Its one fail is real, and the suggestion reuses a
+  measurement the harness already takes.

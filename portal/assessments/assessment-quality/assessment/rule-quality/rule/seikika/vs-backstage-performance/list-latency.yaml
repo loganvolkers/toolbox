@@ -1,0 +1,58 @@
+apiVersion: seikika.com/assessment/v1
+entity: assessment:rule-quality/rule:seikika/vs-backstage-performance/list-latency
+rubric: assessment-quality
+subjectHash: 29bf24be4a56
+assessor: {kind: agent, name: cursor-reviewer-16, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: supported
+    verdict: fail
+    reason: >-
+      Most citations in
+      portal/assessments/rule-quality/rule/seikika/vs-backstage-performance/list-latency.yaml
+      land. The rationale is backstage-comparison.yaml:299-302, the filter
+      measure.py:168-175 and the gate measure.py:270-273.
+      ADJUDICATION.md:155-162 covers the equality-only index, RESULTS.md:40-47
+      the empty Backstage lists, and routes.rs:206-215 `list_candidates` and
+      the index comment. RESULTS.md:138-144 is 916f596, RESULTS.md:129 round
+      1's 118 ms, README.md:39 the bar and plan.md:920 the 200 ms p99. One
+      claim does not hold. hard-to-game ends "Only 200s count toward the
+      measured reads". That is true of rps only (measure.py:128-130). The p95
+      is taken over all responses (measure.py:124-127).
+    suggestion: >-
+      Drop the "only 200s" sentence from hard-to-game, or limit it to
+      listRps.
+  - criterion: complete
+    verdict: fail
+    reason: >-
+      hard-to-game should not pass outright. The gate (measure.py:270-273)
+      runs once, before load. During the timed oha run, fast errors (401, 429,
+      5xx) enter the percentile (measure.py:124-127), and snapshot.py:43
+      copies p95ms with no `ok` check. A server that sheds load with fast
+      errors lowers listP95Ms and passes. measures-intent, fix-leads-to-pass
+      and the unsure threshold verdict are right. The threshold is also
+      supported by RESULTS.md:134, which calls round 1's 118 ms p95 "still a
+      defect" although it passed the 500 ms bar.
+    suggestion: >-
+      Mark hard-to-game unsure or fail, citing measure.py:124-127 and
+      snapshot.py:43. Suggest refusing a read whose ok is below 1, or a p95
+      over 200 responses only.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      The verdicts rest on harness code, the plan's SLO and the round 1
+      tables. A second assessor reading plan.md:920 against README.md:39 would
+      also find no source that derives 500 ms. The p95 error gap is a fact of
+      measure.py.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      The one unsure, threshold-justified, offers two routes. Stating why
+      lists get 500 ms against plan.md:920 would supply the missing source. So
+      would tightening the bar to the plan's figure in
+      docs/design/thresholds.md. Either turns it into a pass.
+summary: >-
+  The measures-intent pass and the unsure threshold are well argued, with
+  the citations landing. The hard-to-game pass rests on "only 200s count",
+  which holds for throughput but not for the p95 this rule reads. Fast
+  errors under load would pass the latency bar.

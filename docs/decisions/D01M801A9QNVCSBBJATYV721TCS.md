@@ -5,7 +5,7 @@ decided: 2026-11-21T22:30:00Z
 
 # Finding tools: a deterministic inventory, checked by an agent
 
-**`toolbox tools find` lists the tools a repository already uses, from config files, CI and hook
+**`seikika tools find` lists the tools a repository already uses, from config files, CI and hook
 commands, package manifests and installer files, matched against a catalog. For each it gives its
 evidence, whether it is in the box, and the slot and kit that would carry it. It also lists the
 scripts CI runs. It decides nothing. The `find-tools` agent skill checks each candidate (in use,
@@ -21,5 +21,5 @@ version, SARIF command, same findings alone) before anything goes in the box.**
 **Status:** ✅
 
 **Where:** [docs/design/finding-tools.md](../design/finding-tools.md),
-[crates/toolbox-cli/src/find.rs](../../crates/toolbox-cli/src/find.rs),
-[plugins/toolbox-operator/skills/find-tools](../../plugins/toolbox-operator/skills/find-tools/SKILL.md)
+[crates/seikika-cli/src/find.rs](../../crates/seikika-cli/src/find.rs),
+[plugins/seikika-operator/skills/find-tools](../../plugins/seikika-operator/skills/find-tools/SKILL.md)

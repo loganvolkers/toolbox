@@ -1,4 +1,4 @@
-apiVersion: toolbox.dev/assessment/v1
+apiVersion: seikika.com/assessment/v1
 entity: assessment:sdlc-stage-quality/sdlc-stage:operator/monitor
 rubric: assessment-quality
 subjectHash: d592f134cc90
@@ -18,7 +18,7 @@ verdicts:
       does not list. The stage's checks are only m4-acceptance.sh
       (portal/sdlc/stages/operator.yaml:116). pin.env does pin otelcol-contrib
       by SHA-256, and the Grafana gap is the stage's own gaps text (:119-122).
-      score.sh defaults TOOLBOX to target/debug/toolbox (score.sh:13), not a
+      score.sh defaults SEIKIKA to target/debug/seikika (score.sh:13), not a
       released binary.
     suggestion: >-
       Attribute /metrics, snapshot lag and trace_id to score.sh, and say

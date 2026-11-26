@@ -12,9 +12,9 @@ in the appendix isn't needed yet.
 |---|---|---|
 | Maintainer edit → test | Small, shallow Cargo workspace (≈10 crates, [v1-spec.md](../v1-spec.md) §4); heavy dependencies in leaf crates; `cargo nextest`; Bacon in watch mode | Incremental rebuild of a leaf edit ≈ 1.2 s ([technology-critique.md](../technology-critique.md) §7.3) |
 | Maintainer correctness | Differential test against the reference model on every PR | Reference portal check < 5 s |
-| Operator edit → result | `toolbox dev`: watch → re-run the TS builder if present (≈0.3 s) → validate → full recompute over fixtures (milliseconds at fixture scale) → re-run `toolbox test` → local API/MCP/UI | ≤ 2 s from save to updated results |
+| Operator edit → result | `seikika dev`: watch → re-run the TS builder if present (≈0.3 s) → validate → full recompute over fixtures (milliseconds at fixture scale) → re-run `seikika test` → local API/MCP/UI | ≤ 2 s from save to updated results |
 | Operator type feedback | `tsc` (TypeScript 7) on the builder program | 0.38 s on the reference portal ([experiments/typescript-builder](../../experiments/typescript-builder/README.md)) |
-| Operator plan | `toolbox plan --local` (two recomputes + diff) | ≤ 5 s at fixture scale |
+| Operator plan | `seikika plan --local` (two recomputes + diff) | ≤ 5 s at fixture scale |
 | CI | Same commands; sccache for Rust; cache keyed on the canonical manifest | — |
 
 Rules:
@@ -50,10 +50,10 @@ re-architecture later.*
 | **Rust 2026 "Fast Builds" roadmap** (rust-project-goals) | Planned work: alternative debug backends (Cranelift), the **parallel frontend**, **Relink-Don't-Rebuild**, the Wild linker, end-to-end incremental compilation, shared check/build artifacts, crate slicing. "No one thing"; "end-to-end, not just the compiler" | Structure the workspace to benefit from these as they land. Don't wait for them |
 | **Rust 1.90 (Sept 2025)** | **LLD is the default linker** on x86_64 Linux, with "significant" link-time wins | Free win; mold/wild optional for further gains |
 | **Parallel frontend** | Being **enabled by default on nightly** (Nov 2026), ahead of stabilisation | An opt-in nightly "fast" profile for maintainers; stable stays supported |
-| **Feldera** (DBSP's authors) | They compiled SQL → **Rust code → rustc**. An 8.5k-line SQL program became ~100k lines of Rust: ~102 s to generate, **~1,618 s to compile**. Fixes: dynamic dispatch (no monomorphization), splitting into ~1,000 crates, Merkle-hash naming to **reuse compiled crates**. Result: **30 min → 2 min**, after which their own compiler became the bottleneck and needed memoisation | **Toolbox must never compile Rust per portal.** Build circuits at runtime from precompiled, dynamically-typed operators. Content-addressing and memoisation are the right reuse tools |
+| **Feldera** (DBSP's authors) | They compiled SQL → **Rust code → rustc**. An 8.5k-line SQL program became ~100k lines of Rust: ~102 s to generate, **~1,618 s to compile**. Fixes: dynamic dispatch (no monomorphization), splitting into ~1,000 crates, Merkle-hash naming to **reuse compiled crates**. Result: **30 min → 2 min**, after which their own compiler became the bottleneck and needed memoisation | **Seikika must never compile Rust per portal.** Build circuits at runtime from precompiled, dynamically-typed operators. Content-addressing and memoisation are the right reuse tools |
 | **cargo-nextest** | Process-per-test parallelism; sliced and hashed **partitioning** for CI sharding; **archives** (build once, run sharded); filtersets (`-E`). Speedups vary by suite (vendor claims 2–3×; measure) | The default maintainer test runner. CI builds once and shards |
 | **sccache** | Incrementally compiled crates **can't be cached**. CI sets `CARGO_INCREMENTAL=0` with `RUSTC_WRAPPER=sccache` | Local: incremental on. CI: sccache, incremental off |
-| **cargo-watch** | **Archived Jan 2025**; its maintainer recommends **Bacon** or **Watchexec** | Bacon for maintainers; the Watchexec library for `toolbox dev`'s watcher |
+| **cargo-watch** | **Archived Jan 2025**; its maintainer recommends **Bacon** or **Watchexec** | Bacon for maintainers; the Watchexec library for `seikika dev`'s watcher |
 | **cargo-hakari** | A generated workspace-hack crate unifies dependency features so shared dependencies compile once, not once per feature set | Use from day one; CI checks it is current |
 | **TypeScript 7** (Go-native `tsc`, GA July 2026) | Full type checks typically **8–12× faster**; watch mode reported for 7.1; the editor language service is still JS | Operators' TS programs are type-checked with the native compiler, *off* the evaluation hot path |
 | **Javy** (JS → WASM) | **Dynamic linking**: 1–16 KB modules vs ≥ 869 KB static, with a shared QuickJS provider | TS WASM functions use dynamic mode; the provider is compiled once |
@@ -65,34 +65,34 @@ re-architecture later.*
 
 | # | Naive design | Why it fails | Decision |
 |---|---|---|---|
-| T1 | **Compile each portal's manifest to Rust** (circuits, rules, mappings as generated code) | Feldera's experience: tens of minutes per change; generated-code compile time dominates everything | **No per-portal native code generation, ever.** Toolbox ships a fixed, precompiled operator library over **one dynamic row type**. `toolbox-ivm` builds the DBSP circuit *at runtime* from the manifest. CEL runs as compiled expression programs (interpreted), and WASM covers custom logic. DBSP's generics are instantiated once, inside `toolbox-ivm` |
-| T2 | The operator loop is `toolbox build` → image → deploy → look | Minutes per change | **`toolbox dev` daemon** with hot reload: program → manifest → circuit → tests → UI, all in process, no container (§4) |
+| T1 | **Compile each portal's manifest to Rust** (circuits, rules, mappings as generated code) | Feldera's experience: tens of minutes per change; generated-code compile time dominates everything | **No per-portal native code generation, ever.** Seikika ships a fixed, precompiled operator library over **one dynamic row type**. `seikika-ivm` builds the DBSP circuit *at runtime* from the manifest. CEL runs as compiled expression programs (interpreted), and WASM covers custom logic. DBSP's generics are instantiated once, inside `seikika-ivm` |
+| T2 | The operator loop is `seikika build` → image → deploy → look | Minutes per change | **`seikika dev` daemon** with hot reload: program → manifest → circuit → tests → UI, all in process, no container (§4) |
 | T3 | Re-run and type-check the whole TS/Python program on every save, spawning a new runtime each time | Node or Python cold start plus a full type check, per keystroke | A **warm, persistent language host**. **Transpile-only evaluation** (no type check on the hot path). **Native `tsc` 7 type checking in the background** and in the editor. **Salsa-memoised manifest compilation:** only changed definitions are re-validated and re-type-checked |
 | T4 | Tests hit Postgres serially, or start a container per test | Seconds of overhead per test; no parallelism | **The in-memory store (`MemStore`) by default** for operator and most maintainer tests. Postgres only for store-conformance and isolation tests, with a **database per test** (cloned from a migrated template) in parallel |
 | T5 | Run every test on every change | O(suite) feedback | **Selective tests from the dependency graph** (§3.4, §4.3), with **content-addressed test-result caching**. Full suites run in CI and the merge queue |
 | T6 | Simulation and property testing only as long CI campaigns | Bugs found hours later | **Tiered seeds:** tens of seeds on affected modules in the loop, ~1k per PR, continuous millions on `main`. Seeds run in parallel processes |
-| T7 | The embedded OpenFGA Go archive rebuilds on every Rust build | A Go toolchain build plus a large static link in every loop | **Content-hashed prebuilt `toolbox-fga` archives.** `build.rs` reuses the archive unless Go sources or `go.sum` change. The crate is isolated so only crates that need it link it |
+| T7 | The embedded OpenFGA Go archive rebuilds on every Rust build | A Go toolchain build plus a large static link in every loop | **Content-hashed prebuilt `seikika-fga` archives.** `build.rs` reuses the archive unless Go sources or `go.sum` change. The crate is isolated so only crates that need it link it |
 | T8 | WASM functions recompiled and re-instantiated from scratch | Slow reloads; large JS modules | Javy dynamic linking; a wasmtime precompile cache; recompile only the changed function |
 | T9 | A few large crates, generic-heavy APIs, proc macros everywhere | Every edit recompiles a lot; monomorphisation bloat | A **wide, shallow workspace**; interface crates separate from implementations; `dyn` at boundaries; heavy dependencies in leaf crates; hakari |
-| T10 | Remote plan inside the inner loop, or a remote plan that recomputes all production state | Network and full-scale recompute per check | `toolbox plan --local` (fixtures/synthetic) in the loop; `--remote` before PRs. Remote plans build **only the affected sub-circuits** of the candidate epoch (§5) |
+| T10 | Remote plan inside the inner loop, or a remote plan that recomputes all production state | Network and full-scale recompute per check | `seikika plan --local` (fixtures/synthetic) in the loop; `--remote` before PRs. Remote plans build **only the affected sub-circuits** of the candidate epoch (§5) |
 
-### 3. Maintainers: building Toolbox itself
+### 3. Maintainers: building Seikika itself
 
 #### 3.1 Workspace shape (decided before the first crate)
-- **Wide and shallow.** Most crates depend only on `toolbox-model` and small **interface crates**
+- **Wide and shallow.** Most crates depend only on `seikika-model` and small **interface crates**
   (`*-api`: traits and types).
   - Implementations depend on interfaces, never on each other.
   - Changing an implementation recompiles only that crate and the binary link, until
     Relink-Don't-Rebuild lands.
 - **Heavy dependencies isolated in leaf crates:**
-  - `dbsp` in `toolbox-ivm`
-  - `wasmtime` in `toolbox-wasm`
-  - `tantivy` in `toolbox-search`
-  - the Go archive in `toolbox-fga`
+  - `dbsp` in `seikika-ivm`
+  - `wasmtime` in `seikika-wasm`
+  - `tantivy` in `seikika-search`
+  - the Go archive in `seikika-fga`
   - `rmcp`, `sqlx`
 
   Tests for other crates use in-memory fakes of those interfaces and don't link them.
-- **Reference models** (`toolbox-ref`) depend only on `toolbox-model`, so they build in seconds and
+- **Reference models** (`seikika-ref`) depend only on `seikika-model`, so they build in seconds and
   property tests start immediately.
 - **Generics policy:** no generic types crossing crate boundaries in hot APIs; `dyn` traits at
   boundaries. Proc-macro-heavy dependencies (e.g. derive-heavy serialisation in many crates) are
@@ -136,12 +136,12 @@ codegen-units = 16
 
 | Need | Tool |
 |---|---|
-| Continuous check and test on save | **Bacon** (`bacon test -- -E 'rdeps(toolbox-score)'`). cargo-watch is archived |
+| Continuous check and test on save | **Bacon** (`bacon test -- -E 'rdeps(seikika-score)'`). cargo-watch is archived |
 | Test runner | **cargo-nextest**: process-per-test, retries for known-flaky integration tests (tracked, never hidden), JUnit output |
 | Snapshots | **insta** (`cargo insta review`) |
 | IDE | rust-analyzer; check-on-save limited to the current package in large workspaces |
 | Property tests | proptest/bolero with **small case counts locally** (`PROPTEST_CASES=64`), deep runs in CI |
-| Simulation | `toolbox-sim --component <crate> --seeds 50` locally; replay any seed; failing seeds become regression tests |
+| Simulation | `seikika-sim --component <crate> --seeds 50` locally; replay any seed; failing seeds become regression tests |
 | Build profiling | `cargo build --timings`; tracked in CI |
 
 #### 3.4 Selective testing for maintainers
@@ -165,7 +165,7 @@ codegen-units = 16
 
 ### 4. Operators: building portals
 
-#### 4.1 `toolbox dev`: an incremental pipeline, not a rebuild
+#### 4.1 `seikika dev`: an incremental pipeline, not a rebuild
 
 ```
  file save (watchexec lib)
@@ -176,12 +176,12 @@ codegen-units = 16
    → background: native tsc 7 type check, WASM function recompiles (Javy dynamic + precompile cache)
 ```
 
-- **Data:** fixtures or a `toolbox-synth` organisation (default 2k entities, configurable) in
+- **Data:** fixtures or a `seikika-synth` organisation (default 2k entities, configurable) in
   `MemStore`. No Postgres or containers are needed. `--store sqlite` is available for persistence
   across restarts.
-- **Real sources (optional):** `toolbox dev --connector github --readonly` records to cassettes, so
+- **Real sources (optional):** `seikika dev --connector github --readonly` records to cassettes, so
   the next run replays offline.
-- **One daemon, many clients:** CLI watch output, the UI, and the authoring MCP server (`toolbox mcp
+- **One daemon, many clients:** CLI watch output, the UI, and the authoring MCP server (`seikika mcp
   --dev` attaches to the running daemon) all read the same incremental state. An agent's `validate` or
   `test` call returns in milliseconds when nothing relevant changed.
 
@@ -200,7 +200,7 @@ codegen-units = 16
 - **The dependency graph already exists:** the meta catalog's edges
   ([meta-catalog.md](./meta-catalog.md)) such as `Rule.reads`, `View.reads`, `Action.scopedTo`,
   `AuthzModule.governs` and fixture references.
-- `toolbox test --affected` selects every test whose **declared or observed inputs** (definitions,
+- `seikika test --affected` selects every test whose **declared or observed inputs** (definitions,
   fixtures, authz modules) changed. Observed inputs are recorded on each run, the same idea as
   test-impact analysis.
 - **Parallel by construction:** each test file gets its own `MemStore` and circuit instance, with no
@@ -210,7 +210,7 @@ codegen-units = 16
   `(engine version, manifest-subset hash, fixture hash, test hash)`, a result is reused. This is safe
   because evaluation is deterministic, the same premise as Bazel/Turborepo caching. CI shares the
   cache.
-- **`toolbox test --all`** ignores selection and the cache; CI runs it on merge.
+- **`seikika test --all`** ignores selection and the cache; CI runs it on merge.
 
 #### 4.4 Language and toolchain choices for operator speed
 - **TypeScript:**
@@ -221,7 +221,7 @@ codegen-units = 16
 - **Python:** a warm interpreter; `uv`-managed environments created once and reused.
 - **WASM functions:** Javy dynamic mode for TS (tiny modules, shared provider), native Rust or Go;
   wasmtime precompile cache keyed by module hash + engine config + wasmtime version.
-- **Connectors:** cassette record and replay for development; `toolbox connector test --watch`.
+- **Connectors:** cassette record and replay for development; `seikika connector test --watch`.
 
 ### 5. Making remote `plan` and epochs fast at production scale
 
@@ -239,14 +239,14 @@ codegen-units = 16
 ### 6. Dev-loop SLOs (measured, enforced)
 
 These are performance targets, measured by a benchmark harness that edits a reference portal and the
-Toolbox workspace and times time-to-feedback. They run on every PR, and regressions block release.
+Seikika workspace and times time-to-feedback. They run on every PR, and regressions block release.
 
 | Loop | Target (p50, reference laptop class) |
 |---|---|
 | Maintainer: `cargo check` after editing a leaf crate | ≤ 2 s |
 | Maintainer: affected tests after editing one implementation crate (incremental build + run) | ≤ 15 s |
 | Operator: save a CEL rule → `check` diagnostics | ≤ 300 ms |
-| Operator: save a definition → affected tests green/red in `toolbox dev` (2k-entity fixtures) | ≤ 2 s |
+| Operator: save a definition → affected tests green/red in `seikika dev` (2k-entity fixtures) | ≤ 2 s |
 | Operator: add a WASM transform (TS) → reloaded | ≤ 3 s |
 | Operator: `simulate --quick` on affected modules | ≤ 30 s |
 | Operator: `plan --remote` for a single-rule change at 100k entities | ≤ 60 s |
@@ -266,9 +266,9 @@ Toolbox workspace and times time-to-feedback. They run on every PR, and regressi
    - sub-circuit state reuse
    - warm language host evaluation latency
    - the Salsa manifest pipeline
-   - the prebuilt `toolbox-fga` archive cache
+   - the prebuilt `seikika-fga` archive cache
    - the dev-loop benchmark harness and the §6 SLOs
-3. **Phase 1:** `toolbox dev` daemon (watch, hot reload, attached MCP), `test --affected` with the
+3. **Phase 1:** `seikika dev` daemon (watch, hot reload, attached MCP), `test --affected` with the
    result cache, `check`, `plan --local`, and maintainer `xtask affected` + Bacon/nextest/hakari
    setup.
 4. **Phase 2:** content-addressed sub-circuits for remote plan and epochs.

@@ -1,0 +1,73 @@
+apiVersion: seikika.com/assessment/v1
+entity: rule:seikika/review-crate/assessed
+rubric: rule-quality
+subjectHash: a4044ac2c95e
+assessor: {kind: agent, name: cursor-assessor-05, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: measures-intent
+    verdict: fail
+    reason: >-
+      The rationale says a review holds until "src/, tests/ or Cargo.toml
+      change" (portal/standards/crates.yaml:398-401), and the `hash` field
+      says it covers the crate's src/ and tests/ files (crates.yaml:51-55).
+      But `source_hash` walks only files ending in `.rs`
+      (crates/seikika-connector-workspace/src/rust.rs:364-373, 395-400).
+      Sources compiled into a crate with `include_str!` are not hashed:
+      seikika-store's SQL migrations (crates/seikika-store/src/pg.rs:12-14),
+      crates/seikika-cli/src/report.html and
+      crates/seikika-cli/src/seikika-report.js
+      (crates/seikika-cli/src/report.rs:1401-1402),
+      crates/seikika-cli/src/tool-catalog.yaml
+      (crates/seikika-cli/src/find.rs:19), and
+      crates/seikika-model/tests/cases.json. A schema migration leaves a
+      seikika-store review `fresh`.
+    suggestion: >-
+      Hash every file under src/ and tests/, not only `.rs`, plus any path a
+      crate pulls in with `include_str!`/`include_bytes!` (for seikika-store,
+      migrations/). Or narrow the `hash` description and this rationale to
+      "Rust sources and Cargo.toml" so the claim matches the check.
+  - criterion: hard-to-game
+    verdict: fail
+    reason: >-
+      What counts as a review is only a schema-valid file. The schema needs a
+      reason of at least 10 characters per verdict
+      (schema/assessment.schema.json:32-36), and `assess check` adds only that
+      every crate-design criterion has a verdict
+      (crates/seikika-api/src/assess.rs:137-168). Four `pass` verdicts that
+      each say "Reviewed it, fine." with the brief's subjectHash make
+      reviewState `fresh` (crates.yaml:56-62) and pass silver without opening
+      a source file. Citations (`uncited`) are read only by gold
+      `passes-review`.
+    suggestion: >-
+      Have silver require engagement with the crate. The connector already
+      lists what a review cites (`cited`,
+      crates/seikika-connect/src/assessment.rs:220-228). Expose whether any
+      cited path lies under the crate's `path`, for example a
+      `reviewCitesCrate` field, and add it to this check.
+  - criterion: fix-leads-to-pass
+    verdict: pass
+    reason: >-
+      The fix names both commands (crates.yaml:394-397). The brief names the
+      file to write and the current subjectHash, and writing that file turns
+      reviewState `fresh`. CI runs `seikika assess check portal`
+      (.github/workflows/ci.yml:95-98), which validates the file. It also
+      exits 1 on any stale assessment
+      (crates/seikika-cli/src/assess.rs:134-142), so once a crate has an
+      assessment, later changes force a re-assessment.
+  - criterion: threshold-justified
+    verdict: pass
+    reason: >-
+      The rule has no number. Silver for "a current review" is the review-*
+      ladder in docs/design/thresholds.md:55 and change C1 in
+      docs/design/meta-standards-review.md:136, under
+      D01M831P5QWJQ4A2FT85N5MXJQF. The card is advisory (crates.yaml:372), as
+      D79 requires.
+summary: >-
+  Fails. The ladder position and fix are sound, and CI's stale check keeps
+  any existing review current. Two problems remain. "Current sources"
+  leaves out every non-Rust file a crate compiles in (seikika-store's
+  migrations, seikika-cli's report.html), so a review can stay fresh after
+  the crate's behaviour changes. And an uncited, all-pass file is enough
+  for silver. The hash gap also weakens every rule on this card that
+  requires `fresh`.

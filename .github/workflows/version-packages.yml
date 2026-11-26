@@ -71,7 +71,7 @@ jobs:
           It runs `scripts/apply-changesets.py` (portable Changesets applicator) to bump:
           - Cargo workspace version
           - root CHANGELOG.md
-          - packages/*/toolbox-package.yaml discovered via `.changeset/config.json` includes (lockstep)
+          - packages/*/seikika-package.yaml discovered via `.changeset/config.json` includes (lockstep)
 
           **After merge:** tag and push (do not replace cargo-dist):
 
