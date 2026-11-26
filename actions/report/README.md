@@ -8,7 +8,7 @@ secrets ([docs/design/repo-portals.md](../../docs/design/repo-portals.md)).
 ## Adopt it in a repository
 
 1. Copy [`examples/repo-portal-starter/seikika.yaml`](../../examples/repo-portal-starter/seikika.yaml)
-   to `.seikika/seikika.yaml`. It scores README, CODEOWNERS (a catch-all rule; teams **or** only
+   to `.seikika/seikika.yaml` and copy the starter’s `tests/` and `fixtures/` into `.seikika/`. It scores README, CODEOWNERS (a catch-all rule; teams **or** only
    personal handles), and LICENSE, and checks the docs' relative links. Edit or add scorecards as
    the team likes. In JS/TS repos, ignore `.seikika/**` in ESLint so fixture YAML is not parsed as
    code (see the [starter README](../../examples/repo-portal-starter/README.md)).
@@ -30,15 +30,14 @@ secrets ([docs/design/repo-portals.md](../../docs/design/repo-portals.md)).
        runs-on: ubuntu-latest
        steps:
          - uses: actions/checkout@v4
-         - uses: seikika/seikika/actions/report@v0.2.0
+         - uses: seikika/seikika/actions/report@c14c9fbb60405f9fea12d86de3d0b32b717755d9
            with:
-             seikika-version: "0.2.0"   # download attested binaries (D90)
              mode: ${{ inputs.mode || 'ci' }}
    ```
 
 3. **First run:** start the workflow by hand with `mode: update`. It uploads `results.json` in the
    `seikika-report` artifact; commit it as `.seikika/results.json`. Or, with the release
-   installed ([Install a release](../../site/src/content/docs/start/install.md)), run
+   installed ([Install Seikika](../../site/src/content/docs/start/install.md)), run
    `seikika report .seikika --baseline .seikika/results.json --update`.
 4. **Git packages:** if `.seikika/seikika.yaml` includes a `github:…@…` package, run
    `seikika install .seikika` locally, commit `.seikika/seikika.lock`, and keep the action's

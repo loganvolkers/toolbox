@@ -1,96 +1,76 @@
 ---
 title: Quickstart
-description: Install a release, score a repository with the starter portal, and ratchet the baseline in CI.
+description: Score a practice repository, record a baseline, and see the check catch a regression.
 sidebar:
   order: 1
 ---
 
-Score a repository with the CLI, a checkout, and a committed baseline. This path uses a local connector. Prefer this path before choosing an [operator](/operators/), [user](/users/), or [maintainer](/maintainers/) loop.
+Score a practice repository and watch Seikika catch a broken Markdown link. You need Git, Bash, curl, the Seikika CLI, and the workspace connector. Follow [Install Seikika](/start/install/) for the source build or release setup. Keep the same terminal so the tools stay on `PATH`. The example uses a disposable checkout and runs locally.
 
-## 1. Install the binaries
+## 1. Create a practice repository
 
-The starter uses the `seikika` CLI and the `seikika-connector-workspace` binary. When **v0.2.0** is listed on [GitHub Releases](https://github.com/seikika/seikika/releases), install [mise](https://mise.jdx.dev/installing-mise.html) 2026.11.14 or later and run these commands from the repository you want to score. Before the release, follow the [source setup](/start/run/#try-a-repo-portal-from-source), then continue at [Score once](#3-score-once).
-
-If the repository already has a mise config, merge the tool aliases and pins from the [starter config](https://github.com/seikika/seikika/blob/v0.2.0/examples/repo-portal-starter/mise.example.toml). To start a new config, copy the file.
+From a directory where you can create a new folder, run these commands. The manifest defines the checks that Seikika runs.
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/seikika/seikika/v0.2.0/examples/repo-portal-starter/mise.example.toml -o mise.toml
+mkdir seikika-practice
+cd seikika-practice
+git init -b main
+mkdir -p .seikika/tests .seikika/fixtures
+
+starter=https://raw.githubusercontent.com/seikika/seikika/c14c9fbb60405f9fea12d86de3d0b32b717755d9/examples/repo-portal-starter
+curl -fsSL "$starter/seikika.yaml" -o .seikika/seikika.yaml
+curl -fsSL "$starter/tests/standards.test.yaml" -o .seikika/tests/standards.test.yaml
+curl -fsSL "$starter/fixtures/workspace.ndjson" -o .seikika/fixtures/workspace.ndjson
+
+cat > README.md <<'README'
+# Practice repository
+
+This repository is a small example for learning how Seikika checks Markdown links and repository
+standards. The readme describes the project, the owner in CODEOWNERS reviews changes, and the
+license explains the terms for reuse. The [portal notes](portal.md) contain a short description
+of what the example repository is for.
+README
+printf '# Portal notes\n' > portal.md
+printf '* @example-maintainer\n' > CODEOWNERS
+printf 'Practice file for the Seikika tutorial.\n' > LICENSE
 ```
 
-Install and check the CLI and connector.
+The demo ownership and license files are for this exercise. Use your own team or GitHub handle and your project's license when you [adopt the starter](/operators/ci/).
 
-```sh
-mise trust
-mise install
-mise exec -- seikika --version
-```
+## 2. Check the setup and record a baseline
 
-For PowerShell, use `curl.exe` for the downloads. For other `builtin:` connectors, see [Install a release](/start/install/).
+If you are using mise to install the release, follow the [repo portal setup](/start/install/#run-a-portal) from the new practice repository. Its config installs both binaries.
 
-## 2. Copy the starter portal
-
-In the repository you want to score:
+From `seikika-practice`, run:
 
 ```bash
-mkdir -p .seikika
-curl -fsSL https://raw.githubusercontent.com/seikika/seikika/v0.2.0/examples/repo-portal-starter/seikika.yaml -o .seikika/seikika.yaml
+seikika doctor .seikika
+seikika validate .seikika
+seikika report .seikika --baseline .seikika/results.json --update
 ```
 
-In PowerShell, create the directory with `New-Item -ItemType Directory -Force .seikika`.
+`doctor` checks the connector executable and any tools the portal declares. `validate` checks the manifest. The final command creates `.seikika/results.json`. This file is your **baseline**, a record of the scores and findings you compare against later.
 
-Or copy `examples/repo-portal-starter/seikika.yaml` from a local checkout. The starter’s `repo-hygiene` and `docs` scorecards ask for a README, CODEOWNERS, LICENSE, and markdown links that resolve.
+## 3. Break a link and catch the regression
 
-## 3. Score once
+Move the file that `README.md` links to and rerun the check.
 
 ```bash
-mise exec -- seikika doctor .seikika
-mise exec -- seikika report .seikika
+mv portal.md moved-portal.md
+seikika report .seikika --baseline .seikika/results.json --ci
 ```
 
-`report` prints each scorecard, failing rules, evidence, and a fix. `doctor` checks that connectors resolve and declared tools are present.
+The command exits with status 1. Look for the `docs` scorecard and the `links-resolve` rule for `README.md`. The report names `portal.md` in the evidence.
 
-## 4. Commit a baseline
+## 4. Fix the link and verify the result
 
 ```bash
-mise exec -- seikika report .seikika --baseline .seikika/results.json --update
-git add .seikika
-git commit -m "Add Seikika repo portal and baseline"
+mv moved-portal.md portal.md
+seikika report .seikika --baseline .seikika/results.json --ci
 ```
 
-If you used mise to install the release, commit your `mise.toml` alongside the baseline so contributors use the same versions.
-
-Later runs with the same `--baseline` fail when a rule newly fails or evidence grows. `--ci` also fails when the file is stale after an improvement. That ratchet is the same idea as Betterer’s results file — see [Scorecards](/concepts/scorecards/) and [Seikika ratchets vs Betterer](/compare/betterer/).
-
-## 5. Gate pull requests
-
-Once the v0.2.0 release is available, use the matching action ref and binaries in CI.
-
-```yaml
-- uses: seikika/seikika/actions/report@v0.2.0
-  with:
-    seikika-version: "0.2.0"
-    mode: ci
-```
-
-Use `mode: update` once when you intentionally tighten the baseline. Pin the action ref and the binary version together ([Install a release](/start/install/)).
-
-## What you just proved
-
-| Surface | What happened |
-|---|---|
-| Repo portal | Standards as data in `.seikika/seikika.yaml`, no server |
-| Scorecards | Levels with evidence and a fix |
-| Ratchet | Committed `.seikika/results.json` that CI compares |
+The check now exits with status 0. You restored the link and kept the original baseline. Seikika calls this comparison a **ratchet** because the baseline can record improvements and catch regressions.
 
 ## Next steps
 
-| If you are… | Go to |
-|---|---|
-| Changing the portal or serving the catalog | [Build a portal](/operators/) |
-| Writing a connector other portals run | [Write a connector](/authors/connectors/) |
-| Reading owners and scores from scripts or agents | [Use a portal](/users/) · [Agents](/agents/reads/) |
-| Publishing a package other portals include | [Publish a standard](/authors/) |
-| Changing Seikika itself | [Build Seikika](/maintainers/) |
-| Comparing to other IDPs and tools | [Seikika vs others](/compare/) |
-
-Command map: [CLI reference](/start/cli/).
+[Gate pull requests](/operators/ci/) to adopt the same checks in a real repository, or [explore a running catalog](/start/portal/). If a command fails before the link exercise, see [troubleshooting](/start/troubleshooting/).

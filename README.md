@@ -1,8 +1,11 @@
 # Seikika
 
-An open-source, agent-first internal developer portal (IDP) framework: Rust core, configured entirely in
-code, deployed by you. Catalog, scorecards, self-service actions, knowledge/context lake and search —
-exposed identically over API, MCP, CLI and UI.
+Seikika is an open-source framework for building an internal developer portal in code.
+Score one repository from the command line, or serve a catalog with ownership, standards,
+and self-service actions for developers and agents.
+
+Start with the [quickstart](https://seikika.com/start/quickstart/) or
+[explore a local portal](https://seikika.com/start/portal/).
 
 See [the naming decision](docs/decisions/D01M8B8PPJ47YR81JZ3ZYHCFHCZ.md) for the shared identifiers used by the CLI, packages, and protocols.
 
@@ -16,16 +19,10 @@ The public docs are a Starlight site in [site/](site/src/content/docs/index.md),
 
 **SDLC has four layers** ([docs/sdlc.md](docs/sdlc.md)): the *maintainer* SDLC for building Seikika, the *package author* SDLC for publishing packages and connectors others consume, the *operator* SDLC for building a portal, and the *user* SDLC for building apps on a portal.
 
-**Operators** can install the CLI and the connectors their portal needs with mise once v0.2.0 is published. See [Install a release](site/src/content/docs/start/install.md) or [try a repo portal from source](site/src/content/docs/start/run.md#try-a-repo-portal-from-source).
+**Install Seikika:** use the [installation guide](site/src/content/docs/start/install.md) to
+choose a matching release or build the current CLI and workspace connector from source.
 
-**Maintainers** use mise to install the development tools and build from the checkout. Run the following from the repository root after [installing mise](https://mise.jdx.dev/installing-mise.html).
-
-```bash
-mise trust
-mise install
-mise exec -- cargo build --locked
-mise exec -- target/debug/seikika validate examples/reference-portal
-```
+**Build from source** with the checkout's pinned tools. See [Run Seikika locally](site/src/content/docs/start/run.md) to set up mise and validate the reference portal.
 
 **Start here:** [AGENTS.md](AGENTS.md) for working rules and parallel tracks, [docs/v1-spec.md](docs/v1-spec.md) for what v1 must do, [examples/reference-portal](examples/reference-portal/README.md) for the reference implementation anchor. Also: [docs/decisions/](docs/decisions/README.md) for every decision, [docs/questions.md](docs/questions.md) for open questions, [docs/glossary.md](docs/glossary.md) for vocabulary, and [docs/research-log.md](docs/research-log.md) for methods and hands-on verifications.
 

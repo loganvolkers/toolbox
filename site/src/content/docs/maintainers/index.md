@@ -1,87 +1,50 @@
 ---
 title: Build Seikika
-description: A maintainer changes this repository and proves the change against the reference portal and the scorecards.
+description: Build from source, run the checks, and contribute changes to Seikika or its documentation.
 sidebar:
   order: 1
 ---
 
-A maintainer changes Seikika itself: the Rust workspace, the connectors shipped in the binary, the schemas, and this site. The contract is the v1 spec and the reference portal. A portal team's manifest is the [operator](/operators/) loop. A scorecard published for other repositories to include is the [package author](/authors/) loop, including when that package lives in this repository.
+Use this guide when you change Seikika's source code, first-party connectors, or public docs. For changes to a portal you operate, see [Build a portal](/operators/).
 
-The maintainer SDLC is how a change lands here. Every milestone exit is a command, so a change is done when the command passes.
+## Build and test a change
 
-## Set up the checkout
+Follow [Run Seikika locally](/start/run/) to build and validate the reference portal. It contains fixtures and expected results for entities, scorecards, permissions, and action options. If a behavior change alters those results, review the difference before updating them.
 
-Install [mise](https://mise.jdx.dev/installing-mise.html) 2026.11.14 or later, then run the following from the repository root.
-
-```sh
-mise trust
-mise install
-```
-
-For frontend work, run `mise exec -- pnpm install --frozen-lockfile`. For Python reference checks, use the [hashed reference requirements](https://github.com/seikika/seikika/blob/main/docs/design/maintainer-sdlc.md#5-local-prerequisites).
-
-## Prove a derived-state change
-
-`examples/reference-portal` is the oracle. Its `expected/` directory is the derived catalog the pipeline must reproduce byte for byte: entities, scores, tuples, options. `seikika derive` writes that catalog. `cargo test -p seikika-derive` compares it. `scripts/validate-parity.py` compares `seikika validate` with the Python validator on the same accept and reject cases.
-
-```bash
-mise exec -- cargo build --locked
-mise exec -- target/debug/seikika validate examples/reference-portal
-mise exec -- target/debug/seikika test examples/reference-portal
-mise exec -- cargo test --locked -p seikika-derive
-mise exec -- .venv/bin/python scripts/validate-parity.py
-```
-
-A change that moves one field in the output fails the byte compare. Regenerate `expected/` only after reading the diff.
-
-## Benchmark a claim about developer experience
-
-Tests prove that Seikika behaves as specified. A DX Benchmark asks whether that helps the agents that use it. Fresh agents do lifecycle work on open-source forks, with Seikika and with its strongest alternative, against a bar written before the run. A claim that Seikika makes something easier needs one. Each benchmark has an entry in `portal/benchmarks/`, which `maintainer-benchmark` scores, and is archived once it has served its value. See [DX Benchmarks](/concepts/dx-benchmarks/).
-
-## Keep the inner loop short
-
-On a 4 vCPU container with warm caches, after milestone M4, the recorded times are: rebuild after editing `seikika-derive` 2.1 s, `cargo test` 3.6 s, `seikika test examples/reference-portal` 0.2 s, `cargo clippy --all-targets -- -D warnings` 4.7 s. The acceptance script that drives Postgres, OpenFGA, the connectors and a browser (`scripts/m4-acceptance.sh`) is 7.9 s.
+Run the checks for the code you changed from the repository root. Use the mise setup from the build guide.
 
 ```bash
 mise exec -- cargo fmt --all --check
 mise exec -- cargo clippy --all-targets --locked -- -D warnings
 mise exec -- cargo test --locked
-mise exec -- target/debug/seikika test portal
 ```
 
-`seikika test portal` checks passing and failing fixture entities against this repository's rules. Acceptance scripts for M2, M3 and M4 need Postgres 16. For M3 and M4, set `SEIKIKA_OPENFGA_BIN="$(mise which openfga)"`. M4 also needs Playwright's Chromium browser.
+Use the [repository working rules](https://github.com/seikika/seikika/blob/main/AGENTS.md) for the project's acceptance checks, tool pins, and decisions.
 
-The toolchain is pinned in `rust-toolchain.toml`. YAML in the repository is formatted with Yamark 0.6.1 (`yamark format --check`). The public [CLI reference](/start/cli/) is an Astro page built from `seikika describe`. The pages workflow runs `pnpm --filter seikika-site check:cli-docs` to check the committed fingerprint.
+## Contribute to the docs
 
-## Stop a standard from regressing
+1. Find the page under `site/src/content/docs/`. Follow the [documentation style guide](/maintainers/writing/) and verify any changed command with the stated version.
+2. With the checkout's tools installed through mise, run the site checks from the repository root. Build the CLI first because the site reads its help output.
 
-This repository is also a portal. `portal/` declares the standards for crates, docs, workflows, skills, this site's pages, and the four SDLC layers.
+   ```bash
+   mise exec -- pnpm install --frozen-lockfile
+   mise exec -- pnpm --filter seikika-site check:cli-docs
+   mise exec -- pnpm docs:build
+   ```
+
+3. Run `mise exec -- pnpm --filter seikika-site preview`. Check the rendered page, local links, headings, and code blocks. Review the change on a narrow screen and check that you can use the page with a keyboard.
+4. Include what you ran and the result in your pull request. The [Pages workflow](https://github.com/seikika/seikika/blob/main/.github/workflows/pages.yml) builds the site and publishes changes from `main`.
+
+The [public docs scorecard](/concepts/scorecards/#this-site) checks page structure. The [documentation gap analysis](https://github.com/seikika/seikika/blob/main/docs/audits/public-docs-2026-11-26.md) explains how the docs are evaluated against Backstage and other open-source projects.
+
+## Check the repository standards
+
+Seikika scores its own code, docs, and workflows. From the checkout, with the required tools installed:
 
 ```bash
 mise exec -- target/debug/seikika report portal --skip runner,github-actions --baseline portal/results.json --ci
 ```
 
-`--ci` fails when an entity drops a level, when a failing rule's evidence grows, when a new entity is below the floor (bronze for these standards), and when the baseline is missing an improvement. `--update` rewrites `portal/results.json` after you have looked at the diff. The HTML report published on this site is the same run; CI compares the committed files with a fresh one.
+The check compares the current results against the committed baseline. Review the differences before updating it. See the [repository portal README](https://github.com/seikika/seikika/blob/main/portal/README.md) for the full check and tool setup.
 
-The test runner and the GitHub API are skipped in that fast check. A rule that needed them is unknown, and it names the connector that was skipped. The full report, including those connectors, is the slow path.
-
-[This repository, scored](/demo/report/) is that report, in the site's navigation.
-
-## Record the decision, then change the contract
-
-A decision is one file, `docs/decisions/<id>.md`. The id is `D` plus a ULID, minted with `python3 scripts/decision-id.py`. Filename order is time order. An existing decision stays as it was written. A change is a new file, and the design doc it points at is updated in the same change.
-
-The v1 spec says what the binary must do. The design docs say why. When they disagree, the decision file wins, then the spec.
-
-## Where the loop stands
-
-| Step | What you run | State |
-|---|---|---|
-| Decide | A new file in `docs/decisions/` | Built |
-| Build | `cargo build`, `pnpm build`, `pnpm docs:build` | Built |
-| Test | `cargo test`, clippy, `seikika test`, the parity script | Built |
-| Verify a milestone | `scripts/m2-acceptance.sh`, `m3-acceptance.sh`, `m4-acceptance.sh`, `m5-acceptance.sh` | M5 checks federated actions. Cross-instance durable steps and action UI pages are still planned |
-| Release | `dist plan`, tag `v0.2.0`, the release and image workflows | The Seikika-branded installers start with v0.2.0. See [docs/RELEASING.md](https://github.com/seikika/seikika/blob/main/docs/RELEASING.md) |
-| Watch this repository | `seikika report portal` and the ratchet | Built |
-
-[Run Seikika locally](/start/run/) is the short form of the build. [The four SDLC layers](/concepts/layers/) says which loop a sentence is about.
+Report bugs and propose changes in [GitHub Issues](https://github.com/seikika/seikika/issues). For vulnerabilities, follow the [security policy](https://github.com/seikika/seikika/security/policy).

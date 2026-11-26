@@ -1,11 +1,11 @@
 ---
 title: Secrets in connector config
-description: Use logical ${secret:…} names; document local env and file fallbacks; never commit secret values.
+description: Declare a logical secret name and read the resolved connector configuration.
 sidebar:
-  order: 2
+  order: 3
 ---
 
-When a connector needs a credential, put a **logical** placeholder in the example manifest:
+In an example manifest, use a logical placeholder for each credential:
 
 ```yaml
 config:
@@ -13,12 +13,6 @@ config:
   token: ${secret:jira-app-token}
 ```
 
-Do not paste PEMs, tokens or service-account JSON into the repository. Connector authors run with:
+Read the resolved fields from `SEIKIKA_CONNECTOR_CONFIG` in your connector. Document which fields are required and give a clear configuration error if a required value is missing. Keep credential values out of logs and records.
 
-- `SEIKIKA_SECRET_<NAME>` (hyphens become underscores), or
-- files under `SEIKIKA_SECRETS_DIR` (gitignored `.secrets/`).
-
-Operators map those logical names to Vault or cloud secret managers. Your connector code only reads
-the resolved `SEIKIKA_CONNECTOR_CONFIG` JSON. See the
-[operator secrets page](/operators/secrets/) and
-[`examples/secret-vault-gcp`](https://github.com/seikika/seikika/tree/main/examples/secret-vault-gcp).
+During local development, supply a secret through its environment variable or a file in a private directory. See [Connector secrets](/operators/secrets/) for the naming rules and for the secret stores an operator can use.

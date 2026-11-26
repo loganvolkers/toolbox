@@ -1,67 +1,36 @@
 ---
 title: Use a portal
-description: A developer or an agent reads owners, scores and evidence over the CLI, MCP or the API.
+description: Look up software, check ownership and scores, and build on a portal's catalog.
 sidebar:
   order: 1
 ---
 
-A user builds on a portal someone else runs. The manifest, the scorecards and the deploy belong to the [operator](/operators/). You ask the catalog questions, and you build scripts, checks and agents on the answers.
+Use the catalog to find software, check who owns it, and understand why it received a score. Your operator supplies the portal URL and tells you how to sign in. To practice with sample data, start with [Explore a portal](/start/portal/).
 
-The same reads are on the CLI, on MCP and on the HTTP API, and the same authorization applies to each. A field you are not allowed to see comes back as hidden, with the relation that would reveal it.
+## Choose a way to read the catalog
 
-## Who owns this?
+| You want to | Use |
+|---|---|
+| Browse the catalog as a person | The portal URL in a browser |
+| Check an owner, a score, or the evidence behind a rule | The [CLI reference](/start/cli/) |
+| Build a script or dashboard | The [HTTP API reference](/users/api/) |
+| Connect an agent | [Read the catalog from an agent](/agents/reads/) |
+| Request a change the portal offers | [Test and run an action](/users/actions/) |
 
-Ownership is a fact with evidence. In the reference portal, `repository:ledger` claims `group:payments` in its catalog file, and CODEOWNERS names a different team. The claim stays unverified, the ownership level is `none`, and the detail is visible to portal admins.
+## Read an owner or score
 
-Run the reference portal from its fixtures:
-
-```bash
-seikika serve examples/reference-portal --fixtures
-seikika owner repository:ledger --as alice
-seikika score repository:ledger --as alice
-```
-
-`--as` is the dev-server switch for acting as a user. A deployed portal expects a personal access token: `seikika token create --user alice --database-url "$DATABASE_URL"`, then `SEIKIKA_TOKEN` or `--token` on the read. The token is stored as a hash in that portal's Postgres. Service identities, so a job has its own principal, are specified and not built. A CI job today uses a person's token.
-
-`owner` answers who, and why. `explain` answers one rule: the evidence and the fix.
-
-## Why is this below the bar?
-
-`ownership` on `repository:checkout-web` stops at bronze: the default branch is unprotected, and that rule is silver. App hygiene is a separate scorecard on the same repository.
+For a token-based portal, set `SEIKIKA_URL` in your shell and load `SEIKIKA_TOKEN` from your secret store as your operator directs. Replace `repository:checkout-web` below with your entity's ID. In the local tutorial, use the loopback URL and add `--as bob` to each command.
 
 ```bash
-seikika score repository:checkout-web --as bob
-seikika explain repository:checkout-web --rule ownership/branch-protected --as bob
-seikika scorecard ownership --level none --as alice
+seikika owner repository:checkout-web
+seikika score repository:checkout-web -o json
+seikika explain repository:checkout-web --rule ownership/branch-protected
 ```
 
-`score` is one entity, every scorecard, every rule. `scorecard` is one scorecard across entities, which is the work list. `explain --rule` takes `scorecard/rule`. On `ownership`, the level is public and the rule detail is for the owner. A caller outside that relation gets the level and a marker naming the relation, which is the same fact an app has to handle.
+`owner` explains the effective owner and any evidence behind it. `score` returns the levels for one entity. `explain` can show the evidence and fix for one rule. If a rule is hidden, your client may receive a redaction marker. Handle that marker separately from a missing field or a failing rule.
 
-The levels in this repository's own standards are `none`, `bronze`, `silver` and `gold`. An entity's level is the highest one where every rule at that level and below passes. A skipped scorecard, such as an archived repository, is not a failure.
+## Build on the results
 
-The read names and the short loop an agent follows are on [Read the catalog from an agent](/agents/reads/).
+A script can compare a level against your team's minimum and fail a build if the level is too low. Define how the script handles `unknown`, skipped, and redacted results. Use your portal's real level names. The fixture catalog uses levels such as `bronze` and `silver`.
 
-## Fail a check when the level drops
-
-A CI job can refuse a deploy when a scorecard is below bronze. Point it at the portal and read JSON:
-
-```bash
-SEIKIKA_TOKEN=… seikika score repository:ledger -o json
-```
-
-The script owns the comparison. The token is a personal access token for the portal. Seikika returns the level, the rule outcomes and, where the caller is allowed to see them, the evidence. Pin the read to a snapshot when the job must see the write it just made: responses carry a snapshot id, and a later read can pass `min_snapshot`.
-
-`seikika query` lists a kind with a CEL filter over `entity` and `scores`. `seikika search` finds entities by name. `seikika get` is one entity and the provenance of its fields.
-
-## Build on the contract
-
-| App | Surface | What works today |
-|---|---|---|
-| An agent in a harness | MCP at `/mcp`, or `seikika mcp` over stdio | The catalog reads, with the caller's authorization |
-| A script or a CI check | CLI `-o json`, or HTTP with a personal access token | The same reads. The script decides pass and fail |
-| A dashboard | HTTP `/v1` | The same reads. A generated typed client is specified and not built |
-| Something that changes a system | Actions | Listing actions works. Running one, with preview and a confirm token, is paused |
-
-Two promises already hold for anything you build. Paths and problem codes under `/v1` stay stable within that version. Snapshot ids are monotonic per portal, and `min_snapshot` means "at least this snapshot". Portal-defined kinds and fields can change when an operator edits the manifest. `seikika plan` is how that operator sees the diff, including removed fields and MCP tools, before the change ships. A deprecation feed for users is specified and not built.
-
-Start from [Run Seikika locally](/start/run/) if you do not have a binary yet. The reference portal is the fixture catalog the commands above read.
+The catalog changes as connectors report new facts and operators update the manifest. Record the snapshot ID if you need to know which catalog version answered a request. Use `min_snapshot` on HTTP endpoints that accept it when your read needs to see a particular update. See the [HTTP API reference](/users/api/#snapshots-and-errors) for response and retry details.

@@ -5220,6 +5220,9 @@
       "doc:docs/audits/design-loop-efficiency-2026-11-24.md": {
         "level": "silver"
       },
+      "doc:docs/audits/public-docs-2026-11-26.md": {
+        "level": "silver"
+      },
       "doc:docs/audits/seikika-report-2026-11-24-2.md": {
         "level": "silver"
       },
@@ -6553,7 +6556,22 @@
       "site-page:site/src/content/docs/maintainers/index.md": {
         "level": "gold"
       },
+      "site-page:site/src/content/docs/maintainers/writing.md": {
+        "level": "gold"
+      },
+      "site-page:site/src/content/docs/operators/access.md": {
+        "level": "gold"
+      },
+      "site-page:site/src/content/docs/operators/ci.md": {
+        "level": "gold"
+      },
+      "site-page:site/src/content/docs/operators/deploy.md": {
+        "level": "gold"
+      },
       "site-page:site/src/content/docs/operators/index.md": {
+        "level": "gold"
+      },
+      "site-page:site/src/content/docs/operators/manifest.md": {
         "level": "gold"
       },
       "site-page:site/src/content/docs/operators/portal.md": {
@@ -6568,10 +6586,25 @@
       "site-page:site/src/content/docs/start/install.md": {
         "level": "gold"
       },
+      "site-page:site/src/content/docs/start/portal.md": {
+        "level": "gold"
+      },
       "site-page:site/src/content/docs/start/quickstart.md": {
         "level": "gold"
       },
       "site-page:site/src/content/docs/start/run.md": {
+        "level": "gold"
+      },
+      "site-page:site/src/content/docs/start/troubleshooting.md": {
+        "level": "gold"
+      },
+      "site-page:site/src/content/docs/start/versions.md": {
+        "level": "gold"
+      },
+      "site-page:site/src/content/docs/users/actions.md": {
+        "level": "gold"
+      },
+      "site-page:site/src/content/docs/users/api.md": {
         "level": "gold"
       },
       "site-page:site/src/content/docs/users/index.md": {

@@ -5,13 +5,7 @@ sidebar:
   order: 0
 ---
 
-Seikika tests its developer experience the way an experiment tests a claim. In a DX Benchmark,
-fresh coding agents do real lifecycle work on open-source repositories, once with Seikika and once
-with the strongest alternative a team would actually use. The bar is written down before the run.
-The results are published as they came out, including when Seikika loses.
-
-We know of no other developer platform that benchmarks itself this way. This is our survey, not a
-verified absence.
+A developer experience (DX) benchmark tests how well Seikika helps someone finish a real task. In each benchmark, fresh coding agents work on open-source repositories. One group uses Seikika and the other uses the strongest available alternative. We set the success criteria before the run and publish the results, including losses.
 
 ## What is compared
 
@@ -28,32 +22,23 @@ verified absence.
 
 ## What it has taught us
 
-Seikika rarely beats a capable agent on a single run. Agents already know programming languages
-and their tools, but not Seikika. Its value shows up with repetition: on a second repository, on
-the next upgrade, across many repositories, and over time. The benchmarks now measure exactly
-that: what it costs to reuse something, and whether two runs give the same answer.
+In the measured tasks, Seikika often cost more on the first run. Agents already knew the alternatives and had to learn Seikika. Later benchmarks test whether the effort pays off when teams repeat the task, such as adding the same standard to a second repository.
 
-Every benchmark has changed Seikika. Among the changes:
-- packages with parameters;
-- a numeric ratchet;
-- a standard slot for SARIF;
-- one pin per tool;
-- root causes for regressions;
-- missing data scored as unknown rather than as failure.
+The results led to reusable packages, numeric thresholds for baselines, support for standard tool output such as SARIF, and clearer explanations of regressions and missing data.
 
 ## How a benchmark is run
 
 - The question, the alternative, the measures and the bar are written before the run.
-- Each phase starts a fresh agent, with the same model, budget and tools in both arms, and no
+- Each phase starts a fresh agent, with the same model, budget, and tools in both groups, and no
   network.
 - Each runs on open-source repositories at pinned commits.
 - Correctness is judged against an independent truth: a script, or a recorded judgement with its
   evidence.
 - Tokens, tool calls, time and lines of glue are measured.
-- Both arms are asked for developer-experience feedback the same way, and it is triaged into fixes.
+- Both groups answer the same feedback questions. We use their answers to identify fixes.
 - The prompts are committed before the first run, and each arm runs at least three times. A
   difference smaller than the spread between runs is reported as inconclusive.
-- Every arm gets the same level of help, and nothing in Seikika is changed to fit the harness.
+- Each group gets the same level of help. The benchmark uses the same Seikika build throughout.
 - The verdict is written by someone who did not design the experiment.
 
 Two early results, a connector "win" and a deploy "defeat", were run before these rules. Both
