@@ -1,6 +1,6 @@
 # Incremental Computation and Durable Execution
 
-*Status: v1 design updated 2026-11-20 (D37, D39). Implementation detail: [v1-spec.md](../v1-spec.md) §6 and §8.1. **Implemented (M1–M2):** the full recompute behind `DerivedState`, byte-identical to the reference model, at 7.3–8.4 s for the 100k-entity scale run (budget 10 s); durable workflows arrive with M5.*
+*Status: v1 design updated 2026-11-20 (D37, D39). Implementation detail: [v1-spec.md](../v1-spec.md) §6 and §8.1. **Implemented (M1–M2):** the full recompute behind `DerivedState`, byte-identical to the reference model, at 7.3–8.4 s for the 100k-entity scale run (budget 10 s); cross-instance durable workflows are still planned for M5. The crate enters the workspace with its implementation (D01M8BGQBN0PZ6PE5389FT1W400).*
 
 ## v1 design
 

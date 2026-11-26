@@ -23,7 +23,7 @@ assert:
       score('maintainer-crate',
       'crate:seikika-connector-git-files').rules['has-tests'] == 'fail'
   - name: placeholder crates are skipped
-    expect: score('maintainer-crate', 'crate:seikika-durable').level == 'skipped'
+    expect: score('maintainer-crate', 'crate:fixture-empty').level == 'skipped'
   - name: runner results land on the crate entity
     expect: >-
       entity('crate:seikika-derive').tests.failed == 1 &&

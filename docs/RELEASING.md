@@ -70,21 +70,21 @@ Verify an artifact with `gh attestation verify <file> --repo <owner>/seikika`.
 ## Rust crates on crates.io
 
 The workspace publishes the CLI, connectors, SDK, and their Rust libraries in lockstep.
-The durable crate is a private placeholder. The version applicator updates exact workspace
+The version applicator updates exact workspace
 dependency pins along with the workspace version. Refresh `Cargo.lock` with
 `cargo update --workspace` when preparing a version by hand.
 
 Verify the archives from the release commit.
 
 ```bash
-cargo package --workspace --exclude seikika-durable --locked
+cargo package --workspace --locked
 ```
 
 For new crate names, use an authenticated crates.io account with permission to publish new
 crates. Publish from the verified release commit, then check each version in the registry.
 
 ```bash
-cargo publish --workspace --exclude seikika-durable --locked
+cargo publish --workspace --locked
 ```
 
 After the first publish, register a GitHub Actions trusted publisher for each public crate.

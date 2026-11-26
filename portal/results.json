@@ -892,11 +892,6 @@
           "833e4fc9"
         ]
       },
-      "assessment:assessment-quality/assessment:crate-design/crate:seikika-durable": {
-        "cites-everything": [
-          "833e4fc9"
-        ]
-      },
       "assessment:assessment-quality/assessment:crate-design/crate:seikika-exec": {
         "cites-everything": [
           "55caed82"
@@ -4563,6 +4558,9 @@
       },
       "action:github/codeql-action": {
         "level": "bronze"
+      },
+      "action:rust-lang/crates-io-auth-action": {
+        "level": "bronze"
       }
     },
     "maintainer-advisories": {},
@@ -4723,6 +4721,16 @@
           "still-running"
         ]
       },
+      "workflow:.github/workflows/publish-crates.yml": {
+        "level": "bronze",
+        "unknown": [
+          "fail-rate-under-10",
+          "fail-rate-under-20",
+          "fail-rate-under-5",
+          "main-not-stuck-red",
+          "still-running"
+        ]
+      },
       "workflow:.github/workflows/publish-npm.yml": {
         "level": "bronze",
         "unknown": [
@@ -4783,6 +4791,9 @@
       "workflow:.github/workflows/pages.yml": {
         "level": "gold"
       },
+      "workflow:.github/workflows/publish-crates.yml": {
+        "level": "gold"
+      },
       "workflow:.github/workflows/publish-npm.yml": {
         "level": "gold"
       },
@@ -4827,6 +4838,12 @@
         ]
       },
       "workflow:.github/workflows/pages.yml": {
+        "level": "bronze",
+        "unknown": [
+          "fast-feedback"
+        ]
+      },
+      "workflow:.github/workflows/publish-crates.yml": {
         "level": "bronze",
         "unknown": [
           "fast-feedback"
@@ -4997,9 +5014,6 @@
           "clippy-clean",
           "tests-pass"
         ]
-      },
-      "crate:seikika-durable": {
-        "level": "skipped"
       },
       "crate:seikika-exec": {
         "failing": {
@@ -5702,6 +5716,9 @@
         "level": "skipped"
       },
       "doc:docs/decisions/D01M8BEC7ZX7TFBTSC47W1XQVV4.md": {
+        "level": "skipped"
+      },
+      "doc:docs/decisions/D01M8BGQBN0PZ6PE5389FT1W400.md": {
         "level": "skipped"
       },
       "doc:docs/decisions/README.md": {
@@ -6863,12 +6880,6 @@
         "level": "gold"
       },
       "assessment:assessment-quality/assessment:crate-design/crate:seikika-derive": {
-        "failing": {
-          "cites-everything": 1
-        },
-        "level": "silver"
-      },
-      "assessment:assessment-quality/assessment:crate-design/crate:seikika-durable": {
         "failing": {
           "cites-everything": 1
         },
@@ -8495,9 +8506,6 @@
         "level": "gold"
       },
       "assessment:crate-design/crate:seikika-derive": {
-        "level": "gold"
-      },
-      "assessment:crate-design/crate:seikika-durable": {
         "level": "gold"
       },
       "assessment:crate-design/crate:seikika-exec": {
