@@ -162,7 +162,7 @@ scorecards:
     owner: group:maintainers
     track: maintainer
     levels: [bronze, silver, gold]
-    appliesTo: entity.codeLines >= 50 # placeholder crates (seikika-durable, seikika-exec) are skipped
+    appliesTo: entity.codeLines >= 50
     rules:
     - name: crate-docs
       level: bronze

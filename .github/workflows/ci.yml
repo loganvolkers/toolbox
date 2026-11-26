@@ -39,7 +39,7 @@ jobs:
         run: cargo build --locked && python scripts/validate-parity.py
       - name: Verify the crates.io archives
         env: {CARGO_PROFILE_DEV_DEBUG: "0", CARGO_INCREMENTAL: "0"}
-        run: cargo package --workspace --exclude seikika-durable --locked
+        run: cargo package --workspace --locked
       - name: >-
           Install OpenFGA, actionlint, OpenSSF Scorecard and osv-scanner from
           their releases, SHA-256-pinned (no compile, D90), and the pinned RustSec

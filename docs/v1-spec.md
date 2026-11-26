@@ -90,7 +90,6 @@ Small, shallow workspace; heavy dependencies isolated in leaf crates (D44, D46):
 | `seikika-derive` | The §6 pipeline behind `DerivedState`; plan diffs |
 | `seikika-store` | `Store` trait; `MemStore`; `PgStore` (sqlx); migrations |
 | `seikika-authz` | Authn; `Authorizer` trait; OpenFGA client + supervisor; facet shaping; audit |
-| `seikika-durable` | `Durable` trait; Postgres implementation (Q4 decides SDK vs own) |
 | `seikika-connect` | Connector runtime, control channel, command scheduler, conformance kit |
 | `seikika-exec` | `Executor` trait; stdio, HTTP, GitHub Actions, webhook implementations |
 | `seikika-api` | axum REST + OpenAPI generation; MCP (rmcp); UI host |
@@ -100,6 +99,9 @@ Small, shallow workspace; heavy dependencies isolated in leaf crates (D44, D46):
 | `seikika-connector-*` | First-party connectors as separate binaries: `github`, `gitlab`, `git-files` and `scim` read sources; `workspace` and `runner` serve Seikika for Seikika. Third-party connectors may be in any language |
 | `executors/*` | First-party executors as separate binaries (any language; Rust or TS) |
 | `ui/` | Embedded Astro/Vue UI (TypeScript) |
+
+The proposed `seikika-durable` crate will enter the workspace with an implementation of the
+`Durable` contract (§8.1). Q4 tracks the choice of SDK or local implementation (D01M8BGQBN0PZ6PE5389FT1W400).
 
 ## 5. The manifest
 

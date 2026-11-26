@@ -221,6 +221,7 @@ OpenFGA component), no required runtime service besides Postgres, ≤ 3 author-f
 `seikika-graphql`, `seikika-sim`, `seikika-gen`, tantivy in `seikika-search`, the language hosts in
 `seikika-config` and every SDK except TypeScript are **deferred**; `seikika-tcp` shrinks to the ingest
 API and the stdio executor/connector transport; `seikika-fga` becomes the OpenFGA packaging (Q11).
+`seikika-durable` is planned and enters the workspace with its implementation (D01M8BGQBN0PZ6PE5389FT1W400).
 The crates that exist are listed in [v1-spec.md §4](./v1-spec.md#4-architecture-and-crates).*
 
 | Crate | Responsibility | Key dependencies |
