@@ -3,17 +3,17 @@
 # after checking each release archive's SHA-256. Same layout as actions/report/install.sh.
 #
 # The consumer install is the installer on the GitHub release.
-# See site/src/content/docs/start/install.md. For v0.2.0:
+# See site/src/content/docs/start/install.md. For v0.2.1:
 #   curl --proto '=https' --tlsv1.2 -LsSf \
-#     https://github.com/seikika/seikika/releases/download/v0.2.0/seikika-cli-installer.sh | sh
+#     https://github.com/seikika/seikika/releases/download/v0.2.1/seikika-cli-installer.sh | sh
 #
 # This script is for a checkout that already exists:
-#   SEIKIKA_VERSION=0.2.0 ./scripts/install-release.sh
-#   SEIKIKA_VERSION=0.2.0 SEIKIKA_BIN=~/.local/bin ./scripts/install-release.sh
+#   SEIKIKA_VERSION=0.2.1 ./scripts/install-release.sh
+#   SEIKIKA_VERSION=0.2.1 SEIKIKA_BIN=~/.local/bin ./scripts/install-release.sh
 # Private repos: set GH_TOKEN or GITHUB_TOKEN (contents:read on the Seikika repo).
 set -euo pipefail
 SEIKIKA_REPO="${SEIKIKA_REPO:-seikika/seikika}"
-SEIKIKA_VERSION="${SEIKIKA_VERSION:?set SEIKIKA_VERSION, e.g. 0.2.0}"
+SEIKIKA_VERSION="${SEIKIKA_VERSION:?set SEIKIKA_VERSION, e.g. 0.2.1}"
 SEIKIKA_VERSION="${SEIKIKA_VERSION#v}"
 if [ -n "${SEIKIKA_BIN:-}" ]; then
   dest="$SEIKIKA_BIN"

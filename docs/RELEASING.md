@@ -118,8 +118,8 @@ resolution mode in Actions if the scheduled run fails.
 Use the pinned Rust toolchain and Python 3.13 to reproduce the portable checks locally.
 
 ```bash
-python3 scripts/check-crates-release.py install 0.2.0
-python3 scripts/check-crates-release.py install 0.2.0 --resolution fresh
+python3 scripts/check-crates-release.py install 0.2.1
+python3 scripts/check-crates-release.py install 0.2.1 --resolution fresh
 ```
 
 The GitHub Release and installer artifacts are built by cargo-dist from the version tag.
@@ -191,7 +191,7 @@ The weekly workflow run repeats the install for the version pinned in the starte
 To repeat the check locally for a published tag, run the following from the repository root.
 
 ```sh
-mise exec -- python3 scripts/check-mise.py release v0.2.0
+mise exec -- python3 scripts/check-mise.py release v0.2.1
 ```
 
 `scripts/install-release.sh` unpacks `seikika`, `seikika-connector-workspace`
@@ -199,7 +199,7 @@ and `seikika-connector-runner` into one directory after checking each
 `.sha256`, for a checkout that already exists (the same layout as
 `actions/report/install.sh`).
 
-In CI, set `seikika-version: "0.2.0"` on `seikika/seikika/actions/report` so the action
+In CI, set `seikika-version: "0.2.1"` on `seikika/seikika/actions/report` so the action
 downloads checksum-verified binaries instead of compiling.
 
 ## Public vs private (required for external consumers)
@@ -217,9 +217,9 @@ GitHub App token) with `contents: read` on `seikika/seikika`, stored as a secret
 
 ```yaml
 - uses: actions/checkout@v4
-- uses: seikika/seikika/actions/report@v0.2.0
+- uses: seikika/seikika/actions/report@v0.2.1
   with:
-    seikika-version: "0.2.0"
+    seikika-version: "0.2.1"
   env:
     GH_TOKEN: ${{ secrets.SEIKIKA_READ_TOKEN }}   # install.sh / gh release download
 ```

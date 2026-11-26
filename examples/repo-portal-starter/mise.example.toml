@@ -6,5 +6,5 @@ seikika = "github:seikika/seikika"
 seikika-connector-workspace = "github:seikika/seikika"
 
 [tools]
-seikika = { version = "0.2.0", matching = "seikika-cli-" }
-seikika-connector-workspace = { version = "0.2.0", matching = "seikika-connector-workspace-" }
+seikika = { version = "0.2.1", matching = "seikika-cli-" }
+seikika-connector-workspace = { version = "0.2.1", matching = "seikika-connector-workspace-" }

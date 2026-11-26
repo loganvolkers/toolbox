@@ -2,7 +2,7 @@
 # zizmor and actionlint (D70). The first package extracted from Seikika for Seikika, which includes it.
 apiVersion: seikika.com/package/v0
 name: github-actions
-version: 0.2.0
+version: 0.2.1
 description: >-
   Score GitHub Actions workflows and the third-party actions they use,
   with zizmor, actionlint and run history.

@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 0.2.1 — 2026-11-26
+
+- First GitHub release under the Seikika name. Toolbox users should update the CLI and connector names, manifest headers, environment variables, and report-action references together. The release includes the portal and report UI, public SDK and package guides, and a mise starter that pins the CLI and workspace connector to the same version.
+
 ## 0.2.0 — 2026-11-26
 
 - Build the hosted portal and offline report from Astro and Vue. The report uses the same shared entity and scorecard components as the live portal. Publish the report and UI Storybook with the docs. Embed the Astro builds in Seikika so the binary and offline report can run without a JavaScript build tool.
