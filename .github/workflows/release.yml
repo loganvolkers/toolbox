@@ -325,7 +325,7 @@ jobs:
           persist-credentials: false
           submodules: recursive
 
-  # dist's post-announce-jobs = ["./image"] (dist-workspace.toml), patched under allow-dirty:
+  # dist's post-announce jobs (dist-workspace.toml), patched under allow-dirty:
   # no `secrets: inherit`, because image.yml needs only github.token (zizmor secrets-inherit).
   custom-image:
     needs:
@@ -339,3 +339,14 @@ jobs:
       "contents": "read"
       "id-token": "write"
       "packages": "write"
+
+  custom-mise:
+    needs:
+      - plan
+      - announce
+    if: ${{ !fromJSON(needs.plan.outputs.val).announcement_is_prerelease }}
+    uses: ./.github/workflows/mise.yml
+    with:
+      plan: ${{ needs.plan.outputs.val }}
+    permissions:
+      "contents": "read"

@@ -27,7 +27,7 @@ Changeset frontmatter still uses logical names: package YAML `name:` for package
    ```
 
 5. `.github/workflows/release.yml` (cargo-dist) builds archives, installers, attestations,
-   and a GitHub Release. Its last job calls `.github/workflows/image.yml`, which builds the GHCR image.
+   and a GitHub Release. After publication, it builds the GHCR image and checks operator installs with mise.
 
 Maintainer-run apply (without the Version PR):
 
@@ -64,6 +64,8 @@ python3 scripts/test-apply-changesets.py
    archives. A release made with `GITHUB_TOKEN` starts no other workflow, so the image is not
    built on a `release` event. For a tag released before this job existed, run
    `gh workflow run image.yml -f tag=vX.Y.Z`.
+6. The `custom-mise` job [checks the operator install](#install-what-a-consumer-needs) after
+   the stable release is announced.
 
 Verify an artifact with `gh attestation verify <file> --repo <owner>/seikika`.
 
@@ -142,14 +144,16 @@ entries. The [starter config](../examples/repo-portal-starter/mise.example.toml)
 connector together.
 
 When updating the recommended operator version, update both starter pins and the matching
-examples in the public docs. After the release is published, copy the config and starter manifest
-into a test Git repository (`mise.toml` and `.seikika/seikika.yaml`) and run the release smoke check.
+examples in the public docs. After cargo-dist announces a stable release, it calls the
+[mise workflow](../.github/workflows/mise.yml) for that tag. The workflow installs the CLI and
+workspace connector on Linux using the starter config, checks connector discovery and the
+report baseline, and resolves the release assets for all five targets with `mise lock`.
+The weekly workflow run repeats the install for the version pinned in the starter.
+
+To repeat the check locally for a published tag, run the following from the repository root.
 
 ```sh
-mise trust
-mise install
-mise exec -- seikika --version
-mise exec -- seikika doctor .seikika
+mise exec -- python3 scripts/check-mise.py release v0.2.0
 ```
 
 `scripts/install-release.sh` unpacks `seikika`, `seikika-connector-workspace`

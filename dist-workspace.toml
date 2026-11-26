@@ -22,10 +22,10 @@ github-attestations = true
 # Keep hand-patched release.yml Token-Permissions (top-level contents: read; job-level
 # write on host/announce). Without this, `dist generate` refuses the dirty CI file (cargo-dist#2320).
 allow-dirty = ["ci"]
-# The server image is built after the release is announced: a `release: published` trigger never
-# fires for a release made with GITHUB_TOKEN. release.yml carries the job without `secrets: inherit`.
-post-announce-jobs = ["./image"]
-github-custom-job-permissions = { "image" = { contents = "read", packages = "write", id-token = "write", attestations = "write" } }
+# Build the image and smoke-test mise after the release is announced. A `release: published`
+# trigger never fires for a release made with GITHUB_TOKEN. Neither job needs `secrets: inherit`.
+post-announce-jobs = ["./image", "./mise"]
+github-custom-job-permissions = { "image" = { contents = "read", packages = "write", id-token = "write", attestations = "write" }, "mise" = { contents = "read" } }
 
 # Actions pinned to commit SHAs (zizmor `unpinned-uses`; maintainer-ci-security). Update with the
 # tag's commit when upgrading: git ls-remote --tags https://github.com/actions/<name>

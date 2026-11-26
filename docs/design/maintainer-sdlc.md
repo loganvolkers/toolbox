@@ -120,6 +120,12 @@ The repository's [mise config](../../mise.toml) uses the Rust version and compon
 `rust-toolchain.toml` and selects Node 24 and Python 3.13 to match CI. Use an activated mise
 shell or run commands with `mise exec --`.
 
+The [mise workflow](../../.github/workflows/mise.yml) installs the toolchain with an empty
+Rust home and no Actions cache. Pull requests and pushes to main use the minimum supported
+mise version. The weekly run uses the newest stable version to catch upstream changes. It
+checks the Rust and pnpm pins, runs formatting and the frozen frontend install, and verifies
+that cargo-dist still plans the CLI and workspace connector archives for every release target.
+
 | Tool | Used by | Note |
 |---|---|---|
 | Rust, Clippy and rustfmt | Build and workspace checks | The Rust pin stays in `rust-toolchain.toml` (D46) |
@@ -179,7 +185,7 @@ A version tag releases everything; nothing is built by hand.
    - writes shell and PowerShell installers;
    - attests every artifact;
    - publishes a GitHub release.
-4. The same run's last job, `custom-image` (dist's `post-announce-jobs`), calls
+4. After the release is announced, `custom-image` (one of dist's `post-announce-jobs`) calls
    `.github/workflows/image.yml`. It builds `ghcr.io/<owner>/seikika:<version>` from that release's
    Linux archives, plus checksum-verified OpenFGA, and attests it. A `release: published` trigger
    would never fire: dist creates the release with `GITHUB_TOKEN`, and events from that token start

@@ -1,0 +1,53 @@
+name: mise
+on:
+  pull_request:
+  push: {branches: [main]}
+  schedule: [{cron: 41 6 * * 1}]
+  workflow_dispatch:
+  workflow_call:
+    inputs:
+      plan:
+        description: cargo-dist plan provided by the post-announce job
+        type: string
+        required: true
+permissions: {contents: read}
+concurrency:
+  group: "${{ github.workflow }}-mise-${{ github.ref }}"
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+jobs:
+  smoke:
+    name: mise smoke
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+        with: {persist-credentials: false}
+      - name: Read the minimum supported mise version
+        id: minimum
+        run: |
+          version=$(python3 -c 'import tomllib; print(tomllib.load(open("mise.toml", "rb"))["min_version"])')
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+      - uses: jdx/mise-action@924e7c586e33d7d4bae9c14e26c5d22e2beb6e78 # v5.3.0
+        with:
+          # An empty version uses the newest stable mise release on the weekly run.
+          version: "${{ github.event_name != 'schedule' && steps.minimum.outputs.version || '' }}"
+          install: false
+          cache: false
+          env: false
+          export_path: false
+          add_shims_to_path: false
+      - name: Provision a fresh maintainer checkout
+        if: ${{ inputs.plan == '' }}
+        env:
+          CARGO_HOME: ${{ runner.temp }}/mise-cargo
+          RUSTUP_HOME: ${{ runner.temp }}/mise-rustup
+        run: |
+          mise trust
+          mise install
+          mise exec -- cargo fmt --all --check
+          mise exec -- pnpm install --frozen-lockfile
+          mise exec -- python3 scripts/check-mise.py maintainer
+      - name: Install the published CLI and workspace connector
+        env:
+          RELEASE_TAG: ${{ inputs.plan != '' && github.ref_name || '' }}
+        run: python3 scripts/check-mise.py release "$RELEASE_TAG"
