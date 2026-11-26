@@ -17,13 +17,13 @@ The questions worth separating:
 
 | Question | What answers it | In this repo |
 |---|---|---|
-| Can an operator tell what it is and how to configure it? | A package description, crate docs, and a documented config | `maintainer-connector` bronze |
+| Can an operator find it and learn how to configure it? | A public setup guide, package description, crate docs, and a documented config | `maintainer-connector` bronze |
 | Does a resync close, and does a refresh admit when an id is gone? | The conformance kit's message rules, visible as source shapes | silver |
 | Does CI actually run it, and is a credential pasted into the tree? | A `connector test` line, or an acceptance script for a push connector; secret shapes | gold |
 | Is it healthy in production? | Lag, error rate, a permission probe | **Not gated.** That is `connector-health` in [meta-catalog.md](./meta-catalog.md), and it needs a live portal |
 
 The workspace connector emits one `connector` record per `crates/seikika-connector-*/Cargo.toml`.
-It reports facts. `portal/seikika.yaml` holds the thresholds. A connector added after this baseline
+It reports facts. `portal/standards/connectors.yaml` holds the thresholds. A connector added after this baseline
 must reach bronze.
 
 **What we did not adopt, and why:**
@@ -62,6 +62,7 @@ One `connector` record per manifest. The id is `connector:<crate directory>`.
 |---|---|
 | `name`, `description`, `descriptionChars`, `path`, `dir` | Package name and the `description` field of `[package]` |
 | `crateDoc`, `configDocumented` | A `//!` block on `src/main.rs` (or `src/lib.rs`). Config is documented when that block names `SEIKIKA_CONNECTOR_CONFIG`, `--seikika` or `--listen` |
+| `publicGuide` | The public `/connectors/<name>/` route, or null if it cannot be verified. The crate's `seikika-connector-` suffix names its guide. The workspace collector checks for a titled and described directory and guide, sidebar visibility, and a directory link. |
 | `transport` | `stdio` if the source calls `run_stdio`, `remote` if it calls `run_remote`, `both` or `none` |
 | `pushOnly` | The crate doc says push-only, or the crate calls `run_remote` and not `run_stdio` |
 | `documentedKinds`, `genericKinds` | Kinds from `record("…")`, `snapshot_complete("…")`, `"kind": "…"`, and doc bullets. `genericKinds` is set when the doc says kinds come from job config (`kind \`<\`` or `declares their \`kinds\``), which is how the runner works |
@@ -79,6 +80,7 @@ the authors of these connectors.
 |---|---|---|
 | bronze | `described` | A non-empty Cargo description and a crate doc |
 | bronze | `config-documented` | The crate doc names the config env or the remote CLI flags |
+| bronze | `public-guide` | The connector's guide appears in the public connector directory and sidebar |
 | bronze | `speaks-the-protocol` | `transport` is `stdio`, `remote` or `both` |
 | silver | `names-its-kinds` | At least one documented kind, or the runner's generic-kinds note |
 | silver | `closes-snapshots` | The source sends `snapshot_complete`, or the connector is push-only |
@@ -87,25 +89,23 @@ the authors of these connectors.
 | gold | `exercised-in-ci` | A CI line runs `connector test` on the binary, or the connector is push-only and an acceptance script starts it |
 | gold | `no-hardcoded-secrets` | No secret shape in the crate sources |
 
-A new connector below bronze is a ratchet regression. Gold is not the floor: `git-files` and `scim`
-have no unit tests, and inventing a test only to pass the rule would not be a measurement. The
-rule names the gap.
+A new connector below bronze is a ratchet regression. Add an operator landing page under
+`site/src/content/docs/connectors/` and link its route from the directory there. Give the page a
+title and description. Use the [documentation style guide](../../site/src/content/docs/maintainers/writing.md)
+to review setup, record examples, verification, and recovery steps. The public guide rule checks
+presence and discoverability. A guide may link to more pages when the connector needs them.
+See [connector directory research](../audits/connector-directory.md) and
+[the public guide decision](../decisions/D01M8CHMD6TH2AXRWT9E49G4V6V.md).
 
 ## 5. This repository
 
-Measured with `seikika report portal --skip runner,github-actions` after the connector change.
+On November 26, 2026, `seikika report portal --skip runner,github-actions` found that all six
+first-party connectors passed `public-guide` and reached gold. The directory links to the guides
+for GitHub, GitLab, Git files, Workspace, Runner, and SCIM. [Connector directory](../../site/src/content/docs/connectors/index.md)
 
-| Connector | Level | What fails above bronze |
-|---|---|---|
-| `seikika-connector-github` | gold | — |
-| `seikika-connector-gitlab` | gold | — (conformance runs in `scripts/gitlab-acceptance.sh` step 8, against a real GitLab) |
-| `seikika-connector-runner` | gold | Kinds come from job config, which the rule allows |
-| `seikika-connector-workspace` | gold | — |
-| `seikika-connector-git-files` | bronze | No `#[test]` (silver). Conformance runs in `scripts/m4-acceptance.sh` |
-| `seikika-connector-scim` | bronze | No `#[test]`. Push-only, so the snapshot and `not_found` rules do not apply. `scripts/m4-acceptance.sh` starts the binary; the conformance kit does not, because a push connector has no resync |
-
-`seikika test portal` pins three fixture connectors: `crates/demo/focused` at gold,
-`crates/demo/partial` at bronze, `crates/demo/unsafe` at none. Every rule passes on one fixture and
+`seikika test portal` pins four fixture connectors: `crates/demo/focused` at gold,
+`crates/demo/partial` at bronze, `crates/demo/unsafe` and `crates/demo/unlisted` at none. The
+unlisted fixture has crate docs and fails the public guide rule. Every rule passes on one fixture and
 fails on another, so the new rules and the scorecard clear `meta-rule` / `meta-scorecard` from
 this commit (D71).
 

@@ -44,4 +44,4 @@ The driver starts the connector and requests records for `example-item`. Look fo
 3. Read connector configuration from the `SEIKIKA_CONNECTOR_CONFIG` JSON. Use [logical secret names](/authors/secrets/) for credentials.
 4. Update the example manifest's `records` and mappings. Run both commands again and check that the expected kind, ID, and fields arrive.
 
-For message formats and remote connectors, see the [connector protocol](https://github.com/seikika/seikika/blob/main/docs/design/connector-control.md) and its [JSON Schema](https://github.com/seikika/seikika/blob/main/crates/seikika-model/schema/connector-messages.schema.json). Operators can [install a first-party connector](/start/install/#install-a-connector) for a shipped data source.
+For message formats and remote connectors, see the [connector protocol](https://github.com/seikika/seikika/blob/main/docs/design/connector-control.md) and its [JSON Schema](https://github.com/seikika/seikika/blob/main/crates/seikika-model/schema/connector-messages.schema.json). For examples of how operators configure shipped connectors, see the [connector directory](/connectors/).
