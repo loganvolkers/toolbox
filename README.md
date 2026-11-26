@@ -16,17 +16,15 @@ The public docs are a Starlight site in [site/](site/src/content/docs/index.md),
 
 **SDLC has four layers** ([docs/sdlc.md](docs/sdlc.md)): the *maintainer* SDLC for building Seikika, the *package author* SDLC for publishing packages and connectors others consume, the *operator* SDLC for building a portal, and the *user* SDLC for building apps on a portal.
 
-**Install a Seikika release (v0.2.0 onward):** the shell and PowerShell installers come with the GitHub release ([Install a release](site/src/content/docs/start/install.md), [docs/RELEASING.md](docs/RELEASING.md)). An operator running a repo portal installs the CLI and the workspace connector. Writing a connector is the CLI plus the scaffold in [examples/connector-scaffold](examples/connector-scaffold/README.md). Until v0.2.0 appears on [GitHub Releases](https://github.com/seikika/seikika/releases), you can [try a repo portal from source](site/src/content/docs/start/run.md#try-a-repo-portal-from-source). Once the release is available, install both binaries for a repo portal:
+**Operators** can install the CLI and the connectors their portal needs with mise once v0.2.0 is published. See [Install a release](site/src/content/docs/start/install.md) or [try a repo portal from source](site/src/content/docs/start/run.md#try-a-repo-portal-from-source).
+
+**Maintainers** use mise to install the development tools and build from the checkout. Run the following from the repository root after [installing mise](https://mise.jdx.dev/installing-mise.html).
 
 ```bash
-curl --proto '=https' --tlsv1.2 -LsSf https://github.com/seikika/seikika/releases/download/v0.2.0/seikika-cli-installer.sh | sh
-curl --proto '=https' --tlsv1.2 -LsSf https://github.com/seikika/seikika/releases/download/v0.2.0/seikika-connector-workspace-installer.sh | sh
-```
-
-**Validate the reference portal** (changing Seikika itself):
-
-```bash
-cargo build && target/debug/seikika validate examples/reference-portal
+mise trust
+mise install
+mise exec -- cargo build --locked
+mise exec -- target/debug/seikika validate examples/reference-portal
 ```
 
 **Start here:** [AGENTS.md](AGENTS.md) for working rules and parallel tracks, [docs/v1-spec.md](docs/v1-spec.md) for what v1 must do, [examples/reference-portal](examples/reference-portal/README.md) for the reference implementation anchor. Also: [docs/decisions/](docs/decisions/README.md) for every decision, [docs/questions.md](docs/questions.md) for open questions, [docs/glossary.md](docs/glossary.md) for vocabulary, and [docs/research-log.md](docs/research-log.md) for methods and hands-on verifications.

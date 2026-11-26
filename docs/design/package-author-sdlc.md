@@ -32,10 +32,9 @@ Three couplings make the gap structural:
    then forks:
    - its test runs against **released** Seikika versions and platforms, not the workspace;
    - it ends in **distribute** and **adopt**, not merge.
-2. **Release Seikika (maintainer/release) with `dist`.** It produces archives for each platform plus
-   shell, PowerShell, Homebrew and npm installers, an MSI and GitHub attestations. We add
-   cargo-binstall metadata, an aqua registry entry (which also reaches mise) and a container image.
-   apt comes later (§3.1).
+2. **Release Seikika (maintainer/release) with `dist`.** It produces per-platform archives, shell
+   and PowerShell installers, and GitHub attestations. Operators can use mise to install the
+   archives. We also ship cargo-binstall metadata and a container image (§3.1).
 3. **Decouple connectors from core by making the protocol the product** (§3.2):
    - **builtin** (shipped in the image);
    - **executable** (any language, released by its author, pinned by digest per platform);
@@ -91,7 +90,8 @@ Popular CLIs offer five or so install paths. What each costs us:
 | Homebrew | `dist` writes a formula to our tap | A tap repository | `homebrew-core` later, by request |
 | npm | `dist` npm installer, or the platform-package pattern (one package per os/cpu, selected by `optionalDependencies`; esbuild, Biome, turbo) | npm trusted publishing | For TS-builder users; known lockfile pitfalls when lockfiles lack other platforms (npm/cli issues) |
 | cargo-binstall | `[package.metadata.binstall]` pointing at release assets | Metadata only | Rust users |
-| aqua / mise | A PR to the aqua registry (mise's default backend uses it) | A registry PR per format change | Checksums, cosign and SLSA verification come with it |
+| mise | One GitHub backend alias per release app | Keep the starter config in sync with the recommended release | Checksums and GitHub attestation verification |
+| aqua registry | Register the release archives upstream | A registry PR per format change | Checksums, cosign and SLSA verification |
 | apt / rpm | `cargo-deb` or nfpm plus a hosted repository | A repository host and signing key | Defer until asked; the image covers servers |
 | Container image | `ghcr.io/<org>/seikika:<version>` with attestations | Image workflow | Charter G1: operators build `FROM` it |
 
@@ -200,7 +200,11 @@ digest, data packages with typed parameters) stands. A package now has three par
   - the package tests itself in `packages/github-actions/tests`;
   - the second package, `packages/pnpm-expo/` (pnpm workspace + Expo app scorecards on new workspace facts, D01M7Y6X38AERPBT0YH1AG5TBRD);
   - the third package, `packages/storybook/` (Storybook catalog scorecard on `storybook` workspace facts, D01M7YNZFP68W0DR24PEA6T3FVM).
-- **Step 1, first release cut:** tag `v0.1.0` publishes attested archives and installers. Consumers run the release's shell or PowerShell installer (`<app>-installer.sh` / `.ps1`, one per dist app) or set `seikika-version` on `actions/report`. Homebrew, npm and aqua channels remain deferred. cargo-binstall metadata is on each distable crate; the crates are not on crates.io yet (sparse index 404 for `seikika-cli`, 2026-11-23), so `cargo binstall` does not resolve them.
+- **Step 1, release distribution:** cargo-dist publishes archives and shell and PowerShell
+  installers. Starting with the branded v0.2.0 release, operators can use mise's GitHub backend and
+  pin each app to the same version. CI consumers can set `seikika-version` on `actions/report`.
+  See the [mise adoption decision](../decisions/D01M8BJDPAP97XH4AQSQCN1C0X2.md) and the
+  [release guide](../RELEASING.md#install-what-a-consumer-needs).
 - **Not built:** WASM connectors (step 5), deterministic archives and the OCI mirror, Homebrew, npm and aqua registry entries.
 
 **Build order**, because each step unblocks the next stage in the catalogue:

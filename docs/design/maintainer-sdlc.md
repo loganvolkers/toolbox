@@ -115,14 +115,30 @@ npm --prefix scripts/github-emulate test
 
 ## 5. Local prerequisites
 
+From the repository root, run `mise trust` and `mise install` after installing mise 2026.11.14 or later.
+The repository's [mise config](../../mise.toml) uses the Rust version and components from
+`rust-toolchain.toml` and selects Node 24 and Python 3.13 to match CI. Use an activated mise
+shell or run commands with `mise exec --`.
+
 | Tool | Used by | Note |
 |---|---|---|
-| Rust 1.97.0 | Everything | Pinned; dependencies needing a newer toolchain are isolated or rejected (D46) |
-| Postgres 16 | M2–M4 acceptance | The scripts create a throwaway cluster (as the `postgres` user when run as root) |
-| OpenFGA v1.22.1 (`SEIKIKA_OPENFGA_BIN`) | Authorization tests, M3–M4 acceptance | `go install github.com/openfga/openfga/cmd/openfga@v1.22.1` |
-| Python 3 + `tools/requirements.txt` | Reference model, parity, mock GitHub, SCIM feeder | `cel-python`, `jsonschema`, `pyyaml` |
-| yamark 0.6.1 | YAML formatting (D97) | `python3 -m pip install yamark==0.6.1` |
-| Node 24 + PNPM + Playwright | Astro builds, A11 browser check, UI stories and probes | `pnpm install --frozen-lockfile`; `pnpm --filter @seikika/astro-report exec playwright install chromium` |
+| Rust, Clippy and rustfmt | Build and workspace checks | The Rust pin stays in `rust-toolchain.toml` (D46) |
+| OpenFGA and its `fga` CLI | Authorization tests, M3–M4 acceptance | The tests find `openfga` on `PATH`. The acceptance scripts need `SEIKIKA_OPENFGA_BIN="$(mise which openfga)"` |
+| Python and uv | Reference model, parity, mock GitHub, SCIM feeder | Sync the reference requirements before running the oracle |
+| Yamark, actionlint, zizmor, Ruff, Scorecard and OSV-Scanner | YAML and repository scorecard checks | Fetch the pinned RustSec snapshot with `scripts/ci-tools.sh <dir> rustsec-osv` when running the offline scan |
+| Node and pnpm | Astro builds, UI stories and probes | Run `mise exec -- pnpm install --frozen-lockfile`. For browser checks, run `mise exec -- pnpm --filter @seikika/astro-report exec playwright install chromium` |
+| cargo-dist | Release planning | Run `mise exec -- dist plan` |
+| Postgres 16 | M2–M4 acceptance | Install the system package separately. The scripts create a throwaway cluster |
+
+The reference requirements have hashes for Linux x86-64 with Python 3.13. Install them in a virtual environment and use its Python for parity checks.
+
+```sh
+mise exec -- uv venv --allow-existing --python 3.13 .venv
+mise exec -- uv pip sync --python .venv --require-hashes examples/reference-portal/tools/requirements.txt
+mise exec -- .venv/bin/python scripts/validate-parity.py
+```
+
+See the [mise adoption decision](../decisions/D01M8BJDPAP97XH4AQSQCN1C0X2.md).
 
 ## 6. Standards
 

@@ -9,16 +9,27 @@ A maintainer changes Seikika itself: the Rust workspace, the connectors shipped 
 
 The maintainer SDLC is how a change lands here. Every milestone exit is a command, so a change is done when the command passes.
 
+## Set up the checkout
+
+Install [mise](https://mise.jdx.dev/installing-mise.html) 2026.11.14 or later, then run the following from the repository root.
+
+```sh
+mise trust
+mise install
+```
+
+For frontend work, run `mise exec -- pnpm install --frozen-lockfile`. For Python reference checks, use the [hashed reference requirements](https://github.com/seikika/seikika/blob/main/docs/design/maintainer-sdlc.md#5-local-prerequisites).
+
 ## Prove a derived-state change
 
 `examples/reference-portal` is the oracle. Its `expected/` directory is the derived catalog the pipeline must reproduce byte for byte: entities, scores, tuples, options. `seikika derive` writes that catalog. `cargo test -p seikika-derive` compares it. `scripts/validate-parity.py` compares `seikika validate` with the Python validator on the same accept and reject cases.
 
 ```bash
-cargo build
-seikika validate examples/reference-portal
-seikika test examples/reference-portal
-cargo test -p seikika-derive
-python3 scripts/validate-parity.py
+mise exec -- cargo build --locked
+mise exec -- target/debug/seikika validate examples/reference-portal
+mise exec -- target/debug/seikika test examples/reference-portal
+mise exec -- cargo test --locked -p seikika-derive
+mise exec -- .venv/bin/python scripts/validate-parity.py
 ```
 
 A change that moves one field in the output fails the byte compare. Regenerate `expected/` only after reading the diff.
@@ -32,13 +43,13 @@ Tests prove that Seikika behaves as specified. A DX Benchmark asks whether that 
 On a 4 vCPU container with warm caches, after milestone M4, the recorded times are: rebuild after editing `seikika-derive` 2.1 s, `cargo test` 3.6 s, `seikika test examples/reference-portal` 0.2 s, `cargo clippy --all-targets -- -D warnings` 4.7 s. The acceptance script that drives Postgres, OpenFGA, the connectors and a browser (`scripts/m4-acceptance.sh`) is 7.9 s.
 
 ```bash
-cargo fmt --check
-cargo clippy --all-targets -- -D warnings
-cargo test
-seikika test portal
+mise exec -- cargo fmt --all --check
+mise exec -- cargo clippy --all-targets --locked -- -D warnings
+mise exec -- cargo test --locked
+mise exec -- target/debug/seikika test portal
 ```
 
-`seikika test portal` runs this repository's own expectations: the rules, scored against fixture entities, both the passing cases and the failing ones. Acceptance scripts for milestones M2, M3 and M4 need Postgres 16. M3 and M4 also need OpenFGA (`SEIKIKA_OPENFGA_BIN`). M4 needs Node and Playwright for the browser check.
+`seikika test portal` checks passing and failing fixture entities against this repository's rules. Acceptance scripts for M2, M3 and M4 need Postgres 16. For M3 and M4, set `SEIKIKA_OPENFGA_BIN="$(mise which openfga)"`. M4 also needs Playwright's Chromium browser.
 
 The toolchain is pinned in `rust-toolchain.toml`. YAML in the repository is formatted with Yamark 0.6.1 (`yamark format --check`). The public [CLI reference](/start/cli/) is an Astro page built from `seikika describe`. The pages workflow runs `pnpm --filter seikika-site check:cli-docs` to check the committed fingerprint.
 
@@ -47,7 +58,7 @@ The toolchain is pinned in `rust-toolchain.toml`. YAML in the repository is form
 This repository is also a portal. `portal/` declares the standards for crates, docs, workflows, skills, this site's pages, and the four SDLC layers.
 
 ```bash
-seikika report portal --skip runner,github-actions --baseline portal/results.json --ci
+mise exec -- target/debug/seikika report portal --skip runner,github-actions --baseline portal/results.json --ci
 ```
 
 `--ci` fails when an entity drops a level, when a failing rule's evidence grows, when a new entity is below the floor (bronze for these standards), and when the baseline is missing an improvement. `--update` rewrites `portal/results.json` after you have looked at the diff. The HTML report published on this site is the same run; CI compares the committed files with a fresh one.

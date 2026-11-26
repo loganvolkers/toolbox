@@ -5,11 +5,13 @@ sidebar:
   order: 3
 ---
 
-Build from source to try the current checkout or contribute to Seikika. The repo pins its Rust toolchain in `rust-toolchain.toml`, which rustup installs on first use.
+Build from source to try the current checkout or contribute to Seikika. Install [mise](https://mise.jdx.dev/installing-mise.html) 2026.11.14 or later, then run these commands in the Seikika checkout. Mise reads the Rust version and components from `rust-toolchain.toml`.
 
 ```bash
-cargo build
-target/debug/seikika validate examples/reference-portal
+mise trust
+mise install
+mise exec -- cargo build --locked
+mise exec -- target/debug/seikika validate examples/reference-portal
 ```
 
 `validate` checks a portal manifest. The reference portal under `examples/reference-portal` is the anchor for v1: its expected outputs are the oracle.
@@ -23,7 +25,8 @@ you can use the same binaries and manifest from a different checkout.
 git clone https://github.com/seikika/seikika.git
 cd seikika
 export SEIKIKA_SRC="$PWD"
-cargo build --locked -p seikika-cli -p seikika-connector-workspace
+mise trust
+mise exec rust -- cargo build --locked -p seikika-cli -p seikika-connector-workspace
 export PATH="$SEIKIKA_SRC/target/debug:$PATH"
 ```
 
@@ -40,7 +43,7 @@ cp "$SEIKIKA_SRC/examples/repo-portal-starter/seikika.yaml" .seikika/seikika.yam
 Seikika also scores itself. From a built checkout:
 
 ```bash
-target/debug/seikika report portal --skip runner,github-actions
+mise exec -- target/debug/seikika report portal --skip runner,github-actions
 ```
 
 That report reads the catalog in `portal/` and prints each scorecard with the evidence for rules that fail. It does not need Postgres.
