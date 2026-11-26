@@ -5208,6 +5208,9 @@
       "doc:actions/report/README.md": {
         "level": "silver"
       },
+      "doc:docs/README.md": {
+        "level": "silver"
+      },
       "doc:docs/RELEASING.md": {
         "level": "silver"
       },
@@ -5221,6 +5224,9 @@
         "level": "silver"
       },
       "doc:docs/audits/public-docs-2026-11-26.md": {
+        "level": "silver"
+      },
+      "doc:docs/audits/readmes-2026-11-26.md": {
         "level": "silver"
       },
       "doc:docs/audits/seikika-report-2026-11-24-2.md": {
@@ -6030,6 +6036,9 @@
       "doc:experiments/durable-schema/README.md": {
         "level": "silver"
       },
+      "doc:experiments/full-recompute/README.md": {
+        "level": "silver"
+      },
       "doc:experiments/gate-repair-ab/README.md": {
         "level": "silver"
       },
@@ -6351,6 +6360,9 @@
         "level": "gold"
       },
       "example:experiments/durable-schema/README.md": {
+        "level": "gold"
+      },
+      "example:experiments/full-recompute/README.md": {
         "level": "gold"
       },
       "example:experiments/gate-repair-ab/README.md": {

@@ -174,3 +174,11 @@ skills-ref validate plugins/seikika-operator/skills/<skill>
 # and the §4.6 test file in authz/scorecards.fga.yaml, then:
 fga model test --tests authz/scorecards.fga.yaml
 ```
+
+## README review (2026-11-26)
+
+The [README gap analysis](audits/readmes-2026-11-26.md) records seven primary sources and the inventory. With the Rust 1.97 toolchain on Linux, `cargo test --workspace --locked --offline` passed. Each of the 17 `cargo package --list --locked --offline --allow-dirty -p <crate>` runs included `README.md`.
+
+The 0.2.0 source CLI reported its version, validated the reference portal, and passed its 20 fixture expectations and OpenFGA tests. Both documented Git package pins installed and wrote a lock in disposable checkouts. Their manifests validated, their reports contained the expected scorecards, and the package suites passed all six expectations. The Astro and Storybook build and the hosted UI type check passed under Node 24 and pnpm 11.25.0.
+
+The repository quickstart recorded a baseline, exited 1 after moving its linked file, and exited 0 after restoring it. The full-recompute smoke check (`cargo run --release -- 100 2`) evaluated 200 expressions per run and printed the group-closure summary. The Seikika standards ratchet matched the regenerated baseline with the same connector skips as CI.

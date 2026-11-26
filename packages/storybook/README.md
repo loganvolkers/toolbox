@@ -1,37 +1,23 @@
-# storybook: a Seikika package
+# storybook
 
-Storybook project hygiene for React / React Native Web catalogs. Built
-on `builtin:workspace` facts (`storybook` records via `storybooks`
-globs) — deterministic CEL for config, deps, a11y addon, telemetry and
-CI; qualitative story coverage stays assessment-backed later
-([D01M7YNZFP68W0DR24PEA6T3FVM](../../docs/decisions/D01M7YNZFP68W0DR24PEA6T3FVM.md)).
+Check Storybook setup in React and React Native Web projects. The package scores configuration, dependencies, accessibility tooling, telemetry settings, and CI.
+The Seikika package adds checks to your portal using records from the workspace connector.
 
-| Brings                 | What                                                                                                                                     |
-| ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
-| Kinds                  | `Storybook`                                                                                                                              |
-| Scorecards             | `storybook-catalog`                                                                                                                      |
-| Connector config       | Consumer must enable `storybooks` globs on `builtin:workspace`                                                                           |
-| Minimum Seikika binary | **After the release that ships `storybook` workspace facts** (post-merge of this package + connector). Until then use a workspace build. |
+## Add the package
 
-## Consumer diff
-
-### 1. Include (pin a git tag that **contains** this directory)
+[Build the CLI and workspace connector](https://seikika.com/start/install/#build-from-source)
+using the commit in the include below as your checkout revision. This build emits the storybook records
+these checks need. Add the include to your portal manifest.
 
 ```yaml
 include:
-  - package: github:seikika/seikika/packages/storybook@0.1.2
+  - package: github:seikika/seikika/packages/storybook@25a208a3bc1a97f184588c512afcb12d636ce7be
     with: {requireA11yAddon: true}
 ```
 
-Replace `@0.1.2` with the Seikika release tag that first contains
-`packages/storybook` **and** emits `storybook` records. Pins follow the
-**git tag**, not only `seikika-package.yaml` `version:` (same trap as
-`pnpm-expo`).
-
-An older `seikika-version` that lacks `storybook` facts will leave the
-scorecard empty.
-
-### 2. Workspace connector config delta
+Keep existing connector kinds and settings, and add these workspace connector
+settings. The glob paths are relative to the checkout root. Adjust them to
+match your repository.
 
 ```yaml
 connectors:
@@ -45,25 +31,21 @@ connectors:
     records: [storybook, workflow] # keep any existing kinds too
 ```
 
-### 3. Install, then report
+From the portal directory, install the package, validate the manifest,
+and run the checks. Keep both binaries on `PATH`.
 
-```bash
-seikika install
-seikika doctor
-seikika report . --baseline .seikika/results.json
+```sh
+seikika install .
+seikika validate .
+seikika report .
 ```
 
-### Publishing path
+Look for the scorecards below. If they have no entities, check that the
+workspace connector is available and its globs match your files.
+Commit `seikika.lock` so other checkouts can reproduce the package selection.
+Follow [Gate pull requests](https://seikika.com/operators/ci/) to add a baseline in CI.
 
-| Step                                                                                             | Required?                |
-| ------------------------------------------------------------------------------------------------ | ------------------------ |
-| Merge this package + connector facts to `seikika/seikika` `main`                            | **Yes**                  |
-| Tag / GitHub Release that includes this directory **and** a Seikika build with `storybook` facts | **Yes for external CI**  |
-| Separate npm/OCI publish of the package YAML                                                     | **No** — git-first (D89) |
-
-Parameters: `requireA11yAddon` (boolean, default `true`).
-
-Test the package with `seikika test packages/storybook/tests`.
+Set `requireA11yAddon` to control whether the accessibility addon is required. It defaults to `true`. The package fixture is in [tests/](tests/).
 
 ## Scorecard: `storybook-catalog` (kind `Storybook`)
 
