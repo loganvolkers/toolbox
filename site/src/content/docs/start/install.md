@@ -14,30 +14,74 @@ Check [GitHub Releases](https://github.com/seikika/seikika/releases) for a relea
 v0.2.0. The 0.1 releases use Toolbox names and a different manifest header. Until v0.2.0 is
 available, [build from source](#build-from-source).
 
-Install mise 2026.11.14 or later and activate it in your shell. Run the following to install
-the CLI for your user. [Mise installation](https://mise.jdx.dev/installing-mise.html) ·
-[Shell setup](https://mise.jdx.dev/shell-setup.html)
+Install mise 2026.11.14 or later. Use a repository config to share the CLI and connector
+versions with your team. Use the global install when you want the CLI available across
+projects. [Mise installation](https://mise.jdx.dev/installing-mise.html)
+
+The release targets Linux (glibc) and macOS on x86-64 and Arm64, and Windows on x86-64.
+
+### Install for a repo portal
+
+Work from the root of the repository you want to score. If it already has a mise config,
+merge the entries from the starter into its `[tool_alias]` and `[tools]` tables. If it has
+no mise config, download the example as `mise.toml`. [Starter mise config](https://github.com/seikika/seikika/blob/main/examples/repo-portal-starter/mise.example.toml)
 
 ```bash
-mise use --global 'github:seikika/seikika[matching=seikika-cli-]@0.2.0'
-seikika --version
+curl -fsSL https://raw.githubusercontent.com/seikika/seikika/main/examples/repo-portal-starter/mise.example.toml -o mise.toml
 ```
 
-To pin tools for a repo portal, copy the [starter mise config](https://github.com/seikika/seikika/blob/main/examples/repo-portal-starter/mise.example.toml)
-to the root of your Git checkout as `mise.toml`, or merge its aliases and versions into an
-existing config. It pins the CLI and workspace connector. Review the config, then run
-`mise trust` and `mise install` in that checkout.
+Use `curl.exe` in PowerShell. Review the config before you trust it. Each alias points to
+the Seikika release repository, and each `matching` value selects that app's archive.
+
+```sh
+mise trust
+mise install
+mise exec -- seikika --version
+mise which seikika-connector-workspace
+```
+
+The version should match the CLI pin in the config, and `mise which` should print the path
+to the workspace connector. Commit the config to share both pins. Once your portal manifest
+is in `.seikika/`, check that the CLI can find its connector.
+
+```sh
+mise exec -- seikika doctor .seikika
+```
+
+Look for `ok` next to the workspace connector. `mise exec --` makes the project's tools
+available for one command. To use plain `seikika` commands, activate mise in your shell.
+[Mise shell setup](https://mise.jdx.dev/shell-setup.html)
+
+### Install the CLI globally
+
+Use a terminal outside a project with its own Seikika pin to verify your global install.
+
+```sh
+mise use --global 'github:seikika/seikika[matching=seikika-cli-]@0.2.0'
+mise exec -- seikika --version
+```
 
 The release also supplies shell and PowerShell installers, archives, and checksum files.
-Use matching CLI and connector versions.
 
 ## Install a connector
 
 If the manifest contains `package: builtin:NAME`, install the `seikika-connector-NAME`
 executable. The starter mise config above includes the workspace connector for the tutorial.
-Use its connector entry as a template for other connector aliases. Seikika looks beside the CLI, in
-`SEIKIKA_CONNECTORS_DIR`, and on `PATH`. Use `seikika doctor PATH_TO_PORTAL` to check
-what resolves. Pass the directory containing `seikika.yaml`.
+For `builtin:runner`, add these entries to the corresponding tables in your config. Use the
+same version as the CLI.
+
+```toml
+[tool_alias]
+seikika-connector-runner = "github:seikika/seikika"
+
+[tools]
+seikika-connector-runner = { version = "0.2.0", matching = "seikika-connector-runner-" }
+```
+
+Review the updated config, run `mise trust` and `mise install`, then run
+`mise exec -- seikika doctor .seikika`. Use the directory containing `seikika.yaml` if
+your manifest lives elsewhere. Mise puts the installed connectors on the command's `PATH`.
+Seikika also looks beside the CLI and in `SEIKIKA_CONNECTORS_DIR`.
 
 ## Build from source
 

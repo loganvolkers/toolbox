@@ -7,13 +7,31 @@ sidebar:
 
 Build from source to work on Seikika itself. If you only need a CLI for another repository, see [Install Seikika](/start/install/).
 
-## Build and verify
+## Set up the checkout
 
-Install mise 2026.11.14 or later and the [source build prerequisites](/start/install/#build-from-source) for your platform. Mise reads the Rust version and components from `rust-toolchain.toml`. From the root of your Seikika checkout, run the commands below. [Mise installation](https://mise.jdx.dev/installing-mise.html)
+Install mise 2026.11.14 or later, Git, and a native linker. The Seikika checkout declares
+its development tools in `mise.toml` and its Rust version and components in
+`rust-toolchain.toml`. Mise installs Rust through rustup. [Mise installation](https://mise.jdx.dev/installing-mise.html) · [Platform build prerequisites](/start/install/#build-from-source)
+
+From the root of your Seikika checkout, review `mise.toml` and run these commands.
 
 ```bash
+mise --version
 mise trust
 mise install
+mise ls --current
+```
+
+`mise ls --current` lists the selected tools and their config sources. Run `mise install`
+again when the checkout changes a tool pin. Use `mise exec --` to run a command with
+the checkout's tools, or activate mise to use those tools for the whole shell.
+[Mise shell setup](https://mise.jdx.dev/shell-setup.html)
+
+## Build and verify
+
+Run these commands in Bash from the Seikika checkout.
+
+```bash
 mise exec -- cargo build --locked
 mise exec -- target/debug/seikika validate examples/reference-portal
 mise exec -- target/debug/seikika test examples/reference-portal
