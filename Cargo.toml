@@ -37,7 +37,7 @@ sha2 = "0.11"
 # Ed25519 for approval grants between portals (seikika-exec::grant); already built for rustls.
 aws-lc-rs = "1.19"
 walkdir = "2"
-sqlx = { version = "0.9", default-features = false, features = ["runtime-tokio", "postgres", "json"] }
+sqlx = { version = "0.9", default-features = false, features = ["runtime-tokio", "postgres", "json", "tls-rustls-aws-lc-rs-native-roots"] }
 tokio = { version = "1", features = ["rt-multi-thread", "macros", "signal", "sync", "time", "process", "io-util", "io-std", "net", "fs"] }
 seikika-api = { path = "crates/seikika-api", version = "=0.2.0" }
 seikika-secrets = { path = "crates/seikika-secrets", version = "=0.2.0" }

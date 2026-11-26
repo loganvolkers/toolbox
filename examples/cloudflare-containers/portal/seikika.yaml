@@ -1,0 +1,23 @@
+apiVersion: seikika.com/v1alpha1
+portal:
+  name: cloudflare-demo
+  title: Seikika on Cloudflare
+  owner: group:platform
+  seikika: "0.1"
+
+authz:
+  model: model.fga
+  tuples:
+    - static:
+      - {user: user:operator, relation: admin, object: portal:cloudflare-demo}
+      - {user: user:reader, relation: viewer, object: portal:cloudflare-demo}
+      - user: portal:cloudflare-demo
+        relation: parent
+        object: portal:example-repo
+
+federation:
+  signingKey: SEIKIKA_SIGNING_KEY
+  children:
+    - git: https://github.com/example/example-repo.git
+      branch: main
+      key: example-repo

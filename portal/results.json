@@ -6035,6 +6035,9 @@
       "doc:examples/acme-live/README.md": {
         "level": "silver"
       },
+      "doc:examples/cloudflare-containers/README.md": {
+        "level": "silver"
+      },
       "doc:examples/connector-scaffold/README.md": {
         "level": "silver"
       },
@@ -6285,6 +6288,9 @@
           "says-how-to-check": 1
         },
         "level": "bronze"
+      },
+      "example:examples/cloudflare-containers/README.md": {
+        "level": "gold"
       },
       "example:examples/connector-scaffold/README.md": {
         "level": "gold"
