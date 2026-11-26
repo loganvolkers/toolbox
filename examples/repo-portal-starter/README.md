@@ -5,7 +5,7 @@ Copy `seikika.yaml` to `.seikika/seikika.yaml` and add the
 [report action](../../actions/report/README.md): the repository is then scored on every push, and a
 pull request fails when anything gets worse than the committed `.seikika/results.json`.
 
-Once v0.2.0 is published, copy [`mise.example.toml`](mise.example.toml) to `mise.toml` at the
+Once v0.2.1 is published, copy [`mise.example.toml`](mise.example.toml) to `mise.toml` at the
 repository root or merge its entries into your existing mise config. Run `mise trust`, `mise install`, then
 `mise exec -- seikika doctor .seikika` to verify the CLI and workspace connector.
 

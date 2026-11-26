@@ -11,7 +11,7 @@ Install the Seikika CLI to validate, test, and serve a portal with fixtures. Ins
 
 Check [GitHub Releases](https://github.com/seikika/seikika/releases) for a release with
 `seikika-cli` binaries. These docs use the command names and manifest format introduced in
-v0.2.0. The 0.1 releases use Toolbox names and a different manifest header. Until v0.2.0 is
+v0.2.0. The 0.1 releases use Toolbox names and a different manifest header. Until v0.2.1 is
 available, [build from source](#build-from-source).
 
 Install mise 2026.11.14 or later. Use a repository config to share the CLI and connector
@@ -57,7 +57,7 @@ available for one command. To use plain `seikika` commands, activate mise in you
 Use a terminal outside a project with its own Seikika pin to verify your global install.
 
 ```sh
-mise use --global 'github:seikika/seikika[matching=seikika-cli-]@0.2.0'
+mise use --global 'github:seikika/seikika[matching=seikika-cli-]@0.2.1'
 mise exec -- seikika --version
 ```
 
@@ -77,7 +77,7 @@ same version as the CLI.
 seikika-connector-runner = "github:seikika/seikika"
 
 [tools]
-seikika-connector-runner = { version = "0.2.0", matching = "seikika-connector-runner-" }
+seikika-connector-runner = { version = "0.2.1", matching = "seikika-connector-runner-" }
 ```
 
 Review the updated config, run `mise trust` and `mise install`, then run

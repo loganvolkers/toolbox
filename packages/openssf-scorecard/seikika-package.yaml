@@ -3,7 +3,7 @@
 # and its documentation. The box adds a ratchet (a check's score must not drop) and a campaign.
 apiVersion: seikika.com/package/v0
 name: openssf-scorecard
-version: 0.2.0
+version: 0.2.1
 description: >-
   Carry OpenSSF Scorecard's checks as they are: one entity per check with
   Scorecard's own score, reason and details, a ratchet so no score drops,

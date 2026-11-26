@@ -2,7 +2,7 @@
 # Install released seikika binaries (D90) instead of building from source: download the archives of
 # seikika and the connectors this action runs for the runner's platform from a GitHub release,
 # check each against its published SHA-256, and unpack them into $SEIKIKA_BIN.
-# Usage: SEIKIKA_REPO=owner/repo SEIKIKA_VERSION=0.2.0 SEIKIKA_BIN=dir install.sh
+# Usage: SEIKIKA_REPO=owner/repo SEIKIKA_VERSION=0.2.1 SEIKIKA_BIN=dir install.sh
 # Private repos: prefer `gh` (GITHUB_TOKEN on Actions) or set GH_TOKEN for curl.
 set -euo pipefail
 : "${SEIKIKA_REPO:?}" "${SEIKIKA_VERSION:?}" "${SEIKIKA_BIN:?}"
