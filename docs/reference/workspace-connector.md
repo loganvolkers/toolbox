@@ -60,6 +60,7 @@ The external id is `<kind>:<path>` for per-file records.
 | `repo` | README, LICENSE, CODEOWNERS and `.github` facts ([repo-portals.md](../design/repo-portals.md)) |
 | `portal` | `key`, `name`, `title`, `owner`, `path`, `dir`, `file`, `actions`, `runner`, `acceptApprovalsFrom`, `scorecards`, `packages`, `packageError`, `error`; `git` for a cloned child; `warning` when two share a name ([federated-actions.md](../design/federated-actions.md) §5.2) |
 | `workflow`, `action-ref` | Triggers, permissions, timeouts, `uses:` and how each is pinned ([github-actions-standards.md](../design/github-actions-standards.md)) |
+| `connector` | Package, protocol, test, and public guide facts used by the first-party connector scorecard ([connector standards](../design/connector-standards.md#3-the-catalog)) |
 | Others | Described in the design docs that use them (`seikika describe portal .seikika` lists a portal's kinds and fields) |
 
 `lines` counts lines as `wc -l` would, plus a last line without a newline. `matchLines` is 1-based.

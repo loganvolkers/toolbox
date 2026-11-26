@@ -33,6 +33,7 @@ pub(crate) fn analyse(root: &Path, rel: &str) -> Value {
         "descriptionChars": description.chars().count() as i64,
         "crateDoc": !doc.is_empty(),
         "configDocumented": config_documented(&doc),
+        "publicGuide": crate::site::connector_guide(root, &name),
         "transport": transport,
         "pushOnly": push_only(&source, &doc),
         "documentedKinds": documented_kinds(&source, &doc),

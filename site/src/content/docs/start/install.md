@@ -33,6 +33,8 @@ Use matching CLI and connector versions.
 
 ## Install a connector
 
+Choose a connector and check its prerequisites and record kinds in the [connector directory](/connectors/).
+
 If the manifest contains `package: builtin:NAME`, install the `seikika-connector-NAME`
 executable. The starter mise config above includes the workspace connector for the tutorial.
 Use its connector entry as a template for other connector aliases. Seikika looks beside the CLI, in

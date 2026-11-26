@@ -1,0 +1,22 @@
+---
+title: Connector directory
+description: Find a Seikika connector, see what it reads, and follow its setup guide.
+sidebar:
+  order: 1
+---
+
+import ConnectorDirectory from '../../../components/ConnectorDirectory.astro';
+
+Connect your portal to source control, local tools, or an identity provider. A **connector** sends records, such as repository details or group membership. Your portal's manifest defines how those records become catalog entities and scorecard inputs.
+
+The Seikika project maintains the connectors listed here. These guides use the 0.2 source. Build the CLI and the connector binary from the same revision. [Install a connector](/start/install/#install-a-connector) · [Check release availability](/start/versions/)
+
+## Available connectors
+
+<ConnectorDirectory />
+
+Seikika starts an `in-image` connector as a child process. You run a `remote` connector as a separate service. Each guide shows which runtime to use.
+
+To use connector records in your catalog, declare their kinds under `connectors` and add mappings under `kinds`. For a source that requires credentials, use environment variables or secret references in the manifest. [Portal manifest reference](/operators/manifest/) · [Connector secrets](/operators/secrets/)
+
+To add a new data source, follow the connector author guide. A first-party connector's published guide appears here automatically. [Write a connector](/authors/connectors/) · [First-party connector scorecard](https://github.com/seikika/seikika/blob/main/docs/design/connector-standards.md)

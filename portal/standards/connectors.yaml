@@ -17,6 +17,11 @@ kinds:
       descriptionChars: {type: integer}
       crateDoc: {type: boolean}
       configDocumented: {type: boolean}
+      publicGuide:
+        type: string
+        description: >-
+          The operator guide's public route. Empty if the directory or sidebar
+          cannot reach it.
       transport: {type: string} # stdio, remote, both, or none
       pushOnly: {type: boolean}
       documentedKinds: {type: list, items: string}
@@ -36,6 +41,7 @@ kinds:
         {'path': record.path, 'dir': record.dir, 'name': record.name,
          'description': record.description, 'descriptionChars': record.descriptionChars,
          'crateDoc': record.crateDoc, 'configDocumented': record.configDocumented,
+         'publicGuide': has(record.publicGuide) && record.publicGuide != null ? record.publicGuide : '',
          'transport': record.transport, 'pushOnly': record.pushOnly,
          'documentedKinds': record.documentedKinds, 'genericKinds': record.genericKinds,
          'snapshotComplete': record.snapshotComplete, 'reportsNotFound': record.reportsNotFound,
@@ -111,6 +117,23 @@ scorecards:
         Seikika asks connectors for data only over the control channel; a
         connector that serves neither stdio nor long-poll can never be told to
         refresh or resync.
+    - name: public-guide
+      level: bronze
+      check: entity.publicGuide != ''
+      evidence: >-
+        entity.publicGuide == '' ? ['No public guide linked from the connector
+        directory and sidebar'] : [entity.publicGuide]
+      fix: >-
+        Add a titled and described page at
+        `site/src/content/docs/connectors/<name>.md`. The directory and sidebar
+        pick up published guides automatically. Remove draft or hidden flags
+        when the guide is ready to publish.
+      rationale: >-
+        Operators need to find the guide before they can judge whether the
+        connector suits their portal or learn how to run and verify it.
+      links:
+      - title: 'Decision: public docs for every shipped connector'
+        url: https://github.com/seikika/seikika/blob/main/docs/decisions/D01M8CHMD6TH2AXRWT9E49G4V6V.md
     - name: names-its-kinds
       level: silver
       check: entity.documentedKinds.size() > 0 || entity.genericKinds

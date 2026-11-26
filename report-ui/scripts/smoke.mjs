@@ -89,6 +89,15 @@ try {
 
   await page.goto(docsOrigin);
   assert.equal(await page.locator('link[rel="canonical"]').getAttribute("href"), "https://seikika.com/");
+  await page.getByRole("main").getByRole("link", { name: "Browse connectors", exact: true }).click();
+  await page.getByRole("heading", { name: "Connector directory", exact: true }).waitFor();
+  const guideLinks = 'a[href^="/connectors/"]:not([href="/connectors/"])';
+  const directoryGuides = await page.locator(".sl-markdown-content").locator(guideLinks)
+    .evaluateAll(links => links.map(link => link.pathname).sort());
+  const sidebarGuides = await page.locator("#starlight__sidebar").locator(guideLinks)
+    .evaluateAll(links => links.map(link => link.pathname).filter(path => /^\/connectors\/[^/]+\/$/.test(path)).sort());
+  assert(directoryGuides.length > 0, "The connector directory lists published guides.");
+  assert.deepEqual(directoryGuides, sidebarGuides, "The directory lists the same connector landing pages as the sidebar.");
   await page.goto(docsOrigin + "report/");
   await page.getByRole("tab", { name: /Catalog/ }).click();
   await page.locator("#report-body").getByRole("heading", { name: "Catalog", exact: true }).waitFor();
@@ -117,7 +126,7 @@ try {
   await filterJump.click();
   await page.waitForFunction(() => document.activeElement?.textContent === "Entities");
   assert.deepEqual(errors, []);
-  console.log("Hosted portal, offline report, Pages report, Storybook, CLI reference, and npm catalog passed.");
+  console.log("Hosted portal, offline report, Pages report, Storybook, CLI reference, and npm and connector directories passed.");
 } finally {
   await browser?.close();
   portal?.kill();

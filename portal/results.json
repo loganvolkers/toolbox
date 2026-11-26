@@ -5269,6 +5269,9 @@
       "doc:docs/audits/astro-vue-portal-2026-11-25.md": {
         "level": "silver"
       },
+      "doc:docs/audits/connector-directory.md": {
+        "level": "silver"
+      },
       "doc:docs/audits/design-loop-efficiency-2026-11-24.md": {
         "level": "silver"
       },
@@ -5786,6 +5789,9 @@
         "level": "skipped"
       },
       "doc:docs/decisions/D01M8BJDPAP97XH4AQSQCN1C0X2.md": {
+        "level": "skipped"
+      },
+      "doc:docs/decisions/D01M8CHMD6TH2AXRWT9E49G4V6V.md": {
         "level": "skipped"
       },
       "doc:docs/decisions/README.md": {
@@ -6612,6 +6618,27 @@
         "level": "gold"
       },
       "site-page:site/src/content/docs/concepts/scorecards.md": {
+        "level": "gold"
+      },
+      "site-page:site/src/content/docs/connectors/git-files.md": {
+        "level": "gold"
+      },
+      "site-page:site/src/content/docs/connectors/github.md": {
+        "level": "gold"
+      },
+      "site-page:site/src/content/docs/connectors/gitlab.md": {
+        "level": "gold"
+      },
+      "site-page:site/src/content/docs/connectors/index.mdx": {
+        "level": "gold"
+      },
+      "site-page:site/src/content/docs/connectors/runner.md": {
+        "level": "gold"
+      },
+      "site-page:site/src/content/docs/connectors/scim.md": {
+        "level": "gold"
+      },
+      "site-page:site/src/content/docs/connectors/workspace.md": {
         "level": "gold"
       },
       "site-page:site/src/content/docs/demo/report.md": {
@@ -10367,6 +10394,9 @@
         },
         "level": "bronze"
       },
+      "field:seikika/Connector.publicGuide": {
+        "level": "gold"
+      },
       "field:seikika/Connector.pushOnly": {
         "failing": {
           "described": 1
@@ -12516,6 +12546,9 @@
         "level": "gold"
       },
       "rule:seikika/maintainer-connector/no-hardcoded-secrets": {
+        "level": "gold"
+      },
+      "rule:seikika/maintainer-connector/public-guide": {
         "level": "gold"
       },
       "rule:seikika/maintainer-connector/reports-missing-ids": {
