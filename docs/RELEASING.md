@@ -67,6 +67,11 @@ python3 scripts/test-apply-changesets.py
 6. The `custom-mise` job [checks the operator install](#install-what-a-consumer-needs) after
    the stable release is announced.
 
+Before tagging, run the **image rehearsal** workflow against the release commit. It builds
+both Linux release archives with cargo-dist, verifies checksums, and builds the amd64 and
+arm64 images. It exports an OCI archive on the runner without publishing it. The same
+archive staging script runs in the release workflow.
+
 Verify an artifact with `gh attestation verify <file> --repo <owner>/seikika`.
 
 ## Rust crates on crates.io

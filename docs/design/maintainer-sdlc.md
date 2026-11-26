@@ -113,6 +113,21 @@ npm --prefix scripts/github-emulate ci --ignore-scripts
 npm --prefix scripts/github-emulate test
 ```
 
+### Merge checks
+
+Require the Actions check `merge-readiness` on `main`. It succeeds when every CI job
+passes, including the Scorecard ratchet in `rust`. Require CodeQL's separate `analyze`
+check as well. These names stay stable as individual CI jobs change.
+
+In the Nov 26 sample, 8 of 24 main CI runs were cancelled and all eight had zero recorded
+jobs. That is consistent with GitHub replacing a pending run when another push reaches the
+same concurrency group. The CodeQL jobs on the docs-only PRs #129 and #130 took 20m 00s and
+19m 50s respectively. Keep the full scan on pull requests and main while measuring the
+merge gate with these check names.
+[Concurrency behavior](https://docs.github.com/en/actions/how-tos/write-workflows/choose-when-workflows-run/control-workflow-concurrency) ·
+[PR #129 scan](https://github.com/seikika/seikika/actions/runs/45868142640/job/140076257160) ·
+[PR #130 scan](https://github.com/seikika/seikika/actions/runs/45868710248/job/140078202540)
+
 ## 5. Local prerequisites
 
 From the repository root, run `mise trust` and `mise install` after installing mise 2026.11.14 or later.
