@@ -4723,6 +4723,16 @@
           "still-running"
         ]
       },
+      "workflow:.github/workflows/publish-npm.yml": {
+        "level": "bronze",
+        "unknown": [
+          "fail-rate-under-10",
+          "fail-rate-under-20",
+          "fail-rate-under-5",
+          "main-not-stuck-red",
+          "still-running"
+        ]
+      },
       "workflow:.github/workflows/release.yml": {
         "failing": {
           "every-job-has-timeout": 5
@@ -4773,6 +4783,9 @@
       "workflow:.github/workflows/pages.yml": {
         "level": "gold"
       },
+      "workflow:.github/workflows/publish-npm.yml": {
+        "level": "gold"
+      },
       "workflow:.github/workflows/release.yml": {
         "level": "gold",
         "waived": [
@@ -4814,6 +4827,12 @@
         ]
       },
       "workflow:.github/workflows/pages.yml": {
+        "level": "bronze",
+        "unknown": [
+          "fast-feedback"
+        ]
+      },
+      "workflow:.github/workflows/publish-npm.yml": {
         "level": "bronze",
         "unknown": [
           "fast-feedback"
@@ -5677,6 +5696,9 @@
         "level": "skipped"
       },
       "doc:docs/decisions/D01M8B8PPJ47YR81JZ3ZYHCFHCZ.md": {
+        "level": "skipped"
+      },
+      "doc:docs/decisions/D01M8BBPE4KN9NF9E9K3F9ZEE4Q.md": {
         "level": "skipped"
       },
       "doc:docs/decisions/README.md": {
