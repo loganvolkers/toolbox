@@ -6580,7 +6580,7 @@
       "site-page:site/src/content/docs/connectors/gitlab.md": {
         "level": "gold"
       },
-      "site-page:site/src/content/docs/connectors/index.md": {
+      "site-page:site/src/content/docs/connectors/index.mdx": {
         "level": "gold"
       },
       "site-page:site/src/content/docs/connectors/runner.md": {

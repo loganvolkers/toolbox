@@ -62,7 +62,7 @@ One `connector` record per manifest. The id is `connector:<crate directory>`.
 |---|---|
 | `name`, `description`, `descriptionChars`, `path`, `dir` | Package name and the `description` field of `[package]` |
 | `crateDoc`, `configDocumented` | A `//!` block on `src/main.rs` (or `src/lib.rs`). Config is documented when that block names `SEIKIKA_CONNECTOR_CONFIG`, `--seikika` or `--listen` |
-| `publicGuide` | The public `/connectors/<name>/` route, or null if it cannot be verified. The crate's `seikika-connector-` suffix names its guide. The workspace collector checks for a titled and described directory and guide, sidebar visibility, and a directory link. |
+| `publicGuide` | The public `/connectors/<name>/` route, or null if it cannot be verified. The crate's `seikika-connector-` suffix names its guide. The workspace collector checks for a titled and described directory and guide, and sidebar visibility. |
 | `transport` | `stdio` if the source calls `run_stdio`, `remote` if it calls `run_remote`, `both` or `none` |
 | `pushOnly` | The crate doc says push-only, or the crate calls `run_remote` and not `run_stdio` |
 | `documentedKinds`, `genericKinds` | Kinds from `record("…")`, `snapshot_complete("…")`, `"kind": "…"`, and doc bullets. `genericKinds` is set when the doc says kinds come from job config (`kind \`<\`` or `declares their \`kinds\``), which is how the runner works |
@@ -90,8 +90,9 @@ the authors of these connectors.
 | gold | `no-hardcoded-secrets` | No secret shape in the crate sources |
 
 A new connector below bronze is a ratchet regression. Add an operator landing page under
-`site/src/content/docs/connectors/` and link its route from the directory there. Give the page a
-title and description. Use the [documentation style guide](../../site/src/content/docs/maintainers/writing.md)
+`site/src/content/docs/connectors/`. Give the page a title and description. The directory and
+sidebar pick up published landing pages automatically. Put additional pages under the connector's
+path and link them from the landing page. Use the [documentation style guide](../../site/src/content/docs/maintainers/writing.md)
 to review setup, record examples, verification, and recovery steps. The public guide rule checks
 presence and discoverability. A guide may link to more pages when the connector needs them.
 See [connector directory research](../audits/connector-directory.md) and
@@ -101,7 +102,7 @@ See [connector directory research](../audits/connector-directory.md) and
 
 On November 26, 2026, `seikika report portal --skip runner,github-actions` found that all six
 first-party connectors passed `public-guide` and reached gold. The directory links to the guides
-for GitHub, GitLab, Git files, Workspace, Runner, and SCIM. [Connector directory](../../site/src/content/docs/connectors/index.md)
+for GitHub, GitLab, Git files, Workspace, Runner, and SCIM. [Connector directory](../../site/src/content/docs/connectors/index.mdx)
 
 `seikika test portal` pins four fixture connectors: `crates/demo/focused` at gold,
 `crates/demo/partial` at bronze, `crates/demo/unsafe` and `crates/demo/unlisted` at none. The

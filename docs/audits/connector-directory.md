@@ -41,15 +41,15 @@ A zero means the linked path does not satisfy the 1-point description. For Seiki
 | Gap in Seikika | Fix |
 |---|---|
 | Connecting a data source was hard to find from the home page. | Add direct links to GitHub and the directory near the top of the home page. Put Connectors next to Start in the sidebar. Link from installation, the operator index, and the manifest reference. |
-| Operators could not compare providers, run locations, or record coverage. | Group the directory by source control, files and tools, and identity. State the first-party scope, source version, and which process runs each connector. |
+| Operators could not compare providers, run locations, or record coverage. | Generate the directory from public connector guides. Show each guide's title and description, and explain the source version and the two ways connectors run. |
 | Setup, credentials, and recovery were spread across examples, crate docs, and references. | Publish one operator guide for each of GitHub, GitLab, Git files, Workspace, Runner, and SCIM. Each guide gives a manifest example, sample evidence of success, and recovery steps. Link further references for detailed configuration. |
 | The connector scorecard could pass a connector with no public setup page. | Add the bronze `public-guide` rule. Require a published landing page linked from the connector directory and sidebar. Use the site scorecard and the documentation style guide to review the page itself. |
 
-With six entries, the site's existing search and the grouped directory cover discovery. A searchable provider filter or separate publisher tiers become candidates when the number or ownership of entries changes.
+With six entries, the site's existing search and the directory cover discovery. A searchable provider filter or separate publisher tiers become candidates when the number or ownership of entries changes.
 
 ## Sources
 
-- [Public directory source](../../site/src/content/docs/connectors/index.md)
+- [Public directory source](../../site/src/content/docs/connectors/index.mdx)
 - [Connector scorecard design](../design/connector-standards.md)
 - [Documentation style guide](../../site/src/content/docs/maintainers/writing.md)
 - [Decision](../decisions/D01M8CHMD6TH2AXRWT9E49G4V6V.md)

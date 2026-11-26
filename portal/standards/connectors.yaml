@@ -125,9 +125,9 @@ scorecards:
         directory and sidebar'] : [entity.publicGuide]
       fix: >-
         Add a titled and described page at
-        `site/src/content/docs/connectors/<name>.md`. Include it in the sidebar
-        and link its route from the connector directory. Remove draft or hidden
-        flags when the guide is ready to publish.
+        `site/src/content/docs/connectors/<name>.md`. The directory and sidebar
+        pick up published guides automatically. Remove draft or hidden flags
+        when the guide is ready to publish.
       rationale: >-
         Operators need to find the guide before they can judge whether the
         connector suits their portal or learn how to run and verify it.
