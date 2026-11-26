@@ -1,29 +1,103 @@
-//! Writing a connector (connector-control §3–§4). Implement [`Source`], then call [`run_stdio`]
-//! (in-image: commands on stdin, messages on stdout) or [`run_remote`] (long-poll the server for
-//! commands, push messages to `POST /v1/ingest`). The SDK sends `register`, `ack` and `complete`.
+//! Implement the record reads for a connector and serve them over stdio or HTTP.
+//!
+//! Implement [`Source`] and use [`Out`] to report the results of each command. The transport
+//! sends registration, acknowledgement, and completion messages for you. Keep stdout reserved
+//! for protocol messages in stdio mode. Use stderr or [`Out::log`] for diagnostics.
+//!
+//! # Examples
+//!
+//! This connector serves one record kind. Add `seikika-connect`, `serde_json`, and `tokio` with
+//! `macros` and `rt` enabled to your binary crate. The example compiles as a doctest and waits
+//! for portal commands when run as a binary. Use `seikika connector test` with a manifest that
+//! declares `example-item` to exercise the protocol.
+//!
+//! ```no_run
+//! use seikika_connect::sdk::{Out, Source, run_stdio};
+//! use serde_json::{Value, json};
+//!
+//! struct Example;
+//!
+//! impl Source for Example {
+//!     fn name(&self) -> &str { "example" }
+//!     fn version(&self) -> &str { env!("CARGO_PKG_VERSION") }
+//!
+//!     fn capabilities(&self) -> Value {
+//!         json!({"refresh": {"example-item": ["external_ids"]}, "resync": ["example-item"]})
+//!     }
+//!
+//!     async fn handle(&mut self, command: &Value, out: &mut Out) -> Result<(), String> {
+//!         const KIND: &str = "example-item";
+//!         const ID: &str = "example:alpha";
+//!         let item = || json!({"title": "Alpha"});
+//!         match command["command"].as_str() {
+//!             Some("refresh") if command["kind"] == KIND => {
+//!                 let ids = command["external_ids"].as_array().ok_or("external_ids required")?;
+//!                 for id in ids {
+//!                     let id = id.as_str().ok_or("expected a string id")?;
+//!                     if id == ID {
+//!                         out.record(KIND, id, item());
+//!                     } else {
+//!                         out.not_found(KIND, id);
+//!                     }
+//!                 }
+//!             }
+//!             Some("resync") if command["kinds"].as_array().is_some_and(|k| k.contains(&json!(KIND))) => {
+//!                 out.record(KIND, ID, item());
+//!                 out.snapshot_complete(KIND);
+//!             }
+//!             _ => return Err("unsupported command or kind".into()),
+//!         }
+//!         Ok(())
+//!     }
+//! }
+//!
+//! #[tokio::main(flavor = "current_thread")]
+//! async fn main() {
+//!     run_stdio(Example).await;
+//! }
+//! ```
 
 use serde_json::{Value, json};
 use std::time::Duration;
 use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
 
-/// A connector's data source.
+/// Supplies a connector's registration and command handlers.
+///
+/// The SDK calls the handler one command at a time. Make repeated reads safe so a second
+/// refresh of the same scope can return the same records when the upstream data is unchanged.
+/// The transport ignores `cancel` commands and lets each handler finish before reading the next
+/// command.
 #[allow(async_fn_in_trait)]
 pub trait Source {
+    /// Returns the connector name declared in the portal manifest.
     fn name(&self) -> &str;
-    /// Connector package version reported on `register`.
+    /// Returns the connector package version reported during registration.
     ///
-    /// Override this. The previous default used `env!("CARGO_PKG_VERSION")` inside
-    /// `seikika-connect`, so every connector that left the default reported the SDK crate's
-    /// version instead of its own.
+    /// Use `env!("CARGO_PKG_VERSION")` in your connector crate to report its version.
     fn version(&self) -> &str;
-    /// `capabilities` for the register message.
+    /// Returns the control capabilities reported during registration.
+    ///
+    /// Set `refresh` to an object mapping record kinds to lists of supported scopes, such as
+    /// `external_ids`. Set `resync` to the list of kinds this connector can read in full.
     fn capabilities(&self) -> Value;
-    /// Handle a `refresh` or `resync` command, writing records to `out`. Return `Ok(())` for
-    /// success, or `Err` with a message (the command completes as `failed`).
+    /// Handles one command and writes result messages to `out`.
+    ///
+    /// Read the requested `kind` and scope for `refresh`, or the requested `kinds` for `resync`.
+    /// Finish a full read with [`Out::snapshot_complete`]. For an external ID refresh, report
+    /// each requested ID even when the source cannot find it.
+    ///
+    /// # Errors
+    ///
+    /// Return an error message if the request is unsupported or the read fails. The SDK sends a
+    /// `failed` completion with error code `source`. Messages already written to `out` are still
+    /// sent, so emit a snapshot completion marker only after a successful full read of its kind.
     async fn handle(&mut self, command: &Value, out: &mut Out) -> Result<(), String>;
 }
 
-/// Where messages go; collects counts for `complete`.
+/// Buffers messages and completion counts for the current command.
+///
+/// The transport makes this value available to [`Source::handle`] and sends the buffered
+/// messages after the handler returns.
 pub struct Out {
     lines: Vec<Value>,
     command_id: Option<String>,
@@ -41,6 +115,11 @@ impl Out {
         }
     }
 
+    /// Reports the current data for a record and increments the completion's record count.
+    ///
+    /// Use a connector-declared record kind and a stable external ID such as `example:alpha`.
+    /// The ID needs a lowercase alphanumeric or hyphenated prefix, a colon, and a nonempty
+    /// suffix. Supply the data object expected by the portal's mapping for that kind.
     pub fn record(&mut self, kind: &str, external_id: &str, data: Value) {
         self.records += 1;
         let mut m =
@@ -51,6 +130,9 @@ impl Out {
         self.lines.push(m);
     }
 
+    /// Reports an explicit deletion of a known record in the source.
+    ///
+    /// Use [`Self::not_found`] when reporting a lookup miss during a scoped refresh.
     pub fn delete(&mut self, kind: &str, external_id: &str) {
         let mut m = json!({"type": "delete", "kind": kind, "externalId": external_id});
         if let Some(c) = &self.command_id {
@@ -59,6 +141,9 @@ impl Out {
         self.lines.push(m);
     }
 
+    /// Reports that a requested external ID could not be found during a scoped refresh.
+    ///
+    /// This accounts for the ID in the refresh result. Use [`Self::delete`] to request removal.
     pub fn not_found(&mut self, kind: &str, external_id: &str) {
         self.not_found += 1;
         if let Some(c) = &self.command_id {
@@ -66,6 +151,10 @@ impl Out {
         }
     }
 
+    /// Marks the end of a full read of `kind` during a resync.
+    ///
+    /// Emit this marker after all records for the kind, including after a successful empty
+    /// read. The portal can use it to reconcile records absent from the snapshot.
     pub fn snapshot_complete(&mut self, kind: &str) {
         if let Some(c) = &self.command_id {
             self.lines
@@ -73,6 +162,9 @@ impl Out {
         }
     }
 
+    /// Adds a diagnostic log message to the command's output.
+    ///
+    /// Use a protocol level such as `info`, `warn`, or `error`. Keep credentials out of `message`.
     pub fn log(&mut self, level: &str, message: &str) {
         self.lines
             .push(json!({"type": "log", "level": level, "message": message}));
@@ -107,7 +199,15 @@ async fn run_command(src: &mut impl Source, cmd: &Value) -> Vec<Value> {
     lines
 }
 
-/// In-image mode: register on stdout, then serve commands from stdin until it closes.
+/// Runs an in-image connector over newline-delimited JSON on stdin and stdout.
+///
+/// Run this on a Tokio runtime. It registers on stdout, then serves commands serially until stdin
+/// closes or a read fails. It skips malformed JSON and non-command messages. Output write failures
+/// are discarded. Send application diagnostics to stderr so stdout stays machine-readable.
+///
+/// # Panics
+///
+/// Panics if polled outside a Tokio runtime.
 pub async fn run_stdio(mut src: impl Source) {
     let mut stdout = tokio::io::stdout();
     let instance = format!("{}-{}", src.name(), std::process::id());
@@ -131,9 +231,20 @@ pub async fn run_stdio(mut src: impl Source) {
     }
 }
 
-/// Remote mode: register through the ingest endpoint, then long-poll for commands.
-/// `token` is the connector's bearer token (or, against a dev server, `None` to use the
-/// `x-seikika-connector` header).
+/// Registers a remote connector and long-polls the portal for commands.
+///
+/// Run this on a Tokio runtime. Pass the portal base URL without a trailing slash. Supply the
+/// connector's bearer token, or pass `None` to identify it with `x-seikika-connector` in dev mode.
+/// After registration this loops until cancelled. It retries failed polls after a delay and
+/// submits each command's response batch once. Submission failures are discarded.
+///
+/// # Errors
+///
+/// Returns an error if the registration request fails or responds with a client or server error.
+///
+/// # Panics
+///
+/// Panics if the HTTP client cannot initialize, for example if TLS setup fails.
 pub async fn run_remote(
     mut src: impl Source,
     url: &str,
@@ -177,7 +288,20 @@ pub async fn run_remote(
     }
 }
 
-/// Push records outside any command (webhooks, SCIM): one batch through the ingest endpoint.
+/// Sends one unsolicited batch to the portal's ingest endpoint.
+///
+/// Call this on a Tokio runtime from a webhook or other event receiver. Pass the portal base URL
+/// without a trailing slash and a list of connector protocol messages. Supply a connector bearer
+/// token, or pass `None` to identify `connector` with `x-seikika-connector` in dev mode.
+/// A successful HTTP status returns the decoded response body, or JSON `null` if decoding fails.
+///
+/// # Errors
+///
+/// Returns an error if the request fails or the portal returns an unsuccessful HTTP status.
+///
+/// # Panics
+///
+/// Panics if the HTTP client cannot initialize, for example if TLS setup fails.
 pub async fn push(
     url: &str,
     connector: &str,

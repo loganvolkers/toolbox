@@ -25,6 +25,11 @@ jobs:
         run: rustup show active-toolchain
       - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
         with: {key: pages}
+      - name: setup node
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with: {node-version: 24}
+      - {name: Enable pinned pnpm, run: corepack enable pnpm}
+      - run: pnpm install --frozen-lockfile
       # The portal report is generated for this commit, not committed (D92, D01M7YAXH89ZJQ7Q4HP77NMHBX8).
       # `seikika doctor` fails the build if a pinned tool is missing, so no rule turns `unknown`.
       - name: This repository's portal report
@@ -40,11 +45,6 @@ jobs:
           if [ "$GITHUB_EVENT_NAME" != push ]; then skip=runner,github-actions; fi
           # The baseline gives each campaign its recorded start, so the report shows progress since then.
           target/debug/seikika report portal --skip "$skip" --baseline portal/results.json -o web --out site/.generated
-      - name: setup node
-        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
-        with: {node-version: 24}
-      - {name: Enable pinned pnpm, run: corepack enable pnpm}
-      - run: pnpm install --frozen-lockfile
       - run: pnpm check:packages
       # CLI reference is built from clap (`seikika describe` + --help) in Astro;
       # fail if the committed fingerprint is stale.

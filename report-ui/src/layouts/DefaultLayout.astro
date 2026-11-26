@@ -1,4 +1,8 @@
 ---
+interface Props {
+  /** Browser tab title. Defaults to `Seikika report`. */
+  title?: string;
+}
 const { title = "Seikika report" } = Astro.props;
 ---
 <!doctype html>

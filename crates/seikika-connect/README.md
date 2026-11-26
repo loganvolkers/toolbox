@@ -4,8 +4,8 @@ Defines how Seikika and connectors exchange records and commands. It provides th
 connector software development kit (SDK), the server-side command hub, and a protocol
 conformance kit.
 
-This Rust crate is part of the Seikika framework. Use it when maintaining Seikika's
-internals.
+Implement the SDK's `Source` trait to write a connector. The Seikika server uses the command
+hub to queue requests and track their results.
 
 ## Where to start
 
@@ -13,5 +13,5 @@ If you are writing a connector, start with the connector author guide. Use the c
 kit to check the capabilities your connector advertises.
 
 - [Write a connector](https://seikika.com/authors/connectors/)
-- [Rust API source](https://github.com/seikika/seikika/blob/25a208a3bc1a97f184588c512afcb12d636ce7be/crates/seikika-connect/src/lib.rs)
+- [Rust API reference on docs.rs](https://docs.rs/seikika-connect)
 - [Build and check Seikika](https://seikika.com/start/run/)

@@ -1,0 +1,83 @@
+kinds:
+  - name: SdkDocs
+    description: Documentation consumers can find through a Rust crate or npm package.
+    identityFrom: [connector:surfaces]
+    fields:
+      name: {type: string, description: Published crate or npm package name.}
+      path:
+        type: string
+        description: Repository path to the package manifest.
+      entryPoints:
+        type: list
+        items: string
+        description: Rust crate root or resolved npm import paths.
+      undocumented:
+        type: list
+        items: string
+        description: Public declarations without a documentation comment.
+      referenceGaps:
+        type: list
+        items: string
+        description: Rustdoc diagnostics and gaps in the package reference.
+    sources: {default: [connector:surfaces]}
+    map:
+    - from: surfaces/sdk-docs
+      id: "'sdk-docs:' + record.name"
+      set: >-
+        {'name': record.name, 'path': record.path, 'entryPoints': record.entryPoints,
+         'undocumented': record.undocumented, 'referenceGaps': record.referenceGaps}
+
+scorecards:
+  - name: maintainer-sdk-docs
+    title: SDK documentation
+    kind: SdkDocs
+    description: >-
+      Checks the Rust connector SDK and public npm packages for entry points,
+      comments, and reference coverage.
+    rationale: >-
+      Readers arrive through rustdoc, an editor, or a package README. Use the
+      compiler and package exports to find the declarations and import paths
+      readers see, then report concrete gaps for maintainers.
+    links:
+    - title: SDK documentation comments guide
+      url: https://seikika.com/maintainers/sdk-docs/
+    - title: SDK documentation standard decision
+      url: https://github.com/seikika/seikika/blob/main/docs/decisions/D01M8CK6XW8PR5AXSA1FQEZ5YD8.md
+    owner: group:maintainers
+    track: maintainer
+    levels: [bronze, silver, gold]
+    ratchet: {newEntitiesAtLeast: gold}
+    rules:
+    - name: has-entry-point
+      level: bronze
+      check: entity.entryPoints.size() > 0
+      evidence: "[entity.path + ': no public entry point found']"
+      fix: >-
+        Expose the supported entry point in Cargo.toml or in the exports map in
+        package.json.
+      rationale: >-
+        A consumer needs an import path that belongs to the package's public
+        interface.
+    - name: documented-items
+      level: silver
+      check: entity.undocumented.size() == 0
+      evidence: entity.undocumented
+      measure: entity.undocumented.size()
+      fix: >-
+        Add a summary and caller-facing details to each named Rust item,
+        TypeScript declaration, or component prop.
+      rationale: >-
+        Item comments supply the description that consumers see in rustdoc and
+        in editor hovers.
+    - name: reference-complete
+      level: gold
+      check: entity.referenceGaps.size() == 0
+      evidence: entity.referenceGaps
+      measure: entity.referenceGaps.size()
+      fix: >-
+        Repair the rustdoc diagnostics or fill the named missing export, slot,
+        or token in the package README.
+      rationale: >-
+        A consumer needs working links and a reference for entry points and
+        options that editors cannot fully describe.
+    facets: {summary: public, details: public}
