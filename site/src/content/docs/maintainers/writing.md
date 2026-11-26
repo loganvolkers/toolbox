@@ -59,4 +59,19 @@ Use heading levels in order, meaningful headings, and links that make sense on t
 - Does the page explain unusual terms, likely failures, and what success looks like?
 - Did the docs build, link checks, and [site scorecard](/concepts/scorecards/#this-site) pass? Check prose and task completion by hand as well.
 
+## Write a README
+
+A README helps someone arriving through GitHub or a package registry decide whether the project or component serves their task. Apply this guide's voice, reading-level, accessibility, and example rules.
+
+| README | What readers need first |
+|---|---|
+| Repository | What the project does, who it helps, and how to reach a first result. Link to installation, version guidance, contribution, help, and the license. |
+| CLI or connector | The binary name, its job, and how to get a compatible build. For a connector, name the source, required access, and what records or results it produces. Link to setup and verification. |
+| Library or package | What it provides and who should use it. Identify internal components, support limits, and the entry point for API, configuration, or adoption instructions. |
+| Example or experiment | What it demonstrates, its status, and where to find the fixture, reproduction procedure, or result. Say when credentials or another service are required. |
+
+Put the reader's first decision before architecture, decision history, and long lists. Link to the canonical procedure when it already teaches the task and shows a result. Include a short command when it gives the reader a useful check from the stated starting point.
+
+Use relative links between files in a checkout. For a README published on its own, link to public docs, the matching package API reference, or repository files at a ref that contains them. Check the GitHub rendering and package links, including from the packaged copy. When changing a Rust package README, use `cargo package --list -p <crate>` from the workspace root to confirm it ships. Replace `<crate>` with the package name from its manifest.
+
 These standards draw on role and task organization from Backstage and Diátaxis, worked examples from React, and plain-language and accessibility guidance from Google, Kubernetes, and W3C. [Backstage style guide](https://backstage.io/docs/contribute/doc-style-guide/), [Diátaxis](https://diataxis.fr/), [React's documentation redesign](https://react.dev/blog/2023/03/16/introducing-react-dev), [Google voice and tone](https://developers.google.com/style/tone), [Google procedures](https://developers.google.com/style/procedures), [Kubernetes style guide](https://kubernetes.io/docs/contribute/style/style-guide/), [W3C writing for accessibility](https://www.w3.org/WAI/tips/writing/), [W3C reading level guidance](https://www.w3.org/WAI/WCAG22/Understanding/reading-level.html).

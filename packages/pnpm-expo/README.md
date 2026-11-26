@@ -1,44 +1,23 @@
-# pnpm-expo: a Seikika package
+# pnpm-expo
 
-pnpm workspace and Expo app hygiene for monorepos (Expo SDK 53+ era). Built on
-`builtin:workspace` facts (`js-workspace`, `expo-app`) — not on S4S's
-`maintainer-package`, which scores each `package.json` as an application and is
-the wrong shape for workspace / Expo standards
-([package-standards.md](../../docs/design/package-standards.md) §6).
+Check pnpm workspace and Expo app setup in a monorepo. The package compares toolchain settings and checks the workspace and Expo project configuration.
+The Seikika package adds checks to your portal using records from the workspace connector.
 
-| Brings | What |
-|---|---|
-| Kinds | `JsWorkspace`, `ExpoApp` |
-| Scorecards | `pnpm-workspace`, `expo-app` |
-| Connector config | Consumer must enable `jsWorkspace: true` and `expoApps` globs on `builtin:workspace` |
-| Minimum Seikika binary | **≥ 0.2.0** (first release under the Seikika name) |
+## Add the package
 
-## Consumer diff
-
-Adopting this package is not “add one include line”. Diff against a starter-style portal
-(`repo` + `docs` only):
-
-### 1. Include (pin a git tag that **contains** this directory)
+[Build the CLI and workspace connector](https://seikika.com/start/install/#build-from-source)
+using the commit in the include below as your checkout revision. This build emits the js-workspace and expo-app records
+these checks need. Add the include to your portal manifest.
 
 ```yaml
 include:
-  - package: github:seikika/seikika/packages/pnpm-expo@0.2.0
-    with: {requireHoisted: true}   # RN/Expo monorepos that document hoisted node_modules
+  - package: github:seikika/seikika/packages/pnpm-expo@25a208a3bc1a97f184588c512afcb12d636ce7be
+    with: {requireHoisted: true}
 ```
 
-| Pin | Safe value (as of Seikika `v0.2.0`) |
-|---|---|
-| Package include | `github:seikika/seikika/packages/pnpm-expo@0.2.0` (or `@v0.2.0`) |
-| `actions/report` | `seikika/seikika/actions/report@v0.2.0` |
-| Binary | `seikika-version: "0.2.0"` |
-
-**Version vs git tag.** This package’s `seikika-package.yaml` may still say `version: 0.1.0`
-while consumers must pin **`@0.2.0`** because `seikika install` clones `--branch v<ver>`. The
-YAML `version:` and the Seikika release tag that first *contains* `packages/pnpm-expo` can
-differ. **Pins follow the git tag.** The workspace connector in Seikika 0.2.0 emits
-`js-workspace` and `expo-app` entities for these scorecards.
-
-### 2. Workspace connector config delta
+Keep existing connector kinds and settings, and add these workspace connector
+settings. The glob paths are relative to the checkout root. Adjust them to
+match your repository.
 
 ```yaml
 connectors:
@@ -56,32 +35,21 @@ connectors:
     records: [repo, doc, js-workspace, expo-app, workflow]
 ```
 
-### 3. Install, then report
+From the portal directory, install the package, validate the manifest,
+and run the checks. Keep both binaries on `PATH`.
 
-```bash
-seikika install
-seikika doctor
-seikika report . --baseline .seikika/results.json
+```sh
+seikika install .
+seikika validate .
+seikika report .
 ```
 
-In CI, run `seikika install` (or otherwise populate the package cache for the pinned tag) **before**
-`actions/report` / `seikika report` when `seikika.lock` lists packages.
+Look for the scorecards below. If they have no entities, check that the
+workspace connector is available and its globs match your files.
+Commit `seikika.lock` so other checkouts can reproduce the package selection.
+Follow [Gate pull requests](https://seikika.com/operators/ci/) to add a baseline in CI.
 
-### Publishing path
-
-| Step | Required? |
-|---|---|
-| Merge this package + connector facts to `seikika/seikika` `main` | **Yes** — consumers that `include` a git path need the commit |
-| Tag / GitHub Release that includes this directory **and** a Seikika build with the new workspace facts | **Yes for external CI** — pin package tag + `seikika-version` together (see handoff) |
-| Separate npm/OCI publish of the package YAML | **No** — packages are git-first (`github:…/packages/pnpm-expo@<tag>`) per D89 |
-
-Same pattern as `packages/github-actions`: `seikika install` pins the package in `seikika.lock`.
-
-Parameters (see `seikika-package.yaml`):
-- `requireHoisted` (boolean, default `false`); set `true` when the repo documents hoisted deps (Gradle/RN).
-- `expoAppGlobs` documents the usual glob; the consumer's connector `expoApps` list is the live config.
-
-Test the package with `seikika test packages/pnpm-expo/tests`.
+Set `requireHoisted` to `true` when your project requires hoisted dependencies. Set `expoApps` in the connector to match your actual app layout. The package fixture is in [tests/](tests/).
 
 ## Operator notes (toolchain gold)
 
