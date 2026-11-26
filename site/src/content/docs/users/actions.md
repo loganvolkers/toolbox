@@ -5,7 +5,7 @@ sidebar:
   order: 3
 ---
 
-A self-service action lets you request a change defined by a portal, such as proposing a file update. The portal validates the inputs and shows the effects before execution. Repo portals and parent portals can run actions through the CLI. A served portal also exposes action endpoints and MCP tools.
+A self-service action lets you request a change defined by a portal, such as proposing a file update. The portal validates the inputs and shows the effects before execution. Repo portals and parent portals can run actions through the CLI. A served portal also exposes HTTP and Model Context Protocol (MCP) operations. A repository checkout can preview an approval-gated action. Request it through its parent to collect approvals.
 
 ## Try action tests without changing a real repository
 
@@ -25,20 +25,29 @@ git -C "$practice_dir" -c user.name='Seikika example' \
 )
 ```
 
-The test runs approved and refused requests in scratch copies. Look for passing cases for an approved change, invalid input, refused approvers, and a rejected Git push. The example leaves the practice repository's commit unchanged.
+The test runs approved and refused requests in scratch copies. Look for passing cases for an approved change, invalid input, refused approvers, and a rejected Git push. The example leaves the practice repository's commit unchanged. Delete the practice directory when you finish.
 
 ## Request an action on a portal
 
 1. Ask the portal operator which actions are available and which identities can request them. Use `seikika run` from a portal checkout to list its actions. For a served portal, add `--url` and authenticate on each call.
 2. Preview the selected action with `seikika run ACTION --entity ENTITY -i KEY=VALUE`. Replace the uppercase names with the action name, target entity ID, and required input. Read what the action would change, any blockers, and who must approve.
-3. Use the same command with `--confirm` and the preview's confirm token when you are ready to request the change. Preview again if the token expires. A served portal accepts each token once.
+3. Use the same command with `--confirm` and the preview's confirm token when you are ready to request the change. Preview again if the token expires or the underlying change makes the preview stale. A served portal accepts each token once.
 4. Save the run ID and check it with `seikika run --verify RUN_ID`. Use the same portal and authentication as the request.
 
 | State | What to check |
 |---|---|
-| `awaiting_approval` | Send the run ID to an authorized approver. The requester cannot approve their own run. |
+| `awaiting_approval` | Send the run ID and parent portal to an authorized approver. |
 | `proposed` or `dispatched` | Follow the review branch or workflow, then check the run again. |
 | `succeeded` | Seikika observed the required result, such as a commit on the target branch. |
 | `failed` or `unverified` | Read the run record and inspect the target before retrying. An effect may already have occurred. |
+| `rejected` or `cancelled` | Check the reason in the record before requesting another run. |
 
-For the operator's setup and approval flow, see the [federated actions example](https://github.com/seikika/seikika/tree/main/examples/federated-actions). For exact flags and exit codes, use [CLI reference](/start/cli/) or `seikika run --help`.
+## Review an approval request
+
+Check the requester, inputs, and proposed effects on the parent that holds the run. The requester cannot approve their own run. In a local practice parent, Bob can inspect, approve, or reject a request with `seikika run --verify RUN_ID --as bob`, `seikika run --approve RUN_ID --as bob --wait`, or `seikika run --reject RUN_ID --as bob`. Replace `RUN_ID` with the request's ID. For a complete local exercise with the expected results, see [Federate repository actions](/operators/federate-actions/).
+
+On a shared server, approval requires a signed-in person whose identity qualifies for the action. The HTTP approval route requires interactive authentication. Personal access tokens and MCP sessions cannot approve. Ask your operator how to sign in and review requests. Dedicated approval pages in the built-in UI remain planned.
+
+A proposed Git change can exit with status 0 while it waits for a merge. A dispatched workflow can also exit with status 0 while it runs. For scripts, read the state in `-o json` and check the run again until you have the result you need.
+
+See [Define a self-service action](/operators/actions/) for inputs and tests, [HTTP API reference](/users/api/#action-runs) for endpoints, or [CLI reference](/start/cli/) for the flags and exit codes.

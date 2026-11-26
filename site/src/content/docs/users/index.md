@@ -16,6 +16,7 @@ Use the catalog to find software, check who owns it, and understand why it recei
 | Build a script or dashboard | The [HTTP API reference](/users/api/) |
 | Connect an agent | [Read the catalog from an agent](/agents/reads/) |
 | Request a change the portal offers | [Test and run an action](/users/actions/) |
+| Read a change you made in a source repository | [Refresh an entity](/users/refresh/) |
 
 ## Read an owner or score
 
