@@ -1,6 +1,7 @@
-//! The server side of the control channel (connector-control §4–§5): registrations, a durable-ish
-//! command registry with per-connector queues, coalescing, priorities, deadlines, acknowledgements
-//! and completion. In-memory in v1 (commands are lost on restart; durable workflows arrive in M5).
+//! Queue commands and track connector state on the portal side of the control channel.
+//!
+//! The hub keeps registrations, queues, and command history in memory. Restarting the portal
+//! clears that state. Connector binaries implement [`crate::sdk::Source`].
 
 use serde::Serialize;
 use serde_json::{Value, json};
@@ -9,47 +10,75 @@ use std::sync::Mutex;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 use tokio::sync::Notify;
 
+/// The lifecycle state of a connector command.
 #[derive(Debug, Clone, Serialize, PartialEq)]
 #[serde(rename_all = "snake_case")]
 pub enum Status {
+    /// Queued or delivered without a matching acknowledgement yet.
     Pending,
+    /// Acknowledged by the connector and awaiting completion.
     Acked,
+    /// Completed successfully.
     Succeeded,
+    /// Completed with partial results.
     Partial,
+    /// Completed with a failure reported by the connector.
     Failed,
+    /// Completed with cancellation reported by the connector.
     Cancelled,
+    /// The hub observed that the deadline had passed. A late completion can still update the state.
     TimedOut,
 }
 
 impl Status {
+    /// Returns whether this state is beyond queueing and acknowledgement.
+    ///
+    /// A terminal state can represent success, failure, cancellation, or timeout.
     pub fn terminal(&self) -> bool {
         !matches!(self, Status::Pending | Status::Acked)
     }
 }
 
+/// A queued or completed connector command and its observed result.
 #[derive(Debug, Clone, Serialize)]
 pub struct Command {
+    /// Command ID assigned by the hub.
     pub id: String,
+    /// Portal manifest name of the connector that receives this command.
     pub connector: String,
+    /// Wire command name, such as `refresh` or `resync`.
     pub command: String,
+    /// Record kind selected for a `refresh`.
     pub kind: Option<String>,
+    /// Record kinds selected for a `resync`.
     pub kinds: Vec<String>,
+    /// External IDs requested by a scoped refresh.
     pub external_ids: Vec<String>,
+    /// Reason passed to the connector with the command.
     pub reason: String,
+    /// Dispatch priority, with `interactive` served first.
     pub priority: String,
+    /// Deadline in whole Unix seconds.
     pub deadline: u64,
+    /// Principal that requested the command.
     pub requested_by: String,
+    /// Latest lifecycle state observed by the hub.
     pub status: Status,
-    /// Input version of the batch that carried `complete`; the result snapshot covers it.
+    /// Input version of the batch that carried `complete`, if received.
     pub completed_version: Option<u64>,
+    /// Protocol error objects from the completion message, if any.
     pub errors: Vec<Value>,
+    /// Counters reported in the completion message. Starts as an empty object.
     pub counts: Value,
-    /// Other command ids coalesced into this one.
+    /// Other command IDs recorded as merged into this one. New commands start with an empty list.
     pub merged: Vec<String>,
 }
 
 impl Command {
-    /// The wire form (crates/seikika-model/schema/connector-messages.schema.json `command`).
+    /// Builds the wire command sent to the connector.
+    ///
+    /// The message includes request context and a UTC deadline. For `refresh` it carries `kind`
+    /// and `external_ids`. For `resync` it carries `kinds`.
     pub fn message(&self) -> Value {
         let mut m = json!({"type": "command", "command_id": self.id, "command": self.command,
                            "reason": self.reason, "priority": self.priority,
@@ -66,7 +95,7 @@ impl Command {
     }
 }
 
-/// Seconds since the epoch.
+/// Returns the current time in whole Unix seconds, or zero for a clock before the epoch.
 pub fn now() -> u64 {
     SystemTime::now()
         .duration_since(UNIX_EPOCH)
@@ -74,7 +103,19 @@ pub fn now() -> u64 {
         .as_secs()
 }
 
-/// RFC 3339 UTC from epoch seconds (no external date library).
+/// Formats whole Unix seconds as UTC with a `Z` suffix and no fractional seconds.
+///
+/// Keep times within the four-digit year range for RFC 3339 and [`parse_rfc3339`].
+///
+/// # Examples
+///
+/// ```
+/// use seikika_connect::hub::{parse_rfc3339, rfc3339};
+///
+/// let start = rfc3339(0);
+/// assert_eq!(start, "1970-01-01T00:00:00Z");
+/// assert_eq!(parse_rfc3339(&start), Some(0));
+/// ```
 pub fn rfc3339(secs: u64) -> String {
     let days = secs / 86_400;
     let (h, m, s) = ((secs % 86_400) / 3600, (secs % 3600) / 60, secs % 60);
@@ -91,7 +132,11 @@ pub fn rfc3339(secs: u64) -> String {
     format!("{y:04}-{mo:02}-{d:02}T{h:02}:{m:02}:{s:02}Z")
 }
 
-/// Epoch seconds from `YYYY-MM-DDTHH:MM:SSZ`, the inverse of `rfc3339`.
+/// Parses whole Unix seconds from the UTC format produced by [`rfc3339`].
+///
+/// Returns `None` if the expected fields cannot be read or the result precedes the Unix epoch.
+/// Pass trusted timestamps in `YYYY-MM-DDTHH:MM:SSZ` form. This helper reads fixed-position fields
+/// and performs limited format checks. Use a full RFC 3339 parser to validate user input or handle offsets.
 pub fn parse_rfc3339(s: &str) -> Option<u64> {
     let b = s.as_bytes();
     if b.len() < 20 || b[4] != b'-' || b[10] != b'T' {
@@ -109,11 +154,16 @@ pub fn parse_rfc3339(s: &str) -> Option<u64> {
     u64::try_from(days * 86_400 + hh * 3_600 + mm * 60 + ss).ok()
 }
 
+/// The most recent registration accepted for a connector name.
 #[derive(Debug, Clone, Serialize)]
 pub struct Registration {
+    /// Instance name reported by the connector process.
     pub instance: String,
+    /// Connector package version reported by that instance.
     pub version: String,
+    /// Wire capability object used to determine supported kinds and scopes.
     pub capabilities: Value,
+    /// Time the hub received the registration, in whole Unix seconds.
     pub at: u64,
 }
 
@@ -131,32 +181,53 @@ struct Inner {
     tried: HashMap<(String, String), u64>,
 }
 
+/// The portal's in-memory registry and dispatch queues for connector commands.
+///
+/// Create one per portal process and share it between command requesters and transports. Methods
+/// that lock shared state can panic if another thread panicked while holding the lock.
 #[derive(Default)]
 pub struct Hub {
     inner: Mutex<Inner>,
     notify: Notify,
 }
 
-/// What a scoped refresh or resync asks for.
+/// Requests a scoped refresh or full resync from a named connector.
 pub struct Request {
+    /// Connector name declared in the portal manifest.
     pub connector: String,
+    /// Wire command name. Use `refresh` for external IDs and `resync` for a full read.
     pub command: &'static str,
+    /// Single record kind for `refresh`. Use `None` for `resync`.
     pub kind: Option<String>,
+    /// Record kinds for `resync`. Leave empty for `refresh`.
     pub kinds: Vec<String>,
+    /// External IDs for `refresh`. Leave empty for `resync`.
     pub external_ids: Vec<String>,
+    /// Reason included in the wire message.
     pub reason: String,
+    /// Dispatch priority. In order, `interactive`, `verification`, `freshness`, and `background`.
     pub priority: &'static str,
+    /// Time allowed for a new command, rounded down to whole seconds with a minimum of one.
     pub timeout: Duration,
+    /// Principal that requested the command.
     pub requested_by: String,
 }
 
 impl Hub {
+    /// Creates a hub with no registered connectors or queued commands.
     pub fn new() -> Self {
         Self::default()
     }
 
-    /// Queue a command, coalescing with a pending one for the same connector and scope
-    /// (connector-control §5). Returns the id the caller should wait on.
+    /// Queues a command and returns its ID for [`Self::get`] or [`Self::wait`].
+    ///
+    /// Returns the existing ID if a nonterminal command already covers the request. A refresh
+    /// covers a second refresh of the same kind if it includes all the requested IDs. A reused
+    /// command keeps its original priority and deadline.
+    ///
+    /// # Panics
+    ///
+    /// Panics on a poisoned hub lock. An excessive timeout can overflow the Unix deadline.
     pub fn enqueue(&self, r: Request) -> String {
         let mut g = self.inner.lock().unwrap();
         let ids: BTreeSet<&String> = r.external_ids.iter().collect();
@@ -216,7 +287,15 @@ impl Hub {
         id
     }
 
-    /// Take the queued commands for `connector`, waiting up to `wait` for one to arrive.
+    /// Drains queued command messages for `connector` in priority order.
+    ///
+    /// Run this on a Tokio runtime with time enabled. Returns an empty list if no dispatchable
+    /// command arrives before `wait`. Delivery leaves a command pending until acknowledgement.
+    ///
+    /// # Panics
+    ///
+    /// Panics on a poisoned hub lock, or if it needs to wait and Tokio time is unavailable.
+    /// An excessive wait can overflow the deadline.
     pub async fn take(&self, connector: &str, wait: Duration) -> Vec<Value> {
         let deadline = tokio::time::Instant::now() + wait;
         loop {
@@ -254,8 +333,15 @@ impl Hub {
         }
     }
 
-    /// Record control messages from `connector` that arrived in the batch committed as
-    /// `version`. Returns resync reconciliations to perform: (kind, external ids seen).
+    /// Applies control messages from a connector batch committed as input `version`.
+    ///
+    /// Pass validated messages and the authenticated connector name. Each returned pair contains
+    /// a kind to reconcile and the external IDs seen for that kind during the resync. The caller
+    /// applies the reconciliation to the input store.
+    ///
+    /// # Panics
+    ///
+    /// Panics on a poisoned hub lock.
     pub fn on_messages(
         &self,
         connector: &str,
@@ -312,13 +398,24 @@ impl Hub {
         reconcile
     }
 
+    /// Returns a copy of the command, marking overdue work before reading its status.
+    ///
+    /// Returns `None` for an unknown ID. See [`Hub`] for lock poisoning behavior.
     pub fn get(&self, id: &str) -> Option<Command> {
         let mut g = self.inner.lock().unwrap();
         self.expire(&mut g);
         g.commands.get(id).cloned()
     }
 
-    /// Wait until command `id` is terminal (or `wait` passes).
+    /// Waits for a terminal state or returns the latest command when `wait` elapses.
+    ///
+    /// Returns `None` immediately for an unknown ID. Check [`Command::status`] to see whether the
+    /// command finished. Run this on a Tokio runtime with time enabled.
+    ///
+    /// # Panics
+    ///
+    /// Panics on a poisoned hub lock, or if it needs to wait and Tokio time is unavailable.
+    /// An excessive wait can overflow the deadline.
     pub async fn wait(&self, id: &str, wait: Duration) -> Option<Command> {
         let deadline = tokio::time::Instant::now() + wait;
         loop {
@@ -335,6 +432,7 @@ impl Hub {
         }
     }
 
+    /// Returns the latest registration for `connector`, if it has registered in this process.
     pub fn registration(&self, connector: &str) -> Option<Registration> {
         self.inner
             .lock()
@@ -344,10 +442,15 @@ impl Hub {
             .cloned()
     }
 
+    /// Returns a copy of the latest registrations keyed by connector name.
     pub fn registrations(&self) -> HashMap<String, Registration> {
         self.inner.lock().unwrap().registrations.clone()
     }
 
+    /// Returns the completion time of the last successful read, in whole Unix seconds.
+    ///
+    /// Both a scoped refresh and a full resync can update the timestamp for `kind`. Returns
+    /// `None` if no successful read of `kind` has been recorded for the connector.
     pub fn last_read(&self, connector: &str, kind: &str) -> Option<u64> {
         self.inner
             .lock()
@@ -385,7 +488,10 @@ impl Hub {
         }
     }
 
-    /// The input version holding `connector`'s first finished sync of `kind`, if one has finished.
+    /// Returns the first input version where `connector` reported completion for `kind`.
+    ///
+    /// This includes failed or cancelled completions. Returns `None` until the connector reports
+    /// a completion for a command covering the kind.
     pub fn first_sync(&self, connector: &str, kind: &str) -> Option<u64> {
         self.inner
             .lock()
@@ -395,6 +501,7 @@ impl Hub {
             .copied()
     }
 
+    /// Returns queued and acknowledged commands, after marking overdue work as timed out.
     pub fn pending(&self) -> Vec<Command> {
         let mut g = self.inner.lock().unwrap();
         self.expire(&mut g);
@@ -405,7 +512,7 @@ impl Hub {
             .collect()
     }
 
-    /// Whether the connector registered `scope` for refreshing `kind`.
+    /// Returns whether the connector's latest registration supports refreshing `kind` by `scope`.
     pub fn can_refresh(&self, connector: &str, kind: &str, scope: &str) -> bool {
         self.registration(connector).is_some_and(|r| {
             r.capabilities["refresh"][kind]
@@ -414,6 +521,7 @@ impl Hub {
         })
     }
 
+    /// Returns whether the connector's latest registration lists `kind` for a full resync.
     pub fn can_resync(&self, connector: &str, kind: &str) -> bool {
         self.registration(connector).is_some_and(|r| {
             r.capabilities["resync"]

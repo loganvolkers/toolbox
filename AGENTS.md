@@ -146,7 +146,8 @@ The full loop, check pyramid and measured timings are in
 - **Plugin changes:** validate `plugin.json`/`mcp.json` against the official 1.0.0 schemas, and every
   skill with `skills-ref validate`. Use `"license": "MIT"` (D88).
 - **Writing style:** state conclusions first, then evidence. Prefer tables for comparisons. Keep docs
-  self-contained, with relative links that resolve.
+  self-contained, with relative links that resolve. Use the [SDK documentation comments guide](./site/src/content/docs/maintainers/sdk-docs.md)
+  for public Rust and npm declarations.
 - **The box and the tools** ([seikika-and-tools.md](./docs/design/seikika-and-tools.md),
   D01M7ZRAJT47W11X5X3FEJ6QTX8). Seikika is a box for tools, not a wrapper or a factory:
   - Every design doc and package README says whether it is about the box (carrying, pinning,

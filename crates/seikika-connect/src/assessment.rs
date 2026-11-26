@@ -1,7 +1,10 @@
-//! Agent assessments as connector records (docs/design/scorecards-for-scorecards.md §6). An
-//! assessment is one agent's or person's judgement of one entity against one rubric, written as a
-//! file (`crates/seikika-model/schema/assessment.schema.json`) or pushed by `seikika assess submit`. Both paths produce
-//! the same `assessment` record, so a portal maps it once.
+//! Convert rubric assessments into catalog records for the portal.
+//!
+//! Assessments written to files and those pushed via `seikika assess submit` produce the same
+//! `assessment` record. Validate the document against the [assessment schema] before passing it
+//! to these helpers.
+//!
+//! [assessment schema]: https://github.com/seikika/seikika/blob/main/crates/seikika-model/schema/assessment.schema.json
 
 use serde_json::{Value, json};
 use sha2::{Digest, Sha256};
@@ -148,8 +151,9 @@ fn known_id(root: &std::path::Path, id: &str) -> bool {
     word(&read("docs/questions.md"))
 }
 
-/// The first 12 hex digits of the SHA-256 of the assessment as written: what an assessment of
-/// this assessment is versioned by.
+/// Returns the first 12 lowercase hex digits of the SHA-256 of the serialized assessment.
+///
+/// Use this value as the subject hash when writing a review of the assessment.
 pub fn hash(doc: &Value) -> String {
     let text = serde_json::to_string(doc).unwrap_or_default();
     Sha256::digest(text.as_bytes())
@@ -159,7 +163,10 @@ pub fn hash(doc: &Value) -> String {
         .collect()
 }
 
-/// The external id: one current assessment per (rubric, entity).
+/// Builds the stable external ID `assessment:<rubric>/<entity>` from the document.
+///
+/// An assessment replaces an earlier one with the same rubric and entity. Validate both fields
+/// first. A missing or non-string field becomes an empty ID segment.
 pub fn external_id(doc: &Value) -> String {
     format!(
         "assessment:{}/{}",
@@ -168,15 +175,21 @@ pub fn external_id(doc: &Value) -> String {
     )
 }
 
-/// The record data: the assessment as written, plus its overall `verdict` (`fail` when any
-/// criterion fails, else `unsure` when any is unsure, else `pass`), the `failing` and `unsure`
-/// criteria, the criteria whose fail or unsure verdict has no `suggestion` (`unsuggested`) or whose
-/// reason cites nothing checkable (`uncited`), its content `hash`, and the `path` it was read from.
+/// Builds catalog record data from a validated assessment document.
+///
+/// The overall verdict is `fail` if any criterion fails, otherwise `unsure` if any is unsure,
+/// otherwise `pass`. The record includes the verdict lists, `hash`, and `path` when supplied.
+/// For criteria that failed or were unsure, it identifies missing suggestions and citations.
+/// This form recognizes citation shapes without checking the local filesystem. Use [`record_in`]
+/// to resolve repository references.
 pub fn record(doc: &Value, path: Option<&str>) -> Value {
     record_in(doc, path, None)
 }
 
-/// [`record`], resolving each reason's citations against the repository at `root`.
+/// Builds assessment record data and checks local citations against `root` when supplied.
+///
+/// With a checkout root, the `cited` field lists resolved file paths for review grounding. With
+/// `None`, citation checks use the same shape rules as [`record`].
 pub fn record_in(doc: &Value, path: Option<&str>, root: Option<&std::path::Path>) -> Value {
     let by = |v: &str| -> Vec<String> {
         doc["verdicts"]
@@ -229,13 +242,12 @@ pub fn record_in(doc: &Value, path: Option<&str>, root: Option<&std::path::Path>
     data
 }
 
-/// Link reviews to what they review. On each review, `groundedIn`: what it cites that its subject
-/// cites too, or the subject's own file (a review that engages with the assessment rather than
-/// citing any file). On each assessment, `independentReview`: the verdict (`pass`, `fail`,
-/// `unsure`) of a current, grounded review of it (an assessment whose entity is this assessment's
-/// external id and whose `subjectHash` is its `hash`) by a different, named assessor; empty when
-/// there is none. A scorecard on the assessed entity reads it to require a second pair of eyes,
-/// which the assessment's own fields can't show.
+/// Adds review grounding and independent review verdicts to assessment records in place.
+///
+/// Pass pairs of external ID and [`record_in`] data from the same checkout. A review's `groundedIn`
+/// lists citations it shares with its subject or the path of the subject itself. An assessment's
+/// `independentReview` holds the verdict of a grounded review with a matching subject hash and a
+/// different named assessor. An empty string means no qualifying review was found.
 pub fn link_reviews(records: &mut [(String, Value)]) {
     let name = |d: &Value| {
         d["assessor"]["name"]

@@ -1,5 +1,14 @@
 <script setup lang="ts">
-withDefaults(defineProps<{ title: string; description?: string; heading?: "h1" | "h2" }>(), { heading: "h1" });
+/** Displays a page heading and optional description, metadata, and actions. */
+interface Props {
+  /** Heading text used when the `title` slot is empty. */
+  title: string;
+  /** Text displayed below the heading when provided. */
+  description?: string;
+  /** Heading level. Defaults to `h1`. Use `h2` inside a page with its own main heading. */
+  heading?: "h1" | "h2";
+}
+withDefaults(defineProps<Props>(), { heading: "h1" });
 </script>
 
 <template>

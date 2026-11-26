@@ -1,13 +1,30 @@
-//! Files in a local checkout, for connectors that read one (`workspace`, `runner`): globs over
-//! `/`-separated relative paths and a walk that skips build and VCS directories.
+//! Match repository-relative paths for connectors that read a local checkout.
 
 use regex::Regex;
 use std::path::Path;
 
-/// Directories never walked.
+/// Directory names omitted from checkout scans at every depth.
 pub const SKIP_DIRS: &[&str] = &["target", "node_modules", ".git", "dist", ".venv"];
 
-/// A glob over `/`-separated relative paths: `**` spans directories, `*` and `?` don't.
+/// Compiles a glob that matches an entire `/`-separated relative path.
+///
+/// `**` crosses directory boundaries, and `**/` matches zero or more directories. `*` matches
+/// zero or more characters in one path segment, and `?` matches one. Other characters are literal.
+///
+/// # Errors
+///
+/// Returns a diagnostic if the translated expression exceeds the regex compiler's limits.
+///
+/// # Examples
+///
+/// ```
+/// use seikika_connect::files::glob;
+///
+/// let manifests = glob("**/catalog-info.yaml")?;
+/// assert!(manifests.is_match("catalog-info.yaml"));
+/// assert!(manifests.is_match("services/checkout/catalog-info.yaml"));
+/// # Ok::<(), String>(())
+/// ```
 pub fn glob(pattern: &str) -> Result<Regex, String> {
     let mut re = String::from("^");
     let mut chars = pattern.chars().peekable();
@@ -31,9 +48,11 @@ pub fn glob(pattern: &str) -> Result<Regex, String> {
     Regex::new(&re).map_err(|e| format!("glob {pattern}: {e}"))
 }
 
-/// Relative paths (sorted) of every file under `root`, skipping [`SKIP_DIRS`]. In a git work tree
-/// these are the files git sees (tracked, or untracked and not ignored), so a developer's checkout
-/// scores like a fresh clone; elsewhere, or when git lists nothing, every file on disk.
+/// Lists sorted, `/`-separated paths relative to `root`, omitting [`SKIP_DIRS`].
+///
+/// In a Git checkout, includes tracked files and unignored untracked files. If Git is unavailable
+/// or lists no existing files after filtering, falls back to a disk walk with no Git ignore rules.
+/// The fallback skips entries it cannot read.
 pub fn walk(root: &Path) -> Vec<String> {
     match git_files(root) {
         Some(out) if !out.is_empty() => out,
@@ -93,7 +112,9 @@ fn walk_disk(root: &Path) -> Vec<String> {
     out
 }
 
-/// The files under `root` matching any of `globs`.
+/// Returns the paths from [`walk`] that match at least one of `globs`.
+///
+/// Compile each pattern with [`glob`]. An empty pattern list returns an empty result.
 pub fn matching(root: &Path, globs: &[Regex]) -> Vec<String> {
     walk(root)
         .into_iter()

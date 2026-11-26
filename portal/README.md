@@ -10,6 +10,7 @@ no Postgres, no OpenFGA, no network.
 | Scorecard | Layer | Kind | What it raises |
 |---|---|---|---|
 | `maintainer-crate` | 1. Maintainer | Crate | Crate docs, tests that pass, clippy, public-API docs, function size and complexity, unwraps |
+| `maintainer-sdk-docs` | 1. Maintainer | SdkDocs | Public entry points, item and prop comments, links, and package references. New SDKs must reach gold |
 | `maintainer-docs` | 1. Maintainer | Doc | Links resolve, the SDLC layer is named, design docs have a status banner and sources |
 | `operator-cli` | 2. Operator | Command | Operator commands have help, are documented and are run by a script or test |
 | `user-cli` | 3. User | Command | Read commands have help, structured output (`-o json`) and are exercised |
@@ -89,7 +90,7 @@ seikika assess brief rule:seikika/user-mcp/contract-tested --portal portal --ski
 seikika assess check portal --skip runner,github-actions                       # validate assessments/: fresh, stale, missing
 ```
 
-`seikika` here is `target/debug/seikika` (connectors are found next to it). The ratchet needs
+`seikika` here is `target/debug/seikika` (connectors are found next to it). Run `pnpm install --frozen-lockfile` from the checkout root before a live report. The SDK documentation check uses the workspace's TypeScript and Vue tools. The ratchet needs
 `zizmor` 1.32.0 (`pip install zizmor==1.32.0` or `pipx install zizmor==1.32.0`) and
 `actionlint` 1.7.12 (`scripts/ci-tools.sh <bin-dir> actionlint`, the same pin as CI) on the
 `PATH`; without them their rules are `unknown` (reported, not compared) and `--ci`/`--update`
@@ -115,7 +116,7 @@ To register it in an MCP client (for example Claude Code's `.mcp.json`), use the
 | Connector | Records | How | Refresh |
 |---|---|---|---|
 | `workspace` ([crate](../crates/seikika-connector-workspace)) | `crate`, `doc`, `file`, `skill`, `connector`, `dependency`, `agent-doc`, `package-json`, `json-schema`, `example` | `cargo metadata`, a `syn` parse of each crate, markdown and file scans with configurable regex captures and counts, one record per `SKILL.md`, one record per `seikika-connector-*` crate, one record per direct Cargo dependency, one record per `AGENTS.md` and its aliases, one record per `package.json`, one record per JSON Schema, and one record per example or experiment write-up | Re-reads one crate, doc, file, skill, connector, dependency, agent instruction file, npm manifest, schema or example |
-| `surfaces` (the runner binary) | `command`, `mcp-tool` | Runs `seikika describe` | Reruns it |
+| `surfaces` (the runner binary) | `command`, `mcp-tool`, `scorecard`, `rule`, `kind`, `field`, `connector`, `rubric`, `sdk-docs` | Runs `seikika describe` and the [SDK documentation check](../scripts/sdk-docs.mjs) | Reruns jobs for the requested record kinds |
 | `ci-lint` (the runner binary) | `zizmor`, `actionlint` | Runs both linters over `.github/workflows` and `actions/`; one record per file, clean ones included | Reruns them |
 | `github-actions` (the github binary) | `workflow-runs` | Run history per workflow on `main` from the GitHub API: fail rate, re-runs, failing streak, p90 time | Re-reads it |
 | `runner` ([crate](../crates/seikika-connector-runner)) | `test`, `clippy`, `mcp-calls` | Runs `cargo test -p`, `cargo clippy -p` per crate, and the MCP contract tests with `SEIKIKA_MCP_TRACE` (observed calls per tool) | Reruns one crate's jobs |
