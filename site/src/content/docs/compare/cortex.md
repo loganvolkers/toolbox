@@ -6,68 +6,19 @@ sidebar:
 relationship: replace
 peer: Cortex
 peer_url: https://www.cortex.io/
-last_verified: 2026-11-23
+last_verified: 2026-11-26
 claim_sources:
   - https://github.com/seikika/seikika/blob/main/docs/research.md
 ---
 
-Both projects help organizations define what “good” looks like for services and drive improvement. [Cortex](https://www.cortex.io/) popularized scorecards inside commercial IDP / engineering-intelligence products, with CQL rules and optional scorecards-as-code. Seikika puts scorecards, evidence, and Betterer-style ratchets in an open-source portal you configure in git.
+Cortex offers a hosted software catalog and scorecards. Use Cortex if your team already tracks services and standards in it or needs a managed catalog. Try Seikika if your team needs standards stored with code and a baseline that runs in Git-based CI.
 
-## Quick glance
-
-| | Cortex | Seikika |
+| Area | Cortex | Seikika |
 |---|---|---|
-| License / deploy | Commercial SaaS | Open-source; self-host image + Postgres |
-| Scorecard language | CQL (and product UI) | CEL over connector facts |
-| Scorecards as code | YAML under `.cortex/`; UI lock when GitOps is on | Manifest and packages in git always |
-| Catalog entities | `cortex.yaml` and product catalog | Manifest kinds + connector records |
-| Ratchet / baseline | Product workflows and initiatives | `seikika report --baseline` (committed results) |
-| Agent surface | MCP (reads + CQL); Context Graph positioning | API, MCP, CLI, UI |
-| Who operates it | Cortex operates the control plane | Your team operates the portal |
+| Catalog | Entities in Cortex with repository descriptors | Kinds and entities mapped by the portal manifest |
+| Standards | Scorecards with Cortex Query Language (CQL) rules | Scorecards with Common Expression Language (CEL) rules |
+| Git workflow | Scorecards can be managed as code | The manifest, packages, and baseline live with the code |
 
-## What we share
+If you use both systems, choose which one owns each standard. A Seikika [repo portal](/start/quickstart/) can check a repository alongside a Cortex catalog. A migration requires mapping the descriptors and rules you use.
 
-- Progressive levels: an entity earns a level when the rules for that level pass.
-- Interest in expressing standards as code, not only as dashboard clicks.
-- An agent-readable view of ownership, links, and policy-shaped facts.
-- The idea that scorecards are how a platform talks about quality.
-
-## Where they differ
-
-### Scorecards in a SaaS vs portal-as-artifact
-
-Cortex's strength is a productized scorecard and intelligence experience. Seikika's strength is a portal and report that live as artifacts in your repositories — the same loop as the code they score.
-
-### Expression language
-
-CQL is powerful inside Cortex. Seikika prefers CEL so agents and humans share a common expression language already used elsewhere in cloud-native tooling. That is a design choice, not a claim that CQL is inadequate.
-
-### Ratchets
-
-Seikika's baseline file records levels and evidence so CI can say better / same / worse. That design explicitly credits Betterer ([ratchets](/compare/betterer/)). Compare product initiative features against that mechanism on their own docs when you evaluate Cortex.
-
-## Good for / not for
-
-### Choose Cortex when
-
-- You want a commercial engineering-intelligence suite with scorecards as a product feature.
-- Your organization already standardizes on Cortex's catalog and CQL.
-- You need the vendor's integrations and UI more than a self-hosted config-as-code portal.
-
-### Choose Seikika when
-
-- You want open-source scorecards tied to git-reviewed portal config.
-- You need CI ratchets and campaigns over the same facts agents read via MCP/CLI.
-- You are assembling a portal from packages and connectors rather than adopting a SaaS IDP.
-
-## Coexistence
-
-No Cortex → Seikika importer ships today. Teams can keep Cortex for intelligence product needs while using Seikika for repo-local ratchets, or the reverse, as long as they are honest about two sources of truth. Dual-running without a sync story needs clear ownership of which system is authoritative for which rule.
-
-## What we learned
-
-Cortex showed that scorecards belong in the IDP conversation, not only in scattered spreadsheets — including progressive levels and taking GitOps seriously enough to lock UI edits when code is the source. Seikika carries that product lesson into config-as-code scorecards and [Acknowledgments](/compare/acknowledgments/) for the wider peer set.
-
-## Last verified
-
-**2026-11-23**, against [docs/research.md](https://github.com/seikika/seikika/blob/main/docs/research.md) (Cortex public docs cited there for CQL, scorecards-as-code, and MCP). Re-check [Cortex docs](https://docs.cortex.io/) when describing product features; omit undated adoption statistics.
+See [Cortex documentation](https://docs.cortex.io/) for current product options and [Seikika scorecards](/concepts/scorecards/) for local levels and baselines.

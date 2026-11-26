@@ -1,46 +1,37 @@
 ---
 title: Read the catalog from an agent
-description: The same catalog reads are available over MCP, the CLI and the API.
+description: Connect an MCP client, discover its tools, and read a scorecard with the caller's permissions.
 sidebar:
   order: 1
 ---
 
-The reads are the same on each surface. The person or agent making the call is a [user of a portal](/users/). Command names, flags, and MCP tool names are on the [CLI reference](/start/cli/) (built from the live CLI at site build time).
+Connect an agent to a running portal with Model Context Protocol (MCP). Start with [Explore a portal](/start/portal/) for fixture data or ask your operator for the shared portal URL and credentials.
 
-| Read | What it answers |
-|---|---|
-| `get` | One entity, by id |
-| `query` | Entities of a kind, with a filter |
-| `score` | One entity's level, and which rules failed |
-| `explain` | The evidence and the fix for a rule |
-| `search` | Text across the catalog |
-| `owner` | Who owns an entity and why |
-| `graph` | Neighbours of an entity |
-| `scorecard` | One scorecard across entities |
-| `campaign` | Progress on a campaign |
+## Connect a client
 
-Over MCP those reads are tools. Over the CLI they are subcommands of `seikika`. Over HTTP they are the portal's API under `/v1`. Authorization is shared: a field you cannot see comes back hidden.
+Use the client settings for a Streamable HTTP server. Set the URL to the portal's `/mcp` endpoint. A token-based portal expects `Authorization: Bearer …`. Use your client's secret store for the token. For local fixture use, set `x-seikika-user` to the fixture name, such as `bob`.
 
-## Connect
-
-Serve a portal, then attach:
+If your client uses standard input and output (stdio), configure it to run the CLI as a subprocess. For the loopback example, use this command and arguments:
 
 ```bash
-seikika serve examples/reference-portal --fixtures
-# MCP HTTP: http://127.0.0.1:8080/mcp
-# or stdio bridge:
-seikika mcp --url http://127.0.0.1:8080 --as alice
+seikika mcp --url http://127.0.0.1:8080 --as bob
 ```
 
-On a deployed portal, pass a personal access token (`SEIKIKA_TOKEN` / `--token`) instead of `--as`. Service identities for jobs are specified and not built.
+For a token-based portal, load `SEIKIKA_TOKEN` into the subprocess environment and set `--url` to the shared portal's HTTPS root. The CLI connects to `/mcp` for you.
 
-## A short loop
+## Discover the tools and read a score
 
-1. `score` the entity you are about to change.
-2. Read the failing rule's evidence (`explain --rule scorecard/rule`).
-3. Change the file the evidence names.
-4. Refresh that entity and `score` it again.
+Ask your client to list tools. It should show names such as `get`, `owner_of`, `scorecard_status`, and `explain`. The [CLI reference](/start/cli/) maps command names to MCP tools.
 
-The scorecard for this site is the same loop. A page with a broken link fails `links-resolve`, and the evidence is the link target.
+Call `scorecard_status` with the following arguments on the fixture portal:
 
-Nouns: [Glossary](/concepts/glossary/). First local score without a server: [Quickstart](/start/quickstart/). Build from source: [Run Seikika locally](/start/run/).
+```json
+{
+  "id": "repository:checkout-web",
+  "scorecard": "ownership"
+}
+```
+
+Look for a bronze ownership level. As Bob, you can use `explain` with `id` set to `repository:checkout-web` and `rule` set to `ownership/branch-protected` to see why the next level failed. The portal applies the same permissions to MCP and HTTP reads. A response can show the level and redact rule details.
+
+If a user asks you to change something, check which [self-service actions](/users/actions/) the portal offers and review the preview before you request a run.

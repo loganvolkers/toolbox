@@ -1,6 +1,6 @@
 # Seikika docs
 
-Astro Starlight publishes the official Seikika documentation, the catalog report, and Storybook at [seikika.com](https://seikika.com/) through GitHub Pages.
+Astro Starlight publishes the official Seikika documentation, the catalog report, and Storybook at [seikika.com](https://seikika.com/) through GitHub Pages. Follow the [documentation style guide](src/content/docs/maintainers/writing.md) when you change a page.
 
 ```sh
 corepack enable pnpm

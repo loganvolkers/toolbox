@@ -1,25 +1,16 @@
 ---
 title: The catalog
-description: Entities, kinds and connectors. Facts live in the connector. Rules live in the manifest.
+description: Follow a connector record through the manifest to a catalog entity and scorecard.
 ---
 
-A portal's catalog is a set of entities. Each entity has a kind, an id and fields. A **connector** reports facts from a system of record: a checkout, GitHub, a directory of skills. The portal manifest maps those records onto entities.
+A catalog is the collection of software, people, and other things a portal tracks. Seikika calls each item an **entity**. Each entity has an ID, a kind, and fields.
 
-The split is the point. The connector says what is true (`this file has no title`, `this workflow uses an unpinned action`). The manifest says what is required.
+## How a record becomes a score
 
-## Kinds you will see
+1. A connector reads a source such as a Git checkout or an API. In the [repo starter](/start/quickstart/), the workspace connector examines Markdown files and reports broken links.
+2. The manifest maps each Markdown record to a `Doc` entity. The README becomes `doc:README.md`, with a `brokenLinks` field.
+3. The `docs` scorecard checks that `brokenLinks` is empty. If it contains `notes.md`, the report marks the rule as failing and shows that path as evidence.
 
-| Kind | A typical entity |
-|---|---|
-| Crate | One Cargo package in the workspace |
-| Doc | One markdown document in the repository |
-| Scorecard | A ladder of rules for one kind |
-| Site page | One page of this site |
+Connectors collect facts. [The manifest](/operators/manifest/) defines what the portal does with those facts, including rules and relationships. A portal can also map a repository's ownership claim to a team, then show whether other records support the claim. [Explore a portal](/start/portal/) walks through that example.
 
-Relations come from the same facts. A document that names a command is linked to that command, so an agent can walk from a failing score to the file that should change.
-
-## This site is in the catalog
-
-Each page under `site/src/content/docs` is a `site-page` entity. Adding a page adds an entity. The [scorecard](/concepts/scorecards/) then says whether that page is titled, linked, and reachable from the sidebar.
-
-Terms: [Glossary](/concepts/glossary/).
+Each page on this site becomes a `SitePage` entity in Seikika's own catalog. You can see its results in [this repository's report](/demo/report/). See the [glossary](/concepts/glossary/) for more terms.

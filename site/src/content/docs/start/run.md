@@ -1,35 +1,22 @@
 ---
 title: Run Seikika locally
-description: Build the seikika binary and validate the reference portal.
+description: Build Seikika from a source checkout and check the reference portal.
 sidebar:
   order: 3
 ---
 
-Prefer a [released install](/start/install/) for another repository. Build from source when you are changing Seikika itself. The binary is `target/debug/seikika`.
+Build from source to work on Seikika itself. If you only need a CLI for another repository, see [Install Seikika](/start/install/).
+
+## Build and verify
+
+You need Git, Rust through rustup, and a native linker. See the [source build prerequisites](/start/install/#build-from-source) for your platform. From the root of your Seikika checkout, run:
 
 ```bash
-cargo build
+cargo build --locked
 target/debug/seikika validate examples/reference-portal
+target/debug/seikika test examples/reference-portal
 ```
 
-`validate` checks a portal manifest. The reference portal under `examples/reference-portal` is the anchor for v1: its expected outputs are the oracle.
+Look for zero validation errors and passing tests. The example configures a catalog with sample ownership, scorecards, and permissions. Its expected outputs give maintainers a way to test changes against the same input.
 
-## Score this repository
-
-Seikika also scores itself. From a built checkout:
-
-```bash
-target/debug/seikika report portal --skip runner,github-actions
-```
-
-That report reads the catalog in `portal/` and prints each scorecard with the evidence for rules that fail. It does not need Postgres.
-
-## What you get
-
-| Surface | What it is |
-|---|---|
-| Catalog | Entities (crates, docs, services, scorecards) and the relations between them |
-| Scorecards | Levels with evidence and a fix, ratcheted in CI |
-| API, MCP, CLI, UI | The same reads, for people and for agents |
-
-Next: [what a catalog holds](/concepts/catalog/).
+Follow [Explore a portal](/start/portal/) to run the example, or [Build Seikika](/maintainers/) for other repository checks.

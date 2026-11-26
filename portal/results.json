@@ -4563,6 +4563,9 @@
       },
       "action:github/codeql-action": {
         "level": "bronze"
+      },
+      "action:rust-lang/crates-io-auth-action": {
+        "level": "bronze"
       }
     },
     "maintainer-advisories": {},
@@ -4723,6 +4726,16 @@
           "still-running"
         ]
       },
+      "workflow:.github/workflows/publish-crates.yml": {
+        "level": "bronze",
+        "unknown": [
+          "fail-rate-under-10",
+          "fail-rate-under-20",
+          "fail-rate-under-5",
+          "main-not-stuck-red",
+          "still-running"
+        ]
+      },
       "workflow:.github/workflows/publish-npm.yml": {
         "level": "bronze",
         "unknown": [
@@ -4783,6 +4796,9 @@
       "workflow:.github/workflows/pages.yml": {
         "level": "gold"
       },
+      "workflow:.github/workflows/publish-crates.yml": {
+        "level": "gold"
+      },
       "workflow:.github/workflows/publish-npm.yml": {
         "level": "gold"
       },
@@ -4827,6 +4843,12 @@
         ]
       },
       "workflow:.github/workflows/pages.yml": {
+        "level": "bronze",
+        "unknown": [
+          "fast-feedback"
+        ]
+      },
+      "workflow:.github/workflows/publish-crates.yml": {
         "level": "bronze",
         "unknown": [
           "fast-feedback"
@@ -5204,6 +5226,9 @@
         "level": "silver"
       },
       "doc:docs/audits/design-loop-efficiency-2026-11-24.md": {
+        "level": "silver"
+      },
+      "doc:docs/audits/public-docs-2026-11-26.md": {
         "level": "silver"
       },
       "doc:docs/audits/seikika-report-2026-11-24-2.md": {
@@ -6530,7 +6555,22 @@
       "site-page:site/src/content/docs/maintainers/index.md": {
         "level": "gold"
       },
+      "site-page:site/src/content/docs/maintainers/writing.md": {
+        "level": "gold"
+      },
+      "site-page:site/src/content/docs/operators/access.md": {
+        "level": "gold"
+      },
+      "site-page:site/src/content/docs/operators/ci.md": {
+        "level": "gold"
+      },
+      "site-page:site/src/content/docs/operators/deploy.md": {
+        "level": "gold"
+      },
       "site-page:site/src/content/docs/operators/index.md": {
+        "level": "gold"
+      },
+      "site-page:site/src/content/docs/operators/manifest.md": {
         "level": "gold"
       },
       "site-page:site/src/content/docs/operators/portal.md": {
@@ -6545,10 +6585,25 @@
       "site-page:site/src/content/docs/start/install.md": {
         "level": "gold"
       },
+      "site-page:site/src/content/docs/start/portal.md": {
+        "level": "gold"
+      },
       "site-page:site/src/content/docs/start/quickstart.md": {
         "level": "gold"
       },
       "site-page:site/src/content/docs/start/run.md": {
+        "level": "gold"
+      },
+      "site-page:site/src/content/docs/start/troubleshooting.md": {
+        "level": "gold"
+      },
+      "site-page:site/src/content/docs/start/versions.md": {
+        "level": "gold"
+      },
+      "site-page:site/src/content/docs/users/actions.md": {
+        "level": "gold"
+      },
+      "site-page:site/src/content/docs/users/api.md": {
         "level": "gold"
       },
       "site-page:site/src/content/docs/users/index.md": {

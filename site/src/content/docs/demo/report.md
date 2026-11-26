@@ -5,7 +5,7 @@ description: The Seikika catalog and scorecard report, published as an Astro int
 
 [Browse the report](/report/) to see every derived entity, scorecard results, evidence, and fixes. [Browse Storybook](/storybook/) for the report and hosted portal stories.
 
-The docs build imports `@seikika/astro-report`. To publish your own report, generate a snapshot and pass its path to the integration in your Astro configuration.
+To publish a report on your own Astro site, install [the report integration](/authors/npm/) and generate a snapshot. From your Astro project, run the following command. Replace `portal` with your portal directory if needed.
 
 ```bash
 seikika report portal -o web --out generated
@@ -20,4 +20,4 @@ export default defineConfig({
 });
 ```
 
-The integration publishes the report at `/report/` by default and accepts an Astro layout for your navigation. Publish a snapshot approved for the site's readers. The same command writes a standalone `index.html` for offline use.
+Build the Astro site and open `/report/` to check that it shows your catalog. Review the snapshot for sensitive data before publishing it. The report command also writes a standalone `index.html` in `generated/` that you can open offline.

@@ -1,30 +1,26 @@
 ---
 title: Four SDLC layers
-description: Maintainer, package author, operator and user are four different pieces of software, with four different loops.
+description: See what operators, package authors, users, and maintainers build with Seikika.
 ---
 
-Seikika has four groups of builders. Naming the layer keeps a standard, a command and a review from being applied to the wrong person.
+Several groups work with Seikika. Each group owns a different part of the software development lifecycle (SDLC). One person can work in more than one group.
 
-| Layer | Who | What they build | The page |
-|---|---|---|---|
-| Maintainer SDLC | People changing this repository | Seikika: the binary, the connectors it ships, the schemas, this site | [Build Seikika](/maintainers/) |
-| Package author SDLC | Anyone publishing standards for other portals | A package: scorecards, fixtures, a connector, the tools those rules need | [Publish a standard](/authors/) |
-| Operator SDLC | A platform team | A portal: manifest, connectors, authorization, a running service | [Build a portal](/operators/) |
-| User SDLC | A developer or an agent | An app, a script, a check or an agent on that portal's API, MCP and CLI | [Use a portal](/users/) |
-
-The loops meet at the edges. Maintainers release Seikika. Package authors pin a Seikika version and ship a package. Operators include that package and deploy a portal. Users call the portal. Feedback, a failing scorecard, a missing field, comes back up the same chain.
-
-A sentence that says "SDLC" and names no layer is ambiguous, and the docs scorecard fails it. The four names above are the ones to use.
-
-## What each loop can rely on
-
-| Layer | In the binary today | Specified, and not in the binary yet |
+| Role | What you build | Start here |
 |---|---|---|
-| Maintainer SDLC | Build, test, the reference portal as the oracle, the ratchet on this repository; [installable releases](/start/install/) (v0.2.0+) | Broader release automation and image pipelines beyond the first attested binaries |
-| Package author SDLC | A package directory, `include`, `seikika test`, `seikika install` pinning a git tag by content hash | A package release archive, attestations, a fleet rollout. The registry is an open question |
-| Operator SDLC | `validate`, `test`, `plan --local`, `serve`, `push`, `connector test`, `report` | A plan against live data, preview environments, `seikika verify` |
-| User SDLC | The catalog reads on CLI, MCP and HTTP, personal access tokens, snapshot ids | Typed clients, service identities, a deprecation feed. Action runs are paused |
+| Operator | A portal with data sources, rules, and permissions | [Build a portal](/operators/) |
+| Package author | Reusable standards, tests, and connectors | [Publish a standard](/authors/) |
+| User | An app, script, check, or agent that uses the portal | [Use a portal](/users/) |
+| Maintainer | The Seikika CLI, server, first-party connectors, and docs | [Build Seikika](/maintainers/) |
 
-The reference portal sits on the boundary. Maintainers use it as the acceptance oracle. Its scenarios are written as user tasks: who owns a repository, why a level is redacted, refresh this, install this app.
+Maintainers release Seikika. Package authors publish standards against a known version. Operators include packages when they configure their portals. Users read the catalog and report gaps, such as a missing field or a rule that needs better evidence.
 
-Whether each loop actually works for agents is measured, not asserted: [DX Benchmarks](/concepts/dx-benchmarks/) run agents through a layer's work on open-source repositories, with Seikika and with the alternatives.
+## What each role can do
+
+| Role | Available in current source | Planned |
+|---|---|---|
+| Operator | Validate, test, plan against fixtures, serve a catalog, and configure actions | Live remote planning, managed preview environments, and a separate `seikika verify` command |
+| Package author | Test, share by Git ref, and install locked packages | An OCI registry mirror |
+| User | Read data through the CLI, HTTP, or MCP. Preview, request, and verify configured actions. | A generated client, service identities, and a deprecation feed |
+| Maintainer | Build, test, and score Seikika. Check the public docs as part of CI. | See the [project roadmap](https://github.com/seikika/seikika/blob/main/docs/plan.md) for later work. |
+
+Check [Releases and upgrades](/start/versions/) for the version that matches your work.
