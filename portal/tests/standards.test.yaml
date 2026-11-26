@@ -3,6 +3,20 @@
 # rule means; the live portal applies the same rules to the whole repository.
 name: standards
 assert:
+  - name: a standards package reaches bronze with a public guide
+    expect: >-
+      score('maintainer-standard-package',
+      'standard-package:packages/demo-listed/seikika-package.yaml').level ==
+      'bronze' && score('maintainer-standard-package',
+      'standard-package:packages/demo-listed/seikika-package.yaml').rules['public-guide']
+      == 'pass'
+  - name: a standards package without a guide fails bronze
+    expect: >-
+      score('maintainer-standard-package',
+      'standard-package:packages/demo-unlisted/seikika-package.yaml').level ==
+      'none' && score('maintainer-standard-package',
+      'standard-package:packages/demo-unlisted/seikika-package.yaml').rules['public-guide']
+      == 'fail'
   # Layer 1: crates
   - name: >-
       a crate with passing tests and clippy, 80%+ documented, no huge

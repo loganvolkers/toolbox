@@ -73,7 +73,15 @@ kindGroups:
     description: >-
       The portal's own model, scored like any other code: scorecards, rules,
       kinds, fields, connectors, rubrics, and the agents' assessments.
-    kinds: [Scorecard, Rule, Kind, Field, PortalConnector, Rubric, Assessment]
+    kinds:
+    - Scorecard
+    - Rule
+    - Kind
+    - Field
+    - PortalConnector
+    - Rubric
+    - Assessment
+    - StandardPackage
   - name: evidence
     title: SDLC and evidence
     description: >-
@@ -148,6 +156,7 @@ connectors:
       repo: true
       # npm manifests (docs/design/package-standards.md). One record per package.json.
       packages: ["**/package.json"]
+      standardPackages: [packages/*/seikika-package.yaml]
       # JSON Schema documents (docs/design/schema-standards.md). The contracts compiled into the binary.
       schemas: [crates/seikika-model/schema/*.json]
       # Example and experiment write-ups (docs/design/example-standards.md).
@@ -198,6 +207,7 @@ connectors:
     - agent-doc
     - plugin
     - package-json
+    - standard-package
     - json-schema
     - example
     - site-page
@@ -220,6 +230,7 @@ connectors:
       agent-doc: [external_ids]
       plugin: [external_ids]
       package-json: [external_ids]
+      standard-package: [external_ids]
       json-schema: [external_ids]
       example: [external_ids]
       site-page: [external_ids]
@@ -241,6 +252,7 @@ connectors:
       agent-doc: 5m
       plugin: 5m
       package-json: 5m
+      standard-package: 5m
       json-schema: 5m
       example: 5m
       site-page: 5m

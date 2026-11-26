@@ -1,9 +1,10 @@
 import assert from "node:assert/strict";
 import { execFileSync, spawn } from "node:child_process";
+import { globSync } from "node:fs";
 import { createServer } from "node:http";
 import { mkdtemp, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
-import { extname, join, resolve, sep } from "node:path";
+import { basename, dirname, extname, join, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import { chromium } from "playwright";
 
@@ -98,6 +99,18 @@ try {
     .evaluateAll(links => links.map(link => link.pathname).filter(path => /^\/connectors\/[^/]+\/$/.test(path)).sort());
   assert(directoryGuides.length > 0, "The connector directory lists published guides.");
   assert.deepEqual(directoryGuides, sidebarGuides, "The directory lists the same connector landing pages as the sidebar.");
+  await page.goto(docsOrigin);
+  await page.getByRole("main").getByRole("link", { name: "Browse standards packages", exact: true }).click();
+  await page.getByRole("heading", { name: "Standards package directory", exact: true }).waitFor();
+  const packageGuides = await page.locator(".sl-markdown-content .sl-link-card a")
+    .evaluateAll(links => links.map(link => link.pathname).sort());
+  const packageRoutes = globSync("packages/*/seikika-package.yaml", { cwd: root })
+    .map(path => `/packages/${basename(dirname(path))}/`).sort();
+  assert(packageRoutes.length > 0, "There are first-party standards packages.");
+  assert.deepEqual(packageGuides, packageRoutes, "Every package manifest has a public directory entry.");
+  const sidebarPackages = await page.locator('#starlight__sidebar a[href^="/packages/"]')
+    .evaluateAll(links => links.map(link => link.pathname).filter(path => /^\/packages\/[^/]+\/$/.test(path)).sort());
+  assert.deepEqual(sidebarPackages, packageRoutes, "Every package guide is reachable from the sidebar.");
   await page.goto(docsOrigin + "report/");
   await page.getByRole("tab", { name: /Catalog/ }).click();
   await page.locator("#report-body").getByRole("heading", { name: "Catalog", exact: true }).waitFor();
@@ -126,7 +139,7 @@ try {
   await filterJump.click();
   await page.waitForFunction(() => document.activeElement?.textContent === "Entities");
   assert.deepEqual(errors, []);
-  console.log("Hosted portal, offline report, Pages report, Storybook, CLI reference, and npm and connector directories passed.");
+  console.log("Hosted portal, offline report, Pages report, Storybook, CLI reference, and npm, connector, and package directories passed.");
 } finally {
   await browser?.close();
   portal?.kill();

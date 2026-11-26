@@ -31,6 +31,10 @@ pub fn analyse(root: &Path, rel: &str) -> Value {
 /// The directory builds its entries from public connector landing pages.
 pub(crate) fn connector_guide(root: &Path, package: &str) -> Option<String> {
     let name = package.strip_prefix("seikika-connector-")?;
+    public_guide(root, "connectors", name)
+}
+
+pub(crate) fn public_guide(root: &Path, section: &str, name: &str) -> Option<String> {
     if name.is_empty()
         || !name
             .bytes()
@@ -38,11 +42,11 @@ pub(crate) fn connector_guide(root: &Path, package: &str) -> Option<String> {
     {
         return None;
     }
-    let slug = format!("connectors/{name}");
+    let slug = format!("{section}/{name}");
     if !is_published_page(
         root,
-        "site/src/content/docs/connectors/index.mdx",
-        "connectors",
+        &format!("site/src/content/docs/{section}/index.mdx"),
+        section,
     ) {
         return None;
     }

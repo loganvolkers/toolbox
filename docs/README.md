@@ -6,6 +6,7 @@ or the [open questions](questions.md). For build and review instructions, see [A
 
 - [docs/research.md](research.md) — landscape (Backstage, Port, Cortex, DX, OpsLevel, Datadog, OSS alternatives) and validation
 - [Connector directory research](audits/connector-directory.md) compares how five products help operators discover, configure, and verify connectors.
+- [Standards package directory research](audits/package-directory.md) compares package discovery, installation, and verification across five ecosystems.
 - [docs/v1-spec.md](v1-spec.md) — the v1 implementation contract (milestones, contracts, API, MCP, CLI, data model, properties)
 - [examples/reference-portal/](../examples/reference-portal/README.md) — reference implementation anchor: manifest, schemas, fixtures, oracle and authz tests
 - [docs/plan.md](plan.md) — architecture and delivery roadmap
