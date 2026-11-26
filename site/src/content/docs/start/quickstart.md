@@ -5,7 +5,7 @@ sidebar:
   order: 1
 ---
 
-Score a practice repository and watch Seikika catch a broken Markdown link. You need Git, Bash, curl, the Seikika CLI, and the workspace connector. Follow [Install Seikika](/start/install/) first and keep the same terminal if you built from source. The example uses a disposable checkout and runs locally.
+Score a practice repository and watch Seikika catch a broken Markdown link. You need Git, Bash, curl, the Seikika CLI, and the workspace connector. Follow [Install Seikika](/start/install/) for the source build or release setup. Keep the same terminal so the tools stay on `PATH`. The example uses a disposable checkout and runs locally.
 
 ## 1. Create a practice repository
 
@@ -38,6 +38,8 @@ printf 'Practice file for the Seikika tutorial.\n' > LICENSE
 The demo ownership and license files are for this exercise. Use your own team or GitHub handle and your project's license when you [adopt the starter](/operators/ci/).
 
 ## 2. Check the setup and record a baseline
+
+If you are using mise to install the release, follow the [repo portal setup](/start/install/#run-a-portal) from the new practice repository. Its config installs both binaries.
 
 From `seikika-practice`, run:
 
