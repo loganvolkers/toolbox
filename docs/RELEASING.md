@@ -87,10 +87,15 @@ crates. Publish from the verified release commit, then check each version in the
 cargo publish --workspace --exclude seikika-durable --locked
 ```
 
-Register Trusted Publishing on crates.io after the first publish. The GitHub Release and
-installer artifacts are built by cargo-dist from the version tag. See [the crates.io
-decision](decisions/D01M8BEC7ZX7TFBTSC47W1XQVV4.md) and the [registry's Trusted Publishing
-documentation](https://crates.io/docs/trusted-publishing).
+After the first publish, register a GitHub Actions trusted publisher for each public crate.
+Use repository owner and name `seikika/seikika`, workflow filename `publish-crates.yml`,
+and environment `crates-io-publish`. In GitHub, restrict that environment to the `main`
+branch. Run **Publish Rust crates** from `main` with `publish=true` to publish with OIDC.
+The default dispatch verifies the archives without publishing.
+
+The GitHub Release and installer artifacts are built by cargo-dist from the version tag.
+See [the crates.io decision](decisions/D01M8BEC7ZX7TFBTSC47W1XQVV4.md) and the
+[registry's Trusted Publishing documentation](https://crates.io/docs/trusted-publishing).
 
 ## Docs and GitHub Pages
 
