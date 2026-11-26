@@ -1640,9 +1640,9 @@ checksum = "11c0bd7d22989969a619bae09147b992a6aa7f31dd4f9d9af6345f533744781f"
 
 [[package]]
 name = "dbsp"
-version = "0.384.0"
+version = "0.387.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "cbc37218774386dcff0e09155a3e4709d739af9c33c848a7145cc59758f8b422"
+checksum = "6a39a0257d173f93dd83631c7680c93db46011d023423fd27212c04cd02129ae"
 dependencies = [
  "anyhow",
  "arc-swap",
@@ -2046,9 +2046,9 @@ dependencies = [
 
 [[package]]
 name = "feldera-buffer-cache"
-version = "0.384.0"
+version = "0.387.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e04ae05db323f00466a99b53b565b1eee540b9c90fe74bdcff6db7e489474d9a"
+checksum = "4dbc2dd97d627831792b8cb65db9e2d721f134e24366396974723f5fc5250c71"
 dependencies = [
  "enum-map",
  "feldera-types",
@@ -2059,9 +2059,9 @@ dependencies = [
 
 [[package]]
 name = "feldera-ir"
-version = "0.384.0"
+version = "0.387.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "129ad2fe6ae9305b9785edf31162066565ca49cd41271115e4b3dae79867718c"
+checksum = "b2e74adff3bc1ee96e213c7f1efe9f72895fefe42a345b1cfc3f2e0278b8f41e"
 dependencies = [
  "serde",
  "serde_json",
@@ -2071,9 +2071,9 @@ dependencies = [
 
 [[package]]
 name = "feldera-macros"
-version = "0.384.0"
+version = "0.387.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "13b1b8381c7e7c18eb625da6a5861eed76b5874ebde623f34b6f35d2694b69d0"
+checksum = "50e5984003a4d1b8cfe9db8173f3f3bfc1fa9d351e55c91d07ad1c4ee02747b0"
 dependencies = [
  "prettyplease 0.2.37",
  "proc-macro2",
@@ -2083,18 +2083,18 @@ dependencies = [
 
 [[package]]
 name = "feldera-modular-bloom"
-version = "0.384.0"
+version = "0.387.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e616adc03f7e3948c1ad01aa64d473d60b3a3278dda075f29a3b52770a57cc65"
+checksum = "eafd0e5445516ce59cec4256603b78d45890769ac805c8a1fd05de83f69210ef"
 dependencies = [
  "thiserror 2.0.21",
 ]
 
 [[package]]
 name = "feldera-observability"
-version = "0.384.0"
+version = "0.387.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f4c021b53443f6b6f5406e66c1ff1128094650853f1afde39c94eaa3a35d01ed"
+checksum = "d81262949df263944580ff921bd91022e21dc5aa0bbdabef8c3f6d680d8372c4"
 dependencies = [
  "chrono",
  "colored",
@@ -2107,9 +2107,9 @@ dependencies = [
 
 [[package]]
 name = "feldera-samply"
-version = "0.384.0"
+version = "0.387.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1662b658beb5dc71d83bcb4ce7dbda112bf64c8f79b5842207b8b9348bdfd345"
+checksum = "a99d60d14f4063d8b4f8c2d5094f7e664570daf866d555651eb74ba0fc89bc41"
 dependencies = [
  "crossbeam",
  "feldera-size-of",
@@ -2142,9 +2142,9 @@ dependencies = [
 
 [[package]]
 name = "feldera-storage"
-version = "0.384.0"
+version = "0.387.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bc89e933656d998b0b74a032895be752a6e469997984ba68ddb00e3a11e4923d"
+checksum = "c2a79b8e3b65b8271413a1300893916b149559320083e535be750fc4cde9753f"
 dependencies = [
  "anyhow",
  "crossbeam",
@@ -2167,11 +2167,12 @@ dependencies = [
 
 [[package]]
 name = "feldera-types"
-version = "0.384.0"
+version = "0.387.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3bf7802b84d9dd3f1015d5da93e5c963ff0d26f268d4d735ff88eeaba490aad8"
+checksum = "80a8e02f4d520bd7533ceecb43d2dc3657c79401300efc3f1ad2fba7b2ba3a06"
 dependencies = [
  "actix-web",
+ "aho-corasick",
  "anyhow",
  "arrow-schema",
  "bytemuck",
@@ -2190,6 +2191,9 @@ dependencies = [
  "thiserror 2.0.21",
  "time",
  "tracing",
+ "typeid",
+ "url",
+ "urlencoding",
  "utoipa",
  "uuid",
 ]
@@ -6179,7 +6183,14 @@ dependencies = [
  "idna",
  "percent-encoding",
  "serde",
+ "serde_derive",
 ]
+
+[[package]]
+name = "urlencoding"
+version = "2.1.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "daf8dba3b7eb870caf1ddeed7bc9d2a049f3cfdfae7cb521b087cc33ae4c49da"
 
 [[package]]
 name = "utf8-ranges"
