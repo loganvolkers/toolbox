@@ -38,4 +38,4 @@ curl -fsS http://127.0.0.1:8080/readyz
 
 Monitor readiness, connector logs, and catalog freshness. Back up Postgres and retain the manifest revision and image digest. Follow [Releases and upgrades](/start/versions/#verify-an-upgrade) to rehearse rollback. Keep action execution on one owning instance until shared execution and durable recovery are available. An interrupted action can fail after its effect occurred, so inspect the run before retrying.
 
-If readiness fails or catalog data is missing, start with [portal troubleshooting](/start/troubleshooting/#running-a-portal).
+If readiness fails or catalog data is missing, start with [portal troubleshooting](/start/troubleshooting/#running-a-portal). For a parent portal, also check [child access and runners](/operators/federate-actions/#configure-a-shared-parent). If your readers need a saved snapshot, see [static report hosting](/operators/publish/).

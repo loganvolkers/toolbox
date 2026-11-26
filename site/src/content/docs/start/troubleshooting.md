@@ -29,6 +29,12 @@ Find the symptom you see, run the check, and confirm that the original command w
 | A field or scorecard rule shows a redaction marker | Check the required relation in the response. Ask the operator to confirm your identity and access. | Handle the hidden value in your client. Request access through the portal's usual process if you need the details. |
 | `/readyz` reports unconfined connectors | Check the host's Landlock support and `SEIKIKA_CONNECTOR_CONFINEMENT`. | Use a supported host and `required` confinement when your deployment depends on that boundary. |
 
+## Actions and static reports
+
+- If a child action is missing or a parent signature is refused, check the [federation setup](/operators/federate-actions/#diagnose-a-federation-problem).
+- If a run is waiting or shows `unverified`, check [what each run state means](/users/actions/#request-an-action-on-a-portal).
+- If a published report returns 404 or shows stale data, check [static report hosting](/operators/publish/#troubleshoot-a-published-report).
+
 ## Get help
 
 Report reproducible problems in [GitHub Issues](https://github.com/seikika/seikika/issues). Include the version or source revision, platform, exact command, and a small sanitized example. Follow the [security policy](https://github.com/seikika/seikika/security/policy) for vulnerabilities.

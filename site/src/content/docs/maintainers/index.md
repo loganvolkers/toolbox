@@ -35,7 +35,7 @@ Use the [repository working rules](https://github.com/seikika/seikika/blob/main/
 3. Run `mise exec -- pnpm --filter seikika-site preview`. Check the rendered page, local links, headings, and code blocks. Review the change on a narrow screen and check that you can use the page with a keyboard.
 4. Include what you ran and the result in your pull request. The [Pages workflow](https://github.com/seikika/seikika/blob/main/.github/workflows/pages.yml) builds the site and publishes changes from `main`.
 
-The [public docs scorecard](/concepts/scorecards/#this-site) checks page structure. The [documentation gap analysis](https://github.com/seikika/seikika/blob/main/docs/audits/public-docs-2026-11-26.md) explains how the docs are evaluated against Backstage and other open-source projects.
+The [public docs scorecard](/concepts/scorecards/#this-site) checks page structure. The [documentation gap analysis](https://github.com/seikika/seikika/blob/main/docs/audits/public-docs-2026-11-26.md) explains how the docs are evaluated against Backstage and other open-source projects. The [internal capability audit](https://github.com/seikika/seikika/blob/main/docs/audits/internal-capabilities-2026-11-26.md) checks whether readers can use the features Seikika already implements.
 
 ## Check the repository standards
 

@@ -5230,6 +5230,9 @@
       "doc:actions/report/README.md": {
         "level": "silver"
       },
+      "doc:docs/README.md": {
+        "level": "silver"
+      },
       "doc:docs/RELEASING.md": {
         "level": "silver"
       },
@@ -5242,7 +5245,13 @@
       "doc:docs/audits/design-loop-efficiency-2026-11-24.md": {
         "level": "silver"
       },
+      "doc:docs/audits/internal-capabilities-2026-11-26.md": {
+        "level": "silver"
+      },
       "doc:docs/audits/public-docs-2026-11-26.md": {
+        "level": "silver"
+      },
+      "doc:docs/audits/readmes-2026-11-26.md": {
         "level": "silver"
       },
       "doc:docs/audits/seikika-report-2026-11-24-2.md": {
@@ -6052,6 +6061,9 @@
       "doc:experiments/durable-schema/README.md": {
         "level": "silver"
       },
+      "doc:experiments/full-recompute/README.md": {
+        "level": "silver"
+      },
       "doc:experiments/gate-repair-ab/README.md": {
         "level": "silver"
       },
@@ -6375,6 +6387,9 @@
       "example:experiments/durable-schema/README.md": {
         "level": "gold"
       },
+      "example:experiments/full-recompute/README.md": {
+        "level": "gold"
+      },
       "example:experiments/gate-repair-ab/README.md": {
         "level": "gold"
       },
@@ -6554,6 +6569,9 @@
       "site-page:site/src/content/docs/compare/port.md": {
         "level": "gold"
       },
+      "site-page:site/src/content/docs/concepts/capabilities.md": {
+        "level": "gold"
+      },
       "site-page:site/src/content/docs/concepts/catalog.md": {
         "level": "gold"
       },
@@ -6584,10 +6602,19 @@
       "site-page:site/src/content/docs/operators/access.md": {
         "level": "gold"
       },
+      "site-page:site/src/content/docs/operators/actions.md": {
+        "level": "gold"
+      },
+      "site-page:site/src/content/docs/operators/assessments.md": {
+        "level": "gold"
+      },
       "site-page:site/src/content/docs/operators/ci.md": {
         "level": "gold"
       },
       "site-page:site/src/content/docs/operators/deploy.md": {
+        "level": "gold"
+      },
+      "site-page:site/src/content/docs/operators/federate-actions.md": {
         "level": "gold"
       },
       "site-page:site/src/content/docs/operators/index.md": {
@@ -6599,7 +6626,13 @@
       "site-page:site/src/content/docs/operators/portal.md": {
         "level": "gold"
       },
+      "site-page:site/src/content/docs/operators/publish.md": {
+        "level": "gold"
+      },
       "site-page:site/src/content/docs/operators/secrets.md": {
+        "level": "gold"
+      },
+      "site-page:site/src/content/docs/operators/standards.md": {
         "level": "gold"
       },
       "site-page:site/src/content/docs/start/cli.mdx": {
@@ -6630,6 +6663,9 @@
         "level": "gold"
       },
       "site-page:site/src/content/docs/users/index.md": {
+        "level": "gold"
+      },
+      "site-page:site/src/content/docs/users/refresh.md": {
         "level": "gold"
       }
     },

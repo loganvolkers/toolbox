@@ -12,6 +12,8 @@ Seikika is an open-source framework for building an internal developer portal in
 | Score a repository and catch regressions in CI | [Quickstart](/start/quickstart/) |
 | Start a local portal and look up a service | [Explore a portal](/start/portal/) |
 | Configure, deploy, or maintain a portal | [Build a portal](/operators/) |
+| Offer actions from several repositories | [Federate repository actions](/operators/federate-actions/) |
+| Publish a report on a static host | [Generate and host a static report](/operators/publish/) |
 | Share standards or write a connector | [Publish a standard](/authors/) |
 | Use a portal from a script, an app, or an agent | [Use a portal](/users/) |
 | Change Seikika or contribute to the docs | [Build Seikika](/maintainers/) |
@@ -22,7 +24,7 @@ A running portal serves a **catalog** of software, teams, and their relationship
 
 ## Explore further
 
-- [Install Seikika](/start/install/) and check which features are available.
+- [Install Seikika](/start/install/) or check [what Seikika supports](/concepts/capabilities/).
 - [Browse this repository's report](/demo/report/) to see scores, evidence, and fixes.
 - [Compare Seikika with Backstage and other tools](/compare/) and see how [developer experience benchmarks](/concepts/dx-benchmarks/) are run.
 - [Find a command](/start/cli/), [look up a term](/concepts/glossary/), or [troubleshoot a problem](/start/troubleshooting/).
