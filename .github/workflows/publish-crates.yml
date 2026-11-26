@@ -96,6 +96,6 @@ jobs:
       !cancelled() && inputs.publish && needs.package.result == 'success' &&
       (needs.publish.result == 'success' || needs.publish.result == 'skipped')
     needs: [package, publish]
-    uses: ./.github/workflows/crates-registry-smoke.yml
+    uses: ./.github/workflows/crates-registry-smoke.yml # zizmor: ignore[self-repository] actionlint 1.7.12 rejects $/
     with:
       version: ${{ needs.package.outputs.version }}

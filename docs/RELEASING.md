@@ -108,7 +108,7 @@ latest stable, non-yanked CLI release once, then tests that exact version across
 targets with both locked and fresh dependency resolution. Check the failed platform and
 resolution mode in Actions if the scheduled run fails.
 
-To reproduce the portable checks locally with the pinned Rust toolchain and Python 3.13:
+Use the pinned Rust toolchain and Python 3.13 to reproduce the portable checks locally.
 
 ```bash
 python3 scripts/check-crates-release.py install 0.2.0
