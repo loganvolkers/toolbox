@@ -76,6 +76,10 @@ jobs:
             target/debug/seikika validate "$t"
             target/debug/seikika test "$t"
           done
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with: {node-version: 24}
+      - run: corepack enable pnpm
+      - run: pnpm install --frozen-lockfile
       # The ratchet, through the same action pilot repos use (D66, D69), with the binaries built above.
       # Fails on any regression, and when portal/results.json is out of date (update it with
       # `seikika report portal --skip runner --baseline portal/results.json --update`).

@@ -194,6 +194,14 @@ The repository quickstart recorded a baseline, exited 1 after moving its linked 
 - Ran `cargo test --locked -p seikika-connector-workspace` and `seikika connector test --name workspace --portal portal -- target/debug/seikika-connector-workspace`. The collector tests cover a public guide, a missing guide, a hidden guide, a draft, and a route override. The portal fixtures check both outcomes of the bronze `public-guide` rule.
 - Built the generated directory in a disposable checkout. Adding a public guide produced a card, while draft, hidden, and supplemental pages stayed outside the directory. Removing GitHub's guide made the CI ratchet fail on `public-guide`. The Pages smoke test compares the generated directory with the sidebar.
 
+## SDK documentation (2026-11-26)
+
+- The [SDK audit](audits/sdk-documentation-2026-11-26.md) records the comparison of six published packages and the before and after Seikika results. The npm metrics came from the registry downloads API. Rust project stars came from the GitHub API. The crates.io API returned 403 for the connector crate, and the public docs.rs crate reference returned 200.
+- `cargo test --locked -p seikika-connect` on Rust 1.97.0 passed seven unit tests and three doctests. The two helper examples execute their assertions. The stdio connector example compiles as `no_run`. Building that exact snippet as a binary and using the scaffold manifest with `seikika connector test` passed all 10 protocol checks.
+- `pnpm check` on Node 24 and pnpm 11.25.0 passed. Both npm archives contain the README and the source or declarations with the new comments. Vue declaration emit preserved the prop descriptions. An Astro 7.4.13 build from the two unpacked archives rendered the README's Checkout example, `/report`, a custom route using `page.astro`, and a page using `default-layout.astro` with a custom title and slot content.
+- The original SDK findings scored bronze on all three entities in a fixture replay. The live `maintainer-sdk-docs` scorecard scored all three gold. `seikika connector test --name surfaces --portal portal -- target/debug/seikika-connector-runner` passed all 18 protocol checks, including SDK record resync.
+- `seikika test portal` passed all 139 assertions. The CI ratchet rejected three deliberately removed SDK documentation entries and passed after their restoration. The Starlight site build generated the new guide and the updated references in the author guides.
+
 ## Standards package directory review (2026-11-26)
 
 - Compared Backstage, GitHub Marketplace, Artifact Hub, OpenTofu Registry, and Gatekeeper on the path from package discovery to a verifiable result. [Package directory research](audits/package-directory.md)

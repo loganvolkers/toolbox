@@ -693,6 +693,22 @@ Scorecard `maintainer-schema` over `JsonSchema` entities, owned by group:maintai
 | `local-refs` | gold | measured | `entity.externalRefs.size() == 0` | A remote $ref cannot be resolved where the contract runs, and its target can change without a review in this repository. | Point $ref at a fragment in this file. The compiler embeds the document and does not fetch a remote schema. |
 | `no-hardcoded-secrets` | bronze | measured | `entity.secretHits.size() == 0` | A credential in a schema ships inside every build of the binary, where it cannot be removed without a new release. | Remove the credential in the evidence. A schema is compiled into the binary and published with the repository. |
 
+## SDK documentation
+
+Checks the Rust connector SDK and public npm packages for entry points, comments, and reference coverage.
+
+**Why:** Readers arrive through rustdoc, an editor, or a package README. Use the compiler and package exports to find the declarations and import paths readers see, then report concrete gaps for maintainers.
+
+See [SDK documentation comments guide](https://seikika.com/maintainers/sdk-docs/), [SDK documentation standard decision](https://github.com/seikika/seikika/blob/main/docs/decisions/D01M8CK6XW8PR5AXSA1FQEZ5YD8.md).
+
+Scorecard `maintainer-sdk-docs` over `SdkDocs` entities, owned by group:maintainers. `seikika report` lists what fails now. *Measured* rules check facts a tool or connector read; *judged* rules pass on an agent's assessment (`seikika assess`).
+
+| Rule | Level | Basis | Passes when | Why | Fix |
+|---|---|---|---|---|---|
+| `has-entry-point` | bronze | measured | `entity.entryPoints.size() > 0` | A consumer needs an import path that belongs to the package's public interface. | Expose the supported entry point in Cargo.toml or in the exports map in package.json. |
+| `documented-items` | silver | measured | `entity.undocumented.size() == 0` | Item comments supply the description that consumers see in rustdoc and in editor hovers. | Add a summary and caller-facing details to each named Rust item, TypeScript declaration, or component prop. |
+| `reference-complete` | gold | measured | `entity.referenceGaps.size() == 0` | A consumer needs working links and a reference for entry points and options that editors cannot fully describe. | Repair the rustdoc diagnostics or fill the named missing export, slot, or token in the package README. |
+
 ## SDLC stages
 
 Each stage of an SDLC layer, checked against facts: an exit criterion, a doc that exists, commands that resolve, checks CI runs, and status built (D87, docs/sdlc.md).

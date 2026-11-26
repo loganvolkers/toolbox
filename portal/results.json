@@ -252,48 +252,8 @@
         "few-unwraps": [
           "a75cfd43"
         ],
-        "fully-documented": [
-          "046eb778",
-          "0b55c501",
-          "193cf60a",
-          "2b78e41f",
-          "32ff5745",
-          "3ee3ac68",
-          "44e6a802",
-          "6abe917c",
-          "7964d0bf",
-          "92cb9926",
-          "9d218165",
-          "a236aca3",
-          "afdfa1ad",
-          "c0906b0d",
-          "c998b948",
-          "d245fb47",
-          "dfb3229a",
-          "f54398a5"
-        ],
         "no-huge-functions": [
           "39c55bc5"
-        ],
-        "public-api-documented": [
-          "046eb778",
-          "0b55c501",
-          "193cf60a",
-          "2b78e41f",
-          "32ff5745",
-          "3ee3ac68",
-          "44e6a802",
-          "6abe917c",
-          "7964d0bf",
-          "92cb9926",
-          "9d218165",
-          "a236aca3",
-          "afdfa1ad",
-          "c0906b0d",
-          "c998b948",
-          "d245fb47",
-          "dfb3229a",
-          "f54398a5"
         ],
         "short-functions": [
           "39c55bc5"
@@ -5009,9 +4969,7 @@
       "crate:seikika-connect": {
         "failing": {
           "few-unwraps": 1,
-          "fully-documented": 18,
           "no-huge-functions": 1,
-          "public-api-documented": 18,
           "short-functions": 1
         },
         "level": "bronze",
@@ -5304,6 +5262,9 @@
         "level": "silver"
       },
       "doc:docs/audits/readmes-2026-11-26.md": {
+        "level": "silver"
+      },
+      "doc:docs/audits/sdk-documentation-2026-11-26.md": {
         "level": "silver"
       },
       "doc:docs/audits/seikika-report-2026-11-24-2.md": {
@@ -5814,6 +5775,9 @@
         "level": "skipped"
       },
       "doc:docs/decisions/D01M8CHMD6TH2AXRWT9E49G4V6V.md": {
+        "level": "skipped"
+      },
+      "doc:docs/decisions/D01M8CK6XW8PR5AXSA1FQEZ5YD8.md": {
         "level": "skipped"
       },
       "doc:docs/decisions/D01M8CRS50G5086P5DCFQN636BA.md": {
@@ -6581,6 +6545,7 @@
         "level": "gold"
       }
     },
+    "maintainer-sdk-docs": {},
     "maintainer-site": {
       "site-page:site/src/content/docs/agents/reads.md": {
         "level": "gold"
@@ -6673,6 +6638,9 @@
         "level": "gold"
       },
       "site-page:site/src/content/docs/maintainers/index.md": {
+        "level": "gold"
+      },
+      "site-page:site/src/content/docs/maintainers/sdk-docs.md": {
         "level": "gold"
       },
       "site-page:site/src/content/docs/maintainers/writing.md": {
@@ -11765,6 +11733,21 @@
         },
         "level": "bronze"
       },
+      "field:seikika/SdkDocs.entryPoints": {
+        "level": "gold"
+      },
+      "field:seikika/SdkDocs.name": {
+        "level": "gold"
+      },
+      "field:seikika/SdkDocs.path": {
+        "level": "gold"
+      },
+      "field:seikika/SdkDocs.referenceGaps": {
+        "level": "gold"
+      },
+      "field:seikika/SdkDocs.undocumented": {
+        "level": "gold"
+      },
       "field:seikika/SdlcLayer.builds": {
         "level": "gold"
       },
@@ -12313,6 +12296,9 @@
           "fields-described": 12
         },
         "level": "silver"
+      },
+      "kind:seikika/SdkDocs": {
+        "level": "gold"
       },
       "kind:seikika/SdlcLayer": {
         "level": "gold"
@@ -12882,6 +12868,15 @@
         "level": "gold"
       },
       "rule:seikika/maintainer-schema/wired-in": {
+        "level": "gold"
+      },
+      "rule:seikika/maintainer-sdk-docs/documented-items": {
+        "level": "gold"
+      },
+      "rule:seikika/maintainer-sdk-docs/has-entry-point": {
+        "level": "gold"
+      },
+      "rule:seikika/maintainer-sdk-docs/reference-complete": {
         "level": "gold"
       },
       "rule:seikika/maintainer-site/described": {
@@ -13579,6 +13574,9 @@
           "fixtures-reach-every-level": 1
         },
         "level": "silver"
+      },
+      "scorecard:seikika/maintainer-sdk-docs": {
+        "level": "gold"
       },
       "scorecard:seikika/maintainer-site": {
         "failing": {

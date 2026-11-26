@@ -1,14 +1,19 @@
-//! The connector conformance kit (`seikika connector test`, connector-control §8). It starts a
-//! connector in in-image mode and checks, over stdio:
+//! Check a connector's registration, resync, refresh, and cancellation over stdio.
 //!
-//! 1. it registers first, with capabilities naming the record kinds the manifest declares;
-//! 2. every message validates against crates/seikika-model/schema/connector-messages.schema.json;
-//! 3. a `resync` of each declared kind emits records of that kind, `snapshot_complete` and a
-//!    successful `complete`, with every record carrying the command id;
-//! 4. a scoped `refresh` by external ids returns exactly those ids (record or `not_found`);
-//! 5. an unknown external id comes back as `not_found`, never silently missing;
-//! 6. the same refresh twice yields the same records (idempotent reads);
-//! 7. it keeps serving after a `cancel` for an unknown command.
+//! `seikika connector test` uses this kit. [`run`] starts a connector and checks these behaviors:
+//!
+//! 1. The connector registers first, and its resync capabilities name only manifest record kinds.
+//! 2. Registration and command responses validate against the [connector message schema].
+//! 3. A `resync` of each advertised kind emits records of that kind, `snapshot_complete`, and a
+//!    successful `complete`. Every record carries the command ID.
+//! 4. A scoped `refresh` returns a record or `not_found` for each requested external ID.
+//! 5. A lookup of an unknown external ID returns `not_found`.
+//! 6. Repeating the same refresh yields the same records.
+//! 7. The connector keeps serving after a `cancel` for an unknown command.
+//!
+//! Use [`drive_resync`] to inspect raw messages from a single resync.
+//!
+//! [connector message schema]: https://github.com/seikika/seikika/blob/main/crates/seikika-model/schema/connector-messages.schema.json
 
 use serde::Serialize;
 use serde_json::{Value, json};
@@ -18,10 +23,14 @@ use std::time::Duration;
 use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader, Lines};
 use tokio::process::{Child, ChildStdin, ChildStdout, Command};
 
+/// The outcome of one connector conformance check.
 #[derive(Debug, Clone, Serialize)]
 pub struct CheckResult {
+    /// Human-readable check name.
     pub name: String,
+    /// Whether the observed messages satisfied the check.
     pub passed: bool,
+    /// Observed result or failure detail. May be empty.
     pub detail: String,
 }
 
@@ -68,7 +77,16 @@ fn command(id: &str, body: Value) -> Value {
     c
 }
 
-/// Run the kit against `program args…` for a connector declared with `records`.
+/// Starts a connector and returns the outcomes of its conformance checks in execution order.
+///
+/// Pass the executable and its arguments separately. Use `envs` to override inherited environment
+/// variables and pass the manifest's record kind names in `records`. Inspect each
+/// [`CheckResult::passed`] to determine whether the connector passed. If the process fails to
+/// start, the only result is a failing `starts` check.
+///
+/// # Panics
+///
+/// Panics without a Tokio runtime with process I/O and time enabled.
 pub async fn run(
     program: &str,
     args: &[String],
@@ -274,8 +292,21 @@ pub async fn run(
     results
 }
 
-/// Drive a connector binary through one `resync` of `kinds` and return every message until
-/// `complete`. Used by `seikika connector drive` so authors do not hand-build stdio JSON.
+/// Starts a connector, issues one `resync`, and returns the response messages.
+///
+/// Pass the executable and its arguments separately. Use `envs` to override inherited
+/// environment variables. The returned batch starts after registration and includes the matching
+/// `complete` message if received. It can be partial if the process stops responding or emits
+/// invalid JSON. Check the completion status if you require a successful resync.
+///
+/// # Errors
+///
+/// Returns an error if the process fails to start, the first message is missing or isn't a
+/// registration, or no response messages arrive.
+///
+/// # Panics
+///
+/// Panics without a Tokio runtime with process I/O and time enabled.
 pub async fn drive_resync(
     program: &str,
     args: &[String],

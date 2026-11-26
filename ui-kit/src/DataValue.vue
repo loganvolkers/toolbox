@@ -1,6 +1,13 @@
 <script setup lang="ts">
 import { computed } from "vue";
-const props = defineProps<{ value: unknown; entityHref?: (id: string) => string }>();
+/** Displays a catalog value, including redaction markers and entity references. */
+interface Props {
+  /** Value to display. Nullish values show a dash, and objects should be JSON-serializable. */
+  value: unknown;
+  /** Builds a URL for entity references. Omit it to display those references as text. */
+  entityHref?: (id: string) => string;
+}
+const props = defineProps<Props>();
 const redaction = computed(() => {
   const value = props.value as { redacted?: boolean; reason?: string; requires?: string; visible_to?: string } | null;
   return value?.redacted ? value : null;

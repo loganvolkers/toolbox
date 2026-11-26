@@ -1611,3 +1611,43 @@ assert:
       campaign('close-review-findings').inScope > 0 &&
       campaign('close-review-findings').meeting <
       campaign('close-review-findings').inScope
+  # SDK documentation
+  - name: an SDK with no public entry point fails bronze
+    expect: >-
+      score('maintainer-sdk-docs', 'sdk-docs:fixture-empty').level == 'none'
+      && score('maintainer-sdk-docs',
+      'sdk-docs:fixture-empty').rules['has-entry-point'] == 'fail' &&
+      score('maintainer-sdk-docs',
+      'sdk-docs:fixture-empty').evidence['has-entry-point'] ==
+      ['fixture-empty/package.json: no public entry point found']
+  - name: >-
+      an import path with missing prop and slot docs stops at bronze and names
+      each gap
+    expect: >-
+      score('maintainer-sdk-docs', 'sdk-docs:fixture-gaps').level == 'bronze'
+      && score('maintainer-sdk-docs',
+      'sdk-docs:fixture-gaps').rules['has-entry-point'] == 'pass' &&
+      score('maintainer-sdk-docs',
+      'sdk-docs:fixture-gaps').rules['documented-items'] == 'fail' &&
+      score('maintainer-sdk-docs',
+      'sdk-docs:fixture-gaps').rules['reference-complete'] == 'fail' &&
+      score('maintainer-sdk-docs',
+      'sdk-docs:fixture-gaps').evidence['documented-items'] ==
+      ['fixture-gaps/component.vue props.title'] &&
+      score('maintainer-sdk-docs',
+      'sdk-docs:fixture-gaps').evidence['reference-complete'] ==
+      ['fixture-gaps/component.vue: default slot']
+  - name: a complete SDK reference reaches gold
+    expect: >-
+      score('maintainer-sdk-docs', 'sdk-docs:fixture-complete').level ==
+      'gold' && score('maintainer-sdk-docs',
+      'sdk-docs:fixture-complete').rules['documented-items'] == 'pass' &&
+      score('maintainer-sdk-docs',
+      'sdk-docs:fixture-complete').rules['reference-complete'] == 'pass'
+  - name: a documented component with a missing slot reference stops at silver
+    expect: >-
+      score('maintainer-sdk-docs', 'sdk-docs:fixture-reference-gap').level ==
+      'silver' && score('maintainer-sdk-docs',
+      'sdk-docs:fixture-reference-gap').rules['documented-items'] == 'pass' &&
+      score('maintainer-sdk-docs',
+      'sdk-docs:fixture-reference-gap').rules['reference-complete'] == 'fail'
