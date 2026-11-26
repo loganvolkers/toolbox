@@ -6,28 +6,28 @@ records:
     order: 1
     intent: Write the portal in YAML (split with include) or the TypeScript builder.
     exitCriterion: The canonical manifest validates.
-    commands: [toolbox validate]
-    checks: [examples/repo-portal-starter/toolbox.yaml]
+    commands: [seikika validate]
+    checks: [examples/repo-portal-starter/seikika.yaml]
     docs: [docs/design/typescript-builder.md, docs/design/sdlc.md]
     status: partial
     gaps:
-    - the TypeScript builder is a prototype; `toolbox build` doesn't exist
+    - the TypeScript builder is a prototype; `seikika build` doesn't exist
   - id: operator/build-connector
     layer: operator
     name: build-connector
     order: 2
-    intent: Connect a system Toolbox has no connector for.
+    intent: Connect a system Seikika has no connector for.
     exitCriterion: >-
       The operator's connector passes the conformance kit and runs in-image or
       remotely.
     commands:
-    - toolbox connector test
-    - toolbox install
-    - toolbox doctor
-    - toolbox push
+    - seikika connector test
+    - seikika install
+    - seikika doctor
+    - seikika push
     checks:
-    - crates/toolbox-connect/src/conformance.rs
-    - crates/toolbox-cli/tests/install.rs
+    - crates/seikika-connect/src/conformance.rs
+    - crates/seikika-cli/tests/install.rs
     docs: [docs/design/connector-control.md, docs/design/package-author-sdlc.md]
     status: partial
     gaps: [no scaffold or SDK outside Rust]
@@ -36,8 +36,8 @@ records:
     name: validate
     order: 3
     intent: Catch schema, reference and CEL errors before anything runs.
-    exitCriterion: toolbox validate reports 0 errors.
-    commands: [toolbox validate]
+    exitCriterion: seikika validate reports 0 errors.
+    commands: [seikika validate]
     checks: [scripts/validate-parity.py]
     docs: [docs/v1-spec.md]
     status: built
@@ -47,8 +47,8 @@ records:
     name: test
     order: 4
     intent: Pin what each rule means with expectations over fixtures.
-    exitCriterion: toolbox test passes.
-    commands: [toolbox test]
+    exitCriterion: seikika test passes.
+    commands: [seikika test]
     checks: [portal/tests/standards.test.yaml]
     docs: [docs/v1-spec.md]
     status: built
@@ -61,7 +61,7 @@ records:
       Show what a change does to entities, scores, access and notifications
       before it merges.
     exitCriterion: A plan against the running portal's data is attached to the PR.
-    commands: [toolbox plan --local]
+    commands: [seikika plan --local]
     checks: []
     docs: [docs/design/sdlc.md]
     status: partial
@@ -83,25 +83,25 @@ records:
     order: 7
     intent: Ship the portal as one image plus Postgres, and roll back by image.
     exitCriterion: A tagged image deploys and rolls back on Cloud Run or equivalent.
-    commands: [toolbox serve]
+    commands: [seikika serve]
     checks: []
     docs: [docs/plan.md]
     status: designed
     gaps:
     - >-
-      no `toolbox build` image pipeline and no published base image
+      no `seikika build` image pipeline and no published base image
       (maintainer/release is missing)
   - id: operator/verify
     layer: operator
     name: verify
     order: 8
     intent: Confirm the deployed portal matches the plan.
-    exitCriterion: toolbox verify passes against the deployed portal.
+    exitCriterion: seikika verify passes against the deployed portal.
     commands: []
     checks: []
     docs: [docs/design/sdlc.md]
     status: designed
-    gaps: ["`toolbox verify` doesn't exist"]
+    gaps: ["`seikika verify` doesn't exist"]
   - id: operator/monitor
     layer: operator
     name: monitor
@@ -112,11 +112,11 @@ records:
     exitCriterion: >-
       The ops view and metrics show freshness, diagnostics and snapshot lag;
       OTLP export and Prometheus /metrics both carry the catalog.
-    commands: [toolbox serve]
+    commands: [seikika serve]
     checks: [scripts/m4-acceptance.sh]
     docs: [docs/design/minimal-ui.md, docs/design/observability.md]
     status: partial
     gaps:
     - >-
-      Grafana / toolbox-ops pack deferred (alert stubs + local OTel testbed
+      Grafana / seikika-ops pack deferred (alert stubs + local OTel testbed
       exist)

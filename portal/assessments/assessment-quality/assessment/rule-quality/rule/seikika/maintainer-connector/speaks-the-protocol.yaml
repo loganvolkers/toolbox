@@ -1,0 +1,46 @@
+apiVersion: seikika.com/assessment/v1
+entity: assessment:rule-quality/rule:seikika/maintainer-connector/speaks-the-protocol
+rubric: assessment-quality
+subjectHash: f83f53078cc6
+assessor: {kind: agent, name: cursor-reviewer-10, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: supported
+    verdict: pass
+    reason: >-
+      The citations in
+      portal/assessments/rule-quality/rule/seikika/maintainer-connector/speaks-the-protocol.yaml
+      hold. connectors.rs:21-26 joins every .rs file and 125-132 matches
+      substrings. connectors.rs:371 is a test fixture containing `run_remote`,
+      235-246 is production_lines, and conformance.rs:120-134 is the
+      "registers first" check. standards.test.yaml:418-420 pins `none`,
+      connectors.yaml:106-109 is the evidence and fix, and
+      connector-standards.md:45 is the control-channel row. The workspace
+      `both` misread is real. The fixture is one cause, but production
+      connectors.rs:126 and 135 also hold the literal "run_remote", which
+      strengthens the fail. A scratch `fn main() {}` with a run_stdio comment
+      gave transport `stdio`.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      Both fails follow from connectors.rs:125-132, and a live entity already
+      misreads. The fix names the two SDK entry points, and D73 places the
+      rule at bronze.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      Every verdict rests on a four-line match and a scratch run any assessor
+      can repeat.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      Skipping test modules alone would leave the misread, because the
+      literals at connectors.rs:126 and 135 are production code. The
+      suggestion also asks for a `run_stdio(`/`run_remote(` call reachable
+      from main, and the hard-to-game suggestion ignores string literals.
+      Either closes all three causes and the comment route.
+summary: >-
+  Right on all four criteria. The workspace connector's `both` transport
+  has more causes than the test fixture the assessment names: the
+  analyser's own production literals at connectors.rs:126 and 135. Its
+  call-from-main suggestion covers them anyway.

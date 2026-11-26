@@ -1,0 +1,19 @@
+# The package's test portal: includes the package as a consumer would, with its own parameters.
+# Run: seikika test packages/pattern-count/tests
+apiVersion: seikika.com/v1alpha1
+portal:
+  name: pattern-count-package
+  title: Pattern count standard (package tests)
+  owner: group:maintainers
+  seikika: "0.1"
+include:
+  - package: ..
+    with:
+      name: person-orm
+      kind: PythonFile
+      files: ["**/*.py"]
+      exclude: ["**/tests/**"]
+      exempt: {app/models/util.py: the routed helpers themselves}
+      pattern: \b(Person|Group)\.objects\b
+      fix: Use the routed helpers in app/models/util.py.
+tests: [standards.test.yaml]

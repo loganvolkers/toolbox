@@ -1,4 +1,4 @@
-# Toolbox v1: Implementation Specification
+# Seikika v1: Implementation Specification
 
 *Status: implementation contract, 2026-11-20 (decision D50). This is the document an implementing
 agent builds from. [decisions.md](./decisions/README.md) says what was decided and why; the design docs
@@ -42,7 +42,7 @@ The acceptance bar is the reference portal: an implementation is done when it pa
 | OpenFGA in the image (co-process by default), reading a tuple view | c-archive linking (Q11), external OpenFGA as the default |
 | Durable runs in-process on Postgres behind `Durable` | Temporal/Restate; DBOS SDK adoption is Q4 |
 | Ingest API + connector control channel | A governed connector standard (D42) |
-| MCP (curated tools), REST + OpenAPI, CLI, minimal UI + UI extension contract | GraphQL (D43); `@toolbox/ui` persona Storybook beyond the default kit (D40) |
+| MCP (curated tools), REST + OpenAPI, CLI, minimal UI + UI extension contract | GraphQL (D43); `@seikika/ui` persona Storybook beyond the default kit (D40) |
 | In-image, HTTP, GitHub Actions and webhook executors | Argo, k8s Job, template + PR executors |
 | Differential + property tests; the reference model | Deterministic simulation, Antithesis (D44) |
 | Postgres full-text search over entities | tantivy, vectors, context lake (plan Phase 4) |
@@ -60,18 +60,18 @@ earlier ones. Tracks in [AGENTS.md](../AGENTS.md) map onto these. Every mileston
 
 | # | Milestone | Delivers | Exit criteria |
 |---|---|---|---|
-| **M0** ✅ | Skeleton | Cargo workspace (§4), `toolbox validate` (done 2026-11-20: [research-log.md](./research-log.md)) | Validates the reference `toolbox.yaml` with the same results as `tools/validate.py`, including cross-reference errors; rejects the negative cases recorded in [research-log.md](./research-log.md) |
-| **M1** ✅ | Derived state | `MemStore`, NDJSON fixture loader, the §6 pipeline behind `DerivedState`, `toolbox test`, `toolbox plan --local` | **Byte-identical** `expected/*.json` and `authz/tuples.expected.json` vs `tools/reference.py`; all `tests/*.test.yaml` pass; a plan between two manifests lists changed fields, levels, tuples and options; 100k-entity synthetic run under the §10.4 budget |
+| **M0** ✅ | Skeleton | Cargo workspace (§4), `seikika validate` (done 2026-11-20: [research-log.md](./research-log.md)) | Validates the reference `seikika.yaml` with the same results as `tools/validate.py`, including cross-reference errors; rejects the negative cases recorded in [research-log.md](./research-log.md) |
+| **M1** ✅ | Derived state | `MemStore`, NDJSON fixture loader, the §6 pipeline behind `DerivedState`, `seikika test`, `seikika plan --local` | **Byte-identical** `expected/*.json` and `authz/tuples.expected.json` vs `tools/reference.py`; all `tests/*.test.yaml` pass; a plan between two manifests lists changed fields, levels, tuples and options; 100k-entity synthetic run under the §10.4 budget |
 | **M2** ✅ | Postgres and API | `PgStore` (§8), ingest endpoint, snapshot loop, REST reads (§7.2), snapshot ids | Same outputs as M1 when fixtures arrive through `POST /v1/ingest`; `min_snapshot` read-your-writes works; restart loses nothing |
-| **M3** ✅ | Authorization | Authn (IAP JWT, OIDC, PAT), OpenFGA co-process over the tuple view, facet shaping, `toolbox test` runs `.fga.yaml` | Reference `authz/model.fga.yaml` passes through `Authorizer`; A3/A4/A10 behave as specified; a membership removal is enforced within 60 s |
+| **M3** ✅ | Authorization | Authn (IAP JWT, OIDC, PAT), OpenFGA co-process over the tuple view, facet shaping, `seikika test` runs `.fga.yaml` | Reference `authz/model.fga.yaml` passes through `Authorizer`; A3/A4/A10 behave as specified; a membership removal is enforced within 60 s |
 | **M4** ✅ | Agents and connectors | MCP (§7.3), CLI (§7.7), the read pages of the [minimal UI](./design/minimal-ui.md), connector runtime with control channel (§7.4), GitHub, git-files and SCIM connectors | Acceptance A1–A5 and A11; connector conformance kit passes for all three connectors |
-| **M5** 🔶 | Actions, federated (**unpaused**, D01M86BY3YQX3SA1W99QXF1QA1H, after the [self-service review](./self-service-review.md); design: [federated-actions.md](./design/federated-actions.md)) | Executor protocol (§7.5), run lifecycle (§6.6), previews and tokens, approvals, verification, federation (actions up, runs down, signed approvals), durable tables (§8.1), UI extension contract (§7.6), the minimal UI's action, run and approval pages, the `github-apps` executor. **Built:** the lifecycle in `toolbox run` and `toolbox serve` (REST, MCP), the `command`, `change`, `github-workflow`, `gitlab-pipeline`, `in-image` (a command or a pinned released `package`), `http`, `webhook` and federated `toolbox` executors, with the protocol's `status`, `cancel` and `verify` messages sent (action-runs §5), approvals and federation, children listed by git URL with kept clones and a kept signing key (D01M86J769VGE6K5FJJQ76EP4AA). `change` executors that propose or land (`land: push`), runs written through to Postgres (`toolbox.runs`). **Not yet:** durable steps across instances, the UI pages, the `github-apps` executor | `scripts/m5-acceptance.sh` (built); acceptance A6–A10 with simulated executor and connector; failure-injection properties P9–P12 hold; the sandbox-org integration test passes |
+| **M5** 🔶 | Actions, federated (**unpaused**, D01M86BY3YQX3SA1W99QXF1QA1H, after the [self-service review](./self-service-review.md); design: [federated-actions.md](./design/federated-actions.md)) | Executor protocol (§7.5), run lifecycle (§6.6), previews and tokens, approvals, verification, federation (actions up, runs down, signed approvals), durable tables (§8.1), UI extension contract (§7.6), the minimal UI's action, run and approval pages, the `github-apps` executor. **Built:** the lifecycle in `seikika run` and `seikika serve` (REST, MCP), the `command`, `change`, `github-workflow`, `gitlab-pipeline`, `in-image` (a command or a pinned released `package`), `http`, `webhook` and federated `seikika` executors, with the protocol's `status`, `cancel` and `verify` messages sent (action-runs §5), approvals and federation, children listed by git URL with kept clones and a kept signing key (D01M86J769VGE6K5FJJQ76EP4AA). `change` executors that propose or land (`land: push`), runs written through to Postgres (`seikika.runs`). **Not yet:** durable steps across instances, the UI pages, the `github-apps` executor | `scripts/m5-acceptance.sh` (built); acceptance A6–A10 with simulated executor and connector; failure-injection properties P9–P12 hold; the sandbox-org integration test passes |
 | **M6** ⏸ | Ship (**paused**, D01M7Y46VDDBK2SW6H96ZSG89MP: repo-level value first, [repo-value.md](./design/repo-value.md)) | Image build, Cloud Run deployment, `plan --remote`, `verify`, the operator SDLC workflow, metrics | A12; the reference workflow runs end to end on a sandbox project; `v0.1` tagged |
 
 ## 4. Architecture and crates
 
 ```
-toolbox serve (one binary, roles: all | api | worker; default all)
+seikika serve (one binary, roles: all | api | worker; default all)
  ├─ api:      REST · MCP · UI host · authn · facet shaping
  ├─ derive:   snapshot loop → DerivedState::recompute → atomic in-memory swap → tuple delta to Postgres
  ├─ connect:  connector runtime (stdio children, long-poll endpoints) · command scheduler
@@ -85,31 +85,31 @@ Small, shallow workspace; heavy dependencies isolated in leaf crates (D44, D46):
 
 | Crate | Responsibility |
 |---|---|
-| `toolbox-model` | Manifest types (serde), JSON Schema validation, cross-reference checks, entity/value types |
-| `toolbox-expr` | CEL compile and evaluate (cel-rust), custom functions, error mapping to `unknown` |
-| `toolbox-derive` | The §6 pipeline behind `DerivedState`; plan diffs |
-| `toolbox-store` | `Store` trait; `MemStore`; `PgStore` (sqlx); migrations |
-| `toolbox-authz` | Authn; `Authorizer` trait; OpenFGA client + supervisor; facet shaping; audit |
-| `toolbox-durable` | `Durable` trait; Postgres implementation (Q4 decides SDK vs own) |
-| `toolbox-connect` | Connector runtime, control channel, command scheduler, conformance kit |
-| `toolbox-exec` | `Executor` trait; stdio, HTTP, GitHub Actions, webhook implementations |
-| `toolbox-api` | axum REST + OpenAPI generation; MCP (rmcp); UI host |
-| `toolbox-cli` | The `toolbox` binary (server and CLI subcommands) |
-| `toolbox-secrets` | Secret backends for connector `${secret:…}` resolution (D55) |
-| `toolbox-telemetry` | OpenTelemetry and Prometheus bootstrap, metric catalog, log bridge (§10.5) |
-| `toolbox-connector-*` | First-party connectors as separate binaries: `github`, `gitlab`, `git-files` and `scim` read sources; `workspace` and `runner` serve Toolbox for Toolbox. Third-party connectors may be in any language |
+| `seikika-model` | Manifest types (serde), JSON Schema validation, cross-reference checks, entity/value types |
+| `seikika-expr` | CEL compile and evaluate (cel-rust), custom functions, error mapping to `unknown` |
+| `seikika-derive` | The §6 pipeline behind `DerivedState`; plan diffs |
+| `seikika-store` | `Store` trait; `MemStore`; `PgStore` (sqlx); migrations |
+| `seikika-authz` | Authn; `Authorizer` trait; OpenFGA client + supervisor; facet shaping; audit |
+| `seikika-durable` | `Durable` trait; Postgres implementation (Q4 decides SDK vs own) |
+| `seikika-connect` | Connector runtime, control channel, command scheduler, conformance kit |
+| `seikika-exec` | `Executor` trait; stdio, HTTP, GitHub Actions, webhook implementations |
+| `seikika-api` | axum REST + OpenAPI generation; MCP (rmcp); UI host |
+| `seikika-cli` | The `seikika` binary (server and CLI subcommands) |
+| `seikika-secrets` | Secret backends for connector `${secret:…}` resolution (D55) |
+| `seikika-telemetry` | OpenTelemetry and Prometheus bootstrap, metric catalog, log bridge (§10.5) |
+| `seikika-connector-*` | First-party connectors as separate binaries: `github`, `gitlab`, `git-files` and `scim` read sources; `workspace` and `runner` serve Seikika for Seikika. Third-party connectors may be in any language |
 | `executors/*` | First-party executors as separate binaries (any language; Rust or TS) |
 | `ui/` | Embedded Astro/Vue UI (TypeScript) |
 
 ## 5. The manifest
 
 The schema is [`schema/manifest.schema.json`](../schema/manifest.schema.json)
-(`apiVersion: toolbox.dev/v1alpha1`), compiled into the `toolbox` binary;
-[`toolbox.yaml`](../examples/reference-portal/toolbox.yaml) uses every v1 feature.
+(`apiVersion: seikika.com/v1alpha1`), compiled into the `seikika` binary;
+[`seikika.yaml`](../examples/reference-portal/seikika.yaml) uses every v1 feature.
 
 | Section | Meaning |
 |---|---|
-| `portal` | Name, owner, pinned Toolbox version |
+| `portal` | Name, owner, pinned Seikika version |
 | `policies` | Named values, readable in CEL as `policy.<name>` |
 | `connectors` | Package, runtime (`in-image` or `remote`), config with `${env:…}` and `${secret:…}`, record kinds, required refresh scopes, freshness per record kind |
 | `kinds` | Fields (types, facets, computed, authority), relations, identity sources, per-field source precedence, write-back, mapping rules |
@@ -125,7 +125,7 @@ The schema is [`schema/manifest.schema.json`](../schema/manifest.schema.json)
 
 **Sources and the canonical manifest (D53–D55).** A portal's source is one YAML file, several YAML files
 joined by a top-level `include` list (globs; sources only), or a TypeScript program using the
-[builder](./design/typescript-builder.md). `toolbox build` turns any of them into **one canonical,
+[builder](./design/typescript-builder.md). `seikika build` turns any of them into **one canonical,
 key-sorted `manifest.json`**, which is what the server loads, `plan` diffs and the image hash covers.
 Neither the builder nor `build` resolves `${env:…}` or `${secret:…}`; the server does at start-up.
 Diagnostics on a value from an included file or package fragment name that file and the JSON
@@ -134,15 +134,15 @@ pointer inside it, not the merged document (D95).
 **Action inputs (D58)** use the form-renderable JSON Schema subset in
 [minimal-ui.md](./design/minimal-ui.md) §4, so every action has a generated form.
 
-**Validation (`toolbox validate`)** runs the JSON Schema, then cross-reference checks: map rules name
+**Validation (`seikika validate`)** runs the JSON Schema, then cross-reference checks: map rules name
 declared connectors and record kinds; precedence lists name sources some rule provides (or `native`);
 scorecards and actions name declared kinds and levels; refreshes name declared connectors; UI bundles
 exist; action inputs stay within the form-renderable subset; every CEL expression compiles with the
 variables available at its site (§6.2).
 
-**The TypeScript builder** (`@toolbox/manifest`, [design](./design/typescript-builder.md)) is a typed
+**The TypeScript builder** (`@seikika/manifest`, [design](./design/typescript-builder.md)) is a typed
 library whose only output is this JSON. CI keeps it honest: the TS reference portal must equal
-`toolbox.yaml` ([prototype](../experiments/typescript-builder/README.md): identical), its output must
+`seikika.yaml` ([prototype](../experiments/typescript-builder/README.md): identical), its output must
 pass the schema, and its negative type tests must fail to compile.
 
 ## 6. Derived-state pipeline (semantics)
@@ -158,7 +158,7 @@ prose and the model disagree, fix one of them in the same commit.
   memory atomically. Recompute is debounced (default 500 ms after the last change, at most 5 s
   behind under continuous change).
 - **Snapshot id** = `<input version>.<manifest hash prefix>`. Every response carries it
-  (`X-Toolbox-Snapshot`, MCP `_meta`); reads accept `min_snapshot` and wait up to 10 s for it.
+  (`X-Seikika-Snapshot`, MCP `_meta`); reads accept `min_snapshot` and wait up to 10 s for it.
 
 ### 6.2 Stages and CEL variables
 
@@ -210,7 +210,7 @@ raised ([ocean.md](./ocean.md) lesson 6). Scoped refreshes never delete implicit
 
 ### 6.4 Plan
 
-`toolbox plan` recomputes twice over one snapshot (current manifest, candidate manifest) and diffs
+`seikika plan` recomputes twice over one snapshot (current manifest, candidate manifest) and diffs
 entities (fields and provenance), scorecard levels and rule outcomes, tuples (gained and lost access,
 as user-level `ListObjects` deltas for affected objects), options, actions and MCP tools. `--local`
 uses fixtures; `--remote` uploads the candidate manifest to the portal, which runs the plan
@@ -227,7 +227,7 @@ inherits the most restrictive facet of the fields its CEL reads, unless the mani
 
 ### 6.6 Action runs
 
-Exactly as [action-runs.md](./design/action-runs.md) §2–§4: preview (Toolbox layer always, executor
+Exactly as [action-runs.md](./design/action-runs.md) §2–§4: preview (Seikika layer always, executor
 layer when supported) → confirmation token `sha256(action version, inputs, effects, facts read,
 requester, entity)`, valid 10 minutes and spent once by a server → optional approval (durable
 wait; in memory until §8.1 lands) → dispatch with idempotency key → progress → executor result →
@@ -247,7 +247,7 @@ against a key it pinned ([federated-actions.md](./design/federated-actions.md) �
 Sketches; names and shapes are binding, details are the implementer's.
 
 ```rust
-/// Inputs. MemStore for tests and `toolbox dev`; PgStore in production.
+/// Inputs. MemStore for tests and `seikika dev`; PgStore in production.
 #[async_trait] pub trait Store: Send + Sync {
     async fn ingest(&self, connector: &str, batch: Vec<ConnectorMessage>) -> Result<InputVersion>;
     async fn put_native(&self, write: NativeWrite) -> Result<InputVersion>;
@@ -316,7 +316,7 @@ pub struct Derived { pub snapshot: SnapshotId, pub entities: Entities, pub score
 Errors use RFC 9457 problem details with `code`, and for authorization failures the missing
 `relation`. Pagination is cursor-based; `fields` projects.
 
-### 7.3 MCP tools (Streamable HTTP at `/mcp`; `toolbox mcp` stdio bridge)
+### 7.3 MCP tools (Streamable HTTP at `/mcp`; `seikika mcp` stdio bridge)
 
 | Tool | Inputs | Returns |
 |---|---|---|
@@ -364,13 +364,13 @@ semantics: [action-runs.md](./design/action-runs.md) §5. Golden conversation:
 In-image executors are child processes over stdio, started with a cleared environment: a fixed
 base set plus only their declared secrets (built). Running them as a separate Unix user is still
 open (Q12). `http` executors receive the same messages as POST bodies. An executor that answers
-`accepted` with an `executor_run_id` and no `result` keeps the run `dispatched`; Toolbox then asks
+`accepted` with an `executor_run_id` and no `result` keeps the run `dispatched`; Seikika then asks
 after it with `status` and stops it with `cancel`. An executor that declares `verify: true` is sent
 `verify` when the action has no postcondition (built). Credentials for the acting identity arrive
 per request in `identity.credentials` and are never logged. **GitHub Actions executor:** dispatch with `return_run_details` and track that
 run id through the runs API; a server that returns no id falls back to the one run named for the
-Toolbox run, on the dispatched ref, created after the dispatch. Conclusions map to `result`, a run
-that never finishes is `timed_out`, and previews come from the Toolbox layer only. The dispatch
+Seikika run, on the dispatched ref, created after the dispatch. Conclusions map to `result`, a run
+that never finishes is `timed_out`, and previews come from the Seikika layer only. The dispatch
 token and API are the portal's, never a child manifest's. **CI hosts** (D01M87T16JRH53YV6VVWM8PH169,
 [forges.md](./design/forges.md) §4.7): a manifest declares the CI systems it starts runs on under
 `ci:`, apart from `forges:`. Each is `github-actions`, `gitlab-ci`, or `http`, a service that
@@ -382,7 +382,7 @@ may take their endpoint and token from a host (`ci:`) (built).
 ### 7.6 UI extension contract
 
 - A bundle is a static ES module built by the operator (any framework) and copied into the image by
-  `toolbox build`. The manifest declares `ui.bundles[] {name, path, entry, mounts[]}`.
+  `seikika build`. The manifest declares `ui.bundles[] {name, path, entry, mounts[]}`.
 - Slots: `action:<name>` (replaces the generated form), `entity-tab:<Kind>`, `page:<name>`.
 - The module exports `mount(element, ctx): { unmount(): void }`. A Web Component may be used inside;
   the contract is the function.
@@ -391,39 +391,39 @@ may take their endpoint and token from a host (`ci:`) (built).
   (design tokens).
 - Served same-origin under a strict CSP; the server enforces every permission, so a bundle can't
   widen access.
-- The first-party kit is Astro + Vue on `@toolbox-dev/ui`. Browser extensions use the module contract above.
+- The first-party kit is Astro + Vue on `@seikika/ui`. Browser extensions use the module contract above.
 
 ### 7.7 CLI
 
 | Command | Purpose |
 |---|---|
-| `toolbox validate` | §5 validation |
-| `toolbox test` | `tests/*.test.yaml`, `.fga.yaml` through `Authorizer`, executor cassettes |
-| `toolbox plan [--local | --remote URL] [--format md|json]` | §6.4 |
-| `toolbox dev` | Watch, recompute over fixtures, serve API/MCP/UI locally, re-run affected tests |
-| `toolbox build [--image REF] [--push]` | Build the portal image |
-| `toolbox verify --url URL [--rollback-on-failure]` | Post-deploy smoke checks (MCP tools present, snapshot fresh, scorecards evaluating) |
-| `toolbox serve [--role all|api|worker]` | Run the server |
-| `toolbox push [--url URL]` | Send a portal's fixtures through the ingest API and wait for the snapshot (dev and tests) |
-| `toolbox derive [--out DIR]` | Recompute from fixtures; print a summary or write the reference-format outputs |
-| `toolbox report [--skip C] [-o md\|json\|html] [--baseline F [--update\|--ci]] [--verdict F]` | Score a repository without a server: connectors once, recompute, scorecards with evidence; a ratchet against a committed baseline (D66, [repo-portals.md](./design/repo-portals.md)); `--verdict` writes the outcome as JSON for any CI system (D96) |
-| `toolbox scorecard [NAME] [--rule R]` | One scorecard across entities: a work list (MCP `scorecard_report`) |
-| `toolbox campaign [NAME]` | One campaign's progress and gaps (MCP `campaign_report`) |
-| `toolbox assess brief ID` / `assess check` / `assess submit FILE` | Brief a coding agent on an entity (MCP `assessment_brief`), validate a portal's `assessments/`, or push an assessment to a server (D79) |
-| `toolbox install [PORTAL] [--frozen]` | Download released executable connectors (`package: github:owner/repo[/app]@version`) for this platform, verify them against `toolbox.lock` (pinning new ones), and unpack them into the cache (D90) |
-| `toolbox doctor [PORTAL] [--mise]` | Check every in-image connector and executor package resolves and every declared `tools:` entry is at its pinned version; `--mise` prints the mise config that installs them (D90) |
-| `include: [{package: <dir or github:owner/repo[/subdir]@ref>, with: {...}}]` | A package (D89): fragments merged with typed parameters (`${param:name}`; parameters with `tighten` may only move that way); git packages are cloned by `toolbox install` (semver tag `v…`, branch, or commit SHA) and pinned in `toolbox.lock` by content hash, checked on every load |
-| `toolbox describe` | Print Toolbox's own CLI commands and MCP tools as connector records (contract snapshots; Toolbox for Toolbox, D65) |
-| `toolbox token create --user U` | Create a personal access token (printed once) |
-| `toolbox get|query|search|graph|owner|explain|score|refresh|actions` | Read commands, each calling the MCP tool of the same purpose (`-o md|json|yaml`) |
-| `toolbox mcp` | Stdio MCP server bridging to a portal's `/mcp` (for agent harnesses) |
-| `toolbox run [<action>] [--entity ID] [-i k=v] [--confirm TOKEN \| --yes] [--verify ID] [--runs] [--wait] [--approve\|--reject ID] [--url URL]` | Actions: list, preview, run, approve and verify in a checkout (a parent's holds approvals), or with `--url` on a served portal (federated-actions §6.4) |
-| `toolbox connector refresh|resync|test` | Connector operations and the conformance kit |
-| `toolbox login` | OIDC device flow or PAT |
+| `seikika validate` | §5 validation |
+| `seikika test` | `tests/*.test.yaml`, `.fga.yaml` through `Authorizer`, executor cassettes |
+| `seikika plan [--local | --remote URL] [--format md|json]` | §6.4 |
+| `seikika dev` | Watch, recompute over fixtures, serve API/MCP/UI locally, re-run affected tests |
+| `seikika build [--image REF] [--push]` | Build the portal image |
+| `seikika verify --url URL [--rollback-on-failure]` | Post-deploy smoke checks (MCP tools present, snapshot fresh, scorecards evaluating) |
+| `seikika serve [--role all|api|worker]` | Run the server |
+| `seikika push [--url URL]` | Send a portal's fixtures through the ingest API and wait for the snapshot (dev and tests) |
+| `seikika derive [--out DIR]` | Recompute from fixtures; print a summary or write the reference-format outputs |
+| `seikika report [--skip C] [-o md\|json\|html] [--baseline F [--update\|--ci]] [--verdict F]` | Score a repository without a server: connectors once, recompute, scorecards with evidence; a ratchet against a committed baseline (D66, [repo-portals.md](./design/repo-portals.md)); `--verdict` writes the outcome as JSON for any CI system (D96) |
+| `seikika scorecard [NAME] [--rule R]` | One scorecard across entities: a work list (MCP `scorecard_report`) |
+| `seikika campaign [NAME]` | One campaign's progress and gaps (MCP `campaign_report`) |
+| `seikika assess brief ID` / `assess check` / `assess submit FILE` | Brief a coding agent on an entity (MCP `assessment_brief`), validate a portal's `assessments/`, or push an assessment to a server (D79) |
+| `seikika install [PORTAL] [--frozen]` | Download released executable connectors (`package: github:owner/repo[/app]@version`) for this platform, verify them against `seikika.lock` (pinning new ones), and unpack them into the cache (D90) |
+| `seikika doctor [PORTAL] [--mise]` | Check every in-image connector and executor package resolves and every declared `tools:` entry is at its pinned version; `--mise` prints the mise config that installs them (D90) |
+| `include: [{package: <dir or github:owner/repo[/subdir]@ref>, with: {...}}]` | A package (D89): fragments merged with typed parameters (`${param:name}`; parameters with `tighten` may only move that way); git packages are cloned by `seikika install` (semver tag `v…`, branch, or commit SHA) and pinned in `seikika.lock` by content hash, checked on every load |
+| `seikika describe` | Print Seikika's own CLI commands and MCP tools as connector records (contract snapshots; Seikika for Seikika, D65) |
+| `seikika token create --user U` | Create a personal access token (printed once) |
+| `seikika get|query|search|graph|owner|explain|score|refresh|actions` | Read commands, each calling the MCP tool of the same purpose (`-o md|json|yaml`) |
+| `seikika mcp` | Stdio MCP server bridging to a portal's `/mcp` (for agent harnesses) |
+| `seikika run [<action>] [--entity ID] [-i k=v] [--confirm TOKEN \| --yes] [--verify ID] [--runs] [--wait] [--approve\|--reject ID] [--url URL]` | Actions: list, preview, run, approve and verify in a checkout (a parent's holds approvals), or with `--url` on a served portal (federated-actions §6.4) |
+| `seikika connector refresh|resync|test` | Connector operations and the conformance kit |
+| `seikika login` | OIDC device flow or PAT |
 
 ## 8. Data model (Postgres)
 
-Migrations are expand/contract only. Tables (schema `toolbox`):
+Migrations are expand/contract only. Tables (schema `seikika`):
 
 | Table | Key | Contents |
 |---|---|---|
@@ -435,7 +435,7 @@ Migrations are expand/contract only. Tables (schema `toolbox`):
 | `commands` | `command_id` | Command, scope, priority, deadline, status, requester, result snapshot |
 | `snapshots` | `snapshot_id` | Input version, manifest hash, published at, summary counts, diagnostics |
 | `derived_tuples` | `(object, relation, subject)` | Current tuples, written as deltas by the leader |
-| `toolbox_durable.*` | — | Durable workflow state (§8.1) |
+| `seikika_durable.*` | — | Durable workflow state (§8.1) |
 | `runs` | `run_id` | Action, entity, inputs, requester, state, confirm token hash, executor run id, timeline |
 | `audit` | `id` | Every authorization decision that denied, every write, command and run transition |
 
@@ -443,7 +443,7 @@ Migrations are expand/contract only. Tables (schema `toolbox`):
 
 [`experiments/durable-schema/schema.sql`](../experiments/durable-schema/schema.sql) is the v1 schema:
 a column subset of DBOS's `workflow_status`, `operation_outputs` and `notifications` (same names), plus
-a Toolbox `executors` heartbeat table. Semantics, each shown by the experiment's test:
+a Seikika `executors` heartbeat table. Semantics, each shown by the experiment's test:
 
 | Operation | Implementation |
 |---|---|
@@ -458,7 +458,7 @@ Adopting the DBOS SDK later (Q4) means migrating these tables to DBOS's full sch
 ### 8.2 OpenFGA tables
 
 OpenFGA uses its own schema with its Postgres datastore; its `tuple` table is replaced by a view over
-`toolbox.derived_tuples` (the critique's §7.2 experiment). OpenFGA's write API is never used.
+`seikika.derived_tuples` (the critique's §7.2 experiment). OpenFGA's write API is never used.
 
 **Multiple instances:** every instance recomputes in memory from the same snapshot (deterministic, P1).
 One instance, holding a Postgres advisory lock, publishes `snapshots` rows and the tuple delta. Any
@@ -481,7 +481,7 @@ instance can run workflows; `Durable::recover` reclaims those of dead instances.
   (public by default) and their owner-only facets to portal admins. Filters are evaluated over the
   shaped entity, so they can't probe hidden values. Native writes need `can_edit` (if the model
   defines it) or portal `admin`.
-- **M4 implementation notes (D61, D62):** MCP is Toolbox's own JSON-RPC handler at `/mcp` (plain
+- **M4 implementation notes (D61, D62):** MCP is Seikika's own JSON-RPC handler at `/mcp` (plain
   JSON responses over Streamable HTTP; no SSE streams or MCP tasks yet), whose tools call the REST
   handlers in-process. Connector commands are held in memory (lost on restart; they become durable
   with M5). The UI polls `/v1/snapshot` every 10 s for "newer data" instead of the `/v1/events`
@@ -496,25 +496,25 @@ instance can run workflows; `Durable::recover` reclaims those of dead instances.
 
 ### 10.1 Image
 
-`FROM ghcr.io/toolbox-dev/toolbox:<version>` plus `/portal/toolbox.yaml`, `authz/`, UI bundle
+`FROM ghcr.io/seikika/seikika:<version>` plus `/portal/seikika.yaml`, `authz/`, UI bundle
 `dist/` directories and executor binaries (reference [`Dockerfile`](../examples/reference-portal/Dockerfile)).
-The base image contains `toolbox` and the pinned OpenFGA binary.
+The base image contains `seikika` and the pinned OpenFGA binary.
 
 ### 10.2 Runtime configuration (environment)
 
 | Variable | Meaning |
 |---|---|
 | `DATABASE_URL` | Postgres (Cloud SQL via connector or private IP) |
-| `TOOLBOX_MANIFEST` | Manifest path (default `/portal/toolbox.yaml`) |
-| `TOOLBOX_PUBLIC_URL` | External URL (OAuth, links) |
-| `TOOLBOX_AUTH_MODE` | `iap-google`, `cloudflare-access`, `oidc`, `token` (personal access tokens only), `dev` (trusts `x-toolbox-user`). Unset: `dev` when the server binds loopback, otherwise `token`, so the image (`PORT` binds `0.0.0.0`) never trusts a header unless told to. Explicit `dev` off loopback also needs `TOOLBOX_ALLOW_DEV_AUTH_OFF_LOOPBACK`, or the server refuses to start (D01M885TA0R4HCZTVDSG9F0PHDQ) |
-| `TOOLBOX_ALLOW_DEV_AUTH_OFF_LOOPBACK` | `1`, `true` or `yes` acknowledges `TOOLBOX_AUTH_MODE=dev` on a non-loopback address. Without it, `serve` exits 2. Unset, `dev` still works on loopback (D01M885TA0R4HCZTVDSG9F0PHDQ) |
-| `TOOLBOX_CONNECTOR_CONFINEMENT` | `best-effort` (the default, including unset or empty) or `required`. Where the host has Landlock, in-image connectors start confined either way. Without it, `best-effort` starts them unconfined and says so in `/readyz`, `/v1/connectors`, field explain and `toolbox doctor`; `required` refuses to start them. Any other value makes `serve` exit 2 (D01M88668MR8K559A1NYSNQQTX0) |
-| `TOOLBOX_SECRET_<NAME>` | Env backend for `${secret:…}` (uppercase, `-` → `_`) |
-| `TOOLBOX_SECRETS_DIR` | Mounted secrets directory (files named by logical secret); first hit after env |
-| `TOOLBOX_SECRETS_CONFIG` | JSON/YAML path (or inline JSON) listing backends: env, file, Vault KV, AWS/GCP/Azure secret managers, plus logical→provider maps ([secret-vault.md](./design/secret-vault.md)) |
-| `TOOLBOX_SECRETS_REQUIRED` | When `1`/`true`, fail if a `${secret:…}` cannot be resolved (default: omit key + warn) |
-| `TOOLBOX_ROLE` | `all` (default), `api`, `worker` |
+| `SEIKIKA_MANIFEST` | Manifest path (default `/portal/seikika.yaml`) |
+| `SEIKIKA_PUBLIC_URL` | External URL (OAuth, links) |
+| `SEIKIKA_AUTH_MODE` | `iap-google`, `cloudflare-access`, `oidc`, `token` (personal access tokens only), `dev` (trusts `x-seikika-user`). Unset: `dev` when the server binds loopback, otherwise `token`, so the image (`PORT` binds `0.0.0.0`) never trusts a header unless told to. Explicit `dev` off loopback also needs `SEIKIKA_ALLOW_DEV_AUTH_OFF_LOOPBACK`, or the server refuses to start (D01M885TA0R4HCZTVDSG9F0PHDQ) |
+| `SEIKIKA_ALLOW_DEV_AUTH_OFF_LOOPBACK` | `1`, `true` or `yes` acknowledges `SEIKIKA_AUTH_MODE=dev` on a non-loopback address. Without it, `serve` exits 2. Unset, `dev` still works on loopback (D01M885TA0R4HCZTVDSG9F0PHDQ) |
+| `SEIKIKA_CONNECTOR_CONFINEMENT` | `best-effort` (the default, including unset or empty) or `required`. Where the host has Landlock, in-image connectors start confined either way. Without it, `best-effort` starts them unconfined and says so in `/readyz`, `/v1/connectors`, field explain and `seikika doctor`; `required` refuses to start them. Any other value makes `serve` exit 2 (D01M88668MR8K559A1NYSNQQTX0) |
+| `SEIKIKA_SECRET_<NAME>` | Env backend for `${secret:…}` (uppercase, `-` → `_`) |
+| `SEIKIKA_SECRETS_DIR` | Mounted secrets directory (files named by logical secret); first hit after env |
+| `SEIKIKA_SECRETS_CONFIG` | JSON/YAML path (or inline JSON) listing backends: env, file, Vault KV, AWS/GCP/Azure secret managers, plus logical→provider maps ([secret-vault.md](./design/secret-vault.md)) |
+| `SEIKIKA_SECRETS_REQUIRED` | When `1`/`true`, fail if a `${secret:…}` cannot be resolved (default: omit key + warn) |
+| `SEIKIKA_ROLE` | `all` (default), `api`, `worker` |
 
 ### 10.3 Cloud Run reference settings
 
@@ -529,16 +529,16 @@ Webhooks and MCP share the service URL.
 | Full recompute, 100k entities / 2M relations / 100 rules, 4 vCPU | ≤ 10 s (the prototype measured ~3 s; the pipeline measures 4.8–4.9 s, and 8.0 s on 2 vCPU, after the scale fixes, 8.0–8.6 s before; see [research-log.md](./research-log.md), *Scale profile*). Each push is gated on instruction counts (`scripts/scale-gate.py`), and the budget is timed weekly on 4 vCPU (`scale-slo.yml`) | [technology-critique.md](./technology-critique.md) §7.1 |
 | Webhook → visible | p95 ≤ 60 s | plan §6.6 |
 | Check latency (OpenFGA over the view) | p95 ≤ 10 ms in-container | critique §7.2 (2.4 ms p50 over HTTP) |
-| Toolbox preview | p95 ≤ 150 ms | [frontend.md](./design/frontend.md) §6 |
+| Seikika preview | p95 ≤ 150 ms | [frontend.md](./design/frontend.md) §6 |
 | Cold start to ready (reference portal) | ≤ 15 s | — (measure in M6) |
 
 ### 10.5 Observability
 
-OTel traces and logs via `toolbox-telemetry` (init before listeners; honour `OTEL_*`); Prometheus
-`/metrics` from the same catalog: `toolbox_recompute_seconds`, `toolbox_snapshot_lag_seconds`
-(canonical; temporary alias `toolbox_snapshot_age_seconds`), `toolbox_ingest_records_total`,
-`toolbox_command_duration_seconds{status}`, `toolbox_run_transitions_total{state}`,
-`toolbox_authz_checks_total{decision}`, `toolbox_mcp_tool_calls_total{tool}`. Analytics sinks are
+OTel traces and logs via `seikika-telemetry` (init before listeners; honour `OTEL_*`); Prometheus
+`/metrics` from the same catalog: `seikika_recompute_seconds`, `seikika_snapshot_lag_seconds`
+(canonical; temporary alias `seikika_snapshot_age_seconds`), `seikika_ingest_records_total`,
+`seikika_command_duration_seconds{status}`, `seikika_run_transitions_total{state}`,
+`seikika_authz_checks_total{decision}`, `seikika_mcp_tool_calls_total{tool}`. Analytics sinks are
 deferred beyond `none`/`otlp` (D6 keeps PostHog as a later reference sink). See
 [observability.md](./design/observability.md).
 
@@ -546,13 +546,13 @@ deferred beyond `none`/`otlp` (D6 keeps PostHog as a later reference sink). See
 
 ### 11.1 Acceptance
 
-The scenarios A1–A12 in the [reference portal README](../examples/reference-portal/README.md#acceptance-scenarios-with-the-toolbox-binary),
+The scenarios A1–A12 in the [reference portal README](../examples/reference-portal/README.md#acceptance-scenarios-with-the-seikika-binary),
 plus every milestone exit in §3.
 
 ### 11.2 Test formats
 
 - `tests/*.test.yaml`: `name` + `assert[] {name, expect}`; `expect` is CEL with `entity(id)`,
-  `score(scorecard, id)`, `options(action, id)` and `orphans()`. `toolbox test` evaluates them
+  `score(scorecard, id)`, `options(action, id)` and `orphans()`. `seikika test` evaluates them
   against the fixtures listed by the portal (default `fixtures/`). The same file may hold
   `runs[] {name, action, entity?, as?, inputs, approve[], rejectPush?, expect {state, files?,
   refused?, error?}}`: action cases, each run through the real lifecycle in a scratch copy of the

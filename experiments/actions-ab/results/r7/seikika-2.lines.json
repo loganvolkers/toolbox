@@ -1,0 +1,24 @@
+{
+ "linesToMaintain": 1527,
+ "files": {
+  "alpha/.seikika/actions/mark-deprecated.yaml": 25,
+  "alpha/.seikika/tests/mark-deprecated.test.yaml": 36,
+  "alpha/.seikika/seikika.yaml": 3,
+  "beta/.seikika/seikika.yaml": 3,
+  "gamma/.seikika/seikika.yaml": 3,
+  "org/env.sh": 6,
+  "org/seikika.yaml": 7,
+  ".seikika-state/runs/run_2fu88ifjltwa.json": 217,
+  ".seikika-state/runs/run_2fu8d1fgz5go.json": 104,
+  ".seikika-state/runs/run_2fu8ekfk7p7u.json": 217,
+  ".seikika-state/runs/run_2fu8eoqroal9.json": 217,
+  ".seikika-state/runs/run_2fu8ev9fv1c7.json": 104,
+  ".seikika-state/runs/run_2fu8frmmfvd7.json": 104,
+  ".seikika-state/runs/run_2fu8ooutdib7.json": 159,
+  ".seikika-state/runs/run_2fu8p051pulk.json": 77,
+  ".seikika-state/runs/run_2fu8wt3qt7kw.json": 78,
+  ".seikika-state/served/org/runs/run_2fu8wgqdu1li.json": 165,
+  ".seikika-state/served/org/runs/spent-tokens": 1,
+  ".seikika-state/served/org/signing-key": 1
+ }
+}

@@ -5,7 +5,7 @@
 ## v1 design
 
 **Derived state is recomputed in full from a consistent snapshot whenever inputs change.** Side effects
-run as durable workflows on Postgres. Both sit behind Toolbox-owned contracts (`DerivedState`,
+run as durable workflows on Postgres. Both sit behind Seikika-owned contracts (`DerivedState`,
 `Durable`) so an incremental engine or a different workflow runtime can replace them (G3).
 
 | Concern | v1 | Evidence |
@@ -49,7 +49,7 @@ They are easy to conflate, so we name them separately:
 | Right tool | A dataflow/IVM engine | A durable-execution engine |
 
 Port's strength (calculation, aggregation and mirror properties, scorecards that update as data
-changes) is IVM. DBOS (which the user leaned towards) is durable execution. **Toolbox needs both, and
+changes) is IVM. DBOS (which the user leaned towards) is durable execution. **Seikika needs both, and
 must not use either for the other's job.**
 
 ### 2. Incremental view maintenance: options
@@ -67,7 +67,7 @@ must not use either for the other's job.**
 1. **Formal foundation.** The incrementalisation is *derived* from the query, with proofs, not
    hand-written, so `incremental ≡ batch` holds by construction. Our verification
    ([verification.md](./verification.md) E1) becomes a check of our operators, not of the theory.
-2. **Recursion is first class.** The heart of Toolbox is graph closures: nested group membership,
+2. **Recursion is first class.** The heart of Seikika is graph closures: nested group membership,
    inherited ownership through bridge edges, `dependsOn` reachability, system and domain roll-ups,
    meta-catalog `reads` edges. DBSP maintains these incrementally.
 3. **Rust, MIT, embeddable.** It runs in-process, adds no service, and is driven by our `Env`, so it
@@ -76,7 +76,7 @@ must not use either for the other's job.**
    roll-ups are just operators in the circuit.
 
 **Risks:**
-- `dbsp`'s API evolves with Feldera. Mitigation: pin it, wrap it in `toolbox-ivm`, contribute
+- `dbsp`'s API evolves with Feldera. Mitigation: pin it, wrap it in `seikika-ivm`, contribute
   upstream.
 - Memory for large state. Mitigation: DBSP supports spilling to storage; use single-node state sizes
   per the scale targets.
@@ -87,7 +87,7 @@ must not use either for the other's job.**
  WRITES (each fact written exactly once)            DERIVED (never written back as source data)
  ┌────────────────────────────────────────┐        ┌──────────────────────────────────────────────┐
  │ raw_records      (connector RECORDs)   │        │ DBSP circuit, compiled from the manifest:    │
- │ native_values    (Toolbox-owned fields)│  log   │  map (CEL) → fragments → merge by sources    │
+ │ native_values    (Seikika-owned fields)│  log   │  map (CEL) → fragments → merge by sources    │
  │ workflow state   (DBOS system tables)  │ ─────► │  → entities → relations → closures           │
  │ audit            (append-only)         │ (commit│  → authz tuples → rule outcomes → levels     │
  │ manifest         (immutable, per epoch)│ order) │  → rollups → search docs → history deltas    │
@@ -122,7 +122,7 @@ must not use either for the other's job.**
 **Rules and expressions inside the circuit:**
 - CEL predicates and mappings compile to closures used by `filter`, `map` and `flat_map` operators.
 - Graph predicates (`related`, `path_exists`) compile to bounded joins or recursive sub-circuits.
-- Their **cost is visible at build time.** `toolbox plan` reports the circuit's size and estimated
+- Their **cost is visible at build time.** `seikika plan` reports the circuit's size and estimated
   state, and rejects unbounded recursion that isn't declared.
 
 **Information flow** ([authorization.md](../authorization.md) §4.2): every circuit column carries a

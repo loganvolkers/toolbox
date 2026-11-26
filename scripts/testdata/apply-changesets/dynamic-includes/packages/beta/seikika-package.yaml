@@ -1,0 +1,7 @@
+# Discovered package (not named in changeset; still lockstep-bumped).
+apiVersion: seikika.com/package/v0
+name: beta
+version: 0.3.0
+description: >-
+  Fixture package beta for lockstep after glob discovery.
+fragments: []

@@ -1,0 +1,46 @@
+apiVersion: seikika.com/assessment/v1
+entity: assessment:scorecard-quality/scorecard:seikika/vs-backstage-agent-surface
+rubric: assessment-quality
+subjectHash: 86d7ec265a06
+assessor: {kind: agent, name: cursor-reviewer-15, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: supported
+    verdict: pass
+    reason: >-
+      The citations in
+      portal/assessments/scorecard-quality/scorecard/seikika/vs-backstage-agent-surface.yaml
+      hold: - backstage-comparison.yaml:796-855 is the card. -
+      docs/design/backstage-comparison.md:58 is F13. - README.md:52 is the
+      bar. - RESEARCH.md:275-282 lists F13(a)-(f). - RESULTS.md:295 lists the
+      20-question call count as unmeasured. - surface.py:186-187 computes
+      `mcpReadOnlyTools`. - mcp.rs:20-98 and 651-665 are the two fix targets.
+      - portal/results.json puts product:seikika at bronze. One citation is
+      loose. D01M857ZB468ZM2YS6GNSEG6YB9 defines the standing, but it does not
+      say that a comparative card has one level. That is merely true of every
+      vs-backstage card.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      no-obvious-gap fails correctly: F13(b) and F13(c) are in the brief
+      (RESEARCH.md:277-279) and missing from the card. one-concern,
+      levels-are-a-ladder and actionable match the sources. The three rules
+      are F13 alone, bronze is reached, and each fix names mcp.rs or the
+      serving commands.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      The gap is read off the brief's F13 list and RESULTS.md's "Not measured
+      yet". The single-level pass applies the standing mechanism every
+      comparative card uses. A second assessor would agree.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      `calls-per-answer`, fed by a 20-question oracle, and `annotated-tools`,
+      from the readOnlyHint share at surface.py:186-187, add the two missing
+      F13 measures. Together they close the gap the no-obvious-gap fail names.
+summary: >-
+  An accurate assessment. Its one fail, the unmeasured calls-per-question
+  and annotation coverage, comes straight from the brief's F13 list. One
+  citation leans on D01M857ZB468ZM2YS6GNSEG6YB9 for more than it says, but
+  no verdict depends on it.

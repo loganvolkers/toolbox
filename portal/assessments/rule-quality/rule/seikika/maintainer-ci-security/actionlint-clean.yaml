@@ -1,0 +1,59 @@
+apiVersion: seikika.com/assessment/v1
+entity: rule:seikika/maintainer-ci-security/actionlint-clean
+rubric: rule-quality
+subjectHash: 814af5f14c84
+assessor: {kind: agent, name: cursor-assessor-12, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: measures-intent
+    verdict: pass
+    reason: >-
+      The check is actionlint's own finding count for the file
+      (packages/github-actions/fragments/github-actions.yaml:198-205), read
+      through the actionlint fitting with every error kept
+      (crates/seikika-connector-runner/src/lint.rs:54-74). The job turns
+      shellcheck and pyflakes off (github-actions.yaml:30-35) so laptop and CI
+      agree (docs/design/github-actions-standards.md:100-103), and the record
+      carries that command, so "clean" means clean under the command the
+      package pins. Action metadata passes by `entity.type == 'action'`, which
+      matches actionlint linting local actions only through the workflows that
+      call them (github-actions-standards.md:56).
+  - criterion: hard-to-game
+    verdict: fail
+    reason: >-
+      actionlint reads ignores from the repository's .github/actionlint.yaml
+      (github-actions.yaml:4-7, 28-29), and a `paths:` entry with `ignore:
+      ['.*']` silences every finding, so `total` is 0 and the rule passes.
+      That is one file and cheaper than fixing a mistyped expression. No rule
+      reads the ignore list, and unlike portal/waivers.yaml it needs no
+      decision or reason. The package's starter
+      (packages/github-actions/actionlint.yaml:7-11) shows the shape. This
+      repository has no .github/actionlint.yaml today, so the route is open
+      but unused.
+    suggestion: >-
+      Have the workspace connector record the ignore patterns in
+      .github/actionlint.yaml per workflow path, and add evidence (or a gold
+      rule) that lists each pattern, failing on a pattern that matches
+      everything (`.*`, `.+`) or has no comment above it.
+  - criterion: fix-leads-to-pass
+    verdict: pass
+    reason: >-
+      The evidence lists each finding as `<kind> at line <n>: <message>`
+      (github-actions.yaml:202-204), and fixing those lines makes `total` 0.
+      The fix's bare `actionlint` would also run shellcheck where it is
+      installed and report more than the rule counts, which leads to extra
+      work, not a miss; the record's `command` reproduces the exact run.
+  - criterion: threshold-justified
+    verdict: pass
+    reason: >-
+      No number. Bronze is where D70 puts it (actionlint clean first in
+      maintainer-ci-security), and github-actions-standards.md:84 maps script
+      injection to `no-high-findings` / `actionlint-clean`, which is the floor
+      principle in docs/design/thresholds.md:19-21. The rule's rationale
+      (github-actions.yaml:206-209) adds the cost argument.
+summary: >-
+  A faithful carry of actionlint at a justified level, with a fix the
+  evidence makes concrete. The weak point is the tool's own config: one
+  ignore-everything entry in .github/actionlint.yaml passes the rule with
+  no reason recorded, and nothing in the portal reads that file. Its tests
+  pin only the unknown outcome (portal/tests/standards.test.yaml:144-147).

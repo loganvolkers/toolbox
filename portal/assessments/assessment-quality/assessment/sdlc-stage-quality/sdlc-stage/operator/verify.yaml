@@ -1,4 +1,4 @@
-apiVersion: toolbox.dev/assessment/v1
+apiVersion: seikika.com/assessment/v1
 entity: assessment:sdlc-stage-quality/sdlc-stage:operator/verify
 rubric: assessment-quality
 subjectHash: 01388aa5f8d3
@@ -9,10 +9,10 @@ verdicts:
     verdict: pass
     reason: >-
       portal/sdlc/stages/operator.yaml:94-104 is the verify stage. The exit
-      criterion at line 99 is "toolbox verify passes against the deployed
+      criterion at line 99 is "seikika verify passes against the deployed
       portal", commands and checks are empty at 100-101, and the gap at 104
-      says toolbox verify does not exist. The Command enum at
-      crates/toolbox-cli/src/main.rs:43-324 has no verify variant. The probes
+      says seikika verify does not exist. The Command enum at
+      crates/seikika-cli/src/main.rs:43-324 has no verify variant. The probes
       are design text at docs/design/sdlc.md:156-162, including rollback to
       the previous digest at 162. detach.rs waits on /readyz at 132 and
       refuses to start when /healthz already answers at 165. Plan's comment at
@@ -35,13 +35,13 @@ verdicts:
   - criterion: actionable
     verdict: pass
     reason: >-
-      Shipping toolbox verify with the sdlc.md probes, or replacing the exit
+      Shipping seikika verify with the sdlc.md probes, or replacing the exit
       criterion with checks over /readyz, scorecard and the MCP tool list,
       would give the stage a command that exists and that an operator can run
       without a new crate. That changes the three fails. The reuses-artifacts
       pass needs no suggestion.
 summary: >-
   The verify assessment is trustworthy. The stage's exit criterion names
-  toolbox verify, the CLI has no such subcommand, and the probes exist
+  seikika verify, the CLI has no such subcommand, and the probes exist
   only in the design. The readiness endpoints the interim checklist would
   use are already in detach.rs. All four review criteria pass.

@@ -1,0 +1,50 @@
+apiVersion: seikika.com/assessment/v1
+entity: rule:seikika/maintainer-package/described
+rubric: rule-quality
+subjectHash: 6755a9177eee
+assessor: {kind: agent, name: cursor-assessor-06, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: measures-intent
+    verdict: pass
+    reason: >-
+      The rule's name, check and fix all say "has a description"
+      (portal/standards/packages.yaml:135-144), and the connector counts
+      trimmed characters (crates/seikika-connector-workspace/src/npm.rs:22),
+      so whitespace alone does not pass. Whether the text says what the
+      package is for is not something a field check can decide; the two live
+      passes (site/package.json, scripts/playwright-ci/package.json) are real
+      one-sentence descriptions.
+  - criterion: hard-to-game
+    verdict: fail
+    reason: >-
+      One visible character passes (`> 0`): a scratch manifest with
+      `"description": " x"` reported `descriptionChars: 1`. "TODO" or a copy
+      of the name would also pass. maintainer-skill sets a 20-character floor
+      on its description for the same reason
+      (portal/standards/skills.yaml:99), so this card is the weaker of the
+      two.
+    suggestion: >-
+      Require at least 20 characters (matching skills.yaml:99) and a
+      description that is not equal to the name, and record the number in
+      docs/design/thresholds.md.
+  - criterion: fix-leads-to-pass
+    verdict: pass
+    reason: >-
+      The evidence 'no description' (packages.yaml:138; pinned at
+      portal/tests/standards.test.yaml:544-545) names the missing field, and
+      adding `description` to package.json passes. ui/package.json and
+      experiments/typescript-builder/package.json fail only this and
+      engines-declared (portal/results.json), so the fix is the whole gap.
+  - criterion: threshold-justified
+    verdict: pass
+    reason: >-
+      No numeric threshold beyond non-empty. Gold comes from D76
+      (docs/decisions/D01M7W56B7R0000000000000000.md: "gold is a description,
+      engines.node, and CI that does not run npm install") and the npm
+      instruction "put a description in it" cited in
+      docs/design/package-standards.md:33.
+summary: >-
+  Clear and sourced; the connector trims, so whitespace does not pass. One
+  character does, though, which is cheaper than writing a description. A
+  20-character floor would match maintainer-skill.

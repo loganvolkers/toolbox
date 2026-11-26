@@ -1,5 +1,5 @@
 # Connectors we ship (docs/design/connector-standards.md).
-# Included by portal/toolbox.yaml; see portal/README.md for the layout.
+# Included by portal/seikika.yaml; see portal/README.md for the layout.
 
 kinds:
   # First-party connectors (docs/design/connector-standards.md). Facts from the crate; thresholds below.
@@ -64,11 +64,11 @@ scorecards:
       tree. Lag and error rate need a live portal and are not gated.
     links:
     - title: Connector standards
-      url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/connector-standards.md
+      url: https://github.com/seikika/seikika/blob/main/docs/design/connector-standards.md
     - title: 'Decision: a connector scorecard'
-      url: https://github.com/loganvolkers/toolbox/blob/main/docs/decisions/D01M7W4FRJR0000000000000000.md
+      url: https://github.com/seikika/seikika/blob/main/docs/decisions/D01M7W4FRJR0000000000000000.md
     - title: Connector control channel
-      url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/connector-control.md
+      url: https://github.com/seikika/seikika/blob/main/docs/design/connector-control.md
     owner: group:maintainers
     track: maintainer
     levels: [bronze, silver, gold]
@@ -89,13 +89,13 @@ scorecards:
     - name: config-documented
       level: bronze
       check: entity.configDocumented
-      evidence: "['crate docs name neither TOOLBOX_CONNECTOR_CONFIG nor a CLI flag']"
+      evidence: "['crate docs name neither SEIKIKA_CONNECTOR_CONFIG nor a CLI flag']"
       fix: >-
-        Document the configuration in the crate doc: TOOLBOX_CONNECTOR_CONFIG
-        for an in-image connector, or the --toolbox and --listen flags for a
+        Document the configuration in the crate doc: SEIKIKA_CONNECTOR_CONFIG
+        for an in-image connector, or the --seikika and --listen flags for a
         remote one.
       rationale: >-
-        A connector reads its settings from TOOLBOX_CONNECTOR_CONFIG or its
+        A connector reads its settings from SEIKIKA_CONNECTOR_CONFIG or its
         flags; when they are undocumented an operator has to read the source to
         wire it into a manifest.
     - name: speaks-the-protocol
@@ -108,7 +108,7 @@ scorecards:
         Serve commands with run_stdio (in-image) or run_remote (long-poll). A
         connector that does neither is not on the control channel.
       rationale: >-
-        Toolbox asks connectors for data only over the control channel; a
+        Seikika asks connectors for data only over the control channel; a
         connector that serves neither stdio nor long-poll can never be told to
         refresh or resync.
     - name: names-its-kinds
@@ -165,7 +165,7 @@ scorecards:
         [string(entity.conformanceMentions) + ' connector-test lines, ' +
         string(entity.ciMentions) + ' CI files']
       fix: >-
-        Run toolbox connector test on this binary from CI. A push-only connector
+        Run seikika connector test on this binary from CI. A push-only connector
         has no resync for that kit; an acceptance script must start it instead.
       rationale: >-
         The conformance kit is the run that proves the protocol shapes the
@@ -177,12 +177,12 @@ scorecards:
       evidence: entity.secretHits
       fix: >-
         Remove the hardcoded credentials in the evidence. Read tokens from the
-        environment or from TOOLBOX_CONNECTOR_CONFIG.
+        environment or from SEIKIKA_CONNECTOR_CONFIG.
       rationale: >-
         Connectors are open source and carry tokens for systems such as GitHub,
         so a credential in the tree is published with it. It sits at bronze so
         such a connector cannot pass the ratchet.
       links:
       - title: 'Thresholds: why credentials sit at bronze'
-        url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/thresholds.md
+        url: https://github.com/seikika/seikika/blob/main/docs/design/thresholds.md
     facets: {summary: public, details: public}

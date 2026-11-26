@@ -1,11 +1,11 @@
-# Toolbox Packages: Sharing Standards, Publishing Our Own, and Running Them Across a Fleet
+# Seikika Packages: Sharing Standards, Publishing Our Own, and Running Them Across a Fleet
 
 *Status: decided, 2026-11-20 (D89, resolving Q15). Package includes, parameters and git pinning are built; the first package is `packages/github-actions/`. Originally research and proposal. Answers the flagged open question Q15 (federation's
 package registry) with a recommendation that is **not yet decided**. Covers four questions raised
-while building Toolbox for Toolbox (T4T):*
+while building Seikika for Seikika (S4S):*
 1. *How should we catalogue the open-source packages we publish?*
-2. *Is T4T's single 1,841-line manifest OK?*
-3. *What should a shareable package of Toolbox primitives look like, and where should it live?*
+2. *Is S4S's single 1,841-line manifest OK?*
+3. *What should a shareable package of Seikika primitives look like, and where should it live?*
 4. *How do we tell what is unique to us from what is worth sharing?*
 
 *Layers: the **operator SDLC** (sharing and importing standards) and the **maintainer SDLC** (what we
@@ -18,7 +18,7 @@ and [repo-portals.md](./repo-portals.md).*
 
 ## 1. Conclusion
 
-**A Toolbox package should be data, not code:**
+**A Seikika package should be data, not code:**
 - **What it contains:** manifest fragments, fixtures, tests, rubrics and agent skills, with typed
   parameters and a version.
 - **How it is identified:** by a git path and a semver tag, and pinned in a lockfile by commit and
@@ -34,16 +34,16 @@ This is the Go-modules shape, which the configuration ecosystems we surveyed are
 
 | Question | Answer |
 |---|---|
-| **What a package is** (§3) | `toolbox-package.yaml` (name, version, Toolbox compatibility, typed `parameters`, `exports`) plus fragments, fixtures, tests, rubrics and skills. A package must pass its own `toolbox test` and reach meta bronze before it can be published |
+| **What a package is** (§3) | `seikika-package.yaml` (name, version, Seikika compatibility, typed `parameters`, `exports`) plus fragments, fixtures, tests, rubrics and skills. A package must pass its own `seikika test` and reach meta bronze before it can be published |
 | **Where it lives** (§4) | **Recommended: option R1+, git-first with an OCI mirror.** No registry of our own, no Node requirement for YAML users, private packages use existing repository permissions. Provenance comes from GitHub immutable releases and artifact attestations |
-| **The monolith** (§5) | Split T4T now with the existing `include` (no new technology), by concern and owner. Then remove its duplication with parameterised packages, not a TypeScript program. The TS builder stays for teams that want it and compiles to the same data |
+| **The monolith** (§5) | Split S4S now with the existing `include` (no new technology), by concern and owner. Then remove its duplication with parameterised packages, not a TypeScript program. The TS builder stays for teams that want it and compiles to the same data |
 | **Our public packages** (§6) | A `Package` kind and an `oss-package` scorecard anchored in OpenSSF Scorecard, the OSPS Baseline, SLSA and each ecosystem's norms. Licence (Q1) blocks bronze for everything we publish |
-| **Unique or shareable** (§7) | Deterministic signals (repo-specific literals, kinds only we have, duplication across portals) plus a `shareability` rubric. Candidates graduate T4T → `packages/` in this repo → published, and T4T consumes its own packages |
+| **Unique or shareable** (§7) | Deterministic signals (repo-specific literals, kinds only we have, duplication across portals) plus a `shareability` rubric. Candidates graduate S4S → `packages/` in this repo → published, and S4S consumes its own packages |
 | **Fleet scale** (§8) | Deterministic CI does the gating (`actions/report` with a pinned baseline package). gh-aw adds the agentic part: agents raise ratchets and write assessments, installed from a central repo with `gh aw add …@v1` |
 
 **What needs deciding:**
 1. Adopt R1+ (§4.4), which resolves Q15.
-2. Split T4T with `include` (§5).
+2. Split S4S with `include` (§5).
 3. Package format v0, including how parameters work (§3.3).
 4. ~~The project licence (Q1).~~ Decided: MIT (D88). Items 1 and 3 are decided too (D89); item 2 is next.
 
@@ -78,7 +78,7 @@ marked).
 - **Not available:** GitHub's *immutable actions* published to GHCR, which are still unreleased per
   `actions/publish-immutable-action`.
 
-## 3. What a Toolbox package looks like
+## 3. What a Seikika package looks like
 
 ### 3.1 Three shapes considered
 
@@ -95,7 +95,7 @@ validation rules (monotonic tightening), not as a language.
 ### 3.2 Layout
 
 ```
-toolbox-package.yaml        # identity, compatibility, parameters, exports, dependencies
+seikika-package.yaml        # identity, compatibility, parameters, exports, dependencies
 fragments/*.yaml            # kinds, fields, scorecards, rubrics, connector configs (manifest schema)
 fixtures/*.ndjson           # records that exercise every exported rule both ways
 tests/*.test.yaml           # the package's own expectations (meta-rule `tested` holds inside the package)
@@ -105,11 +105,11 @@ README.md  CHANGELOG.md  LICENSE
 ```
 
 ```yaml
-# toolbox-package.yaml
-apiVersion: toolbox.dev/package/v0
-name: github.com/acme/toolbox-standards/ci   # identity = git path (+ subdirectory)
+# seikika-package.yaml
+apiVersion: seikika.com/package/v0
+name: github.com/acme/seikika-standards/ci   # identity = git path (+ subdirectory)
 version: 1.4.0                               # package semver (may lag the git tag consumers pin)
-toolbox: ">=0.2 <0.4"                         # compatible Toolbox versions
+seikika: ">=0.2 <0.4"                         # compatible Seikika versions
 description: CI security and reliability standards built on zizmor and actionlint.
 parameters:
   failRateBronze: {type: integer, default: 20, description: "Max % failed runs on main for bronze."}
@@ -121,30 +121,30 @@ exports:
 requires:                                     # kinds and connector records it reads, not defines
   records: [workspace/workflow, github-actions/workflow-runs]
 dependencies:
-  - github.com/acme/toolbox-standards/core@^2
+  - github.com/acme/seikika-standards/core@^2
 ```
 
 **Version vs git tag.** Ideal design keeps `version:` equal to the release tag (Pkl-style). In
-practice the package YAML `version:` and the Toolbox **git tag that first contains the package
+practice the package YAML `version:` and the Seikika **git tag that first contains the package
 directory** can differ (e.g. `version: 0.1.0` while consumers must pin `@0.1.1` / tag `v0.1.1`).
-`toolbox install` resolves `@<ver>` to `git clone --branch v<ver>`. **Consumer pins follow the git
-tag that contains the package**, not only `toolbox-package.yaml` `version:`. Document both in the
+`seikika install` resolves `@<ver>` to `git clone --branch v<ver>`. **Consumer pins follow the git
+tag that contains the package**, not only `seikika-package.yaml` `version:`. Document both in the
 package README (see [package-author-sdlc.md](./package-author-sdlc.md) §6.5).
 
 The consumer side extends D54's `include`:
 ```yaml
 include:
-  - package: github.com/acme/toolbox-standards/ci@^1
+  - package: github.com/acme/seikika-standards/ci@^1
     with: {failRateBronze: 15, stage: mandatory}   # parameters may only tighten (validated)
 ```
-`toolbox.lock` (committed) records, per package:
+`seikika.lock` (committed) records, per package:
 - the resolved version and the commit SHA;
 - the **SHA-256 of the canonical package archive**;
 - the source it was fetched from.
 
 ### 3.3 Parameters, not templates
 
-The duplication in T4T is parameter-shaped: four `review-*` scorecards and four sets of
+The duplication in S4S is parameter-shaped: four `review-*` scorecards and four sets of
 `reviewState`/`reviewFailing`/`reviewUnsure` fields differ only in a kind, a relation and a rubric.
 Three ways to remove it:
 
@@ -158,7 +158,7 @@ Three ways to remove it:
 builder.
 
 **Rule for parameters:** a parameter declares its direction (`tighten: lower`, as for
-`failRateBronze`). `toolbox validate` rejects a `with:` value that weakens the package's default
+`failRateBronze`). `seikika validate` rejects a `with:` value that weakens the package's default
 when the package is included as `mandatory`. This is federation's monotonic tightening, applied at
 the parameter rather than the rule.
 
@@ -167,7 +167,7 @@ Booleans work too (`requireHoisted` in `packages/pnpm-expo`); use `${param:requi
 Enums and strings are also valid.
 
 **CEL in scorecard `evidence:` / `check:`.** There is no `join()`. Build strings with `.map(...)`
-(and `+` / list concat). `toolbox validate` rejects undeclared functions early; copying JS-ish
+(and `+` / list concat). `seikika validate` rejects undeclared functions early; copying JS-ish
 `join` fails as `cel.function` if you skip validate. Authoring checklist:
 [package-author-sdlc.md](./package-author-sdlc.md) §6.4.
 
@@ -180,7 +180,7 @@ From federation §3, Q15 and charter goals G1–G3:
 - provenance;
 - private hosting inside enterprises;
 - air-gapped use;
-- fetchable by the `toolbox` binary with no extra toolchain;
+- fetchable by the `seikika` binary with no extra toolchain;
 - update bots (Dependabot, Renovate) can propose upgrades;
 - no registry of our own;
 - discovery.
@@ -189,7 +189,7 @@ From federation §3, Q15 and charter goals G1–G3:
 
 | Option | Pin and integrity | Provenance | Private and air-gapped | Toolchain | Update bots | Discovery | Verdict |
 |---|---|---|---|---|---|---|---|
-| **R1. Git refs** (tag → commit → archive) | commit SHA plus our archive hash in `toolbox.lock` | immutable releases (GA) plus `gh attestation verify` on the release asset | repository permissions; mirror the repository | `git` or HTTPS only | Renovate (regex or custom manager on `toolbox.lock`); a built-in `toolbox update` (as `gh aw update`) | GitHub search, topics | Matches every fleet tool in §2 |
+| **R1. Git refs** (tag → commit → archive) | commit SHA plus our archive hash in `seikika.lock` | immutable releases (GA) plus `gh attestation verify` on the release asset | repository permissions; mirror the repository | `git` or HTTPS only | Renovate (regex or custom manager on `seikika.lock`); a built-in `seikika update` (as `gh aw update`) | GitHub search, topics | Matches every fleet tool in §2 |
 | **R2. OCI artifacts** (ORAS media type on GHCR, Artifactory, Harbor, ECR, ACR) | digest, native | Sigstore or GitHub attestations stored as OCI referrers | enterprise registries exist; air-gap by registry mirroring; can be baked into the one image (G1) | the binary needs an OCI client (e.g. the `oci-client` crate), not the `oras` CLI | Renovate's docker datasource; Dependabot doesn't bump OCI refs in custom files | Artifact Hub | Best for air-gapped sites and the server image; weaker for repo portals |
 | **R3. npm** | lockfile integrity | trusted publishing plus provenance (GA) | private npm registries | Node for every consumer, against D53's "Node only for the builder" | native in both bots | npmjs.com | Fits only TS-builder users; Renovate's npm-preset deprecation is a signal against it |
 | **R4. APM as the carrier** | per-file SHA-256 lock | none | git or Artifactory | the `apm` CLI | Dependabot (`apm.yml`) | APM | Carries skills and prompts well; fragments aren't an APM primitive and its install model writes into agent harness folders. Use it for the *agent part* only |
@@ -205,18 +205,18 @@ From federation §3, Q15 and charter goals G1–G3:
 
 ### 4.4 Recommendation: R1+, git-first with an OCI mirror on the same digest
 
-1. **Identity is git** (`github.com/acme/toolbox-standards/ci`), **versions are tags** (immutable
+1. **Identity is git** (`github.com/acme/seikika-standards/ci`), **versions are tags** (immutable
    releases required for `mandatory` packages), and the canonical artifact is a **deterministic
    archive** attached to the release.
-2. **`toolbox.lock` pins the archive's SHA-256.** The same archive can be pushed as an OCI artifact
-   (`application/vnd.toolbox.package.v0+tar`). A mirror setting
-   (`TOOLBOX_PACKAGE_MIRROR=oci://registry.internal/toolbox`) makes the resolver fetch by digest from
+2. **`seikika.lock` pins the archive's SHA-256.** The same archive can be pushed as an OCI artifact
+   (`application/vnd.seikika.package.v0+tar`). A mirror setting
+   (`SEIKIKA_PACKAGE_MIRROR=oci://registry.internal/seikika`) makes the resolver fetch by digest from
    OCI instead of git, which covers enterprise and air-gapped use. The digest check makes the mirror
    untrusted, as Go's proxy is.
 3. **Provenance:** packages are built and released by a reusable workflow with `actions/attest`.
-   `toolbox` verifies attestations when a package is `mandatory` (SLSA Build L2; L3 with a
+   `seikika` verifies attestations when a package is `mandatory` (SLSA Build L2; L3 with a
    hardened reusable workflow).
-4. **`toolbox build` (D53) vendors resolved packages into the canonical manifest,** so the server
+4. **`seikika build` (D53) vendors resolved packages into the canonical manifest,** so the server
    image never fetches at runtime.
 5. **Agent pieces:** a package's `skills/` are plain Agent Skills, so `apm install` and plugin
    marketplaces can carry them too. We add an `apm.yml` only if adopters ask.
@@ -230,27 +230,27 @@ From federation §3, Q15 and charter goals G1–G3:
 
 **Cons and risks:**
 - We write a small resolver: git fetch, OCI fetch, lockfile, semver range.
-- Dependabot needs Renovate or our own `toolbox update` until GitHub supports the format.
+- Dependabot needs Renovate or our own `seikika update` until GitHub supports the format.
 - There is no transparency log like Go's sumdb. Attestations and immutable releases are the
   substitute.
 - Moving tags (`@v1`) are convenient but mutable. `mandatory` includes therefore require exact
   versions in the lockfile.
 
-## 5. The T4T monolith
+## 5. The S4S monolith
 
-T4T's `portal/toolbox.yaml` is 1,841 lines: 5 connectors, 21 kinds, 26 scorecards with 143 rules, and
+S4S's `portal/seikika.yaml` is 1,841 lines: 5 connectors, 21 kinds, 26 scorecards with 143 rules, and
 4 rubrics. Scorecards are 965 lines and kinds 665.
 
 | Option | For | Against |
 |---|---|---|
-| Keep one file | One place to search | Every T4T change conflicts in one file (seven changes, D72–D78, landed in it in one morning); CODEOWNERS can't split ownership; fragments can't become packages |
+| Keep one file | One place to search | Every S4S change conflicts in one file (seven changes, D72–D78, landed in it in one morning); CODEOWNERS can't split ownership; fragments can't become packages |
 | **Split with `include` (D54, built)** | No new technology; per-file CODEOWNERS; each file becomes a candidate package (§7) | Duplication remains |
-| TS builder (Pulumi-style) | Functions remove duplication | Node in this repo's CI; T4T's value is being the canonical *data* example operators copy; the builder is still a prototype |
+| TS builder (Pulumi-style) | Functions remove duplication | Node in this repo's CI; S4S's value is being the canonical *data* example operators copy; the builder is still a prototype |
 
 **Recommended:** split now, along the lines packages will follow:
 
 ```
-portal/toolbox.yaml                     # portal, policies, mcp, include list
+portal/seikika.yaml                     # portal, policies, mcp, include list
 portal/connectors.yaml
 portal/standards/maintainer/{crates,docs,ci,skills,connectors,deps,agent-docs,packages,schemas,examples}.yaml
 portal/standards/operator/cli.yaml
@@ -266,28 +266,28 @@ scorecards and their computed fields are the first candidate.
   scorecards and its rubrics together: for example `cli.yaml` holds `Command`, `operator-cli` and
   `user-cli`. A topic often spans layers, and a reviewer reads a kind next to the standards that
   score it.
-- **Connectors stay in `toolbox.yaml`.** The workspace connector has one source per topic, but
+- **Connectors stay in `seikika.yaml`.** The workspace connector has one source per topic, but
   arrays concatenate, so a connector can't be split across files.
 
-Before the split, `validate` labelled every problem `toolbox.yaml` with the merged document's
+Before the split, `validate` labelled every problem `seikika.yaml` with the merged document's
 pointer. Now problems name the included file and the pointer inside it.
 
 `portal/results.json` is the busier file: 22 of 50 recent commits touched it along with
-`toolbox.yaml`. It is not split. Its keys are sorted, so a new scorecard or entity is inserted, not
+`seikika.yaml`. It is not split. Its keys are sorted, so a new scorecard or entity is inserted, not
 appended, and splitting it by scorecard wouldn't change which hunks touch. Its conflicts come from
 one entity changing on both sides, which needs regenerating anyway. It is treated like a lockfile:
 on a conflict, take upstream's copy and rerun `--update`.
 
 ## 6. Cataloguing what we publish
 
-What Toolbox publishes, or will publish:
+What Seikika publishes, or will publish:
 - crates;
 - the `actions/report` action;
-- the `plugins/toolbox-operator` agent plugin;
-- `@toolbox/manifest`;
+- the `plugins/seikika-operator` agent plugin;
+- `@seikika/manifest`;
 - JSON Schemas;
 - container images;
-- Toolbox packages.
+- Seikika packages.
 
 Proposed: a `Package` kind (record per published unit: ecosystem, name, path, release and publish
 facts), and an **`oss-package`** scorecard. Its anchors are OpenSSF Scorecard's checks (18 checks;
@@ -309,7 +309,7 @@ Ecosystem rules sit under `appliesTo`:
 | Crates | `rust-version` (MSRV) declared; `cargo publish --dry-run` in CI; `cargo-semver-checks`; docs.rs builds; no workspace-only paths in `include` |
 | GitHub Actions | `action.yml` metadata complete (`description`, `branding`, every input described); a major-version tag; immutable releases; its own `uses:` pinned by SHA (already scored by `maintainer-ci-security`) |
 | Agent plugins | `plugin.json` validates against Agent Plugins 1.0.0; skills pass `skills-ref`; no hidden Unicode (APM's check); listed in a marketplace |
-| Toolbox packages | `toolbox test` passes on the package; every exported rule at meta bronze; parameters documented; `toolbox` compatibility range; the archive is deterministic |
+| Seikika packages | `seikika test` passes on the package; every exported rule at meta bronze; parameters documented; `seikika` compatibility range; the archive is deterministic |
 
 **Source:** the workspace connector already reads `Cargo.toml`, `package.json`, `action.yml`, plugin
 and schema files. Release facts (tags, attestations, immutable releases) come from the GitHub
@@ -319,9 +319,9 @@ connector. One new `package` record kind joins them.
 
 | Signal | How | What it says |
 |---|---|---|
-| Repo-specific literals in CEL | The CEL analysis already lists string literals; flag paths, org and repository names | Only **5 of T4T's 143 rules** mention anything specific to this repo: specificity lives in connector config and kind mappings, not in the standards |
+| Repo-specific literals in CEL | The CEL analysis already lists string literals; flag paths, org and repository names | Only **5 of S4S's 143 rules** mention anything specific to this repo: specificity lives in connector config and kind mappings, not in the standards |
 | Kinds only we have | A rule reads fields of kinds no builtin connector produces | Coupled to our model; package the kind with it or keep it local |
-| Duplication across portals | The same rule shape in T4T, the starter and the reference portal (`describe portal` content hashes) | Two portals → a package candidate |
+| Duplication across portals | The same rule shape in S4S, the starter and the reference portal (`describe portal` content hashes) | Two portals → a package candidate |
 | Thresholds | Literal numbers in checks | Parameter candidates |
 | Prior art | The rubric asks for an external standard (OpenSSF, OSPS, Betterer) | Anchored standards travel better |
 
@@ -332,9 +332,9 @@ A `shareability` rubric would join the `review-*` mechanism (D79):
 - Does it read only builtin-connector records?
 
 Graduation:
-1. A rule starts in T4T.
+1. A rule starts in S4S.
 2. It moves to `packages/<name>/` in this repository.
-3. T4T `include`s its own package (dogfood).
+3. S4S `include`s its own package (dogfood).
 4. It is published by tag with attestations.
 5. Others include it.
 
@@ -349,16 +349,16 @@ Likely first packages:
 
 Gating stays deterministic; agents do the improving.
 
-1. **Baseline.** A company publishes `github.com/acme/toolbox-standards@v3` (R1+). Each repository
-   carries a small `.toolbox/toolbox.yaml` that `include`s it, plus `.toolbox/results.json`, as the
+1. **Baseline.** A company publishes `github.com/acme/seikika-standards@v3` (R1+). Each repository
+   carries a small `.seikika/seikika.yaml` that `include`s it, plus `.seikika/results.json`, as the
    starter (D69) does today.
 2. **Gate.** `actions/report` (plain Actions, deterministic) runs the ratchet on every PR. Rollout
    across repositories is a PR per repository: org rulesets or required workflows, or a gh-aw
    CentralRepoOps workflow that opens them.
 3. **Improve.** An agentic workflow installed from a central repository
-   (`gh aw add acme/toolbox-fleet/raise-the-bar@v1`):
+   (`gh aw add acme/seikika-fleet/raise-the-bar@v1`):
    - reads the report's failing rules and evidence;
-   - fixes one rule and runs `toolbox report --update`;
+   - fixes one rule and runs `seikika report --update`;
    - opens a PR;
    - writes assessments (D79) for the rubric-based cards.
 
@@ -379,7 +379,7 @@ Gating stays deterministic; agents do the improving.
 |---|---|
 | PQ1 | Package names: full git paths (Go-style, unambiguous) or short aliases resolved through a git *index* repository (as the Bazel Central Registry does)? |
 | PQ2 | Namespacing on import (`ci/Workflow`) versus federation FQ2 (extending a parent's kinds) |
-| PQ3 | Should `toolbox` verify attestations itself or shell out to `gh attestation verify`? Offline verification needs bundles shipped with the archive |
+| PQ3 | Should `seikika` verify attestations itself or shell out to `gh attestation verify`? Offline verification needs bundles shipped with the archive |
 | PQ4 | Do we publish an `apm.yml` for packages' skills? Only if adopters use APM |
 | PQ5 | The licence (Q1): nothing in §6 reaches bronze, and no package can be published, until it is decided |
 

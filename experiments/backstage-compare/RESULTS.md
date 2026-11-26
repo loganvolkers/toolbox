@@ -1,7 +1,7 @@
-# Results: Toolbox against Backstage, beyond DX
+# Results: Seikika against Backstage, beyond DX
 
 *Round 3 ran 2026-11-23 on the harness frozen at `e66526c`, with the scorecards frozen at `581be50`,
-and measured Toolbox at `581be50`. Rounds 1 and 2 ran on the harness frozen at `dfeeea4`. The
+and measured Seikika at `581be50`. Rounds 1 and 2 ran on the harness frozen at `dfeeea4`. The
 adjudication of rounds 1 and 2 is [ADJUDICATION.md](./ADJUDICATION.md); round 3 answers it. Raw
 results for every round are in [results/](./results); the product records the scorecards read are
 [portal/comparisons/](../../portal/comparisons). The adjudication of round 3 is
@@ -10,10 +10,10 @@ rule, credential isolation, which this write-up and the records now score as it 
 
 ## Verdict
 
-**After round 3, Toolbox is ahead of Backstage on seven of the eight pre-registered factors and
+**After round 3, Seikika is ahead of Backstage on seven of the eight pre-registered factors and
 behind on one, capabilities.** Extensibility, which the README counts inside capabilities, is
-scored as a ninth scorecard (a deviation, below); Toolbox is ahead on it. This is the Compare view
-of the Toolbox for Toolbox report:
+scored as a ninth scorecard (a deviation, below); Seikika is ahead on it. This is the Compare view
+of the Seikika for Seikika report:
 
 | Factor (scorecard) | Standing | Rules ahead / parity / behind |
 |---|---|---|
@@ -27,14 +27,14 @@ of the Toolbox for Toolbox report:
 | Extensibility (`vs-backstage-extensibility`) | **ahead** | 2 / 0 / 0 |
 | Capabilities (`vs-backstage-capabilities`) | **behind** | 0 / 6 / 7 |
 
-The capabilities Toolbox lacks are docs search, docs, templates, API docs, Kubernetes,
+The capabilities Seikika lacks are docs search, docs, templates, API docs, Kubernetes,
 notifications and community (4 contributors against 2,826). Templates are self-service actions,
-which are paused (D64). Toolbox's own bars fail in five places: five known vulnerabilities, no
+which are paused (D64). Seikika's own bars fail in five places: five known vulnerabilities, no
 federation, listening on every interface in its image, a connector that can read OpenFGA's
 credentials (below), and the capabilities above. Each is published as a loss, not waived.
 Security stays ahead on owner-only fields and process isolation.
 
-**What changed since round 2.** Three corrections from the adjudication, each against Toolbox,
+**What changed since round 2.** Three corrections from the adjudication, each against Seikika,
 and one harness defect that flattered Backstage:
 
 - **Backstage's lists were empty in rounds 1 and 2.** Its filter named the owner as
@@ -44,7 +44,7 @@ and one harness defect that flattered Backstage:
   req/s: round 1's loss on lists stands at about 2.4× rather than 6×, and round 2's margin was
   understated. The 2.4× is a cross-round estimate; the adjudicator reran Backstage under round 1's
   conditions with the filter fixed and got 432 to 482 req/s (two runs, ADJUDICATION.md R3.6).
-- **Loopback is judged on the image.** The image sets `PORT=8080`, so Toolbox listens on every
+- **Loopback is judged on the image.** The image sets `PORT=8080`, so Seikika listens on every
   interface, like Backstage. The rule is now *parity*, both failing, not *ahead*.
 - **Scorecards count add-ons.** Backstage's Tech Insights community plugin counts, as the brief
   says, so the scorecards rule is *parity*, not *ahead*.
@@ -54,26 +54,26 @@ and one harness defect that flattered Backstage:
   restriction names no permissions, so a read-only token gets 403 on MCP. A token scoped to
   plugins works, but it can still delete an entity (204, ADJUDICATION.md R3.5): an agent token
   that can use MCP cannot be made read-only. The rule is scored on the read-only REST token, which
-  favours Backstage; Toolbox uses one token for both, and it cannot delete. With a plugin-scoped
-  token, Backstage's tool list is 14,744 bytes rather than 20,500; Toolbox is ahead either way.
+  favours Backstage; Seikika uses one token for both, and it cannot delete. With a plugin-scoped
+  token, Backstage's tool list is 14,744 bytes rather than 20,500; Seikika is ahead either way.
 
 Credential isolation was *ahead* in rounds 1 and 2 on evidence the adjudicator found too thin. Two
-Toolbox changes made before the round 3 freeze close the two leaks it named (below), but the round 3
+Seikika changes made before the round 3 freeze close the two leaks it named (below), but the round 3
 adjudication found a third: a same-user connector reads OpenFGA's memory. **The rule is a fail, so
 security is 2 / 6 / 0, not the 3 / 5 / 0 this round's records first said.**
 
 ## Performance and memory
 
 Medians of 5 runs per arm, arms alternating, oha 1.10.0 at 16 connections for 10 s per read, on
-one 4-vCPU VM. Toolbox authorizes every read through OpenFGA, checking each decision once per
+one 4-vCPU VM. Seikika authorizes every read through OpenFGA, checking each decision once per
 snapshot and then serving it from a cache; Backstage runs its template's `allow-all` policy. Round 3
 spreads reads over 1,000 ids and all 50 owners; rounds 1 and 2 read one id and one owner each. So
-round 3's Toolbox reads are mostly cache hits: the adjudicator's probe over all 10,000 ids gave
+round 3's Seikika reads are mostly cache hits: the adjudicator's probe over all 10,000 ids gave
 about 36,000 to 37,000 gets per second, against 56,500 here and Backstage's 4,150.
 
-### Round 3: Toolbox at `581be50`
+### Round 3: Seikika at `581be50`
 
-| Fact | Size | Toolbox min / median / max (n) | Backstage min / median / max (n) |
+| Fact | Size | Seikika min / median / max (n) | Backstage min / median / max (n) |
 |---|---|---|---|
 | `readyS` | 1000 | 0.9 / 0.92 / 0.93 (5) | 3.24 / 3.3 / 3.33 (5) |
 | `catalogReadableS` | 1000 | 1.53 / 1.54 / 1.55 (5) | 6.27 / 6.43 / 6.48 (5) |
@@ -95,20 +95,20 @@ about 36,000 to 37,000 gets per second, against 56,500 here and Backstage's 4,15
 | `listRps` | 10000 | 3718.6 / 3789.8 / 3883.8 (5) | 116.9 / 473.6 / 482.4 (5) |
 
 Every run of both arms passed the equivalence gate, with one digest per corpus size. One Backstage
-run at 10k listed at 117 req/s with a 306 ms p95; the median is unaffected. Toolbox's medians moved
+run at 10k listed at 117 req/s with a 306 ms p95; the median is unaffected. Seikika's medians moved
 by no more than run-to-run spread from round 2, apart from the 10k get (58.6k to 56.5k req/s),
 which now reads 1,000 ids instead of one.
 
 **Rounds 1 and 2 below measured Backstage's lists on empty responses** (the filter defect above).
 Their Backstage `listP95Ms` and `listRps` rows are not comparable with round 3. Round 1's list loss
-stands, at a smaller margin: Toolbox's 198 req/s at 10k is behind the 474 req/s Backstage reaches
+stands, at a smaller margin: Seikika's 198 req/s at 10k is behind the 474 req/s Backstage reaches
 with real items, about 2.4× rather than 6×. That figure sets one round against another; the
 adjudicator confirmed it by rerunning Backstage under round 1's conditions with the filter fixed
-(432 to 482 req/s over two runs, R3.6). The fix in `916f596` took Toolbox's 10k list to 3,900 req/s.
+(432 to 482 req/s over two runs, R3.6). The fix in `916f596` took Seikika's 10k list to 3,900 req/s.
 
-### Round 1: Toolbox at `5ef6263` (Backstage lists empty)
+### Round 1: Seikika at `5ef6263` (Backstage lists empty)
 
-| Fact | Size | Toolbox min / median / max (n) | Backstage min / median / max (n) |
+| Fact | Size | Seikika min / median / max (n) | Backstage min / median / max (n) |
 |---|---|---|---|
 | `readyS` | 1000 | 0.99 / 1.0 / 1.02 (5) | 3.51 / 3.61 / 3.95 (5) |
 | `catalogReadableS` | 1000 | 1.61 / 1.63 / 1.65 (5) | 6.95 / 7.14 / 8.07 (5) |
@@ -131,21 +131,21 @@ adjudicator confirmed it by rerunning Backstage under round 1's conditions with 
 
 **The loss, as recorded then.** A filtered list of one owner's components at 10k was 6× slower than
 Backstage's, while every other measure was ahead by 3× or more. Backstage's side returned no items,
-so the comparison was not like for like; Toolbox's own 118 ms p95 was still a defect. The cause: the filter `entity.owner == 'group:g3'`
+so the comparison was not like for like; Seikika's own 118 ms p95 was still a defect. The cause: the filter `entity.owner == 'group:g3'`
 was evaluated in CEL against every component, 10,000 evaluations per page, where Backstage's
 catalog answers the same query from an indexed table.
 
-**The fix** (`916f596`, in `crates/toolbox-expr` and `crates/toolbox-api`). A filter's top-level
+**The fix** (`916f596`, in `crates/seikika-expr` and `crates/seikika-api`). A filter's top-level
 `entity.<field> == '<string>'` conjuncts now pick candidates from an index of that declared field's
 values. The index is built once per snapshot, the first time a list filters on that field. The
 full filter still runs on every candidate. A redacted field is an object, never a string, so a
 filter still cannot probe a hidden facet (`a_filter_cannot_probe_a_hidden_facet` passes
-unchanged). The uses outside the benchmark are the MCP `query` tool, `toolbox query` and the UI
+unchanged). The uses outside the benchmark are the MCP `query` tool, `seikika query` and the UI
 catalog filter, which filter on an owner or a team. It touches no harness file.
 
-### Round 2: Toolbox at `916f596` (Backstage lists empty)
+### Round 2: Seikika at `916f596` (Backstage lists empty)
 
-| Fact | Size | Toolbox min / median / max (n) | Backstage min / median / max (n) |
+| Fact | Size | Seikika min / median / max (n) | Backstage min / median / max (n) |
 |---|---|---|---|
 | `readyS` | 1000 | 0.81 / 0.97 / 1.0 (5) | 3.45 / 3.5 / 3.66 (5) |
 | `catalogReadableS` | 1000 | 1.44 / 1.6 / 1.63 (5) | 6.71 / 7.04 / 7.17 (5) |
@@ -166,7 +166,7 @@ catalog filter, which filter on an owner or a team. It touches no harness file.
 | `listP95Ms` | 10000 | 5.89 / 6.01 / 6.55 (5) | 17.27 / 17.68 / 18.94 (5) |
 | `listRps` | 10000 | 3487.6 / 3899.5 / 3960.3 (5) | 1251.4 / 1279.0 / 1332.5 (5) |
 
-At 10k, Toolbox's filtered lists went from 198 to 3,900 req/s, and p95 from 118 to 6.0 ms. The 1k list went from 2,003 to 24,800 req/s. No other median
+At 10k, Seikika's filtered lists went from 198 to 3,900 req/s, and p95 from 118 to 6.0 ms. The 1k list went from 2,003 to 24,800 req/s. No other median
 moved by more than run-to-run spread.
 
 ## Static facts and single-run probes
@@ -174,7 +174,7 @@ moved by more than run-to-run spread.
 These do not vary between runs, so they were run once per round. Round 3's values, with what
 changed from rounds 1 and 2:
 
-| Fact | Toolbox | Backstage | Source |
+| Fact | Seikika | Backstage | Source |
 |---|---|---|---|
 | Unauthenticated catalog read | 401 | 401 | surface.py |
 | Forged identity header | 401 | 401 (guest sign-in 403) | surface.py |
@@ -191,7 +191,7 @@ changed from rounds 1 and 2:
 | Adopter lines changed per release | 0 (v0.1.0..HEAD) | 47.3 (v1.51.0..v1.57.1) | upgrade.py |
 | Manual rollback steps per release | 0 (from v0.1.1) | 1.5 (9 Knex migrations over 6 releases) | upgrade.py |
 
-Toolbox's five known vulnerabilities:
+Seikika's five known vulnerabilities:
 
 - RUSTSEC-2026-0543 and RUSTSEC-2026-0555: `chrono` and `chrono-tz` are unmaintained, through
   `cel`'s default `chrono` feature. Neither is a code vulnerability. Removing them drops CEL's
@@ -207,19 +207,19 @@ have none.
 The facts in [facts.yaml](./facts.yaml) (loopback, owner-only fields, extension isolation, offline
 validate, change preview, repo scope, federation, extension language and rebuild, the twelve
 capability scenarios, contributors) each carry their evidence. Round 3 judges each product as it
-ships to production: Toolbox's image, Backstage's create-app Dockerfile configuration. One fact is
+ships to production: Seikika's image, Backstage's create-app Dockerfile configuration. One fact is
 scored in Backstage's favour: a permission rule counts as a capability although its policy is
-TypeScript code, not configuration. Three were scored in Toolbox's favour in rounds 1 and 2
+TypeScript code, not configuration. Three were scored in Seikika's favour in rounds 1 and 2
 (loopback, credential isolation, scorecards); all three are now corrected, credential isolation
 after the round 3 adjudication.
 
 ### Credential isolation, round 3
 
-Two Toolbox changes made before the round 3 freeze, each for any deployment that runs connectors
+Two Seikika changes made before the round 3 freeze, each for any deployment that runs connectors
 beside the server (`71d8655`, `26b77f3`):
 
 - The server makes itself non-dumpable at start, so a process of the same user can no longer read
-  `/proc/<pid>/environ` or its memory (`crates/toolbox-cli/tests/serve.rs`; the previous binary
+  `/proc/<pid>/environ` or its memory (`crates/seikika-cli/tests/serve.rs`; the previous binary
   leaked a probe variable to the same test).
 - OpenFGA starts with a cleared environment plus an allowlist. Its datastore URI is no longer on its
   command line, which every local user can read; it is in a `0600` file in a `0700` directory,
@@ -227,7 +227,7 @@ beside the server (`71d8655`, `26b77f3`):
   that finds OpenFGA's port gets 401 (`openfga_gets_no_server_credentials`).
 
 **What still leaks (ADJUDICATION.md R3.3).** An in-image connector runs as the same user as
-OpenFGA, and Toolbox cannot make OpenFGA non-dumpable. The measurement VM has no Yama, so nothing
+OpenFGA, and Seikika cannot make OpenFGA non-dumpable. The measurement VM has no Yama, so nothing
 stops a same-user process from reading another's memory. The adjudicator read `/proc/<openfga>/mem`
 and found the datastore password and the per-start key in OpenFGA's config text, and OpenFGA
 accepted the key (200). Hosts with Yama default to `ptrace_scope=1`, which blocks this, but the image
@@ -238,7 +238,7 @@ Two more exposures:
 
 - **`--database-url` on the command line.** `/proc/<pid>/cmdline` is readable by every local user,
   whatever the UID, and non-dumpable does not cover it. The harness passes the URL this way
-  (`measure.py`), and `toolbox serve --database-url` is documented. The image passes it in the
+  (`measure.py`), and `seikika serve --database-url` is documented. The image passes it in the
   environment, so it is unaffected.
 - **Files.** A connector can write any file the server's user can; whether `/portal` is writable in
   the image is unverified.
@@ -249,8 +249,8 @@ must lose access to its siblings' memory (its own UID, or a Landlock domain or P
 the canary must be rerun on the image.
 
 **After round 3, not scored.** Each in-image connector now starts in its own Landlock domain
-(`crates/toolbox-api/src/confine.rs`, for every deployment with in-image connectors), and `serve`
-warns when the database URL is on its command line. A canary connector under `toolbox serve` on the
+(`crates/seikika-api/src/confine.rs`, for every deployment with in-image connectors), and `serve`
+warns when the database URL is on its command line. A canary connector under `seikika serve` on the
 measurement VM, which has no Yama, opened OpenFGA's `/proc/<pid>/mem` and `environ` before the
 change, and is denied both after it; `a_confined_connector_cannot_read_a_sibling` tests the same,
 and CI requires Landlock for it. This ran on the binary, not the image, and the fact stays `false`
@@ -279,7 +279,7 @@ until a round reruns the canary on the image.
   allows these when a change names a use outside the harness and touches no harness file (P5).
 - **`facts.yaml` changed after round 3**, to score `extensionCredentialIsolated` as the round 3
   adjudication found it (`false`). The records were regenerated from the same raw results with
-  `snapshot.py`; no other fact changed. The change goes against Toolbox.
+  `snapshot.py`; no other fact changed. The change goes against Seikika.
 - **Round 3 changed the harness after seeing results**: the equivalence gate, spread reads, the list
   filter, the production config, equal log levels, the read-only token, wider supply chain and
   upgrade window. Each answers a finding of the adjudication; each moves a measure toward Backstage
@@ -293,5 +293,5 @@ until a round reruns the canary on the image.
   the first ingest.
 - F11: the reference extension's lines of code.
 - F13: calls and bytes to answer the 20 scripted questions.
-- F12 federation: neither product federates; Toolbox's is designed, not built (D68).
+- F12 federation: neither product federates; Seikika's is designed, not built (D68).
 - Multi-replica behaviour: one VM, one replica each.

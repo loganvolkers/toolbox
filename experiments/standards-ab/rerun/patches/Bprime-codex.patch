@@ -4,7 +4,7 @@ index 0000000..f45037a
 --- /dev/null
 +++ b/.github/workflows/rust-module-size.yml
 @@ -0,0 +1,52 @@
-+# Ratchet for the "small Rust modules" standard (AGENTS.md). See .toolbox/STANDARD.md.
++# Ratchet for the "small Rust modules" standard (AGENTS.md). See .seikika/STANDARD.md.
 +# Fails when a .rs file under codex-rs/ that is already over 700 lines grows, or when a file
 +# crosses 700 lines. Shrinking files pass and are listed so the baseline can be tightened.
 +---
@@ -18,9 +18,9 @@ index 0000000..f45037a
 +  contents: read
 +
 +env:
-+  TOOLBOX_VERSION: "0.1.1"
-+  TOOLBOX_REPO: loganvolkers/toolbox
-+  TOOLBOX_TARGET: x86_64-unknown-linux-gnu
++  SEIKIKA_VERSION: "0.1.1"
++  SEIKIKA_REPO: seikika/seikika
++  SEIKIKA_TARGET: x86_64-unknown-linux-gnu
 +
 +jobs:
 +  gate:
@@ -33,34 +33,34 @@ index 0000000..f45037a
 +          ref: ${{ github.event.pull_request.head.sha }}
 +          persist-credentials: false
 +
-+      - name: Install toolbox
++      - name: Install seikika
 +        shell: bash
 +        run: |
 +          set -euo pipefail
-+          dir="$RUNNER_TEMP/toolbox-bin"
-+          mkdir -p "$dir" "$RUNNER_TEMP/toolbox-dl"
-+          cd "$RUNNER_TEMP/toolbox-dl"
-+          base="https://github.com/${TOOLBOX_REPO}/releases/download/v${TOOLBOX_VERSION}"
-+          for app in toolbox-cli toolbox-connector-workspace; do
-+            archive="${app}-${TOOLBOX_TARGET}.tar.xz"
++          dir="$RUNNER_TEMP/seikika-bin"
++          mkdir -p "$dir" "$RUNNER_TEMP/seikika-dl"
++          cd "$RUNNER_TEMP/seikika-dl"
++          base="https://github.com/${SEIKIKA_REPO}/releases/download/v${SEIKIKA_VERSION}"
++          for app in seikika-cli seikika-connector-workspace; do
++            archive="${app}-${SEIKIKA_TARGET}.tar.xz"
 +            curl -fsSLO "${base}/${archive}"
 +            curl -fsSLO "${base}/${archive}.sha256"
 +            sha256sum -c "${archive}.sha256"
 +            tar -xJf "${archive}"
-+            cp "${app}-${TOOLBOX_TARGET}"/* "$dir"/
++            cp "${app}-${SEIKIKA_TARGET}"/* "$dir"/
 +          done
 +          echo "$dir" >> "$GITHUB_PATH"
 +
-+      - name: Gate (ratchet against .toolbox/results.json)
++      - name: Gate (ratchet against .seikika/results.json)
 +        shell: bash
 +        run: |
-+          toolbox --version
-+          toolbox report .toolbox --baseline .toolbox/results.json --out /dev/null
-diff --git a/.toolbox/STANDARD.md b/.toolbox/STANDARD.md
++          seikika --version
++          seikika report .seikika --baseline .seikika/results.json --out /dev/null
+diff --git a/.seikika/STANDARD.md b/.seikika/STANDARD.md
 new file mode 100644
 index 0000000..8ab496c
 --- /dev/null
-+++ b/.toolbox/STANDARD.md
++++ b/.seikika/STANDARD.md
 @@ -0,0 +1,121 @@
 +# Standard S2: small Rust modules
 +
@@ -81,14 +81,14 @@ index 0000000..8ab496c
 +| Ratchet | A file already over 700 lines (recorded in the baseline) may not grow. A file at or under 700 (or a new or renamed file) may not cross 700 |
 +| Campaign | `rust-module-size-zero`: progress from the baseline's count of violating files (229 at 700 lines, 2026-11-21) to zero. See [Campaign history](#campaign-history) |
 +
-+It is scored by [Toolbox](https://github.com/loganvolkers/toolbox) (`toolbox` 0.1.1 and its
-+`toolbox-connector-workspace` binary on `PATH`, plus `jq`). Files:
++It is scored by [Seikika](https://github.com/seikika/seikika) (`seikika` 0.1.1 and its
++`seikika-connector-workspace` binary on `PATH`, plus `jq`). Files:
 +
 +| File | What it is |
 +|---|---|
-+| `.toolbox/toolbox.yaml` | The repo portal: includes the `file-size` package with this standard's globs and limit |
-+| `.toolbox/packages/file-size/` | A vendored copy of Toolbox's `file-size` package (so no network is needed) |
-+| `.toolbox/results.json` | The committed baseline (generated; never hand-edit or hand-merge it) |
++| `.seikika/seikika.yaml` | The repo portal: includes the `file-size` package with this standard's globs and limit |
++| `.seikika/packages/file-size/` | A vendored copy of Seikika's `file-size` package (so no network is needed) |
++| `.seikika/results.json` | The committed baseline (generated; never hand-edit or hand-merge it) |
 +| `.github/workflows/rust-module-size.yml` | Runs the Gate on every pull request |
 +
 +## Commands (run from the repository root)
@@ -96,13 +96,13 @@ index 0000000..8ab496c
 +**Report:** every violating file as JSON, largest first.
 +
 +```bash
-+toolbox report .toolbox -o failures | jq '[.[] | select(.scorecard == "rust-module-size") | {file: .fields.path, lines: .fields.lines}] | sort_by(-.lines)'
++seikika report .seikika -o failures | jq '[.[] | select(.scorecard == "rust-module-size") | {file: .fields.path, lines: .fields.lines}] | sort_by(-.lines)'
 +```
 +
 +**Gate:** exits 1 when a violating file grew or a file newly crossed 700 lines, 0 otherwise.
 +
 +```bash
-+toolbox report .toolbox --baseline .toolbox/results.json --out /dev/null
++seikika report .seikika --baseline .seikika/results.json --out /dev/null
 +```
 +
 +It prints one line per change (on stderr):
@@ -113,12 +113,12 @@ index 0000000..8ab496c
 +- `✓ better … within-limit evidence shrank 370 → 369` or `… within-limit now passes`: a file shrank
 +  or dropped to 700 or below (exit 0), followed by `results.json is out of date: run with --update
 +  and commit it`. Tighten the baseline then (below).
-+- `baseline: matches .toolbox/results.json`: nothing changed.
++- `baseline: matches .seikika/results.json`: nothing changed.
 +
 +**Campaign:** progress toward zero violating files.
 +
 +```bash
-+toolbox report .toolbox --baseline .toolbox/results.json -o json 2>/dev/null | jq '.campaigns["rust-module-size-zero"].sinceStart.entitiesShort | {baseline: .from, current: .now, percentDone}'
++seikika report .seikika --baseline .seikika/results.json -o json 2>/dev/null | jq '.campaigns["rust-module-size-zero"].sinceStart.entitiesShort | {baseline: .from, current: .now, percentDone}'
 +```
 +
 +`baseline` is the number of violating files when the campaign started (recorded in
@@ -132,8 +132,8 @@ index 0000000..8ab496c
 +cannot be lost again:
 +
 +```bash
-+toolbox report .toolbox --baseline .toolbox/results.json --update --out /dev/null
-+git add .toolbox/results.json
++seikika report .seikika --baseline .seikika/results.json --update --out /dev/null
++git add .seikika/results.json
 +```
 +
 +`--update` refuses to write when anything regressed. The campaign's starting count is kept across
@@ -142,7 +142,7 @@ index 0000000..8ab496c
 +
 +## Campaign history
 +
-+The campaign's starting point is recorded in `.toolbox/results.json` (`campaigns.rust-module-size-zero`).
++The campaign's starting point is recorded in `.seikika/results.json` (`campaigns.rust-module-size-zero`).
 +
 +| Date | Limit | Start (files over / lines over) | Why |
 +|---|---|---|---|
@@ -158,7 +158,7 @@ index 0000000..8ab496c
 +
 +## Changing the standard
 +
-+All settings are in the `include` of `.toolbox/toolbox.yaml`; commit the manifest and the updated
++All settings are in the `include` of `.seikika/seikika.yaml`; commit the manifest and the updated
 +`results.json` together.
 +
 +- **Exempt a file** (measured, but never a violation): add it to `exempt` with a reason, e.g.
@@ -170,37 +170,37 @@ index 0000000..8ab496c
 +  purpose:
 +
 +  ```bash
-+  toolbox report .toolbox --baseline .toolbox/results.json --update --accept rust-module-size --out /dev/null
++  seikika report .seikika --baseline .seikika/results.json --update --accept rust-module-size --out /dev/null
 +  ```
 +
 +  The files that now fail, and the files already over that grew by the difference, are listed as
 +  `✓ accept`; review them before committing. `--accept` also restarts the campaign from the new
 +  state, counted against the new limit; add a row to [Campaign history](#campaign-history).
 +- **Raise the threshold:** change `limit` and run `--update`. Nothing blocks this (the package marks
-+  `limit` as `tighten: lower`, but `toolbox` 0.1.1 does not enforce it), and the files that drop
++  `limit` as `tighten: lower`, but `seikika` 0.1.1 does not enforce it), and the files that drop
 +  under the new limit count as campaign progress, so treat it as a deliberate decision and say so
 +  in the commit.
 +- **Measure other files:** change `files` (globs relative to the repository root).
 +
-+Check the manifest after any edit with `toolbox validate .toolbox`.
-diff --git a/.toolbox/packages/file-size/README.md b/.toolbox/packages/file-size/README.md
++Check the manifest after any edit with `seikika validate .seikika`.
+diff --git a/.seikika/packages/file-size/README.md b/.seikika/packages/file-size/README.md
 new file mode 100644
 index 0000000..e256240
 --- /dev/null
-+++ b/.toolbox/packages/file-size/README.md
++++ b/.seikika/packages/file-size/README.md
 @@ -0,0 +1,90 @@
-+# file-size: a Toolbox package
++# file-size: a Seikika package
 +
 +**Files over a line limit are violations.** One `include` gives a repository the standard, a
 +ratchet and a campaign:
 +
-+- `toolbox report` lists every file over the limit, with its line count and the fix;
++- `seikika report` lists every file over the limit, with its line count and the fix;
 +- the ratchet fails a pull request that grows a violating file, or brings a new or renamed file
 +  over the limit, and reports the files that shrank;
 +- the campaign `<name>-zero` counts files over the limit, and lines over it, from the day the
 +  baseline first records it.
 +
-+It needs nothing but the `toolbox` binaries: the files are read by `builtin:workspace`, without a
++It needs nothing but the `seikika` binaries: the files are read by `builtin:workspace`, without a
 +build or the network. Include it once per standard, with that standard's files and limit.
 +
 +| Brings | Named |
@@ -212,13 +212,13 @@ index 0000000..e256240
 +
 +## Use it
 +
-+`.toolbox/toolbox.yaml`, for TypeScript components of at most 400 lines, tests excluded:
++`.seikika/seikika.yaml`, for TypeScript components of at most 400 lines, tests excluded:
 +
 +```yaml
-+apiVersion: toolbox.dev/v1alpha1
-+portal: {name: my-repo, owner: group:maintainers, toolbox: "0.1"}
++apiVersion: seikika.com/v1alpha1
++portal: {name: my-repo, owner: group:maintainers, seikika: "0.1"}
 +include:
-+  - package: github:loganvolkers/toolbox/packages/file-size@<tag>   # or a relative path
++  - package: github:seikika/seikika/packages/file-size@<tag>   # or a relative path
 +    with:
 +      name: component-size
 +      kind: Component
@@ -231,10 +231,10 @@ index 0000000..e256240
 +Then, from the repository root:
 +
 +```bash
-+toolbox report .toolbox -o failures                                     # every violation, as JSON
-+toolbox report .toolbox --baseline .toolbox/results.json --update      # record the baseline; commit it
-+toolbox report .toolbox --baseline .toolbox/results.json               # the gate: exit 1 on a regression
-+toolbox report .toolbox --baseline .toolbox/results.json -o json | jq '.campaigns'   # campaign progress
++seikika report .seikika -o failures                                     # every violation, as JSON
++seikika report .seikika --baseline .seikika/results.json --update      # record the baseline; commit it
++seikika report .seikika --baseline .seikika/results.json               # the gate: exit 1 on a regression
++seikika report .seikika --baseline .seikika/results.json -o json | jq '.campaigns'   # campaign progress
 +```
 +
 +In CI, run the gate with `--ci` (it also fails when `results.json` is out of date), or use the
@@ -251,7 +251,7 @@ index 0000000..e256240
 +| `name` | `file-size` | Names the connector, scorecard and campaign |
 +| `kind` | `SizedFile` | The kind (PascalCase). Include the package twice with different `name` and `kind` for two standards |
 +| `title`, `owner`, `fix` | | The scorecard's heading, owner and fix text |
-+| `root` | `.` | The checkout, relative to where `toolbox report` runs |
++| `root` | `.` | The checkout, relative to where `seikika report` runs |
 +
 +## What a pull request sees
 +
@@ -268,7 +268,7 @@ index 0000000..e256240
 +## Changing the standard
 +
 +- **Tighten the limit** (400 → 300): change `limit`, then
-+  `toolbox report .toolbox --baseline .toolbox/results.json --update --accept component-size`. The
++  `seikika report .seikika --baseline .seikika/results.json --update --accept component-size`. The
 +  newly failing files are recorded and listed, regressions in other scorecards still fail, and
 +  the campaign restarts from the new state. Review the list, then commit the manifest and
 +  `results.json` together.
@@ -279,11 +279,11 @@ index 0000000..e256240
 +
 +- [docs/design/ratchets.md](../../docs/design/ratchets.md): the ratchet, measures and campaign starts
 +- [docs/reference/workspace-connector.md](../../docs/reference/workspace-connector.md): `files`, `exclude` and `file` records
-diff --git a/.toolbox/packages/file-size/fragments/file-size.yaml b/.toolbox/packages/file-size/fragments/file-size.yaml
+diff --git a/.seikika/packages/file-size/fragments/file-size.yaml b/.seikika/packages/file-size/fragments/file-size.yaml
 new file mode 100644
 index 0000000..248f68c
 --- /dev/null
-+++ b/.toolbox/packages/file-size/fragments/file-size.yaml
++++ b/.seikika/packages/file-size/fragments/file-size.yaml
 @@ -0,0 +1,60 @@
 +# File size: lines per file against `limit`. One connector, kind, scorecard and campaign, all
 +# named from the parameters, so a portal can include the package more than once.
@@ -345,15 +345,15 @@ index 0000000..248f68c
 +      from the start the baseline records: files over the limit, and lines
 +      over it.
 +    includes: [{scorecard: '${param:name}', rules: [within-limit]}]
-diff --git a/.toolbox/packages/file-size/toolbox-package.yaml b/.toolbox/packages/file-size/toolbox-package.yaml
+diff --git a/.seikika/packages/file-size/seikika-package.yaml b/.seikika/packages/file-size/seikika-package.yaml
 new file mode 100644
 index 0000000..b3796dd
 --- /dev/null
-+++ b/.toolbox/packages/file-size/toolbox-package.yaml
++++ b/.seikika/packages/file-size/seikika-package.yaml
 @@ -0,0 +1,64 @@
-+# A Toolbox package (D89): a size limit on files, ratcheted per file, with a campaign to zero
++# A Seikika package (D89): a size limit on files, ratcheted per file, with a campaign to zero
 +# (D01M7Z2ZZ97VZQNTDT4QQHM3HQD).
-+apiVersion: toolbox.dev/package/v0
++apiVersion: seikika.com/package/v0
 +name: file-size
 +version: 0.1.0
 +description: >-
@@ -384,7 +384,7 @@ index 0000000..b3796dd
 +    type: string
 +    default: .
 +    description: >-
-+      The checkout the files are read from, relative to where `toolbox report`
++      The checkout the files are read from, relative to where `seikika report`
 +      runs.
 +  files:
 +    type: array
@@ -415,22 +415,22 @@ index 0000000..b3796dd
 +      limit. Do not add new functionality to it.
 +    description: What to do about a violation (shown with each one).
 +fragments: [fragments/*.yaml]
-diff --git a/.toolbox/toolbox.yaml b/.toolbox/toolbox.yaml
+diff --git a/.seikika/seikika.yaml b/.seikika/seikika.yaml
 new file mode 100644
 index 0000000..73a02bf
 --- /dev/null
-+++ b/.toolbox/toolbox.yaml
++++ b/.seikika/seikika.yaml
 @@ -0,0 +1,25 @@
-+# Toolbox repo portal for this repository: enforces the written standard
-+# "small Rust modules" (S2) from AGENTS.md. See .toolbox/STANDARD.md.
-+apiVersion: toolbox.dev/v1alpha1
++# Seikika repo portal for this repository: enforces the written standard
++# "small Rust modules" (S2) from AGENTS.md. See .seikika/STANDARD.md.
++apiVersion: seikika.com/v1alpha1
 +portal:
 +  name: codex
 +  title: Codex repository standards
 +  owner: group:maintainers
-+  toolbox: "0.1"
++  seikika: "0.1"
 +include:
-+  # Vendored copy of Toolbox's file-size package (no network needed).
++  # Vendored copy of Seikika's file-size package (no network needed).
 +  - package: packages/file-size
 +    with:
 +      name: rust-module-size

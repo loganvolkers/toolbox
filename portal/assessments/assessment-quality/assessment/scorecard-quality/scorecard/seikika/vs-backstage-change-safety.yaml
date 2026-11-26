@@ -1,0 +1,55 @@
+apiVersion: seikika.com/assessment/v1
+entity: assessment:scorecard-quality/scorecard:seikika/vs-backstage-change-safety
+rubric: assessment-quality
+subjectHash: 76f03ebc1639
+assessor: {kind: agent, name: cursor-reviewer-37, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: supported
+    verdict: fail
+    reason: >-
+      no-obvious-gap in
+      portal/assessments/scorecard-quality/scorecard/seikika/vs-backstage-change-safety.yaml
+      says CI compares the reference portal byte for byte at
+      .github/workflows/ci.yml:57-59. Those lines are validate, test and
+      derive. The cmp loop is ci.yml:60-62. The other citations hold. The four
+      rules are the description at
+      portal/standards/backstage-comparison.yaml:656-668, covering F9, F10 and
+      the rollback half of F14 (docs/design/backstage-comparison.md:54-55 and
+      :59). F10's four measures are RESEARCH.md:66, and the ten scripted
+      changes are RESEARCH.md:244. Seikika's row is offlineValidate and
+      changePreview true, 0 upgrade lines and 0 rollback steps
+      (portal/comparisons/seikika.yaml:32-39). The two booleans are
+      facts.yaml:38-47, and their fixes (backstage-comparison.yaml:681-694)
+      name neither facts.yaml nor snapshot.py. upgrade.py:81-104 uses gh
+      release download and psql.
+    suggestion: >-
+      Cite ci.yml:60-62 for the cmp, and keep :57-59 for the derive that
+      produces the files being compared.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      The four rules are one operator change loop, and a single bronze level
+      does not invert the ladder. F10's determinism and config-in-git measures
+      are in the brief and absent from the rules, so the gap stands once the
+      compare is read at lines 60-62. Two fixes do not name the hand-written
+      facts, so actionable fails.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      The factor table, the four rules and the two booleans are text. A second
+      assessor still fails the gap and the fixes after moving the cmp citation
+      down two lines.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      Adding the two F10 measures, and naming facts.yaml in the boolean fixes,
+      would change the two fails in
+      portal/assessments/scorecard-quality/scorecard/seikika/vs-backstage-change-safety.yaml.
+      The passes need no suggestion.
+summary: >-
+  The scorecard is one operator concern, Seikika is at bronze, and F10's
+  determinism and config-in-git measures are missing. The byte-compare
+  citation is two lines early: ci.yml:57-59 derives the files and :60-62
+  runs cmp. The two hand-written booleans and their fixes are cited
+  correctly, so both fails stand after that correction.

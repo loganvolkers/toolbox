@@ -1,10 +1,10 @@
 # DX Benchmark catalog entry (docs/design/dx-benchmarks.md §6), scored by maintainer-benchmark.
 records:
   - id: pin-repair-ab
-    title: 'Pin repair: Toolbox ratchet vs reviewdog (R4)'
+    title: 'Pin repair: Seikika ratchet vs reviewdog (R4)'
     question: >-
       When a coding agent's pull request adds actions written as tags that the
-      repository already pins by SHA elsewhere, does Toolbox's ratchet get it
+      repository already pins by SHA elsewhere, does Seikika's ratchet get it
       to a correct pass for less effort than reviewdog over the same tools?
     layers: [operator]
     stages: [operator/monitor]
@@ -17,16 +17,16 @@ records:
     status: complete
     ran: 2026-11-23
     outcome: >-
-      Round 1: no win. N1 held (Toolbox correct 5 of 5), and N2 to N4 were
+      Round 1: no win. N1 held (Seikika correct 5 of 5), and N2 to N4 were
       inconclusive (calls 3 vs 4, read 6,054 vs 11,605, gate read 5,794 vs
       7,850). The runtime dropped three of reviewdog's command results, which
       the registered measure counted as nothing. Round 2, registered with a
       measure that rebuilds dropped command results by replay, for every arm:
-      Toolbox beats reviewdog on read. N5 held, and N7 held: median read 5,794
+      Seikika beats reviewdog on read. N5 held, and N7 held: median read 5,794
       vs 18,300 characters, with W 11,433. N6 (calls 2 vs 5) and N8 (gate read
       5,794 vs 8,299) were inconclusive. N7 holds by 1,073 characters over W,
       and the replay decides it; without it N7 would have been inconclusive.
-      One repository, one planted pull request, chosen where Toolbox's pin
+      One repository, one planted pull request, chosen where Seikika's pin
       hints should help (ADJUDICATION.md)
     changed:
     - D01M84X4JDHXS98K89KN4AB0RCD

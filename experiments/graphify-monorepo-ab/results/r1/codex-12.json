@@ -15,11 +15,11 @@
   "graphifyCalls": 0,
   "graphifyCommands": {},
   "graphifyChars": 0,
-  "toolboxCalls": 1,
-  "toolboxCommands": {
+  "seikikaCalls": 1,
+  "seikikaCommands": {
     "get": 1
   },
-  "toolboxChars": 3456,
+  "seikikaChars": 3456,
   "outsidePaths": [],
   "wallSeconds": 250
 }

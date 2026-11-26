@@ -5,7 +5,7 @@ sidebar:
   order: 1
 ---
 
-The reads are the same on each surface. The person or agent making the call is a [user of a portal](/toolbox/users/). Command names, flags, and MCP tool names are on the [CLI reference](/toolbox/start/cli/) (built from the live CLI at site build time).
+The reads are the same on each surface. The person or agent making the call is a [user of a portal](/users/). Command names, flags, and MCP tool names are on the [CLI reference](/start/cli/) (built from the live CLI at site build time).
 
 | Read | What it answers |
 |---|---|
@@ -19,20 +19,20 @@ The reads are the same on each surface. The person or agent making the call is a
 | `scorecard` | One scorecard across entities |
 | `campaign` | Progress on a campaign |
 
-Over MCP those reads are tools. Over the CLI they are subcommands of `toolbox`. Over HTTP they are the portal's API under `/v1`. Authorization is shared: a field you cannot see comes back hidden.
+Over MCP those reads are tools. Over the CLI they are subcommands of `seikika`. Over HTTP they are the portal's API under `/v1`. Authorization is shared: a field you cannot see comes back hidden.
 
 ## Connect
 
 Serve a portal, then attach:
 
 ```bash
-toolbox serve examples/reference-portal --fixtures
+seikika serve examples/reference-portal --fixtures
 # MCP HTTP: http://127.0.0.1:8080/mcp
 # or stdio bridge:
-toolbox mcp --url http://127.0.0.1:8080 --as alice
+seikika mcp --url http://127.0.0.1:8080 --as alice
 ```
 
-On a deployed portal, pass a personal access token (`TOOLBOX_TOKEN` / `--token`) instead of `--as`. Service identities for jobs are specified and not built.
+On a deployed portal, pass a personal access token (`SEIKIKA_TOKEN` / `--token`) instead of `--as`. Service identities for jobs are specified and not built.
 
 ## A short loop
 
@@ -43,4 +43,4 @@ On a deployed portal, pass a personal access token (`TOOLBOX_TOKEN` / `--token`)
 
 The scorecard for this site is the same loop. A page with a broken link fails `links-resolve`, and the evidence is the link target.
 
-Nouns: [Glossary](/toolbox/concepts/glossary/). First local score without a server: [Quickstart](/toolbox/start/quickstart/). Build from source: [Run Toolbox locally](/toolbox/start/run/).
+Nouns: [Glossary](/concepts/glossary/). First local score without a server: [Quickstart](/start/quickstart/). Build from source: [Run Seikika locally](/start/run/).

@@ -13,12 +13,12 @@ mkdir -p "$OUT"
 for n in $SIZES; do
   [ -f "$CATALOGS/n$n/catalog.ndjson" ] || python3 "$here/gen.py" "$n" "$CATALOGS/n$n"
   for r in $(seq "$REPS"); do
-    for arm in toolbox backstage; do
+    for arm in seikika backstage; do
       python3 "$here/measure.py" "$arm" "$CATALOGS/n$n" "$OUT/perf-$arm-$n-$r.json"
     done
   done
 done
-for arm in toolbox backstage; do
+for arm in seikika backstage; do
   python3 "$here/surface.py" "$arm" "$CATALOGS/n1000" "$OUT/surface-$arm.json"
 done
 python3 "$here/footprint.py" "$OUT/footprint.json"

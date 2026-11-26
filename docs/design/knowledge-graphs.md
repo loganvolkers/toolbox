@@ -3,8 +3,8 @@
 *Status: research and verdict. Research date 2026-11-23.*
 
 **About:** both. It surveys tools (Graphify and the code, document and enterprise graphs around it)
-and decides what the box does with them: whether Toolbox for Toolbox carries Graphify, and whether
-Toolbox's context lake ([context-lake.md](./context-lake.md)) builds a code knowledge graph of its own.
+and decides what the box does with them: whether Seikika for Seikika carries Graphify, and whether
+Seikika's context lake ([context-lake.md](./context-lake.md)) builds a code knowledge graph of its own.
 
 *Graphify was installed and run hands-on (graphifyy 0.9.118, source at `Graphify-Labs/graphify`
 `013a646`). Star counts and push dates come from the GitHub API on the research date. "(vendor)" marks
@@ -19,22 +19,22 @@ the decision were attacked by a red team without the designer's context
 
 ## 1. Conclusions
 
-- **Toolbox for Toolbox doesn't adopt Graphify, uses no other code-graph tool, and Toolbox
+- **Seikika for Seikika doesn't adopt Graphify, uses no other code-graph tool, and Seikika
   doesn't build a code knowledge graph**
   ([D01M84ZW6K2V9CV2SD644DE5M0S](../decisions/D01M84ZW6K2V9CV2SD644DE5M0S.md), its reasons
   restated by [D01M85G2ZXXPQRXWKQF7TWV2RTP](../decisions/D01M85G2ZXXPQRXWKQF7TWV2RTP.md)). Code
   intelligence stays federated, as [context-lake.md](./context-lake.md) §5.5 already designs it.
   Graphify's value is not shown, which is not the same as absent: a cost result can reopen this.
 - **Graphify didn't make answers more complete; whether it lowers cost is open.** In
-  [graphify-ab](../../experiments/graphify-ab/README.md), 20 runs on Toolbox and OpenFGA under
+  [graphify-ab](../../experiments/graphify-ab/README.md), 20 runs on Seikika and OpenFGA under
   Graphify's own Cursor rule and document layer tied on coverage, and every label was inconclusive
-  (§6). On Toolbox, though, every Graphify run made fewer calls and read less than every baseline
+  (§6). On Seikika, though, every Graphify run made fewer calls and read less than every baseline
   run: 25% fewer calls and 29% less read by median, exact p = 0.008 each when read post hoc. The
   registered rule detects an effect that size about a quarter of the time (L23). Building the
   document layer for this repository took 17 agents; keeping it current was never measured.
 - **On a large monorepo, nothing separated.** In
   [graphify-monorepo-ab](../../experiments/graphify-monorepo-ab/README.md), 15 runs on Codex (a
-  120-crate, 950k-line Rust monorepo, a code-only graph) compared Graphify, a Toolbox repo portal and
+  120-crate, 950k-line Rust monorepo, a code-only graph) compared Graphify, a Seikika repo portal and
   nothing. Every hypothesis comparing arms was inconclusive under the registered rule and under a
   post-hoc rank test (p ≥ 0.22) (§6.1). Every answer scored 0.981 or more. Graphify's `affected`
   command, built for these impact questions, was never named to the agents and never used.
@@ -46,7 +46,7 @@ the decision were attacked by a red team without the designer's context
   billed tokens and incremental updates.
 - **Graphify and a catalog hold different facts.** Graphify extracts a symbol-and-document graph
   in an open world: a missing edge means nothing, and node ids and communities change between
-  builds. Port's context lake and Toolbox hold a declared catalog in a closed world: who owns what,
+  builds. Port's context lake and Seikika hold a declared catalog in a closed world: who owns what,
   which standard an entity meets, what changed. Only the second can be scored (§2, §5).
 - **The independent evidence mostly agrees.** No independent study shows a code graph making a
   strong agent's answers better on average, and the billed-token studies under Graphify's hooks
@@ -71,10 +71,10 @@ cheaply, and how far its answers can be trusted (Hogan et al. 2021 is the survey
 | **Community detection** | Modularity maximisation is NP-hard (Brandes et al. 2008). Louvain can return badly connected or disconnected communities (Traag et al. 2019); Leiden's refinement guarantees connected ones. Both are randomised and depend on a resolution parameter, and modularity can't see modules below about √(2m) edges (Fortunato & Barthélemy 2007). Unless seed and resolution are pinned, community ids are not stable across rebuilds, so nothing that diffs or ratchets should key on them |
 | **Centrality** | Degree is O(V+E); PageRank is power iteration, and *personalised* PageRank restarts at query seeds (Aider's repo map, HippoRAG). Betweenness is O(VE) by Brandes' algorithm. Centrality is structural prominence: a logger or `utils` module is a hub, not an answer. Graphify's "god nodes" are degree |
 | **Entity resolution** | Fellegi–Sunter (1969): a likelihood ratio over field agreement, with link, review and non-link thresholds, then transitive closure. LLM-extracted graphs (GraphRAG, LightRAG, Graphiti) mostly resolve by name, embedding or LLM judgement, so they duplicate and falsely merge. A catalog avoids this with declared identifiers and external ids ([identity-resolution.md](./identity-resolution.md)) |
-| **World assumption** | Under the *open-world* assumption (RDF, OWL) a missing fact is unknown; under the *closed-world* assumption (SQL, Datalog's negation as failure, SHACL, JSON Schema) it is false. A scorecard rule such as "has no owner" is closed-world, so it needs a complete, declared catalog. It can't be computed soundly over an extracted graph. Toolbox already encodes the distinction: missing connector data is `unknown`, not a failure (D01M7Y5VWKW5TDS0VQWZFPRQ27N) |
+| **World assumption** | Under the *open-world* assumption (RDF, OWL) a missing fact is unknown; under the *closed-world* assumption (SQL, Datalog's negation as failure, SHACL, JSON Schema) it is false. A scorecard rule such as "has no owner" is closed-world, so it needs a complete, declared catalog. It can't be computed soundly over an extracted graph. Seikika already encodes the distinction: missing connector data is `unknown`, not a failure (D01M7Y5VWKW5TDS0VQWZFPRQ27N) |
 | **Symbolic vs embedded** | Graph embeddings (TransE, ComplEx, RotatE) score plausibility for link prediction; symbolic graphs answer exactly, over what was asserted. Hybrid retrieval seeds with embeddings or lexical search and expands symbolically (HippoRAG, LightRAG, codebase-memory-mcp). Graphify seeds lexically and expands by BFS; it has no embeddings |
 | **Provenance and time** | W3C PROV-DM (entity, activity, agent) and semiring provenance (Green et al. 2007) say how a fact was derived. Bitemporal data separates valid time from transaction time (Snodgrass; SQL:2011), which audit and incident review need; Graphiti and XTDB store both. Graphify's `EXTRACTED` / `INFERRED` / `AMBIGUOUS` tags are coarse confidence classes |
-| **Incremental maintenance** | Counting and DRed maintain views under inserts and deletes (Gupta et al. 1993); differential dataflow and DBSP maintain iterative computations. Per-file re-parsing is easy to make incremental; cross-file name resolution, closure and global clustering are not. Toolbox recomputes in full in v1 (D37) |
+| **Incremental maintenance** | Counting and DRed maintain views under inserts and deletes (Gupta et al. 1993); differential dataflow and DBSP maintain iterative computations. Per-file re-parsing is easy to make incremental; cross-file name resolution, closure and global clustering are not. Seikika recomputes in full in v1 (D37) |
 | **Retrieval** | BM25 and trigram indexes are strong on code because identifiers are rare tokens; most of dense retrieval's apparent advantage on code comes from queries without identifiers (Xue et al. 2026, secondary). Reciprocal rank fusion combines rankers |
 | **Static analysis** | Tree-sitter builds concrete syntax trees with no name binding, types or import resolution, so a tree-sitter "call graph" matches names heuristically: homonyms add false edges, and dynamic dispatch, reflection and generated code drop real ones. Compiler-backed indexes (SCIP, LSIF, LSP, Kythe, Glean, CodeQL) resolve names precisely; a sound call graph needs a further analysis (CHA, RTA, points-to), and practical tools are "soundy" (Livshits et al. 2015). Facts outside the code (build targets, ownership, deployments, test↔code links) are not recoverable by any parser |
 
@@ -95,7 +95,7 @@ product, Graphify Cloud, adds a re-indexed graph per push, cross-repo graphs and
 | Query | `query` picks lexical seed nodes, expands by BFS to depth 2 (DFS optional), and prints nodes and edges up to a token budget (default 2,000). `path` finds a shortest path between two symbols; `explain` lists a node's neighbourhood |
 | Agent integration | `graphify install --platform cursor` writes an always-applied rule that makes a `graphify` query **mandatory** before Read, Grep, Glob or Bash; Claude Code gets hooks; a stdio MCP server is also offered |
 
-Measured here on our two benchmark repositories (§6): the AST pass took seconds; the Toolbox graph
+Measured here on our two benchmark repositories (§6): the AST pass took seconds; the Seikika graph
 needed 17 semantic subagents for 355 documents, and OpenFGA's 3 subagents for 23 files. A query for
 how OpenFGA's Check resolver chain works matched 768 nodes and printed 65 of them before the budget
 cut it off; most were methods of the experimental v2 check package (`internal/check`), not the
@@ -193,17 +193,17 @@ GitLab Orbit, and none has an independent evaluation of agent outcomes.
 
 Neo4j (GPL-3.0 community), Memgraph (BSL), FalkorDB (SSPL/AGPL), Kùzu (MIT, archived 2025-10-10, with
 forks such as LadybugDB), SurrealDB (BSL), Apache AGE (Apache-2.0, openCypher inside Postgres),
-TerminusDB, XTDB (bitemporal) and Datomic. For Toolbox, whose deployment is one container plus
+TerminusDB, XTDB (bitemporal) and Datomic. For Seikika, whose deployment is one container plus
 Postgres (charter goal 1), the standards-track route to graph queries is SQL/PGQ or AGE over Postgres,
 and Kùzu's archival is a caution against an embedded single-vendor graph database.
 
-## 5. The overlap: Port, Graphify and Toolbox
+## 5. The overlap: Port, Graphify and Seikika
 
-Port's "context lake", Graphify and Toolbox all sell context to agents, but they hold different facts.
+Port's "context lake", Graphify and Seikika all sell context to agents, but they hold different facts.
 
-| | Graphify | Port Context Lake | Toolbox |
+| | Graphify | Port Context Lake | Seikika |
 |---|---|---|---|
-| Unit | Symbol, file, document concept | Entity of a declared blueprint | Entity of a declared kind (`toolbox.yaml`) |
+| Unit | Symbol, file, document concept | Entity of a declared blueprint | Entity of a declared kind (`seikika.yaml`) |
 | How facts arrive | Extracted: tree-sitter and LLM | Declared and integrated | Declared and integrated (connectors, NDJSON) |
 | World | Open: a missing edge means nothing | Closed enough to score | Closed, with `unknown` for missing data (D01M7Y5VWKW5TDS0VQWZFPRQ27N) |
 | Identity | Generated node ids; communities change between builds | Blueprint identifiers | Entity ids and external ids ([identity-resolution.md](./identity-resolution.md)) |
@@ -229,14 +229,14 @@ table, not Graphify's.
 **Why run one.** The independent evidence (§3) tested the graph as an optional tool, or under
 Claude Code and Codex. Nobody had tested the vendor's own integration: the always-applied rule that
 makes a query mandatory, plus the LLM document layer, in Cursor, on a repository where much of the
-answer is in documents and decisions. That is exactly how Toolbox for Toolbox would adopt it.
+answer is in documents and decisions. That is exactly how Seikika for Seikika would adopt it.
 
 **Design** ([README](../../experiments/graphify-ab/README.md), pre-registered under protocol 2):
 
 | | |
 |---|---|
 | Arms | A: the agent's own search and read tools. B: the same, plus Graphify 0.9.118, its built graph in `graphify-out/`, and its Cursor rule |
-| Repositories | Toolbox at `a8f7e03` (documentation-heavy) and OpenFGA at `7d89a566` (Go, little documentation) |
+| Repositories | Seikika at `a8f7e03` (documentation-heavy) and OpenFGA at `7d89a566` (Go, little documentation) |
 | Task | Five questions per repository that need several files: a call chain, an impact set, a mechanism, a validation rule, a configuration path |
 | Measures | Key-fact coverage (Graphify's own metric), graded blind against gold written before the run; tool calls; characters of tool results read |
 | Runs | Five per arm per repository, launched together as fresh local subagents |
@@ -249,15 +249,15 @@ answer is in documents and decisions. That is exactly how Toolbox for Toolbox wo
 | K1 | OpenFGA coverage | 0.955 | 0.955 | 0 | Inconclusive |
 | K2 | OpenFGA read, chars | 319,746 | 465,815 | 574,157 | Inconclusive |
 | K3 | OpenFGA calls | 62 | 44 | 39 | Inconclusive |
-| K4 | Toolbox coverage | 1.000 | 1.000 | 0 | Inconclusive |
-| K5 | Toolbox read, chars | 343,316 | 244,970 | 122,285 | Inconclusive |
-| K6 | Toolbox calls | 73 | 55 | 27 | Inconclusive |
+| K4 | Seikika coverage | 1.000 | 1.000 | 0 | Inconclusive |
+| K5 | Seikika read, chars | 343,316 | 244,970 | 122,285 | Inconclusive |
+| K6 | Seikika calls | 73 | 55 | 27 | Inconclusive |
 | K7 | Every B run calls `graphify` | | 10 of 10 | | Holds |
 
 Neither "helps" nor "hurts" is shown on either repository under the registered rule, which is what
 the designer predicted. That rule detects a two-standard-deviation effect about a quarter of the
 time at five runs per arm (L23). Read post hoc with an exact rank test, K5 and K6 separate
-completely: every B run on Toolbox read less and made fewer calls than every A run (p = 0.008
+completely: every B run on Seikika read less and made fewer calls than every A run (p = 0.008
 each). The registered labels stand; the post-hoc reading is why
 [D01M85G2ZXXPQRXWKQF7TWV2RTP](../decisions/D01M85G2ZXXPQRXWKQF7TWV2RTP.md) calls the cost
 question open rather than settled. Three findings matter beyond the bar:
@@ -267,14 +267,14 @@ question open rather than settled. Three findings matter beyond the bar:
   [dx-benchmarks.md](./dx-benchmarks.md).
 - **The rule changes how agents search, not what they find.** Every B run queried the graph first,
   as the rule requires. B's agents then stopped using the Grep tool (median 0 calls, against 7 on
-  OpenFGA and 24 on Toolbox in arm A) and searched in the shell instead. On Toolbox they opened
+  OpenFGA and 24 on Seikika in arm A) and searched in the shell instead. On Seikika they opened
   fewer files (median 23 reads against 41). B made fewer calls in both repositories (by more than
-  every A run on Toolbox, within A's range on OpenFGA), and read less on Toolbox and more on
+  every A run on Seikika, within A's range on OpenFGA), and read less on Seikika and more on
   OpenFGA. The graph also sits in the
   workspace, so one unscoped `grep -rn` returned 580,577 characters of `graph.json`.
 - **The first build is expensive; upkeep is unmeasured.** The AST pass takes seconds. The first
   document build took 17 agents for this repository (413 calls, 4.27M characters read), which B's
-  median read saving on Toolbox repays after about 43 sessions. That counts characters, not billed
+  median read saving on Seikika repays after about 43 sessions. That counts characters, not billed
   tokens, so it understates the saving from fewer calls. 141 of the 200 commits before the frozen
   one changed a Markdown file, but Graphify re-extracts only changed files (about 4.9 of the
   graph's 355 documents a commit, by the red team's count), and that per-commit cost was never
@@ -291,32 +291,32 @@ vendor says suits it best:
 - **The questions:** crate dependents, trait-dispatch callers, two-hop callers and a five-crate
   execution trace.
 
-A third arm, a Toolbox repo portal over the Cargo workspace, held the crate structure. Two dry runs
+A third arm, a Seikika repo portal over the Cargo workspace, held the crate structure. Two dry runs
 saturated the score, so it became a guard before round 1 (L21), and "helps" had to come from cost.
 
 | Arm | Score median | Calls median (range) | Read median, chars (range) |
 |---|---|---|---|
 | A: nothing | 0.994 | 56 (51–77) | 255,863 (203,379–261,195) |
 | B: Graphify | 0.988 | 54 (49–59) | 204,870 (198,160–256,203) |
-| C: Toolbox repo portal | 0.994 | 54 (45–73) | 206,872 (183,831–275,061) |
+| C: Seikika repo portal | 0.994 | 54 (45–73) | 206,872 (183,831–275,061) |
 
 Every hypothesis comparing arms was inconclusive, and a post-hoc rank test agrees (p ≥ 0.22 on
 calls, read and wall time). Both tool-use checks held: every Graphify run called `graphify` and
-every portal run called `toolbox`. D01M84ZW6K2V9CV2SD644DE5M0S's "Otherwise" case applies. No
+every portal run called `seikika`. D01M84ZW6K2V9CV2SD644DE5M0S's "Otherwise" case applies. No
 Graphify run used `affected`, the command that answers Q2 and Q3's shape in one call: the vendor's
 rule doesn't name it, and the harness didn't either, though it was triaged after the round to
-name Toolbox's own `graph --relation` (red team R3).
+name Seikika's own `graph --relation` (red team R3).
 
 - **Graphify oriented, then agents read the code**, as in graphify-ab. Its graph holds the Cargo
   packages, but the agents' natural-language `query` for dependents matched unrelated symbols
   instead. Names were ambiguous across nodes, and `path` found no directed call path.
-- **The portal answered Q1's direct dependents and nothing more.** `toolbox graph` couldn't follow
+- **The portal answered Q1's direct dependents and nothing more.** `seikika graph` couldn't follow
   one relation in one direction, so agents computed transitive dependents themselves. The CLI now
   takes `--relation` and `--direction`.
 
 Harder questions didn't create headroom (L22 in [dx-benchmarks.md](./dx-benchmarks.md)).
 
-## 7. What Toolbox does
+## 7. What Seikika does
 
 [D01M84ZW6K2V9CV2SD644DE5M0S](../decisions/D01M84ZW6K2V9CV2SD644DE5M0S.md) records the
 verdict on the four options, and
@@ -324,9 +324,9 @@ verdict on the four options, and
 
 | Option | Verdict |
 |---|---|
-| Adopt Graphify in Toolbox for Toolbox | Not yet: no coverage gain; a likely cost gain on Toolbox, measured in characters and post hoc; billed tokens and the cost of keeping the document graph current unmeasured |
+| Adopt Graphify in Seikika for Seikika | Not yet: no coverage gain; a likely cost gain on Seikika, measured in characters and post hoc; billed tokens and the cost of keeping the document graph current unmeasured |
 | Use another code-graph tool | No: none has independent evidence of agent gains (§4.1). Precise navigation is the harness's language server |
-| Expand Toolbox with a code graph | No: an extracted, open-world graph with unstable ids can't be scored |
+| Expand Seikika with a code graph | No: an extracted, open-world graph with unstable ids can't be scored |
 | Do nothing | **Yes.** Code intelligence stays federated ([context-lake.md](./context-lake.md) §5.5) |
 
 What stays open:
@@ -336,8 +336,8 @@ What stays open:
   the overlap where the literature finds gains. Any claim that they help needs its own DX Benchmark,
   with a question set the baseline doesn't saturate.
 - **A portal may carry Graphify** as a standalone tool, with its own command, ignore file and rule.
-  Toolbox doesn't wrap it, and no scorecard reads its graph.
-- **Reopen** on a cost result: a round on Toolbox with billed tokens (or calls and read together,
+  Seikika doesn't wrap it, and no scorecard reads its graph.
+- **Reopen** on a cost result: a round on Seikika with billed tokens (or calls and read together,
   [Q21](../questions.md)), `affected` named in Graphify's rule, a code-only Graphify arm beside the
   full build, and the `--update` cost per commit measured, showing at least 20% fewer tokens per
   session at equal coverage. Also reopen if a cheaper model or a question set with headroom shows a
@@ -350,7 +350,7 @@ What stays open:
 
 **Hands-on (this research):** graphifyy 0.9.118 from PyPI, installed with `uv tool`; its source at
 `Graphify-Labs/graphify` `013a646` (`graphify/skill.md`, `graphify/install.py`, `graphify/cluster.py`,
-`graphify/skills/agents/references/extraction-spec.md`); graphs built over Toolbox `a8f7e03` and
+`graphify/skills/agents/references/extraction-spec.md`); graphs built over Seikika `a8f7e03` and
 OpenFGA `7d89a566` ([graphify-ab](../../experiments/graphify-ab/README.md)), and a code-only graph
 over Codex `859dbe27`, a fork of `openai/codex`
 ([graphify-monorepo-ab](../../experiments/graphify-monorepo-ab/README.md)).

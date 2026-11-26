@@ -1,8 +1,8 @@
-# Repo Portals: Toolbox Without a Server
+# Repo Portals: Seikika Without a Server
 
 *Status: built 2026-11-20 (D66); the static-site extensions in §5 are proposals. A **repo portal**
-is a Toolbox manifest in one repository, run by `toolbox report` locally and in CI. Toolbox for
-Toolbox ([portal/](../../portal/README.md)) is the first one. It is the leaf of
+is a Seikika manifest in one repository, run by `seikika report` locally and in CI. Seikika for
+Seikika ([portal/](../../portal/README.md)) is the first one. It is the leaf of
 [federation](./federation.md) and the first step of the go-to-market path. Proving its value is the
 current focus: [repo-value.md](./repo-value.md).*
 
@@ -10,8 +10,8 @@ current focus: [repo-value.md](./repo-value.md).*
 
 ## 1. Conclusion
 
-A team can adopt Toolbox in one repository with no infrastructure:
-- a `toolbox.yaml`;
+A team can adopt Seikika in one repository with no infrastructure:
+- a `seikika.yaml`;
 - in-image connectors that read the checkout;
 - a committed baseline;
 - one CI step.
@@ -22,19 +22,19 @@ portal, these repos are already its children ([federation.md](./federation.md) �
 
 | Capability | Command | State |
 |---|---|---|
-| Score the repo | `toolbox report [--skip <connector>] [-o md\|json\|html] [--out FILE]` | ✅ |
+| Score the repo | `seikika report [--skip <connector>] [-o md\|json\|html] [--out FILE]` | ✅ |
 | Ratchet | `--baseline FILE` (+ `--update`, `--ci`) | ✅ ([ratchets.md](./ratchets.md)) |
 | Evidence for failing rules | rule `evidence:` CEL, shown by `report`, `scorecard_status`, `explain`, `scorecard_report` | ✅ |
-| Work lists | `toolbox scorecard <name> --rule R` / MCP `scorecard_report` (needs `serve`) | ✅ |
-| Live, agent-driven loop | `toolbox serve` + `toolbox mcp`, with refreshes that report what changed | ✅ |
-| Static publishing | `report -o html`: one self-contained page. `report -o web`: the same page plus `<toolbox-report>` and its JSON, so a host fills header, nav, and footer slots | ✅ (§4); a multi-page site is a proposal (§5) |
-| **GitHub Action** | `uses: loganvolkers/toolbox/actions/report@<sha>`: one step, with a starter portal ([examples/repo-portal-starter](../../examples/repo-portal-starter/README.md)) | ✅ (D69, §6) |
+| Work lists | `seikika scorecard <name> --rule R` / MCP `scorecard_report` (needs `serve`) | ✅ |
+| Live, agent-driven loop | `seikika serve` + `seikika mcp`, with refreshes that report what changed | ✅ |
+| Static publishing | `report -o html`: one self-contained page. `report -o web`: the same page plus `<seikika-report>` and its JSON, so a host fills header, nav, and footer slots | ✅ (§4); a multi-page site is a proposal (§5) |
+| **GitHub Action** | `uses: seikika/seikika/actions/report@<sha>`: one step, with a starter portal ([examples/repo-portal-starter](../../examples/repo-portal-starter/README.md)) | ✅ (D69, §6) |
 | Readers for existing ratchets | Betterer results files; ESLint, PHPStan and basedpyright baselines | Betterer ✅; others proposed (ratchets.md R2) |
 
 ## 2. What runs where
 
 ```
-toolbox report portal --baseline portal/results.json --ci
+seikika report portal --baseline portal/results.json --ci
   ├─ for each in-image connector (in parallel, except --skip): spawn, send one resync, collect records
   ├─ full recompute (the same pipeline as serve)
   ├─ compare with the baseline: worse → exit 1; stale under --ci → exit 1; --update → write
@@ -50,10 +50,10 @@ toolbox report portal --baseline portal/results.json --ci
 
 | Concern | Approach |
 |---|---|
-| Slow connectors (tests, builds) | Split them into their own connector and `--skip` them in the ratchet step. Toolbox for Toolbox runs `workspace` + `surfaces` (about 1 s), and its `runner` (tests, clippy, MCP trace) only in full runs |
+| Slow connectors (tests, builds) | Split them into their own connector and `--skip` them in the ratchet step. Seikika for Seikika runs `workspace` + `surfaces` (about 1 s), and its `runner` (tests, clippy, MCP trace) only in full runs |
 | Deterministic baselines | Results are pure functions of the files. Keep time-dependent data (`lastChange`, durations) out of rules that the baseline records |
 | Merge conflicts in the baseline | Rerun `--update` on the merged tree; never hand-merge |
-| Pre-commit | A hook running `toolbox report --skip runner,github-actions --baseline … --update` (documented; packaging is ratchets.md R4) |
+| Pre-commit | A hook running `seikika report --skip runner,github-actions --baseline … --update` (documented; packaging is ratchets.md R4) |
 | Tools a rule needs (zizmor, actionlint) | Install the pinned versions in CI; where they're missing, their rules are `unknown`, reported but not compared, and `--ci`/`--update` refuse unless the rule's `dataFrom` connector was skipped ([github-actions-standards.md](./github-actions-standards.md) §4, D01M7Y5VWKW5TDS0VQWZFPRQ27N) |
 
 ## 4. One page to publish: `report -o html`
@@ -61,7 +61,7 @@ toolbox report portal --baseline portal/results.json --ci
 **What it is.** A single self-contained HTML file. It embeds:
 - the report as JSON (portal, snapshot, scorecard definitions, scores, and a slim `catalog` of
   entity ids by kind);
-- the `<toolbox-report>` element: three modes — **Overview** (fleet health), **Catalog** (kinds →
+- the `<seikika-report>` element: three modes — **Overview** (fleet health), **Catalog** (kinds →
   entities → scores), and **Scorecards** (level bars, filters, and every rule outcome with fix and
   evidence on failures) — see [report-ux.md](./report-ux.md) (D01M7XY1QYKW2D0HMSG50R0XTQH);
 - light and dark themes;
@@ -83,13 +83,13 @@ and it never goes stale relative to the commit it describes.
 
 | Where | How |
 |---|---|
-| CI artifact | `toolbox report … -o html --out report.html` and upload it |
+| CI artifact | `seikika report … -o html --out report.html` and upload it |
 | GitHub Pages | The same, in a Pages workflow on the default branch |
 | PR | Upload it as an artifact and link it from the ratchet's summary comment |
 
-**Hosting it in another site.** `toolbox report -o web --out DIR` writes `report.json`,
-`toolbox-report.js`, and a standalone `index.html`. An Astro site imports
-[`@toolbox-dev/astro-report`](../../report-ui/README.md) with that JSON and can supply its own Astro
+**Hosting it in another site.** `seikika report -o web --out DIR` writes `report.json`,
+`seikika-report.js`, and a standalone `index.html`. An Astro site imports
+[`@seikika/astro-report`](../../report-ui/README.md) with that JSON and can supply its own Astro
 layout. The integration and the hosted portal share the Vue entity and scorecard views. The CLI
 uses the same integration to produce its offline HTML document.
 
@@ -102,16 +102,16 @@ viewer-specific permissions.
 
 | # | Proposal | Why |
 |---|---|---|
-| S1 | `toolbox report -o site --out DIR`: an index plus one page per entity (fields, provenance, relations, scores, evidence) | Browse a repo portal like the minimal UI, offline |
+| S1 | `seikika report -o site --out DIR`: an index plus one page per entity (fields, provenance, relations, scores, evidence) | Browse a repo portal like the minimal UI, offline |
 | S2 | **Static federation:** an index page that loads several children's `report -o json` files (by URL or path) and shows them together, like Storybook composition (secondary) | A "parent" with no server, the minimal answer to [federation.md](./federation.md) FQ5 |
 | S3 | Embed the snapshot id and git commit in the page; link entities to files at that commit | Every claim on the page is checkable |
 
 ## 6. Adoption in one step: the GitHub Action
 
 **[`actions/report`](../../actions/report/README.md)** is a composite action. A pilot repository:
-1. copies the starter manifest to `.toolbox/toolbox.yaml`;
+1. copies the starter manifest to `.seikika/seikika.yaml`;
 2. adds one workflow step;
-3. runs it once with `mode: update` to create `.toolbox/results.json`.
+3. runs it once with `mode: update` to create `.seikika/results.json`.
 
 From then on, pull requests fail on regressions and on unrecorded improvements. The job summary says
 which, and how to update the baseline. The Markdown and HTML reports are uploaded as an artifact.
@@ -119,19 +119,19 @@ which, and how to update the baseline. The Markdown and HTML reports are uploade
 | Design choice | Why |
 |---|---|
 | Composite action + `run.sh` | Testable locally with the same environment variables. This repo tested `run.sh` through every result: missing baseline, update, pass, regression, unrecorded improvement, unknown mode, missing portal |
-| Build from the action's own source at the pinned commit, cached by a hash of `Cargo.lock`, the toolchain file, `crates/` and `schema/` | No releases exist yet (licence Q1). Pinning a commit pins both the action and the toolbox it runs |
-| `toolbox-dir` input | Repos that already build toolbox (this one) skip the build |
+| Build from the action's own source at the pinned commit, cached by a hash of `Cargo.lock`, the toolchain file, `crates/` and `schema/` | No releases exist yet (licence Q1). Pinning a commit pins both the action and the seikika it runs |
+| `seikika-dir` input | Repos that already build seikika (this one) skip the build |
 | Starter: `repo-hygiene` + `docs` | Useful on day one in any repository, with no build and no network. Silver accepts team CODEOWNERS or personal-only handles (D01M7Y57FVX0XYNGMX0A0XJ4GK9). It is also stage 1 of the federation graduation example |
 | `pull_request`, never `pull_request_target` | Connectors run the manifest's commands; fork code must not get write tokens |
 
 **Dogfooding.** This repository's CI:
-- runs the Toolbox-for-Toolbox ratchet through the action, with prebuilt binaries;
+- runs the Seikika-for-Seikika ratchet through the action, with prebuilt binaries;
 - runs a `report-action` job that builds from source, sets up a pilot from the starter, creates its
   baseline in `update` mode, and passes in `ci` mode.
 
 ## Sources
 
-- Implementation: `crates/toolbox-cli/src/report.rs`, `report.html`;
-  [toolbox-for-toolbox.md](./toolbox-for-toolbox.md); [ratchets.md](./ratchets.md).
+- Implementation: `crates/seikika-cli/src/report.rs`, `report.html`;
+  [seikika-for-seikika.md](./seikika-for-seikika.md); [ratchets.md](./ratchets.md).
 - Storybook static builds and composition: Storybook documentation (secondary; not re-read in this
   session).

@@ -2,7 +2,7 @@
 """The measure, from the runtime's transcript of one run (P6): tool calls, characters read, gate runs
 and the characters of their results, wall time.
 
-    count.py <arm: toolbox|reviewdog> <transcript.json> [<repo> [<replay.json>]]
+    count.py <arm: seikika|reviewdog> <transcript.json> [<repo> [<replay.json>]]
 
 The transcript is what `batch-fetch-details` with `includeTranscripts` writes for a subagent's bcId:
 `{"messages": [...]}`, with one `role: tool` message per tool call carrying `tool_name`,
@@ -22,7 +22,7 @@ import subprocess
 import sys
 
 GATE = {
-    "toolbox": re.compile(r"toolbox report \S+.*--baseline"),
+    "seikika": re.compile(r"seikika report \S+.*--baseline"),
     "reviewdog": re.compile(r"(?<!cat )(?<!less )(?<!head )\bscripts/quality-gate\.sh"),
 }
 

@@ -1,0 +1,63 @@
+apiVersion: seikika.com/assessment/v1
+entity: rule:seikika/review-rule/no-doubts
+rubric: rule-quality
+subjectHash: eff0e20f5f51
+assessor: {kind: agent, name: cursor-assessor-04, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: measures-intent
+    verdict: pass
+    reason: >-
+      The check needs a current assessment with no unsure criterion
+      (portal/standards/meta.yaml:971-985; `reviewUnsure` at
+      meta.yaml:171-175). The rationale ties an unsure to a threshold with no
+      source or an unstated intent, lesson L9
+      (docs/design/scorecards-for-scorecards.md:89), and rule-quality's
+      `threshold-justified` says "unsure when no source states the number"
+      (meta.yaml:1174-1180). So passing means the assessor found a source.
+      Fixtures pin both outcomes (portal/tests/standards.test.yaml:875-876,
+      945-949).
+  - criterion: hard-to-game
+    verdict: fail
+    reason: >-
+      Anyone, the rule's author included, can re-run the brief and answer
+      `pass` where the last assessor said unsure, at the same subjectHash and
+      with no new source. One overwritable file per rule
+      (crates/seikika-connect/src/assessment.rs:162-169) keeps no trace of the
+      doubt. review-assessment protects its gold with a different reviewer at
+      silver (portal/standards/assessments.yaml:259-262), but review-rule has
+      no independence rule at any level (meta.yaml:927-985).
+    suggestion: >-
+      Keep an unsure open across a same-hash re-assessment unless the new
+      reason cites a path the earlier one didn't, or comes from a different
+      assessor. Alternatively, add review-crate's `independently-reviewed` at
+      gold (portal/standards/crates.yaml:433-450), so the doubt is settled by
+      a second assessor.
+  - criterion: fix-leads-to-pass
+    verdict: fail
+    reason: >-
+      The fix says "resolve what the assessor was unsure of: usually a missing
+      source for a threshold or an unstated intent" (meta.yaml:977-979). It
+      names no file, and doing it doesn't pass. A row added to
+      docs/design/thresholds.md leaves the assessment unsure, and a rationale
+      added to the rule changes its hash, so the rule fails as "no current
+      assessment". Either way it needs a re-assessment, which the fix omits.
+      review-crate's no-doubts fix ends "then re-assess with `seikika assess
+      brief …`" (portal/standards/crates.yaml:425-428).
+    suggestion: >-
+      Reword the fix: "Add the missing source (a row in
+      docs/design/thresholds.md, or a `rationale:` on the rule), then
+      re-assess: `seikika assess brief <rule id> --portal portal`."
+  - criterion: threshold-justified
+    verdict: pass
+    reason: >-
+      There is no number. "No doubts" at gold is in the gold cell of
+      docs/design/thresholds.md:55, which the rule links (meta.yaml:984-985).
+      It adds to silver what silver doesn't imply, as thresholds.md:24-25 asks
+      of gold.
+summary: >-
+  It measures the right thing and the level is justified. It is weaker
+  than its review-assessment twin: with no independence rule on this card,
+  anyone can overwrite a doubt with a pass. Its fix names neither where to
+  add the source nor that a re-assessment is needed, though either way of
+  resolving the doubt needs one.

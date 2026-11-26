@@ -4,7 +4,7 @@
     blind.py <round>
 
 Reads results/r<round>/<run>.answers.md and writes /tmp/graphify-monorepo-ab/blind-r<round>/<label>.md,
-with every "graphify" and "toolbox" (any case) replaced by "[tool]" and the portal's `crate:` id
+with every "graphify" and "seikika" (any case) replaced by "[tool]" and the portal's `crate:` id
 prefix removed, and the label-to-run key to /tmp/graphify-monorepo-ab/blind-r<round>.key.tsv. The
 adjudicator grades the blind directory first and is given the key afterwards; the key is committed
 to results/ once the grades are. Adapted from graphify-ab.
@@ -28,7 +28,7 @@ def main() -> None:
     labels = rng.sample(range(100, 1000), len(runs))
     key = []
     for path, label in zip(runs, labels):
-        text = re.sub(r"graphify|toolbox", "[tool]", path.read_text(), flags=re.IGNORECASE)
+        text = re.sub(r"graphify|seikika", "[tool]", path.read_text(), flags=re.IGNORECASE)
         text = re.sub(r"\bcrate:(?=[\w-])", "", text)
         (out / f"{label}.md").write_text(text)
         key.append(f"{label}\t{path.name.removesuffix('.answers.md')}")

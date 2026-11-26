@@ -1,4 +1,4 @@
-apiVersion: toolbox.dev/assessment/v1
+apiVersion: seikika.com/assessment/v1
 entity: assessment:sdlc-stage-quality/sdlc-stage:user/deploy
 rubric: assessment-quality
 subjectHash: db5749ccb38c
@@ -11,9 +11,9 @@ verdicts:
       Most citations in
       portal/assessments/sdlc-stage-quality/sdlc-stage/user/deploy.yaml land.
       scripts/m3-acceptance.sh:49-52 mints a PAT for alice and checks /v1/me
-      plus a 401 for an unknown token. crates/toolbox-cli/src/main.rs:538-548
+      plus a 401 for an unknown token. crates/seikika-cli/src/main.rs:538-548
       is `token create`, with `--user` and `--database-url`/DATABASE_URL.
-      crates/toolbox-authz/src/authn.rs:5-6 describes bearer PATs and OIDC.
+      crates/seikika-authz/src/authn.rs:5-6 describes bearer PATs and OIDC.
       authn.rs:52-55 and 93-95 are the single issuer and subject claim.
       user-sdlc.md:79-80 is the service identity gap. One citation is wrong.
       decoupled-from-core says service identities are 'still "planned" at line
@@ -28,9 +28,9 @@ verdicts:
       The verdicts match the stage (portal/sdlc/stages/user.yaml:40-50). m3
       never exercises a service identity or a CI caller, so executable-exit
       fails. Minting needs an operator, so agent-can-complete fails, and
-      service principals need toolbox-authz work, so decoupled-from-core
+      service principals need seikika-authz work, so decoupled-from-core
       fails. The reason omits one route. authn.rs:56-58 accepts static PATs
-      from `TOOLBOX_PATS` without a database. That route still needs an
+      from `SEIKIKA_PATS` without a database. That route still needs an
       operator to set the server's environment, so the verdict stands.
   - criterion: reproducible
     verdict: pass
@@ -52,5 +52,5 @@ summary: >-
   The fail, fail, pass, fail verdicts are right, and the suggestions would
   flip the fails. One citation is wrong: user-sdlc.md:55 is the
   contract-kit row, while service identities are marked planned at lines
-  52 and 57. The reason also omits the database-free `TOOLBOX_PATS` route
+  52 and 57. The reason also omits the database-free `SEIKIKA_PATS` route
   (authn.rs:56-58), which does not change the verdict.

@@ -1,0 +1,51 @@
+apiVersion: seikika.com/assessment/v1
+entity: assessment:rule-quality/rule:seikika/maintainer-example/cites-the-design
+rubric: assessment-quality
+subjectHash: 24ce91f2caa9
+assessor: {kind: agent, name: cursor-reviewer-33, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: supported
+    verdict: pass
+    reason: >-
+      The citations in
+      portal/assessments/rule-quality/rule/seikika/maintainer-example/cites-the-design.yaml
+      hold. cites_design is `docs/` anywhere, `docs/decisions`, or
+      `(?i)\b(D\d+|D<ULID>)\b`
+      (crates/seikika-connector-workspace/src/examples.rs:38-42). The
+      rationale is portal/standards/examples.yaml:94-96, the evidence and fix
+      are 89 and 91-93, and the pin is
+      portal/tests/standards.test.yaml:646-647. maintainer-docs resolving ids
+      starts at standards.test.yaml:651. D1–D3 is
+      docs/design/dx-benchmarks.md:236, D78's gold sentence is
+      docs/decisions/D01M7W5G0T00000000000000000.md:9, and the gold rows are
+      docs/design/example-standards.md:25 and :61.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      Both fails and both passes are right. `docs/` or `d3` passes while
+      pointing at no design (examples.rs:39-41), which is the rubric's "could
+      pass while missing the intent" (portal/standards/meta.yaml:1160-1161),
+      and that substring is cheaper than the rationale's work
+      (examples.yaml:94-96). Linking `docs/design/<topic>.md` as the fix says
+      contains `docs/` and passes. Gold is what D78 and thresholds.md:24 ask
+      of a gold rule.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      The two fails are the regex at examples.rs:38-42. A second assessor does
+      not have to recheck the live passes to reach them; the assessment labels
+      those misreads latent.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      Both suggestions in
+      portal/assessments/rule-quality/rule/seikika/maintainer-example/cites-the-design.yaml
+      replace the substring with a path or decision id that exists. `docs/`
+      and `D1` would then fail, which is what changes measures-intent and
+      hard-to-game.
+summary: >-
+  The two fails are what examples.rs:38-42 shows: `docs/` anywhere, a
+  lower-case `d3`, or a hypothesis label passes gold, and cited ids are
+  not resolved. The fix and the gold level are cited correctly, and both
+  suggestions would close the routes they name.

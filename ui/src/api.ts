@@ -3,7 +3,7 @@
 
 export type Json = any; // responses are shaped by the server's OpenAPI; typed clients arrive with codegen
 
-const AS_KEY = "toolbox.as";
+const AS_KEY = "seikika.as";
 
 export function devUser(): string | null {
   const q = new URLSearchParams(location.search).get("as");
@@ -24,7 +24,7 @@ export interface ApiResult {
 export async function api(path: string, init: RequestInit = {}): Promise<ApiResult> {
   const headers = new Headers(init.headers);
   const user = devUser();
-  if (user) headers.set("x-toolbox-user", user);
+  if (user) headers.set("x-seikika-user", user);
   if (init.body) headers.set("content-type", "application/json");
   const r = await fetch(path, { ...init, headers });
   let body: Json = null;
@@ -33,5 +33,5 @@ export async function api(path: string, init: RequestInit = {}): Promise<ApiResu
   } catch {
     body = null;
   }
-  return { status: r.status, body, snapshot: r.headers.get("x-toolbox-snapshot") ?? body?.snapshot ?? null };
+  return { status: r.status, body, snapshot: r.headers.get("x-seikika-snapshot") ?? body?.snapshot ?? null };
 }

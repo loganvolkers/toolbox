@@ -1,0 +1,87 @@
+apiVersion: seikika.com/assessment/v1
+entity: scorecard:seikika/maintainer-ci-reliability
+rubric: scorecard-quality
+subjectHash: c350fd673fc2
+assessor: {kind: agent, name: cursor-cloud-agent, model: claude-opus-5.5}
+at: 2026-11-24
+verdicts:
+  - criterion: one-concern
+    verdict: pass
+    reason: >-
+      cancels-superseded-runs and fast-feedback live on their own
+      maintainer-ci-speed card
+      (packages/github-actions/fragments/github-actions.yaml:478-530), with
+      the reason in docs/design/thresholds.md:34. Every remaining rule answers
+      whether a red or green run on the default branch can be believed
+      (github-actions.yaml:330-334): streak, still running, first-try fail
+      rate, hidden failures and job timeouts, the last because a hung job
+      gives no answer. All serve maintainers. The rationale says the same
+      ("red means something broke and green means nothing did",
+      github-actions.yaml:335-340), and the track comes from a package
+      parameter (`${param:track}`, :347), which changes no rule.
+  - criterion: levels-are-a-ladder
+    verdict: pass
+    reason: >-
+      Bronze holds main-not-stuck-red, still-running, failures-visible and
+      timeouts with a loose 20% bound (github-actions.yaml:351-434);
+      thresholds.md:22-23 names failures-visible as the fail rate's
+      prerequisite. Silver and gold tighten the same rate to 10% and 5% and
+      add a floor of 10 decided runs (github-actions.yaml:435-475,
+      thresholds.md:57; packages/github-actions/seikika-package.yaml:43-46).
+      The rationale's "silver and gold each halve the share" matches 20, 10
+      and 5. Re-runs count in the rate (`passed_on_retry`,
+      crates/seikika-connector-github/src/runs.rs:59-65). Fixtures reach gold
+      (demo/steady.yml, portal/tests/standards.test.yaml:197-200), and gold is
+      not implied by silver.
+  - criterion: no-obvious-gap
+    verdict: fail
+    reason: >-
+      A workflow that stops running is not caught. still-running reads only
+      GitHub's state (github-actions.yaml:367-385), and the page it links,
+      through github/docs
+      data/reusables/actions/scheduled-workflows-disabled.md, says GitHub
+      auto-disables only scheduled workflows in a public repository, after 60
+      days without activity. A push or pull_request workflow whose paths or
+      branch filter no longer match stays `active`, and its old history keeps
+      passing every run rule. That is the risk the rule's rationale names
+      (github-actions.yaml:377-382, now worded to say so) and
+      thresholds.md:33. The connector already collects lastRunAt (runs.rs:93),
+      and only main-not-stuck-red's evidence reads it (:357). Against the
+      research the design doc cites, the card otherwise covers GitHub's
+      failure-rate metric and approximates flaky tests by first-try failures
+      (docs/design/github-actions-standards.md:64 and :89); per-job history is
+      a tracked open item (github-actions-standards.md:161).
+    suggestion: >-
+      Add a bronze rule that the last run on the default branch is recent
+      (lastRunAt within the window the run history covers), or extend
+      still-running to read lastRunAt, with a fixture of a stale active
+      workflow on each side.
+  - criterion: actionable
+    verdict: fail
+    reason: >-
+      Every fix names a place, and the run rules' evidence lists failed run
+      URLs (`failedRuns`, runs.rs:84-89). But those are only runs that still
+      failed; runs that passed on a re-run raise firstTryFailRate without
+      being listed. demo/slow.yml shows it: firstTryFailRate 40, failedRuns []
+      (portal/fixtures/github-actions.ndjson:2). An agent raising that
+      workflow to bronze, or a flaky one to silver or gold, gets a fix that
+      says to open the failed runs in the evidence
+      (github-actions.yaml:397-404, :447-450 and :469-472) and an evidence
+      list with nothing to open. The rationale explains why re-runs count but
+      doesn't say where to find them. Below 10 runs the silver and gold
+      evidence says more runs are needed, but the fixes don't say how to get
+      them.
+    suggestion: >-
+      Have crates/seikika-connector-github/src/runs.rs list the runs that
+      passed only on a re-run (first-attempt URL) alongside failedRuns, append
+      them in the three fail-rate rules' evidence, and add to the silver and
+      gold fixes that a workflow under 10 decided runs rises only as more runs
+      land (e.g. `gh workflow run <file>` for a workflow_dispatch one).
+summary: >-
+  Re-assessed after the scorecard gained a rationale, links and a track
+  parameter, and still-running's rationale was corrected. One concern with
+  a sound ladder, and the rationale matches it: speed lives apart, re-runs
+  count in the rate, and barely run workflows can't claim a tier. Two
+  gaps: a push workflow that stops firing stays active and keeps its green
+  history, and flaky runs that passed on a re-run count against a workflow
+  but are absent from the evidence the fixes send an agent to.

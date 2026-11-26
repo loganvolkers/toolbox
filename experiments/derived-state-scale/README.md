@@ -1,6 +1,6 @@
 # derived-state-scale
 
-**Question** ([adversarial-critique.md](../../docs/adversarial-critique.md) §10, E4): at Toolbox's v1.0
+**Question** ([adversarial-critique.md](../../docs/adversarial-critique.md) §10, E4): at Seikika's v1.0
 scale target ([plan.md](../../docs/plan.md) §6.6: 100k entities, 2M relations, 10k users, 1k teams,
 100 rules), how long does a *full* recompute of every derived value take, with no incremental engine?
 And can plain Postgres (views and materialised views) and an unmodified OpenFGA server do the same job?

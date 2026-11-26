@@ -1,12 +1,12 @@
 <script setup lang="ts">
 import { computed, ref, watch } from "vue";
-import DataValue from "@toolbox-dev/ui/components/DataValue.vue";
-import EntityPage from "@toolbox-dev/ui/components/EntityPage.vue";
-import LevelBadge from "@toolbox-dev/ui/components/LevelBadge.vue";
-import PageHeader from "@toolbox-dev/ui/components/PageHeader.vue";
-import ScorecardPage from "@toolbox-dev/ui/components/ScorecardPage.vue";
-import SectionCard from "@toolbox-dev/ui/components/SectionCard.vue";
-import { entityHref, entityOverview } from "@toolbox-dev/ui/entity";
+import DataValue from "@seikika/ui/components/DataValue.vue";
+import EntityPage from "@seikika/ui/components/EntityPage.vue";
+import LevelBadge from "@seikika/ui/components/LevelBadge.vue";
+import PageHeader from "@seikika/ui/components/PageHeader.vue";
+import ScorecardPage from "@seikika/ui/components/ScorecardPage.vue";
+import SectionCard from "@seikika/ui/components/SectionCard.vue";
+import { entityHref, entityOverview } from "@seikika/ui/entity";
 import type { ApiResult, Json } from "../api";
 import type { PortalRoute } from "../routes";
 
@@ -60,9 +60,9 @@ function filter() {
     </div>
 
     <template v-else-if="route.page === 'home'">
-      <PageHeader :title="body.portal?.title ?? 'Toolbox'">
+      <PageHeader :title="body.portal?.title ?? 'Seikika'">
         <template #meta>
-          <p class="tb-meta">Signed in as {{ body.viewer.user }}{{ body.viewer.admin ? ' (portal admin)' : '' }}.
+          <p class="seikika-meta">Signed in as {{ body.viewer.user }}{{ body.viewer.admin ? ' (portal admin)' : '' }}.
             <template v-if="result.snapshot">As of snapshot <code>{{ result.snapshot }}</code>.</template>
           </p>
         </template>
@@ -177,7 +177,7 @@ function filter() {
 
     <ScorecardPage v-else-if="route.page === 'scorecard'" :title="body.scorecard.title ?? route.id" :description="body.scorecard.description">
       <template #meta>
-        <p class="tb-meta">On {{ body.scorecard.kind }}, owned by <DataValue :value="body.scorecard.owner" :entity-href="entityHref" />.
+        <p class="seikika-meta">On {{ body.scorecard.kind }}, owned by <DataValue :value="body.scorecard.owner" :entity-href="entityHref" />.
           <template v-if="result.snapshot">As of snapshot <code>{{ result.snapshot }}</code>.</template>
         </p>
       </template>
@@ -198,7 +198,7 @@ function filter() {
     <template v-else-if="route.page === 'campaign'">
       <PageHeader :title="campaign.title ?? campaign.name" :description="campaign.description">
         <template #meta>
-          <p class="tb-meta">{{ campaign.status }} · {{ campaign.percent }}% of {{ campaign.targetPercent }}% target ({{ campaign.meeting }}/{{ campaign.inScope }}).
+          <p class="seikika-meta">{{ campaign.status }} · {{ campaign.percent }}% of {{ campaign.targetPercent }}% target ({{ campaign.meeting }}/{{ campaign.inScope }}).
             <template v-if="result.snapshot">As of snapshot <code>{{ result.snapshot }}</code>.</template>
           </p>
         </template>
@@ -211,7 +211,7 @@ function filter() {
 
     <template v-else-if="route.page === 'ops'">
       <PageHeader title="Operations">
-        <template #meta><p class="tb-meta">Snapshot <code>{{ body.snapshot }}</code>, input version {{ body.input_version }}, last recompute {{ body.recompute_ms }} ms.</p></template>
+        <template #meta><p class="seikika-meta">Snapshot <code>{{ body.snapshot }}</code>, input version {{ body.input_version }}, last recompute {{ body.recompute_ms }} ms.</p></template>
       </PageHeader>
       <SectionCard title="Connectors">
         <table>

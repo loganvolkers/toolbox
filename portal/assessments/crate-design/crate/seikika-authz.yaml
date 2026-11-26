@@ -1,0 +1,82 @@
+apiVersion: seikika.com/assessment/v1
+entity: crate:seikika-authz
+rubric: crate-design
+subjectHash: 91a731155b11
+assessor: {kind: agent, name: cursor-assessor-19, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: one-responsibility
+    verdict: pass
+    reason: >-
+      Who is calling, and what may they do. The crate docs list five
+      modules, all serving that one question (crates/seikika-authz/src/lib.rs:1-8):
+      - `authn`: IAP, OIDC, PAT and dev identity;
+      - the `Authorizer` contract with its OpenFGA co-process;
+      - `fga_dsl`, which compiles the model language;
+      - `fgatest`, which runs `.fga.yaml` tests;
+      - `local`, which checks against tuples with no server.
+
+      That is the docs/v1-spec.md:92 row and D38. The spec row also names
+      "facet shaping; audit", but facet shaping lives in seikika-api
+      (crates/seikika-api/src/access.rs:289), so the row overstates this
+      crate rather than the crate doing too much.
+  - criterion: small-contract
+    verdict: pass
+    reason: >-
+      seikika-api holds the authorizer only as `Arc<dyn Authorizer>`
+      (crates/seikika-api/src/state.rs:90). Beyond that it uses `Tuple`,
+      `authn::Authenticator` and `fga_dsl::has_relation`
+      (crates/seikika-api/src/access.rs:9-10, 86). seikika-cli is the
+      composition root: it calls `OpenFga::start`, `install_tuple_view`,
+      `fga_dsl::to_json`, `local::Local`, `fgatest::run_file` and the PAT
+      helpers (crates/seikika-cli/src/server.rs:61-92, 415-423). All of these
+      are module-level public functions, not internals. One weakness: 12 of 36
+      public items lack docs, including `Authenticator`, `AuthConfig`,
+      `AuthError`, `Mode`, `Tuple` and `Datastore` (src/authn.rs:23-160,
+      src/openfga.rs:12-14), the types callers construct.
+  - criterion: replaceable-defaults
+    verdict: pass
+    reason: >-
+      OpenFGA sits behind the Seikika-owned `Authorizer` trait
+      (src/lib.rs:18-34). The API never names `OpenFga`
+      (crates/seikika-api/src/state.rs:90), and packaging stays swappable as
+      D38 and Q11 intend. Rough edges, none of which put an OpenFGA type in a
+      caller: - `install_tuple_view` takes `&sqlx::PgPool`
+      (src/openfga.rs:414), which seikika-cli takes from PgStore's public
+      `pool` field (crates/seikika-cli/src/server.rs:89-90). - `sync_tuples`'s
+      contract documents the Postgres-view implementation's behaviour
+      (src/lib.rs:31-33). - `Authorizer::model` returns OpenFGA's model JSON,
+      which seikika-api reads through `fga_dsl::has_relation`.
+  - criterion: tests-match-risk
+    verdict: unsure
+    reason: >-
+      Several high-risk paths have direct tests:
+      - authn: ES256 IAP JWTs, RS256 OIDC with rejections, PATs and dev
+      headers, and token mode ignoring the dev header
+      (tests/authn.rs:57-161);
+      - the DSL compiler, checked against the fga CLI's JSON for every
+      operator (tests/fga.rs:15-50);
+      - the reference `.fga.yaml` through the Authorizer, required in CI via
+      SEIKIKA_REQUIRE_OPENFGA (tests/fga.rs:60-68);
+      - batch errors not being denials (src/openfga.rs:499).
+
+      Two security-relevant paths are only covered indirectly:
+      - `local::Local` claims it "never grants more than the server's
+      OpenFGA would" (src/local.rs:1-6). It has four hand-written cases
+      (src/local.rs:145-200) but no differential run against OpenFGA on the
+      same model and tuples.
+      - The tuple view's `user_type` mapping (src/openfga.rs:405-413) is
+      exercised only by scripts/m3-acceptance.sh and m4-acceptance.sh. A
+      wrong label there caused intermittent wrong denials that unit tests
+      didn't catch (docs/research-log.md:99).
+    suggestion: >-
+      Run the reference examples/reference-portal/authz/model.fga.yaml cases
+      through `Local` as well as OpenFGA and assert they agree wherever
+      `Local` answers. Add a unit test of `tuple_view_sql` (or of the
+      user_type CASE) for a plain user, a userset, `*` and `type:*`.
+summary: >-
+  A coherent authn and authz crate, with OpenFGA behind a Seikika-owned
+  trait that the API holds as a trait object. The decided tuple view ties
+  it to Postgres. Authentication and the DSL compiler are well tested. The
+  offline `Local` checker's "never grants more" claim and the tuple view's
+  labelling have no direct test, and the latter has already failed once.

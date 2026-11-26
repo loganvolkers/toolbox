@@ -1,0 +1,58 @@
+apiVersion: seikika.com/assessment/v1
+entity: assessment:rule-quality/rule:seikika/maintainer-package/ci-installs-from-the-lockfile
+rubric: assessment-quality
+subjectHash: 841e934d0831
+assessor: {kind: agent, name: cursor-reviewer-32, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: supported
+    verdict: fail
+    reason: >-
+      The detector claims in
+      portal/assessments/rule-quality/rule/seikika/maintainer-package/ci-installs-from-the-lockfile.yaml
+      match crates/seikika-connector-workspace/src/npm.rs. unlocked_install
+      (195-204) matches `npm install` and pnpm without `--frozen-lockfile`
+      only. blocks_install (176-192) looks only inside a working-directory
+      line, and working_directory (206-215) splits the inline form `-
+      {working-directory: web, run: npm install}` so the token is `web,` and
+      the same line is not scanned for the install. pages.yml:48 is that
+      flow-mapping style. The check is `!entity.ciUsesInstall`
+      (portal/standards/packages.yaml:158), so a package CI never installs
+      passes. Two citations do not. .github/workflows/ci.yml:300 and :311 are
+      `actions/setup-node` lines. The `npm ci` lines are ci.yml:302 and :313.
+      docs/design/package-standards.md:35 is the npm-developers row. The
+      OpenSSF row the threshold reason cites is line 36. D76 does say gold is
+      "CI that does not run npm install"
+      (docs/decisions/D01M7W56B7R0000000000000000.md:9).
+    suggestion: >-
+      Cite ci.yml:302 and :313 for the npm ci steps, and
+      package-standards.md:36 for the OpenSSF row.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      measures-intent and hard-to-game fail for gaps the code has: `npm i` is
+      not the regex, and a root `cd ui && npm install` is outside the
+      package's working-directory block (npm.rs:176-204). The fix
+      (packages.yaml:162-165) names `.github/workflows/` and the two locked
+      commands, and the live-repo test asserts ciUsesInstall false
+      (npm.rs:395, 401). Gold with no number is what D76 and the OpenSSF row
+      set, even though the assessment points at the wrong line of
+      package-standards.md.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      The two fails follow the regex and the block scanner. A second assessor
+      reaches them without the scratch repo, and the line slips do not change
+      the verdicts.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      Parsing `run:` steps and matching `npm i`, `npx` and `--prefix`, which
+      the measures-intent suggestion names, would flag the three clears the
+      hard-to-game reason lists. Requiring a locked install seen would also
+      fail a package whose CI never installs.
+summary: >-
+  The detector gaps are real and the two fails are the right ones, but the
+  assessment points at the wrong lines for the evidence it uses.
+  ci.yml:300 and :311 are setup-node, not npm ci, and the OpenSSF citation
+  is package-standards.md:36, not :35.

@@ -1,0 +1,8 @@
+{
+  "format": "seikika-scale-gate/v1",
+  "parallel": 10858533825,
+  "serial": 751811139,
+  "services": 10000,
+  "threads": 2,
+  "tolerancePercent": 2
+}

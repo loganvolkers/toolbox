@@ -1,7 +1,7 @@
-# Ratchets: What Toolbox Learns From Betterer and Its Alternatives
+# Ratchets: What Seikika Learns From Betterer and Its Alternatives
 
-*Status: research and decision, 2026-11-20 (D67). The ratchet itself is built: `toolbox report
---baseline` (D66, [toolbox-for-toolbox.md](./toolbox-for-toolbox.md)). Federation, where ratchets
+*Status: research and decision, 2026-11-20 (D67). The ratchet itself is built: `seikika report
+--baseline` (D66, [seikika-for-seikika.md](./seikika-for-seikika.md)). Federation, where ratchets
 roll up across a fleet, is in [federation.md](./federation.md).*
 
 ---
@@ -13,10 +13,10 @@ roll up across a fleet, is in [federation.md](./federation.md).*
 | Question | Answer |
 |---|---|
 | What is Betterer? | A TypeScript tool that records a test's result in a committed file (`.betterer.results`) and fails when the result gets worse. Improvements are written back, so the bar only moves up. It runs per repository, with no fleet view or ownership (§2) |
-| What do we learn? | Five ideas, all now in `toolbox report` or proposed (§3): a committed results file; `better / same / worse` instead of pass/fail; per-issue (here per-evidence-item) granularity so a failing rule can still improve; a `ci` mode that also fails when the file is stale; and conflict-free regeneration instead of a merge tool |
-| Use Betterer directly in Toolbox for Toolbox? | **No** (§4). It is a Node runtime for a Rust repository, it duplicates what our connectors measure, its results carry no owners or levels, and the project's release activity has slowed (last stable release 5.4.0 on 2022-08-09; 6.0.0-alpha.1 on 2024-12-01) |
+| What do we learn? | Five ideas, all now in `seikika report` or proposed (§3): a committed results file; `better / same / worse` instead of pass/fail; per-issue (here per-evidence-item) granularity so a failing rule can still improve; a `ci` mode that also fails when the file is stale; and conflict-free regeneration instead of a merge tool |
+| Use Betterer directly in Seikika for Seikika? | **No** (§4). It is a Node runtime for a Rust repository, it duplicates what our connectors measure, its results carry no owners or levels, and the project's release activity has slowed (last stable release 5.4.0 on 2022-08-09; 6.0.0-alpha.1 on 2024-12-01) |
 | Integrate? | **Yes, by reading its results file** (§5, built): the `workspace` connector parses `.betterer.results` (`betterer` globs) into one record per test, with issue counts per file. Teams that already ratchet with Betterer appear in fleet scorecards with no change on their side. This is the "adopted by a few teams, but no fleet-wide story" gap the user described |
-| Alternatives? | Every mature linter has grown a baseline: ESLint bulk suppressions, PHPStan, detekt, basedpyright, RuboCop's todo file, golangci-lint's new-from-rev (§6). They all ratchet *one tool's* findings in *one repository*. Toolbox ratchets *scorecard outcomes* with owners and levels, locally and across the fleet. OpenSSF Scorecard shows the per-repo and fleet duality works at scale |
+| Alternatives? | Every mature linter has grown a baseline: ESLint bulk suppressions, PHPStan, detekt, basedpyright, RuboCop's todo file, golangci-lint's new-from-rev (§6). They all ratchet *one tool's* findings in *one repository*. Seikika ratchets *scorecard outcomes* with owners and levels, locally and across the fleet. OpenSSF Scorecard shows the per-repo and fleet duality works at scale |
 
 ## 2. Betterer, from its source
 
@@ -42,17 +42,17 @@ registry; repository metadata from the GitHub search API, 2026-11-20.*
 
 ## 3. Ideas we take, and where they landed
 
-| Betterer idea | In Toolbox | State |
+| Betterer idea | In Seikika | State |
 |---|---|---|
-| Commit the results; review changes like a snapshot | `toolbox report --baseline FILE` writes `toolbox-report/v1` JSON: per scorecard and entity, the level and the failing rules with evidence counts. Sorted keys, one entity per block, so diffs are reviewable | ✅ (D66) |
+| Commit the results; review changes like a snapshot | `seikika report --baseline FILE` writes `seikika-report/v1` JSON: per scorecard and entity, the level and the failing rules with evidence counts. Sorted keys, one entity per block, so diffs are reviewable | ✅ (D66) |
 | `better / same / worse`, not pass/fail | A rule that starts failing is *worse*; a failing rule whose evidence list shrinks is *better*, and one whose list grows is *worse*. So "43 undocumented items, and no more" is enforceable before the rule passes | ✅ |
 | `ci` mode: the file must match | `--ci` fails on regressions **and** when the file is out of date, so improvements must be committed too. This repo's CI runs it on `portal/results.json` | ✅ |
-| Machine-readable results for any pipeline | `--verdict FILE` writes `toolbox-verdict/v1`: the result, the exit code, and each regression, improvement and change as `{scorecard, entity, message}`. The GitHub Action reads it for its outputs and annotations; other CI systems read the same file ([actions/report/README.md](../../actions/report/README.md#other-ci-systems)). Tested end to end in `crates/toolbox-cli/tests/ratchet.rs` and in CI's `report-action` job | ✅ (D96) |
+| Machine-readable results for any pipeline | `--verdict FILE` writes `seikika-verdict/v1`: the result, the exit code, and each regression, improvement and change as `{scorecard, entity, message}`. The GitHub Action reads it for its outputs and annotations; other CI systems read the same file ([actions/report/README.md](../../actions/report/README.md#other-ci-systems)). Tested end to end in `crates/seikika-cli/tests/ratchet.rs` and in CI's `report-action` job | ✅ (D96) |
 | `start` mode writes improvements | `--update` writes the file when nothing regressed (and creates it) | ✅ |
 | Merge tool for conflicts | Not needed: the file is a pure function of the code, so a conflict is resolved by rerunning `--update` on the merged tree | ✅ by design |
 | Per-issue tracking with content hashes (survives moved lines) | Evidence is compared by count, not identity, so moved code doesn't churn. The baseline also keeps a key per evidence item (its text with digits folded, hashed), and a grown list marks only the new items (D01M841J2SN4V3AVZZ5D91YAR51). Judging by identity would catch "fixed one, broke another" (Betterer treats that as worse) | Keys ✅, used to explain; judging by them is R1, §7 |
 | Goals | Scorecard levels are the goals; the ratchet is the path to them | ✅ (existing) |
-| `precommit` mode | A pre-commit hook running `toolbox report --skip <slow connectors> --baseline … --update` | Documented, not packaged |
+| `precommit` mode | A pre-commit hook running `seikika report --skip <slow connectors> --baseline … --update` | Documented, not packaged |
 | `bigger` / `smaller` constraints on a number | A rule's `measure` (CEL, a number) is recorded and compared instead of the evidence count: lines in a file, matches of a pattern. One line more is worse, one less better, without one evidence item per unit | ✅ (D01M7Z2ZZ97VZQNTDT4QQHM3HQD) |
 | `--update` accepts worse | `--update --accept <scorecard>` records that scorecard's regressions, lists them, and still fails on regressions elsewhere: for an intended change to a standard (a tighter threshold, a wider pattern). It also restarts the campaigns that include the scorecard | ✅ (D01M7Z2ZZ97VZQNTDT4QQHM3HQD) |
 | Goals with progress | A campaign's starting point is recorded in the baseline the first time it is active: entities short of the goal and the included rules' summed measure. `-o json` and the summary show the paydown from there; changing the campaign's `start` restarts it | ✅ (D01M7Z2ZZ97VZQNTDT4QQHM3HQD) |
@@ -67,15 +67,15 @@ registry; repository metadata from the GitHub search API, 2026-11-20.*
 - the cause was fixed (`execute` split into named steps); the baseline was not edited
   ([research-log.md](../research-log.md)).
 
-## 4. Should Toolbox for Toolbox use Betterer directly?
+## 4. Should Seikika for Seikika use Betterer directly?
 
 | Option | For | Against |
 |---|---|---|
 | **A. Adopt Betterer as the ratchet** (`.betterer.ts` with tests calling cargo, clippy and our scanners) | Mature UX, VS Code extension, merge tooling | Adds a Node toolchain to the maintainer loop for a Rust repository. The tests would re-implement what the `workspace` and `runner` connectors already measure. Results have no owners or levels, so they can't feed scorecards without a second model. A slowing upstream on the critical path (charter goal G3: no lock-in) |
-| **B. Copy the ideas into `toolbox report`** (chosen) | One model: scorecards, evidence, ratchet. Works for any ecosystem a connector can read. The same file feeds the fleet view (federation) | We maintain the comparison logic (about 120 lines with tests) |
-| **C. Read `.betterer.results` as data** (also done) | Teams that already use Betterer roll up with no change | Read-only: Toolbox reports their state; Betterer remains their enforcement |
+| **B. Copy the ideas into `seikika report`** (chosen) | One model: scorecards, evidence, ratchet. Works for any ecosystem a connector can read. The same file feeds the fleet view (federation) | We maintain the comparison logic (about 120 lines with tests) |
+| **C. Read `.betterer.results` as data** (also done) | Teams that already use Betterer roll up with no change | Read-only: Seikika reports their state; Betterer remains their enforcement |
 
-**Decision (D67):** B for our own repository and for Toolbox's product; C as an integration for
+**Decision (D67):** B for our own repository and for Seikika's product; C as an integration for
 fleets that already use Betterer. A is rejected.
 
 ## 5. The Betterer integration (built)
@@ -111,12 +111,12 @@ fleets that already use Betterer. A is rejected.
 1. Baselines are the accepted way to raise a bar on an existing codebase. Every major linter
    converged on one, so the ratchet is table stakes.
 2. They are all per tool and per repository. Nobody aggregates baselines into owned standards with
-   levels across a fleet. **That is Toolbox's slot.**
+   levels across a fleet. **That is Seikika's slot.**
 3. OpenSSF Scorecard proves the duality: the same check definitions run locally on one repo and as a
-   fleet scan. Toolbox should keep that property, with one manifest, `report` locally and `serve`
+   fleet scan. Seikika should keep that property, with one manifest, `report` locally and `serve`
    centrally (see [federation.md](./federation.md)).
 4. Granularity varies: counts per file (PHPStan, ESLint), position-tolerant identity (basedpyright,
-   Betterer hashes), or diff scoping (golangci-lint, Sonar). Toolbox starts with counts per rule and
+   Betterer hashes), or diff scoping (golangci-lint, Sonar). Seikika starts with counts per rule and
    entity (§7).
 
 ## 7. Open items
@@ -126,7 +126,7 @@ fleets that already use Betterer. A is rejected.
 | R1 | Evidence identity | The baseline records a key per evidence item (D01M841J2SN4V3AVZZ5D91YAR51), and the verdict uses them to mark new items. Open: an optional `evidenceKey` CEL per rule (e.g. the function name without the line) and comparing keys rather than counts, so "fixed one, broke another" is worse, as in Betterer |
 | R2 | Read other baselines | ESLint suppressions, PHPStan baselines and basedpyright baselines are JSON/NEON with counts. One `baselines` reader in the workspace connector would roll them all up the way §5 does for Betterer |
 | R3 | Diff-scoped rules | "No *new* function over 80 lines" via the ratchet already works per entity; per-diff scoping (golangci-lint style) is not needed while entities are files and crates |
-| R4 | Pre-commit packaging | A documented hook, then a `toolbox report --precommit` mode that updates and stages the baseline |
+| R4 | Pre-commit packaging | A documented hook, then a `seikika report --precommit` mode that updates and stages the baseline |
 
 ## Sources
 
@@ -138,5 +138,5 @@ fleets that already use Betterer. A is rejected.
   `website/src/user-guide/baseline.md`; basedpyright `docs/benefits-over-pyright/baseline.md`;
   golangci-lint `pkg/config/issues.go`; OpenSSF Scorecard `README.md` and `docs/checks.md`. Each
   was read from its GitHub repository on 2026-11-20.
-- Toolbox: [toolbox-for-toolbox.md](./toolbox-for-toolbox.md), `crates/toolbox-cli/src/report.rs`,
-  `crates/toolbox-connector-workspace/src/betterer.rs`.
+- Seikika: [seikika-for-seikika.md](./seikika-for-seikika.md), `crates/seikika-cli/src/report.rs`,
+  `crates/seikika-connector-workspace/src/betterer.rs`.

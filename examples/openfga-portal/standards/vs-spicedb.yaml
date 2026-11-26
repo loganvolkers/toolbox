@@ -144,7 +144,7 @@ scorecards:
       how fast a rescheduled replica serves again.
     links:
     - title: Pre-registration and method
-      url: https://github.com/loganvolkers/toolbox/blob/main/experiments/openfga-spicedb-compare/README.md
+      url: https://github.com/seikika/seikika/blob/main/experiments/openfga-spicedb-compare/README.md
     owner: group:openfga-maintainers
     track: vs-spicedb
     levels: [bronze]
@@ -225,7 +225,7 @@ scorecards:
       service, so their size and memory are paid many times over.
     links:
     - title: Pre-registration and method
-      url: https://github.com/loganvolkers/toolbox/blob/main/experiments/openfga-spicedb-compare/README.md
+      url: https://github.com/seikika/seikika/blob/main/experiments/openfga-spicedb-compare/README.md
     owner: group:openfga-maintainers
     track: vs-spicedb
     levels: [bronze]
@@ -341,7 +341,7 @@ scorecards:
       is checked inconsistently and cannot be audited in one place.
     links:
     - title: Pre-registration and known biases
-      url: https://github.com/loganvolkers/toolbox/blob/main/experiments/openfga-spicedb-compare/README.md#known-biases
+      url: https://github.com/seikika/seikika/blob/main/experiments/openfga-spicedb-compare/README.md#known-biases
     owner: group:openfga-maintainers
     track: vs-spicedb
     levels: [bronze]
@@ -439,7 +439,7 @@ scorecards:
       without writing glue around it.
     links:
     - title: Pre-registration and method
-      url: https://github.com/loganvolkers/toolbox/blob/main/experiments/openfga-spicedb-compare/README.md
+      url: https://github.com/seikika/seikika/blob/main/experiments/openfga-spicedb-compare/README.md
     owner: group:openfga-maintainers
     track: vs-spicedb
     levels: [bronze]
@@ -503,7 +503,7 @@ scorecards:
       matter as much as how it runs today.
     links:
     - title: Pre-registration and method
-      url: https://github.com/loganvolkers/toolbox/blob/main/experiments/openfga-spicedb-compare/README.md
+      url: https://github.com/seikika/seikika/blob/main/experiments/openfga-spicedb-compare/README.md
     owner: group:openfga-maintainers
     track: vs-spicedb
     levels: [bronze]

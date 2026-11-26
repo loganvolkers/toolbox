@@ -1,0 +1,56 @@
+apiVersion: seikika.com/assessment/v1
+entity: rule:seikika/maintainer-connector/described
+rubric: rule-quality
+subjectHash: 756f5fca3671
+assessor: {kind: agent, name: cursor-assessor-10, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: measures-intent
+    verdict: fail
+    reason: >-
+      The fix and rationale promise a crate doc "that says what the connector
+      emits" (portal/standards/connectors.yaml:83-88), but the check is only
+      `descriptionChars > 0 && crateDoc` (:79), and crateDoc is true for any
+      `//!` block at the top of src/main.rs, or lib.rs when there is no
+      main.rs (crates/seikika-connector-workspace/src/connectors.rs:34,
+      94-117). An honest binary whose main.rs says `//! Entry point.` while
+      the real docs sit in lib.rs passes without telling an operator what it
+      emits; nothing ties the doc to the kinds names-its-kinds finds. The six
+      live connectors pass with substantive docs (e.g.
+      crates/seikika-connector-gitlab/src/main.rs:1-19), so the gap is latent.
+    suggestion: >-
+      Require the crate doc to name at least one of the connector's
+      documentedKinds (or carry the generic-kinds note), and read lib.rs too
+      when main.rs is a thin wrapper.
+  - criterion: hard-to-game
+    verdict: fail
+    reason: >-
+      A scratch crate with `description = "x"` and a one-line `//! x.` doc,
+      run through target/debug/seikika-connector-workspace, reported
+      descriptionChars 1 and crateDoc true, so the rule passed. One character
+      in each place is the cheapest pass, and it says nothing.
+    suggestion: >-
+      Set a minimum length for both (the site card already uses a chosen
+      floor, docs/design/thresholds.md:38), or require the Cargo description
+      to differ from the crate name and the doc to name a kind.
+  - criterion: fix-leads-to-pass
+    verdict: pass
+    reason: >-
+      The evidence separates the two failure causes ("Cargo.toml has no
+      description" or "no crate-level doc comment", connectors.yaml:80-82),
+      and the fix names both places: the Cargo.toml description and a `//!`
+      crate doc. The fixture crates/demo/unsafe pins the first message
+      (portal/tests/standards.test.yaml:410-415).
+  - criterion: threshold-justified
+    verdict: pass
+    reason: >-
+      There is no number beyond non-empty. Bronze is placed by D73
+      (docs/decisions/D01M7W4FRJR0000000000000000.md) and by
+      docs/design/connector-standards.md:20, where "can an operator tell what
+      it is" is the bronze question.
+summary: >-
+  A sound bronze idea with a check far weaker than its fix text: any
+  non-empty Cargo description plus any `//!` line in main.rs passes. A
+  one-character description and doc reach bronze on a scratch crate, and
+  an honest thin main.rs passes without saying what the connector emits.
+  The evidence and fix are clear, and the level is decided by D73.

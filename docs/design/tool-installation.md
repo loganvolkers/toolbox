@@ -1,7 +1,7 @@
 # Installing the Box's Tools
 
 *Status: researched and built, 2026-11-21 (D01M800DHD0Z1RTPH7CM46GZS3B, refining D90). About the
-box ([toolbox-and-tools.md](./toolbox-and-tools.md)): pinning and installing the tools it carries.
+box ([seikika-and-tools.md](./seikika-and-tools.md)): pinning and installing the tools it carries.
 It serves the operator SDLC (a portal's CI) and the package author SDLC (kits that declare their
 tools).*
 
@@ -9,14 +9,14 @@ tools).*
 
 ## 1. Conclusion
 
-**Toolbox owns the pin; installers install. Toolbox still downloads nothing itself (D90), but it
+**Seikika owns the pin; installers install. Seikika still downloads nothing itself (D90), but it
 is no longer tied to one installer.**
 - **One pin.** Each tool has one `version` in `tools:`, plus an id for each installer it can be
   installed with: `install: {mise, aqua, pypi}`.
-- **The installer's input, derived from the pin.** `toolbox tools config --for mise|aqua|pypi`
+- **The installer's input, derived from the pin.** `seikika tools config --for mise|aqua|pypi`
   prints mise's `[tools]` table, an aqua.yaml package list, or PyPI requirements.
-- **Running the installer.** `toolbox tools install --via auto|mise|uv|pipx|pip` runs the chosen
-  installer for every tool not already at its pin. `toolbox doctor` then checks each pin.
+- **Running the installer.** `seikika tools install --via auto|mise|uv|pipx|pip` runs the chosen
+  installer for every tool not already at its pin. `seikika doctor` then checks each pin.
 - **mise is the default recommendation, not a requirement.** It covers the most tools through
   the most backends, verifies the most, and has a lockfile and a CI action. aqua is the
   alternative with the same registry and verification. uv, pipx and pip cover tools published on
@@ -25,10 +25,10 @@ is no longer tied to one installer.**
 What changed: the pins used to be repeated in four places in this repository (`tools:`, `ci.yml`,
 `pages.yml`, the site-report script). Now CI and the script install zizmor and ruff from
 `tools:`, so a version bump is one edit. actionlint, which isn't on PyPI, is still installed by
-`scripts/ci-tools.sh` from a SHA-256-pinned release. `toolbox doctor` fails CI if its version
+`scripts/ci-tools.sh` from a SHA-256-pinned release. `seikika doctor` fails CI if its version
 drifts from the pin.
 
-## 2. Why not have Toolbox download tools
+## 2. Why not have Seikika download tools
 
 D90 rejected it, and the research confirms that. Installing well means:
 - per-platform asset templates;
@@ -36,7 +36,7 @@ D90 rejected it, and the research confirms that. Installing well means:
 - GitHub artifact attestations, Cosign signatures and SLSA provenance;
 - a registry kept current for thousands of tools.
 
-mise and aqua already do all of it (§3). A downloader inside Toolbox would be a worse copy, and
+mise and aqua already do all of it (§3). A downloader inside Seikika would be a worse copy, and
 the sprawl the budget forbids (D45). A box holds tools; it doesn't manufacture the shelves.
 
 ## 3. The installers, from their sources
@@ -59,7 +59,7 @@ Read from clones of each project at the dates shown. Version numbers are as rele
 - **aqua** gives the same registry and verification in a narrower, CI-shaped tool, so it is the
   alternative for CI.
 - **uv, pipx and pip** cover the PyPI tools with what runners already have.
-- **asdf** leaves integrity to each plugin, so Toolbox doesn't recommend it.
+- **asdf** leaves integrity to each plugin, so Seikika doesn't recommend it.
 - **DotSlash** is a good model, a pinned and hashed file per tool, but one hand-maintained per
   tool.
 
@@ -78,13 +78,13 @@ tools:
 
 | Command | Does |
 |---|---|
-| `toolbox tools install [portal] --via auto` | For each tool not at its pin: the first of mise, uv, pipx and pip that is on the `PATH` and that the tool declares an id for |
+| `seikika tools install [portal] --via auto` | For each tool not at its pin: the first of mise, uv, pipx and pip that is on the `PATH` and that the tool declares an id for |
 | `--via mise` / `uv` / `pipx` / `pip` | `mise install <id>@<version>`, `uv tool install <id>==<version>`, `pipx install …`, `python3 -m pip install …` |
 | `--dry-run` | Print the commands without running them |
-| `toolbox tools config --for mise` | A `[tools]` table for `mise.toml` (the same as `toolbox doctor --mise`); then `mise lock` adds checksums |
-| `toolbox tools config --for aqua` | An aqua.yaml package list; pin the registry release, then `aqua i` |
-| `toolbox tools config --for pypi` | Requirements lines for uv, pipx or pip |
-| `toolbox doctor` | Checks every tool's version against its pin; exit 1 on a mismatch or a missing tool |
+| `seikika tools config --for mise` | A `[tools]` table for `mise.toml` (the same as `seikika doctor --mise`); then `mise lock` adds checksums |
+| `seikika tools config --for aqua` | An aqua.yaml package list; pin the registry release, then `aqua i` |
+| `seikika tools config --for pypi` | Requirements lines for uv, pipx or pip |
+| `seikika doctor` | Checks every tool's version against its pin; exit 1 on a mismatch or a missing tool |
 
 **Checked here:** `tools install --via uv` installed ruff 0.14.0 from the pin into a scratch
 directory, and the configs printed correctly for this repository's three tools. The mise

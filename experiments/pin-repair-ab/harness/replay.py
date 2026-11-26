@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Rebuild the results of terminal commands that a run's transcript lacks, by replaying the run (P6).
 
-    replay.py <arm: toolbox|reviewdog> <dest> <transcript.json> <openfga-src> <toolbox-checkout> <toolbox-target-dir>
+    replay.py <arm: seikika|reviewdog> <dest> <transcript.json> <openfga-src> <seikika-checkout> <seikika-target-dir>
 
 The runtime sometimes records no result for a call. This moves the run's workspace <dest> aside,
 sets up a fresh one at the same path with setup.sh, and runs the run's `run_terminal_cmd` calls in

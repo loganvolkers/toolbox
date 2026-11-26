@@ -1,4 +1,4 @@
-apiVersion: toolbox.dev/assessment/v1
+apiVersion: seikika.com/assessment/v1
 entity: assessment:sdlc-stage-quality/sdlc-stage:operator/test
 rubric: assessment-quality
 subjectHash: 6934840f900f
@@ -13,11 +13,11 @@ verdicts:
       not say what the reasons claim. docs/v1-spec.md:547 is the blank line
       under "### 11.1 Acceptance"; the test format `name` plus `assert[]
       {name, expect}` is :553. The packages claim cites
-      .github/workflows/ci.yml:68, which is `toolbox test
+      .github/workflows/ci.yml:68, which is `seikika test
       examples/repo-portal-starter`; the packages/*/tests loop is :70-72. The
-      rest holds: `toolbox --help` says test exits 1 when an expectation
-      fails, ci.yml:66 runs `toolbox test portal`, and
-      plugins/toolbox-operator/skills/test/SKILL.md covers expectations and
+      rest holds: `seikika --help` says test exits 1 when an expectation
+      fails, ci.yml:66 runs `seikika test portal`, and
+      plugins/seikika-operator/skills/test/SKILL.md covers expectations and
       `runs:` cases over local fixtures.
     suggestion: >-
       Cite docs/v1-spec.md:553 for the test format and
@@ -29,7 +29,7 @@ verdicts:
       expectation exits 1, the format and the skill are enough to write a test
       without a secret, package tests ship with the package and CI runs the
       released binary over committed fixtures, and an operator's tests live in
-      the portal rather than in Toolbox's crates. No sdlc-stage-quality
+      the portal rather than in Seikika's crates. No sdlc-stage-quality
       criterion should have failed.
   - criterion: reproducible
     verdict: pass

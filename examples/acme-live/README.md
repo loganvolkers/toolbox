@@ -7,7 +7,7 @@ The design is [local simulation](../../docs/design/local-simulation.md).
 Check the manifest before starting it:
 
 ```
-toolbox validate examples/acme-live
+seikika validate examples/acme-live
 ```
 
 | | |
@@ -18,7 +18,7 @@ toolbox validate examples/acme-live
 
 The image listens on `0.0.0.0:$PORT`. `DATABASE_URL` is the portal database. OpenFGA uses
 that same database: `serve` adds `sslmode=disable` when the URL has none, and replaces
-OpenFGA's tuple table with a view of `toolbox.derived_tuples`. `GITHUB_TOKEN` is a bearer
+OpenFGA's tuple table with a view of `seikika.derived_tuples`. `GITHUB_TOKEN` is a bearer
 token for the GitHub API.
 `GITHUB_API_URL` is the API root the connectors call (`/orgs/acme/repos`, contents, and the
 other reads). The SCIM connector listens on port 9100 inside the same container. Once it is
@@ -31,9 +31,9 @@ whole stack, including a local Git server and a GitHub-shaped façade. That scri
 repository runs the stack. A deploy uses the image, the Score file, or the chart, and points
 them at a GitHub API and Postgres that are already running.
 
-Signed-in users are `X-Toolbox-User` while `TOOLBOX_AUTH_MODE=dev` (the stand-in for the
+Signed-in users are `X-Seikika-User` while `SEIKIKA_AUTH_MODE=dev` (the stand-in for the
 identity-aware proxy). The image binds `0.0.0.0`, so the deploys also set
-`TOOLBOX_ALLOW_DEV_AUTH_OFF_LOOPBACK=1`: without it, the server refuses dev auth off loopback
+`SEIKIKA_ALLOW_DEV_AUTH_OFF_LOOPBACK=1`: without it, the server refuses dev auth off loopback
 (D01M885TA0R4HCZTVDSG9F0PHDQ). `bob` is in `group:platform` and administers the portal. `alice` is in
 `group:payments`. `carol` is in no group.
 

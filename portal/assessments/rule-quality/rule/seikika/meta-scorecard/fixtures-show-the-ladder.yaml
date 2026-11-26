@@ -1,0 +1,54 @@
+apiVersion: seikika.com/assessment/v1
+entity: rule:seikika/meta-scorecard/fixtures-show-the-ladder
+rubric: rule-quality
+subjectHash: c88d38d005df
+assessor: {kind: agent, name: cursor-assessor-02, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: measures-intent
+    verdict: fail
+    reason: >-
+      The rationale wants fixtures that show the card telling a better entity
+      from a worse one (portal/standards/meta.yaml:661-664). The check accepts
+      one real level plus any fixture at `none`. But an entity whose rules are
+      all unknown is also displayed as `none`
+      (crates/seikika-derive/src/lib.rs:1268-1270, 859), and fixtureLevels
+      counts displayed levels (crates/seikika-cli/src/meta.rs:131-139). So a
+      no-data entity counts as the worse rung, although D70 says unknown is
+      not fail.
+    suggestion: >-
+      Have the connector record, separately from `none`, fixture entities with
+      no decided rule (e.g. `unscored`), and accept `none` only when some
+      bronze rule actually failed.
+  - criterion: hard-to-game
+    verdict: fail
+    reason: >-
+      The check accepts one real level plus `'none' in entity.fixtureLevels`
+      (portal/standards/meta.yaml:650-652), and an all-unknown entity is shown
+      at `none` (crates/seikika-derive/src/lib.rs:859, 1269-1271). Given that,
+      for a card whose fixtures sit at one real level, the cheapest pass is a
+      fixture record without the fields its rules read, not an entity that
+      fails a bronze rule. It is shorter to write and shows no ladder.
+    suggestion: >-
+      Same change, plus a fixture card whose only `none` entity is all
+      unknown, pinned failing in portal/tests/standards.test.yaml.
+  - criterion: fix-leads-to-pass
+    verdict: pass
+    reason: >-
+      The evidence states how many levels are reached and whether any fixture
+      is at none (meta.yaml:653-656). The fix states both acceptable shapes
+      and warns that skipped entities don't count (meta.yaml:657-660). Adding
+      a failing-bronze fixture to the card's connector fixtures passes.
+  - criterion: threshold-justified
+    verdict: pass
+    reason: >-
+      D01M831P5QWJQ4A2FT85N5MXJQF point 3 records why one real level is now
+      required (a none-and-skipped ladder used to pass). The meta-scorecard
+      ladder at docs/design/thresholds.md:60 places "a fixture ladder with a
+      real level" at silver, below gold's every level.
+summary: >-
+  A decided, documented silver rule with a clear fix, pinned both ways
+  (portal/tests/standards.test.yaml:290-297, 1300-1304). Its `none` rung
+  can't tell a fixture that failed from one with no data, which is a
+  loophole the D01M831P5QWJQ4A2FT85N5MXJQF fix didn't close. Live, only
+  repo/docs fails it (portal/results.json).

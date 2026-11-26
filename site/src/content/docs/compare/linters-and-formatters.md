@@ -1,31 +1,31 @@
 ---
-title: Toolbox and the linter/formatter ecosystem
-description: How Toolbox carries ESLint, ruff, clippy, actionlint, zizmor, and peers — without replacing them.
+title: Seikika and the linter/formatter ecosystem
+description: How Seikika carries ESLint, ruff, clippy, actionlint, zizmor, and peers — without replacing them.
 sidebar:
   order: 9
 relationship: complement
 peer: Linters and formatters
 last_verified: 2026-11-23
 claim_sources:
-  - https://github.com/loganvolkers/toolbox/blob/main/docs/design/toolbox-and-tools.md
+  - https://github.com/seikika/seikika/blob/main/docs/design/seikika-and-tools.md
 ---
 
-This is **not a replacement**. ESLint, ruff, clippy, rustfmt, actionlint, zizmor, and the rest of the linter and formatter ecosystem remain the tools that check and rewrite code. Toolbox is the *box*: it pins them, runs them together, and remembers what they found ([toolbox-and-tools](https://github.com/loganvolkers/toolbox/blob/main/docs/design/toolbox-and-tools.md)).
+This is **not a replacement**. ESLint, ruff, clippy, rustfmt, actionlint, zizmor, and the rest of the linter and formatter ecosystem remain the tools that check and rewrite code. Seikika is the *box*: it pins them, runs them together, and remembers what they found ([seikika-and-tools](https://github.com/seikika/seikika/blob/main/docs/design/seikika-and-tools.md)).
 
 ## Quick glance
 
-| | Linter / formatter | Toolbox |
+| | Linter / formatter | Seikika |
 |---|---|---|
 | Owns | Rules, config file, CLI, editor integration | Which tools, versions, how they run, what findings mean for a standard |
 | Output | Tool-native or SARIF / similar | Reads standard slots (SARIF, NDJSON, …) and mappings into entities |
 | Config | `.eslintrc`, `ruff.toml`, `clippy` flags, … | `tools:` pins and package kits; tool config stays the tool's |
 | Alone | Fully useful without a portal | Useful as `report` / doctor; not a substitute for the tool's CLI |
 
-## How Toolbox standardizes and carries them
+## How Seikika standardizes and carries them
 
 - **Take it out.** The command the box runs is a command you can run; configuration lives in the tool's own file when possible.
 - **Standard slots first.** Prefer SARIF (and similar) so a new tool fits without a custom extractor.
-- **Pin and doctor.** Declared versions and `toolbox doctor` so missing or wrong tools are visible.
+- **Pin and doctor.** Declared versions and `seikika doctor` so missing or wrong tools are visible.
 - **Ratchet the meaning.** Scorecards and baselines decide levels and regressions; they do not rewrite the tool's findings.
 - **Kits.** Packages can ship a set of tools, pins, and scorecards (for example GitHub Actions lint kits) for other portals to include.
 
@@ -37,4 +37,4 @@ This is **not a replacement**. ESLint, ruff, clippy, rustfmt, actionlint, zizmor
 
 ## Last verified
 
-**2026-11-23**, against [docs/design/toolbox-and-tools.md](https://github.com/loganvolkers/toolbox/blob/main/docs/design/toolbox-and-tools.md). Re-check package READMEs and tool pins when naming specific versions in portal config.
+**2026-11-23**, against [docs/design/seikika-and-tools.md](https://github.com/seikika/seikika/blob/main/docs/design/seikika-and-tools.md). Re-check package READMEs and tool pins when naming specific versions in portal config.

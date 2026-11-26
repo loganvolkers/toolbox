@@ -27,9 +27,9 @@ if [[ ! -d "$AB_HOME/pins/backstage/.git" ]]; then
   git -C "$AB_HOME/pins/backstage" checkout "$BACKSTAGE_PIN" || true
 fi
 
-# --- toolbox binaries on PATH for arm A scoring ------------------------------------
-if [[ -x "$ROOT/target/debug/toolbox" ]]; then
-  ln -sfn "$ROOT/target/debug/toolbox" "$AB_HOME/bin/toolbox"
+# --- seikika binaries on PATH for arm A scoring ------------------------------------
+if [[ -x "$ROOT/target/debug/seikika" ]]; then
+  ln -sfn "$ROOT/target/debug/seikika" "$AB_HOME/bin/seikika"
 fi
 
 # --- arm working copies from scaffolds ---------------------------------------------
@@ -39,9 +39,9 @@ for arm in A B C; do
   mkdir -p "$dest/OUT"
   case "$arm" in
     A)
-      cp -a "$ROOT/experiments/connector-ab/scaffolds/toolbox/." "$dest/"
+      cp -a "$ROOT/experiments/connector-ab/scaffolds/seikika/." "$dest/"
       # Point the path dependency at this checkout
-      sed -i "s|__TOOLBOX_ROOT__|$ROOT|g" "$dest/Cargo.toml"
+      sed -i "s|__SEIKIKA_ROOT__|$ROOT|g" "$dest/Cargo.toml"
       # Arm A must use the repo toolchain (edition2024); without this, cargo 1.83 fails.
       cp "$ROOT/rust-toolchain.toml" "$dest/rust-toolchain.toml"
       echo "export PATH=/usr/local/cargo/bin:\$PATH" > "$dest/env.sh"
@@ -78,7 +78,7 @@ done
 cat > "$AB_HOME/pins/PINS.txt" <<EOF
 port-labs/ocean@$OCEAN_PIN
 backstage/backstage@$BACKSTAGE_PIN
-toolbox=$(git -C "$ROOT" rev-parse HEAD)
+seikika=$(git -C "$ROOT" rev-parse HEAD)
 EOF
 
 echo "AB_HOME=$AB_HOME ready"

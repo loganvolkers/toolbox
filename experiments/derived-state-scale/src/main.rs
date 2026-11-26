@@ -1,4 +1,4 @@
-//! Full-pipeline recompute at Toolbox's v1.0 scale target (plan.md §6.6: 100k entities, 2M relations,
+//! Full-pipeline recompute at Seikika's v1.0 scale target (plan.md §6.6: 100k entities, 2M relations,
 //! 10k users, 1k teams, 100 rules), with no incremental engine. Answers adversarial-critique.md E4.
 //!
 //! Pipeline (every stage recomputed from scratch, from two source fragments per entity):

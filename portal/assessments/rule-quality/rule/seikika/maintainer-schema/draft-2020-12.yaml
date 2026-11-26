@@ -1,0 +1,45 @@
+apiVersion: seikika.com/assessment/v1
+entity: rule:seikika/maintainer-schema/draft-2020-12
+rubric: rule-quality
+subjectHash: 80fe6feebc90
+assessor: {kind: agent, name: cursor-assessor-10, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: measures-intent
+    verdict: pass
+    reason: >-
+      The binary forces the draft: crates/seikika-model/src/schema.rs:22 calls
+      `with_draft(Draft202012)`, and in jsonschema 0.61.2 an explicit draft
+      beats the `$schema` keyword (src/options.rs:614-621, "Explicitly set"
+      first). So `$schema` is only the author's declaration, and an exact
+      match with the 2020-12 URI
+      (crates/seikika-connector-workspace/src/specs.rs:34) is the right test
+      that author and compiler agree. The common wrong-dialect mistake,
+      array-form `items`, also fails the 2020-12 meta-schema, which the build
+      validates by default (`validate_schema: true`, src/options.rs:88) when
+      schema.rs compiles the document.
+  - criterion: hard-to-game
+    verdict: pass
+    reason: >-
+      The only way to pass is to set `$schema` to the 2020-12 URI, which is
+      the rule's intent, given that the compiler already applies 2020-12
+      semantics (schema.rs:19-26). There is no cheaper route.
+  - criterion: fix-leads-to-pass
+    verdict: pass
+    reason: >-
+      The evidence shows the current dialect
+      (portal/standards/schemas.yaml:62, pinned as the draft-07 URI for
+      schema/demo/unsafe in portal/tests/standards.test.yaml:603-604). The fix
+      gives the exact URI the check compares against (schemas.yaml:63-65).
+  - criterion: threshold-justified
+    verdict: pass
+    reason: >-
+      A yes/no rule. Bronze is D77's "bronze is Draft 2020-12"
+      (docs/decisions/D01M7W5BEAG0000000000000000.md). It is grounded in the
+      compiler (docs/design/schema-standards.md:13-15) and links the 2020-12
+      core spec (schemas.yaml:69-71).
+summary: >-
+  A small, honest rule. The compiler forces 2020-12 whatever `$schema`
+  says, so requiring the exact 2020-12 URI keeps the declared dialect
+  equal to the one the server runs, and the meta-schema check catches the
+  worst draft-07 leftovers. Evidence, fix and level are all clear.

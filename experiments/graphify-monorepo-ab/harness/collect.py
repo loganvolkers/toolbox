@@ -16,7 +16,7 @@ import subprocess
 import sys
 
 HERE = pathlib.Path(__file__).resolve().parent
-MEASURES = ("toolCalls", "resultCharsImputed", "graphifyCalls", "toolboxCalls", "wallSeconds")
+MEASURES = ("toolCalls", "resultCharsImputed", "graphifyCalls", "seikikaCalls", "wallSeconds")
 
 
 def main() -> None:
@@ -38,11 +38,11 @@ def main() -> None:
                                                      "answered": answers.exists(), **count}, indent=2) + "\n")
         rows.append((run, arm_of[run], bc, answers.exists(), count))
     lines = ["run\tarm\tbcId\tanswered\tcalls\tread\treadRecorded\tmissing\tgraphifyCalls\tgraphifyRead"
-             "\ttoolboxCalls\ttoolboxRead\toutside\twallSeconds"]
+             "\tseikikaCalls\tseikikaRead\toutside\twallSeconds"]
     for run, arm, bc, answered, c in sorted(rows, key=lambda r: int(r[0].rsplit("-", 1)[1])):
         lines.append(f"{run}\t{arm}\t{bc}\t{answered}\t{c['toolCalls']}\t{c['resultCharsImputed']}"
                      f"\t{c['resultChars']}\t{','.join(c['missingResults']) or '-'}\t{c['graphifyCalls']}"
-                     f"\t{c['graphifyChars']}\t{c['toolboxCalls']}\t{c['toolboxChars']}"
+                     f"\t{c['graphifyChars']}\t{c['seikikaCalls']}\t{c['seikikaChars']}"
                      f"\t{len(c['outsidePaths'])}\t{c['wallSeconds']}")
     (HERE.parent / "results" / f"r{rnd}.tsv").write_text("\n".join(lines) + "\n")
     print("\n".join(lines))

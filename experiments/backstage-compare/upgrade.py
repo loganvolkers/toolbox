@@ -5,9 +5,9 @@
   for them; each release's template diff is what they merge by hand (the Upgrade Helper shows it).
   Counted over the last RELEASES main-line releases in a backstage/backstage clone, without the
   vendored Yarn binary.
-- Toolbox: the oldest release's starter, unchanged, through the current binary's validate and
+- Seikika: the oldest release's starter, unchanged, through the current binary's validate and
   test. The lines an adopter must change are 0 when both pass.
-- Rollback: Toolbox release OLD serves a database, the current binary serves it, then OLD serves it
+- Rollback: Seikika release OLD serves a database, the current binary serves it, then OLD serves it
   again; the steps that fail are the manual steps. Backstage's documented rollback is a manual
   `knex migrate:down` per migration, run from the newer version
   (docs/tutorials/manual-knex-rollback.md), so its steps are the migrations the template's
@@ -22,13 +22,14 @@ import time
 import urllib.request
 from pathlib import Path
 
-from measure import PG, ROOT, TOOLBOX, psql, wait
+from measure import PG, ROOT, SEIKIKA, psql, wait
 
 BS_REPO = Path(os.environ.get("BS_REPO", "/tmp/research/bs"))
 BS_SRC = Path(os.environ.get("BS_SRC", "/tmp/bs/app"))
 BS_FROM, BS_TO = os.environ.get("BS_FROM", "v1.51.0"), os.environ.get("BS_TO", "v1.57.1")
 RELEASES = 6
-TBX_OLDEST, TBX_OLD = "v0.1.0", os.environ.get("TOOLBOX_OLD", "v0.1.1")
+SEIKIKA_OLDEST = os.environ.get("SEIKIKA_OLDEST", "v0.2.0")
+SEIKIKA_OLD = os.environ.get("SEIKIKA_OLD", "v0.2.0")
 PORT = 18093
 
 
@@ -64,31 +65,31 @@ def backstage_rollback_migrations():
     return count
 
 
-def toolbox_required_lines():
+def seikika_required_lines():
     tmp = Path(tempfile.mkdtemp(prefix="starter-"))
-    archive = subprocess.run(["git", "archive", TBX_OLDEST, "examples/repo-portal-starter"],
+    archive = subprocess.run(["git", "archive", SEIKIKA_OLDEST, "examples/repo-portal-starter"],
                              cwd=ROOT, check=True, capture_output=True).stdout
     subprocess.run(["tar", "-x", "-C", str(tmp)], input=archive, check=True)
     starter = tmp / "examples/repo-portal-starter"
-    ok = all(subprocess.run([TOOLBOX, cmd, str(starter)], capture_output=True).returncode == 0
+    ok = all(subprocess.run([SEIKIKA, cmd, str(starter)], capture_output=True).returncode == 0
              for cmd in ("validate", "test"))
     if ok:
         return 0
-    stat = git("diff", "--numstat", TBX_OLDEST, "HEAD", "--", "examples/repo-portal-starter")
+    stat = git("diff", "--numstat", SEIKIKA_OLDEST, "HEAD", "--", "examples/repo-portal-starter")
     return sum(int(a) + int(d) for a, d, _ in (r.split("\t") for r in stat.splitlines()))
 
 
 def old_binary():
-    tmp = Path(tempfile.mkdtemp(prefix="toolbox-old-"))
-    name = "toolbox-cli-x86_64-unknown-linux-gnu.tar.xz"
-    subprocess.run(["gh", "release", "download", TBX_OLD, "-R", "loganvolkers/toolbox", "-p", name,
+    tmp = Path(tempfile.mkdtemp(prefix="seikika-old-"))
+    name = "seikika-cli-x86_64-unknown-linux-gnu.tar.xz"
+    subprocess.run(["gh", "release", "download", SEIKIKA_OLD, "-R", "seikika/seikika", "-p", name,
                     "-D", str(tmp)], check=True)
     with tarfile.open(tmp / name) as t:
         t.extractall(tmp, filter="data")
-    return next(tmp.rglob("toolbox"))
+    return next(tmp.rglob("seikika"))
 
 
-def toolbox_rollback():
+def seikika_rollback():
     """Steps that fail in OLD → current → OLD on one database; 0 means rollback by binary."""
     old = old_binary()
     psql("DROP DATABASE IF EXISTS bench_rollback")
@@ -97,9 +98,9 @@ def toolbox_rollback():
     portal = Path(__file__).resolve().parent / "portal"
     base = f"http://127.0.0.1:{PORT}"
     failed = 0
-    for i, binary in enumerate([old, Path(TOOLBOX), old]):
-        env = {k: v for k, v in os.environ.items() if not k.startswith("TOOLBOX_")}
-        env.update(TOOLBOX_CONNECTORS="off", RUST_LOG="warn")
+    for i, binary in enumerate([old, Path(SEIKIKA), old]):
+        env = {k: v for k, v in os.environ.items() if not k.startswith("SEIKIKA_")}
+        env.update(SEIKIKA_CONNECTORS="off", RUST_LOG="warn")
         proc = subprocess.Popen([str(binary), "serve", str(portal), "--listen", f"127.0.0.1:{PORT}",
                                  "--database-url", PG + "/bench_rollback"], env=env,
                                 stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
@@ -108,11 +109,11 @@ def toolbox_rollback():
                          60)
             if ready and i == 0:
                 req = urllib.request.Request(f"{base}/v1/ingest", data=catalog.read_bytes(),
-                                             headers={"x-toolbox-connector": "catalog"},
+                                             headers={"x-seikika-connector": "catalog"},
                                              method="POST")
                 urllib.request.urlopen(req, timeout=120)
             read = urllib.request.Request(f"{base}/v1/entities/component:c999",
-                                          headers={"x-toolbox-user": "bench"})
+                                          headers={"x-seikika-user": "bench"})
             if not (ready and wait(lambda: urllib.request.urlopen(read, timeout=2).status == 200,
                                    60)):
                 failed += 1
@@ -127,10 +128,10 @@ def main():
     bs_lines = backstage_template_lines()
     bs_migrations = backstage_rollback_migrations()
     out = {
-        "toolbox": {"upgradeLinesPerRelease": toolbox_required_lines(),
-                    "rollbackManualStepsPerRelease": toolbox_rollback(),
-                    "upgradeWindow": f"{TBX_OLDEST}..HEAD",
-                    "rollbackFrom": TBX_OLD},
+        "seikika": {"upgradeLinesPerRelease": seikika_required_lines(),
+                    "rollbackManualStepsPerRelease": seikika_rollback(),
+                    "upgradeWindow": f"{SEIKIKA_OLDEST}..HEAD",
+                    "rollbackFrom": SEIKIKA_OLD},
         "backstage": {"upgradeLinesPerRelease": round(bs_lines / RELEASES, 1),
                       "upgradeTemplateLines": bs_lines,
                       "rollbackManualStepsPerRelease": round(bs_migrations / RELEASES, 1),

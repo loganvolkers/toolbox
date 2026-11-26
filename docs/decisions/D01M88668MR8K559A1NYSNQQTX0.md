@@ -5,7 +5,7 @@ decided: 2026-11-25T01:49:12Z
 
 # Connector confinement is a setting: `best-effort` by default, `required` to refuse unconfined connectors
 
-**`TOOLBOX_CONNECTOR_CONFINEMENT` says what `toolbox serve` does when it cannot put an in-image
+**`SEIKIKA_CONNECTOR_CONFINEMENT` says what `seikika serve` does when it cannot put an in-image
 connector in its own Landlock domain. `best-effort`, the default, starts the connector unconfined
 and makes that visible. `required` refuses to start it.** Where Landlock is available, nothing
 changes: every in-image connector is confined either way.
@@ -28,7 +28,7 @@ changes: every in-image connector is confined either way.
      setting and the two counts. Readiness doesn't change, because a refused connector leaves
      the portal serving its other sources.
    - A field's explain adds `sourceConfinement` when the field came from an in-image connector.
-   - `toolbox doctor` prints a `connector confinement` line for a portal with in-image
+   - `seikika doctor` prints a `connector confinement` line for a portal with in-image
      connectors: `ok` where the host has Landlock, and `UNCONFINED` where it doesn't, as a warning
      that keeps exit 0. It prints `REFUSED` where it doesn't and `required` is set, and `WRONG` for
      a bad value. Both of those exit 1. Doctor checks the host it runs on, which is the server's
@@ -42,8 +42,8 @@ changes: every in-image connector is confined either way.
 
 **Status:** ✅
 
-**Where:** `crates/toolbox-api/src/confine.rs` (`Confinement`, `spawn`),
-`crates/toolbox-api/src/connectors.rs` (`supervise`, `confinement_summary`),
-`crates/toolbox-cli/src/install.rs` (`doctor`),
+**Where:** `crates/seikika-api/src/confine.rs` (`Confinement`, `spawn`),
+`crates/seikika-api/src/connectors.rs` (`supervise`, `confinement_summary`),
+`crates/seikika-cli/src/install.rs` (`doctor`),
 [connector-control.md](../design/connector-control.md) §3,
 [backstage-comparison.md](../design/backstage-comparison.md) §4.

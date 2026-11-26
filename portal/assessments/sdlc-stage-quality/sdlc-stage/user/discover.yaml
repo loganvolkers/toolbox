@@ -1,4 +1,4 @@
-apiVersion: toolbox.dev/assessment/v1
+apiVersion: seikika.com/assessment/v1
 entity: sdlc-stage:user/discover
 rubric: sdlc-stage-quality
 subjectHash: 5dfc4c2a3105
@@ -12,25 +12,25 @@ verdicts:
       (which calls MCP) as alice, erin and bob, and asserts that erin's
       details are redacted. Its A5 step checks a REST filter's exact ids, and
       line 80 drives the UI in Playwright. CI runs it
-      (.github/workflows/ci.yml:177). crates/toolbox-api/tests/mcp.rs:124-240
+      (.github/workflows/ci.yml:177). crates/seikika-api/tests/mcp.rs:124-240
       covers search, query, owner_of and scorecard_status over tools/call. The
       UI step checks refresh, not redaction (scripts/ui-a11.cjs:14-30), so the
       UI's share of "same authorization" rests on the REST path it calls.
   - criterion: agent-can-complete
     verdict: pass
     reason: >-
-      Each listed command has a skill (plugins/toolbox-operator/skills/search,
-      get, owner, mcp). Against `toolbox serve examples/reference-portal
-      --fixtures`, `toolbox search ledger`, `owner repository:ledger` and `get
+      Each listed command has a skill (plugins/seikika-operator/skills/search,
+      get, owner, mcp). Against `seikika serve examples/reference-portal
+      --fixtures`, `seikika search ledger`, `owner repository:ledger` and `get
       repository:ledger` answered with evidence and a snapshot id. The
-      authorization half needs TOOLBOX_OPENFGA_BIN: without it the server
+      authorization half needs SEIKIKA_OPENFGA_BIN: without it the server
       warns "running WITHOUT authorization" and erin saw full rule details.
   - criterion: reuses-artifacts
     verdict: pass
     reason: >-
-      A user only needs the released `toolbox` (installer at v0.1.1,
+      A user only needs the released `seikika` (installer at v0.1.1,
       scripts/install-release.sh:6-8) pointed at a portal with --url or
-      TOOLBOX_URL, or `toolbox mcp` as a stdio bridge to /mcp. Nothing is
+      SEIKIKA_URL, or `seikika mcp` as a stdio bridge to /mcp. Nothing is
       compiled.
   - criterion: decoupled-from-core
     verdict: pass
@@ -42,7 +42,7 @@ verdicts:
   - criterion: fast-feedback
     verdict: fail
     reason: >-
-      portal/sdlc/stages/user.yaml lists toolbox search. docs/design/user-
+      portal/sdlc/stages/user.yaml lists seikika search. docs/design/user-
       sdlc.md gives no measured local time to the stage exit.
     suggestion: >-
       Measure and record the fastest local check that demonstrates this stage
@@ -50,7 +50,7 @@ verdicts:
   - criterion: beyond-one-reference
     verdict: fail
     reason: >-
-      portal/sdlc/stages/user.yaml lists crates/toolbox-api/tests/mcp.rs as
+      portal/sdlc/stages/user.yaml lists crates/seikika-api/tests/mcp.rs as
       evidence. The declared checks name no second exercised reference for
       this stage exit.
     suggestion: >-

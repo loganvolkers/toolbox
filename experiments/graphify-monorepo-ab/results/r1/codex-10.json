@@ -20,12 +20,12 @@
   "graphifyCalls": 0,
   "graphifyCommands": {},
   "graphifyChars": 0,
-  "toolboxCalls": 3,
-  "toolboxCommands": {
+  "seikikaCalls": 3,
+  "seikikaCommands": {
     "get": 2,
     "search": 1
   },
-  "toolboxChars": 9355,
+  "seikikaChars": 9355,
   "outsidePaths": [],
   "wallSeconds": 263
 }

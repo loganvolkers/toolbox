@@ -1,24 +1,24 @@
-# SDLC in Toolbox: Four Layers
+# SDLC in Seikika: Four Layers
 
-*Status: 2026-11-20 (decisions D63 and D87, amending D34/G2). Whenever a Toolbox document says
+*Status: 2026-11-20 (decisions D63 and D87, amending D34/G2). Whenever a Seikika document says
 "SDLC", it means one of these four layers and says which. D87 added the package author SDLC.*
 
-Toolbox has four groups of builders. Each needs its own plan → build → test → deploy → monitor
+Seikika has four groups of builders. Each needs its own plan → build → test → deploy → monitor
 loop, at the standard of ordinary software engineering, and each is worked mostly by agents in
 harnesses such as Claude Code.
 
 | Layer | Who | What they build | Where it's designed | State today |
 |---|---|---|---|---|
-| **1. Maintainer SDLC** | People and agents working on *this repository* | Toolbox itself: the Rust workspace, connectors, the UI, schemas, docs | [design/maintainer-sdlc.md](./design/maintainer-sdlc.md), with [developer-velocity.md](./design/developer-velocity.md) and [verification.md](./design/verification.md) | **In daily use:** pinned toolchain, reference-model differential tests, parity and acceptance scripts, CI, scale budget |
-| **2. Package author SDLC** (D87) | Anyone publishing packages, connectors or standards for others: platform teams, vendors, and us for our own standards | *Packages*: standards as data, connector binaries or WASM components, and the tools they require | [design/package-author-sdlc.md](./design/package-author-sdlc.md), [design/packages.md](./design/packages.md) | **Mostly missing:** connectors outside this repository can only be remote, no package format, and no released Toolbox to test against |
+| **1. Maintainer SDLC** | People and agents working on *this repository* | Seikika itself: the Rust workspace, connectors, the UI, schemas, docs | [design/maintainer-sdlc.md](./design/maintainer-sdlc.md), with [developer-velocity.md](./design/developer-velocity.md) and [verification.md](./design/verification.md) | **In daily use:** pinned toolchain, reference-model differential tests, parity and acceptance scripts, CI, scale budget |
+| **2. Package author SDLC** (D87) | Anyone publishing packages, connectors or standards for others: platform teams, vendors, and us for our own standards | *Packages*: standards as data, connector binaries or WASM components, and the tools they require | [design/package-author-sdlc.md](./design/package-author-sdlc.md), [design/packages.md](./design/packages.md) | **Mostly missing:** connectors outside this repository can only be remote, no package format, and no released Seikika to test against |
 | **3. Operator SDLC** | Platform teams and their agents running a portal | A *portal*: manifest, authorization model, connectors, actions, UI bundles, deployed as one image | [design/sdlc.md](./design/sdlc.md) | **Partly built:** `validate`, `test`, `plan --local`, `derive`, `serve`, `push`, `connector test`; remote plan, previews, build, deploy and verify arrive with M6 |
-| **4. User SDLC** | Developers and agents *using* a portal | *Apps* powered by Toolbox context and actions: agents, scripts, dashboards, internal tools, CI checks | [design/user-sdlc.md](./design/user-sdlc.md) | **Foundations built:** MCP, REST, CLI, PATs, snapshot ids for reproducible reads; typed clients, the generated user plugin and action runs are still to come |
+| **4. User SDLC** | Developers and agents *using* a portal | *Apps* powered by Seikika context and actions: agents, scripts, dashboards, internal tools, CI checks | [design/user-sdlc.md](./design/user-sdlc.md) | **Foundations built:** MCP, REST, CLI, PATs, snapshot ids for reproducible reads; typed clients, the generated user plugin and action runs are still to come |
 
 ## Why separate them
 
-- **Different artefacts, different contracts.** Maintainers change Toolbox, so their contract is the
+- **Different artefacts, different contracts.** Maintainers change Seikika, so their contract is the
   [v1 spec](./v1-spec.md) and the reference model. Operators change a portal, so theirs is the manifest
-  schema and `toolbox plan`. Users build on a portal, so theirs is the API, the MCP tools and their
+  schema and `seikika plan`. Users build on a portal, so theirs is the API, the MCP tools and their
   stability.
 - **Different speeds that must not leak.** A maintainer's inner loop can take seconds; an operator's
   must too (charter goal G2). Neither may break a user's app without a versioned, announced change.
@@ -29,13 +29,13 @@ harnesses such as Claude Code.
 ## How the layers connect
 
 ```
-Layer 1 (maintainers)     ── releases toolbox, image, SDKs, schemas ────▶  Layers 2 and 3
+Layer 1 (maintainers)     ── releases seikika, image, SDKs, schemas ────▶  Layers 2 and 3
 Layer 2 (package authors) ── distributes packages: standards, connectors ─▶  Layer 3 (operators)
 Layer 3 (operators)       ── deploys a portal: API, MCP, UI, actions ─────▶  Layer 4 (users)
 Layer 4 (users)           ── feedback, needs, failing scorecards ─────────▶  Layers 3, 2, 1
 
 Package authors fork from the maintainer loop at *test*: they test one package against released
-Toolbox versions and platforms, then distribute it, instead of merging into one repository.
+Seikika versions and platforms, then distribute it, instead of merging into one repository.
 ```
 
 The reference portal ([examples/reference-portal](../examples/reference-portal/README.md)) sits on
@@ -43,9 +43,9 @@ the boundary between the layers. It is a layer-3 (operator) portal that layer 1 
 oracle, and its acceptance scenarios are written as layer-4 (user) tasks ("who owns X?", "refresh this", "install
 this app").
 
-## Toolbox scores its own layers
+## Seikika scores its own layers
 
-[Toolbox for Toolbox](./design/toolbox-for-toolbox.md) (D65) turns these layers into scorecards on
+[Seikika for Seikika](./design/seikika-for-seikika.md) (D65) turns these layers into scorecards on
 this repository: `maintainer-crate` and `maintainer-docs` (layer 1), `operator-cli` (layer 3), and
 `user-cli` and `user-mcp` (layer 4). The layers themselves are catalogued too (D87): `portal/sdlc/`
 declares every stage of every layer (exit criterion, commands, checks, status, gaps), scored by
@@ -57,7 +57,7 @@ declares every stage of every layer (exit criterion, commands, checks, status, g
 Scorecards check that each stage is declared and has a gate. **DX Benchmarks**
 ([design/dx-benchmarks.md](./design/dx-benchmarks.md), D01M82X2K0DYWTCA23MQJ4CKR0Z) check that
 the stages work for agents. Fresh coding agents do a layer's work on open-source repositories,
-with Toolbox and with its strongest alternative, against a bar set before the run. Each benchmark
+with Seikika and with its strongest alternative, against a bar set before the run. Each benchmark
 names the layers and stages it measures (`portal/benchmarks/`, scored by `maintainer-benchmark`).
 So far the benchmarks have measured the operator and package-author layers most. The user layer
 has no benchmark of its own yet.
@@ -65,7 +65,7 @@ has no benchmark of its own yet.
 ## Rules for documents
 
 1. Name the layer: "maintainer SDLC", "package author SDLC", "operator SDLC" or "user SDLC", never bare "SDLC".
-2. A capability that serves several layers says how it serves each (for example, `toolbox test`
+2. A capability that serves several layers says how it serves each (for example, `seikika test`
    is a layer-3 (operator) tool that layer 1 also uses on the reference portal).
 3. Each layer document keeps an **implemented vs. planned** table, so agents can tell what they can
    rely on today.

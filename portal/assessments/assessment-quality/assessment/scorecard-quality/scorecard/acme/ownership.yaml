@@ -1,4 +1,4 @@
-apiVersion: toolbox.dev/assessment/v1
+apiVersion: seikika.com/assessment/v1
 entity: assessment:scorecard-quality/scorecard:acme/ownership
 rubric: assessment-quality
 subjectHash: 0ec8201e1179
@@ -10,14 +10,14 @@ verdicts:
     reason: >-
       The citations in
       portal/assessments/scorecard-quality/scorecard/acme/ownership.yaml
-      mostly hold. In examples/reference-portal/toolbox.yaml the rationale is
+      mostly hold. In examples/reference-portal/seikika.yaml the rationale is
       at 173-178, the rules at 188-227 and claim-verified's "the claimed team
       reviews the claim" at 203-206.
-      crates/toolbox-connector-github/src/main.rs:158-162 reads only
+      crates/seikika-connector-github/src/main.rs:158-162 reads only
       `protected`. tests/ownership.test.yaml has 14 asserts and shows
       platform-infra and checkout-web bronze, payments-api silver and ledger
       none. docs/research-log.md:59 records A2 (ledger unverified, with
-      CODEOWNERS evidence via `toolbox owner`). One attribution overreaches.
+      CODEOWNERS evidence via `seikika owner`). One attribution overreaches.
       D01M7TCJ3280000000000000000 and docs/authorization.md §4.8 (402-415)
       require CODEOWNERS backing but say nothing about required code-owner
       review. The gap is supported by the rule's rationale, not by D17.
@@ -27,8 +27,8 @@ verdicts:
       The verdicts are right. All four rules answer who owns a repository and
       whether that claim can be trusted, and bronze is contained in silver. No
       rule checks the review that claim-verified's rationale promises
-      (toolbox.yaml:203-206). No rule has evidence, and the rubric says to
-      fail that (portal/standards/meta.yaml:1214-1216), even though `toolbox
+      (seikika.yaml:203-206). No rule has evidence, and the rubric says to
+      fail that (portal/standards/meta.yaml:1214-1216), even though `seikika
       owner` can explain it.
   - criterion: reproducible
     verdict: pass

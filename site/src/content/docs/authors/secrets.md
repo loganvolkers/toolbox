@@ -15,10 +15,10 @@ config:
 
 Do not paste PEMs, tokens or service-account JSON into the repository. Connector authors run with:
 
-- `TOOLBOX_SECRET_<NAME>` (hyphens become underscores), or
-- files under `TOOLBOX_SECRETS_DIR` (gitignored `.secrets/`).
+- `SEIKIKA_SECRET_<NAME>` (hyphens become underscores), or
+- files under `SEIKIKA_SECRETS_DIR` (gitignored `.secrets/`).
 
 Operators map those logical names to Vault or cloud secret managers. Your connector code only reads
-the resolved `TOOLBOX_CONNECTOR_CONFIG` JSON. See the
-[operator secrets page](/toolbox/operators/secrets/) and
-[`examples/secret-vault-gcp`](https://github.com/loganvolkers/toolbox/tree/main/examples/secret-vault-gcp).
+the resolved `SEIKIKA_CONNECTOR_CONFIG` JSON. See the
+[operator secrets page](/operators/secrets/) and
+[`examples/secret-vault-gcp`](https://github.com/seikika/seikika/tree/main/examples/secret-vault-gcp).

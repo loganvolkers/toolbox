@@ -16,7 +16,7 @@ COMMON = """You are authoring a cloud/SaaS connector for Forge (a mock Jira Clou
 
 - Read {arm_dir}/FORGE.md for base URLs and tokens. Forge is already running on loopback.
 - Budget: 50 tool calls. Network only to 127.0.0.1 (Forge). No package installs unless the scaffold's README already documented a one-line install that setup ran; prefer the stdlib and what is already present.
-- Do **not** read `{ab}/fixtures/**/expected-*.ndjson`, `{ab}/../experiments/connector-ab/harness/score.py`, `{ab}/../experiments/connector-ab/harness/read-key.md`, `{toolbox}/experiments/`, or `{toolbox}/docs/research-log.md`. Those hold the scoring key.
+- Do **not** read `{ab}/fixtures/**/expected-*.ndjson`, `{ab}/../experiments/connector-ab/harness/score.py`, `{ab}/../experiments/connector-ab/harness/read-key.md`, `{seikika}/experiments/`, or `{seikika}/docs/research-log.md`. Those hold the scoring key.
 - Write mapped catalog entities to {arm_dir}/OUT/entities.ndjson using exactly this schema (one JSON object per line, sorted by kind then id):
 
 ```json
@@ -40,24 +40,24 @@ When you finish, reply with:
 """
 
 ARM = {
-    "A": """## Your setup (Toolbox)
+    "A": """## Your setup (Seikika)
 
-- Scaffold Cargo project at {arm_dir}; `toolbox-connect` is a path dependency.
-- You may read only: {toolbox}/crates/toolbox-connect/, {toolbox}/crates/toolbox-connector-github/src/main.rs, {toolbox}/crates/toolbox-connector-git-files/src/main.rs, {toolbox}/docs/design/connector-control.md, {toolbox}/docs/design/connector-standards.md, {toolbox}/docs/v1-spec.md (connector sections), {toolbox}/schema/connector-messages.schema.json, {toolbox}/plugins/toolbox-operator/skills/connector-test/, {toolbox}/plugins/toolbox-operator/skills/author-connector/, {toolbox}/plugins/toolbox-operator/skills/connector-drive/, {toolbox}/examples/connector-scaffold/, {toolbox}/site/src/content/docs/authors/connectors.md.
-- `export PATH={ab}/bin:$PATH` for `toolbox` if present. Prefer `toolbox connector drive` over hand-built stdio JSON; a portal stub is already under portal/.
+- Scaffold Cargo project at {arm_dir}; `seikika-connect` is a path dependency.
+- You may read only: {seikika}/crates/seikika-connect/, {seikika}/crates/seikika-connector-github/src/main.rs, {seikika}/crates/seikika-connector-git-files/src/main.rs, {seikika}/docs/design/connector-control.md, {seikika}/docs/design/connector-standards.md, {seikika}/docs/v1-spec.md (connector sections), {seikika}/schema/connector-messages.schema.json, {seikika}/plugins/seikika-operator/skills/connector-test/, {seikika}/plugins/seikika-operator/skills/author-connector/, {seikika}/plugins/seikika-operator/skills/connector-drive/, {seikika}/examples/connector-scaffold/, {seikika}/site/src/content/docs/authors/connectors.md.
+- `export PATH={ab}/bin:$PATH` for `seikika` if present. Prefer `seikika connector drive` over hand-built stdio JSON; a portal stub is already under portal/.
 - Do **not** read Ocean or Backstage trees under {ab}/pins/.
 - Required shape: a stdio connector using `run_stdio` / `Source` that emits `record` + `snapshot_complete`, and OUT/entities.ndjson.""",
     "B": """## Your setup (Port Ocean)
 
 - Scaffold at {arm_dir}. Ocean pin root is in OCEAN_ROOT.txt ({ab}/pins/ocean).
 - You may read only that pin's `integrations/fake-integration/` and `integrations/jira/` plus Ocean framework modules those imports need.
-- Do **not** read Toolbox crates/docs or the Backstage pin.
+- Do **not** read Seikika crates/docs or the Backstage pin.
 - Required shape: `@ocean.on_resync` handlers in integration.py for each kind, `.port/spec.yaml` updated, and `resync.py` (or equivalent) writing OUT/entities.ndjson without Port SaaS.""",
     "C": """## Your setup (Backstage)
 
 - Scaffold at {arm_dir}. Backstage pin root is in BACKSTAGE_ROOT.txt ({ab}/pins/backstage).
 - You may read only that pin's `plugins/catalog-backend-module-github/`, `plugins/catalog-node/`, `plugins/catalog-backend/`, `packages/catalog-model/`.
-- Do **not** read Toolbox or Ocean.
+- Do **not** read Seikika or Ocean.
 - Required shape: `ForgeEntityProvider` implementing the EntityProvider pattern (getProviderName + connect), and resync writing OUT/entities.ndjson.""",
 }
 
@@ -76,13 +76,13 @@ Write answers to OUT/read-answers.md. Do not change connector code.""",
 
 
 def render(phase: int, arm: str) -> str:
-    toolbox = "/agent/repos/toolbox"
+    seikika = "/agent/repos/seikika"
     return COMMON.format(
         arm_dir=f"{AB}/arms/{arm}",
-        arm_block=ARM[arm].format(arm_dir=f"{AB}/arms/{arm}", ab=AB, toolbox=toolbox),
+        arm_block=ARM[arm].format(arm_dir=f"{AB}/arms/{arm}", ab=AB, seikika=seikika),
         task=TASKS[phase].format(arm_dir=f"{AB}/arms/{arm}"),
         ab=AB,
-        toolbox=toolbox,
+        seikika=seikika,
     )
 
 

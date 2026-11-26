@@ -1,4 +1,4 @@
-apiVersion: toolbox.dev/assessment/v1
+apiVersion: seikika.com/assessment/v1
 entity: scorecard:repo/docs
 rubric: scorecard-quality
 subjectHash: 35762ee89891
@@ -9,7 +9,7 @@ verdicts:
     verdict: pass
     reason: >-
       One concern, links in a pilot repository's Markdown resolving, for its
-      maintainers (examples/repo-portal-starter/toolbox.yaml:156-179). The
+      maintainers (examples/repo-portal-starter/seikika.yaml:156-179). The
       description and rationale both say this is where the starter begins.
   - criterion: levels-are-a-ladder
     verdict: pass
@@ -25,9 +25,9 @@ verdicts:
       Link checkers such as lychee and markdown-link-check also check
       reference-style links and `#fragment` anchors. This card's only measure
       drops fragments and reads only inline links
-      (crates/toolbox-connector-workspace/src/main.rs:297-318). A renamed
+      (crates/seikika-connector-workspace/src/main.rs:297-318). A renamed
       heading breaks links without failing any build, the same failure its
-      rationale names (examples/repo-portal-starter/toolbox.yaml:161-164), and
+      rationale names (examples/repo-portal-starter/seikika.yaml:161-164), and
       the card leaves it out.
     suggestion: >-
       Have the connector resolve `#fragment` against the target file's
@@ -38,7 +38,7 @@ verdicts:
     verdict: pass
     reason: >-
       The rule's evidence lists the broken targets and the entity is the doc
-      itself (examples/repo-portal-starter/toolbox.yaml:171-175), so an agent
+      itself (examples/repo-portal-starter/seikika.yaml:171-175), so an agent
       knows the file and the link to fix. With that, README.md in the fixture
       would reach bronze by fixing `docs/runbook.md`
       (examples/repo-portal-starter/tests/standards.test.yaml).

@@ -1,13 +1,13 @@
-diff --git a/.github/workflows/toolbox-standards.yml b/.github/workflows/toolbox-standards.yml
+diff --git a/.github/workflows/seikika-standards.yml b/.github/workflows/seikika-standards.yml
 new file mode 100644
 index 0000000..8703936
 --- /dev/null
-+++ b/.github/workflows/toolbox-standards.yml
++++ b/.github/workflows/seikika-standards.yml
 @@ -0,0 +1,35 @@
-+# Coding-standard ratchet (S2: small Rust modules). See .toolbox/STANDARD.md.
++# Coding-standard ratchet (S2: small Rust modules). See .seikika/STANDARD.md.
 +# Fails a pull request when a Rust file over 700 lines grows, or a file crosses 700 lines (including a
 +# new file). Shrinking files pass and are listed in the job summary, so the baseline can be tightened.
-+name: toolbox-standards
++name: seikika-standards
 +
 +on:
 +  pull_request:
@@ -30,20 +30,20 @@ index 0000000..8703936
 +      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 +        with:
 +          persist-credentials: false
-+      # Toolbox's report action (D69). Pin it to a commit SHA once the release is mirrored internally.
-+      - uses: loganvolkers/toolbox/actions/report@v0.1.1
++      # Seikika's report action (D69). Pin it to a commit SHA once the release is mirrored internally.
++      - uses: seikika/seikika/actions/report@v0.1.1
 +        with:
-+          toolbox-version: "0.1.1"
-+          portal: .toolbox
-+          baseline: .toolbox/results.json
++          seikika-version: "0.1.1"
++          portal: .seikika
++          baseline: .seikika/results.json
 +          # check: fail on regressions only. New compliant files and shrinking files don't need a
 +          # results.json update in the same PR (run `--update` to tighten the baseline).
 +          mode: ${{ inputs.mode || 'check' }}
-diff --git a/.toolbox/STANDARD.md b/.toolbox/STANDARD.md
+diff --git a/.seikika/STANDARD.md b/.seikika/STANDARD.md
 new file mode 100644
 index 0000000..398e022
 --- /dev/null
-+++ b/.toolbox/STANDARD.md
++++ b/.seikika/STANDARD.md
 @@ -0,0 +1,128 @@
 +# S2: small Rust modules
 +
@@ -57,7 +57,7 @@ index 0000000..398e022
 +enforced. Test files are exempt: any file in a `tests/` directory, files named `tests.rs`, and files
 +ending in `_tests.rs`.
 +
-+**The ratchet.** Existing violations are recorded in `.toolbox/results.json`. A pull request fails when:
++**The ratchet.** Existing violations are recorded in `.seikika/results.json`. A pull request fails when:
 +- a file already over 700 lines grows, by even one line;
 +- a file at or under 700 lines crosses 700;
 +- a new (or renamed) file arrives with more than 700 lines.
@@ -65,25 +65,25 @@ index 0000000..398e022
 +Shrinking a violating file, or bringing it to 700 or below, passes and is reported as an
 +improvement, so the baseline can be tightened.
 +
-+All commands run from the repository root and need [Toolbox](https://github.com/loganvolkers/toolbox)
-+0.1.1 (`toolbox` and `toolbox-connector-runner` on `PATH`), `python3`, `git` and `jq`.
++All commands run from the repository root and need [Seikika](https://github.com/seikika/seikika)
++0.1.1 (`seikika` and `seikika-connector-runner` on `PATH`), `python3`, `git` and `jq`.
 +
 +## Report: every violating file, as JSON
 +
 +```bash
-+toolbox report .toolbox -o json | jq '[.scores["small-rust-modules"] | to_entries[] | select(.value.rules["at-most-700-lines"] == "fail") | {file: (.key | ltrimstr("rust-file:")), lines: (.value.evidence["at-most-700-lines"][0] | split(" ")[0] | tonumber)}]'
++seikika report .seikika -o json | jq '[.scores["small-rust-modules"] | to_entries[] | select(.value.rules["at-most-700-lines"] == "fail") | {file: (.key | ltrimstr("rust-file:")), lines: (.value.evidence["at-most-700-lines"][0] | split(" ")[0] | tonumber)}]'
 +```
 +
 +Prints `[{"file": "codex-rs/…", "lines": 1070}, …]`. For the human-readable version (every file
-+with its line count and the fix), run `toolbox report .toolbox`.
++with its line count and the fix), run `seikika report .seikika`.
 +
 +## Gate: fail when the ratchet breaks
 +
 +```bash
-+toolbox report .toolbox --baseline .toolbox/results.json --out /dev/null
++seikika report .seikika --baseline .seikika/results.json --out /dev/null
 +```
 +
-+Exit 0 when nothing got worse, 1 on a regression, 2 when Toolbox can't run. It prints one line per
++Exit 0 when nothing got worse, 1 on a regression, 2 when Seikika can't run. It prints one line per
 +change, for example:
 +
 +```
@@ -98,18 +98,18 @@ index 0000000..398e022
 +machine-readable verdict (`regressions`, `improvements`, `changes`). Add `--ci` to also fail when
 +`results.json` is out of date (unrecorded improvements or new files).
 +
-+CI: [`.github/workflows/toolbox-standards.yml`](../.github/workflows/toolbox-standards.yml) runs
-+the same gate (`mode: check`) on every pull request, through Toolbox's `actions/report` action. The
++CI: [`.github/workflows/seikika-standards.yml`](../.github/workflows/seikika-standards.yml) runs
++the same gate (`mode: check`) on every pull request, through Seikika's `actions/report` action. The
 +job summary lists regressions and improvements.
 +
 +## Campaign: progress toward zero violating files
 +
 +```bash
-+toolbox report .toolbox -o web --out "${TMPDIR:-/tmp}/codex-standards" > /dev/null && jq '.campaigns["small-rust-modules-zero"] | {campaign: .title, status, baseline: .inScope, current: (.inScope - .meeting), percentDone: .percent, percentExact: (if .inScope > 0 then (.meeting * 1000 / .inScope | floor) / 10 else 0 end), targetPercent}' "${TMPDIR:-/tmp}/codex-standards/report.json"
++seikika report .seikika -o web --out "${TMPDIR:-/tmp}/codex-standards" > /dev/null && jq '.campaigns["small-rust-modules-zero"] | {campaign: .title, status, baseline: .inScope, current: (.inScope - .meeting), percentDone: .percent, percentExact: (if .inScope > 0 then (.meeting * 1000 / .inScope | floor) / 10 else 0 end), targetPercent}' "${TMPDIR:-/tmp}/codex-standards/report.json"
 +```
 +
 +`baseline` is the number of files that violated when the campaign started (2026-11-21), `current`
-+how many of them still do, and `percentDone` the share fixed (Toolbox rounds down; `percentExact` has
++how many of them still do, and `percentDone` the share fixed (Seikika rounds down; `percentExact` has
 +one decimal). The campaign's scope is frozen in [`campaign.yaml`](./campaign.yaml), so it measures
 +paying down the old violations; the ratchet stops new ones. The HTML report
 +(`${TMPDIR:-/tmp}/codex-standards/index.html`) shows the same progress in its Campaigns tab.
@@ -123,8 +123,8 @@ index 0000000..398e022
 +After a change that shrinks or fixes files (the gate printed `✓ better`), or adds new files:
 +
 +```bash
-+toolbox report .toolbox --baseline .toolbox/results.json --update --out /dev/null
-+git add .toolbox/results.json
++seikika report .seikika --baseline .seikika/results.json --update --out /dev/null
++git add .seikika/results.json
 +```
 +
 +`--update` refuses to write while anything regressed, so it can only tighten the bar. Never hand-edit
@@ -133,28 +133,28 @@ index 0000000..398e022
 +
 +Renaming or moving a file over 700 lines is a regression: to the ratchet it is a new file over the
 +limit. Split it below 700 in the same PR, or, if a maintainer approves, reset the baseline: delete
-+`.toolbox/results.json`, rerun `--update`, and review the diff (it must show only the renamed
-+path). Toolbox has no way to accept one named regression.
++`.seikika/results.json`, rerun `--update`, and review the diff (it must show only the renamed
++path). Seikika has no way to accept one named regression.
 +
 +## Change the standard
 +
-+Everything lives in [`toolbox.yaml`](./toolbox.yaml) (the `small-rust-modules` scorecard) and
-+[`campaign.yaml`](./campaign.yaml). Check your change with `toolbox validate .toolbox`, then run the
++Everything lives in [`seikika.yaml`](./seikika.yaml) (the `small-rust-modules` scorecard) and
++[`campaign.yaml`](./campaign.yaml). Check your change with `seikika validate .seikika`, then run the
 +Gate and update the baseline.
 +
 +| Change | Where |
 +|---|---|
-+| **Threshold** (e.g. 700 → 600) | In `toolbox.yaml`, replace `700` in the rule's name (`at-most-700-lines`), `check` (`entity.lines <= 700`), `evidence` (`n > 700` and the `limit 700` label) and `fix`; the same in `campaign.yaml`, and in the Report command above and the workflow's header comment. A lower threshold makes passing files fail (and the `update` refuses), so reset the baseline: delete `.toolbox/results.json`, rerun `--update`, and review the diff (only evidence counts, the rule name and newly failing files should change). Then decide the campaign's scope (see *History*)
-+| **Exempt a file** | Add its path to the list at the end of `appliesTo` in `toolbox.yaml`: `entity.path in ['codex-rs/foo/src/generated.rs']`. The file is then skipped; the gate reports it as `✓ better … now passes`; run `--update` |
++| **Threshold** (e.g. 700 → 600) | In `seikika.yaml`, replace `700` in the rule's name (`at-most-700-lines`), `check` (`entity.lines <= 700`), `evidence` (`n > 700` and the `limit 700` label) and `fix`; the same in `campaign.yaml`, and in the Report command above and the workflow's header comment. A lower threshold makes passing files fail (and the `update` refuses), so reset the baseline: delete `.seikika/results.json`, rerun `--update`, and review the diff (only evidence counts, the rule name and newly failing files should change). Then decide the campaign's scope (see *History*)
++| **Exempt a file** | Add its path to the list at the end of `appliesTo` in `seikika.yaml`: `entity.path in ['codex-rs/foo/src/generated.rs']`. The file is then skipped; the gate reports it as `✓ better … now passes`; run `--update` |
 +| **Exempt a pattern** | Add a condition to `appliesTo`, e.g. `entity.path.startsWith('codex-rs/protocol/src/generated/')` |
-+| **Which files are measured** | `.toolbox/rust-file-lines.py` (every tracked or untracked, non-ignored `codex-rs/**/*.rs`). It only measures; the rule and exemptions stay in the manifest |
++| **Which files are measured** | `.seikika/rust-file-lines.py` (every tracked or untracked, non-ignored `codex-rs/**/*.rs`). It only measures; the rule and exemptions stay in the manifest |
 +| **Campaign scope or dates** | `campaign.yaml`: the frozen file list, `start`, optional `end`, `targetPercent` and `milestones` |
 +
 +## How it works
 +
 +| File | Role |
 +|---|---|
-+| `toolbox.yaml` | The repo portal: a `runner` connector, the `RustFile` kind, the `small-rust-modules` scorecard and its ratchet floor (`newEntitiesAtLeast: bronze`) |
++| `seikika.yaml` | The repo portal: a `runner` connector, the `RustFile` kind, the `small-rust-modules` scorecard and its ratchet floor (`newEntitiesAtLeast: bronze`) |
 +| `rust-file-lines.py` | Emits one record per Rust file: path, line count, and line numbers (so each line over 700 is one evidence item, and the ratchet sees growth of one line) |
 +| `campaign.yaml` | The campaign and its scorecard over the 229 files that violated the 700-line limit on 2026-11-21 |
 +| `results.json` | The committed baseline (generated; do not edit) |
@@ -173,18 +173,18 @@ index 0000000..398e022
 +what the campaign counts. A later threshold change mid-campaign should instead either keep the
 +scope and say so here, or end the campaign (`end`) and start a new one, so that progress already
 +made stays visible.
-diff --git a/.toolbox/campaign.yaml b/.toolbox/campaign.yaml
+diff --git a/.seikika/campaign.yaml b/.seikika/campaign.yaml
 new file mode 100644
 index 0000000..e6d4816
 --- /dev/null
-+++ b/.toolbox/campaign.yaml
++++ b/.seikika/campaign.yaml
 @@ -0,0 +1,261 @@
-+# The campaign toward zero Rust files over 700 lines (docs: .toolbox/STANDARD.md). Included by
-+# .toolbox/toolbox.yaml.
++# The campaign toward zero Rust files over 700 lines (docs: .seikika/STANDARD.md). Included by
++# .seikika/seikika.yaml.
 +#
 +# Campaign scope is frozen: the 229 files that broke the standard when the campaign started
 +# (2026-11-21; re-frozen the same day when the threshold went from 800 to 700 lines, see
-+# STANDARD.md). The ratchet in toolbox.yaml stops new violations; this measures paying down the
++# STANDARD.md). The ratchet in seikika.yaml stops new violations; this measures paying down the
 +# old ones. A file leaves the list only when it is deleted or renamed: then delete its line here too.
 +scorecards:
 +  - name: small-rust-modules-campaign
@@ -440,16 +440,16 @@ index 0000000..e6d4816
 +    targetPercent: 100
 +    milestones: [{name: half, targetPercent: 50}]
 +    includes: [{scorecard: small-rust-modules-campaign, atLeast: bronze}]
-diff --git a/.toolbox/rust-file-lines.py b/.toolbox/rust-file-lines.py
+diff --git a/.seikika/rust-file-lines.py b/.seikika/rust-file-lines.py
 new file mode 100644
 index 0000000..ae99052
 --- /dev/null
-+++ b/.toolbox/rust-file-lines.py
++++ b/.seikika/rust-file-lines.py
 @@ -0,0 +1,25 @@
 +#!/usr/bin/env python3
-+"""Emit one Toolbox connector record per Rust file under codex-rs/ (tracked or untracked, not ignored).
++"""Emit one Seikika connector record per Rust file under codex-rs/ (tracked or untracked, not ignored).
 +
-+Used by the `sizes` runner job in .toolbox/toolbox.yaml. It only measures; the standard (threshold,
++Used by the `sizes` runner job in .seikika/seikika.yaml. It only measures; the standard (threshold,
 +exemptions) lives in the manifest. `lineNumbers` lets a rule's evidence hold one item per line over
 +the limit, so the ratchet sees a violating file grow or shrink by a single line.
 +"""
@@ -471,21 +471,21 @@ index 0000000..ae99052
 +    record = {"type": "record", "kind": "rust-file", "externalId": path,
 +              "data": {"path": path, "lines": lines, "lineNumbers": list(range(1, lines + 1))}}
 +    sys.stdout.write(json.dumps(record, separators=(",", ":")) + "\n")
-diff --git a/.toolbox/toolbox.yaml b/.toolbox/toolbox.yaml
+diff --git a/.seikika/seikika.yaml b/.seikika/seikika.yaml
 new file mode 100644
 index 0000000..90fe997
 --- /dev/null
-+++ b/.toolbox/toolbox.yaml
++++ b/.seikika/seikika.yaml
 @@ -0,0 +1,70 @@
-+# Codex coding standards, enforced (S2: small Rust modules). See .toolbox/STANDARD.md.
-+# Run from the repository root: toolbox report .toolbox --baseline .toolbox/results.json
-+apiVersion: toolbox.dev/v1alpha1
++# Codex coding standards, enforced (S2: small Rust modules). See .seikika/STANDARD.md.
++# Run from the repository root: seikika report .seikika --baseline .seikika/results.json
++apiVersion: seikika.com/v1alpha1
 +
 +portal:
 +  name: codex
 +  title: Codex coding standards
 +  owner: group:maintainers
-+  toolbox: "0.1"
++  seikika: "0.1"
 +
 +connectors:
 +  - name: sizes
@@ -496,7 +496,7 @@ index 0000000..90fe997
 +      root: .
 +      jobs:
 +        - name: rust-files # one record per codex-rs/**/*.rs: path, lines, lineNumbers
-+          command: [python3, .toolbox/rust-file-lines.py]
++          command: [python3, .seikika/rust-file-lines.py]
 +          parse: ndjson
 +          kinds: [rust-file]
 +    records: [rust-file]

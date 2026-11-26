@@ -43,7 +43,7 @@ OpenFGA c-archive ([fga-carchive](./fga-carchive), OpenFGA v1.22.1, Go 1.26.11,
 cargo fetch
 RUSTUP_TOOLCHAIN=1.99.0 TARGET_ROOT=/scratch/build-cost ./run.sh > results.txt
 # OpenFGA c-archive
-cd fga-carchive && GOTOOLCHAIN=go1.26.11 go build -buildmode=c-archive -o /scratch/libtoolboxfga.a .
+cd fga-carchive && GOTOOLCHAIN=go1.26.11 go build -buildmode=c-archive -o /scratch/libseikikafga.a .
 ```
 
 `run.sh` builds each set from an empty target directory, then edits `app` and `leaf-cel` (comment

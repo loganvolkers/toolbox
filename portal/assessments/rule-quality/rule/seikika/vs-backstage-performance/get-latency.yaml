@@ -1,0 +1,47 @@
+apiVersion: seikika.com/assessment/v1
+entity: rule:seikika/vs-backstage-performance/get-latency
+rubric: rule-quality
+subjectHash: 070a655fb39f
+assessor: {kind: agent, name: cursor-assessor-16, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: measures-intent
+    verdict: pass
+    reason: >-
+      oha reads 1,000 seeded ids through GET /v1/entities/{id} with the
+      client's PAT (measure.py:92-94, 172-175), and the handler authenticates,
+      checks visibility and shapes facets on every call
+      (crates/seikika-api/src/routes.rs:412-437). So the p95 is that of a real
+      authorized read. Most of those reads are decision-cache hits, as the
+      adjudicator notes (ADJUDICATION.md:540-542), and the README discloses
+      this (README.md:108-112). Even the adjudicator's uncached spread over
+      all 10,000 ids gave p95 of about 1.1 ms (ADJUDICATION.md:197), far under
+      the bar. So passing does mean "one entity is fast to read".
+  - criterion: hard-to-game
+    verdict: pass
+    reason: >-
+      The p95 comes from oha's HDR histogram. Throughput counts only 200
+      responses (measure.py:128-131), so a fast error cannot pass for a read.
+      The ids are spread with a fixed seed, and the same ids are read on both
+      arms. The cheapest way to lower the p95 is to make the read path faster.
+  - criterion: fix-leads-to-pass
+    verdict: pass
+    reason: >-
+      The fix names the handler (GET /v1/entities/{id} in
+      crates/seikika-api/src/routes.rs, `get_entity` at line 412) and the
+      harness to rerun. run.sh:4 then leads to snapshot.py for the record.
+      Authorization and shaping on that path go through access.rs, which an
+      agent profiling `get_entity` reaches directly.
+  - criterion: threshold-justified
+    verdict: pass
+    reason: >-
+      The 50 ms p95 was pre-registered (README.md:38; ADJUDICATION.md §3.1)
+      and is tighter than the product's read SLO of under 200 ms p99
+      (docs/plan.md:920). RESEARCH.md F4 (line 60) grounds the per-call tail
+      in Dean and Barroso, which the rule's rationale cites. Single bronze
+      level per D01M857ZB468ZM2YS6GNSEG6YB9.
+summary: >-
+  A sound latency rule: a real, authorized, spread read, a bar tighter
+  than the plan's SLO, and a fix that names the handler. The disclosed
+  caveats are the decision cache, the closed-loop load and oha sharing the
+  CPUs. They affect the margin (0.49 ms against 50 ms), not the outcome.

@@ -1,7 +1,7 @@
 # A Results Spec: the Contract Above SARIF
 
 *Status: proposal, 2026-11-22. Not decided: [questions.md](../questions.md) Q17 and Q18 hold the
-choices. About the box ([toolbox-and-tools.md](./toolbox-and-tools.md)): what the box remembers and
+choices. About the box ([seikika-and-tools.md](./seikika-and-tools.md)): what the box remembers and
 reports, written as a contract any tool can produce and any tool can consume. It is not about a
 tool. Bottom-up end (D01M80Y0XEK069GD08VCCNF0WB8); federation and hosted portals consume it.*
 
@@ -9,7 +9,7 @@ tool. Bottom-up end (D01M80Y0XEK069GD08VCCNF0WB8); federation and hosted portals
 
 ## 1. Conclusion
 
-**Make the specification, not the implementation, the thing Toolbox is about. But compose existing
+**Make the specification, not the implementation, the thing Seikika is about. But compose existing
 standards wherever one fits, and invent only the layer none of them covers.**
 
 - **The gap is real.** SARIF standardises findings, and nothing standardises what sits above them:
@@ -19,10 +19,10 @@ standards wherever one fits, and invent only the layer none of them covers.**
   - the baseline a pull request is compared with, and the verdict;
   - the campaign that pays debt down, and the root cause of a regression.
 
-  Today each portal (Toolbox's `results.json`, Backstage Tech Insights, Port, a team's
+  Today each portal (Seikika's `results.json`, Backstage Tech Insights, Port, a team's
   `baseline.json`) invents its own format for these.
 - **Inventing a fresh format has a cost, and the box A/B measured it.** The box arm spent 30k extra
-  tokens in phase 1 learning Toolbox ([experiments/box-ab](../../experiments/box-ab/README.md) §0).
+  tokens in phase 1 learning Seikika ([experiments/box-ab](../../experiments/box-ab/README.md) §0).
   A new spec has the same problem: agents are trained on SARIF and JSON Schema, not on a spec
   written last week. So the spec must be:
   - small;
@@ -35,10 +35,10 @@ standards wherever one fits, and invent only the layer none of them covers.**
   Statements. Rule catalogs and evaluations map onto Gemara where its model fits. The new part is
   subjects and facts, rule evaluations with honest outcomes, the baseline and ratchet verdict, and
   campaigns.
-- **Toolbox becomes one implementation**: the reference producer, evaluator, ratchet and consumer,
+- **Seikika becomes one implementation**: the reference producer, evaluator, ratchet and consumer,
   judged by the same conformance suite as anyone else's.
 - **Test it before deciding** (§7): one A/B where agents produce and consume spec documents three
-  ways (by hand from the spec alone, with Toolbox, and on Backstage), scored by the conformance
+  ways (by hand from the spec alone, with Seikika, and on Backstage), scored by the conformance
   suite.
 
 **Why this doesn't contradict C5 and D42.** Those rejected a *governed ingestion protocol* (TCP),
@@ -55,9 +55,9 @@ An interchange format earns a spec where a pipe between two of our own component
 
 | Observation | Source | What a spec would have changed |
 |---|---|---|
-| Both A/B arms invented a private baseline (`.github/quality-gate/baseline.json`, `.toolbox/results.json`), and neither is readable by the other's gate | box A/B, phase 1 | One baseline format: the arms differ in how they compute it, not in what they write |
+| Both A/B arms invented a private baseline (`.github/quality-gate/baseline.json`, `.seikika/results.json`), and neither is readable by the other's gate | box A/B, phase 1 | One baseline format: the arms differ in how they compute it, not in what they write |
 | The harness imposed a small interface (`TOOLS.md`: gate, accept, progress, tools with commands) and could then score two unrelated implementations with one script | box A/B, harness | That *was* a spec. It made two implementations comparable and replaceable |
-| A finding moved down two lines read as a new one, so the read key needed line arithmetic, and both arms wanted new findings marked | box A/B, phase 6 (both arms), root-causes C1 | Fingerprints per finding, normative in the baseline (SARIF already defines `partialFingerprints`). `toolbox report` now records one key per evidence item and marks new findings (D01M841J2SN4V3AVZZ5D91YAR51); the key is ours, not yet SARIF's |
+| A finding moved down two lines read as a new one, so the read key needed line arithmetic, and both arms wanted new findings marked | box A/B, phase 6 (both arms), root-causes C1 | Fingerprints per finding, normative in the baseline (SARIF already defines `partialFingerprints`). `seikika report` now records one key per evidence item and marks new findings (D01M841J2SN4V3AVZZ5D91YAR51); the key is ours, not yet SARIF's |
 | One `unknown` covered "tool not installed", "data missing" and "skipped on purpose", and a missing tool passed the gate silently | box A/B, phase 1 (arm B) | Distinct outcomes, as Scorecard (5) and Gemara (6) already have |
 | A restarted campaign lost its history, so an upgrade and a changed standard looked the same | box A/B, phases 2–4 | Campaign starts and restarts as normative records with a reason |
 | The tool's version was pinned in three or four places | box A/B, phase 4 (both arms) | Provenance: every document names its producer and version, so drift is visible downstream |
@@ -91,7 +91,7 @@ Read from each project's repository on 2026-11-22 (commit dates in [Sources](#so
 
 ## 4. The proposed spec, in document types
 
-**Working name: the Toolbox Results spec, v0.1 (an editor's draft).** The name is open (Q17). Each
+**Working name: the Seikika Results spec, v0.1 (an editor's draft).** The name is open (Q17). Each
 document is JSON with `$schema` and `type`, and validates against a JSON Schema 2020-12. Every type
 can be written alone, by a script in any language. A consumer reads only the types it needs.
 
@@ -99,10 +99,10 @@ can be written alone, by a script in any language. A consumer reads only the typ
 |---|---|---|---|---|
 | 1 | **facts** | A subject (an id with a kind: `repository`, `file`, `package`, `service`), its typed facts, and provenance (producer, version, the command run, input digests) | Subject ids reuse purl and URLs where they fit | Connector records (`builtin:workspace`, runner), Tech Insights fact retrievers |
 | 2 | **findings** | **SARIF 2.1.0, unchanged**, with three normative conventions: `partialFingerprints` set, `suppressions` for inline ignores, and `invocations[].commandLine` set so the result can be reproduced with the tool alone | SARIF | ruff, semgrep, zizmor, ESLint formatters |
-| 3 | **standard** | Rules over facts and findings: id, the level it belongs to, the check (CEL, normative), a measure, evidence, fix text, owner, and a mapping to an external control (Gemara, OSPS Baseline) | Gemara Layer 2 controls as optional mappings | Toolbox scorecards, `-o standard` |
-| 4 | **evaluation** | Per subject and rule: an outcome, the measure, evidence (references to facts and to SARIF results by fingerprint), the assessor (tool, agent or person) and its confidence, and the subject's level | Gemara Layer 5 results and confidence | `toolbox report -o json`, agent assessments (D79) |
-| 5 | **baseline** | Recorded evaluations (compact: only what fails), finding fingerprints, and campaign starts and restarts with a reason | — | `results.json` (`toolbox-report/v1`) |
-| 6 | **verdict** | A comparison of an evaluation with a baseline: worse, better and changed, each regression's root-cause chain, and an exit code | — | `toolbox-verdict/v1` |
+| 3 | **standard** | Rules over facts and findings: id, the level it belongs to, the check (CEL, normative), a measure, evidence, fix text, owner, and a mapping to an external control (Gemara, OSPS Baseline) | Gemara Layer 2 controls as optional mappings | Seikika scorecards, `-o standard` |
+| 4 | **evaluation** | Per subject and rule: an outcome, the measure, evidence (references to facts and to SARIF results by fingerprint), the assessor (tool, agent or person) and its confidence, and the subject's level | Gemara Layer 5 results and confidence | `seikika report -o json`, agent assessments (D79) |
+| 5 | **baseline** | Recorded evaluations (compact: only what fails), finding fingerprints, and campaign starts and restarts with a reason | — | `results.json` (`seikika-report/v1`) |
+| 6 | **verdict** | A comparison of an evaluation with a baseline: worse, better and changed, each regression's root-cause chain, and an exit code | — | `seikika-verdict/v1` |
 | 7 | **envelope** (optional) | Any of the above as an in-toto Statement (`predicateType` set to the document type's URI), so that federation can sign and verify it | in-toto attestation v1 | Not yet |
 
 **Outcomes (normative, one enum for every assessor):**
@@ -131,9 +131,9 @@ Better is the reverse. Everything else is a change.
 
 ```json
 {
-  "$schema": "https://toolbox.dev/spec/results/v0.1/evaluation.schema.json",
+  "$schema": "https://seikika.com/spec/results/v0.1/evaluation.schema.json",
   "type": "evaluation",
-  "producer": {"name": "toolbox", "version": "0.2.0", "command": "toolbox report .toolbox -o evaluation"},
+  "producer": {"name": "seikika", "version": "0.2.0", "command": "seikika report .seikika -o evaluation"},
   "standard": {"id": "github-actions", "version": "0.2.0", "digest": {"sha256": "…"}},
   "subject": {"kind": "file", "id": ".github/workflows/ci.yml", "in": "repository:github.com/acme/app"},
   "level": "bronze",
@@ -155,28 +155,28 @@ Better is the reverse. Everything else is a change.
 | Numbered RFC 2119 requirements (`req-ev-001`), indexed in an appendix | Every MUST and SHOULD |
 | Conformance classes | **Producer** (writes facts, findings and evaluations); **Evaluator** (standard plus facts gives evaluations); **Ratchet** (evaluation plus baseline gives a verdict); **Consumer** (reads: reports, portals, federation) |
 | A conformance suite: inputs with byte-exact expected outputs, as `examples/reference-portal` already does | `spec/conformance/<class>/<case>/` |
-| A generated conformance statement per implementation, with an honesty contract: each requirement is `active` only if a behavioural test exercises it | `CONFORMANCE.md` generated by Toolbox's CI |
-| Normative JSON Schemas, inline, and a validator anyone can run | `spec/schemas/*.json`; `toolbox spec validate <file>` |
+| A generated conformance statement per implementation, with an honesty contract: each requirement is `active` only if a behavioural test exercises it | `CONFORMANCE.md` generated by Seikika's CI |
+| Normative JSON Schemas, inline, and a validator anyone can run | `spec/schemas/*.json`; `seikika spec validate <file>` |
 
-## 6. What changes in Toolbox, if adopted
+## 6. What changes in Seikika, if adopted
 
 No code moves until Q17 is decided. If it is adopted:
 - `results.json` becomes a **baseline** document, and `--verdict` a **verdict** document.
 - `-o json` writes **evaluation** documents.
 - Connector records become **facts**. The SARIF slot keeps reading SARIF.
-- The current formats get one release of compatibility: `toolbox-report/v1` keeps reading.
+- The current formats get one release of compatibility: `seikika-report/v1` keeps reading.
 - `scripts/take-it-out.py` becomes the spec's check that a producer's `command` reproduces its
   findings.
 - Federation (D68) consumes evaluation and baseline documents in in-toto envelopes, instead of
-  Toolbox's own format.
+  Seikika's own format.
 
 ## 7. Testing the spec before deciding
 
 The [spec A/B](../../experiments/spec-ab/README.md) is designed, not run. It asks whether a
-well-specified format lets agents produce and consume results reliably without Toolbox, and what
-Toolbox and Backstage add. Arms:
+well-specified format lets agents produce and consume results reliably without Seikika, and what
+Seikika and Backstage add. Arms:
 - **A:** by hand, from the spec alone;
-- **B:** with Toolbox;
+- **B:** with Seikika;
 - **C:** building on Backstage.
 
 All three are scored by the spec's conformance suite.

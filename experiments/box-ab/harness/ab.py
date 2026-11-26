@@ -54,7 +54,7 @@ SCOPE[6] = SCOPE[5]
 
 def env(phase):
     e = dict(os.environ)
-    # box-bin too: arm B's gate calls `toolbox` (arm A's never does). The dry run's reference gate
+    # box-bin too: arm B's gate calls `seikika` (arm A's never does). The dry run's reference gate
     # didn't need it, so this was first found scoring arm B's phase 1.
     path = [str(AB_HOME / "box-bin"), str(BIN)]
     if phase >= 4:
@@ -315,7 +315,7 @@ NOT_GLUE = [
 def glue(arm):
     base = git(arm, "rev-list", "--max-parents=0", "HEAD").stdout.split()[0]
     rows = collections.Counter()
-    # A kit copied in with `toolbox vendor` is third-party code, like node_modules: not glue.
+    # A kit copied in with `seikika vendor` is third-party code, like node_modules: not glue.
     vendored = [f.rsplit("/", 1)[0] + "/" for f in git(arm, "ls-files").stdout.split() if f.endswith("/VENDORED.json")]
     for line in git(arm, "diff", "--numstat", base, "HEAD").stdout.splitlines():
         added, removed, path = line.split("\t")

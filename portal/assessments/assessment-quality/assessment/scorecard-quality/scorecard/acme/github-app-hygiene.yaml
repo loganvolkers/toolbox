@@ -1,4 +1,4 @@
-apiVersion: toolbox.dev/assessment/v1
+apiVersion: seikika.com/assessment/v1
 entity: assessment:scorecard-quality/scorecard:acme/github-app-hygiene
 rubric: assessment-quality
 subjectHash: ca30cfb118ea
@@ -10,12 +10,12 @@ verdicts:
     reason: >-
       The citations in
       portal/assessments/scorecard-quality/scorecard/acme/github-app-hygiene.yaml
-      hold. In examples/reference-portal/toolbox.yaml the card is at 230-254,
+      hold. In examples/reference-portal/seikika.yaml the card is at 230-254,
       the rationale's "single bronze rule is enough" at 235-236, the fix at
       247-249 and the only actions at 304-364. The `eligible` keys are at 26
       and 32. docs/examples/approved-github-apps.md:89-91 lists the four
       hygiene rules. `rg eligible` over crates/ finds only
-      crates/toolbox-derive/tests/reference.rs:79. tests/apps.test.yaml shows
+      crates/seikika-derive/tests/reference.rs:79. tests/apps.test.yaml shows
       platform-infra bronze and checkout-web none.
   - criterion: complete
     verdict: pass
@@ -25,7 +25,7 @@ verdicts:
       single reachable bronze level passes levels-are-a-ladder. no-obvious-gap
       fails on the design's own four-rule list (:89-91). actionable fails
       because the fix names a missing action and there is no evidence
-      (toolbox.yaml:247-249).
+      (seikika.yaml:247-249).
   - criterion: reproducible
     verdict: pass
     reason: >-

@@ -5,7 +5,7 @@ decided: 2026-11-23T15:10:00Z
 
 # A failing gate quotes the lines its new findings point at, and a pin hint carries the pin as written
 
-**When `toolbox report --baseline` (or `--against`) fails, each entity with a `path` field ends its
+**When `seikika report --baseline` (or `--against`) fails, each entity with a `path` field ends its
 new findings with the lines of that file the findings name (`at line N`), read from the working
 tree. The `github-actions` package writes each unpinned `uses:` as `<ref> at line <n>`, and
 `pinned-everywhere` names the SHA pin the repository already writes, with its version comment
@@ -16,7 +16,7 @@ document and the annotations don't change.
 1. **Why.** In round 4 of [gate-repair-ab](../../experiments/gate-repair-ab/README.md), the
    repair took arm A a median of 7 calls, against reviewdog's 3. Half the gap was exploration
    after the gate:
-   - four of five Toolbox runs read `pull_request.yaml` before editing it;
+   - four of five Seikika runs read `pull_request.yaml` before editing it;
    - three made a separate lookup for the version comment the existing pins carry, because the
      SHA hint left it out.
 
@@ -54,7 +54,7 @@ document and the annotations don't change.
    - Any repository's bare `--baseline` gate and `--against` comparisons. This repository's own
      ratchet is an example: an unpinned `actions/checkout@v6` planted in `ci.yml` is quoted at its
      line, and its hint reads `pinned elsewhere as actions/checkout@11d5960a… # v4`.
-   - Every portal that includes `packages/github-actions`, including Toolbox for Toolbox and the
+   - Every portal that includes `packages/github-actions`, including Seikika for Seikika and the
      pilot repositories that use the starter.
 
    No harness file changed with this decision.

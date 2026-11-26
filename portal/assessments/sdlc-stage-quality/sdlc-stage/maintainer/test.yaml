@@ -1,4 +1,4 @@
-apiVersion: toolbox.dev/assessment/v1
+apiVersion: seikika.com/assessment/v1
 entity: sdlc-stage:maintainer/test
 rubric: sdlc-stage-quality
 subjectHash: a47ade45a1d2
@@ -10,17 +10,17 @@ verdicts:
     reason: >-
       Every clause of the exit criterion is a CI step. fmt, clippy -D warnings
       and cargo test are at .github/workflows/ci.yml:22-24. The OpenFGA tests
-      are forced not to skip with TOOLBOX_REQUIRE_OPENFGA (ci.yml:47-52).
+      are forced not to skip with SEIKIKA_REQUIRE_OPENFGA (ci.yml:47-52).
       Parity is at ci.yml:38-39. Reference outputs are compared with `cmp`
-      (ci.yml:53-60), and `toolbox test portal` runs at ci.yml:61-71.
+      (ci.yml:53-60), and `seikika test portal` runs at ci.yml:61-71.
   - criterion: agent-can-complete
     verdict: pass
     reason: >-
       All four listed commands run locally without secrets. The prerequisites
       are documented in docs/design/maintainer-sdlc.md §5 (lines 81-88). One
-      trap: without TOOLBOX_OPENFGA_BIN, the OpenFGA tests skip with a message
-      instead of failing (crates/toolbox-authz/tests/fga.rs:65-67). CI sets
-      TOOLBOX_REQUIRE_OPENFGA to close that gap.
+      trap: without SEIKIKA_OPENFGA_BIN, the OpenFGA tests skip with a message
+      instead of failing (crates/seikika-authz/tests/fga.rs:65-67). CI sets
+      SEIKIKA_REQUIRE_OPENFGA to close that gap.
   - criterion: reuses-artifacts
     verdict: fail
     reason: >-
@@ -32,14 +32,14 @@ verdicts:
       builds a third-party tool from source.
     suggestion: >-
       Change maintainer-sdlc.md §5 to `scripts/ci-tools.sh <dir> openfga`
-      (then set TOOLBOX_OPENFGA_BIN), the same pinned release CI uses. Add
-      TOOLBOX_REQUIRE_OPENFGA=1 to the stage's commands so a local run cannot
+      (then set SEIKIKA_OPENFGA_BIN), the same pinned release CI uses. Add
+      SEIKIKA_REQUIRE_OPENFGA=1 to the stage's commands so a local run cannot
       pass by skipping.
   - criterion: decoupled-from-core
     verdict: pass
     reason: >-
-      Testing Toolbox is the maintainer's own work. The manifest-level part
-      needs no crate change either: `toolbox test portal` runs expectations in
+      Testing Seikika is the maintainer's own work. The manifest-level part
+      needs no crate change either: `seikika test portal` runs expectations in
       portal/tests/standards.test.yaml, and each package tests itself in
       packages/*/tests (ci.yml:67-71).
 # Codex evaluated the two added criteria. Earlier verdicts retain their original attribution.
@@ -56,7 +56,7 @@ verdicts:
     verdict: pass
     reason: >-
       The reference portal and independent package fixtures both run through
-      toolbox test in .github/workflows/ci.yml.
+      seikika test in .github/workflows/ci.yml.
 summary: >-
   The check pyramid is fully enforced in CI, including a guard against
   silently skipped OpenFGA tests. Locally, the stage's doc still sends

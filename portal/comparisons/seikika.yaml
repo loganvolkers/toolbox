@@ -1,0 +1,57 @@
+# Seikika, as measured by experiments/backstage-compare at 5bd608d.
+# Written by snapshot.py; rerun the harness rather than editing it.
+records:
+  - id: seikika
+    title: Seikika
+    version: 581be50 (release build); install facts from v0.1.1
+    harness: 5bd608d
+    corpus: 10000
+    runs: 5
+    readyS: 0.9
+    catalogReadableS: 2.15
+    rssIdleMb: 89.4
+    rssLoadedMb: 166.4
+    recoveredS: 1.13
+    getP95Ms: 0.49
+    getRps: 56546.9
+    listP95Ms: 6.59
+    listRps: 3789.8
+    anonymousReadRefused: true
+    forgedIdentityRefused: true
+    anonymousMcpRefused: true
+    clientCannotDelete: true
+    mcpToolsListBytes: 6473
+    mcpGetEntityBytes: 253
+    installMb: 121.1
+    adopterFiles: 2
+    adopterLines: 230
+    thirdPartyPackages: 605
+    knownVulns: 5
+    highVulns: 0
+    provenancePercent: 100
+    upgradeLinesPerRelease: 0
+    rollbackManualStepsPerRelease: 0
+    loopbackByDefault: false
+    ownerOnlyFields: true
+    extensionProcessIsolated: true
+    extensionCredentialIsolated: false
+    offlineValidate: true
+    changePreview: true
+    repoScopedWithoutServer: true
+    federates: false
+    mcpByDefault: true
+    extensionAnyLanguage: true
+    extensionWithoutRebuild: true
+    capCatalogBrowse: true
+    capOwnership: true
+    capGraph: true
+    capDocsSearch: false
+    capDocs: false
+    capTemplates: false
+    capScorecards: true
+    capApiDocs: false
+    capKubernetes: false
+    capNotifications: false
+    capPermissionRule: true
+    capMcpRead: true
+    contributors: 4

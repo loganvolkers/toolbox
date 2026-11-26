@@ -1,0 +1,59 @@
+{
+  "run": "seikika-1",
+  "C1": "holds",
+  "P1": {
+    "verdict": "holds",
+    "evidence": "score.py check re-run before probing: pass true (all three present, firstLine, reason). `git --git-dir origins/<r>.git ls-tree -r main .seikika` lists .seikika/seikika.yaml and .seikika/tests/mark-deprecated.test.yaml on main of alpha (added bad1290), beta (acaa7db) and gamma (e248bda); each main copy is identical to the checkout's (diff -q). Each defines mark-deprecated (JSON Schema inputs, precondition, approval, change executor, pinned org approval key) inside its repository; org/seikika.yaml only lists the three origins under federation.children."
+  },
+  "P2": {
+    "verdict": "holds",
+    "evidence": "Server per handoff on 127.0.0.1:7910, cwd org/, `. ./env.sh`. As ann on portal:alpha, both as preview and with --yes: successor 'Acme/Bad Name' (valid reason) -> {\"error\":\"422 invalid-inputs: successor: \\\"Acme/Bad Name\\\" does not match \\\"^[a-z0-9-]+/[a-z0-9-]+$\\\"\"}, exit 2; successor acme/probe-valid with reason 'short' -> 422 invalid-inputs: reason \"short\" is shorter than 20 characters, exit 2. `--runs` count 3 before and after (no run created). alpha main 085bd498 before and after."
+  },
+  "P3": {
+    "verdict": "holds",
+    "evidence": "As ann, `seikika run mark-deprecated --entity portal:beta -i successor=acme/probe-preview -i reason=...` (no --yes): exit 0; effects[0] = update file:DEPRECATED.md with a unified diff whose + lines are the whole new file ('# Deprecated: use acme/probe-preview', blank context line, the reason); effects[1] = push branch:main 'one commit, pushed once approved (never forced)'; approvers user:ann|user:bob; confirm token, expires_in_secs 600. beta main 6931115a before and after; --runs count unchanged (3)."
+  },
+  "P4": {
+    "verdict": "holds",
+    "evidence": "cwd /tmp/actions-ab/r4/seikika-1/org: ann --yes on portal:gamma, successor acme/probe-approval -> exit 3, run_2fswzf4o49sd awaiting_approval, requested_by user:ann. gamma main 0279ea7c before and after the request. `--as ann --approve` -> {\"error\":\"403 not-an-approver: a requester cannot approve their own run\"}, exit 2; `--as carol --approve` -> 403 not-an-approver: user:carol is not one of the pending approvers [\"user:ann|user:bob\"], exit 2. --verify: awaiting_approval, approved_by [] (exit 3); gamma main still 0279ea7c."
+  },
+  "P5": {
+    "verdict": "holds",
+    "evidence": "`seikika run --as bob --approve run_2fswzf4o49sd --note ... --wait -o json` -> exit 0, state succeeded, outputs.landed true, commit f74dc84b. origins/gamma.git main 0279ea7c -> f74dc84b; `git show main:DEPRECATED.md` = '# Deprecated: use acme/probe-approval', blank, the P4 reason; trailers Seikika-Run/Requested-By: user:ann/Approved-By: user:bob. Record verification: by 'child portal', child_run run_2fsx1e1mleyi, child verification by base origin/main, 'fetched origin/main: the commit is on it, and every file it changed has the content the preview showed', DEPRECATED.md blob 7d192797 matches true; `git --git-dir origins/gamma.git rev-parse main:DEPRECATED.md` = 7d192797. The child clone's origin remote is origins/gamma.git. Source at the round's frozen commit 48257824: run.rs on_base() calls executor::landed(), which calls merged() (git fetch -- origin main, then merge-base --is-ancestor commit origin/main) and compares each changed file's blob on origin/main with the commit's; on_base() fails the run otherwise, and only then done() sets succeeded; the org run is succeeded only when the child's state is succeeded."
+  },
+  "P6": {
+    "verdict": "holds",
+    "evidence": "Wrote origins/alpha.git/hooks/pre-receive (echo to stderr; exit 1), chmod +x. As ann --yes on portal:alpha successor acme/probe-reject -> run_2fsx9jdqtukl awaiting_approval; `--as bob --approve --wait` -> exit 1, state failed, error 'the push to origin main was refused, so nothing landed: ... ! [remote rejected] ... (pre-receive hook declined)'; events previewed, confirmed, awaiting_approval, approved, dispatched, running, failed (no succeeded); `--verify` -> failed, exit 1. alpha main 085bd498 before and after. Hook removed (rm); only *.sample hooks remain."
+  },
+  "P7": {
+    "verdict": "holds",
+    "evidence": "cwd org/: `seikika run --as ann -o json` (SEIKIKA_URL from env.sh) returned mark-deprecated for portal:alpha, portal:beta and portal:gamma in one call, each verified true, unreadable []. P4 was requested (and P5 approved) from org/ through that server."
+  },
+  "P8": {
+    "verdict": "holds",
+    "evidence": "`seikika run --as ann --verify run_2fswzf4o49sd -o json` (also .seikika-state/served/org/runs/run_2fswzf4o49sd.json): requested_by user:ann; inputs {successor: acme/probe-approval, reason: ...}; approval.approved_by [user:bob]; state succeeded with outputs.commit f74dc84b; events with at: previewed and confirmed by user:ann 12:45:46Z, approved by user:bob 12:45:50Z (with note), succeeded 12:45:51Z."
+  },
+  "P9": {
+    "verdict": "holds",
+    "evidence": "Every step (serve --detach, list, preview, request, approve, verify, --runs, serve --stop) ran from a non-interactive shell; every seikika run call used -o json and returned JSON (errors as {\"error\": ...}) with the documented exit codes 0/1/2/3."
+  },
+  "P10": {
+    "verdict": "holds",
+    "evidence": "Operated entirely from org/HANDOFF.md (Commands and Test the refusals): `. org/env.sh`, `seikika serve <org> --listen 127.0.0.1:7910 --detach` printed the pinned key the handoff names, and `seikika serve <org> --stop` stopped it. No fixes. Source read only for P5."
+  },
+  "fixes": [],
+  "strikes": [
+    {"path": ".seikika-state/runs/run_2fssf57c8p5g.json", "lines": 104, "reason": "child portal's run record, written by Seikika at run time"},
+    {"path": ".seikika-state/runs/run_2fssfya7rxmx.json", "lines": 104, "reason": "child portal's run record, written by Seikika at run time"},
+    {"path": ".seikika-state/runs/run_2fssgtq6ka2w.json", "lines": 104, "reason": "child portal's run record, written by Seikika at run time"},
+    {"path": ".seikika-state/served/org/runs/run_2fssefqli4ia.json", "lines": 217, "reason": "org server's run record, written at run time"},
+    {"path": ".seikika-state/served/org/runs/run_2fssemupwey3.json", "lines": 217, "reason": "org server's run record, written at run time"},
+    {"path": ".seikika-state/served/org/runs/run_2fssetokm8ak.json", "lines": 217, "reason": "org server's run record, written at run time"},
+    {"path": ".seikika-state/served/org/runs/spent-tokens", "lines": 3, "reason": "server's spent confirm-token list, runtime state"},
+    {"path": ".seikika-state/served/org/signing-key", "lines": 1, "reason": "generated approval signing key"}
+  ],
+  "linesBeforeStrikes": 1335,
+  "linesAfterStrikes": 368,
+  "fullyPasses": true,
+  "notes": "Kept: the three .seikika/seikika.yaml (44 each), the three tests/mark-deprecated.test.yaml (72 each, seikika test cases a team keeps), org/env.sh (9) and org/seikika.yaml (11). The handoff states that refused approvals (403) are answered but not written into the run record; R7 as probed (P8) does not require them. The probes left two new org run records (run_2fswzf4o49sd, run_2fsx9jdqtukl), their child records, and gamma's main at f74dc84b (acme/probe-approval) as P5 requires; these postdate the measures and are not counted."
+}

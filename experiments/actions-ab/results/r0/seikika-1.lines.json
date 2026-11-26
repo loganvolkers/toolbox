@@ -1,0 +1,19 @@
+{
+ "linesToMaintain": 1604,
+ "files": {
+  "alpha/.seikika/mark_deprecated.py": 128,
+  "alpha/.seikika/origin_state.py": 23,
+  "alpha/.seikika/seikika.yaml": 71,
+  "beta/.seikika/seikika.yaml": 71,
+  "gamma/.seikika/seikika.yaml": 71,
+  "org/.gitignore": 2,
+  "org/.state/org-runs/run_2fp22olkluj6.json": 175,
+  "org/.state/org-runs/run_2fp22tc0m7jx.json": 175,
+  "org/.state/org-runs/run_2fp22y9neb1e.json": 175,
+  "org/.state/seikika/runs/run_2fp24q9oqli8.json": 85,
+  "org/.state/seikika/runs/run_2fp257s5yk2i.json": 85,
+  "org/.state/seikika/runs/run_2fp25ozg81yi.json": 85,
+  "org/bin/acme-actions": 425,
+  "org/seikika.yaml": 33
+ }
+}

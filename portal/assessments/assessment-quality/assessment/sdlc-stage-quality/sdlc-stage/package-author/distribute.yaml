@@ -1,4 +1,4 @@
-apiVersion: toolbox.dev/assessment/v1
+apiVersion: seikika.com/assessment/v1
 entity: assessment:sdlc-stage-quality/sdlc-stage:package-author/distribute
 rubric: assessment-quality
 subjectHash: fd672afdd00c
@@ -15,11 +15,11 @@ verdicts:
       resolved by D89, git-first with an OCI mirror. agent-can-complete says
       no package format exists and that docs/design/packages.md §3 is only a
       proposal. §3.2 is the layout the tree now ships (apiVersion
-      toolbox.dev/package/v0 in
-      packages/github-actions/toolbox-package.yaml:1-4), and CI tests those
+      seikika.com/package/v0 in
+      packages/github-actions/seikika-package.yaml:1-4), and CI tests those
       packages. reuses-artifacts says .github/workflows/ci.yml lines 69-70 use
       pip and go install. Those lines are the packages/*/tests loop. Pinned
-      tools are installed by scripts/ci-tools.sh (ci.yml:41-45) and toolbox
+      tools are installed by scripts/ci-tools.sh (ci.yml:41-45) and seikika
       tools install (ci.yml:81-82).
     suggestion: >-
       Cite questions.md:23 as resolved, cite the package files and the test
@@ -40,7 +40,7 @@ verdicts:
       asks for; and that mirror is not something an outside author can finish
       without a change in this repository.
     suggestion: >-
-      Change reuses-artifacts to pass, citing the tools: block and toolbox
+      Change reuses-artifacts to pass, citing the tools: block and seikika
       tools install, and leave the other three fails.
   - criterion: reproducible
     verdict: pass

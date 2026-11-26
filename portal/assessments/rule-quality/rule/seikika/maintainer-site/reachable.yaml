@@ -1,0 +1,55 @@
+apiVersion: seikika.com/assessment/v1
+entity: rule:seikika/maintainer-site/reachable
+rubric: rule-quality
+subjectHash: a2fd6236cc83
+assessor: {kind: agent, name: cursor-assessor-13, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: measures-intent
+    verdict: fail
+    reason: >-
+      `inSidebar` is found by regex over the raw text of astro.config.mjs
+      (crates/seikika-connector-workspace/src/site.rs:114-133). It matches any
+      `directory: '...'` and any quoted occurrence of the slug, with no
+      comment stripping and no sense of where the sidebar array is. If a
+      section is commented out, for example `// { label: 'Demo', items: [{
+      autogenerate: { directory: 'demo' } }] }` in site/astro.config.mjs, its
+      pages are no longer in the sidebar, but `demo/report` still reads as
+      reachable. So does a page whose slug appears quoted anywhere in the
+      config, such as in a comment. Drafts and `sidebar.hidden` are handled
+      (site.rs:14-15, 115-117), and all 30 live pages sit under an
+      autogenerate directory (site/astro.config.mjs: 15-25), so the misses are
+      latent.
+    suggestion: >-
+      Strip `//` and `/* */` comments before matching. Better, extract the
+      `sidebar:` array, for example by evaluating the config with node, as the
+      site build already requires, and match only `autogenerate. directory`
+      and `slug`/`link` entries inside it.
+  - criterion: hard-to-game
+    verdict: pass
+    reason: >-
+      The fix offers two real routes: add the directory to `autogenerate`, or
+      link the slug in site/astro.config.mjs (portal/standards/site.yaml:
+      125-127). Either is a one-line edit. The comment loophole above takes
+      the same effort and leaves the comment in the diff, so it isn't the
+      cheaper path.
+  - criterion: fix-leads-to-pass
+    verdict: pass
+    reason: >-
+      The evidence is a fixed `not in the sidebar` (site.yaml:124), which fits
+      a single boolean field. The fix names the file, the two entries that
+      count, and "Leave `draft` unset", which covers the fixture draft.md
+      (portal/tests/standards.test.yaml:762-767). Doing either step flips
+      `inSidebar` (site.rs:126-132).
+  - criterion: threshold-justified
+    verdict: pass
+    reason: >-
+      No number. D91 (D01M7X0RYD00000000000000000) and docs/design/
+      site-standards.md:24 and :29-30 put "in the sidebar and not a draft" at
+      silver: a draft or unlisted page exists but is "not yet part of the
+      site". That is the step above a bronze page that stands on its own.
+summary: >-
+  The right silver criterion, with a fix that names the file and the two
+  ways to satisfy it. The fact behind it is a text search of the Astro
+  config, so a commented-out sidebar section or a stray quoted slug still
+  counts as reachable. No live page hits this yet.

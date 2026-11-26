@@ -8,7 +8,7 @@ facts.py recorded what each probe, count or facts.yaml entry decided.
 
 The tally follows README.md: on each rule OpenFGA is ahead, at parity or behind SpiceDB (a measured
 value decides, within the rule's tolerance is parity; otherwise passing beats failing, as
-toolbox-derive's rule_standing does). A factor is ahead when OpenFGA is ahead on more rules than it
+seikika-derive's rule_standing does). A factor is ahead when OpenFGA is ahead on more rules than it
 is behind, parity when as many, behind otherwise.
 """
 import glob

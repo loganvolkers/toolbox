@@ -7,7 +7,7 @@ decided: 2026-11-22T07:00:00Z
 
 **Refines D01M7Y46VDDBK2SW6H96ZSG89MP. Federation is unpaused. Value is now proven from both ends
 at once:**
-- **Bottom-up:** Toolbox installed at a leaf node, a single repository (repo portals, the box,
+- **Bottom-up:** Seikika installed at a leaf node, a single repository (repo portals, the box,
   the ratchet, `actions/report`, packages). This continues as before, with the exit in
   [repo-value.md](../design/repo-value.md) §6.
 - **Top-down:** the central portal, inspired by Backstage, DX, Port and other IDPs, proceeds in its

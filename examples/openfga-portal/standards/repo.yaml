@@ -57,7 +57,7 @@ scorecards:
       unambiguous and adds a licence.
     links:
     - title: Repo portals
-      url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/repo-portals.md
+      url: https://github.com/seikika/seikika/blob/main/docs/design/repo-portals.md
     - title: GitHub code owners
       url: https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
     owner: group:openfga-maintainers
@@ -113,7 +113,7 @@ scorecards:
         reach silver.
       links:
       - title: Personal CODEOWNERS decision
-        url: https://github.com/loganvolkers/toolbox/blob/main/docs/decisions/D01M7Y57FVX0XYNGMX0A0XJ4GK9.md
+        url: https://github.com/seikika/seikika/blob/main/docs/decisions/D01M7Y57FVX0XYNGMX0A0XJ4GK9.md
     - name: has-license
       level: silver
       check: has(entity.license)
@@ -141,7 +141,7 @@ scorecards:
       network, so that is where the starter begins.
     links:
     - title: Repo portal starter
-      url: https://github.com/loganvolkers/toolbox/blob/main/examples/repo-portal-starter/README.md
+      url: https://github.com/seikika/seikika/blob/main/examples/repo-portal-starter/README.md
     owner: group:openfga-maintainers
     levels: [bronze]
     rules:

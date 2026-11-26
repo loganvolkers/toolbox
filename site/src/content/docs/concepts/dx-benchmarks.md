@@ -1,39 +1,39 @@
 ---
 title: DX Benchmarks
-description: How Toolbox measures its own developer experience by benchmarking agents doing real work on open-source repositories, against the alternatives, with the losses published.
+description: How Seikika measures its own developer experience by benchmarking agents doing real work on open-source repositories, against the alternatives, with the losses published.
 sidebar:
   order: 0
 ---
 
-Toolbox tests its developer experience the way an experiment tests a claim. In a DX Benchmark,
-fresh coding agents do real lifecycle work on open-source repositories, once with Toolbox and once
+Seikika tests its developer experience the way an experiment tests a claim. In a DX Benchmark,
+fresh coding agents do real lifecycle work on open-source repositories, once with Seikika and once
 with the strongest alternative a team would actually use. The bar is written down before the run.
-The results are published as they came out, including when Toolbox loses.
+The results are published as they came out, including when Seikika loses.
 
 We know of no other developer platform that benchmarks itself this way. This is our survey, not a
 verified absence.
 
 ## What is compared
 
-| Benchmark | Toolbox against | Repositories | Result |
+| Benchmark | Seikika against | Repositories | Result |
 |---|---|---|---|
 | Out of the box | Hand triage of every finding | OpenFGA, Codex, gh-aw, PostHog | The first run failed on all four. After the fixes, 939 of 940 findings were true and 70% were worth fixing |
-| Checklist or report | The same rules as a written checklist | OpenFGA, Codex | The checklist did as well or better. Toolbox lost |
-| Standards lifecycle | Bespoke scripts | PostHog, Codex, OpenFGA | Equal correctness. Toolbox cost 15% more tokens even after the fixes. Toolbox lost |
+| Checklist or report | The same rules as a written checklist | OpenFGA, Codex | The checklist did as well or better. Seikika lost |
+| Standards lifecycle | Bespoke scripts | PostHog, Codex, OpenFGA | Equal correctness. Seikika cost 15% more tokens even after the fixes. Seikika lost |
 | Ratchet replay | Upstream's own merges | OpenFGA, Codex, gh-aw, PostHog | 141 commits: one real supply-chain regression caught, and one false alarm |
-| Several tools, one box | Hand-written CI glue | PostHog | Equal correctness and less glue, but 11% more tokens. Toolbox lost on cost |
+| Several tools, one box | Hand-written CI glue | PostHog | Equal correctness and less glue, but 11% more tokens. Seikika lost on cost |
 | Security scorecards | An agent's home-built scorecard, against OpenSSF Scorecard | OpenFGA, Codex | The home builds found more. The standard won on reuse cost and consistency |
-| Connector authoring | Port Ocean and a Backstage entity provider | Ocean, Backstage | The first run lost on cost. The reruns changed only Toolbox's arm and are within noise, so they are not a win |
+| Connector authoring | Port Ocean and a Backstage entity provider | Ocean, Backstage | The first run lost on cost. The reruns changed only Seikika's arm and are within noise, so they are not a win |
 | Laptop deploy | Backstage from create-app | Backstage, OpenFGA | Inconclusive: no token counts, and the two arms did not start from equal conditions |
 
 ## What it has taught us
 
-Toolbox rarely beats a capable agent on a single run. Agents already know programming languages
-and their tools, but not Toolbox. Its value shows up with repetition: on a second repository, on
+Seikika rarely beats a capable agent on a single run. Agents already know programming languages
+and their tools, but not Seikika. Its value shows up with repetition: on a second repository, on
 the next upgrade, across many repositories, and over time. The benchmarks now measure exactly
 that: what it costs to reuse something, and whether two runs give the same answer.
 
-Every benchmark has changed Toolbox. Among the changes:
+Every benchmark has changed Seikika. Among the changes:
 - packages with parameters;
 - a numeric ratchet;
 - a standard slot for SARIF;
@@ -53,7 +53,7 @@ Every benchmark has changed Toolbox. Among the changes:
 - Both arms are asked for developer-experience feedback the same way, and it is triaged into fixes.
 - The prompts are committed before the first run, and each arm runs at least three times. A
   difference smaller than the spread between runs is reported as inconclusive.
-- Every arm gets the same level of help, and nothing in Toolbox is changed to fit the harness.
+- Every arm gets the same level of help, and nothing in Seikika is changed to fit the harness.
 - The verdict is written by someone who did not design the experiment.
 
 Two early results, a connector "win" and a deploy "defeat", were run before these rules. Both
@@ -61,8 +61,8 @@ have been corrected in the repository, and the rules now apply to every run.
 
 The method, the prior art it builds on (SWE-bench, Terminal-Bench, METR's study, the Agentic
 Benchmark Checklist, BetterBench, Next.js Evals and others) and the catalog are in the
-repository's [DX Benchmarks design](https://github.com/loganvolkers/toolbox/blob/main/docs/design/dx-benchmarks.md).
+repository's [DX Benchmarks design](https://github.com/seikika/seikika/blob/main/docs/design/dx-benchmarks.md).
 Each benchmark's pre-registration and results are under
-[experiments/](https://github.com/loganvolkers/toolbox/tree/main/experiments). The catalog in
-[portal/benchmarks/](https://github.com/loganvolkers/toolbox/tree/main/portal/benchmarks) is scored
-like the rest of the repository; see [this repository, scored](/toolbox/demo/report/).
+[experiments/](https://github.com/seikika/seikika/tree/main/experiments). The catalog in
+[portal/benchmarks/](https://github.com/seikika/seikika/tree/main/portal/benchmarks) is scored
+like the rest of the repository; see [this repository, scored](/demo/report/).

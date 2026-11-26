@@ -8,19 +8,18 @@ import { fileURLToPath } from "node:url";
 import { chromium } from "playwright";
 
 const root = fileURLToPath(new URL("../../", import.meta.url));
-const toolbox = process.env.TOOLBOX_BIN ?? join(root, "target/debug/toolbox");
+const seikika = process.env.SEIKIKA_BIN ?? join(root, "target/debug/seikika");
 const docs = resolve(root, "site/dist");
 const fixture = resolve(root, "examples/reference-portal");
 const id = "repository:payments-api";
-const temp = await mkdtemp(join(tmpdir(), "toolbox-ui-smoke-"));
+const temp = await mkdtemp(join(tmpdir(), "seikika-ui-smoke-"));
 const types = { ".html": "text/html", ".js": "text/javascript", ".json": "application/json", ".css": "text/css", ".svg": "image/svg+xml", ".woff2": "font/woff2" };
 const site = createServer(async (request, response) => {
   const pathname = new URL(request.url, "http://localhost").pathname;
   if (pathname === "/favicon.ico") return response.writeHead(204).end();
   const offline = pathname === "/offline-artifact";
-  if (!offline && !pathname.startsWith("/toolbox/")) return response.writeHead(404).end();
   const file = offline ? join(temp, "index.html") :
-    resolve(docs, "." + decodeURIComponent(pathname.slice("/toolbox".length)), ...(pathname.endsWith("/") ? ["index.html"] : []));
+    resolve(docs, "." + decodeURIComponent(pathname), ...(pathname.endsWith("/") ? ["index.html"] : []));
   if (!offline && !file.startsWith(docs + sep)) return response.writeHead(404).end();
   try {
     const contents = await readFile(file);
@@ -34,17 +33,17 @@ const listen = server => new Promise((resolve, reject) => server.once("error", r
 let portal, browser;
 try {
   await listen(site);
-  const docsOrigin = "http://127.0.0.1:" + site.address().port + "/toolbox/";
+  const docsOrigin = "http://127.0.0.1:" + site.address().port + "/";
   const keeper = createServer();
   await listen(keeper);
   const port = keeper.address().port;
   await new Promise(resolve => keeper.close(resolve));
   const portalOrigin = "http://127.0.0.1:" + port;
-  portal = spawn(toolbox, ["serve", fixture, "--fixtures", "--listen", "127.0.0.1:" + port], {
-    env: { ...process.env, TOOLBOX_AUTH_MODE: "dev" },
+  portal = spawn(seikika, ["serve", fixture, "--fixtures", "--listen", "127.0.0.1:" + port], {
+    env: { ...process.env, SEIKIKA_AUTH_MODE: "dev" },
     stdio: ["ignore", "ignore", "inherit"],
   });
-  execFileSync(toolbox, ["report", fixture, "--fixtures", "-o", "html", "--out", join(temp, "index.html")]);
+  execFileSync(seikika, ["report", fixture, "--fixtures", "-o", "html", "--out", join(temp, "index.html")]);
   let ready = false;
   for (let check = 0; check < 60 && !ready; check++) {
     try { ready = (await fetch(portalOrigin + "/readyz")).ok; } catch {}
@@ -88,6 +87,8 @@ try {
   page.off("request", recordRequest);
   assert.deepEqual(offlineRequests, [], "The offline artifact must make no requests for code, styles, or data.");
 
+  await page.goto(docsOrigin);
+  assert.equal(await page.locator('link[rel="canonical"]').getAttribute("href"), "https://seikika.com/");
   await page.goto(docsOrigin + "report/");
   await page.getByRole("tab", { name: /Catalog/ }).click();
   await page.locator("#report-body").getByRole("heading", { name: "Catalog", exact: true }).waitFor();
@@ -97,16 +98,16 @@ try {
   await page.getByRole("searchbox", { name: "Filter commands" }).fill("report");
   await page.getByText(/\d+ of \d+ commands/).waitFor();
   await page.goto(docsOrigin + "authors/npm/");
-  await page.getByRole("link", { name: "@toolbox-dev/astro-report", exact: true }).waitFor();
-  await page.getByRole("link", { name: "@toolbox-dev/ui", exact: true }).waitFor();
+  await page.getByRole("link", { name: "@seikika/astro-report", exact: true }).waitFor();
+  await page.getByRole("link", { name: "@seikika/ui", exact: true }).waitFor();
 
   await page.setViewportSize({ width: 390, height: 844 });
   const story = id => docsOrigin + "storybook/iframe.html?viewMode=story&id=" + id;
-  await page.goto(story("pages-toolbox-for-toolbox--scorecards"));
+  await page.goto(story("pages-seikika-for-seikika--scorecards"));
   await page.getByRole("button", { name: "Standards that check themselves", exact: true }).click();
   await page.waitForFunction(() => document.activeElement?.textContent?.includes("Standards that check themselves") &&
     document.activeElement.tagName === "H3");
-  await page.goto(story("pages-toolbox-for-toolbox--scorecard"));
+  await page.goto(story("pages-seikika-for-seikika--scorecard"));
   const filterJump = page.getByRole("button", { name: /Filter entities/ });
   await filterJump.waitFor();
   assert(await filterJump.evaluate(button => {

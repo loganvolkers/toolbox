@@ -1,4 +1,4 @@
-apiVersion: toolbox.dev/assessment/v1
+apiVersion: seikika.com/assessment/v1
 entity: assessment:rule-quality/rule:repo/repo-hygiene/owners-are-teams
 rubric: assessment-quality
 subjectHash: 91f81a77cf67
@@ -11,9 +11,9 @@ verdicts:
       The citations in
       portal/assessments/rule-quality/rule/repo/repo-hygiene/owners-are-teams.yaml
       land. `owners_ok` is
-      crates/toolbox-connector-workspace/src/repo.rs:108-116, and repo.rs:243
+      crates/seikika-connector-workspace/src/repo.rs:108-116, and repo.rs:243
       asserts `@alice @bob` passes. In
-      examples/repo-portal-starter/toolbox.yaml the evidence is at 125-128,
+      examples/repo-portal-starter/seikika.yaml the evidence is at 125-128,
       the fix at 130-132, the rationale at 133-137 and the decision link at
       138-140. The payments-api fixture and test name `@alice`. "The decision
       says the same" holds only for its motivation. The rule
@@ -25,7 +25,7 @@ verdicts:
     reason: >-
       The measures-intent fail is defensible. The rule's name and its fix
       ("for a single-maintainer repository only personal handles",
-      toolbox.yaml:130-131) both promise less than the check accepts. The
+      seikika.yaml:130-131) both promise less than the check accepts. The
       rubric judges against "the rule's name and fix"
       (portal/standards/meta.yaml:1157-1158). hard-to-game, fix-leads-to-pass
       and threshold-justified are right. No failure the sources show was
@@ -42,7 +42,7 @@ verdicts:
       assessment doesn't acknowledge.
     suggestion: >-
       Say in the reason that the check matches D01M7Y57FVX0XYNGMX0A0XJ4GK9's
-      rule, and fail on the name and fix wording (toolbox.yaml:122, 130-131)
+      rule, and fail on the name and fix wording (seikika.yaml:122, 130-131)
       rather than on the check being "broader than the decision".
   - criterion: actionable
     verdict: pass

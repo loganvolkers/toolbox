@@ -1,0 +1,161 @@
+{
+ "run": "seikika-2",
+ "C1": "holds",
+ "P1": {
+  "verdict": "holds",
+  "evidence": "score.py check passed before any probe. git --git-dir=origins/<repo>.git log/ls-tree main: .seikika/seikika.yaml is on main of alpha (a86a1b4 'Add the mark-deprecated self-service action (Seikika), owned by alpha's maintainers'), beta (624943d) and gamma (f27ef7f), identical to each checkout; each defines mark-deprecated's inputs, approval, change executor and the pinned org approval key. org/seikika.yaml only lists the three origins as federation.children."
+ },
+ "P2": {
+  "verdict": "holds",
+  "evidence": "cwd org/, as user:ann on portal:alpha: successor 'Acme/Bad Name' (valid reason) -> {\"error\":\"422 invalid-inputs: successor: \\\"Acme/Bad Name\\\" does not match ...\"}, exit 2, as preview and with --yes. successor acme/probe-valid with reason 'short' (5 chars) -> 422 invalid-inputs: reason \"short\" is shorter than 20 characters, exit 2, preview and --yes. --runs still listed the 6 pre-existing runs only. alpha main 52dde32d before and after."
+ },
+ "P3": {
+  "verdict": "holds",
+  "evidence": "As user:ann, preview on portal:beta with successor acme/probe-preview: exit 0; effects[0] = update file:DEPRECATED.md, unified diff with + lines '# Deprecated: use acme/probe-preview', blank, the reason; effects[1] = push to branch:main (never forced); confirm_token returned; no warnings. beta main 72a3978c before and after."
+ },
+ "P4": {
+  "verdict": "holds",
+  "evidence": "cwd org/: user:ann mark-deprecated --entity portal:gamma -i successor=acme/probe-approval --yes -> exit 3, run_2frtmdlqut79 awaiting_approval, requested_by user:ann. gamma main 570f1a3d after request. user:ann --approve -> 403 not-an-approver: a requester cannot approve their own run (exit 2). user:carol --approve -> 403 not-an-approver: user:carol is not one of the pending approvers (exit 2). scripts/run-status.sh -> awaiting_approval, exit 3. gamma main 570f1a3d after both refusals."
+ },
+ "P5": {
+  "verdict": "holds",
+  "evidence": "user:bob --approve run_2frtmdlqut79 --wait -> exit 0; scripts/run-status.sh -> succeeded, exit 0. origins/gamma.git main moved 570f1a3d -> b9b6543f; `git show main:DEPRECATED.md` is '# Deprecated: use acme/probe-approval', blank, the P4 reason; trailers Requested-By: user:ann, Approved-By: user:bob. Record verification: child portal run run_2frtmjzl077t, by: base origin/main, 'fetched origin/main: the commit is on it, and every file it changed has the content the preview showed', DEPRECATED.md matches: true. The workspace's bin/seikika is byte-identical to seikika-1's (sha256 33da076f...); at the frozen commit ad36c06, run.rs on_base() -> executor::landed()/merged() runs `git fetch -- origin main`, `merge-base --is-ancestor commit origin/main`, and compares each changed file's blob on origin/main before done() sets succeeded."
+ },
+ "P6": {
+  "verdict": "holds",
+  "evidence": "Wrote origins/alpha.git/hooks/pre-receive (exit 1). user:ann --yes on portal:alpha with successor acme/probe-reject -> run_2frtqlz1oi6c awaiting_approval (exit 3); user:bob --approve --wait -> exit 1; run-status.sh -> state failed, exit 1, error 'the push to origin main was refused, so nothing landed: ... remote: adjudicator P6: every push rejected ... [remote rejected]'; events end in failed, no succeeded. alpha main 52dde32d before and after. Hook removed; only *.sample hooks remain."
+ },
+ "P7": {
+  "verdict": "holds",
+  "evidence": "cwd org/: `seikika run --url http://127.0.0.1:7450 --as user:ann -o json` returned mark-deprecated for portal alpha, beta and gamma in one call (unreadable: []). P4 was requested (and approved) from org/ against that URL."
+ },
+ "P8": {
+  "verdict": "holds",
+  "evidence": "scripts/run-status.sh run_2frtmdlqut79 (wraps `seikika run --verify -o json`) and state/seikika/served/org/runs/run_2frtmdlqut79.json: requested_by user:ann; inputs {successor: acme/probe-approval, reason: ...}; approval.approved_by ['user:ann|user:bob=user:bob']; state succeeded, outputs.commit b9b6543f, landed true; events previewed/confirmed by user:ann at 11:46:04Z, approved by user:bob at 11:46:04Z (note), succeeded at 11:46:04Z."
+ },
+ "P9": {
+  "verdict": "holds",
+  "evidence": "Every step ran non-interactively from a shell with -o json; outputs were JSON (errors as {\"error\": ...}); exit codes 0/1/2/3 as documented, and run-status.sh's 0/1/3."
+ },
+ "P10": {
+  "verdict": "holds",
+  "evidence": "Operated from org/HANDOFF.md alone: started with its nohup scripts/serve.sh line, approval_key matched the pinned key it names, then its List/Preview/Request/Approve/Check/Read commands and its refusal table. Stopped the server with kill as it says. No fixes. Source read only for P5."
+ },
+ "fixes": [],
+ "strikes": [
+  {
+   "path": "state/app1.json",
+   "lines": 148,
+   "reason": "scratch capture of a seikika command's JSON output (request/approve/verify/no-op test) the agent saved while running the task"
+  },
+  {
+   "path": "state/app2.json",
+   "lines": 174,
+   "reason": "scratch capture of a seikika command's JSON output (request/approve/verify/no-op test) the agent saved while running the task"
+  },
+  {
+   "path": "state/noop.json",
+   "lines": 140,
+   "reason": "scratch capture of a seikika command's JSON output (request/approve/verify/no-op test) the agent saved while running the task"
+  },
+  {
+   "path": "state/req1.json",
+   "lines": 57,
+   "reason": "scratch capture of a seikika command's JSON output (request/approve/verify/no-op test) the agent saved while running the task"
+  },
+  {
+   "path": "state/run_2frfhubjihzi.json",
+   "lines": 206,
+   "reason": "scratch capture of a seikika command's JSON output (request/approve/verify/no-op test) the agent saved while running the task"
+  },
+  {
+   "path": "state/run_2frfi2pr6io4.json",
+   "lines": 206,
+   "reason": "scratch capture of a seikika command's JSON output (request/approve/verify/no-op test) the agent saved while running the task"
+  },
+  {
+   "path": "state/run_2frfia5re0ua.json",
+   "lines": 206,
+   "reason": "scratch capture of a seikika command's JSON output (request/approve/verify/no-op test) the agent saved while running the task"
+  },
+  {
+   "path": "state/runs.txt",
+   "lines": 1,
+   "reason": "scratch note of the three run ids the agent captured while running the task"
+  },
+  {
+   "path": "state/seikika/runs/run_2frf9gq93wnm.json",
+   "lines": 71,
+   "reason": "repository (child) run record written by Seikika"
+  },
+  {
+   "path": "state/seikika/runs/run_2frfe35m86pz.json",
+   "lines": 86,
+   "reason": "repository (child) run record written by Seikika"
+  },
+  {
+   "path": "state/seikika/runs/run_2frfilgnzuhx.json",
+   "lines": 98,
+   "reason": "repository (child) run record written by Seikika"
+  },
+  {
+   "path": "state/seikika/runs/run_2frfjev1srx7.json",
+   "lines": 98,
+   "reason": "repository (child) run record written by Seikika"
+  },
+  {
+   "path": "state/seikika/runs/run_2frfkaxombn7.json",
+   "lines": 98,
+   "reason": "repository (child) run record written by Seikika"
+  },
+  {
+   "path": "state/seikika/runs/run_2frfyoxk0s2q.json",
+   "lines": 65,
+   "reason": "repository (child) run record written by Seikika"
+  },
+  {
+   "path": "state/seikika/served/org/runs/run_2frf6ayc6wms.json",
+   "lines": 147,
+   "reason": "org run record written by the server"
+  },
+  {
+   "path": "state/seikika/served/org/runs/run_2frfdsnih5kr.json",
+   "lines": 173,
+   "reason": "org run record written by the server"
+  },
+  {
+   "path": "state/seikika/served/org/runs/run_2frfhubjihzi.json",
+   "lines": 205,
+   "reason": "org run record written by the server"
+  },
+  {
+   "path": "state/seikika/served/org/runs/run_2frfi2pr6io4.json",
+   "lines": 205,
+   "reason": "org run record written by the server"
+  },
+  {
+   "path": "state/seikika/served/org/runs/run_2frfia5re0ua.json",
+   "lines": 205,
+   "reason": "org run record written by the server"
+  },
+  {
+   "path": "state/seikika/served/org/runs/run_2frfyixi0j8x.json",
+   "lines": 139,
+   "reason": "org run record written by the server"
+  },
+  {
+   "path": "state/seikika/served/org/runs/spent-tokens",
+   "lines": 6,
+   "reason": "spent confirm tokens written by the server"
+  },
+  {
+   "path": "state/seikika/served/org/signing-key",
+   "lines": 1,
+   "reason": "approval signing key generated by `seikika serve` at run time (server state dir)"
+  }
+ ],
+ "linesBeforeStrikes": 2896,
+ "linesAfterStrikes": 161,
+ "fullyPasses": true,
+ "notes": "Kept lines: three .seikika/seikika.yaml (39 each), org/seikika.yaml 11, org/scripts/serve.sh 11, org/scripts/run-status.sh 22. The org files are committed on origins/org.git main. The agent's runtime state and scratch captures sit in the workspace's top-level state/ directory, outside org/ and outside any git repository; none of it is committed. Defects outside the probes, shared with seikika-1 (same binary): the server runs without authorization (anyone may request; stated in the handoff); at ad36c06 the post-push `git fetch` result is ignored; approved_by is encoded as 'user:ann|user:bob=user:bob'; commits are authored by 'Seikika' with requester/approver in trailers. The handoff notes that `seikika run --verify` exits 0 for an unverified run, which is why it ships run-status.sh. P5 left gamma's DEPRECATED.md at the probe content (b9b6543f); C1 was checked before any probe."
+}

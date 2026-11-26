@@ -1,6 +1,6 @@
 ---
-title: Toolbox vs Port
-description: When to choose Toolbox or Port for a developer portal and integration catalog.
+title: Seikika vs Port
+description: When to choose Seikika or Port for a developer portal and integration catalog.
 sidebar:
   order: 3
 relationship: replace
@@ -9,15 +9,15 @@ peer_url: https://www.port.io/
 last_verified: 2026-11-23
 claim_sources:
   - https://github.com/port-labs/ocean
-  - https://github.com/loganvolkers/toolbox/blob/main/docs/research.md
-  - https://github.com/loganvolkers/toolbox/blob/main/docs/ocean.md
+  - https://github.com/seikika/seikika/blob/main/docs/research.md
+  - https://github.com/seikika/seikika/blob/main/docs/ocean.md
 ---
 
-Both projects give platform teams a catalog of services, scorecards, and ways to drive change. [Port](https://www.port.io/) is a mature commercial SaaS portal with blueprints, rich integrations, and productized AI surfaces. Toolbox is open-source infrastructure: portal configuration in git, one self-hosted image, and no hosted no-code suite.
+Both projects give platform teams a catalog of services, scorecards, and ways to drive change. [Port](https://www.port.io/) is a mature commercial SaaS portal with blueprints, rich integrations, and productized AI surfaces. Seikika is open-source infrastructure: portal configuration in git, one self-hosted image, and no hosted no-code suite.
 
 ## Quick glance
 
-| | Port | Toolbox |
+| | Port | Seikika |
 |---|---|---|
 | License / deploy | Commercial SaaS (Ocean OSS for integrations) | Open-source; self-host image + Postgres |
 | Config locus | Portal config in Port's database; Terraform/Pulumi as clients | Manifest and packages in git only |
@@ -38,15 +38,15 @@ Both projects give platform teams a catalog of services, scorecards, and ways to
 
 ### SaaS product vs config-as-code OSS
 
-Port optimizes for a hosted control plane and UI-driven portal building. Toolbox keeps configuration in the repository so `validate` → `test` → `plan` → deploy stays a normal engineering loop. Terraform providers for Port exist; they still talk to DB-held config, so drift is possible ([research.md](https://github.com/loganvolkers/toolbox/blob/main/docs/research.md)).
+Port optimizes for a hosted control plane and UI-driven portal building. Seikika keeps configuration in the repository so `validate` → `test` → `plan` → deploy stays a normal engineering loop. Terraform providers for Port exist; they still talk to DB-held config, so drift is possible ([research.md](https://github.com/seikika/seikika/blob/main/docs/research.md)).
 
 ### Ocean lessons, not Ocean lock-in
 
-We studied [Port Ocean](https://github.com/port-labs/ocean) for connector and mapping ideas ([ocean.md](https://github.com/loganvolkers/toolbox/blob/main/docs/ocean.md)). Toolbox does not adopt Ocean as its connector framework: Ocean is coupled to Port's API and mapping storage. The lesson is the contract shape, not the Python runtime.
+We studied [Port Ocean](https://github.com/port-labs/ocean) for connector and mapping ideas ([ocean.md](https://github.com/seikika/seikika/blob/main/docs/ocean.md)). Seikika does not adopt Ocean as its connector framework: Ocean is coupled to Port's API and mapping storage. The lesson is the contract shape, not the Python runtime.
 
 ### Not a no-code suite
 
-Toolbox does not claim Port's product depth in UI builders, approval workflows, or the breadth of commercial integrations. Self-service actions in Toolbox remain paused pending design review; do not treat them as parity.
+Seikika does not claim Port's product depth in UI builders, approval workflows, or the breadth of commercial integrations. Self-service actions in Seikika remain paused pending design review; do not treat them as parity.
 
 ## Good for / not for
 
@@ -56,7 +56,7 @@ Toolbox does not claim Port's product depth in UI builders, approval workflows, 
 - Non-engineers need to edit portal structure in a product UI without living in git.
 - You are buying a commercial platform and support relationship.
 
-### Choose Toolbox when
+### Choose Seikika when
 
 - You need an open-source, self-hosted portal whose entire config is reviewable in pull requests.
 - Agents and CI should consume stable API/MCP/CLI contracts from day one.
@@ -64,16 +64,16 @@ Toolbox does not claim Port's product depth in UI builders, approval workflows, 
 
 ## Coexistence
 
-There is no Toolbox “import from Port” product path yet. Honest coexistence today means: keep Port where the SaaS fit is right, or export/sync facts through whatever APIs and git artifacts you already own. A migration importer is **not built**.
+There is no Seikika “import from Port” product path yet. Honest coexistence today means: keep Port where the SaaS fit is right, or export/sync facts through whatever APIs and git artifacts you already own. A migration importer is **not built**.
 
 ## What we learned
 
-[Port Ocean](https://github.com/port-labs/ocean) showed how to sync messy third-party APIs into a catalog with a small integration contract and declarative mappings. We study that connector thinking without adopting a database-held portal config: Toolbox keeps configuration in code and carries tools rather than wrapping them.
+[Port Ocean](https://github.com/port-labs/ocean) showed how to sync messy third-party APIs into a catalog with a small integration contract and declarative mappings. We study that connector thinking without adopting a database-held portal config: Seikika keeps configuration in code and carries tools rather than wrapping them.
 
 Port's blueprint expressiveness (mirror, calculated, and aggregated properties) is worth matching *in code* over time; that is admiration of the model, not a claim of feature parity today.
 
-More on [Acknowledgments](/toolbox/compare/acknowledgments/).
+More on [Acknowledgments](/compare/acknowledgments/).
 
 ## Last verified
 
-**2026-11-23**, against [docs/research.md](https://github.com/loganvolkers/toolbox/blob/main/docs/research.md) (Terraform provider schemas and Ocean sources) and [docs/ocean.md](https://github.com/loganvolkers/toolbox/blob/main/docs/ocean.md). Vendor marketing pages were not used as load-bearing evidence. Re-check Ocean and Port docs when describing integrations or MCP tools.
+**2026-11-23**, against [docs/research.md](https://github.com/seikika/seikika/blob/main/docs/research.md) (Terraform provider schemas and Ocean sources) and [docs/ocean.md](https://github.com/seikika/seikika/blob/main/docs/ocean.md). Vendor marketing pages were not used as load-bearing evidence. Re-check Ocean and Port docs when describing integrations or MCP tools.

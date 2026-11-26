@@ -1,4 +1,4 @@
-apiVersion: toolbox.dev/assessment/v1
+apiVersion: seikika.com/assessment/v1
 entity: rule:repo/repo-hygiene/has-readme
 rubric: rule-quality
 subjectHash: 994be1e8539b
@@ -9,9 +9,9 @@ verdicts:
     verdict: fail
     reason: >-
       The fix promises "what this is, how to run it, who owns it"
-      (examples/repo-portal-starter/toolbox.yaml:96-97). The check counts
+      (examples/repo-portal-starter/seikika.yaml:96-97). The check counts
       whitespace tokens in the whole file, including badges, HTML and code
-      blocks (crates/toolbox-connector-workspace/src/repo.rs:73-76). A
+      blocks (crates/seikika-connector-workspace/src/repo.rs:73-76). A
       50-token badge row and a title passes with nothing on running it. The
       README is also looked for only at the root or in .github/
       (repo.rs:55-64), so a repository whose README lives in docs/, which
@@ -32,7 +32,7 @@ verdicts:
     verdict: pass
     reason: >-
       The evidence gives the file and its count ("README.md has 12 words",
-      examples/repo-portal-starter/toolbox.yaml:93-94), and the fix names the
+      examples/repo-portal-starter/seikika.yaml:93-94), and the fix names the
       number and what to write. A 50-word README at the root passes.
   - criterion: threshold-justified
     verdict: unsure

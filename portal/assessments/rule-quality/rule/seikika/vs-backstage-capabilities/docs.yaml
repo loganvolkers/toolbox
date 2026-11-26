@@ -1,0 +1,50 @@
+apiVersion: seikika.com/assessment/v1
+entity: rule:seikika/vs-backstage-capabilities/docs
+rubric: rule-quality
+subjectHash: 2b7b8f9a91ee
+assessor: {kind: agent, name: cursor-assessor-15, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: measures-intent
+    verdict: pass
+    reason: >-
+      "Read a component's documentation in the portal"
+      (backstage-comparison.yaml:141-143) is the brief's "TechDocs page
+      render" scenario (RESEARCH.md:115), worded so a carried site counts as
+      well as TechDocs; Backstage passes on plugin-techdocs
+      (experiments/backstage-compare/facts.yaml:167) and Seikika fails with
+      "no documentation site per component"
+      (experiments/backstage-compare/facts.yaml:80).
+  - criterion: hard-to-game
+    verdict: fail
+    reason: >-
+      The fact is `capDocs: {value: false, ...}` on
+      experiments/backstage-compare/facts.yaml:80; one edit flips it, and no
+      harness step opens a component's docs in either product.
+    suggestion: >-
+      Add a docs page to one gen.py component and have surface.py fetch it
+      through each portal (Backstage's TechDocs route, Seikika's carried-site
+      route), setting `capDocs` from the response.
+  - criterion: fix-leads-to-pass
+    verdict: fail
+    reason: >-
+      "Carry each component's site ... the way the box carries other tools'
+      output" points at a principle (docs/design/seikika-and-tools.md), not a
+      place: it names no connector, record kind, route or UI page, and the UI
+      extension contract that could render a site is still unbuilt
+      (docs/v1-spec.md:68, "Not yet: ... the UI pages").
+    suggestion: >-
+      Name the path: e.g. "Ingest each component's built docs directory with
+      the git-files connector, serve it under /v1/entities/{id}/docs in
+      crates/seikika-api/src/routes.rs with a UI link, then rerun
+      experiments/backstage-compare."
+  - criterion: threshold-justified
+    verdict: pass
+    reason: >-
+      Boolean, no threshold; pre-registered as "true" in
+      experiments/backstage-compare/README.md:53 and checked in
+      ADJUDICATION.md:114.
+summary: >-
+  A well-chosen capability that Seikika honestly lacks, but its fix is a
+  design principle rather than a task: it names no code, and the UI path
+  it implies is not built. The fact is an editable boolean.

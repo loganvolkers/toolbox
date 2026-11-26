@@ -1,0 +1,65 @@
+apiVersion: seikika.com/assessment/v1
+entity: scorecard:seikika/maintainer-dependency
+rubric: scorecard-quality
+subjectHash: fd3f55768d1b
+assessor: {kind: agent, name: cursor-assessor-07, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: one-concern
+    verdict: pass
+    reason: >-
+      Every rule asks whether a direct Cargo dependency resolves the same way
+      on every build, from a known source. That is stated in the rationale
+      (portal/standards/dependencies.yaml:43-48), scoped to the maintainer
+      track (:55) and laid out level by level in
+      docs/design/dependency-standards.md:16-21. Vulnerabilities and licences,
+      which would add a security-policy audience, are left out deliberately,
+      with the reason given (dependency-standards.md:21, 30-31).
+  - criterion: levels-are-a-ladder
+    verdict: pass
+    reason: >-
+      Bronze bounds the requirement and the source. Silver pins it: present in
+      Cargo.lock, at one version. Gold removes the cause of silver's failures,
+      by declaring a shared requirement once so it can't drift
+      (dependencies.yaml:31-34, 59-123). Today 31 of 33 dependencies are gold,
+      regex is silver and syn is bronze (portal/results.json). The fixtures
+      reach none, bronze and gold (portal/tests/standards.test.yaml:424-455).
+      Caveats: `locked` is close to always true once a lockfile exists, so
+      silver in practice means one-version, and syn's bronze is out of
+      maintainers' hands, because both syn majors come in transitively.
+  - criterion: no-obvious-gap
+    verdict: fail
+    reason: >-
+      An unused direct dependency is not scored. The design's reasons for
+      leaving out advisories and licences (a database, an undecided policy;
+      docs/design/dependency-standards.md:21, 30-31) don't apply to it: it is
+      an offline, deterministic fact of the tree, which cargo-machete finds
+      from the manifests and sources. The catalog takes each declared
+      requirement on trust
+      (crates/seikika-connector-workspace/src/deps.rs:21-40), and the design
+      itself noticed an unused workspace entry, `anyhow`, only by hand
+      (dependency-standards.md:85-86). Build-dependencies are also skipped
+      (dependency-standards.md:50), though their code runs on every build.
+    suggestion: >-
+      Add a rule `used` (silver or gold) fed by cargo-machete in the runner or
+      the SARIF slot, so the tool keeps its own command and config. Its
+      evidence names the crates that declare the dependency without using it.
+      Say in dependency-standards.md whether build-dependencies are in scope.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      Every rule's evidence names what to change: the requirement strings, the
+      git source, the versions, or the crates in `usedBy`
+      (dependencies.yaml:62, 76, 87, 101, 113). Every fix names a place:
+      Cargo.toml, `[workspace.dependencies]` or `cargo generate-lockfile`.
+      Raising regex from silver to gold takes exactly what the card gives: add
+      `regex = "1"` to the root `[workspace.dependencies]`, and write
+      `regex.workspace = true` in the four crates its evidence lists. The
+      exception is syn: one-version's fix doesn't apply to its fully
+      transitive duplicate (see that rule's assessment beside this file).
+summary: >-
+  A tight, well-argued card: one concern, a real ladder, every rule pinned
+  on fixtures in both outcomes, and the left-out checks explained. The
+  obvious missing standard is an unused-dependency check, which needs no
+  database. Every non-gold entity can be raised from the card's evidence
+  except syn, which no maintainer change can clear.

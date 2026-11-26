@@ -1,0 +1,31 @@
+{
+ "linesToMaintain": 2268,
+ "files": {
+  "alpha/.seikika/seikika.yaml": 68,
+  "beta/.seikika/seikika.yaml": 68,
+  "gamma/.seikika/seikika.yaml": 68,
+  "org/.gitignore": 1,
+  "org/bin/start": 44,
+  "org/bin/stop": 13,
+  "org/bin/sync": 42,
+  "org/repos.txt": 6,
+  "org/seikika.yaml": 40,
+  "org/var/approval-key": 1,
+  "org/var/final-alpha.json": 200,
+  "org/var/final-beta.json": 200,
+  "org/var/final-gamma.json": 200,
+  "org/var/preview-alpha.json": 87,
+  "org/var/preview-beta.json": 87,
+  "org/var/preview-gamma.json": 87,
+  "org/var/request-alpha.json": 57,
+  "org/var/request-beta.json": 57,
+  "org/var/request-gamma.json": 57,
+  "org/var/state/runs/run_2fq6v4gjta7g.json": 95,
+  "org/var/state/runs/run_2fq6v4wbik2y.json": 95,
+  "org/var/state/runs/run_2fq6v77acr4f.json": 95,
+  "org/var/state/served/org/runs/run_2fq6surjgp8c.json": 199,
+  "org/var/state/served/org/runs/run_2fq6t07ge58u.json": 199,
+  "org/var/state/served/org/runs/run_2fq6t59s2fse.json": 199,
+  "org/var/state/served/org/runs/spent-tokens": 3
+ }
+}

@@ -1,6 +1,6 @@
 // A11 in a real browser: open an entity page, change the source (mock GitHub), click Refresh,
 // and expect the page to re-render at a newer snapshot with the change.
-// Usage: node scripts/ui-a11.cjs <toolbox url> <mock github url>
+// Usage: node scripts/ui-a11.cjs <seikika url> <mock github url>
 const { chromium } = require("playwright");
 (async () => {
   const [url, gh] = process.argv.slice(2);
@@ -9,7 +9,7 @@ const { chromium } = require("playwright");
   page.on("console", (m) => m.type() === "error" && console.error("  browser:", m.text()));
   // Name the failing request: a bare console error doesn't say which resource it was.
   page.on("response", async (r) => {
-    if (r.status() >= 400) console.error(`  http ${r.status()} ${r.request().method()} ${r.url()} ${(await r.text().catch(() => "")).slice(0, 200)} snapshot=${r.headers()["x-toolbox-snapshot"] ?? "?"}`);
+    if (r.status() >= 400) console.error(`  http ${r.status()} ${r.request().method()} ${r.url()} ${(await r.text().catch(() => "")).slice(0, 200)} snapshot=${r.headers()["x-seikika-snapshot"] ?? "?"}`);
   });
   await page.goto(`${url}/e/repository%3Apayments-api?as=alice`);
   await page.getByRole("heading", { name: "Payments API" }).waitFor();

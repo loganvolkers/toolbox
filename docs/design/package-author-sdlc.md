@@ -4,7 +4,7 @@
 checklist added 2026-11-21 (§6). Adds a fourth SDLC layer, the **package author SDLC**, to the
 maintainer, operator and user SDLCs ([sdlc.md](../sdlc.md)). It revises
 [packages.md](./packages.md), which treated a package as data alone. Every layer's stages are now
-catalogued and scored in Toolbox for Toolbox (`portal/sdlc/`, scorecards `sdlc-stage`, `sdlc-layer`
+catalogued and scored in Seikika for Seikika (`portal/sdlc/`, scorecards `sdlc-stage`, `sdlc-layer`
 and `review-sdlc-stage`).*
 
 ---
@@ -16,7 +16,7 @@ standards is not just YAML:
 - **Connector binaries:** its records come from them (`workspace` parses workflows; `runner` runs the
   linters).
 - **Upstream tools:** its rules need zizmor 1.32.0 and actionlint 1.7.12 at pinned versions.
-- **Toolbox itself:** it needs a Toolbox binary, which today nobody can install: every consumer,
+- **Seikika itself:** it needs a Seikika binary, which today nobody can install: every consumer,
   including our own `actions/report`, compiles the workspace from source.
 
 Three couplings make the gap structural:
@@ -24,15 +24,15 @@ Three couplings make the gap structural:
 | Coupling | Today | Consequence |
 |---|---|---|
 | **Connectors ↔ core crates** | In-image connectors are `builtin:<name>`, crates in this repository | Only maintainers can write an in-image connector. Operators and package authors can only push remotely |
-| **Toolbox ↔ source builds** | No releases, installers or image | Every repository rebuilds Toolbox (minutes on a cold runner). Packages can't name a Toolbox version to test against |
+| **Seikika ↔ source builds** | No releases, installers or image | Every repository rebuilds Seikika (minutes on a cold runner). Packages can't name a Seikika version to test against |
 | **Packages ↔ tools** | zizmor and actionlint are installed by hand (CI steps and README prose) | A package can't say what it needs, so its rules come out `unknown` (D70) on a machine without them |
 
 **Recommendations:**
 1. **A fourth layer, the package author SDLC** (§2). It follows the maintainer SDLC until *test*,
    then forks:
-   - its test runs against **released** Toolbox versions and platforms, not the workspace;
+   - its test runs against **released** Seikika versions and platforms, not the workspace;
    - it ends in **distribute** and **adopt**, not merge.
-2. **Release Toolbox (maintainer/release) with `dist`.** It produces archives for each platform plus
+2. **Release Seikika (maintainer/release) with `dist`.** It produces archives for each platform plus
    shell, PowerShell, Homebrew and npm installers, an MSI and GitHub attestations. We add
    cargo-binstall metadata, an aqua registry entry (which also reaches mise) and a container image.
    apt comes later (§3.1).
@@ -46,8 +46,8 @@ Three couplings make the gap structural:
    The conformance kit is the gate for all four.
 4. **Packages declare their tools; installers install them** (§3.3; refined by
    D01M800DHD0Z1RTPH7CM46GZS3B, [tool-installation.md](./tool-installation.md): one pin, an id per
-   installer, and `toolbox tools install --via mise|uv|pipx|pip`). Toolbox never downloads zizmor
-   itself. It checks versions and reports missing ones (`toolbox doctor`). A package emits a
+   installer, and `seikika tools install --via mise|uv|pipx|pip`). Seikika never downloads zizmor
+   itself. It checks versions and reports missing ones (`seikika doctor`). A package emits a
    `mise.toml` fragment with pinned, checksummed tools, and CI uses the same file.
 5. **Score the SDLCs** (§4). `portal/sdlc/` declares each layer's stages, with their exit criteria,
    commands, checks, status and gaps. The first run confirms the critique: `maintainer/release`,
@@ -58,13 +58,13 @@ Three couplings make the gap structural:
 
 | Layer | Who | What they ship | To whom | Ends in |
 |---|---|---|---|---|
-| 1. Maintainer | This repository's maintainers and agents | Toolbox: binary, image, builtin connectors, schemas, SDKs | Everyone below | A **release** |
+| 1. Maintainer | This repository's maintainers and agents | Seikika: binary, image, builtin connectors, schemas, SDKs | Everyone below | A **release** |
 | 2. **Package author** (new) | Anyone, inside or outside a company: a platform team, a vendor, us | Packages: standards as data, connector artifacts, tool requirements | Operators and other authors | A **distributed, attested package** |
 | 3. Operator | Platform teams running a portal | A portal: manifest plus image | Users | A **deploy** |
 | 4. User | Developers and agents building on a portal | Apps, agents, CI checks | Their own users | Their own release |
 
 **Why a separate layer:** a package author is neither a maintainer nor an operator.
-- **Not a maintainer:** they can't change Toolbox's crates and must work against released
+- **Not a maintainer:** they can't change Seikika's crates and must work against released
   versions.
 - **Not an operator:** they don't run a portal; their consumers do, across a fleet.
 - **Their loop:**
@@ -72,15 +72,15 @@ Three couplings make the gap structural:
   - **package → distribute → adopt** looks like a library publisher's.
 
   The fork is at *test*. A maintainer tests the whole system at one commit; a package author tests
-  one package against a *matrix* of Toolbox releases and platforms, plus the consumer's `plan`.
+  one package against a *matrix* of Seikika releases and platforms, plus the consumer's `plan`.
 
 **We are package authors too.** Our own standards (the GitHub Actions, crate and meta scorecards,
-D70–D80) should leave T4T as packages (packages.md §7). Our builtin connectors should be released the
+D70–D80) should leave S4S as packages (packages.md §7). Our builtin connectors should be released the
 way any author's would, so maintainers live in the package author SDLC as well.
 
 ## 3. Binaries
 
-### 3.1 Toolbox itself (maintainer/release)
+### 3.1 Seikika itself (maintainer/release)
 
 Popular CLIs offer five or so install paths. What each costs us:
 
@@ -93,7 +93,7 @@ Popular CLIs offer five or so install paths. What each costs us:
 | cargo-binstall | `[package.metadata.binstall]` pointing at release assets | Metadata only | Rust users |
 | aqua / mise | A PR to the aqua registry (mise's default backend uses it) | A registry PR per format change | Checksums, cosign and SLSA verification come with it |
 | apt / rpm | `cargo-deb` or nfpm plus a hosted repository | A repository host and signing key | Defer until asked; the image covers servers |
-| Container image | `ghcr.io/<org>/toolbox:<version>` with attestations | Image workflow | Charter G1: operators build `FROM` it |
+| Container image | `ghcr.io/<org>/seikika:<version>` with attestations | Image workflow | Charter G1: operators build `FROM` it |
 
 `dist` generates all of this from `Cargo.toml` metadata, attestations included
 (`github-attestations = true`).
@@ -102,7 +102,7 @@ Popular CLIs offer five or so install paths. What each costs us:
 
 **What the release unlocks:**
 - `actions/report` downloads a pinned binary instead of compiling;
-- packages can declare `toolbox: ">=0.3 <0.5"` and test against it;
+- packages can declare `seikika: ">=0.3 <0.5"` and test against it;
 - federation's fleet rollout stops costing a Rust build per repository.
 
 ### 3.2 Connectors outside core
@@ -110,7 +110,7 @@ Popular CLIs offer five or so install paths. What each costs us:
 The connector protocol is already language-neutral:
 - NDJSON over stdio, or long-poll for remote connectors;
 - message schemas in `schema/connector-messages.schema.json`;
-- `toolbox connector test` exercises any executable.
+- `seikika connector test` exercises any executable.
 
 The coupling is in **resolution**: `package: builtin:<name>` is the only way to name an in-image
 connector.
@@ -118,23 +118,23 @@ connector.
 | Form | How it's referenced | Built by | Isolation | When |
 |---|---|---|---|---|
 | **builtin** | `builtin:workspace` | Maintainers, in the image | Process | Today |
-| **executable** | `github:acme/toolbox-connector-jira@1.2.0`, with per-platform assets and SHA-256 in `toolbox.lock` | Any author, any language (`dist`, GoReleaser, …) | Process; the D40 executor isolation (Unix user, scrubbed environment) applies | Next: the smallest change that frees operators and authors |
+| **executable** | `github:acme/seikika-connector-jira@1.2.0`, with per-platform assets and SHA-256 in `seikika.lock` | Any author, any language (`dist`, GoReleaser, …) | Process; the D40 executor isolation (Unix user, scrubbed environment) applies | Next: the smallest change that frees operators and authors |
 | **WASM component** | `oci://ghcr.io/acme/jira-connector@sha256:…` (one artifact for every platform) | Any language with a WASI 0.2 toolchain | Deny-by-default capabilities: the host grants only the network hosts and paths the connector declares | Later: answers Q12 for third-party code; Wasmtime is the mature host (Extism declined the component model) |
 | **remote** | `runtime: remote`, pushes to `/v1/ingest` | Anyone, anywhere | Network boundary | Today |
 
 **What makes them first-class:**
-- `toolbox connector new <lang>` scaffolds a connector;
-- the Rust SDK (`toolbox-connect`) is published to crates.io;
+- `seikika connector new <lang>` scaffolds a connector;
+- the Rust SDK (`seikika-connect`) is published to crates.io;
 - thin TypeScript and Python SDKs follow, since the protocol is small.
 
 The conformance kit is the **only** gate for the executable and WASM forms. A package that ships a
-connector must pass it in its own CI against each supported Toolbox release.
+connector must pass it in its own CI against each supported Seikika release.
 
 ### 3.3 Upstream tools (zizmor, actionlint, …)
 
 | Option | For | Against |
 |---|---|---|
-| Toolbox installs tools itself | One command | Rebuilds aqua or mise inside Toolbox: per-platform URL templates, checksums, signature checks. Sprawl (D45) |
+| Seikika installs tools itself | One command | Rebuilds aqua or mise inside Seikika: per-platform URL templates, checksums, signature checks. Sprawl (D45) |
 | Bundle tools inside connector artifacts | Self-contained | Redistribution and licensing per tool; stale copies; enormous artifacts |
 | **Declare, and let mise or aqua install (recommended)** | aqua's registry already covers the common tools, verified by checksums, cosign and SLSA; mise uses aqua and records URLs and checksums in `mise.lock`; one file serves laptops, CI (`mise-action`) and the image's Dockerfile | Two tools for consumers to know of; tools outside the registry need a `github:` backend entry |
 
@@ -145,14 +145,14 @@ tools:
   actionlint: {version: 1.7.12, mise: "aqua:rhysd/actionlint"}
 ```
 Then:
-- `toolbox tools --mise` prints the merged `mise.toml` for the included packages;
-- `toolbox doctor` reports missing or wrong versions;
+- `seikika tools --mise` prints the merged `mise.toml` for the included packages;
+- `seikika doctor` reports missing or wrong versions;
 - the rules that need a missing tool stay `unknown`, which is D70's honest-missing-data rule.
 
 Whether zizmor has an aqua entry is unverified; zizmor's own docs list Homebrew, PyPI, cargo,
 conda-forge and a GHCR image.
 
-## 4. The SDLCs in Toolbox for Toolbox
+## 4. The SDLCs in Seikika for Seikika
 
 `portal/sdlc/layers.yaml` and `portal/sdlc/stages/<layer>.yaml` declare each stage. A stage has:
 - intent and exit criterion;
@@ -181,38 +181,38 @@ digest, data packages with typed parameters) stands. A package now has three par
 
 | Part | Format | Pinned in |
 |---|---|---|
-| Standards | fragments, fixtures, tests, rubrics, skills (data) | `toolbox.lock` (archive SHA-256) |
-| Connectors | builtin, executable (per-platform assets) or WASM component | `toolbox.lock` (one digest per platform or component) |
+| Standards | fragments, fixtures, tests, rubrics, skills (data) | `seikika.lock` (archive SHA-256) |
+| Connectors | builtin, executable (per-platform assets) or WASM component | `seikika.lock` (one digest per platform or component) |
 | Tools | declared versions and mise/aqua identifiers | `mise.lock` (the consumer's) |
 
 **Implementation status (D90):**
-- **Step 1, released as v0.1.0:** `dist` config and `release.yml` (actions pinned by SHA), the image workflow, and `actions/report` `toolbox-version`. This repository's CI may still build from source for dogfood; external consumers pin the release. Tools in CI download by checksum (`scripts/ci-tools.sh`).
+- **Step 1, released as v0.1.0:** `dist` config and `release.yml` (actions pinned by SHA), the image workflow, and `actions/report` `seikika-version`. This repository's CI may still build from source for dogfood; external consumers pin the release. Tools in CI download by checksum (`scripts/ci-tools.sh`).
 - **Steps 2–3, built:**
   - `package: github:owner/repo[/app]@version`;
-  - `toolbox install` (pins per-platform SHA-256 in `toolbox.lock`, refuses mismatches, `--frozen` for CI);
-  - `tools:` and `toolbox doctor` (`--mise`);
-  - covered end to end by `crates/toolbox-cli/tests/install.rs`.
+  - `seikika install` (pins per-platform SHA-256 in `seikika.lock`, refuses mismatches, `--frozen` for CI);
+  - `tools:` and `seikika doctor` (`--mise`);
+  - covered end to end by `crates/seikika-cli/tests/install.rs`.
 
 - **Step 4, built:**
   - `include: [{package, with}]` with typed parameters that may only tighten;
-  - git packages cloned and pinned by content hash in `toolbox.lock`, verified on every load;
-  - the first package, `packages/github-actions/` (D70's standards, with connectors and tools), extracted from T4T with an identical ratchet;
+  - git packages cloned and pinned by content hash in `seikika.lock`, verified on every load;
+  - the first package, `packages/github-actions/` (D70's standards, with connectors and tools), extracted from S4S with an identical ratchet;
   - the package tests itself in `packages/github-actions/tests`;
   - the second package, `packages/pnpm-expo/` (pnpm workspace + Expo app scorecards on new workspace facts, D01M7Y6X38AERPBT0YH1AG5TBRD);
   - the third package, `packages/storybook/` (Storybook catalog scorecard on `storybook` workspace facts, D01M7YNZFP68W0DR24PEA6T3FVM).
-- **Step 1, first release cut:** tag `v0.1.0` publishes attested archives and installers. Consumers run the release's shell or PowerShell installer (`<app>-installer.sh` / `.ps1`, one per dist app) or set `toolbox-version` on `actions/report`. Homebrew, npm and aqua channels remain deferred. cargo-binstall metadata is on each distable crate; the crates are not on crates.io yet (sparse index 404 for `toolbox-cli`, 2026-11-23), so `cargo binstall` does not resolve them.
+- **Step 1, first release cut:** tag `v0.1.0` publishes attested archives and installers. Consumers run the release's shell or PowerShell installer (`<app>-installer.sh` / `.ps1`, one per dist app) or set `seikika-version` on `actions/report`. Homebrew, npm and aqua channels remain deferred. cargo-binstall metadata is on each distable crate; the crates are not on crates.io yet (sparse index 404 for `seikika-cli`, 2026-11-23), so `cargo binstall` does not resolve them.
 - **Not built:** WASM connectors (step 5), deterministic archives and the OCI mirror, Homebrew, npm and aqua registry entries.
 
 **Build order**, because each step unblocks the next stage in the catalogue:
 1. maintainer/release (`dist`, image, attestations);
-2. executable connectors resolved from `toolbox.lock`, plus a published Rust SDK and scaffold;
-3. `tools:` and `toolbox doctor`;
+2. executable connectors resolved from `seikika.lock`, plus a published Rust SDK and scaffold;
+3. `tools:` and `seikika doctor`;
 4. the package format and `include: package:`;
 5. WASM components.
 
 ## 6. Authoring a second package (checklist)
 
-There is no `toolbox package new`. Copy `packages/github-actions/` (CI), `packages/pnpm-expo/`
+There is no `seikika package new`. Copy `packages/github-actions/` (CI), `packages/pnpm-expo/`
 (JS/Expo workspace) or `packages/storybook/` (Storybook catalog) and trim. Worked examples live
 there; this checklist is the short path aimed at a *second* package author who has already read
 [packages.md](./packages.md) §3.
@@ -221,32 +221,32 @@ there; this checklist is the short path aimed at a *second* package author who h
 
 | Path | Role |
 |---|---|
-| `toolbox-package.yaml` | Name, package `version:`, typed `parameters`, fragment globs |
+| `seikika-package.yaml` | Name, package `version:`, typed `parameters`, fragment globs |
 | `fragments/*.yaml` | Kinds, scorecards, maps (manifest schema) |
 | `tests/fixtures/*.ndjson` | Connector-shaped records that exercise every exported rule **both ways** (meta / D71) |
-| `tests/toolbox.yaml` + `tests/*.test.yaml` | Mini-portal that includes the package and asserts levels |
-| `README.md` | Consumer diff: exact `include`, connector config delta, **minimum Toolbox binary** |
+| `tests/seikika.yaml` + `tests/*.test.yaml` | Mini-portal that includes the package and asserts levels |
+| `README.md` | Consumer diff: exact `include`, connector config delta, **minimum Seikika binary** |
 
-### 6.2 When you must extend `toolbox-connector-workspace`
+### 6.2 When you must extend `seikika-connector-workspace`
 
 | Need | SDLC layer | What to do |
 |---|---|---|
-| New record kinds / fields from files in the checkout (e.g. `js-workspace`, `expo-app`) | **maintainer SDLC** | Change `crates/toolbox-connector-workspace`, ship in a Toolbox release, then write package YAML against those facts |
-| New scorecards / CEL over **existing** record shapes | **package author SDLC** | Fragments + fixtures + `toolbox test` only |
+| New record kinds / fields from files in the checkout (e.g. `js-workspace`, `expo-app`) | **maintainer SDLC** | Change `crates/seikika-connector-workspace`, ship in a Seikika release, then write package YAML against those facts |
+| New scorecards / CEL over **existing** record shapes | **package author SDLC** | Fragments + fixtures + `seikika test` only |
 | Remote / executable connector | **package author SDLC** (after executable connectors land) | Outside the in-image path; see §3.2 |
 
 **Sequencing trap:** high-value Expo/pnpm rules needed workspace facts first. A YAML-only author
 cannot invent `js-workspace` fields; empty scorecards on an old binary look like a broken include.
-Document the minimum Toolbox release that emits the required records in the package README.
+Document the minimum Seikika release that emits the required records in the package README.
 
-Do **not** naively reuse T4T's `maintainer-package` / `PackageJson` for a pnpm monorepo or Expo
+Do **not** naively reuse S4S's `maintainer-package` / `PackageJson` for a pnpm monorepo or Expo
 app — see [package-standards.md](./package-standards.md) §6. Prefer `packages/pnpm-expo` (or new
 facts + scorecards) instead.
 
-### 6.3 Meta bronze, fixtures, and `toolbox test`
+### 6.3 Meta bronze, fixtures, and `seikika test`
 
 1. Every exported rule must pass on one fixture entity and fail on another (D71).
-2. Run `toolbox test packages/<name>/tests` until green.
+2. Run `seikika test packages/<name>/tests` until green.
 3. Package tests are **fixture NDJSON**, not a live connector run. Keep field shapes honest against
    the connector that emits them (or drift will only show up in a consumer report). An optional
    in-image connector-over-tree package-test mode is deferred.
@@ -255,7 +255,7 @@ facts + scorecards) instead.
 
 ### 6.4 CEL next to scorecard examples
 
-`toolbox validate` rejects undeclared CEL functions (they otherwise fail at evaluation as
+`seikika validate` rejects undeclared CEL functions (they otherwise fail at evaluation as
 `cel.function`). Practical rules for package authors:
 
 | Do | Don't |
@@ -279,16 +279,16 @@ evidence: "entity.ciNodeVersions.map(v, 'ci node-version=' + v)"
 Before operators adopt:
 
 1. **README consumer diff** — exact `include:` line, `builtin:workspace` (or other) config delta,
-   and “requires Toolbox ≥ *x* with facts *y*”.
-2. **Consumer pin = git tag that contains the package directory.** `toolbox install` clones
-   `--branch v<version>` after stripping a leading `v`. A package `toolbox-package.yaml`
-   `version: 0.1.0` can lag the Toolbox release tag that first *contains* the package (e.g.
+   and “requires Seikika ≥ *x* with facts *y*”.
+2. **Consumer pin = git tag that contains the package directory.** `seikika install` clones
+   `--branch v<version>` after stripping a leading `v`. A package `seikika-package.yaml`
+   `version: 0.1.0` can lag the Seikika release tag that first *contains* the package (e.g.
    consumers pin `@0.1.1` / tag `v0.1.1` while YAML still says `0.1.0`). **Pins follow the git
    tag**, not only the YAML `version:` field.
-3. **Minimum Toolbox binary** for any new connector facts (separate from the package tag when
-   needed): e.g. `js-workspace` / `expo-app` need Toolbox ≥ `0.1.1`.
+3. **Minimum Seikika binary** for any new connector facts (separate from the package tag when
+   needed): e.g. `js-workspace` / `expo-app` need Seikika ≥ `0.1.1`.
 4. **Release-handoff-before-adopt:** cut (or wait for) a release/handoff note that names the safe
-   package tag, `actions/report` ref, and `toolbox-version` together, then flip consumer CI. Do not
+   package tag, `actions/report` ref, and `seikika-version` together, then flip consumer CI. Do not
    start fleet adopt on a commit SHA pin alone — install resolves tags, and report CI expects a
    populated package cache for that tag.
 
@@ -308,5 +308,5 @@ Read on 2026-11-20 through web search summaries; secondary sources are marked.
 - zizmor installation https://docs.zizmor.sh/installation/ ; actionlint installation https://github.com/rhysd/actionlint/blob/main/docs/install.md
 - This repo: [packages.md](./packages.md), [connector-control.md](./connector-control.md),
   [sdlc.md](../sdlc.md), [maintainer-sdlc.md](./maintainer-sdlc.md),
-  [toolbox-for-toolbox.md](./toolbox-for-toolbox.md), [decisions.md](../decisions/README.md) D40, D45, D63,
+  [seikika-for-seikika.md](./seikika-for-seikika.md), [decisions.md](../decisions/README.md) D40, D45, D63,
   D70, D87, Q12, Q15.

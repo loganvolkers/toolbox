@@ -1,4 +1,4 @@
-# Toolbox against Backstage, beyond DX
+# Seikika against Backstage, beyond DX
 
 *Status: v1 design and round 3 results, 2026-11-23 (D01M857ZB468ZM2YS6GNSEG6YB9,
 D01M857ZB3FZJZWX8G3BF5W1RNR). About the box (running, pinning, reporting, distributing), not a
@@ -11,13 +11,13 @@ its strongest rival.*
 
 ## 1. Conclusion
 
-**Toolbox is ahead of Backstage on performance, footprint, security (owner-only fields and
+**Seikika is ahead of Backstage on performance, footprint, security (owner-only fields and
 connectors as separate processes; the other secure defaults are at parity, and neither keeps an
 extension from the server's credentials), supply chain, change safety, repo
 scope, the agent surface and extensibility. It is at parity on federation (neither has it), and
 behind on capabilities and community.** Each claim is a rule in a comparative scorecard
 (`portal/standards/backstage-comparison.yaml`), scored on a product record written by a script
-from a measured run (`portal/comparisons/`). The Toolbox for Toolbox report shows it under
+from a measured run (`portal/comparisons/`). The Seikika for Seikika report shows it under
 *Compare*.
 
 The DX Benchmarks ([dx-benchmarks.md](./dx-benchmarks.md)) prove the agent claims; this proves the
@@ -37,11 +37,11 @@ OpenFGA's memory on a host without Yama, so credential isolation fails for both 
 ## 2. Factors
 
 Grounded in ISO/IEC 25010:2023, which names nine quality characteristics; all apply except Safety.
-Each factor names the software-design or engineering-management argument for why Toolbox should be
+Each factor names the software-design or engineering-management argument for why Seikika should be
 better, and the parity rule that could falsify it. The full brief, with sources and procedures, is
 [RESEARCH.md](../../experiments/backstage-compare/RESEARCH.md).
 
-| # | Factor | ISO 25010 / framework | Why Toolbox should be better | Scorecard |
+| # | Factor | ISO 25010 / framework | Why Seikika should be better | Scorecard |
 |---|---|---|---|---|
 | F1 | Functional completeness | Functional suitability | It shouldn't: Backstage ships TechDocs, templates, search and 160+ plugins | `vs-backstage-capabilities` |
 | F2 | Installability | Flexibility: installability | One binary or image, configured in code (charter goal 1) | `vs-backstage-footprint` (install, adopter files) |
@@ -67,7 +67,7 @@ A comparison is a scorecard that names a subject and its peers (D01M857ZB468ZM2Y
 
 ```yaml
 - name: vs-backstage-performance
-  compare: {subject: product:toolbox, peers: [product:backstage]}
+  compare: {subject: product:seikika, peers: [product:backstage]}
   rules:
     - name: list-throughput
       check: entity.listRps >= 20.0
@@ -93,22 +93,22 @@ corpus and the run count. A comparison is re-run, not hand-edited. The meta stan
 scorecards to the same bar as any other: each rule is tested on fixtures that pass and fail it,
 and names its fix.
 
-## 4. What changed in Toolbox to reach parity
+## 4. What changed in Seikika to reach parity
 
 | Fix | Factor | Use outside the benchmark |
 |---|---|---|
 | Off loopback, `serve` defaults to token auth; no trusted header (D01M857ZB3FZJZWX8G3BF5W1RNR) | F6 | every image deployment, every `serve --listen 0.0.0.0` |
-| Explicit `TOOLBOX_AUTH_MODE=dev` off loopback refuses to start without `TOOLBOX_ALLOW_DEV_AUTH_OFF_LOOPBACK=1`, like Backstage's `dangerouslyAllowOutsideDevelopment` (D01M885TA0R4HCZTVDSG9F0PHDQ). Not scored: the frozen facts predate it | F6 | every deployment that sets dev mode |
+| Explicit `SEIKIKA_AUTH_MODE=dev` off loopback refuses to start without `SEIKIKA_ALLOW_DEV_AUTH_OFF_LOOPBACK=1`, like Backstage's `dangerouslyAllowOutsideDevelopment` (D01M885TA0R4HCZTVDSG9F0PHDQ). Not scored: the frozen facts predate it | F6 | every deployment that sets dev mode |
 | In-image connectors start from an allowlisted environment | F7 | every portal that runs a connector next to `DATABASE_URL` |
 | The server is non-dumpable, so a same-user process cannot read its environment or memory | F7 | every deployment with supervised connectors |
 | OpenFGA gets no server credentials: its datastore URI is in a private file removed once it is healthy, and every call needs a per-start preshared key | F7 | every deployment with an OpenFGA model and supervised connectors |
 | After round 3: each in-image connector starts in its own Landlock domain, so it cannot read OpenFGA's or another connector's memory; `serve` warns when the database URL is on argv. Not yet scored: the fact stays `false` until a round reruns the canary on the image | F7 | every deployment with in-image connectors; every `serve --database-url` |
-| Where the host has no Landlock, `TOOLBOX_CONNECTOR_CONFINEMENT=best-effort` (the default) starts connectors unconfined and shows it in `/readyz`, `/v1/connectors`, field explain and `toolbox doctor`; `required` refuses to start them (D01M88668MR8K559A1NYSNQQTX0) | F7 | every host without Landlock (gVisor, restrictive seccomp profiles) |
+| Where the host has no Landlock, `SEIKIKA_CONNECTOR_CONFINEMENT=best-effort` (the default) starts connectors unconfined and shows it in `/readyz`, `/v1/connectors`, field explain and `seikika doctor`; `required` refuses to start them (D01M88668MR8K559A1NYSNQQTX0) | F7 | every host without Landlock (gVisor, restrictive seccomp profiles) |
 | A list filter drops candidates it rejects in both shapes before asking OpenFGA | F4 | any portal with an OpenFGA model and filtered lists |
 | OpenFGA decisions kept per snapshot, not in a TTL cache | F4 | every authorized read; no stale read after `min_snapshot` |
 | Indexes on the columns OpenFGA's tuple view computes | F4 | every check against the Postgres datastore |
 | A full list page stops reading candidates; a kind with no owner-only fields is filtered once | F4 | every list |
-| A filter's required `entity.<field> == '<value>'` comparisons narrow candidates through a per-snapshot index | F4 | the MCP `query` tool, `toolbox query`, the UI catalog filter |
+| A filter's required `entity.<field> == '<value>'` comparisons narrow candidates through a per-snapshot index | F4 | the MCP `query` tool, `seikika query`, the UI catalog filter |
 
 ## 5. Results
 

@@ -2,21 +2,21 @@
 # from backstage/backstage at v1.57.1 unless it says otherwise. A capability is true when the
 # default install, a first-party package or a community add-on does it (RESEARCH.md §1.2: an
 # add-on is recorded with its source). Each product is judged as it ships to production: the
-# container image for Toolbox, the create-app Dockerfile's configuration for Backstage.
+# container image for Seikika, the create-app Dockerfile's configuration for Backstage.
 # snapshot.py merges these with the measured facts into portal/comparisons/.
-toolbox:
+seikika:
   loopbackByDefault:
     value: false
     evidence: >-
       the image sets PORT=8080 (image/Dockerfile), so it binds 0.0.0.0:8080
-      (crates/toolbox-cli/src/server.rs: listen_addr); off loopback it
+      (crates/seikika-cli/src/server.rs: listen_addr); off loopback it
       defaults to token auth (D01M857ZB3FZJZWX8G3BF5W1RNR). The bare binary
       binds 127.0.0.1:8080, but that is not how it ships
   ownerOnlyFields:
     value: true
     evidence: >-
       facets hide fields behind can_view_details, and a filter cannot probe
-      them (crates/toolbox-api/tests/authz.rs: facets_actions_and_revocation,
+      them (crates/seikika-api/tests/authz.rs: facets_actions_and_revocation,
       a_filter_cannot_probe_a_hidden_facet)
   extensionProcessIsolated:
     value: true
@@ -27,9 +27,9 @@ toolbox:
     value: false
     evidence: >-
       a supervised connector starts with a cleared environment plus an
-      allowlist (crates/toolbox-api/src/connectors.rs:
+      allowlist (crates/seikika-api/src/connectors.rs:
       connectors_inherit_no_server_credentials), and the server is
-      non-dumpable (crates/toolbox-cli/tests/serve.rs). But an in-image
+      non-dumpable (crates/seikika-cli/tests/serve.rs). But an in-image
       connector runs as the same user as OpenFGA, and OpenFGA is dumpable: on
       the measurement VM, which has no Yama, a same-user process read
       OpenFGA's memory and got the datastore password and the per-start
@@ -38,24 +38,24 @@ toolbox:
   offlineValidate:
     value: true
     evidence: >-
-      `toolbox validate` and `toolbox test` check the manifest, schemas,
+      `seikika validate` and `seikika test` check the manifest, schemas,
       fixtures and rules with no server (docs/v1-spec.md §7.7)
   changePreview:
     value: true
     evidence: >-
-      `toolbox plan --local --base <manifest>` diffs entities, scores and
+      `seikika plan --local --base <manifest>` diffs entities, scores and
       tuples between two manifests before a deploy
   repoScopedWithoutServer:
     value: true
     evidence: >-
-      `toolbox report` scores one repository in CI with no server; the
+      `seikika report` scores one repository in CI with no server; the
       actions/report GitHub Action and examples/repo-portal-starter adopt it
       in one step (D69)
   federates: {value: false, evidence: "federation is designed, not built (D68)"}
   mcpByDefault:
     value: true
     evidence: >-
-      `toolbox serve` hosts /mcp and `toolbox mcp` bridges stdio
+      `seikika serve` hosts /mcp and `seikika mcp` bridges stdio
       (docs/v1-spec.md §7.3)
   extensionAnyLanguage:
     value: true
@@ -69,13 +69,13 @@ toolbox:
       change to the image; a supervised one is a binary named in the manifest
   capCatalogBrowse:
     value: true
-    evidence: UI catalog pages, `toolbox query`, the query MCP tool
-  capOwnership: {value: true, evidence: "`toolbox owner`, the owner MCP tool"}
-  capGraph: {value: true, evidence: "`toolbox graph`, /v1/entities/{id}/graph"}
+    evidence: UI catalog pages, `seikika query`, the query MCP tool
+  capOwnership: {value: true, evidence: "`seikika owner`, the owner MCP tool"}
+  capGraph: {value: true, evidence: "`seikika graph`, /v1/entities/{id}/graph"}
   capDocsSearch:
     value: false
     evidence: >-
-      search finds entities by name or title (crates/toolbox-api/src/mcp.rs);
+      search finds entities by name or title (crates/seikika-api/src/mcp.rs);
       it does not index documentation
   capDocs: {value: false, evidence: no documentation site per component}
   capTemplates:
@@ -94,8 +94,8 @@ toolbox:
   contributors:
     value: 4
     evidence: >-
-      GitHub contributors to loganvolkers/toolbox, anonymous included; three
-      are agents
+      GitHub contributors to seikika/seikika, anonymous included; three are
+      agents
 backstage:
   loopbackByDefault:
     value: false

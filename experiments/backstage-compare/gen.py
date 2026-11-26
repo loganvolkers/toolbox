@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """One synthetic catalog, written for both arms: catalog.yaml (Backstage entities) and
-catalog.ndjson (Toolbox ingest records). Deterministic: the same N gives the same bytes."""
+catalog.ndjson (Seikika ingest records). Deterministic: the same N gives the same bytes."""
 import json
 import sys
 from pathlib import Path

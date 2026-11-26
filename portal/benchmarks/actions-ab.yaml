@@ -2,13 +2,13 @@
 records:
   - id: actions-ab
     title: >-
-      Federated self-service actions: Toolbox vs GitHub Actions vs Backstage
+      Federated self-service actions: Seikika vs GitHub Actions vs Backstage
       vs a vanilla app
     question: >-
       Can a fresh coding agent give three repositories and their org one
       governed self-service action (validated inputs, preview, approval by
       someone other than the requester, verified effect, a record, one place
-      to find it) with less code to maintain and fewer tool calls on Toolbox
+      to find it) with less code to maintain and fewer tool calls on Seikika
       than on GitHub Actions, Backstage's scaffolder or an app of its own?
     layers: [operator, user]
     stages: [operator/author, operator/deploy, user/build]
@@ -26,11 +26,11 @@ records:
     outcome: >-
       Passes in round 8, on the held-out add-notice task. All twelve runs
       fully pass (C1 and P1 to P11), so H1 holds. H2 holds against every
-      rival: Toolbox 241 lines to maintain against GitHub Actions 1330 (W
+      rival: Seikika 241 lines to maintain against GitHub Actions 1330 (W
       283), Backstage 1882 (W 794) and vanilla 952 (W 624). H3 holds against
       Backstage (36 calls vs 81, W 19) and is inconclusive against GitHub
       Actions (36 vs 52) and vanilla (36 vs 20), so nothing is lost. Labelled
-      per the round 8 fit audit: Toolbox's calls come with a shipped task
+      per the round 8 fit audit: Seikika's calls come with a shipped task
       skill tuned on rounds 4 to 7 and extended for R9, and its P9 passes come
       from a change built for this task before the freeze; lines carry little
       discount. Round 7 met the bar on its tally but was not a pass (fitted
@@ -47,7 +47,7 @@ records:
       already has succeeds without a commit; /readyz waits for the first read
       of federation children
     - >-
-      rounds 4 to 6: toolbox test runs action cases in a scratch copy with a
+      rounds 4 to 6: seikika test runs action cases in a scratch copy with a
       rejected push; test defaults; a hint for a value cut at a comma; a
       child's federation from an included file; standard action files
     - >-
@@ -72,18 +72,18 @@ records:
       round 8: 8519cd5, with the twelve run prompts rendered and committed in
       681cf8e before the first launch (013c58f)
     designer: >-
-      the agent that built Toolbox's actions and federation and wrote the
+      the agent that built Seikika's actions and federation and wrote the
       README
     adjudicator: a fresh agent that designed no part of it and changed nothing
     fitAudit: >-
       rounds 1 to 7 (results/FIT-AUDIT.md): 15 commits fit with corrections,
-      and the Toolbox arm had a task-fitted recipe and untriaged rivals, so
+      and the Seikika arm had a task-fitted recipe and untriaged rivals, so
       round 7 is not a pass. Round 8 (results/FIT-AUDIT-r8.md): P4 and P5 hold
       with corrections; 14 of 15 earlier corrections made; the effect and
-      inputs were held out but R9 was not, so Toolbox's P9 passes and its
+      inputs were held out but R9 was not, so Seikika's P9 passes and its
       calls are labelled; the example's group was renamed (38e9549)
     spread: >-
-      round 8, lines (min, median, max): Toolbox 186, 241, 242; GitHub Actions
+      round 8, lines (min, median, max): Seikika 186, 241, 242; GitHub Actions
       1056, 1330, 1339; Backstage 1855, 1882, 2649; vanilla 536, 952, 1160.
-      Calls: Toolbox 23, 36, 42; GitHub Actions 47, 52, 57; Backstage 75, 81,
+      Calls: Seikika 23, 36, 42; GitHub Actions 47, 52, 57; Backstage 75, 81,
       85; vanilla 16, 20, 30. Every run's measures are in results/r8/

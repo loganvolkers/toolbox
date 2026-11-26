@@ -1,4 +1,4 @@
-apiVersion: toolbox.dev/assessment/v1
+apiVersion: seikika.com/assessment/v1
 entity: sdlc-stage:operator/deploy
 rubric: sdlc-stage-quality
 subjectHash: e1b44c93a5e2
@@ -23,13 +23,13 @@ verdicts:
     reason: >-
       There is no published image to deploy: v0.1.0 and v0.1.1 have none until
       a person runs `gh workflow run image.yml -f tag=<tag>`
-      (docs/RELEASING.md:62-66). There is no `toolbox build`, and the listed
-      doc, docs/plan.md §6.2, is design. The only command listed is `toolbox
+      (docs/RELEASING.md:62-66). There is no `seikika build`, and the listed
+      doc, docs/plan.md §6.2, is design. The only command listed is `seikika
       serve`, which runs a server but neither deploys nor rolls back. Cloud
       Run also needs credentials the stage doesn't name.
     suggestion: >-
       Publish the image for the latest tag. Add an operator page: write a
-      Dockerfile FROM ghcr.io/<owner>/toolbox:<version> with COPY portal/
+      Dockerfile FROM ghcr.io/<owner>/seikika:<version> with COPY portal/
       /portal/, set DATABASE_URL, deploy, and roll back by redeploying the
       previous digest. List the secrets it needs.
   - criterion: reuses-artifacts

@@ -3,7 +3,7 @@
 *Status: amended 2026-11-20 (D84, D01M7XKEXQH4HG5371629M50E2G). `maintainer-docs` gains
 `cited-decisions-exist`. The decision files stay the index and stay skipped. This is the maintainer
 SDLC. Related: [decision-files.md](./decision-files.md),
-[toolbox-for-toolbox.md](./toolbox-for-toolbox.md).*
+[seikika-for-seikika.md](./seikika-for-seikika.md).*
 
 ---
 
@@ -41,4 +41,4 @@ nothing missing and passes (D71).
 ## Sources
 
 - [decision-files.md](./decision-files.md), the id and the directory.
-- [toolbox-for-toolbox.md](./toolbox-for-toolbox.md), the docs scorecard this rule extends.
+- [seikika-for-seikika.md](./seikika-for-seikika.md), the docs scorecard this rule extends.

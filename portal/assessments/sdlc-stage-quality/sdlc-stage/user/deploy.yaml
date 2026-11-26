@@ -1,4 +1,4 @@
-apiVersion: toolbox.dev/assessment/v1
+apiVersion: seikika.com/assessment/v1
 entity: sdlc-stage:user/deploy
 rubric: sdlc-stage-quality
 subjectHash: 559017a54590
@@ -20,8 +20,8 @@ verdicts:
   - criterion: agent-can-complete
     verdict: fail
     reason: >-
-      `toolbox token create` requires the portal's Postgres via --database-url
-      or DATABASE_URL (crates/toolbox-cli/src/main.rs:538-548). An app
+      `seikika token create` requires the portal's Postgres via --database-url
+      or DATABASE_URL (crates/seikika-cli/src/main.rs:538-548). An app
       developer therefore needs an operator to mint a token with database
       access, and the token borrows a person's identity (--user).
     suggestion: >-
@@ -30,8 +30,8 @@ verdicts:
   - criterion: reuses-artifacts
     verdict: pass
     reason: >-
-      Tokens come from the released binary (`toolbox token create`), and apps
-      send them as a bearer (crates/toolbox-authz/src/authn.rs:5-6). Nothing
+      Tokens come from the released binary (`seikika token create`), and apps
+      send them as a bearer (crates/seikika-authz/src/authn.rs:5-6). Nothing
       is built from source.
   - criterion: decoupled-from-core
     verdict: fail
@@ -39,8 +39,8 @@ verdicts:
       Service identities need a new principal type with its own OpenFGA
       relations (docs/design/user-sdlc.md:79-80, still "planned" at line 55).
       OIDC mode takes a single issuer and subject claim per portal
-      (crates/toolbox-authz/src/authn.rs:52-55, 93-95), so a CI OIDC token
-      can't be added alongside human sign-in without changes to toolbox-authz.
+      (crates/seikika-authz/src/authn.rs:52-55, 93-95), so a CI OIDC token
+      can't be added alongside human sign-in without changes to seikika-authz.
     suggestion: >-
       Add service principals (and, ideally, accept CI OIDC tokens such as
       GitHub Actions' as a second issuer that maps to them), so operators
@@ -49,7 +49,7 @@ verdicts:
   - criterion: fast-feedback
     verdict: fail
     reason: >-
-      portal/sdlc/stages/user.yaml lists toolbox token create.
+      portal/sdlc/stages/user.yaml lists seikika token create.
       docs/design/user-sdlc.md gives no measured local time to the stage exit.
     suggestion: >-
       Measure and record the fastest local check that demonstrates this stage

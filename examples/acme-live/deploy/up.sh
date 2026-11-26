@@ -150,15 +150,15 @@ fi
 if [[ "$portal" -eq 1 ]]; then
   stage="$(mktemp -d)"
   mkdir -p "$stage/bin" "$stage/portal/authz"
-  cp "$root/target/debug/toolbox" \
-    "$root/target/debug/toolbox-connector-github" \
-    "$root/target/debug/toolbox-connector-git-files" \
-    "$root/target/debug/toolbox-connector-scim" \
+  cp "$root/target/debug/seikika" \
+    "$root/target/debug/seikika-connector-github" \
+    "$root/target/debug/seikika-connector-git-files" \
+    "$root/target/debug/seikika-connector-scim" \
     "$stage/bin/"
-  cp ../toolbox.yaml "$stage/portal/toolbox.yaml"
+  cp ../seikika.yaml "$stage/portal/seikika.yaml"
   cp -a ../authz/. "$stage/portal/authz/"
   cp Dockerfile entrypoint.sh scim_seed.sh "$stage/"
-  docker build -t toolbox-acme:local "$stage"
+  docker build -t seikika-acme:local "$stage"
   rm -rf "$stage"
   docker compose --env-file "$pass_file" --profile portal up -d portal
   echo "waiting for the portal"
@@ -182,7 +182,7 @@ if [[ "$portal" -eq 1 ]]; then
     sleep 1
   done
   if [[ "$seeded" -ne 1 ]]; then
-    TOOLBOX_SCIM_TOKEN=scim-token ./scim_seed.sh "http://127.0.0.1:9100/scim/v2"
+    SEIKIKA_SCIM_TOKEN=scim-token ./scim_seed.sh "http://127.0.0.1:9100/scim/v2"
   fi
 fi
 

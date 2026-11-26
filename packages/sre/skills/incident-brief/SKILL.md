@@ -26,6 +26,6 @@ description: >-
 For a checkout incident in production, read these entities:
 
 ```sh
-toolbox get 'sre-readiness:checkout@production' -o json
-toolbox get 'sre-health:checkout@production' -o json
+seikika get 'sre-readiness:checkout@production' -o json
+seikika get 'sre-health:checkout@production' -o json
 ```

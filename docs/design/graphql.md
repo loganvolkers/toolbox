@@ -11,7 +11,7 @@
 Entity pages need one entity plus its neighbourhood: owner and on-call, system and domain, APIs
 provided and consumed, dependencies and dependents, scorecard summaries, recent runs. All of it is
 permission-shaped. Doing this with REST either means many round trips or an ever-growing `include=`
-mini-language. Should Toolbox expose GraphQL for this?
+mini-language. Should Seikika expose GraphQL for this?
 
 ## 2. Verdict
 
@@ -22,8 +22,8 @@ Not as an open-ended public query API, and not for agents.**
 |---|---|
 | **Read-only schema** (queries only; no mutations, no subscriptions) | Writes already have one well-guarded path (actions with dry-run, approvals and audit; `update_entity` routing). The changefeed already uses SSE. A second write surface would duplicate semantics and risk |
 | **Trusted documents (persisted operations) only, in production** | graphql.org's own security guidance recommends an allowlist of operations for first-party clients. A graphql-js maintainer argues "90+%" of GraphQL users should use trusted documents. This removes most GraphQL-specific attack and cost risk (arbitrary depth, aliases, batching) |
-| **The documents come from code:** built-in UI pages and operator views declare their GraphQL queries, and `toolbox build` validates, cost-analyses and registers them | One reviewable source; breaking schema changes fail the build, not production |
-| **Ad-hoc GraphQL** in `toolbox dev` (with GraphiQL) and, optionally, for authenticated *operators* in production behind cost limits | A fast authoring loop without opening production to arbitrary queries |
+| **The documents come from code:** built-in UI pages and operator views declare their GraphQL queries, and `seikika build` validates, cost-analyses and registers them | One reviewable source; breaking schema changes fail the build, not production |
+| **Ad-hoc GraphQL** in `seikika dev` (with GraphiQL) and, optionally, for authenticated *operators* in production behind cost limits | A fast authoring loop without opening production to arbitrary queries |
 | **Agents keep the MCP task tools** (`get`, `graph`, `context`, …) and the later read-only GQL graph tool | Agents work best with task-level tools. A second query language on MCP would duplicate `graph` and weaken the token-efficient design |
 
 **Why GraphQL rather than a custom view-query DSL:**
@@ -49,17 +49,17 @@ With trusted documents it carries the safety properties of a fixed set of view e
   IBM API Connect, Apollo Router (demand control) and Cosmo Router.
 - **Apollo MCP Server** turns persisted operations into MCP tools, and warns that its schema "isn't a
   security boundary": authorization must live in the backend. This supports keeping authorization in
-  Toolbox's service layer, not in GraphQL.
+  Seikika's service layer, not in GraphQL.
 
 ## 4. Performance
 
-| Practice | Toolbox implementation |
+| Practice | Seikika implementation |
 |---|---|
 | **Avoid N+1 data access** | Resolvers read the circuit's **in-memory indexed views** (graph, entities, scores), so per-field data access is a memory lookup, not a database query |
 | **Avoid N+1 authorization** | Authorization is the expensive part: an OpenFGA call per object. Resolvers collect object refs per depth level and call **batched** checks (BatchCheck, or ListObjects results cached per principal and log position): the DataLoader pattern applied to permissions and facets |
 | **A consistent snapshot per query** | The whole operation executes at **one log position**, returned in `extensions.logPosition`. A page never mixes data from two moments |
 | **Mandatory pagination** | Every list relation is a **Relay-style connection**: `first`/`after` required, `first ≤ 100` (the GitHub convention), and a per-operation node cap |
-| **Static cost analysis** | The schema is generated with `@cost`/`@listSize` annotations. Each trusted document's worst-case cost is computed **at build time**, and documents over budget fail `toolbox build`. Ad-hoc queries are costed before execution, with per-principal point budgets (GitHub/Shopify model) |
+| **Static cost analysis** | The schema is generated with `@cost`/`@listSize` annotations. Each trusted document's worst-case cost is computed **at build time**, and documents over budget fail `seikika build`. Ad-hoc queries are costed before execution, with per-principal point budgets (GitHub/Shopify model) |
 | **Depth and complexity limits** | `limit_depth` and `limit_complexity` are set explicitly. They are **off by default** in async-graphql, and its README "strongly recommends" them in production |
 | **Caching** | Trusted documents allow `GET /graphql?doc=<hash>&variables=…` with an **ETag of `(log position, principal permission fingerprint)`**. `Cache-Control: private` only; responses are never shared across principals |
 | **No speculative features** | No reliance on `@defer`/`@stream` or federation |
@@ -87,7 +87,7 @@ With trusted documents it carries the safety properties of a fixed set of view e
   call the same internal read API. GraphQL is a projection, like the others.
 - **Mapping from the model:**
 
-  | Toolbox concept | GraphQL shape |
+  | Seikika concept | GraphQL shape |
   |---|---|
   | Kind | Object type implementing `Entity` |
   | Relation type | Connection fields in both directions |
@@ -95,11 +95,11 @@ With trusted documents it carries the safety properties of a fixed set of view e
   | Scorecard | `scorecards(names:)` field with summary/details sub-objects |
 
   Identifiers are global ids (entity refs).
-- **Schema changes are reviewed:** `toolbox plan` shows a GraphQL schema diff (breaking/dangerous/safe)
+- **Schema changes are reviewed:** `seikika plan` shows a GraphQL schema diff (breaking/dangerous/safe)
   alongside the OpenAPI and MCP diffs. Trusted documents are re-validated against the new schema at
   build.
 - **Operators** write view queries as `.graphql` files or tagged templates next to their TSX views.
-  `@toolbox/ui-sdk` generates typed hooks. The same documents are snapshot-tested as two principals
+  `@seikika/ui-sdk` generates typed hooks. The same documents are snapshot-tested as two principals
   (Level-3 surface tests).
 
 ```graphql
@@ -135,9 +135,9 @@ query ServicePage($ref: ID!, $deps: Int = 20) {
 
 ## 8. Changes to the plan
 
-1. **Crate `toolbox-graphql`:** async-graphql dynamic schema from the manifest; read-only; batched
+1. **Crate `seikika-graphql`:** async-graphql dynamic schema from the manifest; read-only; batched
    authorization and facet loaders; cost directives; trusted-document registry; GET with ETags.
-2. **Operator views** declare GraphQL documents. `toolbox build` validates and costs them, and plan
+2. **Operator views** declare GraphQL documents. `seikika build` validates and costs them, and plan
    shows schema diffs.
 3. **Verification:** add GraphQL to S1 (non-interference) and E6 (surface equivalence); fuzz the
    GraphQL endpoint (L4); cost-regression checks on the built-in documents.

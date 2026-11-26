@@ -30,9 +30,9 @@ import sys
 import tempfile
 
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-BASELINE = os.path.join(REPO, "crates/toolbox-derive/examples/scale-gate.json")
-FORMAT = "toolbox-scale-gate/v1"
-RECOMPUTE = "<toolbox_derive::FullRecompute as toolbox_derive::DerivedState>::recompute"
+BASELINE = os.path.join(REPO, "crates/seikika-derive/examples/scale-gate.json")
+FORMAT = "seikika-scale-gate/v1"
+RECOMPUTE = "<seikika_derive::FullRecompute as seikika_derive::DerivedState>::recompute"
 
 
 def measure(binary, services, threads):

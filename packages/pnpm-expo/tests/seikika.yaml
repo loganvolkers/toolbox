@@ -1,0 +1,18 @@
+# The package's test portal: includes the package as a consumer would.
+# Run: seikika test packages/pnpm-expo/tests
+apiVersion: seikika.com/v1alpha1
+portal:
+  name: pnpm-expo-package
+  title: pnpm / Expo standards (package tests)
+  owner: group:maintainers
+  seikika: "0.1"
+include: [{package: .., with: {requireHoisted: true}}]
+connectors:
+  - name: workspace
+    package: builtin:workspace
+    runtime: in-image
+    config: {crates: false, jsWorkspace: true, expoApps: [apps/*/app.json]}
+    records: [js-workspace, expo-app]
+    refresh: {js-workspace: [external_ids], expo-app: [external_ids]}
+    freshness: {js-workspace: 5m, expo-app: 5m}
+tests: [standards.test.yaml]

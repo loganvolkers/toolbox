@@ -1,11 +1,11 @@
 # Judgement pushed by coding agents, and its standards (D79, D80).
-# Included by portal/toolbox.yaml; see portal/README.md for the layout.
+# Included by portal/seikika.yaml; see portal/README.md for the layout.
 
 kinds:
   - name: Assessment
     description: >-
       One coding agent's (or person's) judgement of one entity against a
-      rubric: a file in portal/assessments/, written after `toolbox assess
+      rubric: a file in portal/assessments/, written after `seikika assess
       brief`.
     identityFrom: [connector:workspace]
     fields:
@@ -154,11 +154,11 @@ scorecards:
       first on findings, then on every verdict.
     links:
     - title: 'Decision: assessments are scored'
-      url: https://github.com/loganvolkers/toolbox/blob/main/docs/decisions/D01M7WJVW700000000000000000.md
+      url: https://github.com/seikika/seikika/blob/main/docs/decisions/D01M7WJVW700000000000000000.md
     - title: Scorecards for scorecards
-      url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/scorecards-for-scorecards.md#61-assessments-and-rubrics-are-standards-too-d80
+      url: https://github.com/seikika/seikika/blob/main/docs/design/scorecards-for-scorecards.md#61-assessments-and-rubrics-are-standards-too-d80
     - title: assess-entity skill
-      url: https://github.com/loganvolkers/toolbox/blob/main/plugins/toolbox-operator/skills/assess-entity/SKILL.md
+      url: https://github.com/seikika/seikika/blob/main/plugins/seikika-operator/skills/assess-entity/SKILL.md
     owner: group:maintainers
     track: standards
     levels: [bronze, silver, gold]
@@ -231,11 +231,11 @@ scorecards:
       review goes stale on every edit.
     links:
     - title: 'Decision: assessments are reviewed'
-      url: https://github.com/loganvolkers/toolbox/blob/main/docs/decisions/D01M7WJVW700000000000000000.md
+      url: https://github.com/seikika/seikika/blob/main/docs/decisions/D01M7WJVW700000000000000000.md
     - title: Findings first decision
-      url: https://github.com/loganvolkers/toolbox/blob/main/docs/decisions/D01M831P5QWJQ4A2FT85N5MXJQF.md
+      url: https://github.com/seikika/seikika/blob/main/docs/decisions/D01M831P5QWJQ4A2FT85N5MXJQF.md
     - title: Meta standards review
-      url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/meta-standards-review.md
+      url: https://github.com/seikika/seikika/blob/main/docs/design/meta-standards-review.md
     owner: group:maintainers
     track: standards
     levels: [bronze, silver, gold]
@@ -265,7 +265,7 @@ scorecards:
         changed since it was reviewed' : 'not reviewed against
         assessment-quality')]
       fix: >-
-        Run `toolbox assess brief <assessment id> --portal portal`; a different
+        Run `seikika assess brief <assessment id> --portal portal`; a different
         agent or person should review it.
       rationale: >-
         A review by the assessment's own assessor repeats its blind spots and is
@@ -308,14 +308,14 @@ scorecards:
     facets: {summary: public, details: public}
 
 rubrics:
-  # What a coding agent judges, given `toolbox assess brief` (or the assessment_brief MCP tool).
+  # What a coding agent judges, given `seikika assess brief` (or the assessment_brief MCP tool).
   # Criteria are questions a deterministic check can't answer; anything a check can answer belongs
   # in a scorecard rule instead (docs/design/scorecards-for-scorecards.md §6).
   - name: assessment-quality
     kind: Assessment
     description: >-
       Is this assessment trustworthy? Read the assessment, then the sources
-      its reasons cite, and the entity it judges (toolbox get <entity>).
+      its reasons cite, and the entity it judges (seikika get <entity>).
       Review someone else's assessment, not your own.
     criteria:
     - name: supported

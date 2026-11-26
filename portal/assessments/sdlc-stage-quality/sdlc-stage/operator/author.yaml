@@ -1,4 +1,4 @@
-apiVersion: toolbox.dev/assessment/v1
+apiVersion: seikika.com/assessment/v1
 entity: sdlc-stage:operator/author
 rubric: sdlc-stage-quality
 subjectHash: e50e936450ae
@@ -8,7 +8,7 @@ verdicts:
   - criterion: executable-exit
     verdict: pass
     reason: >-
-      The exit criterion is that the manifest validates, and `toolbox
+      The exit criterion is that the manifest validates, and `seikika
       validate` exits 1 on errors. I checked this on a scratch copy of
       examples/repo-portal-starter: renaming `owner` gave schema errors and
       exit 1, and the pristine copy reported 0 errors. CI validates that
@@ -18,13 +18,13 @@ verdicts:
     reason: >-
       On the YAML route, an agent copies the starter, splits it with `include`
       (docs/v1-spec.md:122) and loops on the validate skill
-      (plugins/toolbox-operator/skills/validate/SKILL.md). Diagnostics name
-      the file and JSON path, for example `toolbox.yaml /portal: "owner" is a
+      (plugins/seikika-operator/skills/validate/SKILL.md). Diagnostics name
+      the file and JSON path, for example `seikika.yaml /portal: "owner" is a
       required property`. The TypeScript route the intent mentions isn't
-      usable: the builder is a private prototype and `toolbox build` doesn't
-      exist (docs/design/typescript-builder.md:5). The toolbox-authoring skill
-      also points agents at a `toolbox-dev` MCP server whose launcher execs
-      `toolbox mcp --dev` (plugins/toolbox-operator/bin/toolbox-mcp), a flag
+      usable: the builder is a private prototype and `seikika build` doesn't
+      exist (docs/design/typescript-builder.md:5). The seikika-authoring skill
+      also points agents at a `seikika-dev` MCP server whose launcher execs
+      `seikika mcp --dev` (plugins/seikika-operator/bin/seikika-mcp), a flag
       the CLI does not have.
   - criterion: reuses-artifacts
     verdict: pass
@@ -44,7 +44,7 @@ verdicts:
   - criterion: fast-feedback
     verdict: fail
     reason: >-
-      portal/sdlc/stages/operator.yaml lists toolbox validate.
+      portal/sdlc/stages/operator.yaml lists seikika validate.
       docs/design/typescript-builder.md gives no measured local time to the
       stage exit.
     suggestion: >-
@@ -54,7 +54,7 @@ verdicts:
     verdict: fail
     reason: >-
       portal/sdlc/stages/operator.yaml lists examples/repo-portal-
-      starter/toolbox.yaml as evidence. The declared checks name no second
+      starter/seikika.yaml as evidence. The declared checks name no second
       exercised reference for this stage exit.
     suggestion: >-
       Exercise this exit on a second reference and cite the result in

@@ -1,6 +1,6 @@
 # Read answers (tenant B dump)
 
-Sources: `OUT/entities.ndjson`, `RUN.md`, `portal/toolbox.yaml`, `src/main.rs` (config keys only).
+Sources: `OUT/entities.ndjson`, `RUN.md`, `portal/seikika.yaml`, `src/main.rs` (config keys only).
 
 ## 1. How many projects does tenant B have?
 
@@ -21,4 +21,4 @@ Sources: `OUT/entities.ndjson`, `RUN.md`, `portal/toolbox.yaml`, `src/main.rs` (
 
 ## 5. Which config fields switch tenants?
 
-`baseUrl` and `token` (JSON in `TOOLBOX_CONNECTOR_CONFIG` / `connector drive --config`, and the portal connector `config` object). Same binary; only these two fields change between tenant A (`9743` / `tenant-a-token`) and tenant B (`9744` / `tenant-b-token`).
+`baseUrl` and `token` (JSON in `SEIKIKA_CONNECTOR_CONFIG` / `connector drive --config`, and the portal connector `config` object). Same binary; only these two fields change between tenant A (`9743` / `tenant-a-token`) and tenant B (`9744` / `tenant-b-token`).

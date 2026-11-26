@@ -1,0 +1,49 @@
+# Example portal wiring: GCP Secret Manager holds connector auth.
+# Placeholders stay unresolved until server start (D55).
+# Map logical names → SM secret ids via secrets.yaml + SEIKIKA_SECRETS_CONFIG.
+apiVersion: seikika.com/v1alpha1
+
+portal:
+  name: secret-vault-gcp-demo
+  title: Secret vault GCP example
+  owner: group:platform
+  seikika: "0.1"
+
+connectors:
+  - name: github
+    package: builtin:github
+    runtime: in-image
+    config:
+      org: acme
+      appId: ${env:GITHUB_APP_ID}
+      privateKey: ${secret:github-app-private-key}
+      installationId: ${env:GITHUB_INSTALLATION_ID}
+    records: [repository, codeowners, app, installation]
+
+  - name: jira
+    # Example config for a future/builtin jira connector — resolution path is what matters.
+    package: builtin:jira
+    runtime: in-image
+    config:
+      site: https://acme.atlassian.net
+      email: ${env:JIRA_USER_EMAIL}
+      token: ${secret:jira-app-token}
+    records: [issue]
+
+  - name: gcp
+    package: builtin:gcp
+    runtime: in-image
+    config:
+      project: my-gcp-project
+      serviceAccountJson: ${secret:gcp-sa-key}
+    records: [project]
+
+kinds:
+  - name: Component
+    identityFrom: [connector:github]
+    fields: {title: {type: string}}
+    sources: {default: [connector:github]}
+    map:
+    - from: github/repository
+      id: "'component:' + record.name"
+      set: "{'title': record.name}"

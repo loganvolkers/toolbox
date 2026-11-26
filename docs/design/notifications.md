@@ -7,9 +7,9 @@ Related: [sdlc.md](./sdlc.md) (Actions for the portal repo), [dashboards.md](./d
 [meta-catalog.md](./meta-catalog.md) (routing data problems to connector owners).*
 
 There are two halves:
-1. **The portal reaches teams where they work.** The Toolbox GitHub App posts issues, check runs and
+1. **The portal reaches teams where they work.** The Seikika GitHub App posts issues, check runs and
    fix PRs.
-2. **Teams' own CI talks to the portal.** Toolbox ships GitHub Actions for service repos.
+2. **Teams' own CI talks to the portal.** Seikika ships GitHub Actions for service repos.
 
 ---
 
@@ -25,7 +25,7 @@ There are two halves:
 4. **Actionable or silent.** Every notification carries the fix text, a remediation action and an
    `explain` link. If there is nothing to do, nothing is sent.
 5. **Budgets and previews.** Each team has a daily notification budget, deduplication keys and digest
-   windows. `toolbox plan` estimates notification volume before a change ships, e.g. "this rule would
+   windows. `seikika plan` estimates notification volume before a change ships, e.g. "this rule would
    open 214 issues", with a gate (§5).
 6. **Defined in code, opt-in rollout.** Policies are code. Each channel starts in `shadow` mode (log
    what would be sent), then `pilot` (allowlisted teams), then `on`.
@@ -45,12 +45,12 @@ There are two halves:
 | Entity TTL expiring | Entity owner / requester | Email + dashboard issue |
 | Ownership gap (owner team dissolved, unverified ownership) | Parent group / portal owner | Portal-repo issue + email digest |
 
-## 3. GitHub channel (via the Toolbox GitHub App)
+## 3. GitHub channel (via the Seikika GitHub App)
 
 The App is installed org-wide with least-privilege permissions per feature: issues, checks, pull
 requests, contents for fix PRs only, and members (read).
 
-### 3.1 Living "Toolbox Dashboard" issue per repo
+### 3.1 Living "Seikika Dashboard" issue per repo
 - One issue per repo with a deterministic title and a hidden marker. It is created on first actionable
   finding and **edited in place** after that.
 - Sections:
@@ -65,8 +65,8 @@ requests, contents for fix PRs only, and members (read).
 - Mentions only the owner team (`@acme/payments`) and only on *transitions*, never on every edit.
 
 ### 3.2 Check runs on pull requests (shift-left)
-- "Toolbox / scorecards" shows the **score delta caused by this PR**: entity fragments and facts are
-  computed for the PR head (via the `toolbox/scorecard-check` Action, §4) and evaluated by the portal
+- "Seikika / scorecards" shows the **score delta caused by this PR**: entity fragments and facts are
+  computed for the PR head (via the `seikika/scorecard-check` Action, §4) and evaluated by the portal
   read-only.
 - Annotations point at the offending lines in `catalog-info.yaml`, `CODEOWNERS`, OpenAPI files and so
   on.
@@ -75,7 +75,7 @@ requests, contents for fix PRs only, and members (read).
 
 ### 3.3 Fix PRs
 - Remediation actions can open PRs in the style of Dependabot and Renovate: grouped, rate-limited,
-  labelled `toolbox`, with the rule's explanation in the body, and auto-closed when obsolete.
+  labelled `seikika`, with the rule's explanation in the body, and auto-closed when obsolete.
 
 ### 3.4 Initiative tracking
 - One tracking issue per initiative per owner team, with a GitHub **sub-issue** per affected entity,
@@ -88,37 +88,37 @@ requests, contents for fix PRs only, and members (read).
 
 ## 4. GitHub Actions for service repos (user SDLC, layer 3)
 
-These are thin wrappers over the `toolbox` CLI, so GitLab CI and others get the same features. They
+These are thin wrappers over the `seikika` CLI, so GitLab CI and others get the same features. They
 authenticate with **GitHub OIDC**, with no long-lived secrets. The portal trusts GitHub's OIDC issuer
 and maps the `repository` claim to a *repo principal* that can only act on entities linked to that
 repo.
 
 | Action | What it does |
 |---|---|
-| `toolbox-dev/validate-catalog` | Validates `catalog-info.yaml` against the portal's generated JSON Schemas (fetched once and cached); annotates errors |
-| `toolbox-dev/scorecard-check` | Sends the PR head's fragments and facts to the portal for a **read-only what-if evaluation**; posts the check run and a sticky PR comment with the delta |
-| `toolbox-dev/push` | Pushes facts, docs, OpenAPI/AsyncAPI specs, SBOMs, test and coverage results and deploy events to the portal via the connector protocol's push transport |
-| `toolbox-dev/context` | Fetches the **context pack** for the PR's entity (owners, dependencies, failing rules, standards), writes it to the job summary, and exposes it as an output for AI review agents in the same workflow |
-| `toolbox-dev/run-action` | Triggers a portal action (with dry-run) from a workflow, e.g. "register deployment", "request prod access" |
-| `toolbox-dev/publish-docs` | Publishes rendered docs and the entity link to the knowledge pipeline on merge |
+| `seikika/validate-catalog` | Validates `catalog-info.yaml` against the portal's generated JSON Schemas (fetched once and cached); annotates errors |
+| `seikika/scorecard-check` | Sends the PR head's fragments and facts to the portal for a **read-only what-if evaluation**; posts the check run and a sticky PR comment with the delta |
+| `seikika/push` | Pushes facts, docs, OpenAPI/AsyncAPI specs, SBOMs, test and coverage results and deploy events to the portal via the connector protocol's push transport |
+| `seikika/context` | Fetches the **context pack** for the PR's entity (owners, dependencies, failing rules, standards), writes it to the job summary, and exposes it as an output for AI review agents in the same workflow |
+| `seikika/run-action` | Triggers a portal action (with dry-run) from a workflow, e.g. "register deployment", "request prod access" |
+| `seikika/publish-docs` | Publishes rendered docs and the entity link to the knowledge pipeline on merge |
 
 Example service-repo workflow:
 
 ```yaml
-name: toolbox
+name: seikika
 on: [pull_request, push]
 permissions: { id-token: write, contents: read, checks: write, pull-requests: write }
 jobs:
-  toolbox:
+  seikika:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
-      - uses: toolbox-dev/validate-catalog@v1
+      - uses: seikika/validate-catalog@v1
         with: { portal: https://portal.acme.dev }
-      - uses: toolbox-dev/push@v1
+      - uses: seikika/push@v1
         if: github.event_name == 'push'
         with: { portal: https://portal.acme.dev, facts: coverage.json, openapi: api/openapi.yaml }
-      - uses: toolbox-dev/scorecard-check@v1
+      - uses: seikika/scorecard-check@v1
         if: github.event_name == 'pull_request'
         with: { portal: https://portal.acme.dev }
 ```
@@ -126,13 +126,13 @@ jobs:
 ## 5. Notification policy in code
 
 ```ts
-new tb.NotificationPolicy("default", {
+new seikika.NotificationPolicy("default", {
   owner: "group:default/platform",
   mode: "pilot", pilotTeams: ["group:default/payments", "group:default/search"],   // shadow | pilot | on
   channels: {
-    github: { app: tb.env("TOOLBOX_GITHUB_APP_ID"), dashboardIssue: true, prChecks: true, fixPRs: { maxOpenPerRepo: 3 } },
-    email:  { smtp: tb.env("SMTP_URL"), digest: "weekly" },
-    webhook:{ url: tb.env("NOTIFY_WEBHOOK"), format: "cloudevents" },
+    github: { app: seikika.env("SEIKIKA_GITHUB_APP_ID"), dashboardIssue: true, prChecks: true, fixPRs: { maxOpenPerRepo: 3 } },
+    email:  { smtp: seikika.env("SMTP_URL"), digest: "weekly" },
+    webhook:{ url: seikika.env("NOTIFY_WEBHOOK"), format: "cloudevents" },
   },
   budgets: { perTeamPerDay: 5, dedupWindow: "7d" },
   gates:   { maxNewIssuesPerPlan: 50 },   // plan fails unless acknowledged by the policy owner
@@ -148,7 +148,7 @@ a later adapter rather than a redesign.
 
 ## 6. Agents
 
-- Every principal, human or agent, has an **inbox**, exposed as the MCP resource `toolbox://inbox` and
+- Every principal, human or agent, has an **inbox**, exposed as the MCP resource `seikika://inbox` and
   the tool `inbox_list`. An agent working on a repo sees the same actionable items the team sees.
 - Agent-requested runs report completion to the agent's inbox, and to the human it acts for if that
   human opted in.

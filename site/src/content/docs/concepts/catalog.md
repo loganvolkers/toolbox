@@ -20,6 +20,6 @@ Relations come from the same facts. A document that names a command is linked to
 
 ## This site is in the catalog
 
-Each page under `site/src/content/docs` is a `site-page` entity. Adding a page adds an entity. The [scorecard](/toolbox/concepts/scorecards/) then says whether that page is titled, linked, and reachable from the sidebar.
+Each page under `site/src/content/docs` is a `site-page` entity. Adding a page adds an entity. The [scorecard](/concepts/scorecards/) then says whether that page is titled, linked, and reachable from the sidebar.
 
-Terms: [Glossary](/toolbox/concepts/glossary/).
+Terms: [Glossary](/concepts/glossary/).

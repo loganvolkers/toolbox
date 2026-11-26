@@ -1,7 +1,7 @@
 {
-  "name": "toolbox-github-emulate-tests",
+  "name": "seikika-github-emulate-tests",
   "private": true,
-  "description": "Integration tests for the Toolbox GitHub connector against Vercel Labs Emulate.",
+  "description": "Integration tests for the Seikika GitHub connector against Vercel Labs Emulate.",
   "license": "MIT",
   "engines": {
     "node": "24"

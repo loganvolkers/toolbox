@@ -1,9 +1,9 @@
 # Schema Standards: Cataloguing the JSON Schemas We Compile
 
-*Status: deterministic catalog and scorecard built, 2026-11-20 (D77). Toolbox for Toolbox catalogues
+*Status: deterministic catalog and scorecard built, 2026-11-20 (D77). Seikika for Seikika catalogues
 each document in `schema/` and scores it with `maintainer-schema`. The schema compiler is
 unchanged. Related: [package-standards.md](./package-standards.md),
-[toolbox-for-toolbox.md](./toolbox-for-toolbox.md).*
+[seikika-for-seikika.md](./seikika-for-seikika.md).*
 
 ---
 
@@ -11,7 +11,7 @@ unchanged. Related: [package-standards.md](./package-standards.md),
 
 **A schema in this repository is a contract only if the binary compiles it as Draft 2020-12.**
 
-`crates/toolbox-model` embeds the three documents and builds them with Draft 2020-12. It does not
+`crates/seikika-model` embeds the three documents and builds them with Draft 2020-12. It does not
 fetch a `$ref`. A file that names another dialect, or a schema that lives on the network, is not
 the contract the server runs. The checks that do not need a second validator:
 
@@ -65,7 +65,7 @@ and protocol contracts of this repository.
 
 | Document | Level | Notes |
 |---|---|---|
-| `schema/manifest.schema.json` | gold | Draft 2020-12, `$id` under `toolbox.dev`, compiled in, local `$ref`s |
+| `schema/manifest.schema.json` | gold | Draft 2020-12, `$id` under `seikika.com`, compiled in, local `$ref`s |
 | `schema/connector-messages.schema.json` | gold | The same |
 | `schema/executor-messages.schema.json` | gold | The same |
 
@@ -78,5 +78,5 @@ secret). Every rule passes on one fixture and fails on another (D71).
 
 - JSON Schema 2020-12 core, `$schema`, `$id` and `$ref`:
   https://json-schema.org/draft/2020-12/json-schema-core
-- `crates/toolbox-model/src/schema.rs`, which embeds the documents and compiles them as Draft 2020-12.
+- `crates/seikika-model/src/schema.rs`, which embeds the documents and compiles them as Draft 2020-12.
 - `examples/reference-portal/tools/validate.py`, which applies the same three files.

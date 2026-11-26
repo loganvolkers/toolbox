@@ -1,0 +1,10 @@
+# The package's test portal: includes the package as a consumer would.
+# Run: seikika test packages/openssf-scorecard/tests
+apiVersion: seikika.com/v1alpha1
+portal:
+  name: openssf-scorecard-package
+  title: OpenSSF Scorecard (package tests)
+  owner: group:maintainers
+  seikika: "0.1"
+include: [{package: .., with: {}}]
+tests: [standards.test.yaml]

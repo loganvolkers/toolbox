@@ -1,7 +1,7 @@
 import type { AstroIntegration } from "astro";
 
-interface ToolboxReportOptions {
-  /** File produced by toolbox report -o web. Publish only data your readers may see. */
+interface SeikikaReportOptions {
+  /** File produced by seikika report -o web. Publish only data your readers may see. */
   data: string | URL;
   /** Defaults to /report. */
   path?: string;
@@ -10,4 +10,4 @@ interface ToolboxReportOptions {
   layout?: string | URL;
 }
 
-export default function toolboxReport(options: ToolboxReportOptions): AstroIntegration;
+export default function seikikaReport(options: SeikikaReportOptions): AstroIntegration;

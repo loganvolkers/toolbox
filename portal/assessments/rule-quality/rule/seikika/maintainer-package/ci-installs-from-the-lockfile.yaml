@@ -1,0 +1,65 @@
+apiVersion: seikika.com/assessment/v1
+entity: rule:seikika/maintainer-package/ci-installs-from-the-lockfile
+rubric: rule-quality
+subjectHash: 42266623bc16
+assessor: {kind: agent, name: cursor-assessor-06, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: measures-intent
+    verdict: fail
+    reason: >-
+      `unlocked_install` matches only `npm install` and pnpm without
+      `--frozen-lockfile`
+      (crates/seikika-connector-workspace/src/npm.rs:195-204), and only inside
+      a `working-directory:` block for this exact path (npm.rs:175-193). The
+      OpenSSF guide the rule links lists `npm i`, `npm update`, `npm exec` and
+      `npx` as commands that do not treat the lockfile as read-only
+      (https://github.com/ossf/package-manager-best-practices/blob/main/published/npm.md,
+      "Lockfiles and commands"); none is caught. A step in flow-mapping form,
+      `- {working-directory: web, run: npm install}` (the style
+      .github/workflows/pages.yml:48 uses), is missed too: the line is
+      consumed as a working-directory line and its value parses as "web,"
+      (npm.rs:180-183, 206-216). On a scratch repo, `npm i` under a job
+      default and that inline step both reported `ciUsesInstall: false`. A
+      package CI never installs also passes, so "CI installs from the
+      lockfile" is read as "no unlocked install was seen".
+    suggestion: >-
+      Parse workflows as YAML (the workflows connector already does) and
+      resolve each `run:` step's effective directory from step, job and
+      `cd`/`--prefix`; match `npm i`, `npm update`, `npm exec`/`npx` and `yarn
+      install` without `--immutable`/`--frozen-lockfile`; and emit
+      `ciInstalls` (locked install seen) so the check can require one.
+  - criterion: hard-to-game
+    verdict: fail
+    reason: >-
+      With the evidence naming `npm install`, writing `npm i`, `cd ui && npm
+      install` or `npm install --prefix ui` from the repository root clears it
+      without changing what CI does: only the literal `npm install` is
+      matched, and only inside a `working-directory:` block for the package
+      (crates/seikika-connector-workspace/src/npm.rs:176-204). Each is shorter
+      than reading why `npm ci` is wanted.
+    suggestion: >-
+      The parser change above closes all three; add them as cases to
+      `pnpm_install_without_frozen_lockfile_is_unlocked` (npm.rs:358).
+  - criterion: fix-leads-to-pass
+    verdict: pass
+    reason: >-
+      The fix names the place (`.github/workflows/`) and the two replacement
+      commands (portal/standards/packages.yaml:162-165). Changing the job's
+      `npm install` to `npm ci` passes, as the ui and typescript-builder jobs
+      show (.github/workflows/ci.yml:300,311) and the connector's live-repo
+      test asserts (npm.rs:394,401).
+  - criterion: threshold-justified
+    verdict: pass
+    reason: >-
+      No numeric threshold. Gold comes from D76
+      (docs/decisions/D01M7W56B7R0000000000000000.md: "CI that does not run
+      npm install") and OpenSSF's recommendation 7 for applications, cited in
+      docs/design/package-standards.md:35. Whether it should instead sit at
+      silver with `locked` is a ladder question for the scorecard.
+summary: >-
+  Exactly the OpenSSF rule, and its fix works, but the detector is a
+  line-regex over working-directory blocks. `npm i`, `npx`, `cd dir && npm
+  install`, `--prefix` and inline step mappings all pass, and a package CI
+  never installs passes too. Parse the workflow and require a locked
+  install.

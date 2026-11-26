@@ -1,4 +1,4 @@
-apiVersion: toolbox.dev/assessment/v1
+apiVersion: seikika.com/assessment/v1
 entity: assessment:sdlc-stage-quality/sdlc-stage:operator/validate
 rubric: assessment-quality
 subjectHash: c95730afda7a
@@ -10,10 +10,10 @@ verdicts:
     reason: >-
       The citations in
       portal/assessments/sdlc-stage-quality/sdlc-stage/operator/validate.yaml
-      hold. `toolbox validate --help` states exit codes 0, 1 and 2, and so
-      does plugins/toolbox-operator/skills/validate/SKILL.md, step 1, which
+      hold. `seikika validate --help` states exit codes 0, 1 and 2, and so
+      does plugins/seikika-operator/skills/validate/SKILL.md, step 1, which
       also gives `--format json`. A broken copy of the starter exited 1 when I
-      ran it. scripts/validate-parity.py:1-7 compares `toolbox validate` with
+      ran it. scripts/validate-parity.py:1-7 compares `seikika validate` with
       examples/reference-portal/tools/validate.py, and CI runs it at
       .github/workflows/ci.yml:38-39. docs/v1-spec.md:131-132 requires
       diagnostics from included files to name the file.
@@ -39,7 +39,7 @@ verdicts:
     suggestion: >-
       Either justify, against sdlc.yaml:403-405, treating the command as the
       check for an operator-local exit criterion, or fail executable-exit and
-      suggest a check an operator's CI inherits, such as a `toolbox validate`
+      suggest a check an operator's CI inherits, such as a `seikika validate`
       step in actions/report or the starter.
   - criterion: actionable
     verdict: pass

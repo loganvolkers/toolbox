@@ -13,6 +13,6 @@ decided: 2026-11-21T04:29:37Z
 
 **The ratchet verdict is the gate for scores.** The pages workflow generates `site/public/report/` for each commit and does not commit it (D01M7YAXH89ZJQ7Q4HP77NMHBX8). This change does not bring that directory back, and it does not byte-compare it.
 
-**`toolbox assess check` exits 1 when a recorded assessment is stale.** A missing assessment stays non-fatal. The subject hash is still the freshness check (D79).
+**`seikika assess check` exits 1 when a recorded assessment is stale.** A missing assessment stays non-fatal. The subject hash is still the freshness check (D79).
 
 **Where:** [design/github-actions-standards.md](../design/github-actions-standards.md), [design/repo-value.md](../design/repo-value.md), [design/site-standards.md](../design/site-standards.md)

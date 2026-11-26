@@ -1,6 +1,6 @@
 {
-  "name": "toolbox-portal-ui",
-  "description": "Astro and Vue frontend embedded by the Toolbox server.",
+  "name": "seikika-portal-ui",
+  "description": "Astro and Vue frontend embedded by the Seikika server.",
   "license": "MIT",
   "private": true,
   "type": "module",
@@ -12,7 +12,7 @@
   },
   "dependencies": {
     "@astrojs/vue": "7.1.6",
-    "@toolbox-dev/ui": "workspace:^",
+    "@seikika/ui": "workspace:^",
     "astro": "7.4.13",
     "vue": "^3.5.0"
   },

@@ -24,7 +24,7 @@ PG = os.environ.get("BENCH_PG", "postgres://postgres@127.0.0.1:54350")
 OHA = os.environ.get("OHA", "oha")
 BS_APP = Path(os.environ.get("BS_APP", "/tmp/bs/prod"))
 NODE_BIN = os.environ.get("NODE_BIN", "/tmp/bs/node24/bin")
-TOOLBOX = os.environ.get("TOOLBOX", str(ROOT / "target/release/toolbox"))
+SEIKIKA = os.environ.get("SEIKIKA", str(ROOT / "target/release/seikika"))
 TOKEN = "bench-static-token-0123456789abcdef"
 MCP_TOKEN = "bench-mcp-token-0123456789abcdef"
 DURATION = os.environ.get("BENCH_DURATION", "10s")
@@ -132,24 +132,24 @@ def oha(reads, headers):
                "codes": codes, "errors": out.get("errorDistribution", {})}
 
 
-class Toolbox:
+class Seikika:
     """As deployed: token auth (a PAT), and every read authorized by the OpenFGA co-process."""
-    name = "toolbox"
+    name = "seikika"
     port = 18090
     headers = {"authorization": f"Bearer tbx_{TOKEN}"}
 
     def start(self, catalog, fresh=True):
         if fresh:
-            psql("DROP DATABASE IF EXISTS bench_toolbox")
-            psql("CREATE DATABASE bench_toolbox")
-        env = dict(os.environ, TOOLBOX_CONNECTORS="off", RUST_LOG="warn",
-                   TOOLBOX_AUTH_MODE="token", TOOLBOX_PATS=f"bench=tbx_{TOKEN}",
-                   TOOLBOX_CONNECTOR_TOKENS=f"catalog=conn_{TOKEN}",
-                   TOOLBOX_OPENFGA_BIN=os.environ.get("TOOLBOX_OPENFGA_BIN",
+            psql("DROP DATABASE IF EXISTS bench_seikika")
+            psql("CREATE DATABASE bench_seikika")
+        env = dict(os.environ, SEIKIKA_CONNECTORS="off", RUST_LOG="warn",
+                   SEIKIKA_AUTH_MODE="token", SEIKIKA_PATS=f"bench=tbx_{TOKEN}",
+                   SEIKIKA_CONNECTOR_TOKENS=f"catalog=conn_{TOKEN}",
+                   SEIKIKA_OPENFGA_BIN=os.environ.get("SEIKIKA_OPENFGA_BIN",
                                                       "/tmp/tools/openfga"))
         return subprocess.Popen(
-            [TOOLBOX, "serve", str(HERE / "portal"), "--listen", f"127.0.0.1:{self.port}",
-             "--database-url", PG + "/bench_toolbox"],
+            [SEIKIKA, "serve", str(HERE / "portal"), "--listen", f"127.0.0.1:{self.port}",
+             "--database-url", PG + "/bench_seikika"],
             env=env, stdout=self.log, stderr=subprocess.STDOUT)
 
     def ready(self):
@@ -201,7 +201,7 @@ class Backstage:
                 capture_output=True, text=True).stdout.split()
             for db in ["bench_backstage"] + plugins:
                 psql(f'DROP DATABASE IF EXISTS "{db}"')
-        # The template's production layering, and warn-level logs like the Toolbox arm's RUST_LOG.
+        # The template's production layering, and warn-level logs like the Seikika arm's RUST_LOG.
         cfg = HERE / "backstage" / "app-config.bench.yaml"
         env = dict(os.environ, PATH=NODE_BIN + ":" + os.environ["PATH"],
                    NODE_ENV="production", LOG_LEVEL="warn",
@@ -250,7 +250,7 @@ class Backstage:
 
 
 def main():
-    arm = {"toolbox": Toolbox, "backstage": Backstage}[sys.argv[1]]()
+    arm = {"seikika": Seikika, "backstage": Backstage}[sys.argv[1]]()
     catalog = Path(sys.argv[2])
     n = sum(1 for line in (catalog / "catalog.ndjson").open() if '"component"' in line)
     arm.log = open(Path(sys.argv[3]).with_suffix(".log"), "w")

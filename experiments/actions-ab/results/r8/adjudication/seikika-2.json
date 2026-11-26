@@ -1,0 +1,65 @@
+{
+  "run": "seikika-2",
+  "C1": "holds",
+  "P1": {
+    "verdict": "holds",
+    "evidence": "git -C origins/<r>.git ls-tree -r main: alpha (8cb31a9), beta (8c6bd14) and gamma (d4c86c6) each have .seikika/seikika.yaml, .seikika/actions/add-notice.yaml, .seikika/actions/add-notice.py and .seikika/tests/add-notice.test.yaml committed on main, inside the repository."
+  },
+  "P2": {
+    "verdict": "holds",
+    "evidence": "cd org && . ./env.sh; seikika run --as ann add-notice --entity portal:alpha --yes -o json with level=urgent (exit 2, 'level: \"urgent\" is not one of \"info\" or \"warning\"'), a 200-character message (exit 2, 'longer than 160 characters' and pattern mismatch) and a message with a newline (exit 2, pattern mismatch). state/runs stayed at 9 files; alpha main 8f80ca8d before and after."
+  },
+  "P3": {
+    "verdict": "holds",
+    "evidence": "seikika run --as ann add-notice --entity portal:beta -i level=info -i 'message=Probe: preview only, nothing should change.' -o json (no --yes): exit 0, effects[0].diff replaces readme.md line 1 with '> **Info:** Probe: preview only, nothing should change.', plus the push it would make; no run id. beta main a095eae8 before and after; no run recorded."
+  },
+  "P4": {
+    "verdict": "holds",
+    "evidence": "From org/: seikika run --as dave add-notice --entity portal:gamma -i level=warning -i 'message=Probe: the release group approves this one.' --yes -o json -> run_2fwf3xo5xp7e, awaiting_approval (confirmed with --verify). gamma main a6947e9c unchanged. --approve as dave: exit 2 'a requester cannot approve their own run'; as ann and carol: exit 2 'is not one of the pending approvers [\"group:release\"]'. gamma main still a6947e9c; record awaiting_approval, approved_by []."
+  },
+  "P5": {
+    "verdict": "holds",
+    "evidence": "seikika run --as erin --approve run_2fwf3xo5xp7e --wait -o json: exit 0, succeeded, verification 'fetched origin/main: the commit is on it, and every file it changed has the content the preview showed', commit 58f8945d, README.md blob 84f9ed86 = origins/gamma.git main:README.md. gamma main:README.md is byte-for-byte the probe's warning notice, a blank line, and the root commit's README (cmp): the task's notice is gone. Same built-in change executor as seikika-1, whose source (executor.rs merged/landed) fetches origin main and compares blobs before success."
+  },
+  "P6": {
+    "verdict": "holds",
+    "evidence": "pre-receive hook (exit 1) in origins/alpha.git/hooks. ann requested (info, 'Probe: the origin rejects this push.') -> run_2fwf71ee2xq9; dave --approve --wait: exit 1, state failed, error quotes '[remote rejected] ... (pre-receive hook declined)'; --verify exit 1, failed. alpha main 8f80ca8d before and after. Hook removed."
+  },
+  "P7": {
+    "verdict": "holds",
+    "evidence": "cd org && seikika run --as ann -o json: exit 0, add-notice for portal:alpha, portal:beta, portal:gamma (each verified: true), unreadable []. P4 was requested from org/."
+  },
+  "P8": {
+    "verdict": "holds",
+    "evidence": "seikika run --as ann --verify run_2fwf3xo5xp7e -o json: requested_by user:dave, approval.approved_by [user:erin], inputs {level: warning, message: 'Probe: the release group approves this one.'}, state succeeded; events with at/by/state: previewed and confirmed by dave 15:57:04Z, approval_refused by dave, ann, carol 15:57:04Z, approved by erin 15:57:05Z, succeeded 15:57:05Z."
+  },
+  "P9": {
+    "verdict": "holds",
+    "evidence": "Per the handoff: deleted erin's group:release tuple from org/seikika.yaml (one line), seikika validate . (0 errors), commit and git push origin HEAD:main (org b582466 -> c41e3c5). ann requested on beta (info, 'Probe: erin has left the release group.') -> run_2fwfavzkbhe2; erin --approve: exit 2 'user:erin is not one of the pending approvers'; beta main unchanged (a095eae8); dave --approve --wait: exit 0 succeeded, verified on origin/main (e385106a). beta main:readme.md is exactly the probe notice, a blank line and the imported readme.md (cmp)."
+  },
+  "P10": {
+    "verdict": "holds",
+    "evidence": "Every step was one non-interactive shell command; every seikika command took -o json and returned JSON, with exit codes 0/1/2/3 as the handoff documents."
+  },
+  "P11": {
+    "verdict": "holds",
+    "evidence": "Operated from org/HANDOFF.md alone ('. ./env.sh' and the listed commands; no server). No fixes needed."
+  },
+  "fixes": [],
+  "strikes": [
+    {"path": "state/runs/run_2fw75zvjoi2i.json", "lines": 86, "reason": "run record written by seikika at run time (the agent's own probe run on alpha)"},
+    {"path": "state/runs/run_2fw79bkymssq.json", "lines": 159, "reason": "run record written by seikika at run time (the agent's rejected-push probe on beta)"},
+    {"path": "state/runs/run_2fw79j8hhtk3.json", "lines": 77, "reason": "run record written by seikika at run time (child of the agent's probe run)"},
+    {"path": "state/runs/run_2fw7fe89d3uk.json", "lines": 217, "reason": "run record written by seikika at run time (alpha org run)"},
+    {"path": "state/runs/run_2fw7fjehyhtx.json", "lines": 217, "reason": "run record written by seikika at run time (beta org run)"},
+    {"path": "state/runs/run_2fw7foi8033n.json", "lines": 217, "reason": "run record written by seikika at run time (gamma org run)"},
+    {"path": "state/runs/run_2fw7g14ur0d4.json", "lines": 104, "reason": "run record written by seikika at run time (alpha child run)"},
+    {"path": "state/runs/run_2fw7gd7e1xxg.json", "lines": 104, "reason": "run record written by seikika at run time (beta child run)"},
+    {"path": "state/runs/run_2fw7gmcdq7ck.json", "lines": 104, "reason": "run record written by seikika at run time (gamma child run)"},
+    {"path": "state/served/org/signing-key", "lines": 1, "reason": "generated key written by seikika at run time"}
+  ],
+  "linesBeforeStrikes": 1472,
+  "linesAfterStrikes": 186,
+  "fullyPasses": true,
+  "notes": "C1 rerun by the adjudicator with score.py check before any probe: pass. The remaining 186 lines are alpha/.seikika's action YAML, add-notice.py and test YAML (beta and gamma hold identical copies, not counted again), three 3-line repository manifests, and org/seikika.yaml, groups.fga and env.sh. Same design as seikika-1 (federated org portal, change executor with land: push, org-signed approvals). As the handoff states, --as is taken on trust and the org signing key sits in state/, readable by anyone who can read the workspace. Probe side effects left in the workspace: new run records, one commit each on origins/gamma.git (P5), origins/beta.git (P9) and origins/org.git (P9, erin removed)."
+}

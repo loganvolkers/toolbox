@@ -41,7 +41,7 @@ Dependencies counted are normal `[dependencies]` (target-specific ones included)
 - `core_test_support` (via `codex-core`, `codex-extension-api`)
 - `mcp_test_support` (via `codex-mcp-server`, `core_test_support`)
 
-`app_test_support`, `core_test_support` and `mcp_test_support` are test-support packages. They are still workspace crates, and their dependency on `codex-core` and the others is a normal dependency, so they are listed. Source: the `Cargo.toml` of each crate. The Toolbox portal's `crate:codex-tools` entity (`dependents`) gives the same seven direct dependents.
+`app_test_support`, `core_test_support` and `mcp_test_support` are test-support packages. They are still workspace crates, and their dependency on `codex-core` and the others is a normal dependency, so they are listed. Source: the `Cargo.toml` of each crate. The Seikika portal's `crate:codex-tools` entity (`dependents`) gives the same seven direct dependents.
 
 ## Q2
 

@@ -26,45 +26,45 @@ jobs:
       - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
         with: {key: pages}
       # The portal report is generated for this commit, not committed (D92, D01M7YAXH89ZJQ7Q4HP77NMHBX8).
-      # `toolbox doctor` fails the build if a pinned tool is missing, so no rule turns `unknown`.
+      # `seikika doctor` fails the build if a pinned tool is missing, so no rule turns `unknown`.
       - name: This repository's portal report
         env: {GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"}
         run: |
           cargo build --locked
           scripts/ci-tools.sh "$RUNNER_TEMP/tools" actionlint scorecard osv-scanner rustsec-osv
           export PATH="$RUNNER_TEMP/tools:$PATH" OSV_SCANNER_LOCAL_DB_CACHE_DIRECTORY="$RUNNER_TEMP/tools"
-          target/debug/toolbox tools install portal --via pipx   # the pins in the portal's tools:
-          target/debug/toolbox doctor portal
+          target/debug/seikika tools install portal --via pipx   # the pins in the portal's tools:
+          target/debug/seikika doctor portal
           # On main, score live run history too; pull requests keep the deterministic report.
           skip=runner
           if [ "$GITHUB_EVENT_NAME" != push ]; then skip=runner,github-actions; fi
           # The baseline gives each campaign its recorded start, so the report shows progress since then.
-          target/debug/toolbox report portal --skip "$skip" --baseline portal/results.json -o web --out site/.generated
+          target/debug/seikika report portal --skip "$skip" --baseline portal/results.json -o web --out site/.generated
       - name: setup node
         uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with: {node-version: 24}
       - {name: Enable pinned pnpm, run: corepack enable pnpm}
       - run: pnpm install --frozen-lockfile
       - run: pnpm check:packages
-      # CLI reference is built from clap (`toolbox describe` + --help) in Astro;
+      # CLI reference is built from clap (`seikika describe` + --help) in Astro;
       # fail if the committed fingerprint is stale.
       - name: CLI docs up to date
         working-directory: site
         run: pnpm check:cli-docs
         env:
-          TOOLBOX_BIN: ${{ github.workspace }}/target/debug/toolbox
+          SEIKIKA_BIN: ${{ github.workspace }}/target/debug/seikika
       - name: Build docs and Storybook
         run: pnpm docs:build
         env:
           ASTRO_TELEMETRY_DISABLED: "1"
-          TOOLBOX_BIN: ${{ github.workspace }}/target/debug/toolbox
-          TOOLBOX_REPORT_DATA: ${{ github.workspace }}/site/.generated/report.json
+          SEIKIKA_BIN: ${{ github.workspace }}/target/debug/seikika
+          SEIKIKA_REPORT_DATA: ${{ github.workspace }}/site/.generated/report.json
       - run: >-
-          pnpm --filter @toolbox-dev/astro-report exec playwright install
-          --with-deps chromium
+          pnpm --filter @seikika/astro-report exec playwright install --with-deps
+          chromium
       - name: Smoke test the published UI paths
-        run: pnpm --filter @toolbox-dev/astro-report smoke
-        env: {TOOLBOX_BIN: "${{ github.workspace }}/target/debug/toolbox"}
+        run: pnpm --filter @seikika/astro-report smoke
+        env: {SEIKIKA_BIN: "${{ github.workspace }}/target/debug/seikika"}
       - name: upload
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0

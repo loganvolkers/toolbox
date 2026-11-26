@@ -1,7 +1,7 @@
 # Runner Connector Reference
 
 **`builtin:runner` puts tools in the box: it runs local commands and turns their output into
-records.** This page is about the box ([toolbox-and-tools.md](../design/toolbox-and-tools.md)):
+records.** This page is about the box ([seikika-and-tools.md](../design/seikika-and-tools.md)):
 - **Slots** read standard output any tool can produce.
 - **Fittings** read one tool's own format.
 - Every lint record carries the command that reproduces it with the tool alone.
@@ -46,7 +46,7 @@ connectors:
 | `parse` | Kind | Reads |
 |---|---|---|
 | `sarif` | **Slot** | SARIF 2.1.0, from any tool: ruff, semgrep, zizmor, gitleaks, an ESLint SARIF formatter. Only semgrep and zizmor are checked here (docs/research-log.md) |
-| `ndjson` | **Slot** | Connector `record` messages a tool prints itself (`toolbox describe` does) |
+| `ndjson` | **Slot** | Connector `record` messages a tool prints itself (`seikika describe` does) |
 | `zizmor`, `actionlint`, `semgrep` | Fitting | Those tools' own JSON. Prefer `sarif` where the tool has it; actionlint has no SARIF output |
 | `cargo-test`, `clippy` | Fitting | `cargo test` and `cargo clippy` output, per crate |
 | `tally` | Fitting | An NDJSON file the command writes, counted by a key |
@@ -71,14 +71,14 @@ scorecards whose every entity must pass.
 ## Checking that the box doesn't change what a tool says
 
 ```bash
-toolbox connector records --portal portal --name ci-lint    # the records, with each `command`
+seikika connector records --portal portal --name ci-lint    # the records, with each `command`
 python3 scripts/take-it-out.py portal ci-lint               # rerun each command alone and compare
 ```
 
 `take-it-out.py` counts each file's findings from the tool's own output, independently of
-Toolbox's parsers, and fails on any difference. CI runs it for Toolbox for Toolbox.
+Seikika's parsers, and fails on any difference. CI runs it for Seikika for Seikika.
 
 ## Sources
 
-- [crates/toolbox-connector-runner/src/](../../crates/toolbox-connector-runner/src/): the jobs (`main.rs`), and the slot and fittings (`lint.rs`)
+- [crates/seikika-connector-runner/src/](../../crates/seikika-connector-runner/src/): the jobs (`main.rs`), and the slot and fittings (`lint.rs`)
 - [docs/research-log.md](../research-log.md), *Box and tools*: zizmor 1.32.0 and semgrep 1.163.0 SARIF, checked

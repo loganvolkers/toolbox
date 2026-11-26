@@ -1,0 +1,56 @@
+apiVersion: seikika.com/assessment/v1
+entity: rule:seikika/review-assessment/no-open-findings
+rubric: rule-quality
+subjectHash: f6ac9b76195f
+assessor: {kind: agent, name: cursor-assessor-04, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: measures-intent
+    verdict: pass
+    reason: >-
+      `reviewFailing` is the failing criteria of the assessment-quality review
+      of this assessment, current or stale
+      (portal/standards/assessments.yaml:74-80). The check requires it to be
+      empty (assessments.yaml:245-258), which is the "no review, current or
+      stale, that failed a criterion" bronze of docs/design/thresholds.md:55.
+      Unreviewed assessments pass, which is the intent: bronze marks open
+      findings, not missing reviews.
+  - criterion: hard-to-game
+    verdict: fail
+    reason: >-
+      There is one review record per (rubric, entity)
+      (crates/seikika-connect/src/assessment.rs:162-169), so a newer file at
+      the same path replaces the failing review. The assessment's own author
+      can overwrite it with an all-pass self-review and the finding is gone.
+      `selfReviewed` costs only silver (assessments.yaml:259-262), not this
+      rule. The fix asks for a dispute "by another assessor", but nothing
+      checks that. History is listed as not built
+      (docs/design/scorecards-for-scorecards.md:327-328).
+    suggestion: >-
+      Don't let a self-review clear a finding. In link_reviews, when the
+      current review is by the assessment's own assessor, keep the failing
+      criteria of the last review by someone else (read from the file's git
+      history) in `reviewFailing`. Add a fixture where a self-review replaces
+      a failing review and the rule still fails.
+  - criterion: fix-leads-to-pass
+    verdict: pass
+    reason: >-
+      The evidence lists the failing criteria and marks those from a stale
+      review "re-assess to close it" (assessments.yaml:248-250). The fix says
+      to act on the review's suggestions in portal/assessments/ and re-assess,
+      or dispute in a new review (assessments.yaml:251-254). Writing a new,
+      passing review empties `reviewFailing`, as the has-help fixture's
+      failing case shows (portal/tests/standards.test.yaml:1006-1010).
+  - criterion: threshold-justified
+    verdict: pass
+    reason: >-
+      There is no number. Putting an open finding at none is decision 1 of
+      D01M831P5QWJQ4A2FT85N5MXJQF, based on failing reviews that went unacted
+      for three days, and is the bronze cell of docs/design/thresholds.md:55.
+summary: >-
+  The check matches the bronze ladder and its fix works. The gap is that
+  findings live in a single overwritable file: the reviewed assessor can
+  replace a failing review with a passing self-review, and only silver
+  notices. Only its failing outcome is pinned by name in tests
+  (portal/tests/standards.test.yaml:1006-1010); the pass is implied by a
+  gold fixture.

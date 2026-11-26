@@ -46,7 +46,7 @@ def truth_ok(got: list[dict], want: list[dict]) -> tuple[bool, str]:
     return False, f"missing={missing} extra={extra} mismatched={mismatched}"
 
 
-def shape_toolbox(arm: Path) -> tuple[bool, str]:
+def shape_seikika(arm: Path) -> tuple[bool, str]:
     # Look for run_stdio / Source / register in rust or any language speaking the protocol.
     hits = []
     for p in arm.rglob("*"):
@@ -100,8 +100,8 @@ def shape_backstage(arm: Path) -> tuple[bool, str]:
 
 
 def shape(arm_name: str, arm: Path) -> tuple[bool, str]:
-    if arm_name.endswith("A") or "toolbox" in arm_name:
-        return shape_toolbox(arm)
+    if arm_name.endswith("A") or "seikika" in arm_name:
+        return shape_seikika(arm)
     if arm_name.endswith("B") or "ocean" in arm_name:
         return shape_ocean(arm)
     return shape_backstage(arm)

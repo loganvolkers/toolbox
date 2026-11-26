@@ -1,9 +1,9 @@
 # DX Benchmark catalog entry (docs/design/dx-benchmarks.md §6), scored by maintainer-benchmark.
 records:
   - id: backstage-compare
-    title: Toolbox vs Backstage, beyond DX (F1 to F14)
+    title: Seikika vs Backstage, beyond DX (F1 to F14)
     question: >-
-      Is Toolbox at least at parity with Backstage on the factors a platform
+      Is Seikika at least at parity with Backstage on the factors a platform
       team weighs besides developer experience: performance, footprint,
       security, supply chain, change safety, org fit, the agent surface and
       capabilities?
@@ -17,7 +17,7 @@ records:
     status: complete
     ran: 2026-11-23
     outcome: >-
-      Round 3: Toolbox is ahead on seven of the eight pre-registered factors
+      Round 3: Seikika is ahead on seven of the eight pre-registered factors
       and behind on capabilities (docs search, docs, templates, API docs,
       Kubernetes, notifications, community). Security is 2 rules ahead and 6
       at parity; both products listen on every interface as shipped, and in
@@ -53,8 +53,8 @@ records:
       and facts with evidence (facts.yaml), merged by snapshot.py into
       portal/comparisons/ and scored by the vs-backstage scorecards
     frozenAt: >-
-      rounds 1 and 2 dfeeea4 (Toolbox 5ef6263, then 916f596); round 3 harness
-      e66526c, scorecards 581be50 (Toolbox 581be50)
+      rounds 1 and 2 dfeeea4 (Seikika 5ef6263, then 916f596); round 3 harness
+      e66526c, scorecards 581be50 (Seikika 581be50)
     designer: the agent that wrote the README and ran the rounds
     adjudicator: >-
       a fresh agent that designed no part of it and changed nothing,
@@ -62,8 +62,8 @@ records:
     fitAudit: >-
       rounds 1 and 2: the pre-freeze commits fit but were undisclosed (now
       disclosed); 916f596 fits with its uses corrected to the MCP query tool,
-      toolbox query and the UI catalog filter; three facts were scored in
-      Toolbox's favour and are corrected in round 3 (ADJUDICATION.md). Round
+      seikika query and the UI catalog filter; three facts were scored in
+      Seikika's favour and are corrected in round 3 (ADJUDICATION.md). Round
       3: the freeze preceded the run, the numbers recompute, and the post-hoc
       harness changes move the result toward Backstage; 5968a55 fits (P5);
       credential isolation does not hold on the measurement VM and is rescored

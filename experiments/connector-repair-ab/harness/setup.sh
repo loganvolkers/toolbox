@@ -8,10 +8,10 @@ AB_HOME="${AB_HOME:-/tmp/connector-ab}"
 mkdir -p "$REPAIR_HOME"/{arms,logs,bin,snapshots}
 ln -sfn "$ROOT/experiments/connector-ab/fixtures" "$REPAIR_HOME/fixtures"
 ln -sfn "$AB_HOME/pins" "$REPAIR_HOME/pins"
-if [[ -x "$ROOT/target/debug/toolbox" ]]; then
-  ln -sfn "$ROOT/target/debug/toolbox" "$REPAIR_HOME/bin/toolbox"
-elif [[ -x "$AB_HOME/bin/toolbox" ]]; then
-  ln -sfn "$AB_HOME/bin/toolbox" "$REPAIR_HOME/bin/toolbox"
+if [[ -x "$ROOT/target/debug/seikika" ]]; then
+  ln -sfn "$ROOT/target/debug/seikika" "$REPAIR_HOME/bin/seikika"
+elif [[ -x "$AB_HOME/bin/seikika" ]]; then
+  ln -sfn "$AB_HOME/bin/seikika" "$REPAIR_HOME/bin/seikika"
 fi
 
 for arm in A B C; do
@@ -20,8 +20,8 @@ for arm in A B C; do
   mkdir -p "$dest/OUT"
   case "$arm" in
     A)
-      cp -a "$ROOT/experiments/connector-repair-ab/scaffolds/toolbox/." "$dest/"
-      # Cargo.toml already points at /agent/repos/toolbox; keep pin.
+      cp -a "$ROOT/experiments/connector-repair-ab/scaffolds/seikika/." "$dest/"
+      # Cargo.toml already points at /agent/repos/seikika; keep pin.
       echo "export PATH=$REPAIR_HOME/bin:/usr/local/cargo/bin:\$PATH" > "$dest/env.sh"
       ;;
     B)

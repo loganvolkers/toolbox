@@ -3,7 +3,7 @@
 # as projects and an empty `org` project, the release subgroup, the people's tokens, checkouts,
 # and the arm's platform.
 #
-#   setup.sh <arm: toolbox|gitlab> <dest> <src-dir> <k>
+#   setup.sh <arm: seikika|gitlab> <dest> <src-dir> <k>
 #
 # <src-dir> is what prepare.sh wrote. <k> numbers the run's GitLab group, acme-w<k>, and its
 # platform engineer, ops-w<k>. Beside the workspace it writes <dest>.baseline.json (score.py),
@@ -81,13 +81,13 @@ git clone -q "$GITLAB_URL/$group/org.git" "$dest/org" 2>/dev/null
 cp "$src/glab" "$dest/bin/glab"
 cp -r "$src/gitlab-docs" "$dest/gitlab-docs"
 case $arm in
-  toolbox)
+  seikika)
     cp "$src"/bin/* "$dest/bin/"
-    mkdir -p "$dest/toolbox-docs/examples"
-    cp -r "$repo_root/plugins/toolbox-operator/skills" "$dest/toolbox-docs/skills"
+    mkdir -p "$dest/seikika-docs/examples"
+    cp -r "$repo_root/plugins/seikika-operator/skills" "$dest/seikika-docs/skills"
     cp -r "$repo_root/examples/federated-actions" "$repo_root/examples/repo-portal-starter" \
-      "$dest/toolbox-docs/examples/"
-    cp "$repo_root/schema/manifest.schema.json" "$dest/toolbox-docs/"
+      "$dest/seikika-docs/examples/"
+    cp "$repo_root/schema/manifest.schema.json" "$dest/seikika-docs/"
     ;;
   gitlab) ;;
   *) echo "unknown arm $arm" >&2; exit 2 ;;

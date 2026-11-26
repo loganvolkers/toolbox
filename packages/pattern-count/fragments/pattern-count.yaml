@@ -45,9 +45,9 @@ scorecards:
       a check that stops new ones and tracks the old ones to zero.
     links:
     - title: Packages
-      url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/packages.md
+      url: https://github.com/seikika/seikika/blob/main/docs/design/packages.md
     - title: The box and the tools
-      url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/toolbox-and-tools.md
+      url: https://github.com/seikika/seikika/blob/main/docs/design/seikika-and-tools.md
     kind: ${param:kind}
     owner: ${param:owner}
     track: ${param:track}

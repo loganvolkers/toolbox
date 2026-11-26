@@ -2,7 +2,7 @@
 import { computed, ref } from "vue";
 import type { CliCatalog } from "../lib/cli-catalog";
 
-const props = withDefaults(defineProps<{ catalog: CliCatalog; base?: string }>(), { base: "/toolbox" });
+const props = withDefaults(defineProps<{ catalog: CliCatalog; base?: string }>(), { base: "" });
 const query = ref("");
 const filtered = computed(() => {
   const search = query.value.trim().toLowerCase();
@@ -23,7 +23,7 @@ const filtered = computed(() => {
     <ul class="cli-ref__list" role="list">
       <li v-for="command in filtered" :key="command.slug" class="cli-ref__item">
         <a class="cli-ref__link" :href="'#' + command.slug">
-          <code>toolbox {{ command.name }}</code>
+          <code>seikika {{ command.name }}</code>
           <span v-if="command.mcpTool" class="cli-ref__badge">MCP {{ command.mcpTool }}</span>
         </a>
         <p v-if="command.about" class="cli-ref__about">{{ command.about }}</p>
@@ -50,7 +50,7 @@ const filtered = computed(() => {
     </div>
     <h2 id="command-details">Command details</h2>
     <article v-for="command in catalog.commands" :id="command.slug" :key="command.slug" class="cli-ref__detail">
-      <h3><code>toolbox {{ command.name }}</code></h3>
+      <h3><code>seikika {{ command.name }}</code></h3>
       <p v-if="command.about">{{ command.about }}</p>
       <p v-if="command.usage" class="cli-ref__usage"><span class="cli-ref__label">Usage</span> <code>{{ command.usage }}</code></p>
       <p v-if="command.mcpTool"><span class="cli-ref__label">MCP</span> <code>{{ command.mcpTool }}</code></p>

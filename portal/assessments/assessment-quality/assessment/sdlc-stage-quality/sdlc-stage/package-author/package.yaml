@@ -1,4 +1,4 @@
-apiVersion: toolbox.dev/assessment/v1
+apiVersion: seikika.com/assessment/v1
 entity: assessment:sdlc-stage-quality/sdlc-stage:package-author/package
 rubric: assessment-quality
 subjectHash: 924a7d63eddc
@@ -11,24 +11,24 @@ verdicts:
       The citations in
       portal/assessments/sdlc-stage-quality/sdlc-stage/package-author/package.yaml
       land. portal/sdlc/stages/package-author.yaml:80-81 is `commands: []` and
-      `checks: []`. crates/toolbox-model/src/package.rs:105-106 is
+      `checks: []`. crates/seikika-model/src/package.rs:105-106 is
       `content_hash` over a directory, and package.rs:85-91 keys checkouts by
       version. docs/design/packages.md:206-213 is the §4.4 archive and OCI
       proposal. packages/github-actions/fragments/github-actions.yaml:59-66
       pins tools by version and installer ids, with no checksum, and
       schema/manifest.schema.json has no checksum field. load.rs:344-351
-      compares the directory hash with toolbox.lock.
+      compares the directory hash with seikika.lock.
   - criterion: complete
     verdict: fail
     reason: >-
       reuses-artifacts should not fail. The guidance fails a stage "when
-      consumers compile Toolbox or install tools by hand" and passes it "when
+      consumers compile Seikika or install tools by hand" and passes it "when
       nothing is built or installed in the stage"
       (portal/standards/sdlc.yaml:417-418). The stage has no commands
-      (package-author.yaml:80). Consumers compile nothing. They `toolbox
+      (package-author.yaml:80). Consumers compile nothing. They `seikika
       install` a tag pinned by content hash
-      (crates/toolbox-cli/src/install.rs:194-218, load.rs:344-351), and they
-      install tools with `toolbox tools install` at pinned versions
+      (crates/seikika-cli/src/install.rs:194-218, load.rs:344-351), and they
+      install tools with `seikika tools install` at pinned versions
       (github-actions.yaml:57-62), not by hand. What the reason describes (no
       archive, no tool checksums) is the missing exit criterion, which
       executable-exit and agent-can-complete already count. The other three
@@ -52,7 +52,7 @@ verdicts:
   - criterion: actionable
     verdict: pass
     reason: >-
-      Each suggestion would change its verdict. `toolbox package build` with a
+      Each suggestion would change its verdict. `seikika package build` with a
       twice-built CI diff gives executable-exit a check (package.yaml lines
       15-18). An archive command plus checksummed `tools:` gives an agent
       something to run (lines 27-28). An archive format the resolver accepts

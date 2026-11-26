@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from "vue";
-import PageFrame from "@toolbox-dev/ui/components/PageFrame.vue";
-import PageHeader from "@toolbox-dev/ui/components/PageHeader.vue";
-import "@toolbox-dev/ui/theme.css";
+import PageFrame from "@seikika/ui/components/PageFrame.vue";
+import PageHeader from "@seikika/ui/components/PageHeader.vue";
+import "@seikika/ui/theme.css";
 import "./report.css";
 import type { ReportData } from "./types";
 import { boxLogo } from "./lib/bars";
@@ -64,7 +64,7 @@ const tabs = computed(() => {
   ];
 });
 const columns = computed(() => tabs.value.length <= 3 ? tabs.value.length : tabs.value.length === 4 ? 2 : 3);
-const portal = computed(() => props.data.portal || "Toolbox report");
+const portal = computed(() => props.data.portal || "Seikika report");
 
 function rememberScroll() {
   clearTimeout(scrollTimer);
@@ -130,7 +130,7 @@ async function ready() {
   scrollTabs();
 
   if (props.initialRoute === undefined && hash.value !== lastHash) {
-    const y = view.closest(".toolbox-report")?.getBoundingClientRect().top ?? 0;
+    const y = view.closest(".seikika-report")?.getBoundingClientRect().top ?? 0;
     const top = Math.max(0, y + scrollY);
     if (tabFocus) {
       selected?.focus({ preventScroll: true });
@@ -192,7 +192,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <PageFrame class="toolbox-report" @mouseover="showTip" @mouseout="deferHide" @focusin="showTip" @focusout="deferHide">
+  <PageFrame class="seikika-report" @mouseover="showTip" @mouseout="deferHide" @focusin="showTip" @focusout="deferHide">
     <button type="button" class="skip" @click="content?.focus()">Skip to content</button>
     <PageHeader :title="portal">
       <template #title><span class="top"><ReportContent as="span" :build="boxLogo" />{{ portal }}</span></template>

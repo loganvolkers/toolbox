@@ -1,0 +1,74 @@
+apiVersion: seikika.com/assessment/v1
+entity: scorecard:seikika/maintainer-supply-chain
+rubric: scorecard-quality
+subjectHash: fe0b19401c9d
+assessor: {kind: agent, name: cursor-assessor-12, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: one-concern
+    verdict: pass
+    reason: >-
+      All three rules are repository files that switch on supply-chain
+      protections, scored without the API, for maintainers
+      (portal/standards/repository.yaml:59-82; D85). After
+      D01M82E93XAPNE0WFXEPJZ59WG4 the card keeps only what Scorecard's
+      `--local` checks don't cover, and its description says so
+      (repository.yaml:62-71).
+  - criterion: levels-are-a-ladder
+    verdict: fail
+    reason: >-
+      Gold is cheaper than bronze. Bronze asks for Dependabot across three
+      ecosystems; gold, code-scanning-pinned, is one SHA on a codeql-action
+      line, met by any one pinned use
+      (crates/seikika-connector-workspace/src/repo.rs :143-145). Gold is also
+      implied by maintainer-ci-security's bronze pinned-to-sha on codeql.yml,
+      against docs/design/thresholds.md:24-25. Its stated reason to stay,
+      Pinned-Dependencies below 10 (repository.yaml:99-102, 126-127), no
+      longer holds: portal/results.json records Pinned-Dependencies at ten.
+      Silver (one CODEOWNERS line) builds on nothing in bronze.
+    suggestion: >-
+      Retire code-scanning-pinned under a new decision and rebuild the ladder
+      on one axis. For example: bronze, every ecosystem in use has Dependabot;
+      silver, every manifest directory is covered and workflows have owners;
+      gold, every update entry sets a cooldown or groups (zizmor's
+      dependabot-cooldown audit, docs/design/github-actions-standards.md:159).
+  - criterion: no-obvious-gap
+    verdict: fail
+    reason: >-
+      Dependabot is checked by three fixed ecosystem names (repo.rs:129-135),
+      so this repository is gold while scripts/playwright-ci/package.json
+      (installed by .github/workflows/ci.yml:170), the pip requirements at
+      scripts/requirements-yamark.txt (ci.yml:36) and the base image in
+      image/Dockerfile:6 get no update PRs; .github/dependabot.yml has no pip
+      or docker entry and no npm entry for scripts/. Hash and digest pins
+      without updates are exactly what ages unnoticed, the dependabot rule's
+      own rationale (repository.yaml:91-95). Scorecard's
+      Dependency-Update-Tool doesn't fill it; it asks only that a tool exists
+      (D01M82E93XAPNE0WFXEPJZ59WG4 §2).
+    suggestion: >-
+      Make dependabot (or a new silver rule) check (ecosystem, directory)
+      pairs derived from the tracked manifests, including pip and docker, and
+      list each uncovered pair.
+  - criterion: actionable
+    verdict: fail
+    reason: >-
+      None to bronze works: acme/unsafe's evidence lists the missing
+      ecosystems and the fix names .github/dependabot.yml
+      (portal/tests/standards.test.yaml:722-728). Silver's fix names the
+      CODEOWNERS pattern. Gold doesn't work for a repository without CodeQL
+      (acme/unsafe, portal/fixtures/workspace.ndjson:61): the evidence is the
+      fixed "missing or not pinned" (repository.yaml:120) with no file or
+      line, and the fix only says to pin. Since `code-scanning` was retired,
+      nothing on the card says to add the workflow.
+    suggestion: >-
+      Retire code-scanning-pinned as above, or split its evidence into "no
+      workflow uses github/codeql-action" (fix: add one) and each unpinned use
+      with its file and line.
+summary: >-
+  One concern, scored from files, but the ladder is upside down: gold is
+  one SHA, already implied by the security card, and its own stated reason
+  to stay expired when Pinned-Dependencies reached 10. Dependabot coverage
+  is three fixed names, so this repository reads gold while its pip
+  requirements, a CI npm manifest and its base image get no updates.
+  portal/README.md:35 still lists the retired code-scanning and security-
+  policy rules.

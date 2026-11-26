@@ -4,7 +4,7 @@
 set -eu
 base="${1:?scim base url}"
 base="${base%/}"
-token="${TOOLBOX_SCIM_TOKEN:-}"
+token="${SEIKIKA_SCIM_TOKEN:-}"
 
 put() {
   path="$1"
@@ -22,7 +22,7 @@ put "Users/u-bob" '{"schemas":["urn:ietf:params:scim:schemas:core:2.0:User"],"us
 put "Users/u-carol" '{"schemas":["urn:ietf:params:scim:schemas:core:2.0:User"],"userName":"carol","name":{"formatted":"Carol Ortiz"},"emails":[{"value":"carol@acme.test","primary":true}],"active":true}'
 put "Users/u-dave" '{"schemas":["urn:ietf:params:scim:schemas:core:2.0:User"],"userName":"dave","name":{"formatted":"Dave Shah"},"emails":[{"value":"dave@acme.test","primary":true}],"active":true}'
 
-ext="urn:ietf:params:scim:schemas:extension:toolbox:2.0:Group"
+ext="urn:ietf:params:scim:schemas:extension:seikika:2.0:Group"
 put "Groups/g-platform" "{\"schemas\":[\"urn:ietf:params:scim:schemas:core:2.0:Group\",\"${ext}\"],\"displayName\":\"Platform\",\"members\":[{\"value\":\"u-bob\"}],\"${ext}\":{\"slug\":\"platform\",\"githubTeam\":\"platform\"}}"
 put "Groups/g-payments" "{\"schemas\":[\"urn:ietf:params:scim:schemas:core:2.0:Group\",\"${ext}\"],\"displayName\":\"Payments\",\"members\":[{\"value\":\"u-alice\"},{\"value\":\"u-dave\"}],\"${ext}\":{\"slug\":\"payments\",\"githubTeam\":\"payments\"}}"
 

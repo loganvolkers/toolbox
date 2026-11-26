@@ -1,0 +1,68 @@
+apiVersion: seikika.com/assessment/v1
+entity: rule:seikika/vs-backstage-change-safety/change-preview
+rubric: rule-quality
+subjectHash: d665f3d8946d
+assessor: {kind: agent, name: cursor-assessor-17, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: measures-intent
+    verdict: fail
+    reason: >-
+      The field means "a change's effect on entities and access is shown
+      before deploy" (portal/standards/backstage-comparison.yaml:99-101). The
+      scorecard counts "a catalog edit" as a change (:664-667), and the
+      rationale says re-owned entities (:696-699). `seikika plan --local`
+      recomputes both manifests over one fixture snapshot
+      (crates/seikika-cli/src/main.rs:894-899). So it previews manifest edits
+      (fields, scores, tuples, options:
+      crates/seikika-derive/src/plan.rs:41-51; pinned by
+      crates/seikika-derive/tests/reference.rs:72-117), but not a CODEOWNERS
+      or catalog-info.yaml edit arriving through a connector. That edit
+      re-owns entities and shows nothing. The fact is `true` without that
+      qualification (experiments/backstage-compare/facts.yaml:43-47), and no
+      test runs the CLI's `plan` command.
+    suggestion: >-
+      Narrow the field and rationale to "a manifest change's effect", or
+      extend `plan` to diff a candidate input snapshot (changed connector
+      records) and score the fact on that. Add a CLI test that runs `seikika
+      plan --local --base` and checks the tuple section.
+  - criterion: hard-to-game
+    verdict: fail
+    reason: >-
+      The value is typed into facts.yaml:43-47, and snapshot.py copies it into
+      the record (experiments/backstage-compare/snapshot.py:85). Editing that
+      line and rerunning snapshot.py on results/r3 passes the rule whatever
+      `plan` does. Backstage's `false` is an absence claim that the
+      adjudication calls "plausible but weakly evidenced"
+      (experiments/backstage-compare/ADJUDICATION.md:290-292).
+    suggestion: >-
+      Have the harness run `seikika plan --local --base` on two committed
+      bench manifests (one re-owns a component, one widens a tuple) and set
+      `changePreview` only when the JSON output lists both changes.
+  - criterion: fix-leads-to-pass
+    verdict: fail
+    reason: >-
+      The fix, "Keep `seikika plan --local --base <manifest>` diffing
+      entities, scores and tuples" (backstage-comparison.yaml:693-694), names
+      a command but not where it lives. It also doesn't say that the fact
+      changes only by editing facts.yaml and rerunning snapshot.py. With the
+      evidence `changePreview is false`, an agent who fixed
+      crates/seikika-derive/src/plan.rs would still fail.
+    suggestion: >-
+      Name crates/seikika-derive/src/plan.rs and
+      crates/seikika-cli/src/main.rs (fn plan), and the step that refreshes
+      the record: the harness probe above, or facts.yaml plus snapshot.py
+      until that probe exists.
+  - criterion: threshold-justified
+    verdict: pass
+    reason: >-
+      The rule is boolean and has no number. "Change preview true" at bronze
+      was registered before the run
+      (experiments/backstage-compare/README.md:50) and confirmed by the
+      adjudication (ADJUDICATION.md:111).
+summary: >-
+  The rule needs a narrower claim and a measurement behind it. Seikika
+  does diff entities, scores and tuples for a manifest change, and a test
+  pins that diff. But the fact claims more than that: a catalog edit
+  arriving through a connector isn't previewed. The value is also
+  hand-written in facts.yaml, and the fix doesn't point there.

@@ -1,8 +1,8 @@
 # Dependency Standards: Cataloguing and Scoring the Libraries We Ship Against
 
-*Status: deterministic catalog and scorecard built, 2026-11-20 (D74). Toolbox for Toolbox catalogues
+*Status: deterministic catalog and scorecard built, 2026-11-20 (D74). Seikika for Seikika catalogues
 every direct Cargo dependency and scores it with `maintainer-dependency`. Advisory databases and
-licence allow-lists are not gated. Related: [toolbox-for-toolbox.md](./toolbox-for-toolbox.md).*
+licence allow-lists are not gated. Related: [seikika-for-seikika.md](./seikika-for-seikika.md).*
 
 ---
 
@@ -28,7 +28,7 @@ stay in the manifest. A dependency added after this baseline must reach bronze.
 | Proposal | Why it is not the gate |
 |---|---|
 | OpenSSF Scorecard `Vulnerabilities` | It queries OSV. The result changes when the database changes, and a missing network would look like a failure. The same reason zizmor is `unknown` when it is not installed: a database check is a later optional runner, not a fact of the tree we can recompute offline |
-| `cargo deny` licence allow-list | Right tool, once this repository decides which licences it accepts. Q1 is still open for Toolbox's own licence. Failing a dependency for its licence before that decision would invent a policy |
+| `cargo deny` licence allow-list | Right tool, once this repository decides which licences it accepts. Q1 is still open for Seikika's own licence. Failing a dependency for its licence before that decision would invent a policy |
 | Pinning every requirement to `=x.y.z` | Cargo's reproducibility mechanism is `Cargo.lock`, which OpenSSF Scorecard already accepts as the pin for Rust. Exact requirements fight `[workspace.dependencies]` and the caret ranges the ecosystem publishes |
 | Transitive crates as entities | The lockfile has 384 packages. The direct set is what a maintainer chose. Transitive duplicates show up as extra versions of a direct crate (`sha2`, `syn`), which is the fact the silver rule reads |
 
@@ -73,7 +73,7 @@ against.
 
 ## 5. This repository
 
-Measured with `toolbox report portal --skip runner,github-actions`. Twenty direct crates.
+Measured with `seikika report portal --skip runner,github-actions`. Twenty direct crates.
 
 | Level | Crates |
 |---|---|

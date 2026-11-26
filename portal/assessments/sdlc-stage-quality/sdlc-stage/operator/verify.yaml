@@ -1,4 +1,4 @@
-apiVersion: toolbox.dev/assessment/v1
+apiVersion: seikika.com/assessment/v1
 entity: sdlc-stage:operator/verify
 rubric: sdlc-stage-quality
 subjectHash: 670048c373c5
@@ -8,28 +8,28 @@ verdicts:
   - criterion: executable-exit
     verdict: fail
     reason: >-
-      The exit criterion is "toolbox verify passes", but `toolbox verify` does
-      not exist: it is not among the subcommands in `toolbox --help`, and the
+      The exit criterion is "seikika verify passes", but `seikika verify` does
+      not exist: it is not among the subcommands in `seikika --help`, and the
       stage lists no commands or checks
       (portal/sdlc/stages/operator.yaml:94-104). The probes it should run are
       design only (docs/design/sdlc.md:156-162).
     suggestion: >-
-      Implement `toolbox verify --against <url>` with the sdlc.md §7 probes,
+      Implement `seikika verify --against <url>` with the sdlc.md §7 probes,
       operator access and the MCP tool list first, and run it in CI against a
-      `toolbox serve --fixtures` instance.
+      `seikika serve --fixtures` instance.
   - criterion: agent-can-complete
     verdict: fail
     reason: >-
       With no verify command, an agent can only improvise partial checks. It
       can probe `/readyz` and `/healthz`
-      (crates/toolbox-cli/src/detach.rs:114-165) and read through `toolbox
-      get`, `toolbox scorecard` and `toolbox mcp`. Confirming that the
+      (crates/seikika-cli/src/detach.rs:114-165) and read through `seikika
+      get`, `seikika scorecard` and `seikika mcp`. Confirming that the
       deployment "matches the plan" needs a plan of the deployed state, which
       is M6 (`plan --remote`).
     suggestion: >-
       Meanwhile, document a verify checklist that uses existing reads:
-      `/readyz`, `toolbox scorecard --url`, and the MCP tools/list compared
-      with `toolbox describe`.
+      `/readyz`, `seikika scorecard --url`, and the MCP tools/list compared
+      with `seikika describe`.
   - criterion: reuses-artifacts
     verdict: pass
     reason: >-
@@ -39,13 +39,13 @@ verdicts:
   - criterion: decoupled-from-core
     verdict: fail
     reason: >-
-      Meeting the exit criterion ("toolbox verify passes",
+      Meeting the exit criterion ("seikika verify passes",
       portal/sdlc/stages/operator.yaml:99) needs a new `verify` subcommand in
-      toolbox-cli, whose `Command` enum has none
-      (crates/toolbox-cli/src/main.rs:43-322). An operator cannot add it from
+      seikika-cli, whose `Command` enum has none
+      (crates/seikika-cli/src/main.rs:43-322). An operator cannot add it from
       their portal repository.
     suggestion: >-
-      Ship `toolbox verify` (M6), or make "verify" a set of operator-defined
+      Ship `seikika verify` (M6), or make "verify" a set of operator-defined
       post-deploy checks over existing endpoints so it lives in the portal
       repository.
 # Codex evaluated the two added criteria. Earlier verdicts retain their original attribution.

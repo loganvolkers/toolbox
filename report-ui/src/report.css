@@ -1,5 +1,5 @@
-.toolbox-report { min-block-size: 100vh; }
-@scope (.toolbox-report) {
+.seikika-report { min-block-size: 100vh; }
+@scope (.seikika-report) {
 *{box-sizing:border-box}
 h2[tabindex='-1']:focus{outline:none}
 main{max-width:1120px;margin:0 auto;padding:28px 20px 72px}
@@ -348,12 +348,12 @@ details.ent>summary{grid-template-columns:76px minmax(0,1fr)}details.ent>summary
 @media (min-width:601px){.modes{position:sticky;top:0;z-index:6;background:var(--bg);margin-top:8px;padding-top:12px}.split>section:first-child{top:72px}h2,h3,section,details,.filters,[id]{scroll-margin-top:76px}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 }
-@scope (.toolbox-report) {
-  .report-entity .tb-page-header { align-items: center; }
-  .report-entity .tb-page-header > :last-child:not(.tb-page-heading) { min-width: 0; }
-  .report-entity .tb-entity-meta { margin-block: 8px 16px; }
+@scope (.seikika-report) {
+  .report-entity .seikika-page-header { align-items: center; }
+  .report-entity .seikika-page-header > :last-child:not(.seikika-page-heading) { min-width: 0; }
+  .report-entity .seikika-entity-meta { margin-block: 8px 16px; }
 }
-@scope (.toolbox-report) {
+@scope (.seikika-report) {
   .sc-search { display: grid; gap: 4px; }
   .sc-debt { margin-block: 8px; }
 }

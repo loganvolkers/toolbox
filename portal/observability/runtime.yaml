@@ -1,17 +1,17 @@
-# Runtime telemetry checklist for Toolbox itself (maintainer SDLC).
+# Runtime telemetry checklist for Seikika itself (maintainer SDLC).
 # Paths are verified by the workspace connector (`missingPaths`).
 records:
-  - id: toolbox-runtime
-    title: Toolbox runtime telemetry
+  - id: seikika-runtime
+    title: Seikika runtime telemetry
     intent: >-
-      OTel/Prometheus bootstrap lives in toolbox-telemetry; the catalog,
+      OTel/Prometheus bootstrap lives in seikika-telemetry; the catalog,
       service.name docs, scrape test, alert stubs and operator/monitor
       assessment must exist.
-    crate: crates/toolbox-telemetry
-    catalog: crates/toolbox-telemetry/METRIC_CATALOG.md
-    serviceNameDoc: crates/toolbox-telemetry/README.md
-    promTest: crates/toolbox-telemetry/tests/prom_catalog.rs
-    structuredLogTest: crates/toolbox-telemetry/tests/structured_logs.rs
+    crate: crates/seikika-telemetry
+    catalog: crates/seikika-telemetry/METRIC_CATALOG.md
+    serviceNameDoc: crates/seikika-telemetry/README.md
+    promTest: crates/seikika-telemetry/tests/prom_catalog.rs
+    structuredLogTest: crates/seikika-telemetry/tests/structured_logs.rs
     alerts: [ops/alerts/snapshot-lag.yaml, ops/alerts/index-freshness.yaml]
     monitorAssessment: portal/assessments/sdlc-stage-quality/sdlc-stage/operator/monitor.yaml
     otlpTestbed: experiments/otel-testbed/README.md

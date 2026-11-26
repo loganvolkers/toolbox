@@ -23,9 +23,9 @@ level) names the constituent scorecard that fell and the change below it that ma
 3. **Why it is core:** a gate that fails without a cause teaches people to update the baseline
    blindly. The first internal use of the box showed it: a new generated doc failed one docs rule,
    and the repository level fell. The ratchet reported the fall, but listed its cause only as a
-   change (`toolbox-and-tools.md`, `experiments/box-ab` §1).
+   change (`seikika-and-tools.md`, `experiments/box-ab` §1).
 
 **Status:** ✅
 
 **Where:** [docs/design/root-causes.md](../design/root-causes.md),
-[crates/toolbox-cli/src/causes.rs](../../crates/toolbox-cli/src/causes.rs)
+[crates/seikika-cli/src/causes.rs](../../crates/seikika-cli/src/causes.rs)

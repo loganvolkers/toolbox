@@ -58,7 +58,7 @@ scorecards:
       blocks new findings while existing ones are paid down.
     links:
     - title: The box and the tools
-      url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/toolbox-and-tools.md
+      url: https://github.com/seikika/seikika/blob/main/docs/design/seikika-and-tools.md
     - title: SARIF 2.1.0 specification
       url: https://docs.oasis-open.org/sarif/sarif/v2.1.0/sarif-v2.1.0.html
     kind: ${param:kind}

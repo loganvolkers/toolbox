@@ -1,14 +1,14 @@
 {
   "changelog": "CHANGELOG.md",
   "registry": {
-    "toolbox": {
+    "seikika": {
       "kind": "cargo-workspace",
       "path": "Cargo.toml",
       "changelog": "CHANGELOG.md"
     },
     "demo": {
-      "kind": "toolbox-package",
-      "path": "pkg-fixture/demo/toolbox-package.yaml"
+      "kind": "seikika-package",
+      "path": "pkg-fixture/demo/seikika-package.yaml"
     }
   },
   "policy": {

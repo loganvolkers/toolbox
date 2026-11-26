@@ -6,8 +6,8 @@ decided: 2026-11-22T09:00:00Z
 # Connector `${secret:…}` resolves through a pluggable backend chain
 
 **Extends D55.** `${env:…}` and `${secret:…}` stay placeholders until runtime. At resolve time,
-`${secret:name}` walks a chained `SecretBackend` in `crates/toolbox-secrets`: env
-(`TOOLBOX_SECRET_*`), mounted directory (`TOOLBOX_SECRETS_DIR`), then opt-in remotes (HashiCorp
+`${secret:name}` walks a chained `SecretBackend` in `crates/seikika-secrets`: env
+(`SEIKIKA_SECRET_*`), mounted directory (`SEIKIKA_SECRETS_DIR`), then opt-in remotes (HashiCorp
 Vault KV, AWS Secrets Manager, GCP Secret Manager, Azure Key Vault). Manifests keep stable logical
 names; operators map them to provider resources in runtime config. Unresolvable secrets are omitted
 with a warning unless `required` is set. Cloud access uses HTTPS clients behind Cargo features —

@@ -41,11 +41,11 @@ walked.
 | `repo` | `false` | One `repo` record for the checkout: README, LICENSE, `.github` files, CODEOWNERS rules |
 | `workflows` | `[]` | Globs: `workflow` records for GitHub Actions workflows, and `action-ref` records for the actions they use |
 | `betterer` | `[]` | Globs: one `betterer` record per test in each Betterer results file |
-| `skills`, `connectors`, `agentDocs`, `plugins`, `packages`, `schemas`, `examples`, `pages`, `assessments` | `[]` | Globs for Toolbox's own standards (`skill`, `connector`, `agent-doc`, `plugin`, `package-json`, `json-schema`, `example`, `site-page`, `assessment` records) |
+| `skills`, `connectors`, `agentDocs`, `plugins`, `packages`, `schemas`, `examples`, `pages`, `assessments` | `[]` | Globs for Seikika's own standards (`skill`, `connector`, `agent-doc`, `plugin`, `package-json`, `json-schema`, `example`, `site-page`, `assessment` records) |
 | `dependencies` | `false` | One `dependency` record per direct external Cargo dependency |
 | `jsWorkspace` | `false` | One `js-workspace` record: pnpm or npm workspace, lockfile, `packageManager` pin |
 | `expoApps`, `storybooks` | `[]` | Globs: `expo-app` and `storybook` records ([packages/pnpm-expo](../../packages/pnpm-expo/), [packages/storybook](../../packages/storybook/)) |
-| `portals` | `[]` | Globs, usually `*/.toolbox/toolbox.yaml`: one `portal` record per child portal found in a checkout |
+| `portals` | `[]` | Globs, usually `*/.seikika/seikika.yaml`: one `portal` record per child portal found in a checkout |
 | `git` | `[]` | `[{key, url, branch}]`, written by `federation.children`: each repository is cloned into `<root>/<key>`, kept at its branch, and read as one `portal` record |
 | `data` | `[]` | `[{kind, globs, paths?}]`: entries of YAML or JSON files as records of `kind`, each with a string `id` |
 
@@ -60,18 +60,18 @@ The external id is `<kind>:<path>` for per-file records.
 | `repo` | README, LICENSE, CODEOWNERS and `.github` facts ([repo-portals.md](../design/repo-portals.md)) |
 | `portal` | `key`, `name`, `title`, `owner`, `path`, `dir`, `file`, `actions`, `runner`, `acceptApprovalsFrom`, `scorecards`, `packages`, `packageError`, `error`; `git` for a cloned child; `warning` when two share a name ([federated-actions.md](../design/federated-actions.md) §5.2) |
 | `workflow`, `action-ref` | Triggers, permissions, timeouts, `uses:` and how each is pinned ([github-actions-standards.md](../design/github-actions-standards.md)) |
-| Others | Described in the design docs that use them (`toolbox describe portal .toolbox` lists a portal's kinds and fields) |
+| Others | Described in the design docs that use them (`seikika describe portal .seikika` lists a portal's kinds and fields) |
 
 `lines` counts lines as `wc -l` would, plus a last line without a newline. `matchLines` is 1-based.
 
 ## Checking a configuration
 
 ```bash
-toolbox connector test --name workspace --portal .toolbox -- toolbox-connector-workspace   # the protocol
-toolbox report .toolbox -o failures                   # what the portal's rules make of the records
+seikika connector test --name workspace --portal .seikika -- seikika-connector-workspace   # the protocol
+seikika report .seikika -o failures                   # what the portal's rules make of the records
 ```
 
 ## Sources
 
-- [crates/toolbox-connector-workspace/src/main.rs](../../crates/toolbox-connector-workspace/src/main.rs): the configuration and records, in its module comment
-- [docs/design/toolbox-for-toolbox.md](../design/toolbox-for-toolbox.md) §3: why the connector reads files statically
+- [crates/seikika-connector-workspace/src/main.rs](../../crates/seikika-connector-workspace/src/main.rs): the configuration and records, in its module comment
+- [docs/design/seikika-for-seikika.md](../design/seikika-for-seikika.md) §3: why the connector reads files statically

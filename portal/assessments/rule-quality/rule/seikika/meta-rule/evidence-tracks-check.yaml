@@ -1,0 +1,60 @@
+apiVersion: seikika.com/assessment/v1
+entity: rule:seikika/meta-rule/evidence-tracks-check
+rubric: rule-quality
+subjectHash: 73b0e5bd08fe
+assessor: {kind: agent, name: cursor-assessor-02, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: measures-intent
+    verdict: fail
+    reason: >-
+      evidenceTracksCheck is true when the evidence reads any entity field
+      (portal/standards/meta.yaml:138-142). Which field, and whether the check
+      reads it, doesn't matter. Take rule:demo/sprawling/hides-the-list, which
+      checks `entity.gaps.size() == 0` with evidence `['has gaps']`
+      (portal/fixtures/surfaces.ndjson). It fails, which is right. Rewritten
+      as `[entity.name + ' has gaps']`, it passes, yet it still hides the
+      list. The `size() == 0` guard was added for exactly this case, and
+      reading the identity field bypasses it.
+    suggestion: >-
+      Count a field only if the check also reads it
+      (`entity.evidence.fields.exists(f, f in entity.check.fields)`), or if
+      the evidence loops. Exclude identity fields such as `name`. Keep the
+      fixed-sentence allowance for small yes/no checks.
+  - criterion: hard-to-game
+    verdict: fail
+    reason: >-
+      The cheapest pass for any failing rule is to concatenate `entity.name`
+      into its constant sentence, which needs no thought about what failed:
+      any entry in `entity.evidence.fields` satisfies the computed field
+      (portal/standards/meta.yaml:138-142). Over the briefed rules,
+      rule:seikika/cli-skill/has-skill already passes this way (check over
+      `documentedIn`, evidence reads only `name`,
+      portal/standards/cli.yaml:237-238). There it happens to be the whole
+      answer, but the computed field can't tell that case from a hidden list.
+    suggestion: >-
+      Same change as above. Also add a fixture rule whose evidence reads only
+      `entity.name` over a list check, and pin it failing in
+      portal/tests/standards.test.yaml.
+  - criterion: fix-leads-to-pass
+    verdict: pass
+    reason: >-
+      The evidence quotes the check, its node count and loops
+      (meta.yaml:526-530). The fix says to build the evidence from what the
+      check reads, the failing list or the compared value (meta.yaml:531-533).
+      Doing that reads a field, which satisfies evidenceTracksCheck.
+  - criterion: threshold-justified
+    verdict: pass
+    reason: >-
+      docs/design/thresholds.md:46 justifies both gold and the 8-node
+      allowance with a measurement. The first version failed 68 of 219 rules,
+      mostly falsely. Every constant-evidence rule was 8 nodes or fewer, and
+      after narrowing 213 of 219 met it (2026-11-23). It cites lessons L1 and
+      L2.
+summary: >-
+  The fix is good and the gold placement is measured. The computed field
+  is too loose: evidence that reads any field counts as tracking the
+  check, so appending `entity.name` to a fixed sentence defeats the
+  `size() == 0` guard meant to catch hidden lists. Live it fails 6 rules,
+  all acme (portal/results.json). Tests pin both outcomes
+  (portal/tests/standards.test.yaml:1309-1329).

@@ -1,4 +1,4 @@
-apiVersion: toolbox.dev/assessment/v1
+apiVersion: seikika.com/assessment/v1
 entity: rule:repo/docs/links-resolve
 rubric: rule-quality
 subjectHash: 32fb10940f10
@@ -9,11 +9,11 @@ verdicts:
     verdict: fail
     reason: >-
       `brokenLinks` comes from one regex for inline links, `](target)`
-      (crates/toolbox-connector-workspace/src/main.rs:297-318). A
+      (crates/seikika-connector-workspace/src/main.rs:297-318). A
       reference-style link (`[text][id]` with `[id]: ../runbook.md`) is never
       read, so a doc whose moved target is linked that way passes. That is the
       failure the rationale names
-      (examples/repo-portal-starter/toolbox.yaml:176-178). The `#fragment` is
+      (examples/repo-portal-starter/seikika.yaml:176-178). The `#fragment` is
       also dropped before resolving (main.rs:298), so a renamed heading passes
       too.
     suggestion: >-
@@ -24,7 +24,7 @@ verdicts:
     verdict: pass
     reason: >-
       The cheap passes are to fix the path or delete the link, and the fix
-      allows both (examples/repo-portal-starter/toolbox.yaml:175). A link the
+      allows both (examples/repo-portal-starter/seikika.yaml:175). A link the
       reader can't follow is better gone. Rewriting it as an absolute
       `https://` URL is skipped (main.rs:309-311) and would also pass, but it
       is no cheaper than finding the target's new path, which it needs to be
@@ -33,7 +33,7 @@ verdicts:
     verdict: pass
     reason: >-
       The evidence is the list of unresolved targets (`entity.brokenLinks`,
-      examples/repo-portal-starter/toolbox.yaml:174). The entity is the doc
+      examples/repo-portal-starter/seikika.yaml:174). The entity is the doc
       itself, so the place is known. Correcting or removing each listed target
       empties the list. The fixture's README.md shows `docs/runbook.md`
       (examples/repo-portal-starter/tests/standards.test.yaml).

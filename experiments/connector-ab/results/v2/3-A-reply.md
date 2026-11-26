@@ -1,6 +1,6 @@
 ## What changed
-- `src/main.rs`: sync `component` via bare-array components endpoint; `portal/toolbox.yaml` records + kind map; `RUN.md` drive kinds include component.
-- `OUT/entities.ndjson`: 8 entities. `toolbox connector test` 12 passed.
+- `src/main.rs`: sync `component` via bare-array components endpoint; `portal/seikika.yaml` records + kind map; `RUN.md` drive kinds include component.
+- `OUT/entities.ndjson`: 8 entities. `seikika connector test` 12 passed.
 
 ## Could not do
 - Nothing blocking.

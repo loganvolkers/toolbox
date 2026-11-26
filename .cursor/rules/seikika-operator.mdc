@@ -1,0 +1,7 @@
+---
+description: Read the Seikika operator skill before portal, package, workflow, or plugin edits
+globs: portal/**,packages/**,.github/**,plugins/**
+alwaysApply: false
+---
+
+This file points at AGENTS.md. Before changing a portal, a package, a workflow, or a plugin, read the matching skill under plugins/seikika-operator/skills/. For a score change, follow the report skill. Do not edit site/public/report/ by hand. The ratchet verdict is the gate.

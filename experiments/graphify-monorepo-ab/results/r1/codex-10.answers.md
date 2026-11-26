@@ -2,7 +2,7 @@
 
 ## Q1
 
-Dependencies are normal dependencies only, taken from each crate's `Cargo.toml` in `codex-rs/`. The Toolbox portal's `crate:codex-tools` entity lists the same seven direct dependents in its `dependents` field.
+Dependencies are normal dependencies only, taken from each crate's `Cargo.toml` in `codex-rs/`. The Seikika portal's `crate:codex-tools` entity lists the same seven direct dependents in its `dependents` field.
 
 **Direct dependents (7).** Each lists `codex-tools` under `[dependencies]`:
 

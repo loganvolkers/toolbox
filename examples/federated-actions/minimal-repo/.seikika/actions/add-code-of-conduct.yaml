@@ -1,0 +1,32 @@
+# An org portal may run this portal's actions in its clone (type: local). It records approvals and
+# signs them; they count here only with the key pinned below. Replace it with the key the org
+# portal prints (`seikika serve <org> --detach`), then commit and push.
+federation:
+  runner: {type: local}
+  acceptApprovalsFrom:
+    - portal: org
+      key: ed25519:0000000000000000000000000000000000000000000000000000000000000000
+# Cases for `seikika test .seikika`: approvals, invalid inputs and a rejected push, in a scratch copy.
+tests: [tests/add-code-of-conduct.test.yaml]
+actions:
+  # kind: Portal is the repository's own portal: no connector or kind to declare.
+  - name: add-code-of-conduct
+    kind: Portal
+    description: Publish a CODE_OF_CONDUCT.md with the team's contact on main.
+    # One of ann or bob, and not the person who requested the run.
+    approval: "[['user:ann', 'user:bob']]"
+    inputs:
+      type: object
+      required: [contact]
+      properties: {contact: {type: string, pattern: '^[^@\s]+@[^@\s]+$'}}
+    # entity is this repository's portal, so one file can refer to whichever repository holds it.
+    preconditions: ["!inputs.contact.startsWith(entity.name + '@')"]
+    # Commits and pushes to main once approved, never forced. The run succeeds only when the
+    # commit is seen on the origin's main; a rejected push fails it.
+    executor:
+      type: change
+      land: push
+      base: main
+      run: >-
+        printf '# Code of conduct\n\nReport conduct issues to %s.\n'
+        "$SEIKIKA_INPUT_CONTACT" > CODE_OF_CONDUCT.md

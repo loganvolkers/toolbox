@@ -1,0 +1,28 @@
+{
+ "linesToMaintain": 2172,
+ "files": {
+  "alpha/.seikika/actions/mark-deprecated.yaml": 46,
+  "alpha/.seikika/tests/mark-deprecated.test.yaml": 68,
+  "alpha/.seikika/seikika.yaml": 5,
+  "beta/.seikika/seikika.yaml": 5,
+  "gamma/.seikika/seikika.yaml": 5,
+  "org/.gitignore": 1,
+  "org/state/approve-run_2fu0gl4iwkgn.json": 218,
+  "org/state/approve-run_2fu0gsy9rwxf.json": 218,
+  "org/state/approve-run_2fu0h09oyvit.json": 218,
+  "org/state/req-alpha.json": 58,
+  "org/state/req-beta.json": 58,
+  "org/state/req-gamma.json": 58,
+  "org/state/runs/run_2fu0ksyymn4v.json": 104,
+  "org/state/runs/run_2fu0lml38el1.json": 104,
+  "org/state/runs/run_2fu0mix8vtal.json": 104,
+  "org/state/runs/run_2fu0tti6pfx8.json": 77,
+  "org/state/served/org/runs/run_2fu0gl4iwkgn.json": 217,
+  "org/state/served/org/runs/run_2fu0gsy9rwxf.json": 217,
+  "org/state/served/org/runs/run_2fu0h09oyvit.json": 217,
+  "org/state/served/org/runs/run_2fu0thzrc0s2.json": 159,
+  "org/state/served/org/runs/spent-tokens": 4,
+  "org/state/served/org/signing-key": 1,
+  "org/seikika.yaml": 10
+ }
+}

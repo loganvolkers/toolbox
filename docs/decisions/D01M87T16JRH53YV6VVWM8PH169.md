@@ -27,15 +27,15 @@ a forge's entry says which CI its projects build on.
 3. **`http` bridges any CI:** an `http` host is a service that speaks the executor protocol
    (`run`, `status`, `cancel`; D01M86BY3YQX3SA1W99QXF1QA1H's executor contract). It answers `run`
    with `accepted` and an `executor_run_id`, answers `status` with the run's `result` once the
-   run is done, and puts the child's run record in that result's `outputs.record`. Toolbox gains
-   no Buildkite or Jenkins driver; the bridge is a tool that works without Toolbox, and it is not
+   run is done, and puts the child's run record in that result's `outputs.record`. Seikika gains
+   no Buildkite or Jenkins driver; the bridge is a tool that works without Seikika, and it is not
    an in-process plugin.
 4. **Trust stays with the parent (T1, revised):** a child names neither `ci` nor `via` in its
    runner, and is refused if it does. Which CI host runs it, and with whose token, follows from
    the parent's entry for the forge the child was cloned from. Both the forge's `projects` and the
    CI host's `projects` must admit the project.
-5. **In code:** `toolbox_model::ci` resolves a forge project to a CI target. `ForgeDriver` loses
-   its `ci` method, and `toolbox_exec::ci::driver` builds a `CiDriver` from the target. Adding a
+5. **In code:** `seikika_model::ci` resolves a forge project to a CI target. `ForgeDriver` loses
+   its `ci` method, and `seikika_exec::ci::driver` builds a `CiDriver` from the target. Adding a
    CI is one `CiType` and one driver; adding a forge no longer touches CI.
 6. **Deferred:** a forge with no CI of its own but a declared host (plain git or Origin with
    Buildkite) needs a forge type without a driver. Today `forges[].ci` applies only to `github`
@@ -46,4 +46,4 @@ a forge's entry says which CI its projects build on.
 **Where:** [docs/design/forges.md](../design/forges.md) §1, §4.1, §4.3, §4.7, §5, §7,
 [docs/design/federated-actions.md](../design/federated-actions.md) §5.3, §6.2,
 [docs/v1-spec.md](../v1-spec.md) §7.5,
-[examples/federated-actions/hybrid-org](../../examples/federated-actions/hybrid-org/toolbox.yaml)
+[examples/federated-actions/hybrid-org](../../examples/federated-actions/hybrid-org/seikika.yaml)

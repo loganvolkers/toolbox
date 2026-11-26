@@ -1,4 +1,4 @@
-apiVersion: toolbox.dev/assessment/v1
+apiVersion: seikika.com/assessment/v1
 entity: sdlc-stage:maintainer/design-review
 rubric: sdlc-stage-quality
 subjectHash: de488f5ba20d
@@ -32,7 +32,7 @@ verdicts:
       8.3.5 are the versions ui/ already pins (D01M880QMWD7Z7FTGKJT99AHWBX),
       so the stage adds no second bundler. fixtures.sh installs actionlint,
       scorecard and staticcheck as SHA-256-pinned releases through
-      scripts/ci-tools.sh and zizmor and ruff through `toolbox tools install
+      scripts/ci-tools.sh and zizmor and ruff through `seikika tools install
       portal`. Its one build, `cargo build --locked`, is the renderer under
       change, which the fixtures must come from; CI's report-ui job compiles
       no Rust.
@@ -56,7 +56,7 @@ verdicts:
     verdict: pass
     reason: >-
       The probe ran 53 stories over five fixtures from three portals
-      (report-ui/README.md): Toolbox for Toolbox, the OpenFGA portal
+      (report-ui/README.md): Seikika for Seikika, the OpenFGA portal
       (examples/openfga-portal), and repo-portal-starter. The panel must put
       at least one task on the second portal (design-audit/SKILL.md step 1).
       All three are repository portals, and ui/ has no stories.
@@ -65,7 +65,7 @@ summary: >-
   reference portals, and now a type check of the report data in the
   fastest gate. Running fixtures.sh on this tree showed the stage's known
   gap twice: the new decision file and this stage's stale assessment
-  changed t4t.json and starter.json, and on two runs first openfga.json
+  changed s4s.json and starter.json, and on two runs first openfga.json
   and then openfga-unmeasured.json changed only in the order of two
   OpenSSF Scorecard evidence lines, so fixture output is not fully
   deterministic. No CI step regenerates fixtures or checks that a

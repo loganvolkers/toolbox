@@ -1,0 +1,70 @@
+apiVersion: seikika.com/assessment/v1
+entity: scorecard:seikika/maintainer-docs
+rubric: scorecard-quality
+subjectHash: a0e6fa41716b
+assessor: {kind: agent, name: cursor-assessor-11, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: one-concern
+    verdict: pass
+    reason: >-
+      All five rules ask whether a doc's pointers and claims can be trusted by
+      the maintainers and agents who read it as the source of intent
+      (portal/standards/docs.yaml:84-89): links, the SDLC layer, cited
+      decisions, the banner and sources. It sits in the maintainer layer next
+      to maintainer-sdlc.md and seikika-for-seikika.md:104. Append-only logs
+      and decision files are excluded (docs.yaml:98-100;
+      portal/seikika.yaml:16-27), so wording rules don't reach back into
+      history.
+  - criterion: levels-are-a-ladder
+    verdict: fail
+    reason: >-
+      Silver applies only to design docs. Both silver checks start
+      `entity.area != 'design' ||` (docs.yaml:144,155). Of the 157 scored
+      docs, 92 are not under docs/design/ (READMEs, skills under plugins/,
+      portal/*.md, docs/*.md), and they reach silver by passing bronze alone.
+      portal/results.json shows all 157 at silver. So silver means
+      "trustworthy design doc" for 65 docs and nothing beyond bronze for the
+      rest, and the repository rollup (D86) reads it either way. status-banner
+      is also untested: no fixture fails it (the brief lists it in
+      untestedRules).
+    suggestion: >-
+      Either scope the card to docs/design/ and move the other docs to a
+      bronze-only card, or give non-design docs a silver rule of their own,
+      such as a heading and a sentence saying which design or decision they
+      serve, like maintainer-example's cites-the-design. Add a design-doc
+      fixture with no status line.
+  - criterion: no-obvious-gap
+    verdict: fail
+    reason: >-
+      AGENTS.md's working rules say every design doc and package README states
+      whether it is about the box or a tool (D01M7ZRAJT47W11X5X3FEJ6QTX8,
+      docs/design/seikika-and-tools.md). No rule checks this, and only 12 of
+      the 65 design docs say "about the box", "about a tool" or link
+      seikika-and-tools.md in their first 15 lines.
+      docs/design/thresholds.md:3 shows the form. The other written rules for
+      these docs are either covered (sources, links, banner) or were dropped
+      for false positives (time estimates,
+      docs/design/seikika-for-seikika.md:211).
+    suggestion: >-
+      Add a silver design-doc rule, box-or-tool, reading a workspace count
+      such as `\b[Aa]bout (?:the box|a tool|both)\b` in the banner, with a
+      fixture on each side. Include it in the fix of status-banner so one
+      banner edit satisfies both.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      Every fix names a place: the targets, the missing ids, or the banner or
+      Sources section of the doc under docs/design/
+      (docs.yaml:105,116-118,129-132,146-148,157-159). Raising
+      docs/design/dashboards.md from bronze to silver
+      (portal/tests/standards.test.yaml:38-42) takes one `## Sources` section,
+      as the fix says. The weakest is names-sdlc-layer: a count without lines,
+      and a fix that lists three of the four layers (D87), though grepping for
+      "SDLC" finds the mentions.
+summary: >-
+  A focused card whose bronze is well built (a careful link resolver, a
+  decision check against frontmatter). But silver is vacuous for the 92
+  docs outside docs/design/, so every doc reads silver whether or not it
+  earned it. The written rule that design docs say box or tool has no
+  check, and status-banner has never been seen to fail.

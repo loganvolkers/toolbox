@@ -1,8 +1,8 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://toolbox.dev/schemas/executor-messages/v1.json",
-  "title": "Toolbox executor protocol v1 messages",
-  "description": "Messages between Toolbox and an executor (docs/design/action-runs.md \u00a75, docs/v1-spec.md \u00a77.5). NDJSON over stdio for in-image executors; the same JSON bodies over HTTP for http executors, POSTed one per request with the replies in the response body. `status`, and `executor_run_id` on `cancel` and `verify`, are additive: an executor that never answers `accepted` with an `executor_run_id` is never sent `status`.",
+  "$id": "https://seikika.com/schemas/executor-messages/v1.json",
+  "title": "Seikika executor protocol v1 messages",
+  "description": "Messages between Seikika and an executor (docs/design/action-runs.md \u00a75, docs/v1-spec.md \u00a77.5). NDJSON over stdio for in-image executors; the same JSON bodies over HTTP for http executors, POSTed one per request with the replies in the response body. `status`, and `executor_run_id` on `cancel` and `verify`, are additive: an executor that never answers `accepted` with an `executor_run_id` is never sent `status`.",
   "oneOf": [
     {
       "$ref": "#/$defs/preview"
@@ -90,7 +90,7 @@
           "required": [
             "id"
           ],
-          "description": "The target entity as Toolbox sees it at the preview snapshot."
+          "description": "The target entity as Seikika sees it at the preview snapshot."
         },
         "inputs": {
           "type": "object"
@@ -264,7 +264,7 @@
           "description": "The executor's own id for the run, sent back in `status`, `cancel` and `verify`."
         }
       },
-      "description": "The executor took the run. With an `executor_run_id` and no `result` before its output ends, the executor carries the run on: it stays `dispatched`, and Toolbox asks for it with `status`. Without one, the same session must end in a `result`."
+      "description": "The executor took the run. With an `executor_run_id` and no `result` before its output ends, the executor carries the run on: it stays `dispatched`, and Seikika asks for it with `status`. Without one, the same session must end in a `result`."
     },
     "progress": {
       "type": "object",
@@ -342,7 +342,7 @@
         "type",
         "run_id"
       ],
-      "description": "Toolbox asks after a run the executor carries on (`accepted` with an `executor_run_id`). The executor answers `progress` while it still runs, or the run's `result`.",
+      "description": "Seikika asks after a run the executor carries on (`accepted` with an `executor_run_id`). The executor answers `progress` while it still runs, or the run's `result`.",
       "properties": {
         "type": {
           "const": "status"
@@ -373,7 +373,7 @@
           "type": "string"
         }
       },
-      "description": "Best effort: stop the run. The executor may answer with the run's `result`; Toolbox records what it said and ends the run `cancelled` either way."
+      "description": "Best effort: stop the run. The executor may answer with the run's `result`; Seikika records what it said and ends the run `cancelled` either way."
     },
     "verify": {
       "allOf": [

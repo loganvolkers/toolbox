@@ -88,13 +88,13 @@ export const overviewViews = {
             { className: "next" },
             el("b", { textContent: "Next: " }),
             "run ",
-            el("code", { textContent: "toolbox doctor" }),
+            el("code", { textContent: "seikika doctor" }),
             " in the repository to see which connector or tool is missing, then ",
-            el("code", { textContent: "toolbox report" }),
+            el("code", { textContent: "seikika report" }),
             " again. Connectors are listed under ",
             el("code", { textContent: "connectors:" }),
             " in the portal's ",
-            el("code", { textContent: "toolbox.yaml" }),
+            el("code", { textContent: "seikika.yaml" }),
             ". The " + plural(S.rows.length, "scorecard") + " below will fill in.",
           ),
           absentSections(D, campaignNames) ? el("p", { className: "sub", style: "margin:8px 0 0", textContent: absentSections(D, campaignNames) }) : null,
@@ -260,7 +260,7 @@ export const overviewViews = {
     var almost = at > 0 && verdict.indexOf("Almost") === 0;
     var tone = needs ? "none" : almost ? "bronze" : "gold";
     var seeThem = function (this: HTMLElement) {
-      var h = this.closest(".toolbox-report")?.querySelector("#need-att");
+      var h = this.closest(".seikika-report")?.querySelector("#need-att");
       if (h) h.scrollIntoView({ behavior: "smooth", block: "start" });
     };
     var statusLead = el(

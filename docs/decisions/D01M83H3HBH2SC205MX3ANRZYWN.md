@@ -6,7 +6,7 @@ decided: 2026-11-23T06:25:00Z
 # Composite catalog ids for `connector drive --format catalog`
 
 **A package-author SDLC fix (not a benchmark-bar change).** Connector-ab v3
-phase 3 failed truth on Toolbox and Backstage when agents used Forge's numeric
+phase 3 failed truth on Seikika and Backstage when agents used Forge's numeric
 component id as the catalog/`externalId` suffix (`1`) instead of
 `{project}:{name}` (`ALPHA:api`). C3 requires fixing unclear docs and rematching
 before scoring cost.

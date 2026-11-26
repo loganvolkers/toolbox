@@ -1,0 +1,56 @@
+apiVersion: seikika.com/assessment/v1
+entity: rule:seikika/vs-backstage-footprint/install-size
+rubric: rule-quality
+subjectHash: 2d4d070c126a
+assessor: {kind: agent, name: cursor-assessor-17, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: measures-intent
+    verdict: pass
+    reason: >-
+      footprint.py:57-81 downloads the published v0.1.1
+      x86_64-unknown-linux-gnu archives and extracts only the executables
+      (:69-73). It adds the OpenFGA binary the image carries (:79) and
+      measures with `du -sbL`. Backstage is its production install plus the
+      Node runtime (:169). Both are "megabytes on disk to run it"
+      (portal/standards/backstage-comparison.yaml:57), measured on a release,
+      which is what an adopter installs (:17-20). Neither side counts the
+      container base image or Postgres, so the comparison is like for like.
+  - criterion: hard-to-game
+    verdict: pass
+    reason: >-
+      The size is taken from a published GitHub release (footprint.py:58-64).
+      To lower it, someone has to ship smaller binaries in a new release, by
+      stripping, trimming dependencies or dropping a binary. That is the
+      intent. Fetching code at runtime would hide bytes, but it would also
+      break the offline single-binary install the charter promises (AGENTS.md
+      charter goal 1).
+  - criterion: fix-leads-to-pass
+    verdict: fail
+    reason: >-
+      The fix says to "drop what the release archives carry but do not run"
+      (backstage-comparison.yaml:400-401). But footprint.py counts only
+      executable members (:69-73) plus OpenFGA (:79), so dropping READMEs,
+      licences or completions from the archives doesn't move the number. The
+      levers are binary size and the number of binaries. Cargo.toml:65-67 sets
+      thin LTO and one codegen unit but no `strip`, and the fix names neither.
+      The number also changes only after a new release, because the script
+      reads SEIKIKA_VERSION (v0.1.1), not HEAD (footprint.py:24).
+    suggestion: >-
+      Change the fix to "shrink the release binaries (`strip`, `opt-level`,
+      `panic` in Cargo.toml [profile.release]; fewer or merged connector
+      binaries in dist-workspace.toml) and the OpenFGA binary the image adds,
+      then cut a release and rerun footprint.py".
+  - criterion: threshold-justified
+    verdict: pass
+    reason: >-
+      The 1,000 MB bar was registered before the run
+      (experiments/backstage-compare/README.md:42) and confirmed by the
+      adjudication (ADJUDICATION.md:108). RESEARCH.md F3 grounds the factor in
+      charter goal 1, one image plus Postgres (RESEARCH.md:59), though only as
+      a comparative bar.
+summary: >-
+  A fair, release-based measure that is hard to game. The fix is wrong
+  about the lever: only executables are counted, so trimming archive
+  extras does nothing. Binary size and a new release are what move the
+  number.

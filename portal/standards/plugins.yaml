@@ -1,5 +1,5 @@
 # Agent plugins (docs/design/plugin-standards.md).
-# Included by portal/toolbox.yaml; see portal/README.md for the layout.
+# Included by portal/seikika.yaml; see portal/README.md for the layout.
 
 kinds:
   # Agent plugin packages (docs/design/plugin-standards.md). Skills inside them stay Skill entities.
@@ -77,9 +77,9 @@ scorecards:
       harness is not gated.
     links:
     - title: Plugin standards
-      url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/plugin-standards.md
+      url: https://github.com/seikika/seikika/blob/main/docs/design/plugin-standards.md
     - title: 'Decision: a plugin scorecard'
-      url: https://github.com/loganvolkers/toolbox/blob/main/docs/decisions/D01M7WMSMS00000000000000000.md
+      url: https://github.com/seikika/seikika/blob/main/docs/decisions/D01M7WMSMS00000000000000000.md
     - title: Agent Plugins specification
       url: https://github.com/agentplugins/agent-plugins-spec
     owner: group:maintainers
@@ -113,7 +113,7 @@ scorecards:
         compliant harness.
       links:
       - title: Agent plugins design
-        url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/agent-plugins.md
+        url: https://github.com/seikika/seikika/blob/main/docs/design/agent-plugins.md
     - name: mcp-declared
       level: silver
       check: entity.hasMcp && entity.mcpSchemaOk
@@ -131,7 +131,7 @@ scorecards:
       check: entity.commandToken
       evidence: "['stdio command is not a single token']"
       fix: >-
-        Set command to one token (./bin/toolbox-mcp or ${PLUGIN_ROOT}/bin/tool).
+        Set command to one token (./bin/seikika-mcp or ${PLUGIN_ROOT}/bin/tool).
         Do not use a shell string.
       rationale: >-
         The spec requires one token so the harness can start the server without
@@ -170,5 +170,5 @@ scorecards:
         cannot pass the ratchet.
       links:
       - title: Thresholds
-        url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/thresholds.md
+        url: https://github.com/seikika/seikika/blob/main/docs/design/thresholds.md
     facets: {summary: public, details: public}

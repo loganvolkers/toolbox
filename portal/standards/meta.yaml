@@ -1,5 +1,5 @@
 # Scorecards for scorecards: the portal's own model (docs/design/scorecards-for-scorecards.md).
-# Included by portal/toolbox.yaml; see portal/README.md for the layout.
+# Included by portal/seikika.yaml; see portal/README.md for the layout.
 
 kinds:
   - name: Scorecard
@@ -144,11 +144,11 @@ kinds:
         type: boolean
         description: >-
           The fix tells an agent where to act: a path, a code span, a file name or
-          extension, LICENSE or CODEOWNERS, a toolbox command, a field the check
+          extension, LICENSE or CODEOWNERS, a seikika command, a field the check
           reads, or an evidence that reads this entity's fields and so lists the
           places.
         computed: >-
-          entity.fixText.matches('`|[A-Za-z0-9_.-]+/[A-Za-z0-9_./<>*-]+|[A-Za-z0-9][.](md|rs|ya?ml|json|toml|sh|py)([^A-Za-z]|$)|LICENSE|CODEOWNERS|toolbox
+          entity.fixText.matches('`|[A-Za-z0-9_.-]+/[A-Za-z0-9_./<>*-]+|[A-Za-z0-9][.](md|rs|ya?ml|json|toml|sh|py)([^A-Za-z]|$)|LICENSE|CODEOWNERS|seikika
           [a-z]') || entity.check.fields.exists(f, f.size() > 3 &&
           entity.fixText.contains(f)) || (entity.hasEvidence &&
           (entity.evidence.fields.size() > 0 || entity.evidence.loops > 0))
@@ -200,7 +200,7 @@ kinds:
 
   - name: Kind
     description: >-
-      A kind of entity declared by this portal (ids `toolbox/…`, the kinds the
+      A kind of entity declared by this portal (ids `seikika/…`, the kinds the
       catalog lists) or by an example portal it describes (`repo/…` and
       `acme/…`), so this kind counts more than the catalog's kinds.
     identityFrom: [connector:surfaces]
@@ -401,11 +401,11 @@ scorecards:
       and for evidence and a fix that lead an agent to the change.
     links:
     - title: Scorecards for scorecards
-      url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/scorecards-for-scorecards.md
+      url: https://github.com/seikika/seikika/blob/main/docs/design/scorecards-for-scorecards.md
     - title: D71 one meta level
-      url: https://github.com/loganvolkers/toolbox/blob/main/docs/decisions/D01M7W0J8YR0000000000000000.md
+      url: https://github.com/seikika/seikika/blob/main/docs/decisions/D01M7W0J8YR0000000000000000.md
     - title: Meta standards review
-      url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/meta-standards-review.md
+      url: https://github.com/seikika/seikika/blob/main/docs/design/meta-standards-review.md
     owner: group:maintainers
     track: standards
     levels: [bronze, silver, gold]
@@ -422,7 +422,7 @@ scorecards:
         using only fix texts that said what and where (lesson L1).
       links:
       - title: Thresholds and levels
-        url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/thresholds.md#2-the-numbers
+        url: https://github.com/seikika/seikika/blob/main/docs/design/thresholds.md#2-the-numbers
     - name: explains-why
       level: bronze
       check: entity.explained
@@ -438,7 +438,7 @@ scorecards:
         become an encyclopedia.
       links:
       - title: Goals for rules (GQM)
-        url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/meta-standards-review.md#3-the-literature-and-where-our-meta-standard-stands
+        url: https://github.com/seikika/seikika/blob/main/docs/design/meta-standards-review.md#3-the-literature-and-where-our-meta-standard-stands
     - name: tested
       level: bronze
       check: entity.tested
@@ -508,7 +508,7 @@ scorecards:
         connector can be named and tested on its own.
       links:
       - title: Thresholds and levels
-        url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/thresholds.md#2-the-numbers
+        url: https://github.com/seikika/seikika/blob/main/docs/design/thresholds.md#2-the-numbers
     - name: always-explains
       level: silver
       check: entity.hasEvidence
@@ -520,7 +520,7 @@ scorecards:
         (lesson L2, D66).
       links:
       - title: D66 scorecards say why
-        url: https://github.com/loganvolkers/toolbox/blob/main/docs/decisions/D01M7VWS4ZG0000000000000000.md
+        url: https://github.com/seikika/seikika/blob/main/docs/decisions/D01M7VWS4ZG0000000000000000.md
     - name: evidence-tracks-check
       level: gold
       check: entity.evidenceTracksCheck
@@ -537,7 +537,7 @@ scorecards:
         evidence named (lessons L1 and L2).
       links:
       - title: Thresholds and levels
-        url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/thresholds.md#2-the-numbers
+        url: https://github.com/seikika/seikika/blob/main/docs/design/thresholds.md#2-the-numbers
     - name: pins-both-outcomes
       level: gold
       check: "'pass' in entity.testedOutcomes && 'fail' in entity.testedOutcomes"
@@ -563,7 +563,7 @@ scorecards:
         listing evidence: ' + entity.fixText]
       fix: >-
         Say in `fix:` where to act: the file or directory (a path), the field
-        the check reads, a `toolbox` command, or "the listed …" items of an
+        the check reads, a `seikika` command, or "the listed …" items of an
         evidence that names them (scorecards-for-scorecards.md, lesson L1).
       rationale: >-
         A fix that says what but not where sends an agent searching, which is
@@ -587,11 +587,11 @@ scorecards:
       level.
     links:
     - title: Scorecards for scorecards
-      url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/scorecards-for-scorecards.md
+      url: https://github.com/seikika/seikika/blob/main/docs/design/scorecards-for-scorecards.md
     - title: The ladders
-      url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/thresholds.md#3-the-ladders
+      url: https://github.com/seikika/seikika/blob/main/docs/design/thresholds.md#3-the-ladders
     - title: Meta gold is not good
-      url: https://github.com/loganvolkers/toolbox/blob/main/docs/decisions/D01M831P5QWJQ4A2FT85N5MXJQF.md
+      url: https://github.com/seikika/seikika/blob/main/docs/decisions/D01M831P5QWJQ4A2FT85N5MXJQF.md
     owner: group:maintainers
     track: standards
     levels: [bronze, silver, gold]
@@ -644,7 +644,7 @@ scorecards:
         portal so it doesn't become an encyclopedia.
       links:
       - title: Goals for rules (GQM)
-        url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/meta-standards-review.md#3-the-literature-and-where-our-meta-standard-stands
+        url: https://github.com/seikika/seikika/blob/main/docs/design/meta-standards-review.md#3-the-literature-and-where-our-meta-standard-stands
     - name: fixtures-show-the-ladder
       level: silver
       check: >-
@@ -700,9 +700,9 @@ scorecards:
       readers without making any score wrong.
     links:
     - title: Which parts need standards
-      url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/scorecards-for-scorecards.md#4-holistic-review-which-parts-of-a-portal-need-standards
+      url: https://github.com/seikika/seikika/blob/main/docs/design/scorecards-for-scorecards.md#4-holistic-review-which-parts-of-a-portal-need-standards
     - title: 'Decision: every part is scored'
-      url: https://github.com/loganvolkers/toolbox/blob/main/docs/decisions/D01M7WHQA9G0000000000000000.md
+      url: https://github.com/seikika/seikika/blob/main/docs/decisions/D01M7WHQA9G0000000000000000.md
     owner: group:maintainers
     track: standards
     levels: [bronze, silver, gold]
@@ -769,9 +769,9 @@ scorecards:
       sit above it.
     links:
     - title: The rest of the model
-      url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/scorecards-for-scorecards.md#5-the-rest-of-the-model-kinds-fields-connectors
+      url: https://github.com/seikika/seikika/blob/main/docs/design/scorecards-for-scorecards.md#5-the-rest-of-the-model-kinds-fields-connectors
     - title: 'Decision: every part is scored'
-      url: https://github.com/loganvolkers/toolbox/blob/main/docs/decisions/D01M7WHQA9G0000000000000000.md
+      url: https://github.com/seikika/seikika/blob/main/docs/decisions/D01M7WHQA9G0000000000000000.md
     owner: group:maintainers
     track: standards
     levels: [bronze, silver, gold]
@@ -828,7 +828,7 @@ scorecards:
         are where logic belongs.
       links:
       - title: Thresholds and levels
-        url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/thresholds.md#2-the-numbers
+        url: https://github.com/seikika/seikika/blob/main/docs/design/thresholds.md#2-the-numbers
     facets: {summary: public, details: public}
 
   - name: meta-connector
@@ -846,9 +846,9 @@ scorecards:
       mapping and fixtures are the floor, freshness and refresh sit above it.
     links:
     - title: The rest of the model
-      url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/scorecards-for-scorecards.md#5-the-rest-of-the-model-kinds-fields-connectors
+      url: https://github.com/seikika/seikika/blob/main/docs/design/scorecards-for-scorecards.md#5-the-rest-of-the-model-kinds-fields-connectors
     - title: 'Decision: every part is scored'
-      url: https://github.com/loganvolkers/toolbox/blob/main/docs/decisions/D01M7WHQA9G0000000000000000.md
+      url: https://github.com/seikika/seikika/blob/main/docs/decisions/D01M7WHQA9G0000000000000000.md
     owner: group:maintainers
     track: standards
     levels: [bronze, silver, gold]
@@ -914,16 +914,16 @@ scorecards:
       whenever its subject changes, and gating on it would block every edit.
     links:
     - title: Judgement pushed by agents
-      url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/scorecards-for-scorecards.md#6-judgement-pushed-by-coding-agents-d79
+      url: https://github.com/seikika/seikika/blob/main/docs/design/scorecards-for-scorecards.md#6-judgement-pushed-by-coding-agents-d79
     - title: 'Decision: judgement is pushed'
-      url: https://github.com/loganvolkers/toolbox/blob/main/docs/decisions/D01M7WHQA9G0000000000000000.md
+      url: https://github.com/seikika/seikika/blob/main/docs/decisions/D01M7WHQA9G0000000000000000.md
     - title: Meta standards review
-      url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/meta-standards-review.md
+      url: https://github.com/seikika/seikika/blob/main/docs/design/meta-standards-review.md
     owner: group:maintainers
     track: standards
     levels: [bronze, silver, gold]
     ratchet: {advisory: true}
-    appliesTo: entity.portal == 'toolbox' # our own rules; the starter and reference are examples
+    appliesTo: entity.portal == 'seikika' # our own rules; the starter and reference are examples
     rules:
     - name: no-open-findings
       level: bronze
@@ -946,8 +946,8 @@ scorecards:
         [entity.reviewState == 'stale' ? 'the rule changed since it was
         assessed' : 'not assessed against rule-quality']
       fix: >-
-        Run `toolbox assess brief <rule id> --portal portal`, have your agent
-        write the assessment file it names, then `toolbox assess check portal`.
+        Run `seikika assess brief <rule id> --portal portal`, have your agent
+        write the assessment file it names, then `seikika assess check portal`.
       rationale: >-
         Without a current review, nobody has judged whether the rule as it now
         stands measures its intent; a verdict on an earlier version may not
@@ -983,7 +983,7 @@ scorecards:
         L9).
       links:
       - title: Thresholds and levels
-        url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/thresholds.md
+        url: https://github.com/seikika/seikika/blob/main/docs/design/thresholds.md
     facets: {summary: public, details: public}
 
   - name: review-scorecard
@@ -1002,16 +1002,16 @@ scorecards:
       never gating, because a review goes stale when the scorecard changes.
     links:
     - title: Judgement pushed by agents
-      url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/scorecards-for-scorecards.md#6-judgement-pushed-by-coding-agents-d79
+      url: https://github.com/seikika/seikika/blob/main/docs/design/scorecards-for-scorecards.md#6-judgement-pushed-by-coding-agents-d79
     - title: 'Decision: judgement is pushed'
-      url: https://github.com/loganvolkers/toolbox/blob/main/docs/decisions/D01M7WHQA9G0000000000000000.md
+      url: https://github.com/seikika/seikika/blob/main/docs/decisions/D01M7WHQA9G0000000000000000.md
     - title: Meta standards review
-      url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/meta-standards-review.md
+      url: https://github.com/seikika/seikika/blob/main/docs/design/meta-standards-review.md
     owner: group:maintainers
     track: standards
     levels: [bronze, silver, gold]
     ratchet: {advisory: true}
-    appliesTo: entity.portal == 'toolbox'
+    appliesTo: entity.portal == 'seikika'
     rules:
     - name: no-open-findings
       level: bronze
@@ -1034,8 +1034,8 @@ scorecards:
         [entity.reviewState == 'stale' ? 'the scorecard changed since it was
         assessed' : 'not assessed against scorecard-quality']
       fix: >-
-        Run `toolbox assess brief <scorecard id> --portal portal`, have your
-        agent write the assessment file it names, then `toolbox assess check
+        Run `seikika assess brief <scorecard id> --portal portal`, have your
+        agent write the assessment file it names, then `seikika assess check
         portal`.
       rationale: >-
         A review is tied to the scorecard's content hash; once the scorecard
@@ -1070,7 +1070,7 @@ scorecards:
         and a level nobody can justify is one readers can't trust.
       links:
       - title: The ladders
-        url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/thresholds.md#3-the-ladders
+        url: https://github.com/seikika/seikika/blob/main/docs/design/thresholds.md#3-the-ladders
     facets: {summary: public, details: public}
 
   - name: meta-rubric
@@ -1086,9 +1086,9 @@ scorecards:
       needs three assessments to show that each criterion can fail.
     links:
     - title: Assessments and rubrics
-      url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/scorecards-for-scorecards.md#61-assessments-and-rubrics-are-standards-too-d80
+      url: https://github.com/seikika/seikika/blob/main/docs/design/scorecards-for-scorecards.md#61-assessments-and-rubrics-are-standards-too-d80
     - title: 'Decision: rubrics are scored'
-      url: https://github.com/loganvolkers/toolbox/blob/main/docs/decisions/D01M7WJVW700000000000000000.md
+      url: https://github.com/seikika/seikika/blob/main/docs/decisions/D01M7WJVW700000000000000000.md
     owner: group:maintainers
     track: standards
     levels: [bronze, silver, gold]
@@ -1109,7 +1109,7 @@ scorecards:
       check: entity.assessments > 0
       evidence: "['no assessment uses ' + entity.name]"
       fix: >-
-        Assess one entity with it (`toolbox assess brief <id> --rubric <name>`),
+        Assess one entity with it (`seikika assess brief <id> --rubric <name>`),
         or remove the rubric.
       rationale: >-
         A rubric no assessment has used is untried configuration: nobody knows
@@ -1127,7 +1127,7 @@ scorecards:
         used to pass (D01M831P5QWJQ4A2FT85N5MXJQF).
       links:
       - title: Thresholds and levels
-        url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/thresholds.md#2-the-numbers
+        url: https://github.com/seikika/seikika/blob/main/docs/design/thresholds.md#2-the-numbers
     - name: discriminates
       level: gold
       check: entity.assessments >= 3 && entity.alwaysPass.size() == 0
@@ -1149,7 +1149,7 @@ rubrics:
     kind: Rule
     description: >-
       Is this rule a good standard? Read its check, evidence and fix in the
-      portal's toolbox.yaml, its tests, and the design doc its scorecard
+      portal's seikika.yaml, its tests, and the design doc its scorecard
       cites.
     criteria:
     - name: measures-intent
@@ -1182,7 +1182,7 @@ rubrics:
   - name: scorecard-quality
     kind: Scorecard
     description: >-
-      Is this scorecard a good standard? Read it in the portal's toolbox.yaml
+      Is this scorecard a good standard? Read it in the portal's seikika.yaml
       with the doc that motivates it (portal/README.md says which layer it
       raises).
     criteria:

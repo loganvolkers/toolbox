@@ -1,10 +1,10 @@
 # DX Benchmark catalog entry (docs/design/dx-benchmarks.md §6), scored by maintainer-benchmark.
 records:
   - id: standards-ab
-    title: 'Standards lifecycle: bespoke scripts or Toolbox (R3, second round)'
+    title: 'Standards lifecycle: bespoke scripts or Seikika (R3, second round)'
     question: >-
       Over a standard's life (write, enforce, campaign, change, reuse, read),
-      does Toolbox cost an agent less than bespoke scripts at equal
+      does Seikika cost an agent less than bespoke scripts at equal
       correctness?
     layers: [package-author, operator]
     stages: [package-author/author, package-author/package, operator/monitor]
@@ -16,7 +16,7 @@ records:
     - loganvolkers/openfga@7d89a566
     status: archived
     ran: 2026-11-21
-    outcome: Both exact in every phase; Toolbox 582k tokens against 445k for scripts
+    outcome: Both exact in every phase; Seikika 582k tokens against 445k for scripts
     changed:
     - >-
       18 friction items, among them a numeric ratchet, parameterised packages,

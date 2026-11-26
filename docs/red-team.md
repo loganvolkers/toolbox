@@ -1,4 +1,4 @@
-# Red Team: How a Port Sales Engineer Would Attack Toolbox
+# Red Team: How a Port Sales Engineer Would Attack Seikika
 
 *Written 2026-11-18 against [plan.md](./plan.md), [authorization.md](./authorization.md) and
 [ocean.md](./ocean.md). The point of view is deliberately adversarial. Claims about Port are limited
@@ -28,7 +28,7 @@ The ranking at the end is by *deal risk*: how likely each gap is to lose an eval
 ## A. Buyer-facing gaps (these lose deals)
 
 ### A1. "Who builds and runs this? You've reinvented the Backstage staffing problem." 🔴
-**Pitch:** "Port is live in an afternoon: connect GitHub and you have a catalog. Toolbox needs a repo,
+**Pitch:** "Port is live in an afternoon: connect GitHub and you have a catalog. Seikika needs a repo,
 an SDK, a build pipeline, Postgres, OIDC, connector hosting and on-call. That's the 3–5 FTE Backstage
 story with a Rust logo."
 
@@ -37,14 +37,14 @@ value. There's no quickstart target, no starter templates, and no hosted demo. U
 bump, but *initial* setup is still a platform project.
 
 **Fix:**
-- Make **time to first useful portal** a tested KPI: `toolbox init --from github-org acme` →
+- Make **time to first useful portal** a tested KPI: `seikika init --from github-org acme` →
   deployed, populated portal in **< 30 minutes**, measured in the agent eval suite.
 - Ship **starter portals** (opinionated programs for small, mid-size and regulated orgs), a public demo
   portal, and a one-command docker-compose with SQLite.
 
 ### A2. "Your managers can't see anything: no dashboards, no reports, no trends." 🔴
 **Pitch:** "VPs buy portals to see standards adoption by team, initiative burndown and trends over
-quarters. Port has dashboards and reports. Toolbox has entity pages and Grafana dashboards *about the
+quarters. Port has dashboards and reports. Seikika has entity pages and Grafana dashboards *about the
 portal's own health*."
 
 **Reality check:** the plan's non-goals exclude "drag-and-drop dashboard builders", and the UI is
@@ -60,7 +60,7 @@ storage design, no exports and no leadership views. **The economic buyer is not 
 
 ### A3. "Scorecards nobody hears about don't improve anything." 🔴
 **Pitch:** "Port sends scorecard and initiative reports and reminders (we even open-sourced the
-GitHub Action that does it). Engagement drives adoption. How does a team learn its security score went red in Toolbox?"
+GitHub Action that does it). Engagement drives adoption. How does a team learn its security score went red in Seikika?"
 
 **Reality check:** automations *could* call a webhook. There is no notification subsystem: no
 Slack/Teams/email channels, digests, routing to owners, quiet hours or dedup. There is also no chat
@@ -77,7 +77,7 @@ interface for humans.
 
 ### A4. "Your humans don't get AI. Only people who already run Claude Code do." 🟠
 **Pitch:** "Port has built-in AI agents, an AI assistant and an AI Builder, plus agent governance.
-Toolbox is 'bring your own agent': fine for staff engineers, useless for an EM or a security analyst."
+Seikika is 'bring your own agent': fine for staff engineers, useless for an EM or a security analyst."
 
 **Reality check:** a deliberate non-goal (we don't run agents). But we offer no *assistant* in the UI
 or Slack. Agent governance is also thin: there are agent principals and ceilings, but no registry of
@@ -104,7 +104,7 @@ the same GitHub token. Ocean ships a centralized rate limiter for exactly this r
 - The Ocean spike moved earlier, to Phase 1.
 
 ### A6. "Enterprise readiness: who signs the SLA, where's SOC 2, who answers the pager?" 🔴 (not a technical gap; still decisive)
-**Pitch:** "Port is SOC 2 and ISO certified, has an SLA and a support team. Toolbox has GitHub issues."
+**Pitch:** "Port is SOC 2 and ISO certified, has an SLA and a support team. Seikika has GitHub issues."
 
 **Reality check:** the plan is silent on support, governance, security response, LTS commitments and
 who funds the project.
@@ -139,7 +139,7 @@ Kinds are code but entities are state. The plan versions the config IR, yet says
 - score history when a rule is renamed
 
 **Fix:**
-- `toolbox plan` detects destructive model changes and requires declared migrations (`rename`,
+- `seikika plan` detects destructive model changes and requires declared migrations (`rename`,
   `split`, `retype`).
 - Entity **aliases and redirects** keep old refs resolving.
 - Rule ids are stable, with an explicit `renamed_from`.
@@ -186,7 +186,7 @@ the context lake becomes a data-leak engine for agents.
 
 **Fix:**
 - Connectors can emit **permission relations** (e.g. `doc:x#viewer@group:y`) as derived tuples, with
-  a mapping from external principals to Toolbox users.
+  a mapping from external principals to Seikika users.
 - Without ACL sync, a source is ingested as **owner-only by default**.
 - Add RAG-leak tests to the Level 3 surface suite.
 
@@ -204,7 +204,7 @@ bottleneck. Packages help, but the *process* isn't designed: module ownership, r
 per-module CI, and blast-radius limits.
 
 **Fix:**
-- A documented multi-team pattern: CODEOWNERS per module; `toolbox plan` scoped per module with
+- A documented multi-team pattern: CODEOWNERS per module; `seikika plan` scoped per module with
   impact gates.
 - A **tenancy story** for business units: one portal with authz partitions, or federated portals with
   cross-portal refs. Decide which.
@@ -213,7 +213,7 @@ per-module CI, and blast-radius limits.
 
 ## C. Security and compliance gaps
 
-### C1. `toolbox plan --against prod` leaks production data into CI 🔴
+### C1. `seikika plan --against prod` leaks production data into CI 🔴
 The plan's flagship feature pulls a production snapshot into CI to preview score and authorization
 diffs. The PR author, and the CI runner, may not be allowed to see that data (vulnerability lists,
 costs, incident details). This **bypasses the ReBAC model entirely.**
@@ -240,7 +240,7 @@ and no stance on sending documents to third-party embedding or LLM providers.
 
 **Fix:**
 - A personal-data inventory per kind and fact.
-- `toolbox admin erase <subject>` propagating to raw records, indexes, embeddings and analytics sinks,
+- `seikika admin erase <subject>` propagating to raw records, indexes, embeddings and analytics sinks,
   with audit kept but pseudonymized.
 - An explicit **AI data-egress policy** in code: which facets may be embedded or sent to which
   provider.
@@ -251,7 +251,7 @@ signature verification, egress allowlisting, or least-privilege token scoping pe
 
 **Fix:**
 - Sigstore/cosign verification of connector images.
-- A declared egress allowlist per connector, enforced when Toolbox runs it.
+- A declared egress allowlist per connector, enforced when Seikika runs it.
 - Permission probes that *fail* on over-privileged tokens, not only under-privileged ones.
 
 ### C5. Prompt injection from catalog data 🟠
@@ -316,7 +316,7 @@ Fold these into the plan as follows:
 | Gap | Status |
 |---|---|
 | A1 Time to value | Partly addressed by the operator SDLC and reusable workflow; demos and starter portals **deferred** by decision |
-| A2 Dashboards, reports, trends | **Decided:** dashboards via Claude Artifacts / Cursor Canvas + Toolbox MCP; operator-only UI views; history archive ([design/dashboards.md](./design/dashboards.md)) |
+| A2 Dashboards, reports, trends | **Decided:** dashboards via Claude Artifacts / Cursor Canvas + Seikika MCP; operator-only UI views; history archive ([design/dashboards.md](./design/dashboards.md)) |
 | A3 Notifications | **Designed** (GitHub, email, webhook; Slack out of scope): [design/notifications.md](./design/notifications.md) |
 | B1 Identity resolution, B2 renames/merges | **Designed:** [design/identity-resolution.md](./design/identity-resolution.md) |
 | B3 Pending state, B4 action-created entities, TTL, day-2 | **Designed:** [design/action-entities.md](./design/action-entities.md); data with no system of record → [design/source-of-truth.md](./design/source-of-truth.md) |

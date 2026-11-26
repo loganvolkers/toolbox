@@ -3,7 +3,7 @@
 the files and lines the adopter owns, known vulnerabilities, and release provenance. Prints one
 JSON object per product. Usage: footprint.py <out.json>.
 
-Toolbox is its released Linux archives (the version below) plus the OpenFGA binary the image adds;
+Seikika is its released Linux archives (the version below) plus the OpenFGA binary the image adds;
 its packages are Cargo.lock's, the Go modules built into OpenFGA (`go version -m`) and the UI's npm
 lockfile, which is bundled into the binary.
 Backstage is a `@backstage/create-app` app (BS_SRC, as generated) and its production install
@@ -21,9 +21,9 @@ from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[1]
-TOOLBOX_VERSION = os.environ.get("TOOLBOX_VERSION", "v0.1.1")
+SEIKIKA_VERSION = os.environ.get("SEIKIKA_VERSION", "v0.2.0")
 TOOLS = Path(os.environ.get("TOOLS", "/tmp/tools"))
-OPENFGA = Path(os.environ.get("TOOLBOX_OPENFGA_BIN", TOOLS / "openfga"))
+OPENFGA = Path(os.environ.get("SEIKIKA_OPENFGA_BIN", TOOLS / "openfga"))
 OSV = os.environ.get("OSV_SCANNER", str(TOOLS / "osv-scanner"))
 BS_SRC = Path(os.environ.get("BS_SRC", "/tmp/bs/app"))
 BS_APP = Path(os.environ.get("BS_APP", "/tmp/bs/prod"))
@@ -31,7 +31,7 @@ NODE = Path(os.environ.get("NODE_HOME", "/tmp/bs/node24"))
 # Packages checked for npm provenance: the template's core backend and CLI.
 BS_PACKAGES = ["@backstage/create-app", "@backstage/cli", "@backstage/backend-defaults",
                "@backstage/plugin-catalog-backend", "@backstage/core-components"]
-# What an adopter writes for a first portal with Toolbox: the starter, minus its tests.
+# What an adopter writes for a first portal with Seikika: the starter, minus its tests.
 STARTER = ROOT / "examples" / "repo-portal-starter"
 CODE = {".ts", ".tsx", ".js", ".jsx", ".json", ".yaml", ".yml", ".md", ".hbs", ""}
 
@@ -54,13 +54,13 @@ def owned(root, skip=("node_modules", ".git", "dist", "dist-types", ".yarn")):
     return files, lines
 
 
-def toolbox_install():
-    tmp = Path(tempfile.mkdtemp(prefix="tbx-release-"))
-    out = subprocess.run(["gh", "release", "view", TOOLBOX_VERSION, "--json", "assets", "-q",
+def seikika_install():
+    tmp = Path(tempfile.mkdtemp(prefix="seikika-release-"))
+    out = subprocess.run(["gh", "release", "view", SEIKIKA_VERSION, "--json", "assets", "-q",
                           '.assets[].name | select(test("x86_64-unknown-linux-gnu.tar.xz$"))'],
                          capture_output=True, text=True, check=True, cwd=ROOT)
     names = out.stdout.split()
-    subprocess.run(["gh", "release", "download", TOOLBOX_VERSION, "-D", str(tmp), "--clobber"]
+    subprocess.run(["gh", "release", "download", SEIKIKA_VERSION, "-D", str(tmp), "--clobber"]
                    + sum((["-p", n] for n in names), []), check=True, cwd=ROOT)
     archive_bytes = sum((tmp / n).stat().st_size for n in names)
     bins = tmp / "bin"
@@ -73,7 +73,7 @@ def toolbox_install():
                     t.extract(m, bins, filter="data")
     verified = 0
     for n in names:
-        r = subprocess.run(["gh", "attestation", "verify", str(tmp / n), "-R", "loganvolkers/toolbox"],
+        r = subprocess.run(["gh", "attestation", "verify", str(tmp / n), "-R", "seikika/seikika"],
                            capture_output=True, text=True, cwd=ROOT)
         verified += r.returncode == 0
     return {"installBytes": du(bins) + OPENFGA.stat().st_size,
@@ -150,14 +150,14 @@ def npm_provenance():
 
 
 def main():
-    tbx = toolbox_install()
+    tbx = seikika_install()
     tbx_files, tbx_lines = owned(STARTER, skip=("tests", "fixtures"))
     ui_lock = ROOT / "ui" / "package-lock.json"
     tbx_vulns, tbx_high = vulns(ROOT / "Cargo.lock", OPENFGA, ui_lock)
     bs_files, bs_lines = owned(BS_SRC)
     bs_vulns, bs_high = vulns(BS_APP / "yarn.lock")
     out = {
-        "toolbox": {
+        "seikika": {
             "installMb": round(tbx["installBytes"] / 1e6, 1),
             "downloadMb": round(tbx["downloadBytes"] / 1e6, 1),
             "thirdPartyPackages": cargo_packages() + go_modules(OPENFGA) + npm_packages(ui_lock),

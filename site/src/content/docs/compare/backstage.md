@@ -1,6 +1,6 @@
 ---
-title: Toolbox vs Backstage
-description: When to choose Toolbox or Backstage for an internal developer portal.
+title: Seikika vs Backstage
+description: When to choose Seikika or Backstage for an internal developer portal.
 sidebar:
   order: 2
 relationship: replace
@@ -9,15 +9,15 @@ peer_url: https://backstage.io/
 last_verified: 2026-11-23
 claim_sources:
   - https://github.com/backstage/backstage
-  - https://github.com/loganvolkers/toolbox/blob/main/docs/research.md
-  - https://github.com/loganvolkers/toolbox/blob/main/experiments/backstage-compare/RESULTS.md
+  - https://github.com/seikika/seikika/blob/main/docs/research.md
+  - https://github.com/seikika/seikika/blob/main/experiments/backstage-compare/RESULTS.md
 ---
 
-Both projects help an organization publish a software catalog, standards, and the surfaces people and agents use to work with them. [Backstage](https://backstage.io/) created that category as a scaffolded TypeScript application with a rich plugin ecosystem. Toolbox is a config-as-code portal aimed at agents first, shipped as a versioned dependency rather than an app you own the scaffold of.
+Both projects help an organization publish a software catalog, standards, and the surfaces people and agents use to work with them. [Backstage](https://backstage.io/) created that category as a scaffolded TypeScript application with a rich plugin ecosystem. Seikika is a config-as-code portal aimed at agents first, shipped as a versioned dependency rather than an app you own the scaffold of.
 
 ## Quick glance
 
-| | Backstage | Toolbox |
+| | Backstage | Seikika |
 |---|---|---|
 | License / deploy | Apache-2.0; you run the scaffolded app | Open-source; one container image + Postgres |
 | Config locus | Code in the adopter's app + `app-config` | Portal manifest and packages in git |
@@ -38,21 +38,21 @@ Both projects help an organization publish a software catalog, standards, and th
 
 ### Config-as-code vs owning the scaffold
 
-Backstage adopters compose plugins inside an application they generate and upgrade. Toolbox treats the portal as configuration and packages you validate, plan, and deploy — the binary upgrades like a dependency. That is the core product bet, not a slight against Backstage's ecosystem.
+Backstage adopters compose plugins inside an application they generate and upgrade. Seikika treats the portal as configuration and packages you validate, plan, and deploy — the binary upgrades like a dependency. That is the core product bet, not a slight against Backstage's ecosystem.
 
 ### Agent-first contracts
 
-Toolbox exposes the same catalog over API, MCP, CLI, and UI from the start. Backstage has added MCP and AI-oriented catalog kinds; both projects are moving, and primary docs are the place to verify current surfaces.
+Seikika exposes the same catalog over API, MCP, CLI, and UI from the start. Backstage has added MCP and AI-oriented catalog kinds; both projects are moving, and primary docs are the place to verify current surfaces.
 
 ### Box for tools
 
-Scorecards and lint findings in Toolbox prefer carrying existing tools and standard outputs rather than re-implementing checks inside the portal process. See [the box and the tools](https://github.com/loganvolkers/toolbox/blob/main/docs/design/toolbox-and-tools.md).
+Scorecards and lint findings in Seikika prefer carrying existing tools and standard outputs rather than re-implementing checks inside the portal process. See [the box and the tools](https://github.com/seikika/seikika/blob/main/docs/design/seikika-and-tools.md).
 
 ## Measured, beyond DX
 
-We measured both products with scripts, no agent in the loop, on one VM: Toolbox's release build with OpenFGA authorizing every read (each decision checked once per snapshot, then cached), against Backstage 1.57 from `@backstage/create-app` 0.9.4, built as its Dockerfile does and run with its production config. The comparative scorecards in this repository's own report score the result; see the **Compare** tab of [this repository, scored](/toolbox/report-hosted/#compare). Round 3, at 10,000 components:
+We measured both products with scripts, no agent in the loop, on one VM: Seikika's release build with OpenFGA authorizing every read (each decision checked once per snapshot, then cached), against Backstage 1.57 from `@backstage/create-app` 0.9.4, built as its Dockerfile does and run with its production config. The comparative scorecards in this repository's own report score the result; see the **Compare** tab of [this repository, scored](/report-hosted/#compare). Round 3, at 10,000 components:
 
-| Factor | Toolbox | Backstage | Standing |
+| Factor | Seikika | Backstage | Standing |
 |---|---|---|---|
 | Performance | get 56.5k req/s, owner list 3,790 req/s, ready 0.9 s, catalog readable 2.2 s | get 4.2k req/s, owner list 474 req/s, ready 3.3 s, catalog readable 26.6 s | ahead |
 | Footprint | 89 MB idle, 166 MB loaded, 121 MB installed, 2 adopter files | 452 MB idle, 806 MB loaded, 710 MB installed, 44 adopter files | ahead |
@@ -64,7 +64,7 @@ We measured both products with scripts, no agent in the loop, on one VM: Toolbox
 | Extensibility | connectors in any language, no rebuild | TypeScript plugins, rebuild the app | ahead |
 | Capabilities | catalog, ownership, graph, scorecards, permissions, MCP | all of those, plus TechDocs, search, scaffolder, API docs, Kubernetes, notifications, and a community of 2,826 contributors | **behind** |
 
-Both products listen on every interface as shipped. Backstage wins on capabilities and community, and that loss is published, not waived. The method, every round (including a first round Toolbox lost on filtered lists, and a harness defect that measured Backstage's lists on empty responses), the threats to validity and an independent adjudication are in [the results](https://github.com/loganvolkers/toolbox/blob/main/experiments/backstage-compare/RESULTS.md).
+Both products listen on every interface as shipped. Backstage wins on capabilities and community, and that loss is published, not waived. The method, every round (including a first round Seikika lost on filtered lists, and a harness defect that measured Backstage's lists on empty responses), the threats to validity and an independent adjudication are in [the results](https://github.com/seikika/seikika/blob/main/experiments/backstage-compare/RESULTS.md).
 
 ## Good for / not for
 
@@ -72,10 +72,10 @@ Both products listen on every interface as shipped. Backstage wins on capabiliti
 
 - You already run Backstage and have invested in plugins, TechDocs, and the scaffolder.
 - Your platform team is staffed to own a TypeScript portal application and its upgrade cadence.
-- You need a specific community plugin that has no Toolbox equivalent yet.
+- You need a specific community plugin that has no Seikika equivalent yet.
 - A hosted Backstage distribution (Roadie, Red Hat Developer Hub, Spotify Portal, and similar) matches how you buy and operate software.
 
-### Choose Toolbox when
+### Choose Seikika when
 
 - You want a greenfield portal configured only in code, with agents as a primary audience.
 - You want scorecards and CI ratchets without standing up a separate insights plugin stack.
@@ -83,14 +83,14 @@ Both products listen on every interface as shipped. Backstage wins on capabiliti
 
 ## Coexistence
 
-Toolbox is designed to **read** Backstage-shaped `catalog-info.yaml` so descriptors stay portable ([research.md](https://github.com/loganvolkers/toolbox/blob/main/docs/research.md), plan entity envelope). A full migration importer and a “Backstage plugin that speaks Toolbox” are product work — **not built** as of this page. Running both during a transition is a reasonable path; ripping and replacing overnight is not required.
+Seikika is designed to **read** Backstage-shaped `catalog-info.yaml` so descriptors stay portable ([research.md](https://github.com/seikika/seikika/blob/main/docs/research.md), plan entity envelope). A full migration importer and a “Backstage plugin that speaks Seikika” are product work — **not built** as of this page. Running both during a transition is a reasonable path; ripping and replacing overnight is not required.
 
 ## What we learned
 
-[Backstage](https://backstage.io/) defined the internal developer portal as a product category: a software catalog next to the code, docs-like-code, and a plugin ecosystem that proved platforms can grow in the open. Toolbox keeps the catalog envelope so `catalog-info.yaml` stays portable, and builds the agent-first, config-as-code shape we wanted next.
+[Backstage](https://backstage.io/) defined the internal developer portal as a product category: a software catalog next to the code, docs-like-code, and a plugin ecosystem that proved platforms can grow in the open. Seikika keeps the catalog envelope so `catalog-info.yaml` stays portable, and builds the agent-first, config-as-code shape we wanted next.
 
-More on [Acknowledgments](/toolbox/compare/acknowledgments/).
+More on [Acknowledgments](/compare/acknowledgments/).
 
 ## Last verified
 
-**2026-11-23**, against [docs/research.md](https://github.com/loganvolkers/toolbox/blob/main/docs/research.md) (Backstage docs read from `backstage/backstage`) and [backstage.io](https://backstage.io/). Re-check upstream docs when citing plugin or MCP details; do not copy undated third-party staffing statistics.
+**2026-11-23**, against [docs/research.md](https://github.com/seikika/seikika/blob/main/docs/research.md) (Backstage docs read from `backstage/backstage`) and [backstage.io](https://backstage.io/). Re-check upstream docs when citing plugin or MCP details; do not copy undated third-party staffing statistics.

@@ -1,10 +1,10 @@
 # DX Benchmark catalog entry (docs/design/dx-benchmarks.md §6), scored by maintainer-benchmark.
 records:
   - id: graphify-monorepo-ab
-    title: Graphify vs a Toolbox repo portal vs nothing on a large Rust monorepo
+    title: Graphify vs a Seikika repo portal vs nothing on a large Rust monorepo
     question: >-
       On a large monorepo, where a code graph is supposed to be strong, does
-      Graphify or a Toolbox repo portal help a coding agent answer structure
+      Graphify or a Seikika repo portal help a coding agent answer structure
       and code-navigation questions more completely, or for less reading and
       fewer calls, than the agent's own search?
     layers: [maintainer, user]
@@ -17,7 +17,7 @@ records:
     status: archived
     ran: 2026-11-23
     outcome: >-
-      Neither Graphify nor a Toolbox repo portal helped or hurt, and neither
+      Neither Graphify nor a Seikika repo portal helped or hurt, and neither
       beat the other: M1 to M9, M12 and M13 inconclusive, M10 and M11 held.
       Two hardenings didn't buy headroom: every answer scored 0.981 or more,
       split only by two boundary conventions that fell across all arms. Both
@@ -27,7 +27,7 @@ records:
       D01M84ZW6K2V9CV2SD644DE5M0S stands for large monorepos (ADJUDICATION.md)
     changed:
     - >-
-      toolbox graph gains --relation and --direction, so one call returns a
+      seikika graph gains --relation and --direction, so one call returns a
       crate's transitive dependents
     - >-
       questions.md Q20: whether the graph read goes past 3 hops and search
@@ -38,7 +38,7 @@ records:
     servedValue: >-
       It gave Graphify its home ground (a 120-crate, 950k-line Rust monorepo,
       a code-only graph, questions about calls, dependencies and a trace) and
-      a Toolbox repo portal its crate facts, and showed neither helps there,
+      a Seikika repo portal its crate facts, and showed neither helps there,
       under the registered rule or a post-hoc rank test. It also found the CLI
       graph read's missing filters, now fixed. Graphify's `affected` was never
       named to the agents (red team R3). No second round is planned unless a
@@ -64,7 +64,7 @@ records:
     fitAudit: >-
       One round. Before it was frozen, two dry runs hardened Q2 to Q4 and
       fixed a Q3 gold item (19 to 20), and M1, M4, M12 and M13 became
-      harm-only guards per L21. After the round, toolbox graph gained
+      harm-only guards per L21. After the round, seikika graph gained
       --relation and --direction; no prompt, question or gold changed after
       the freeze
     spread: >-

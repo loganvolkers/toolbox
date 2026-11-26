@@ -1,0 +1,65 @@
+apiVersion: seikika.com/assessment/v1
+entity: rule:seikika/user-mcp/contract-tested
+rubric: rule-quality
+subjectHash: 15beffb9beb0
+assessor: {kind: agent, name: cursor-cloud-agent, model: claude-opus-5.5}
+at: 2026-11-24
+verdicts:
+  - criterion: measures-intent
+    verdict: pass
+    reason: >-
+      The earlier fail is fixed. The static capture CI uses now needs a
+      `"name": "<tool>", "arguments"` body on a line with no `/` or `#` before
+      it (portal/seikika.yaml:115-117), which matches every real call in
+      crates/seikika-api/tests/mcp.rs and not the bare tool list at
+      crates/seikika-api/tests/mcp.rs:99, so `campaign_report`, listed but
+      never called, is the one live failure. docs/design/thresholds.md:49 now
+      scopes the rule to reach, not depth, and says the static mode can't see
+      whether a call succeeds, so an error-path-only call (like
+      crates/seikika-api/tests/mcp.rs:291) passing statically is a stated
+      limit, not drift.
+  - criterion: hard-to-game
+    verdict: fail
+    reason: >-
+      In the mode CI runs (`skip: runner,github-actions`,
+      .github/workflows/ci.yml:109), a dead literal such as `let _ =
+      json!({"name": "campaign_report", "arguments": {}});` in any
+      crates/*/tests/*.rs file passes without calling anything, and so does
+      that text on a ` * ` line inside a `/* */` block comment, since the
+      capture excludes only lines with `/` or `#` before the name
+      (portal/seikika.yaml:117). It costs about as much as a real `ok(&url,
+      …)` call (crates/seikika-api/tests/mcp.rs:73-77), but it isn't the right
+      thing.
+    suggestion: >-
+      Let the report in CI run only the runner's `mcp-calls` job (the MCP
+      contract tests with SEIKIKA_MCP_TRACE, portal/README.md:121) while still
+      skipping the slow per-crate jobs, so observed calls decide; failing
+      that, also exclude lines starting with `*` in the capture.
+  - criterion: fix-leads-to-pass
+    verdict: pass
+    reason: >-
+      The fix names the place (crates/seikika-api/tests) and the mechanism
+      (tools/call), and says why `viaCli` doesn't count
+      (portal/standards/cli.yaml:329-332). The static evidence spells out the
+      body shape the capture needs, `{"name": …, "arguments": …}`
+      (cli.yaml:327-328), which is the shape every call in
+      crates/seikika-api/tests/mcp.rs uses, so following it passes in both
+      modes.
+  - criterion: threshold-justified
+    verdict: pass
+    reason: >-
+      Gold with one successful observed call, or a tools/call body in static
+      mode, is stated with its reasoning in docs/design/thresholds.md:49. The
+      comment at portal/standards/cli.yaml:319-320 still says the helper
+      "asserts on each result", which thresholds.md:49 now corrects (it checks
+      the response shape, crates/seikika-api/tests/mcp.rs:63-70); stale
+      wording, not a missing justification.
+summary: >-
+  Re-assessed after the rule gained a rationale: its check, evidence, fix
+  and level are the same as on main, as is the code the reasons cite, so
+  the verdicts stand; line numbers are updated for the rationale lines
+  inserted above them. The rationale states the why without claiming more
+  than the check sees. The capture now credits only real tools/call bodies
+  and the doc scopes the rule to reach. In CI's static mode a dead `json!`
+  literal or a block-comment line still passes, because nothing has to
+  run.

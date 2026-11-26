@@ -49,8 +49,8 @@ assert:
       'workflow:.github/workflows/ci.yml').evidence['fail-rate-under-20'] ==
       ['92% of the last 12 decided runs on main failed on their first attempt
       (92% still failed after re-runs; 0 cancelled runs not counted)',
-      'https://github.com/loganvolkers/toolbox/actions/runs/12',
-      'https://github.com/loganvolkers/toolbox/actions/runs/11'] &&
+      'https://github.com/seikika/seikika/actions/runs/12',
+      'https://github.com/seikika/seikika/actions/runs/11'] &&
       score('ci-reliability',
       'workflow:.github/workflows/ci.yml').rules['main-not-stuck-red'] ==
       'fail'

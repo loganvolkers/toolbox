@@ -1,4 +1,4 @@
-apiVersion: toolbox.dev/assessment/v1
+apiVersion: seikika.com/assessment/v1
 entity: assessment:sdlc-stage-quality/sdlc-stage:maintainer/monitor
 rubric: assessment-quality
 subjectHash: 510ed7b7e270
@@ -11,16 +11,16 @@ verdicts:
       Every citation in
       portal/assessments/sdlc-stage-quality/sdlc-stage/maintainer/monitor.yaml
       lands where it says. .github/workflows/ci.yml:107-113 is the ratchet
-      step through ./actions/report with `toolbox-dir: target/debug` (line
+      step through ./actions/report with `seikika-dir: target/debug` (line
       112), and actions/report/action.yml:28-34 is the `mode` input that
       defaults to `ci`. actions/report/run.sh:25 turns that into `--baseline …
       --ci`, and portal/README.md:98-99 says CI also fails when an improvement
-      isn't recorded. ci.yml:78-82 is the `toolbox tools install portal --via
-      pip` and `toolbox doctor portal` step.
+      isn't recorded. ci.yml:78-82 is the `seikika tools install portal --via
+      pip` and `seikika doctor portal` step.
       packages/openssf-scorecard/README.md:32 and 51-55 are the `--local` and
       refresh notes. maintainer-sdlc.md:64 still reads "report, not yet a
-      gate", and toolbox-for-toolbox.md:223 says "built and gating".
-      portal/toolbox.yaml:390-391 is `tool: ruff` and `version: 0.14.0`.
+      gate", and seikika-for-seikika.md:223 says "built and gating".
+      portal/seikika.yaml:390-391 is `tool: ruff` and `version: 0.14.0`.
       scripts/ci-tools.sh:9-11 checks SHA-256, and
       examples/repo-portal-starter/README.md:3-6 is the action pilot repos
       use.
@@ -31,10 +31,10 @@ verdicts:
       stage's checks (portal/sdlc/stages/maintainer.yaml:108) include ci.yml,
       whose ratchet step fails on regressions and on a stale baseline.
       agent-can-complete holds even though maintainer-sdlc.md lags.
-      toolbox-for-toolbox.md:17, a listed doc, links portal/README.md, which
+      seikika-for-seikika.md:17, a listed doc, links portal/README.md, which
       gives the commands and tool pins (README:80-97). reuses-artifacts is
-      right too. With `toolbox-dir` set, the action skips its own `cargo
-      build` (action.yml:119-122 run only when toolbox-dir is empty). I found
+      right too. With `seikika-dir` set, the action skips its own `cargo
+      build` (action.yml:119-122 run only when seikika-dir is empty). I found
       no missed failure.
   - criterion: reproducible
     verdict: pass

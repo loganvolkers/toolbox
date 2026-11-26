@@ -1,0 +1,65 @@
+apiVersion: seikika.com/assessment/v1
+entity: assessment:rule-quality/rule:seikika/meta-assessment/cites-for-findings
+rubric: assessment-quality
+subjectHash: 74e915e4db24
+assessor: {kind: agent, name: cursor-reviewer-23, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: supported
+    verdict: pass
+    reason: >-
+      The citations in
+      portal/assessments/rule-quality/rule/seikika/meta-assessment/cites-for-findings.yaml
+      land where they say. In crates/seikika-connect/src/assessment.rs,
+      cites() is 15-46, the dotted-host URL regex 30-35, the unique-name
+      lookup 70-75 and file_names 81-120, with known_id 124-149 and the
+      shape-only doc 10-14. The negative test is 361-371, with "see README.md"
+      and "a bare https:// prefix". The
+      docs/design/scorecards-for-scorecards.md:288-298 table separates
+      meta-assessment from review-assessment. Its row at 295 still lists `§4`
+      and "a number" as checkable, as the summary says. In
+      portal/standards/assessments.yaml, the supported criterion is 321-325
+      and the fix 194-199. The assessment cites 319-323 and 193-198, a line or
+      two early but covering the text it quotes.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      No verdict is contradicted by the sources. measures-intent passes
+      because each path, name and id is resolved against the repository
+      (assessment.rs:44-45). The `:line` suffix is dropped (assessment.rs:49,
+      65), so a wrong line number still counts, but
+      scorecards-for-scorecards.md:295-297 leaves whether a citation supports
+      the reason to review-assessment. fix-leads-to-pass matches the forms at
+      assessment.rs:10-14. threshold-justified has no number
+      (scorecards-for-scorecards.md:295).
+  - criterion: reproducible
+    verdict: unsure
+    reason: >-
+      The hard-to-game pass rests on a judgement. With the repository at hand,
+      paths and ids must resolve, but a URL with a dotted host returns true
+      before any repository check (assessment.rs:34-36). The code's own test
+      accepts "https://x.dev" (assessment.rs:357). So pasting any URL under a
+      finding is as cheap as `assert!(true)`, and the hard-to-game guidance
+      names that pattern (portal/standards/meta.yaml:1164-1166). The
+      assessment says advisory review catches it, but review-assessment
+      doesn't gate (scorecards-for-scorecards.md:297). A second assessor could
+      fail hard-to-game on the same sources.
+    suggestion: >-
+      Either fail hard-to-game for the unchecked URL branch, suggesting that
+      URLs count only when the repository is absent or when they point at a
+      host the portal declares as a source. Or state why a placeholder URL is
+      no cheaper than citing the file read, citing evidence such as no
+      URL-only finding among portal/assessments/.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      Every verdict in
+      portal/assessments/rule-quality/rule/seikika/meta-assessment/cites-for-findings.yaml
+      is pass, so it has no suggestions to judge.
+summary: >-
+  The citations hold, give or take a line in assessments.yaml, and the
+  summary rightly flags the stale `§4` and "a number" at
+  scorecards-for-scorecards.md:295. The hard-to-game pass is a judgement.
+  Any dotted-host URL counts without a repository check
+  (assessment.rs:34), so a placeholder link is as cheap a route as the
+  ones the assessment calls closed.

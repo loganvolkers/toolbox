@@ -3,9 +3,9 @@
 #
 # Pages CI installs actionlint 1.7.12, osv-scanner 2.7.1 and the pinned RustSec database
 # (scripts/ci-tools.sh), then zizmor and ruff from the portal's
-# pins (toolbox tools install),
-# runs toolbox doctor, then:
-#   toolbox report portal --skip runner,github-actions --baseline portal/results.json -o web --out site/.generated
+# pins (seikika tools install),
+# runs seikika doctor, then:
+#   seikika report portal --skip runner,github-actions --baseline portal/results.json -o web --out site/.generated
 # Without those pins, ci-lint rules become `unknown` and the preview diverges from CI
 # (D01M7YAXH89ZJQ7Q4HP77NMHBX8). Use this script instead of a bare report command.
 #
@@ -13,20 +13,20 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
-TOOLS="${TOOLBOX_CI_TOOLS:-${TMPDIR:-/tmp}/toolbox-ci-tools}"
+TOOLS="${SEIKIKA_CI_TOOLS:-${TMPDIR:-/tmp}/seikika-ci-tools}"
 scripts/ci-tools.sh "$TOOLS" actionlint scorecard osv-scanner rustsec-osv
 export PATH="$TOOLS:$PATH" OSV_SCANNER_LOCAL_DB_CACHE_DIRECTORY="$TOOLS"
 
 cargo build --locked
 # zizmor and ruff from the portal's own pins (tools:), with uv, pipx or pip: whichever is here.
 export PATH="${HOME}/.local/bin:$PATH"
-target/debug/toolbox tools install portal
+target/debug/seikika tools install portal
 
 actionlint -version
 zizmor --version
 ruff --version
 osv-scanner --version
 
-target/debug/toolbox doctor portal
-target/debug/toolbox report portal --skip runner,github-actions --baseline portal/results.json -o web --out site/.generated
+target/debug/seikika doctor portal
+target/debug/seikika report portal --skip runner,github-actions --baseline portal/results.json -o web --out site/.generated
 echo "wrote site/.generated/report.json for the Astro report integration"

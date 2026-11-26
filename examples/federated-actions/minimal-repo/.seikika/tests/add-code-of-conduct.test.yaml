@@ -1,0 +1,38 @@
+# `seikika test .seikika` runs each case through the real lifecycle (preview, request, approvals,
+# the change, the check on main) in a scratch copy of this repository and its origin's main.
+# Nothing reaches the real origin, and no run is recorded.
+name: add-code-of-conduct
+# Every case starts from these; a case's inputs merge into them (`null` leaves one out).
+defaults:
+  action: add-code-of-conduct
+  as: user:ann
+  inputs: {contact: conduct@acme.dev}
+  approve: [user:bob]
+runs:
+  - name: ann requests, bob approves, and CODE_OF_CONDUCT.md lands on main
+    expect:
+      state: succeeded
+      files:
+        CODE_OF_CONDUCT.md: |
+          # Code of conduct
+
+          Report conduct issues to conduct@acme.dev.
+  - name: a contact that is not an email address is refused, and nothing changes
+    inputs: {contact: nobody}
+    expect: {state: invalid, files: {CODE_OF_CONDUCT.md: null}}
+  - name: ann cannot approve her own run, and carol is not an approver
+    approve: [user:ann, user:carol]
+    expect:
+      state: awaiting_approval
+      refused: [user:ann, user:carol]
+      files: {CODE_OF_CONDUCT.md: null}
+  # {portal} is the name of the repository under test, so this file is the same in every one.
+  - name: the repository's own address is not a contact
+    inputs: {contact: '{portal}@acme.dev'}
+    expect: {state: blocked, files: {CODE_OF_CONDUCT.md: null}}
+  - name: a push the origin rejects fails the run with the origin's message
+    rejectPush: main is protected
+    expect:
+      state: failed
+      error: main is protected
+      files: {CODE_OF_CONDUCT.md: null}

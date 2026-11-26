@@ -1,0 +1,71 @@
+apiVersion: seikika.com/assessment/v1
+entity: rule:seikika/meta-rubric/discriminates
+rubric: rule-quality
+subjectHash: 658b36d67241
+assessor: {kind: agent, name: cursor-assessor-03, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: measures-intent
+    verdict: fail
+    reason: >-
+      `alwaysPass` lists criteria whose verdicts are `pass` in every one of
+      the rubric's assessments (crates/seikika-cli/src/model.rs:257-271). One
+      `unsure` takes a criterion off the list, so a criterion that assessors
+      can't answer reads as discriminating. Every assessment file counts,
+      fresh or stale (model.rs:240-248), so a criterion that failed once,
+      before the rubric or its subjects changed, discriminates forever. When I
+      counted portal/assessments/, rule-quality's threshold-justified had
+      passed all 19 assessments. fix-leads-to-pass, the criterion the
+      rationale names (portal/standards/meta.yaml:1141-1144), now counts as
+      discriminating on the strength of a single fail.
+    suggestion: >-
+      Count only fresh assessments and only `fail` verdicts, and require fails
+      on at least two entities, so that one outlier review doesn't settle it.
+  - criterion: hard-to-game
+    verdict: fail
+    reason: >-
+      The cheapest pass is one `unsure` on each always-pass criterion, in any
+      assessment, stale or not. That rewards an assessor for withholding a
+      pass, the opposite of the assess-entity skill's "Don't weaken a verdict
+      to raise a level"
+      (plugins/seikika-operator/skills/assess-entity/SKILL.md:40-41).
+    suggestion: >-
+      Count only `fail` verdicts from fresh assessments, as above. A fail must
+      carry a cited reason, which meta-assessment checks, so it costs more
+      than an `unsure`.
+  - criterion: fix-leads-to-pass
+    verdict: fail
+    reason: >-
+      Verdicts are matched by criterion name (model.rs:257-262). Sharpening a
+      criterion's question leaves the old all-pass verdicts in place, so the
+      rule keeps failing until new assessments fail that criterion. A renamed
+      criterion has no verdicts, and `all` over none is true
+      (model.rs:263-268), so it is listed straight away. Dropping a criterion
+      passes, but every existing assessment still answers it, and `seikika
+      assess check` rejects invented criteria
+      (docs/design/scorecards-for-scorecards.md:236-240). When the evidence
+      says "only N assessment(s)" (meta.yaml:1134-1137), the fix's advice
+      doesn't apply at all.
+    suggestion: >-
+      Fix text: "Sharpen or drop the listed criterion, then re-assess three
+      entities with it; with fewer than three assessments, assess more
+      (`seikika assess brief <id> --rubric <name>`)." In the code, leave a
+      criterion with no verdicts off the list instead of listing it.
+  - criterion: threshold-justified
+    verdict: unsure
+    reason: >-
+      The number 3 appears in the evidence (meta.yaml:1135-1136) and in
+      scorecards-for-scorecards.md:295, but nowhere is it reasoned. The
+      thresholds page, which calls itself "where the justification lives"
+      (docs/design/thresholds.md:5-7), has no row for it. The gold level
+      itself follows the card's rationale (meta.yaml:1085-1086).
+    suggestion: >-
+      Add a thresholds.md row explaining why three assessments are enough to
+      call a criterion non-discriminating, rather than five or a share of the
+      rubric's entities, labelled chosen or measured.
+summary: >-
+  The question is the right one for gold, but the measure rewards the
+  wrong behaviour. Any `unsure`, even in a stale file, clears a criterion,
+  and once a criterion has failed it counts as discriminating forever. The
+  fix's "sharpen" doesn't change the verdicts the rule reads, and the
+  three-assessment bar has no stated reason.

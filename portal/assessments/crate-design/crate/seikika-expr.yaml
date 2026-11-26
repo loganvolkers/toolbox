@@ -1,0 +1,102 @@
+apiVersion: seikika.com/assessment/v1
+entity: crate:seikika-expr
+rubric: crate-design
+subjectHash: 6b368f4a6883
+assessor: {kind: agent, name: cursor-cloud-agent, model: claude-opus-5.5}
+at: 2026-11-24
+verdicts:
+  - criterion: one-responsibility
+    verdict: pass
+    reason: >-
+      The crate owns one thing, the expression language, and its crate docs
+      say so and list its four parts: static checks, compile and evaluate,
+      lazy lists, analysis (crates/seikika-expr/src/lib.rs:1-17). That matches
+      its row in docs/v1-spec.md:89 ("CEL compile and evaluate (cel-rust),
+      custom functions"). The change under review adds no new job: it
+      documents that a postcondition also reads the executor's `outputs`
+      (lib.rs:43-44, 63) and tests it. The new caller, seikika-exec, uses the
+      crate only to evaluate action expressions
+      (crates/seikika-exec/src/check.rs:96-117), which is the same job. The
+      spec row's "error mapping to `unknown`" is done by the caller
+      (seikika-derive), not here. That is the right place, but the spec row
+      doesn't say so.
+  - criterion: small-contract
+    verdict: pass
+    reason: >-
+      Every caller uses re-exported, documented items only: seikika-model
+      imports Site and calls check, matching on CelIssue
+      (crates/seikika-model/src/validate.rs:13, 812-816). seikika-derive uses
+      Expr, ExprValue, Scope, with_vals, with_vars and lazy_map
+      (crates/seikika-derive/src/lib.rs:15) and Env (testing.rs:10).
+      seikika-exec uses Expr, ExprValue and with_vars
+      (crates/seikika-exec/src/check.rs:8). seikika-api uses those three and
+      analysis::required_equalities, whose input and output are strings
+      (crates/seikika-api/src/routes.rs:17, 218). seikika-cli calls
+      analysis::analyse (crates/seikika-cli/src/meta.rs:183, model.rs:28,
+      160). Errors cross as String (eval.rs:234), and no caller matches on
+      cel's message text: a search for cel error strings outside the crate
+      finds none. The one rough edge is `Expr::source`, a public field with no
+      doc comment (eval.rs:203).
+  - criterion: replaceable-defaults
+    verdict: pass
+    reason: >-
+      Only this crate depends on cel-rust (crates/seikika-expr/Cargo.toml:11).
+      Apart from the workspace pin (Cargo.toml:22), no other Cargo.toml names
+      `cel`. The crate docs state the contract (lib.rs:16-17). No public
+      signature names a cel type: ExprValue and Lazy keep their cel values in
+      pub(crate) fields (eval.rs:13, 111), Scope wraps a cel Context in a
+      private field (eval.rs:107), and analysis returns Seikika structs or
+      strings (analysis.rs:13-30, 153). Swapping cel-rust would change this
+      crate only.
+  - criterion: tests-match-risk
+    verdict: pass
+    reason: >-
+      The riskiest paths are:
+      1. JSON-to-CEL conversion, which every score goes through;
+      2. lazy `inbound` lists;
+      3. check(), which validate trusts;
+      4. the per-site variable table;
+      5. required_equalities, which the API uses to narrow a list, so a wrong
+      result would hide entities the filter accepts.
+
+      Each has a direct test, and all 14 pass under `cargo test -p
+      seikika-expr`:
+      - Conversion: u64 above i64::MAX, floats, int compared with double,
+      non-finite floats, a value with no JSON form, and a one-line compile
+      error (eval.rs:338-360). Non-string map keys (eval.rs:284-291), and
+      round trips (eval.rs:293-312).
+      - Lazy lists: size, iteration, indexing, out of bounds, and a string or
+      negative index (eval.rs:249-282).
+      - Env functions and their errors (eval.rs:314-336).
+      - check(): the variable, syntax and undeclared-function branches
+      (lib.rs:168-197).
+      - required_equalities: both operand orders under `&&`, and refusing
+      `||`, `!`, a non-literal, a number, a nested field, has() and invalid
+      CEL (analysis.rs:190-212).
+
+      The previous gap is closed. only_a_postcondition_reads_the_executor_outputs
+      (lib.rs:199-215) accepts `outputs` at Site::Postcondition and rejects it
+      at Site::Action with the exact allowed list. seikika-model sends
+      `expect.postcondition` to that site (validate.rs:779-783).
+
+      What remains is minor:
+      - The Tuples and ContextLookup variable lists are only exercised
+      positively, through the reference portal (examples/reference-portal/
+      seikika.yaml:237 and its `candidate.` lookups).
+      - The table and the variables that callers actually bind live in
+      different crates (seikika-exec check.rs:108-116, 193-200), and no test
+      ties them together.
+      - cel-rust itself has not been checked against the CEL spec (Q10,
+      docs/questions.md).
+    suggestion: >-
+      Add one table-driven test that checks, for each Site, that a variable
+      from another site is rejected. Run a slice of the cel-spec conformance
+      suite through Expr (Q10) and record the result in docs/research-log.md.
+summary: >-
+  The crate does one job, through a small documented contract, with
+  cel-rust fully behind it. The new caller, seikika-exec, uses only the
+  public evaluation API. The new test pins that `outputs` is readable at
+  Site::Postcondition and rejected at Site::Action, which closes the gap a
+  previous draft left `unsure`. What stays open is minor: the Tuples and
+  ContextLookup variable lists have no negative tests, and CEL conformance
+  (Q10) is unmeasured.

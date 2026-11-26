@@ -7,11 +7,11 @@ decided: 2026-11-23T06:20:00Z
 
 **A package-author SDLC fix (not a benchmark-bar change).** After the learning-tax
 rerun ([RESULTS-v2](../../experiments/connector-ab/RESULTS-v2.md),
-D01M83FFM2K6XS4EAVHVP92TBDZ) Toolbox held C1–C3, but agents still spent tool calls
+D01M83FFM2K6XS4EAVHVP92TBDZ) Seikika held C1–C3, but agents still spent tool calls
 hand-mapping drive NDJSON (`kind`/`externalId`/`data`) into catalog lines
 (`kind`/`id`/`data`). That map script was the top remaining friction.
 
-**Decision:** Extend `toolbox connector drive` with:
+**Decision:** Extend `seikika connector drive` with:
 
 1. `--format catalog` — emit sorted `{kind,id,data}` NDJSON where `id` is
    `externalId` with a leading `{kind}:` stripped (so `project:ALPHA` → `ALPHA`,

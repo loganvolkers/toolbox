@@ -7,7 +7,7 @@ contract in [v1-spec.md](../v1-spec.md) §7.6. Planned here because it changes t
 > **Implementation status (M4 done; campaigns D01M7Y11G0YZT23W26Z9D3XW68Y):** the read pages (home, entity, scorecard, campaign, ops) over the
 > `/v1/views/*` endpoints, embedded in the binary with a strict CSP, with refresh and redaction
 > markers. **Not yet:** the `/v1/events` SSE stream (the UI polls `/v1/snapshot`), generated action
-> forms and approvals (M5), `@toolbox/ui` and Storybook stories.
+> forms and approvals (M5), `@seikika/ui` and Storybook stories.
 
 ---
 
@@ -15,8 +15,8 @@ contract in [v1-spec.md](../v1-spec.md) §7.6. Planned here because it changes t
 
 The minimal UI is a **read-mostly single-page app** for people who aren't using an agent: find
 things, see who owns them and why, see standards and how to fix them, refresh stale data, and run,
-approve and follow actions. It is built with the default kit (Astro + Vue on `@toolbox-dev/ui`), compiled into
-the Toolbox release and served by the server. **It mounts through the same UI extension contract as
+approve and follow actions. It is built with the default kit (Astro + Vue on `@seikika/ui`), compiled into
+the Seikika release and served by the server. **It mounts through the same UI extension contract as
 operator bundles**, so the contract is exercised from day one.
 
 Planning it exposed four API needs that v1-spec lacked:
@@ -25,7 +25,7 @@ Planning it exposed four API needs that v1-spec lacked:
 |---|---|---|
 | 1 | **Composite view endpoints**, so each page is one request within budget (GraphQL is deferred) | D56 |
 | 2 | **Approvals API**, and approvals stay **human-only** in v1 (not exposed to agent tokens or MCP) | D57 |
-| 3 | **A form-renderable subset of JSON Schema** for action inputs, enforced by `toolbox validate`, so every action gets a usable generated form | D58 |
+| 3 | **A form-renderable subset of JSON Schema** for action inputs, enforced by `seikika validate`, so every action gets a usable generated form | D58 |
 | 4 | **A snapshot event stream** (SSE) so pages show "newer data available" and refresh results without polling | part of D56 |
 
 ## 2. Pages
@@ -65,7 +65,7 @@ admin configuration of any kind (D2).
 
 ## 4. Generated action forms (D58)
 
-Action inputs must use a **form-renderable subset** of JSON Schema, checked by `toolbox validate`:
+Action inputs must use a **form-renderable subset** of JSON Schema, checked by `seikika validate`:
 
 | Allowed | Rendered as |
 |---|---|
@@ -75,7 +75,7 @@ Action inputs must use a **form-renderable subset** of JSON Schema, checked by `
 | `boolean` | Switch |
 | `array` of an allowed scalar (+ `minItems`, `maxItems`, `uniqueItems`) | Multi-select or tag input |
 | `object` one level deep, with `required`, and `additionalProperties: false` ([D01M86J769VGE6K5FJJQ76EP4AA](../decisions/D01M86J769VGE6K5FJJQ76EP4AA.md)) | Field group; inputs that aren't declared are refused either way |
-| `description`, `title`, `default`, `examples`; `x-toolbox-widget` for a registered widget | Help text, defaults, placeholders; field widgets (tier 2) |
+| `description`, `title`, `default`, `examples`; `x-seikika-widget` for a registered widget | Help text, defaults, placeholders; field widgets (tier 2) |
 
 Not allowed in v1: `oneOf`/`anyOf`/`allOf`, `if/then/else`, nested arrays, `$ref`, free-form
 objects. Actions that need more use an operator UI bundle (tier 3).
@@ -118,7 +118,7 @@ client that operator bundles also use.
 - **Stories:** one per page × persona × state, with fixtures generated from the reference portal's
   `expected/` outputs, so UI and engine share data semantics. Story-based tests check a11y and
   interactions ([frontend.md](./frontend.md) §5).
-- **End-to-end:** Playwright against `toolbox dev` running the reference portal, covering A3/A4
+- **End-to-end:** Playwright against `seikika dev` running the reference portal, covering A3/A4
   (redaction vs details), A6–A9 (action flow including a failed verification) and A11 (refresh).
 
 ## Sources

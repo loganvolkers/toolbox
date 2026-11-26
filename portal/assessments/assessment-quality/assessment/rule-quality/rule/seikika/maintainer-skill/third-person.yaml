@@ -1,0 +1,47 @@
+apiVersion: seikika.com/assessment/v1
+entity: assessment:rule-quality/rule:seikika/maintainer-skill/third-person
+rubric: assessment-quality
+subjectHash: c99a4b5543d1
+assessor: {kind: agent, name: cursor-reviewer-33, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: supported
+    verdict: pass
+    reason: >-
+      The citations in
+      portal/assessments/rule-quality/rule/seikika/maintainer-skill/third-person.yaml
+      hold. The pronoun list is
+      crates/seikika-connector-workspace/src/skills.rs:45, and words keep
+      apostrophes (skills.rs:277-282), so "you're" is one token and is not on
+      the list. The check is portal/standards/skills.yaml:116, the rationale
+      is 123-126, the pin `pronoun: you` is
+      portal/tests/standards.test.yaml:370, and the bronze row is
+      docs/design/skill-standards.md:90. portal/results.json has 43 skills and
+      none at level none, so all 43 pass this bronze rule.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      measures-intent fails correctly: "you're", "me" and "us" are absent from
+      skills.rs:45, and the split at skills.rs:278 keeps contractions whole.
+      hard-to-game passes because emptying the description fails
+      skills.yaml:116, and the contraction miss is the detection gap already
+      failed above. The fix lists the words the check drops, and bronze is
+      skill-standards.md:90. No other criterion should have failed.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      The contraction gap is the word split at skills.rs:277-282. A second
+      assessor fails measures-intent from that and passes hard-to-game because
+      the check still requires a non-empty description.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      Adding the contractions to the list at skills.rs:45, as the suggestion
+      in
+      portal/assessments/rule-quality/rule/seikika/maintainer-skill/third-person.yaml
+      says, makes "you're" a found pronoun and changes measures-intent to
+      pass. The three passes have no suggestion.
+summary: >-
+  The fail is what skills.rs does: apostrophes stay inside the word, and
+  the pronoun list has no contractions or "me"/"us", so "you're" passes.
+  The level, the fix and the empty-description guard are cited correctly.

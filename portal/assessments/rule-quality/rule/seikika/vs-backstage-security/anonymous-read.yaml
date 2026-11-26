@@ -1,0 +1,55 @@
+apiVersion: seikika.com/assessment/v1
+entity: rule:seikika/vs-backstage-security/anonymous-read
+rubric: rule-quality
+subjectHash: 28b570f63602
+assessor: {kind: agent, name: cursor-assessor-16, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: measures-intent
+    verdict: fail
+    reason: >-
+      The rationale is that the service map and owners must not reach anyone
+      who can reach the port
+      (portal/standards/backstage-comparison.yaml:468-470). The probe sends
+      one unauthenticated GET, to /v1/entities/component:c1
+      (experiments/backstage-compare/surface.py:74, 156). Other routes are not
+      tried. By reading the code (not run), GET /v1/snapshot takes no
+      credentials (crates/seikika-api/src/routes.rs:28, 183-192). It returns
+      the derive diagnostics, and those carry entity ids
+      (crates/seikika-derive/src/lib.rs:655-664) and samples of dangling
+      relation edges (lib.rs:484-490). A product can therefore pass while an
+      anonymous client reads catalog identifiers from another route.
+    suggestion: >-
+      Make surface.py probe every GET route the server mounts without
+      credentials, not one entity, and treat any route that returns catalog
+      data as a fail. Then gate /v1/snapshot's diagnostics behind
+      `AppState::caller`, or drop them for anonymous callers.
+  - criterion: hard-to-game
+    verdict: pass
+    reason: >-
+      surface.py removes every SEIKIKA_* variable and then sets only tokens
+      and the OpenFGA path (surface.py:59-63). It starts the release binary on
+      0.0.0.0, so the probe meets the server's default auth mode off loopback,
+      not one the harness picked. A 401 or 403 counts (surface.py:138-139), so
+      the cheapest way to pass is for the real default to refuse.
+  - criterion: fix-leads-to-pass
+    verdict: pass
+    reason: >-
+      Without credentials, authn.rs returns `AuthError::Missing`
+      (crates/seikika-authz/src/authn.rs:292), and access.rs turns that into
+      401 for every handler that calls `caller`
+      (crates/seikika-api/src/access.rs:39-46). The fix names that refusal in
+      authn.rs, and an agent following it reaches access.rs at once. For the
+      probed route, `get_entity` calls `caller` first (routes.rs:418-421).
+  - criterion: threshold-justified
+    verdict: pass
+    reason: >-
+      The rule is boolean, with no threshold. It is RESEARCH.md F6 probe P2,
+      "unauthenticated catalog GET returns 401" (RESEARCH.md:182), grounded in
+      OWASP ASVS 5.0 V13 (RESEARCH.md:67). Bronze is the scorecard's single
+      level (D01M857ZB468ZM2YS6GNSEG6YB9).
+summary: >-
+  The rule is a real probe of the default off-loopback mode, and its fix
+  points at the right refusal. But it probes one route, and by reading the
+  code, /v1/snapshot answers without credentials with diagnostics that
+  name entities. So the pass is narrower than the rationale claims.

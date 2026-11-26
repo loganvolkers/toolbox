@@ -1,0 +1,58 @@
+apiVersion: seikika.com/assessment/v1
+entity: assessment:rule-quality/rule:seikika/maintainer-crate/few-unwraps
+rubric: assessment-quality
+subjectHash: b455d7968dc8
+assessor: {kind: agent, name: cursor-reviewer-38, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: supported
+    verdict: pass
+    reason: >-
+      Every citation in
+      portal/assessments/rule-quality/rule/seikika/maintainer-crate/few-unwraps.yaml
+      matches the file. The count is method calls named unwrap or expect
+      outside tests (crates/seikika-connector-workspace/src/rust.rs:356-361);
+      codeLines counts every non-blank, non-// line
+      (crates/seikika-connector-workspace/src/rust.rs:375-382), and in_test is
+      not applied there. The rule text is
+      portal/standards/crates.yaml:329-344, including the evidence count, the
+      "document the invariant" fix, and the Rust Book link. scim's src is 269
+      such lines with 9 counted calls, 7 of them lock().unwrap() at
+      crates/seikika-connector-scim/src/main.rs:67, 108, 112, 152, 154, 173
+      and 174, and the other two are expect at :239 and :241.
+      docs/design/seikika-for-seikika.md:103 states the ratio with no reason,
+      and docs/design/thresholds.md has no row for this rule.
+      portal/results.json has few-unwraps failing on seikika-connect and
+      seikika-connector-scim, and scim fails only that rule at silver.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      All four fails are the ones the sources show. The check misses panic!
+      and macro arguments
+      (crates/seikika-connector-workspace/src/rust.rs:356-361 visits only
+      parsed method calls), the denominator includes test modules, the fix's
+      "document the invariant" (portal/standards/crates.yaml:335-337) does not
+      change the count, and no design doc measures the 1-in-100 line. No
+      criterion should have passed.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      The fails follow from the visitor and the rule text. The scratch-crate
+      counts (three macro unwraps reported as one; codeLines 96 to 107) are
+      the same mechanism as
+      crates/seikika-connector-workspace/src/rust.rs:356-361 and :375-382, and
+      the live 9-in-269 ratio is in the scim sources. A second assessor does
+      not have to share a view on whether lock().unwrap() is idiomatic.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      Each suggestion in the reviewed file changes its own verdict. Excluding
+      cfg(test) lines and counting panic! changes what measures-intent and
+      hard-to-game see. unwrapSites plus a fix that names Result or
+      PoisonError::into_inner makes the fix lower the count. A
+      docs/design/thresholds.md row is what threshold-justified asks for
+      (portal/standards/meta.yaml:1174-1180).
+summary: >-
+  The assessment is trustworthy. The visitor, the 269-line scim crate, the
+  count-only evidence, and the unjustified 1-in-100 ratio all say what the
+  four fails claim, and each suggestion would change its verdict.

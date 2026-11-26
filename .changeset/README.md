@@ -1,6 +1,6 @@
 # Changesets (portable)
 
-This directory holds **Changesets-compatible** release-intent files for Toolbox.
+This directory holds **Changesets-compatible** release-intent files for Seikika.
 The format matches [Changesets](https://changesets.dev/) (YAML frontmatter + summary),
 but versions are applied by `scripts/apply-changesets.py`, not `@changesets/cli`.
 
@@ -15,7 +15,7 @@ Version Packages PR if needed.
 Releasable paths include:
 
 - Rust crates / connectors (`crates/`, root `Cargo.toml`)
-- Toolbox packages (`packages/*/`)
+- Seikika packages (`packages/*/`)
 - `actions/*/`
 - Root changelog-worthy behaviour consumers depend on
 
@@ -23,7 +23,7 @@ Releasable paths include:
 
 ```markdown
 ---
-"toolbox": minor
+"seikika": minor
 "pnpm-expo": minor
 "actions/report": minor
 ---
@@ -35,18 +35,18 @@ Short summary for consumers — becomes a changelog bullet.
 
 | Frontmatter name | How it is resolved | Version source |
 |---|---|---|
-| `toolbox` | Explicit in `config.json` → `registry` | `Cargo.toml` `[workspace.package].version` |
-| `<package>` (e.g. `pnpm-expo`, `file-size`) | Discovered by `includes` glob `packages/*/toolbox-package.yaml`; name = YAML `name:` | that package's `toolbox-package.yaml` `version:` |
-| `actions/<dir>` (e.g. `actions/report`) | Discovered by `includes` glob `actions/*/action.yml` | same git tag as `toolbox` (lockstep; no separate Action semver file yet) |
-| `toolbox-operator` | Explicit `registry` entry | Phase 3 plugin versioning |
+| `seikika` | Explicit in `config.json` → `registry` | `Cargo.toml` `[workspace.package].version` |
+| `<package>` (e.g. `pnpm-expo`, `file-size`) | Discovered by `includes` glob `packages/*/seikika-package.yaml`; name = YAML `name:` | that package's `seikika-package.yaml` `version:` |
+| `actions/<dir>` (e.g. `actions/report`) | Discovered by `includes` glob `actions/*/action.yml` | same git tag as `seikika` (lockstep; no separate Action semver file yet) |
+| `seikika-operator` | Explicit `registry` entry | Phase 3 plugin versioning |
 
-New packages under `packages/<name>/toolbox-package.yaml` and new Actions under
+New packages under `packages/<name>/seikika-package.yaml` and new Actions under
 `actions/<name>/action.yml` are picked up automatically — you do **not** need to edit
 `config.json` for each one. List only special cases (Cargo workspace, plugins) under
 `registry`.
 
 **Fixtures:** keep test packages under `pkg-fixture/` (or outside `packages/`), never as
-`packages/**/toolbox-package.yaml`, so Toolbox-for-Toolbox discovery and the ratchet stay
+`packages/**/seikika-package.yaml`, so Seikika-for-Seikika discovery and the ratchet stay
 clean.
 
 Inspect the resolved set:

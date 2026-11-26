@@ -1,19 +1,19 @@
 # Time-bound focus over continuous scorecards (docs/design/campaigns.md, D01M7Y11G0YZT23W26Z9D3XW68Y).
-# Included by portal/toolbox.yaml.
+# Included by portal/seikika.yaml.
 
 tracks:
   - name: maintainer
     title: Code quality
     owner: group:maintainers
     description: >-
-      Toolbox's own code: the Rust crates, their dependencies, schemas,
+      Seikika's own code: the Rust crates, their dependencies, schemas,
       connectors, scripts and runtime signals, and the repository level they
       roll up to.
     links:
     - title: Maintainer SDLC
-      url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/maintainer-sdlc.md
-    - title: Toolbox for Toolbox
-      url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/toolbox-for-toolbox.md
+      url: https://github.com/seikika/seikika/blob/main/docs/design/maintainer-sdlc.md
+    - title: Seikika for Seikika
+      url: https://github.com/seikika/seikika/blob/main/docs/design/seikika-for-seikika.md
   - name: delivery
     title: CI and supply chain
     owner: group:maintainers
@@ -22,7 +22,7 @@ tracks:
       actions, OpenSSF checks and the repository's security settings.
     links:
     - title: GitHub Actions standards
-      url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/github-actions-standards.md
+      url: https://github.com/seikika/seikika/blob/main/docs/design/github-actions-standards.md
     - {title: OpenSSF Scorecard, url: https://scorecard.dev/}
   - name: docs
     title: Docs people and agents read
@@ -32,7 +32,7 @@ tracks:
       instruction files: each current, linked and readable.
     links:
     - title: Writing style rules
-      url: https://github.com/loganvolkers/toolbox/blob/main/AGENTS.md
+      url: https://github.com/seikika/seikika/blob/main/AGENTS.md
   - name: operator
     title: Operator experience
     owner: group:maintainers
@@ -41,9 +41,9 @@ tracks:
       the agent skills and plugins that teach them.
     links:
     - title: Operator SDLC
-      url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/sdlc.md
+      url: https://github.com/seikika/seikika/blob/main/docs/design/sdlc.md
     - title: Agent plugins
-      url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/agent-plugins.md
+      url: https://github.com/seikika/seikika/blob/main/docs/design/agent-plugins.md
   - name: standards
     title: Standards that check themselves
     owner: group:maintainers
@@ -52,37 +52,37 @@ tracks:
       by deterministic checks and for quality by independent agent reviews.
     links:
     - title: Scorecards for scorecards
-      url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/scorecards-for-scorecards.md
+      url: https://github.com/seikika/seikika/blob/main/docs/design/scorecards-for-scorecards.md
     - title: Do the meta scorecards measure anything?
-      url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/meta-standards-review.md
+      url: https://github.com/seikika/seikika/blob/main/docs/design/meta-standards-review.md
   - name: evidence
     title: Proving value
     owner: group:maintainers
     description: >-
-      Whether Toolbox delivers on its claims: every SDLC layer and stage
+      Whether Seikika delivers on its claims: every SDLC layer and stage
       covered, and DX Benchmarks run on real forks against the strongest
       alternative.
     links:
     - title: The four SDLC layers
-      url: https://github.com/loganvolkers/toolbox/blob/main/docs/sdlc.md
+      url: https://github.com/seikika/seikika/blob/main/docs/sdlc.md
     - title: DX Benchmarks
-      url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/dx-benchmarks.md
+      url: https://github.com/seikika/seikika/blob/main/docs/design/dx-benchmarks.md
   - name: vs-backstage
     title: Against Backstage
     owner: group:maintainers
     description: >-
-      Toolbox 581be50 against Backstage 1.57.0: timed factors are medians of 5
+      Seikika 581be50 against Backstage 1.57.0: timed factors are medians of 5
       scripted runs on a 10,000-component catalog, and on 2026-11-23 an
       independent agent adjudicator recomputed every number and upheld the
-      verdict. Toolbox 581be50 is a commit after v0.1.1, compiled as a release
+      verdict. Seikika 581be50 is a commit after v0.1.1, compiled as a release
       build, and its install facts come from the published v0.1.1 download;
       each product was installed as its project documents on one 4 vCPU Intel
       Xeon VM with Linux 6.12 and one Postgres 16, and the load generator
       shares the same 4 vCPU. Capability and fact factors are probes and facts
       with evidence, and the capability scenarios come from the Backstage
-      parity audit, so they favour what Backstage ships. Toolbox's maintainers
+      parity audit, so they favour what Backstage ships. Seikika's maintainers
       chose the factors from ISO/IEC 25010's quality characteristics, each
-      with a rule that could show Toolbox worse, and set every rule's bar
+      with a rule that could show Seikika worse, and set every rule's bar
       before the run. Both products are scored on the same rules, factor by
       factor. The adjudicator was a fresh coding agent outside the benchmark:
       it designed none of it and decides no rule, so every rule stays
@@ -93,13 +93,13 @@ tracks:
       portal.
     links:
     - title: Results
-      url: https://github.com/loganvolkers/toolbox/blob/main/experiments/backstage-compare/RESULTS.md
+      url: https://github.com/seikika/seikika/blob/main/experiments/backstage-compare/RESULTS.md
     - title: How it was run
-      url: https://github.com/loganvolkers/toolbox/blob/main/experiments/backstage-compare/README.md
+      url: https://github.com/seikika/seikika/blob/main/experiments/backstage-compare/README.md
     - title: Adjudication
-      url: https://github.com/loganvolkers/toolbox/blob/main/experiments/backstage-compare/ADJUDICATION.md
+      url: https://github.com/seikika/seikika/blob/main/experiments/backstage-compare/ADJUDICATION.md
     - title: Design
-      url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/backstage-comparison.md
+      url: https://github.com/seikika/seikika/blob/main/docs/design/backstage-comparison.md
 
 campaigns:
   - name: skill-silver

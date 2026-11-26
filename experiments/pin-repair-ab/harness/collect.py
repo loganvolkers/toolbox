@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 """Score and measure a round's runs; write results/r<round>.tsv and one JSON per run.
 
-    [REPLAY=<openfga-src>:<toolbox-checkout>:<toolbox-target-dir>] collect.py <round> <transcripts-dir> <run>=<bcId> ...
+    [REPLAY=<openfga-src>:<seikika-checkout>:<seikika-target-dir>] collect.py <round> <transcripts-dir> <run>=<bcId> ...
 
 <transcripts-dir> is the directory `batch-fetch-details` wrote, with <bcId>/transcript.json. A run's
 arm is read from prompts/rendered/r<round>/arms.tsv when `round.sh` wrote one, and is otherwise the
-run's name without its number. Arms named `toolbox…` are scored and counted as Toolbox.
+run's name without its number. Arms named `seikika…` are scored and counted as Seikika.
 
 *read* is `resultCharsImputed`: a `read_file` whose result the transcript lacks counts as that file
 on `pr` (count.py). With REPLAY, set from round 2, a `run_terminal_cmd` without a result counts as
@@ -40,7 +40,7 @@ def main() -> None:
     for spec in runs:
         run, bc = spec.split("=")
         arm = arm_of.get(run, run.rsplit("-", 1)[0])
-        kind = "toolbox" if arm.startswith("toolbox") else arm
+        kind = "seikika" if arm.startswith("seikika") else arm
         dest = f"/tmp/pin-repair-ab/r{rnd}/{run}"
         score = json.loads(subprocess.run([sys.executable, HERE / "score.py", kind, dest],
                                           capture_output=True, text=True, check=True).stdout)

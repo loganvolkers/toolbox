@@ -1,7 +1,7 @@
 # Connector Repair A/B: Diagnose and Fix a Near-Correct SaaS Connector
 
 **Question:** when a coding agent inherits a *near-correct* cloud/SaaS connector that fails
-conformance and catalog truth, does Toolbox's test/drive/skills feedback loop cost fewer tool
+conformance and catalog truth, does Seikika's test/drive/skills feedback loop cost fewer tool
 calls and recover more bugs than Port Ocean or a Backstage entity provider, at equal final
 correctness?
 
@@ -19,8 +19,8 @@ Decision: [D01M83NX8BXH45GQA7WMN4ACEH9](../../docs/decisions/D01M83NX8BXH45GQA7W
 
 | Hypothesis | Result |
 |---|---|
-| **D1** Toolbox cheaper on diagnose+repair (calls 1+2) | **Fail** — A 31, B 25, C 25 |
-| **D2** Toolbox higher diagnosis recall | **Fail** — all 3/3 |
+| **D1** Seikika cheaper on diagnose+repair (calls 1+2) | **Fail** — A 31, B 25, C 25 |
+| **D2** Seikika higher diagnosis recall | **Fail** — all 3/3 |
 | **D3** Correctness after repair | **Hold** — all arms exact; read 5/5 |
 
 Details: [RESULTS.md](./RESULTS.md).
@@ -44,12 +44,12 @@ a different API. Fixtures and expected catalogs are shared from
 
 ## 2. Arms
 
-| | A: Toolbox | B: Port Ocean | C: Backstage |
+| | A: Seikika | B: Port Ocean | C: Backstage |
 |---|---|---|---|
-| Given | Broken stdio connector + portal stub; `toolbox connector test` / `drive` on PATH | Broken Ocean-shaped handlers + shim; `resync.py` | Broken `ForgeEntityProvider` + `npm run resync` |
+| Given | Broken stdio connector + portal stub; `seikika connector test` / `drive` on PATH | Broken Ocean-shaped handlers + shim; `resync.py` | Broken `ForgeEntityProvider` + `npm run resync` |
 | Seeded bugs | See `bugs/A.md` (harness-private; agents must not read) | `bugs/B.md` | `bugs/C.md` |
-| Must produce | Green `connector test` (Toolbox) + `OUT/entities.ndjson` truth | Green resync truth + shape | Same |
-| Must not | Read Ocean/Backstage pins; read `bugs/` or `fixtures/**/expected*` | Read Toolbox; read `bugs/` | Read Toolbox/Ocean; read `bugs/` |
+| Must produce | Green `connector test` (Seikika) + `OUT/entities.ndjson` truth | Green resync truth + shape | Same |
+| Must not | Read Ocean/Backstage pins; read `bugs/` or `fixtures/**/expected*` | Read Seikika; read `bugs/` | Read Seikika/Ocean; read `bugs/` |
 
 **Pinned open-source (read allowlists):** same pins as connector-ab
 (`port-labs/ocean@f9f3948e…`, `backstage/backstage@feeadd4d…`).
@@ -80,8 +80,8 @@ Same as connector-ab §5 (stdio Source / `@ocean.on_resync` / EntityProvider).
 
 | Hypothesis | Holds if | Fails if |
 |---|---|---|
-| **D1. Toolbox cheaper to diagnose+repair** | Over phases 1+2, A fewer calls than B and than C, with equal final correctness on phase 2 | A as many or more than either rival |
-| **D2. Toolbox diagnosis finds more bugs** | Phase-1 diagnosis recall (fraction of seeded bugs named) is strictly higher on A than on B and on C | A tied or lower than either |
+| **D1. Seikika cheaper to diagnose+repair** | Over phases 1+2, A fewer calls than B and than C, with equal final correctness on phase 2 | A as many or more than either rival |
+| **D2. Seikika diagnosis finds more bugs** | Phase-1 diagnosis recall (fraction of seeded bugs named) is strictly higher on A than on B and on C | A tied or lower than either |
 | **D3. Platforms correct after repair** | Every finishing arm is fully correct on phase 2 truth+shape, phase 3 truth, and phase 4 read | Any finishing arm incorrect after repair |
 
 **Budget:** 50 tool calls per phase. Network only to `127.0.0.1` (Forge). No installs during a

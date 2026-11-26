@@ -1,5 +1,5 @@
 # Agent instruction files (docs/design/agents-md-standards.md).
-# Included by portal/toolbox.yaml; see portal/README.md for the layout.
+# Included by portal/seikika.yaml; see portal/README.md for the layout.
 
 kinds:
   # Agent instruction files (docs/design/agents-md-standards.md).
@@ -56,9 +56,9 @@ scorecards:
       at the decision log and names only checks CI runs.
     links:
     - title: AGENTS.md standards
-      url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/agents-md-standards.md
+      url: https://github.com/seikika/seikika/blob/main/docs/design/agents-md-standards.md
     - title: 'Decision: agent instruction files are scored'
-      url: https://github.com/loganvolkers/toolbox/blob/main/docs/decisions/D01M7W4Y2K00000000000000000.md
+      url: https://github.com/seikika/seikika/blob/main/docs/decisions/D01M7W4Y2K00000000000000000.md
     - {title: agents.md format, url: https://github.com/agentsmd/agents.md}
     owner: group:maintainers
     track: docs
@@ -80,7 +80,7 @@ scorecards:
         different harnesses follow different rules.
       links:
       - title: 'Decision: harness aliases'
-        url: https://github.com/loganvolkers/toolbox/blob/main/docs/decisions/D01M7WMSMS10000000000000000.md
+        url: https://github.com/seikika/seikika/blob/main/docs/decisions/D01M7WMSMS10000000000000000.md
     - name: links-resolve
       level: bronze
       check: entity.missingFiles.size() == 0
@@ -95,7 +95,7 @@ scorecards:
       evidence: "[string(entity.commandLines) + ' command lines']"
       fix: >-
         Name the build or test command in AGENTS.md (cargo, npm, pnpm, yarn,
-        pytest, or toolbox). An alias inherits the canonical file's commands.
+        pytest, or seikika). An alias inherits the canonical file's commands.
       rationale: >-
         An agent that is not told how to build and test guesses, and either
         skips verification or runs the wrong check.
@@ -139,7 +139,7 @@ scorecards:
         with.
       links:
       - title: 'Decision: named commands run in CI'
-        url: https://github.com/loganvolkers/toolbox/blob/main/docs/decisions/D01M7WMSMS20000000000000000.md
+        url: https://github.com/seikika/seikika/blob/main/docs/decisions/D01M7WMSMS20000000000000000.md
     - name: no-hardcoded-secrets
       level: bronze
       check: entity.secretHits.size() == 0
@@ -153,7 +153,7 @@ scorecards:
         transcript. It sits at bronze so such a file cannot pass the ratchet.
       links:
       - title: Thresholds
-        url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/thresholds.md
+        url: https://github.com/seikika/seikika/blob/main/docs/design/thresholds.md
     - name: no-hidden-instructions
       level: bronze
       check: entity.hiddenChars == 0
@@ -168,5 +168,5 @@ scorecards:
         bronze so such a file cannot pass the ratchet.
       links:
       - title: Thresholds
-        url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/thresholds.md
+        url: https://github.com/seikika/seikika/blob/main/docs/design/thresholds.md
     facets: {summary: public, details: public}

@@ -1,0 +1,54 @@
+apiVersion: seikika.com/assessment/v1
+entity: assessment:rule-quality/rule:seikika/meta-rubric/discriminates
+rubric: assessment-quality
+subjectHash: c9dbd1873b2c
+assessor: {kind: agent, name: cursor-reviewer-34, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: supported
+    verdict: fail
+    reason: >-
+      The code citations in
+      portal/assessments/rule-quality/rule/seikika/meta-rubric/discriminates.yaml
+      hold: crates/seikika-cli/src/model.rs:240-248 reads every assessment
+      file, :257-268 keeps a criterion when every verdict is pass, and
+      Iterator::all on an empty list is true, so a renamed criterion with no
+      verdicts is listed. portal/standards/meta.yaml:1134-1144 is the "only N
+      assessment(s)" evidence and the sharpen-or-drop fix. The count does not:
+      "threshold-justified had passed all 19 assessments" is not what
+      portal/assessments/rule-quality holds. The 15 tracked seikika rule
+      assessments all pass that criterion, and the working tree has fails and
+      unsures among far more than 19 files.
+    suggestion: >-
+      Replace "all 19" with the set actually counted, or drop the number and
+      cite model.rs:263-268 for the all-pass and empty-iterator behaviour.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      measures-intent, hard-to-game and fix-leads-to-pass should fail. One
+      unsure drops a criterion (model.rs:267), stale files count
+      (model.rs:240-248), sharpening the question leaves old verdicts, and the
+      under-three evidence (meta.yaml:1135-1136) is not what the fix
+      addresses. threshold-justified is rightly unsure:
+      docs/design/thresholds.md:5-7 says the justification lives there, and
+      that page has no row for the three-assessment bar
+      (scorecards-for-scorecards.md:295 states it without a reason).
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      The four verdicts follow from the filter and the fix text. A second
+      assessor does not need the count of 19 to fail the first three criteria
+      or to stay unsure on the unexplained 3.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      Counting only fresh fails, rewriting the fix to say re-assess, and
+      leaving a criterion with no verdicts off the list would change the three
+      fails. A thresholds.md row that says why three assessments are enough
+      would change the unsure. Each suggestion is attached to the verdict it
+      would move.
+summary: >-
+  The discriminates verdicts match the code: an unsure or a stale file
+  clears a criterion, and the fix does not change the verdicts the rule
+  reads. The "all 19 assessments" count does not match the tracked set of
+  15 or the files now under portal/assessments/rule-quality.

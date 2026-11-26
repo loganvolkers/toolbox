@@ -1,0 +1,24 @@
+#!/bin/sh
+# Launcher for the Seikika authoring MCP server (stdio).
+#
+# Pre-release skeleton: the `seikika` binary does not exist yet. When it does, this launcher will:
+#   1. Read the Seikika version pinned in the workspace's seikika.lock (workspace is passed per tool call).
+#   2. Use a cached, signature-verified binary from the plugin data directory, or fetch and verify it.
+#   3. exec `seikika mcp --dev`.
+# It deliberately does not rely on whatever `seikika` happens to be on PATH.
+set -eu
+
+DATA_DIR=""
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --data) DATA_DIR="$2"; shift 2 ;;
+    *) shift ;;
+  esac
+done
+
+if [ -n "${SEIKIKA_BIN:-}" ] && [ -x "${SEIKIKA_BIN}" ]; then
+  exec "${SEIKIKA_BIN}" mcp --dev --data "${DATA_DIR}"
+fi
+
+echo "seikika-operator: the Seikika binary is not available yet (pre-release plugin skeleton)." >&2
+exit 1

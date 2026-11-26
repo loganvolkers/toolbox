@@ -1,4 +1,4 @@
-# Acme portal image: toolbox, its in-image connectors, the SCIM connector, OpenFGA, and this portal.
+# Acme portal image: seikika, its in-image connectors, the SCIM connector, OpenFGA, and this portal.
 # Binaries are copied in by the harness (cargo already built them). The base matches the glibc
 # those host-built binaries need. OpenFGA's digest matches image/Dockerfile.
 FROM ubuntu:24.04@sha256:9c7f200c07e3d4a03e7249d2c16bf66a51120fb876aa2242cf31451412543289
@@ -15,8 +15,8 @@ COPY bin/ /usr/local/bin/
 COPY portal/ /portal/
 COPY entrypoint.sh /entrypoint.sh
 COPY scim_seed.sh /usr/local/bin/scim_seed.sh
-RUN chmod 755 /entrypoint.sh /usr/local/bin/scim_seed.sh /usr/local/bin/toolbox /usr/local/bin/toolbox-connector-github /usr/local/bin/toolbox-connector-git-files /usr/local/bin/toolbox-connector-scim
-ENV TOOLBOX_OPENFGA_BIN=/usr/local/bin/openfga
+RUN chmod 755 /entrypoint.sh /usr/local/bin/scim_seed.sh /usr/local/bin/seikika /usr/local/bin/seikika-connector-github /usr/local/bin/seikika-connector-git-files /usr/local/bin/seikika-connector-scim
+ENV SEIKIKA_OPENFGA_BIN=/usr/local/bin/openfga
 ENV PORT=8080
 USER 65532:65532
 EXPOSE 8080 9100

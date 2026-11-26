@@ -1,0 +1,61 @@
+apiVersion: seikika.com/assessment/v1
+entity: assessment:rule-quality/rule:seikika/maintainer-observability/otel-crate-present
+rubric: assessment-quality
+subjectHash: 554e2b9529bf
+assessor: {kind: agent, name: cursor-reviewer-09, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: supported
+    verdict: pass
+    reason: >-
+      The verdict citations in
+      portal/assessments/rule-quality/rule/seikika/maintainer-observability/otel-crate-present.yaml
+      land:
+      - portal/standards/observability.yaml:38-42 (`missingCrate`), 123-125
+        and 101-102;
+      - crates/seikika-connector-workspace/src/data.rs:77-93 (`missing()`),
+        and line 87, where `!path.is_empty()` skips "" so `crate: ""` passes;
+      - crates/seikika-telemetry/Cargo.toml:10-19 (the OTel dependencies);
+        no other crates/*/Cargo.toml names opentelemetry;
+      - portal/observability/runtime.yaml:10;
+      - portal/fixtures/workspace.ndjson:83 (`crates/missing-telemetry`);
+      - D01M81ADN8C10EA1Z1VNRY3A5JZ ("the sole OpenTelemetry and Prometheus
+        bootstrap").
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      The fails on measures-intent and hard-to-game are what the computed
+      field allows: any existing path passes, and so does an empty one
+      (data.rs:87). Following the fix creates the declared path, so
+      fix-leads-to-pass holds. There is no threshold, so threshold-justified
+      passes (portal/standards/meta.yaml:1178-1180). No verdict misses a
+      failure the sources show.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      Every verdict follows from data.rs:77-93, the computed field and the
+      decision text. A second assessor reading these would repeat them.
+  - criterion: actionable
+    verdict: unsure
+    reason: >-
+      The measures-intent suggestion says to check the
+      `crate:seikika-telemetry` record "(it exists and lists dependencies)"
+      for `opentelemetry_sdk` and `opentelemetry-otlp`. That record has only
+      `dependsOn` (workspace members) and an `externalDeps` count
+      (crates/seikika-connector-workspace/src/main.rs:562-575), so it can't
+      name them. The `dependency` records can: they carry `usedBy`
+      (deps.rs:54), and portal/seikika.yaml:132 enables them. A check that
+      `usedBy` is exactly `['seikika-telemetry']` would carry both halves of
+      the suggestion. As written, the first half points an implementer at the
+      wrong record. The hard-to-game suggestion, deriving the path rather than
+      declaring it, works as written.
+    suggestion: >-
+      Point the suggestion at the `dependency:opentelemetry_sdk` and
+      `dependency:opentelemetry-otlp` records, checking that `usedBy` is
+      exactly `['seikika-telemetry']`, instead of the crate record.
+summary: >-
+  The verdicts are right and well cited: the checklist picks its own path,
+  so an empty or unrelated directory passes, and data.rs:87 lets "" pass
+  too. One suggestion relies on the crate record listing external
+  dependencies, which it doesn't (main.rs:562-575). The `dependency`
+  records' `usedBy` field is where that check belongs.

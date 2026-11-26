@@ -1,0 +1,49 @@
+apiVersion: seikika.com/assessment/v1
+entity: assessment:rule-quality/rule:seikika/maintainer-skill/has-evals
+rubric: assessment-quality
+subjectHash: 265adffebbf1
+assessor: {kind: agent, name: cursor-reviewer-01, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: supported
+    verdict: fail
+    reason: >-
+      One citation in
+      portal/assessments/rule-quality/rule/seikika/maintainer-skill/has-evals.yaml
+      is a line off. threshold-justified puts the "at least three" authoring
+      guidance at docs/design/skill-standards.md:47, but line 47 is the Agent
+      Skills spec row. "At least three evals" is the Anthropic row on line 48.
+      Line 97 is right. Everything else holds. cases_in returns the array
+      length without reading elements
+      (crates/seikika-connector-workspace/src/skills.rs:443-451), and the file
+      read is 432-441. In portal/standards/skills.yaml, the fix is 221-224 and
+      the rationale 225-228. The evidence is
+      portal/tests/standards.test.yaml:360-361. portal/results.json lists
+      has-evals failing on 42 of 43 skills. design-audit's evals.json has
+      three `prompt`/`expected` objects.
+    suggestion: Cite docs/design/skill-standards.md:48 (and 97) for the three-case bar.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      The two fails are the ones the code shows: `[{},{},{}]` gives 3
+      (skills.rs:444-445), and duplicate prompts count. fix-leads-to-pass is
+      right. threshold-justified is right: gold is argued at
+      skill-standards.md:102-104, and the paired-run hook at 106-108.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      Both fails follow mechanically from cases_in (skills.rs:443-451). The
+      passes rest on quoted doc lines. A second assessor would reach the same
+      verdicts.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      Counting only objects with a distinct, non-empty `prompt` rejects the
+      empty-object and duplicate routes both fails cite. That flips
+      measures-intent and removes the cheapest hard-to-game pass named in
+      portal/assessments/rule-quality/rule/seikika/maintainer-skill/has-evals.yaml.
+summary: >-
+  Sound verdicts. The empty-array route is real in cases_in, and the
+  catalog numbers (42 of 43 fail, design-audit passes) check out. One
+  citation is off by a line: skill-standards.md:47 should be 48 for the
+  "at least three evals" guidance.

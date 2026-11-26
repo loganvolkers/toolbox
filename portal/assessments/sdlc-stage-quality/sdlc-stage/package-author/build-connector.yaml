@@ -1,4 +1,4 @@
-apiVersion: toolbox.dev/assessment/v1
+apiVersion: seikika.com/assessment/v1
 entity: sdlc-stage:package-author/build-connector
 rubric: sdlc-stage-quality
 subjectHash: 780ed2cf3aae
@@ -8,11 +8,11 @@ verdicts:
   - criterion: executable-exit
     verdict: pass
     reason: >-
-      `toolbox connector test` drives any executable through the kit in
-      crates/toolbox-connect/src/conformance.rs (run at line 72) and exits
+      `seikika connector test` drives any executable through the kit in
+      crates/seikika-connect/src/conformance.rs (run at line 72) and exits
       non-zero on a protocol violation; CI uses it on three connectors
       (.github/workflows/ci.yml:103-105).
-      crates/toolbox-cli/tests/install.rs:92 fails when a released connector
+      crates/seikika-cli/tests/install.rs:92 fails when a released connector
       archive doesn't match its pin. No CI job builds
       examples/connector-scaffold, so the scaffold itself is unproven (stage
       gap).
@@ -20,7 +20,7 @@ verdicts:
     verdict: pass
     reason: >-
       The author-connector skill
-      (plugins/toolbox-operator/skills/author-connector/SKILL.md) and
+      (plugins/seikika-operator/skills/author-connector/SKILL.md) and
       examples/connector-scaffold/README.md give exact steps: copy the
       scaffold, implement Source, add a portal stub, then run `connector test`
       and `connector drive`. A non-Rust author has
@@ -29,28 +29,28 @@ verdicts:
   - criterion: reuses-artifacts
     verdict: fail
     reason: >-
-      The scaffold depends on the SDK by path, `toolbox-connect = { path =
-      "../../crates/toolbox-connect" }`
+      The scaffold depends on the SDK by path, `seikika-connect = { path =
+      "../../crates/seikika-connect" }`
       (examples/connector-scaffold/Cargo.toml:13), and the workspace sets
       `publish = false` (Cargo.toml:11). A Rust author therefore checks out
       and compiles this repository's SDK from source rather than pinning a
       released crate.
     suggestion: >-
-      Publish toolbox-connect to crates.io with each release, and switch the
+      Publish seikika-connect to crates.io with each release, and switch the
       scaffold to a version dependency so authors pin it like any crate.
   - criterion: decoupled-from-core
     verdict: pass
     reason: >-
-      A connector ships as `github:owner/repo@version`, which `toolbox
-      install` downloads and pins per platform in toolbox.lock
-      (crates/toolbox-cli/tests/install.rs:92,
+      A connector ships as `github:owner/repo@version`, which `seikika
+      install` downloads and pins per platform in seikika.lock
+      (crates/seikika-cli/tests/install.rs:92,
       docs/design/package-author-sdlc.md §3.2), or runs remotely against
       /v1/ingest. Neither needs a crate or builtin added here.
 # Codex evaluated the two added criteria. Earlier verdicts retain their original attribution.
   - criterion: fast-feedback
     verdict: fail
     reason: >-
-      portal/sdlc/stages/package-author.yaml lists toolbox connector test.
+      portal/sdlc/stages/package-author.yaml lists seikika connector test.
       examples/connector-scaffold/README.md gives no measured local time to
       the stage exit.
     suggestion: >-
@@ -59,7 +59,7 @@ verdicts:
   - criterion: beyond-one-reference
     verdict: fail
     reason: >-
-      portal/sdlc/stages/package-author.yaml lists crates/toolbox-
+      portal/sdlc/stages/package-author.yaml lists crates/seikika-
       connect/src/conformance.rs as evidence. The declared checks name no
       second exercised reference for this stage exit.
     suggestion: >-

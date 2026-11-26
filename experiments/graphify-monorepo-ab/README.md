@@ -1,15 +1,15 @@
-# graphify-monorepo-ab: Graphify vs a Toolbox repo portal vs nothing, on a large Rust monorepo
+# graphify-monorepo-ab: Graphify vs a Seikika repo portal vs nothing, on a large Rust monorepo
 
-**About:** tools ([toolbox-and-tools.md](../../docs/design/toolbox-and-tools.md)). Graphify is a
+**About:** tools ([seikika-and-tools.md](../../docs/design/seikika-and-tools.md)). Graphify is a
 standalone tool a portal may carry, and arm C is the box's own read path (a repo portal and its CLI
 reads). This benchmark asks what each gives a coding agent on Graphify's home ground.
 
 **Status:** complete (round 1). §0 was filled in after the run. Nothing else changed after the first
-launch, except a `yamark format` of `harness/portal/toolbox.yaml` that parses to the same data.
+launch, except a `yamark format` of `harness/portal/seikika.yaml` that parses to the same data.
 
 ## 0. Results
 
-**Neither Graphify nor a Toolbox repo portal helped or hurt on Codex, and neither beat the other.**
+**Neither Graphify nor a Seikika repo portal helped or hurt on Codex, and neither beat the other.**
 In round 1 (15 runs, 2026-11-23), M1 to M9, M12 and M13 are inconclusive, and M10 and M11 hold. That
 matches the designer's prediction on every outcome, though not on M2 and M3's lean: arm B read and
 called less than arm A, not more, within *W*. §1's "Otherwise" row applies:
@@ -29,7 +29,7 @@ monorepos too, and the friction is triaged below. A fresh agent graded the answe
 | M8 | Read, C vs B | | 204,870 | 206,872 | 91,230 | Inconclusive |
 | M9 | Calls, C vs B | | 54 | 54 | 28 | Inconclusive |
 | M10 | B runs calling `graphify` | | 5 of 5 (3 to 5 calls) | | | Holds |
-| M11 | C runs calling `toolbox` | | | 5 of 5 (1 to 4 calls) | | Holds |
+| M11 | C runs calling `seikika` | | | 5 of 5 (1 to 4 calls) | | Holds |
 | M12 | Code subscore, A vs B (guard) | 1 (0.991–1) | 0.991 (0.991–1) | | 0.0085 | Inconclusive, exactly at *W* |
 | M13 | Structure subscore, A vs C (guard) | 1 (0.95–1) | | 1 (0.95–1) | 0.05 | Inconclusive |
 
@@ -53,21 +53,21 @@ What the numbers say, beyond the bar:
   codex-tools`, which lists the 7 direct dependents (not the indirect ones). `explain read_thread`
   was ambiguous across 6 nodes, and `path` found no directed path from `handle_output_item_done` to
   `spawn_pty_process`.
-- **The portal answered Q1's direct set and nothing more.** Every C run began with `toolbox get
+- **The portal answered Q1's direct set and nothing more.** Every C run began with `seikika get
   crate:codex-tools`, and four of five answers cite its `dependents` field for the 7 direct
   dependents. That field is direct only, and the CLI's `graph` couldn't follow one relation in one
   direction, so each run computed the 22 indirect ones another way. The three C runs that ran `cargo
-  metadata` listed all 22; the two that didn't listed 18. Toolbox results were 1–10% of each C run's
+  metadata` listed all 22; the two that didn't listed 18. Seikika results were 1–10% of each C run's
   read.
 
 **Friction, triaged.**
 
 | Friction | Where | Triage |
 |---|---|---|
-| `toolbox graph` had only `--depth`, though the REST and MCP reads already filter by relation and direction | Toolbox CLI | **Fixed** (`--relation`, `--direction`, and the `graph` skill). On a frozen arm C workspace, `toolbox graph crate:codex-tools --relation dependsOn --direction in --depth 3` returns all 29 dependents in one call |
-| The graph read clamps depth to 3 | Toolbox API | **Open** ([Q20](../../docs/questions.md)). Codex's deepest dependent is 3 hops away; a deeper workspace would need a transitive read |
-| `search` matches ids and titles only, so `search read_thread` found nothing, though the portal lists each crate's functions | Toolbox API | **Open** (Q20). Recommendation: don't widen it; a portal that indexes code becomes the code index `rg` already is |
-| `get` returned about 16k characters per crate, and agents cut it with `head -c` | Harness rule | The `get` and `query` skills already name `--fields`; this benchmark's `toolbox.mdc` didn't. A next round's rule names it |
+| `seikika graph` had only `--depth`, though the REST and MCP reads already filter by relation and direction | Seikika CLI | **Fixed** (`--relation`, `--direction`, and the `graph` skill). On a frozen arm C workspace, `seikika graph crate:codex-tools --relation dependsOn --direction in --depth 3` returns all 29 dependents in one call |
+| The graph read clamps depth to 3 | Seikika API | **Open** ([Q20](../../docs/questions.md)). Codex's deepest dependent is 3 hops away; a deeper workspace would need a transitive read |
+| `search` matches ids and titles only, so `search read_thread` found nothing, though the portal lists each crate's functions | Seikika API | **Open** (Q20). Recommendation: don't widen it; a portal that indexes code becomes the code index `rg` already is |
+| `get` returned about 16k characters per crate, and agents cut it with `head -c` | Harness rule | The `get` and `query` skills already name `--fields`; this benchmark's `seikika.mdc` didn't. A next round's rule names it |
 | `query` matched symbols, not the package node; ambiguous names; no directed call path | Graphify | A tool's own gaps; published here, not worked around |
 | `blind.py` redacts tool names but not "portal" or entity field names, so four C answers were recognisable | Harness | Didn't affect these mechanical grades. A benchmark with judged rubrics redacts each arm's vocabulary |
 | `count.py`'s contamination check sees absolute paths only | Harness | The adjudicator scanned every transcript for relative escapes and found none. A next harness resolves paths against each call's working directory |
@@ -80,11 +80,11 @@ and the [blind grades](results/r1/grades-r1.md)), [results/r1/blind-key.tsv](res
 
 ## 1. Why
 
-[graphify-ab](../graphify-ab/README.md) found neither "helps" nor "hurts" for Graphify on Toolbox
+[graphify-ab](../graphify-ab/README.md) found neither "helps" nor "hurts" for Graphify on Seikika
 and OpenFGA, and its decision ([D01M84ZW6K2V9CV2SD644DE5M0S](../../docs/decisions/D01M84ZW6K2V9CV2SD644DE5M0S.md))
 kept code intelligence out of the context lake. Two limits of that result motivate this one:
 
-- **Wrong ground for Graphify.** Both repositories had about 500 to 800 files and Toolbox is
+- **Wrong ground for Graphify.** Both repositories had about 500 to 800 files and Seikika is
   document-heavy, so the graph's document layer cost 17 agents to build. Graphify's own code
   benchmark (vendor, unreplicated) builds a code-only graph of one large repository, and its README
   says the token saving grows with corpus size (vendor claim). This benchmark gives it that: a large,
@@ -101,7 +101,7 @@ kept code intelligence out of the context lake. Two limits of that result motiva
   and a gain has to come from cost (§5). That is also the claim Graphify makes for large corpora:
   fewer tokens for the same answers (vendor claim).
 
-graphify-ab dropped a Toolbox arm because its questions were about code, which a catalog doesn't
+graphify-ab dropped a Seikika arm because its questions were about code, which a catalog doesn't
 hold. Here one of the four questions (Q1) is about crate structure, which a repo portal over a Cargo
 workspace does hold, and three (Q2 to Q4) are about code, which it doesn't. So the third arm is the
 box as a repository would adopt it, asked the questions Graphify is built for and one it shares.
@@ -109,9 +109,9 @@ box as a repository would adopt it, asked the questions Graphify is built for an
 | If | Then |
 |---|---|
 | Graphify helps (§5), with M1 holding | D01M84ZW6K2V9CV2SD644DE5M0S's second reopen trigger is met (a score gain with headroom and no turn cap). A new decision says where Graphify helps, and the repo-portal docs recommend carrying it as a standalone tool in large code repositories |
-| Graphify helps on cost only (M2 or M3) | A new decision records the cost gain and the repository size it holds at; Toolbox for Toolbox still doesn't adopt it (this repository is neither large nor code-dominant) |
-| Toolbox helps (§5) | A repo portal's crate facts help agents; the starter gains a Crate kind for Rust workspaces, and the claim is narrowed to crate-structure questions if only M13 holds |
-| Graphify over Toolbox on score (M7) | The decision that the context lake builds no code graph is revisited: a new decision on whether repo portals federate a code graph's call and reference edges |
+| Graphify helps on cost only (M2 or M3) | A new decision records the cost gain and the repository size it holds at; Seikika for Seikika still doesn't adopt it (this repository is neither large nor code-dominant) |
+| Seikika helps (§5) | A repo portal's crate facts help agents; the starter gains a Crate kind for Rust workspaces, and the claim is narrowed to crate-structure questions if only M13 holds |
+| Graphify over Seikika on score (M7) | The decision that the context lake builds no code graph is revisited: a new decision on whether repo portals federate a code graph's call and reference edges |
 | Otherwise | D01M84ZW6K2V9CV2SD644DE5M0S stands for large monorepos too; the friction found is triaged into fixes |
 
 ## 2. Arms
@@ -120,15 +120,15 @@ box as a repository would adopt it, asked the questions Graphify is built for an
 |---|---|
 | **A** (nothing) | The repository and the agent's own tools: read, search (`rg`), shell. `cargo` works offline in `codex-rs/` |
 | **B** (Graphify) | A, plus a prebuilt Graphify graph in `graphify-out/` and Graphify's Cursor rule ([prompts/graphify.mdc](prompts/graphify.mdc), what `graphify cursor install` writes), quoted verbatim in the prompt and present at `.cursor/rules/graphify.mdc` |
-| **C** (Toolbox) | A, plus a repo portal at `.toolbox/toolbox.yaml` ([harness/portal/toolbox.yaml](harness/portal/toolbox.yaml)), a `toolbox serve` of it on 127.0.0.1 started before the run, and a rule ([prompts/toolbox.mdc](prompts/toolbox.mdc)) quoted in the prompt and present at `.cursor/rules/toolbox.mdc` |
+| **C** (Seikika) | A, plus a repo portal at `.seikika/seikika.yaml` ([harness/portal/seikika.yaml](harness/portal/seikika.yaml)), a `seikika serve` of it on 127.0.0.1 started before the run, and a rule ([prompts/seikika.mdc](prompts/seikika.mdc)) quoted in the prompt and present at `.cursor/rules/seikika.mdc` |
 
-`graphify` 0.9.118 and `toolbox` are on PATH in every arm. The prompts are identical except for the
+`graphify` 0.9.118 and `seikika` are on PATH in every arm. The prompts are identical except for the
 rule block ([prompts/task.md](prompts/task.md)). A local subagent doesn't load a workspace's rules,
 so the rule is quoted.
 
 **Arm C's departures, declared before the run:**
 
-- **Toolbox ships no agent rule** for reading a repo portal (`toolbox install` installs packages and
+- **Seikika ships no agent rule** for reading a repo portal (`seikika install` installs packages and
   connectors, not rules). Arm C's rule is written for this benchmark in the form of Graphify's: the
   same "MANDATORY ... before Read, Grep, Glob, or Bash" opening and exceptions, with the read
   commands from the operator skills (`search`, `query`, `get`, `graph`) and one line on the Crate
@@ -140,9 +140,9 @@ so the rule is quoted.
   transitive closure, no call or reference edges. A second workspace connector is rooted at
   `codex-rs/`, because the connector runs `cargo metadata` in its root and Codex's Cargo workspace
   isn't at the repository root.
-- `toolbox owner` is left out of the rule: the portal computes no ownership field, so it fails on
+- `seikika owner` is left out of the rule: the portal computes no ownership field, so it fails on
   every crate.
-- Toolbox is the debug build of this repository at `9bac4f3` (main). The server keeps an in-memory
+- Seikika is the debug build of this repository at `9bac4f3` (main). The server keeps an in-memory
   store and runs without OpenFGA (dev mode); each arm C run has its own server on its own copy.
 
 ## 3. Repository and builds
@@ -160,7 +160,7 @@ builds both arms' additions from it:
   repository's `.gitignore`). It takes 59 s and gives 63,888 nodes, 181,569 edges (50,837 `calls`,
   36,283 `references`, 597 `depends_on`) and 1,243 communities, named by the LLM-free hub labeller.
   tree-sitter's SQL grammar isn't installed with graphifyy, so 39 `.sql` files add nothing.
-- **Toolbox:** the portal is copied in and validated (`toolbox validate .toolbox`); each server reads
+- **Seikika:** the portal is copied in and validated (`seikika validate .seikika`); each server reads
   the workspace when it starts (about 25 s for 120 crates).
 
 ## 4. Scoring
@@ -187,7 +187,7 @@ Its hash, recorded now:
 | `gold/codex.md` | `d597a2fb17109f6a92981fa936eaf9981b3c9694e7ba6f5a80d40e1c687823a2` |
 
 Answers are graded blind: [harness/blind.py](harness/blind.py) shuffles them under random labels and
-replaces "graphify" and "toolbox" with "[tool]" and drops the portal's `crate:` id prefix. The
+replaces "graphify" and "seikika" with "[tool]" and drops the portal's `crate:` id prefix. The
 adjudicator sees the arm map only after the grade table is written.
 
 ## 5. Measures and the bar (pre-registered)
@@ -206,26 +206,26 @@ inconclusive (P2).
 | M1 | With Graphify, answers score no lower than with nothing (a guard) | Not tested: the score has no headroom (§8) | med(A) − med(B) > *W*, on score |
 | M2 | With Graphify, the agent reads less | med(A) − med(B) > *W*, on read | med(B) − med(A) > *W* |
 | M3 | With Graphify, the agent makes fewer calls | As M2, on calls | As M2, on calls |
-| M4 | With Toolbox, answers score no lower than with nothing (a guard) | Not tested (§8) | As M1, C for B |
-| M5 | With Toolbox, the agent reads less | As M2, C for B | As M2, C for B |
-| M6 | With Toolbox, the agent makes fewer calls | As M3, C for B | As M3, C for B |
-| M7 | Graphify scores higher than Toolbox | med(B) − med(C) > *W*, on score | med(C) − med(B) > *W* |
-| M8 | Graphify reads less than Toolbox | med(C) − med(B) > *W*, on read | med(B) − med(C) > *W* |
-| M9 | Graphify makes fewer calls than Toolbox | As M8, on calls | As M8, on calls |
+| M4 | With Seikika, answers score no lower than with nothing (a guard) | Not tested (§8) | As M1, C for B |
+| M5 | With Seikika, the agent reads less | As M2, C for B | As M2, C for B |
+| M6 | With Seikika, the agent makes fewer calls | As M3, C for B | As M3, C for B |
+| M7 | Graphify scores higher than Seikika | med(B) − med(C) > *W*, on score | med(C) − med(B) > *W* |
+| M8 | Graphify reads less than Seikika | med(C) − med(B) > *W*, on read | med(B) − med(C) > *W* |
+| M9 | Graphify makes fewer calls than Seikika | As M8, on calls | As M8, on calls |
 | M10 | Arm B's agents use the graph | Every B run calls `graphify` | Any B run doesn't |
-| M11 | Arm C's agents use the portal | Every C run calls `toolbox` | Any C run doesn't |
+| M11 | Arm C's agents use the portal | Every C run calls `seikika` | Any C run doesn't |
 | M12 | Graphify doesn't hurt where it is supposed to be strong: code | Not tested (§8) | As M1, on the code subscore |
-| M13 | Toolbox doesn't hurt where it is supposed to be strong: crate structure | Not tested (§8) | As M4, on the structure subscore |
+| M13 | Seikika doesn't hurt where it is supposed to be strong: crate structure | Not tested (§8) | As M4, on the structure subscore |
 
 M1, M4, M12 and M13 were written as gains and became guards before round 1 was frozen, because two
 dry runs saturated the score (§8, L21). They can fail or be inconclusive. M7 compares two tool arms
 and stays two-sided, but at saturation it can only show that one tool arm lost points.
 
 **Graphify helps** if none of M1 to M3 fails, and one of them holds (so M2 or M3). **Graphify hurts** if M1 fails,
-or both M2 and M3 fail. **Toolbox helps** and **hurts** are the same over M4 to M6.
-**Graphify beats Toolbox** if none of M7 to M9 fails and one holds; **Toolbox beats Graphify** if
+or both M2 and M3 fail. **Seikika helps** and **hurts** are the same over M4 to M6.
+**Graphify beats Seikika** if none of M7 to M9 fails and one holds; **Seikika beats Graphify** if
 none holds and one fails. If M10 (M11) fails, the runs without a call are reported, and the verdict
-for Graphify (Toolbox) is "not shown", whatever the others say.
+for Graphify (Seikika) is "not shown", whatever the others say.
 
 **The designer's prediction, before the run** (revised after both dry runs, §8):
 
@@ -259,7 +259,7 @@ for Graphify (Toolbox) is "not shown", whatever the others say.
   lists every absolute path outside the workspace (`outsidePaths`), and the adjudicator rules on
   each. A voided run is reported, not rerun.
 - **Harness faults.** A run that ends without `ANSWERS.md` because of a runtime error, not the agent's
-  choice, is rerun once, named in §0 with its error. A Toolbox server that isn't serving all 120
+  choice, is rerun once, named in §0 with its error. A Seikika server that isn't serving all 120
   crates when its run starts is a harness fault. No run is dropped for its result.
 - **Adjudication (P7).** A fresh agent that designed no part of this grades the answers blind, then
   applies §5 and writes `ADJUDICATION.md`.
@@ -267,7 +267,7 @@ for Graphify (Toolbox) is "not shown", whatever the others say.
 ## 7. Running
 
 ```bash
-# graphify 0.9.118 (uv tool install graphifyy==0.9.118) and toolbox linked into /usr/local/bin
+# graphify 0.9.118 (uv tool install graphifyy==0.9.118) and seikika linked into /usr/local/bin
 CODEX_CHECKOUT=/path/to/codex experiments/graphify-monorepo-ab/harness/build.sh
 python3 experiments/graphify-monorepo-ab/harness/round.py 1 5 --workspaces
 experiments/graphify-monorepo-ab/harness/serve.sh 1
@@ -281,7 +281,7 @@ experiments/graphify-monorepo-ab/harness/serve.sh 1 stop
 ## 8. Dry run
 
 One run per arm (`round.py dry 1 --workspaces`), graded by the designer against the gold, to check
-that the transcript reports calls and read for every arm, that `graphify` and `toolbox` answer in
+that the transcript reports calls and read for every arm, that `graphify` and `seikika` answer in
 their workspaces, and that arm A leaves headroom (L21): if arm A scores 0.9 or more, the questions are
 hardened, the change and the new gold hash are recorded here, and the dry run is repeated. Its
 outcome is recorded here before round 1 launches.
@@ -293,15 +293,15 @@ scored 1.0 on every question, so there was no headroom.
 |---|---|---|---|---|---|---|
 | A | codex-2 | 1.0 | 36 | 140,066 | — | 199 |
 | B | codex-3 | 1.0 | 32 | 139,699 | `graphify` 4 (`query`, `path`, `explain`) | 172 |
-| C | codex-1 | 1.0 | 28 | 123,081 | `toolbox` 4 (`search`, `query`, `get`) | 168 |
+| C | codex-1 | 1.0 | 28 | 123,081 | `seikika` 4 (`search`, `query`, `get`) | 168 |
 
 Every arm, including B and C, computed the crate questions with `cargo metadata` and a script, and
 answered the caller and reference questions with `rg`. The trace (old Q5) followed one binary's
 `main` in two crates. The harness worked: calls and read came out for every arm, and `graphify` and
-`toolbox` answered in their workspaces. Two harness changes followed. Every arm wrote scratch
+`seikika` answered in their workspaces. Two harness changes followed. Every arm wrote scratch
 files to the shared `/tmp`, where concurrent runs could collide, so each run now gets its own
 scratch directory, named in the prompt and allowed by `count.py`. And `count.py` counted a Python
-line that contained "toolbox d" as a Toolbox call, so it now matches only Toolbox's own commands (C's
+line that contained "seikika d" as a Seikika call, so it now matches only Seikika's own commands (C's
 count above is with the fix; it was 5).
 
 **Hardening.** Q1 is kept. Old Q2 (top five crates by dependents), Q3 (direct callers of
@@ -320,7 +320,7 @@ which gives the same 12 and 19 functions (gold hash `66b9afb0…462c2`). The sec
 |---|---|---|---|---|---|---|---|
 | A | codex-1 | 0.994 | 0.974 | 56 | 240,433 | — | 250 |
 | B | codex-3 | 0.994 | 0.974 | 62 | 290,304 | `graphify` 4 (`query` 3, `explain`, `path`) | 339 |
-| C | codex-2 | 1.000 | 1.000 | 57 | 183,587 | `toolbox` 3 (`search`, `query`, `get`) | 312 |
+| C | codex-2 | 1.000 | 1.000 | 57 | 183,587 | `seikika` 3 (`search`, `query`, `get`) | 312 |
 
 Q1, Q2 and Q4 scored 1.0 in every arm. Every arm told the trait method from the inherent
 `read_thread`s and named all eight trace facts. **The gold had an error, and arm C found it:**

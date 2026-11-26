@@ -1,4 +1,4 @@
-apiVersion: toolbox.dev/assessment/v1
+apiVersion: seikika.com/assessment/v1
 entity: assessment:rule-quality/rule:repo/repo-hygiene/codeowners-catch-all
 rubric: assessment-quality
 subjectHash: 2fcfcfdea06b
@@ -10,10 +10,10 @@ verdicts:
     reason: >-
       The citations in
       portal/assessments/rule-quality/rule/repo/repo-hygiene/codeowners-catch-all.yaml
-      hold. In examples/repo-portal-starter/toolbox.yaml the check is at
+      hold. In examples/repo-portal-starter/seikika.yaml the check is at
       113-115, the evidence at 116, the fix at 117, the rationale at 118-121
       and the scorecard levels at 79-81. In
-      crates/toolbox-connector-workspace/src/repo.rs, `parse_codeowners`
+      crates/seikika-connector-workspace/src/repo.rs, `parse_codeowners`
       (37-51) keeps a rule with an empty owner list, and owners are collected
       across all rules at 77-84. portal/results.json lists this rule as
       failing meta-rule `tested` and `pins-both-outcomes`, as the summary
@@ -24,13 +24,13 @@ verdicts:
       The verdicts are right. A bare `*` passes while clearing ownership, and
       `/**` fails while meeting the intent. The trailing-`*` point is weaker
       than stated: a last `*` still gives every path an owner, which is the
-      fix's stated goal (toolbox.yaml:117). It only defeats the
+      fix's stated goal (seikika.yaml:117). It only defeats the
       later-rules-override design in the rationale (:120-121). The two other
       routes carry the fail without it.
   - criterion: reproducible
     verdict: pass
     reason: >-
-      Each verdict rests on the literal check (toolbox.yaml:114) and the
+      Each verdict rests on the literal check (seikika.yaml:114) and the
       parser (repo.rs:37-51), which a one-line CODEOWNERS fixture would
       confirm.
   - criterion: actionable

@@ -1,21 +1,21 @@
 # graphify-ab: does a Graphify knowledge graph help an agent answer questions about a repository?
 
-**About:** a tool ([toolbox-and-tools.md](../../docs/design/toolbox-and-tools.md)). Graphify is a
-candidate for the box; this benchmark decides whether Toolbox for Toolbox carries it.
+**About:** a tool ([seikika-and-tools.md](../../docs/design/seikika-and-tools.md)). Graphify is a
+candidate for the box; this benchmark decides whether Seikika for Seikika carries it.
 
 **Status:** complete (round 1). §0 was filled in after the run; nothing else changed after the first
 launch.
 
 ## 0. Results
 
-**Toolbox for Toolbox does not adopt Graphify.** Round 1 (20 runs, 2026-11-23) showed neither
+**Seikika for Seikika does not adopt Graphify.** Round 1 (20 runs, 2026-11-23) showed neither
 "helps" nor "hurts" on either repository: K1 to K6 are inconclusive and K7 holds, which is the
 designer's prediction on every point. Two fresh agents graded the answers blind, one per repository,
 and one of them applied §5 ([ADJUDICATION.md](ADJUDICATION.md)). No run was void and no run was
 rerun.
 
 *Post hoc (2026-11-24).* The *W* rule detects a two-standard-deviation effect about a quarter of
-the time at five runs per arm. Under an exact rank test, K5 and K6 separate completely on Toolbox:
+the time at five runs per arm. Under an exact rank test, K5 and K6 separate completely on Seikika:
 every B run made fewer calls and read less than every A run (p = 0.008 each). The labels below
 stand as registered; [graphify-red-team-response.md](../../docs/graphify-red-team-response.md)
 and [D01M85G2ZXXPQRXWKQF7TWV2RTP](../../docs/decisions/D01M85G2ZXXPQRXWKQF7TWV2RTP.md) give the
@@ -27,27 +27,27 @@ changes the rule for later rounds.
 | K1 | OpenFGA coverage | 0.955 (0.955–0.955) | 0.955 (0.955–0.955) | 0 | Inconclusive |
 | K2 | OpenFGA read, chars | 319,746 (261,220–411,348) | 465,815 (230,665–804,822) | 574,157 | Inconclusive |
 | K3 | OpenFGA calls | 62 (52–73) | 44 (40–79) | 39 | Inconclusive |
-| K4 | Toolbox coverage | 1.000 (1.000–1.000) | 1.000 (1.000–1.000) | 0 | Inconclusive |
-| K5 | Toolbox read, chars | 343,316 (327,662–400,058) | 244,970 (199,070–321,355) | 122,285 | Inconclusive |
-| K6 | Toolbox calls | 73 (70–75) | 55 (42–69) | 27 | Inconclusive |
+| K4 | Seikika coverage | 1.000 (1.000–1.000) | 1.000 (1.000–1.000) | 0 | Inconclusive |
+| K5 | Seikika read, chars | 343,316 (327,662–400,058) | 244,970 (199,070–321,355) | 122,285 | Inconclusive |
+| K6 | Seikika calls | 73 (70–75) | 55 (42–69) | 27 | Inconclusive |
 | K7 | B runs calling `graphify` | | 10 of 10 (3 to 8 calls each) | | Holds |
 
 What the numbers say, beyond the bar:
 
 - **Coverage hit the ceiling.** Every answer on a repository scored the same, in both arms: the ten
-  Toolbox answers found all 21 key facts, and the ten OpenFGA answers found all but O4d, which every
+  Seikika answers found all 21 key facts, and the ten OpenFGA answers found all but O4d, which every
   run missed. Without a turn cap, the questions didn't separate the arms. The vendor's 11-point gain came
   under a 14-turn cap.
 - **Arm B made fewer calls in both repositories** (median 18 fewer) and finished sooner (wall-time
-  medians 185 s against 274 s on OpenFGA, 191 s against 201 s on Toolbox; not in the bar). Neither
+  medians 185 s against 274 s on OpenFGA, 191 s against 201 s on Seikika; not in the bar). Neither
   difference clears *W*: on calls, one B run on each repository made as many calls as arm A.
-- **Read went both ways.** B read less on Toolbox and more on OpenFGA. The largest single result in
+- **Read went both ways.** B read less on Seikika and more on OpenFGA. The largest single result in
   the round, 580,577 characters in openfga-3, was a plain `grep -rn` that matched
   `graphify-out/graph.json`: the graph sits in the workspace, so unscoped searches read it.
 - **Building the graph costs more than a run saves.** The AST pass takes seconds, but the document
-  layer needed 17 agents for Toolbox (413 calls, 4.27M characters read, the slowest chunk 905 s) and
+  layer needed 17 agents for Seikika (413 calls, 4.27M characters read, the slowest chunk 905 s) and
   3 for OpenFGA (38 calls, 0.62M characters), measured from their transcripts
-  ([results/build-semantic.tsv](results/build-semantic.tsv)). Taking arm B's median saving on Toolbox
+  ([results/build-semantic.tsv](results/build-semantic.tsv)). Taking arm B's median saving on Seikika
   at face value (98k characters a session), one document build costs as much as about 43 sessions
   save, and 141 of the last 200 commits before `a8f7e03` changed a Markdown file.
 
@@ -65,20 +65,20 @@ evidence for code is thin. Its own code benchmark (vendor, unreplicated) asks si
 repository (ERPNext), builds the graph from code only, caps the agent at 14 turns, and reports
 key-fact coverage of 82.0% with the graph against 70.8% with grep and read.
 
-The question is whether Toolbox should adopt Graphify for this repository (Toolbox for Toolbox), and
-whether Toolbox's context lake ([context-lake.md](../../docs/design/context-lake.md)) needs a code
+The question is whether Seikika should adopt Graphify for this repository (Seikika for Seikika), and
+whether Seikika's context lake ([context-lake.md](../../docs/design/context-lake.md)) needs a code
 knowledge graph of its own.
 
 | If | Then |
 |---|---|
-| Graphify helps on Toolbox and doesn't hurt on OpenFGA (§5) | T4T carries Graphify as a tool in the box: pinned, its ignore file and rule committed, the graph rebuilt by a script; a package for portals follows |
-| Otherwise | T4T doesn't adopt it; the context lake stays catalog-level and federates code graphs rather than building one, and the verdict is recorded with this result |
+| Graphify helps on Seikika and doesn't hurt on OpenFGA (§5) | S4S carries Graphify as a tool in the box: pinned, its ignore file and rule committed, the graph rebuilt by a script; a package for portals follows |
+| Otherwise | S4S doesn't adopt it; the context lake stays catalog-level and federates code graphs rather than building one, and the verdict is recorded with this result |
 
 ## 2. Arms
 
 | Arm | What the agent has |
 |---|---|
-| **A** (baseline) | The repository and the agent's own tools: read, search (`rg`), shell. This is what agents working on Toolbox have today |
+| **A** (baseline) | The repository and the agent's own tools: read, search (`rg`), shell. This is what agents working on Seikika have today |
 | **B** (Graphify) | The same, plus a prebuilt Graphify graph in `graphify-out/` and Graphify's Cursor rule, quoted verbatim in the prompt and present at `.cursor/rules/graphify.mdc`. `graphify` 0.9.118 is on PATH in both arms |
 
 Arm B is Graphify as its README tells a Cursor user to set it up (`/graphify .`, then
@@ -87,7 +87,7 @@ holds the documents' semantic layer as well as the code's AST (§3). The prompts
 except for the rule block ([prompts/task.md](prompts/task.md)); a local subagent doesn't load a
 workspace's rules, so the rule is quoted.
 
-**A third arm was considered and dropped.** Toolbox's own catalog (the T4T portal over MCP) holds
+**A third arm was considered and dropped.** Seikika's own catalog (the S4S portal over MCP) holds
 entity-level facts: scorecards, owners, decisions, connectors. These questions are about code and
 the documents that explain it, which the catalog doesn't hold, and questions it does answer would
 be unfair to Graphify. The overlap is compared by capability in
@@ -98,31 +98,31 @@ be unfair to Graphify. The overlap is compared by capability in
 | Repository | Commit | Language | Files Graphify detects |
 |---|---|---|---|
 | OpenFGA, the fork `loganvolkers/openfga` | `7d89a566` | Go | 531: 508 code, 21 documents, 2 images |
-| Toolbox (this repository) | `a8f7e03` | Rust, Markdown, YAML | 795: 440 code, 355 documents |
+| Seikika (this repository) | `a8f7e03` | Rust, Markdown, YAML | 795: 440 code, 355 documents |
 
 Both are `git archive` exports, so no arm reads history. The graph is built by
 [harness/build-graph.sh](harness/build-graph.sh), which follows Graphify's skill
 (`graphify/skill.md`):
 
 1. Detect, with a `.graphifyignore` per repository
-   ([toolbox](harness/graphifyignore.toolbox), [openfga](harness/graphifyignore.openfga)) that drops
+   ([seikika](harness/graphifyignore.seikika), [openfga](harness/graphifyignore.openfga)) that drops
    generated experiment outputs, rendered prompts, licence texts and illustrations.
 2. Run the AST pass (tree-sitter).
 3. Chunk the documents, and give each chunk to a `general-purpose` subagent with the extraction
-   spec's prompt verbatim: 17 chunks for Toolbox, 3 for OpenFGA.
+   spec's prompt verbatim: 17 chunks for Seikika, 3 for OpenFGA.
 4. Finish with [harness/finish-graph.py](harness/finish-graph.py): coverage check, merge, cache,
    build, Leiden clustering, report and health check.
 
 **Departures from the skill, declared before the run:**
 
-- Toolbox has about 800 files, over the skill's 500-file prompt to narrow the scope. The answer
+- Seikika has about 800 files, over the skill's 500-file prompt to narrow the scope. The answer
   given is "the whole repository, with the ignore file".
 - Communities are named by Graphify's LLM-free labeller (`label_communities_by_hub`), not by the
   host agent. Names affect the report, not `query`, `path` or `explain`.
 - Steps 6 to 9 (HTML, manifest, cost tracker) are skipped. They don't change what the queries
   read. Arm B's workspace gets what step 9's cleanup leaves.
 - tree-sitter's SQL grammar is not installed with graphifyy, so `.sql` files (15 in OpenFGA, 8 in
-  Toolbox) add nothing. That is Graphify as installed.
+  Seikika) add nothing. That is Graphify as installed.
 
 The build's cost (calls and characters of the 20 semantic subagents) is reported with the result;
 it is not in the bar.
@@ -130,16 +130,16 @@ it is not in the bar.
 ## 4. Scoring
 
 Five questions per repository ([openfga](prompts/questions-openfga.md),
-[toolbox](prompts/questions-toolbox.md)) that need several files: a call chain, an impact set, a
+[seikika](prompts/questions-seikika.md)) that need several files: a call chain, an impact set, a
 mechanism, a validation rule, a configuration path. Several also need a document or a decision.
 Each has four or five **key facts**, written and checked against the frozen commit before the run:
-22 for OpenFGA, 21 for Toolbox. The gold is kept outside the repository until the runs finish and
+22 for OpenFGA, 21 for Seikika. The gold is kept outside the repository until the runs finish and
 then committed as `gold/`. Its hashes, recorded now:
 
 | File | sha256 |
 |---|---|
 | `gold/openfga.md` | `baeea1dc3516a70cb7d32227fb539d9a1d6203fcc84ac2550d2a97aa5a189ea1` |
-| `gold/toolbox.md` | `fd1580021b41a02fb3a7e7362d705a15193592d1c0045d9de4baa260c7d2a3e8` |
+| `gold/seikika.md` | `fd1580021b41a02fb3a7e7362d705a15193592d1c0045d9de4baa260c7d2a3e8` |
 
 **Coverage** is Graphify's own metric: (covered + ½ partial) / key facts, per run, over the
 repository's five questions. The adjudicator grades each fact covered, partial or missed, with the
@@ -168,9 +168,9 @@ otherwise it is inconclusive (P2).
 | K1 | OpenFGA | With Graphify, answers cover more key facts | med(B) − med(A) > *W*, on coverage | med(A) − med(B) > *W*, on coverage |
 | K2 | OpenFGA | With Graphify, the agent reads less | med(A) − med(B) > *W*, on read | med(B) − med(A) > *W*, on read |
 | K3 | OpenFGA | With Graphify, the agent makes fewer calls | As K2, on calls | As K2, on calls |
-| K4 | Toolbox | As K1 | As K1 | As K1 |
-| K5 | Toolbox | As K2 | As K2 | As K2 |
-| K6 | Toolbox | As K3 | As K3 | As K3 |
+| K4 | Seikika | As K1 | As K1 | As K1 |
+| K5 | Seikika | As K2 | As K2 | As K2 |
+| K6 | Seikika | As K3 | As K3 | As K3 |
 | K7 | Both | Arm B's agents use the graph | Every B run calls `graphify` at least once | Any B run doesn't |
 
 **Graphify helps** on a repository if none of its three hypotheses fails, and either its coverage
@@ -202,7 +202,7 @@ the rule, which is the product's way to get used, didn't work.
 - **Symmetric (P4).** Same prompt, tools and repository in both arms. Arm B adds what Graphify's
   setup adds, and nothing that helps with these questions in particular.
 - **Contamination.** A run is void if it reads answer-bearing content outside its workspace:
-  another checkout of the same repository (such as `/agent/repos/toolbox`), the build directory,
+  another checkout of the same repository (such as `/agent/repos/seikika`), the build directory,
   another run's workspace, or the gold. `count.py` lists every absolute path outside the workspace
   (`outsidePaths`), and the adjudicator rules on each. A voided run is reported, not rerun.
 - **Harness faults.** A run that ends without `ANSWERS.md` because of a runtime error, not the
@@ -214,7 +214,7 @@ the rule, which is the product's way to get used, didn't work.
 
 ```bash
 export PATH=$HOME/.local/bin:$PATH   # graphify 0.9.118 (uv tool install graphifyy==0.9.118)
-TOOLBOX_CHECKOUT=. OPENFGA_CHECKOUT=/path/to/openfga experiments/graphify-ab/harness/build-graph.sh prepare
+SEIKIKA_CHECKOUT=. OPENFGA_CHECKOUT=/path/to/openfga experiments/graphify-ab/harness/build-graph.sh prepare
 # one general-purpose subagent per /tmp/graphify-ab/semantic-prompts/*.md, then:
 experiments/graphify-ab/harness/build-graph.sh finish
 python3 experiments/graphify-ab/harness/round.py 1 5 --workspaces

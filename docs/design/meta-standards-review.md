@@ -2,7 +2,7 @@
 
 *Status: assessment and changes, 2026-11-23 (D01M831P5QWJQ4A2FT85N5MXJQF). This re-evaluates the
 top level of [scorecards-for-scorecards.md](./scorecards-for-scorecards.md) (D71, D79, D80). About the
-box ([toolbox-and-tools.md](./toolbox-and-tools.md)): how the box judges the standards it carries.
+box ([seikika-and-tools.md](./seikika-and-tools.md)): how the box judges the standards it carries.
 Maintainer SDLC.*
 
 ---
@@ -83,7 +83,7 @@ a gaming attempt that failed first. **All 16 failed: 33 of 64 criteria, and 1 un
 |---|---|---|
 | Presence, not quality: an empty or whitespace value passes | `maintainer-site/titled`, `meta-rubric/guided`, `meta-connector/records-mapped` (a map with `set: "{}"`) | `guided` read in code (`model.rs`, `guidance.is_none()`); fixed (§4) |
 | Self-declared facts are trusted | `sdlc-layer/nothing-missing` and `sdlc-stage` gold read the author's own `status:` | Read in `portal/standards/sdlc.yaml` |
-| Self-review is possible | `review-assessment`, `review-crate` | Confirmed in data: `crate-design/crate:toolbox-expr` was assessed and reviewed by `cursor-grok`; fixed for assessments (§4) |
+| Self-review is possible | `review-assessment`, `review-crate` | Confirmed in data: `crate-design/crate:seikika-expr` was assessed and reviewed by `cursor-grok`; fixed for assessments (§4) |
 | A fixture ladder of `none` and `skipped` passes silver | `meta-scorecard/fixtures-show-the-ladder` | Read in `meta.rs` (`fixture_outcomes` counts every level string); fixed |
 | Tests are paired loosely | `meta-rule/tested` pairs every scorecard and rule in one expectation | Read in `meta.rs`; no rule is affected today, but the route is closed (§4) |
 | Gold rules cheaper than bronze ones | `meta-rule/always-explains` (a constant string passes); `sdlc-stage/built` (a two-line edit) | `always-explains`: by definition |
@@ -136,8 +136,8 @@ escaped by touching the subject. Both are open items (M7, M8 in §5).
 | C1 | Every `review-*` card: bronze `no-open-findings` (fails only on a current failing review), silver `assessed`, gold `passes-review` and `no-doubts` | Open findings head the report as `none`, distinct from "not reviewed yet" at bronze. Reviews stay advisory: a stale review never blocks a change | `meta.yaml`, `crates.yaml`, `sdlc.yaml`, `assessments.yaml` |
 | C2 | `review-assessment/assessed` fails when the review's assessor is the assessment's own (`selfReviewed`) | Independent review is what the fix text promised (SRE PRR, judge bias) | `assessments.yaml`, a fixture, a test |
 | C3 | `fixtures-show-the-ladder` needs at least one real level reached (`fixtureRealLevels`) | `none` with `skipped` was passing silver | `meta.yaml` |
-| C4 | Blank `description:` and `guidance:` don't count, for kinds, fields and rubrics | The cheapest gaming route for `described` and `guided` | `crates/toolbox-cli/src/model.rs`, a unit test |
-| C5 | A rule is tested only by an expectation on its own scorecard (`score_segments`) | One expectation naming two cards used to test every rule named in it | `crates/toolbox-cli/src/meta.rs`, a unit test |
+| C4 | Blank `description:` and `guidance:` don't count, for kinds, fields and rubrics | The cheapest gaming route for `described` and `guided` | `crates/seikika-cli/src/model.rs`, a unit test |
+| C5 | A rule is tested only by an expectation on its own scorecard (`score_segments`) | One expectation naming two cards used to test every rule named in it | `crates/seikika-cli/src/meta.rs`, a unit test |
 | C6 | Campaign `close-review-findings` (review-rule and review-scorecard at bronze) | Findings are worked off against a date, not just listed | `portal/campaigns.yaml` |
 | C7 | 16 adversarial assessments committed | Judgement is data (D79), and the findings are now open items on the campaign | `portal/assessments/` |
 
@@ -182,4 +182,4 @@ the rubric on five samples.
 - Sharma et al., "Towards Understanding Sycophancy in Language Models" (2023), arXiv 2310.13548 (abstract)
 - Grace, Hadfield, Olivares, De Jonghe, "Demystifying evals for AI agents" (Anthropic, 2026), read in full
 - Cortex documentation, scorecards and initiatives (vendor)
-- This repository: `portal/results.json`, `portal/assessments/`, `toolbox assess check portal`, `toolbox describe scorecards portal`
+- This repository: `portal/results.json`, `portal/assessments/`, `seikika assess check portal`, `seikika describe scorecards portal`

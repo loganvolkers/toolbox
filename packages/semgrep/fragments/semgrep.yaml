@@ -58,7 +58,7 @@ scorecards:
       a quiet way to pass: a suppression is a decision a reviewer should see.
     links:
     - title: The box and the tools
-      url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/toolbox-and-tools.md
+      url: https://github.com/seikika/seikika/blob/main/docs/design/seikika-and-tools.md
     - title: 'Semgrep: ignoring findings'
       url: https://semgrep.dev/docs/ignoring-files-folders-code
     kind: ${param:kind}

@@ -25,10 +25,10 @@ succeeds only when its effect is observed.**
   | Standards down | Kinds, scorecards, policies, and now actions | Packages a child `include`s (D89). A package action runs in the child that includes it |
   | Results up | Scorecard results, entities | Committed reports and connector records ([federation.md](./federation.md) §4) |
   | **Actions up** | Each child's declared actions, as data | The workspace connector's `portal` records. The parent offers them on the child's entity |
-  | **Runs down** | A request to run one, with who asked and who approved | The child runs `toolbox run` in its checkout (`runner: local`) or its own CI on whichever forge hosts it (`runner: ci`: a GitHub workflow or a GitLab pipeline, [forges.md](./forges.md)) |
+  | **Runs down** | A request to run one, with who asked and who approved | The child runs `seikika run` in its checkout (`runner: local`) or its own CI on whichever forge hosts it (`runner: ci`: a GitHub workflow or a GitLab pipeline, [forges.md](./forges.md)) |
 
 - **One action, one lifecycle, every level.** A repo portal runs its actions with no server
-  (`toolbox run`). A served portal runs the same definition through REST and MCP. A parent runs a
+  (`seikika run`). A served portal runs the same definition through REST and MCP. A parent runs a
   child's through the child. All three call one preparation step, so a preview means the same
   thing wherever it is asked.
 - **Each side trusts only what it controls.** The parent owns how it reaches a child: which
@@ -81,7 +81,7 @@ ITSM. DX's self-service workflows (part of DX Fabric) were read afterwards from 
 **The rule we draw from it.** Put an action's *definition* at the level that owns the decision it
 hides (Parnas), and its *run* where the credentials and gates already are.
 
-| Action (families documenting it, of 14) | Definition home | Run place | Toolbox shape | Story |
+| Action (families documenting it, of 14) | Definition home | Run place | Seikika shape | Story |
 |---|---|---|---|---|
 | Create a service from a template (8) | Company or org | Central: no repo exists yet | A `create` action in the company portal | S8 |
 | Deploy, promote, roll back (7) | Repo pipeline, under org policy | Repo CI, behind its environments | `github-workflow` or `gitlab-pipeline` executor in the repo portal | S4 |
@@ -114,8 +114,8 @@ brackets.
 
 | # | Story | Defined at | Runs at | Done when | Status |
 |---|---|---|---|---|---|
-| **S1** | As an **app developer**, I want my repo's day-2 operations declared in `.toolbox/` next to the code, so the team that builds it runs it, from a checkout or a portal | Repo | The repo's checkout or CI | `toolbox run write-readme -i text=…` previews the effect, runs it, and ends `succeeded` only after the repo's facts show it [1] | Built |
-| **S2** | As a **repo maintainer**, I want an action that changes code to arrive as a pull request, so review is its approval and nothing lands on main unreviewed | Repo | A branch from the remote's base | The run is `proposed` with the branch and a `Toolbox-Run` trailer, stays `proposed` while unmerged, and is `succeeded` once merged and observed on the base [4] | Built |
+| **S1** | As an **app developer**, I want my repo's day-2 operations declared in `.seikika/` next to the code, so the team that builds it runs it, from a checkout or a portal | Repo | The repo's checkout or CI | `seikika run write-readme -i text=…` previews the effect, runs it, and ends `succeeded` only after the repo's facts show it [1] | Built |
+| **S2** | As a **repo maintainer**, I want an action that changes code to arrive as a pull request, so review is its approval and nothing lands on main unreviewed | Repo | A branch from the remote's base | The run is `proposed` with the branch and a `Seikika-Run` trailer, stays `proposed` while unmerged, and is `succeeded` once merged and observed on the base [4] | Built |
 | **S3** | As a **platform engineer**, I want to publish a fleet fix once, in a package, and run it on every repo that includes it, so a standard doesn't need N teams to act by hand | Org package | Each repo, as a pull request | One org action opens a pull request per repo, and each run succeeds when that repo verifies the merged change [6] | Built |
 | **S4** | As a **release manager**, I want deploys to run in the repo's own workflow, behind its own environment reviewers, so a portal can never bypass a gate | Repo workflow | The repo's CI | The run is `dispatched`, tracked to the workflow's conclusion, and verified by the postcondition. The repo's environment rules decide approval | Built (executor and tracking; tested against a fake GitHub API) |
 | **S5** | As a **security owner**, I want access-granting actions to need a maintainer's approval, never the requester's own | Company or repo | Where the credential is | A run is `awaiting_approval`; the requester's own approval is refused (`not-an-approver`); another maintainer's approval runs it [3, 7] | Built |
@@ -146,13 +146,13 @@ revision keeps every other property.
 | Packages carry kinds, scorecards and policies | Packages carry actions too. A package action runs in the child that includes it |
 | Waivers' approvals wait on M5 (FQ3) | Approvals exist: recorded on the run, by principal, with self-approval refused, and signed by the parent when they cross to a child |
 | A child is named by its own manifest | A child is keyed by where it was found (its path, or its git URL), so no child can claim another's entity |
-| Children are checkouts beside the parent | Children may also be listed by git URL (`federation.children`); Toolbox keeps their clones current ([D01M86J769VGE6K5FJJQ76EP4AA](../decisions/D01M86J769VGE6K5FJJQ76EP4AA.md)) |
+| Children are checkouts beside the parent | Children may also be listed by git URL (`federation.children`); Seikika keeps their clones current ([D01M86J769VGE6K5FJJQ76EP4AA](../decisions/D01M86J769VGE6K5FJJQ76EP4AA.md)) |
 | Nothing implemented | Actions up, runs down and package actions are built (§7) |
 
 ### 5.2 The parent's view
 
 The shortest parent lists its children by git URL, and nothing else
-([examples/federated-actions/git-org](../../examples/federated-actions/git-org/toolbox.yaml)):
+([examples/federated-actions/git-org](../../examples/federated-actions/git-org/seikika.yaml)):
 
 ```yaml
 federation:
@@ -161,13 +161,13 @@ federation:
     - {git: ../repos/beta.git, branch: trunk, key: beta}
 ```
 
-Toolbox expands the list into what the longer form below declares by hand: a `federation`
+Seikika expands the list into what the longer form below declares by hand: a `federation`
 connector over clones it keeps under the state directory, the `Portal` kind,
 `federation.portals` and `runners.local.portals`. A served parent reads its children again
 before it lists, previews or runs an action, and brings a child's clone to its origin branch
 before the child previews or runs, so a key a child has just pinned and pushed counts on the next
 request. Without `federation.signingKey`, a parent keeps its own key at
-`<state>/served/<portal>/signing-key`, served or not, and returns it as `approval_key`; `toolbox
+`<state>/served/<portal>/signing-key`, served or not, and returns it as `approval_key`; `seikika
 run` in its checkout, or with `--url <server>`, prints the line to pin. A child that can't be read is listed as `unreadable` with its
 error. In a child, an action on `kind: Portal` targets the repository's own portal, with no kind
 to declare.
@@ -177,11 +177,11 @@ each child's manifest in sibling checkouts and reports it as a `portal` record, 
 included:
 
 ```yaml
-# examples/federated-actions/org/toolbox.yaml (abridged)
+# examples/federated-actions/org/seikika.yaml (abridged)
 connectors:
   - name: workspace
     package: builtin:workspace
-    config: {root: .., crates: false, portals: ["*/.toolbox/toolbox.yaml"]}
+    config: {root: .., crates: false, portals: ["*/.seikika/seikika.yaml"]}
     records: [portal]
 kinds:
   - name: Portal
@@ -192,9 +192,9 @@ kinds:
 federation:
   portals: Portal
   runners:
-    local: {portals: ["*"]}          # checkouts this server may run `toolbox run` in
+    local: {portals: ["*"]}          # checkouts this server may run `seikika run` in
     # children with runner {type: ci} go to their own forge; see forges.md §4.1 for forges:
-  signingKey: TOOLBOX_APPROVAL_KEY   # env var holding the Ed25519 seed that signs approvals
+  signingKey: SEIKIKA_APPROVAL_KEY   # env var holding the Ed25519 seed that signs approvals
 ```
 
 Every child action is then offered on the child's entity (`portal:beta`), with the parent's
@@ -207,14 +207,14 @@ previews. A child whose manifest fails validation offers nothing, and its record
 
 | # | Rule | Enforced by |
 |---|---|---|
-| T1 | **The parent owns how it reaches a child.** A child's `federation.runner` names only a type, a workflow and a ref (and, for the older `github-workflow`, a repository). The parent runs it only if its own settings allow it: `local` for checkouts whose key matches `runners.local.portals`; `ci` for the project the parent cloned the child from, on a forge it declares or a known host, matching that forge's `projects`, on the CI host the parent's entry for that forge names (admitted by that host's `projects`, with its endpoint and token) or else the forge's own CI with the forge's API and token ([forges.md](./forges.md) §4.3, §4.7, D01M87T16JRH53YV6VVWM8PH169); `github-workflow` for repositories matching `runners.github-workflow.repos`. A `ci` child naming `project`, `repo`, `api`, `url`, `token`, `forge`, `ci` or `via` is refused. Otherwise `409 runner-not-allowed` | `toolbox serve` and `toolbox run` in the parent |
-| T2 | **Executors see only what they declare.** Every executor and child process starts with a cleared environment: a fixed base set (`PATH`, `HOME`, locale, proxies, git identity, `TOOLBOX_*` directories) plus the action's own `secrets`. A served parent's tokens never reach a child's command, including at preview | The executors (`clean_env`) |
+| T1 | **The parent owns how it reaches a child.** A child's `federation.runner` names only a type, a workflow and a ref (and, for the older `github-workflow`, a repository). The parent runs it only if its own settings allow it: `local` for checkouts whose key matches `runners.local.portals`; `ci` for the project the parent cloned the child from, on a forge it declares or a known host, matching that forge's `projects`, on the CI host the parent's entry for that forge names (admitted by that host's `projects`, with its endpoint and token) or else the forge's own CI with the forge's API and token ([forges.md](./forges.md) §4.3, §4.7, D01M87T16JRH53YV6VVWM8PH169); `github-workflow` for repositories matching `runners.github-workflow.repos`. A `ci` child naming `project`, `repo`, `api`, `url`, `token`, `forge`, `ci` or `via` is refused. Otherwise `409 runner-not-allowed` | `seikika serve` and `seikika run` in the parent |
+| T2 | **Executors see only what they declare.** Every executor and child process starts with a cleared environment: a fixed base set (`PATH`, `HOME`, locale, proxies, git identity, `SEIKIKA_*` directories) plus the action's own `secrets`. A served parent's tokens never reach a child's command, including at preview | The executors (`clean_env`) |
 | T3 | **The child previews.** A parent's preview is the child's preview, so blockers, effects and approvals are the child's | Both previews come from one `prepare` |
-| T4 | **A repo portal holds no approvals of its own; a parent does, served or not.** An action with approvers ends `awaiting_approval` (exit 3) in a repository's checkout. A parent's checkout records the run in its state directory, takes `--approve`/`--reject` there under the rules of T6, and signs the grant with the key it keeps, the one a served parent uses (D01M86WAVQQXYF9DFHCP3G035MA) | `toolbox run` |
-| T5 | **A child accepts only approvals a parent signed.** On the last approval the parent signs a grant: parent, parent run, action, action version, entity, inputs, effects hash, requester, approvers, and an expiry 600 s ahead (Ed25519). The child checks every field against its own preview and the key it pinned in `acceptApprovalsFrom: [{portal, key}]`. A child that pins no key for this parent makes the parent's preview say so (`child-refuses-approvals`) before anyone approves | `toolbox run --grant` in the child; the parent's preview |
-| T6 | **Nobody approves their own run, an approver is a person, and each person approves once.** Each approval entry is a user, a group, or a list meaning any one of them. Principals compare without case. A group needs an authorization model to know its members; without one it can't be met, rather than meaning anyone. A served portal asks OpenFGA; a checkout evaluates the portal's model over its derived tuples, exactly for direct types (with nested groups and wildcards), `or`, computed relations and `from`, and refuses `and` and `but not` (D01M8727W7FEED6VVRY6MB3JFR3). In a federation the org portal decides approvals, so its model defines the groups once for every child. A served portal takes approvals only from an interactive sign-in (proxy or OIDC, D57): not a personal access token, and not MCP. A parent's checkout takes `--as` on trust, as a dev server on a loopback address does: whoever can use its state directory holds its signing key anyway. That suits one operator, a trial or a CI job that guards the state directory; a team approves through `toolbox serve` with sign-in (D01M8727W7FEED6VVRY6MB3JFR3). A forge marked `identity: true` makes a checkout take who you are from your own token on it instead, refusing `--as` alone, and makes a dev server refuse to create, approve, reject or cancel runs (D01M87FMCVSQCQJMGDSN2MCTH5W, [forges.md](./forges.md) §4.6). A refused approval or rejection is recorded in the run's events (`approval_refused`, who and why) and changes nothing else | The run lifecycle, `toolbox serve` (`not-an-approver`, `approval-needs-a-person`) and `toolbox run` |
+| T4 | **A repo portal holds no approvals of its own; a parent does, served or not.** An action with approvers ends `awaiting_approval` (exit 3) in a repository's checkout. A parent's checkout records the run in its state directory, takes `--approve`/`--reject` there under the rules of T6, and signs the grant with the key it keeps, the one a served parent uses (D01M86WAVQQXYF9DFHCP3G035MA) | `seikika run` |
+| T5 | **A child accepts only approvals a parent signed.** On the last approval the parent signs a grant: parent, parent run, action, action version, entity, inputs, effects hash, requester, approvers, and an expiry 600 s ahead (Ed25519). The child checks every field against its own preview and the key it pinned in `acceptApprovalsFrom: [{portal, key}]`. A child that pins no key for this parent makes the parent's preview say so (`child-refuses-approvals`) before anyone approves | `seikika run --grant` in the child; the parent's preview |
+| T6 | **Nobody approves their own run, an approver is a person, and each person approves once.** Each approval entry is a user, a group, or a list meaning any one of them. Principals compare without case. A group needs an authorization model to know its members; without one it can't be met, rather than meaning anyone. A served portal asks OpenFGA; a checkout evaluates the portal's model over its derived tuples, exactly for direct types (with nested groups and wildcards), `or`, computed relations and `from`, and refuses `and` and `but not` (D01M8727W7FEED6VVRY6MB3JFR3). In a federation the org portal decides approvals, so its model defines the groups once for every child. A served portal takes approvals only from an interactive sign-in (proxy or OIDC, D57): not a personal access token, and not MCP. A parent's checkout takes `--as` on trust, as a dev server on a loopback address does: whoever can use its state directory holds its signing key anyway. That suits one operator, a trial or a CI job that guards the state directory; a team approves through `seikika serve` with sign-in (D01M8727W7FEED6VVRY6MB3JFR3). A forge marked `identity: true` makes a checkout take who you are from your own token on it instead, refusing `--as` alone, and makes a dev server refuse to create, approve, reject or cancel runs (D01M87FMCVSQCQJMGDSN2MCTH5W, [forges.md](./forges.md) §4.6). A refused approval or rejection is recorded in the run's events (`approval_refused`, who and why) and changes nothing else | The run lifecycle, `seikika serve` (`not-an-approver`, `approval-needs-a-person`) and `seikika run` |
 | T7 | **Review is a change's approval.** A `change` action's approvers approve by reviewing and merging its pull request, behind the repo's branch protection; the run waits as `proposed`, not `awaiting_approval` | `by_review` in the preview |
-| T8 | **The child verifies, and only its own effect counts.** A federated run's verification is the child's, recorded as `{by: child portal, child_run, child}`. A change counts only once its commit is on the base (by ancestry or its `Toolbox-Run` trailer). A postcondition that held before the run ends `unverified` | `recheck` |
+| T8 | **The child verifies, and only its own effect counts.** A federated run's verification is the child's, recorded as `{by: child portal, child_run, child}`. A change counts only once its commit is on the base (by ancestry or its `Seikika-Run` trailer). A postcondition that held before the run ends `unverified` | `recheck` |
 
 An approval binds what the approver saw: if the action's definition or its effects changed between
 the request and the last approval, the run fails `preview_stale` instead of running the new
@@ -225,16 +225,16 @@ approvals can't start it twice and a cancel that was accepted always wins.
 
 | Runner (child declares) | Parent allows with | How a parent dispatches | Credentials |
 |---|---|---|---|
-| `local` | `federation.runners.local.portals` (key globs) | `toolbox run --portal <child> --parent-run <parent>/<id> [--grant <signed>] -- <action>` in the child's checkout | The checkout's own, in a cleared environment |
-| `ci` (`workflow`, `ref`) | The forge the parent cloned the child from (`forges:`, or github.com and gitlab.com by default), and its `projects` | GitHub: `workflow_dispatch` as below. GitLab: a pipeline with the same six values as typed inputs, tracked by id, the child's `toolbox-run.json` read from its `toolbox` job ([forges.md](./forges.md) §4.4). The parent previews in its clone first, so the grant binds the child's effects | The forge token named in the parent's `forges:` entry; the pipeline's own job token and protected variables |
-| `github-workflow` (`repo`, `workflow`, `ref`) | `federation.runners.github-workflow.repos`, `token`, `api` | `workflow_dispatch` of the child's workflow with `action`, `inputs`, `requested_by`, `toolbox_run`, `parent_run` and `grant`; the workflow runs `toolbox run` | The parent's dispatch token; the workflow's own `GITHUB_TOKEN`, environment secrets and OIDC behind its environment reviewers |
+| `local` | `federation.runners.local.portals` (key globs) | `seikika run --portal <child> --parent-run <parent>/<id> [--grant <signed>] -- <action>` in the child's checkout | The checkout's own, in a cleared environment |
+| `ci` (`workflow`, `ref`) | The forge the parent cloned the child from (`forges:`, or github.com and gitlab.com by default), and its `projects` | GitHub: `workflow_dispatch` as below. GitLab: a pipeline with the same six values as typed inputs, tracked by id, the child's `seikika-run.json` read from its `seikika` job ([forges.md](./forges.md) §4.4). The parent previews in its clone first, so the grant binds the child's effects | The forge token named in the parent's `forges:` entry; the pipeline's own job token and protected variables |
+| `github-workflow` (`repo`, `workflow`, `ref`) | `federation.runners.github-workflow.repos`, `token`, `api` | `workflow_dispatch` of the child's workflow with `action`, `inputs`, `requested_by`, `seikika_run`, `parent_run` and `grant`; the workflow runs `seikika run` | The parent's dispatch token; the workflow's own `GITHUB_TOKEN`, environment secrets and OIDC behind its environment reviewers |
 
 ## 6. One action at every level
 
 ### 6.1 The definition
 
 ```yaml
-# examples/federated-actions/repo/.toolbox/toolbox.yaml
+# examples/federated-actions/repo/.seikika/seikika.yaml
 actions:
   - name: set-owners
     kind: Repository
@@ -251,7 +251,7 @@ actions:
     executor:
       type: command                       # or change, github-workflow, gitlab-pipeline, in-image, http, webhook
       run: >-
-        mkdir -p .github && printf '* %s\n' "$TOOLBOX_INPUT_TEAM" >
+        mkdir -p .github && printf '* %s\n' "$SEIKIKA_INPUT_TEAM" >
         .github/CODEOWNERS
     expect:
       postcondition: has(entity.codeowners) && inputs.team in entity.owners
@@ -262,15 +262,15 @@ actions:
 
 | Type | Runs | Preview | Ends at | Verified by |
 |---|---|---|---|---|
-| `command` | A command in the checkout, with `TOOLBOX_INPUT_*` | Toolbox's, plus the command's own when `preview: true` (`TOOLBOX_PHASE=preview`) | Its exit | Re-reading the portal's facts |
-| `change` | A command in a worktree of the remote's base; commits it to `toolbox/<action>/<run>` with `Toolbox-Run`, `Requested-By` and `Approved-By` trailers, and pushes (`land: push`: to the base). A run whose diffs differ from the confirmed preview fails before it commits | The files it would change, with their diffs | `proposed` (`land: push`: `succeeded` once seen) | The commit on the base (ancestry or trailer), each changed file's blob compared with the base (`verification.files`), then the postcondition at the base if one is declared |
+| `command` | A command in the checkout, with `SEIKIKA_INPUT_*` | Seikika's, plus the command's own when `preview: true` (`SEIKIKA_PHASE=preview`) | Its exit | Re-reading the portal's facts |
+| `change` | A command in a worktree of the remote's base; commits it to `seikika/<action>/<run>` with `Seikika-Run`, `Requested-By` and `Approved-By` trailers, and pushes (`land: push`: to the base). A run whose diffs differ from the confirmed preview fails before it commits | The files it would change, with their diffs | `proposed` (`land: push`: `succeeded` once seen) | The commit on the base (ancestry or trailer), each changed file's blob compared with the base (`verification.files`), then the postcondition at the base if one is declared |
 | `change` with `land: push` | The same commit, pushed to the base itself once the approval rule is met; never forced, so a protected or moved base refuses it and the run fails | The same, plus `push branch:<base>` | `succeeded` or `failed` | The fetched base has the commit and every changed file as written (a hook that undoes the push is seen), then the postcondition if one is declared |
-| `github-workflow` | `workflow_dispatch` asking for the run id (`return_run_details`), tracked by that id; without one, by the one run of that name on the dispatched ref created after the dispatch. `ci: <name>` takes the endpoint and token from a `github-actions` host ([forges.md](./forges.md) §4.7) | Toolbox's | `dispatched`, then the workflow's conclusion, or `timed_out` past the deadline | The postcondition after a refresh |
-| `gitlab-pipeline` | `POST /projects/:id/pipeline` on a declared or known GitLab, with the run's inputs as typed pipeline inputs plus `toolbox_run`; tracked by the id GitLab returns. A refused pipeline (an input outside its `options`, invalid YAML) fails the run with GitLab's reason. `ci: <name>` takes the endpoint and token from a `gitlab-ci` host instead of `forge` | Toolbox's | `dispatched`, then the pipeline's status (`manual` stays `dispatched`, with a note) | The postcondition after a refresh |
-| `in-image` | The executor protocol over stdio (D40): `command`, or a released `package` that `toolbox install` pins | The executor's | Its `result`; an `accepted` with an `executor_run_id` stays `dispatched` and is asked with `status` | The postcondition, or the executor's `verify` when it declares `verify: true` |
+| `github-workflow` | `workflow_dispatch` asking for the run id (`return_run_details`), tracked by that id; without one, by the one run of that name on the dispatched ref created after the dispatch. `ci: <name>` takes the endpoint and token from a `github-actions` host ([forges.md](./forges.md) §4.7) | Seikika's | `dispatched`, then the workflow's conclusion, or `timed_out` past the deadline | The postcondition after a refresh |
+| `gitlab-pipeline` | `POST /projects/:id/pipeline` on a declared or known GitLab, with the run's inputs as typed pipeline inputs plus `seikika_run`; tracked by the id GitLab returns. A refused pipeline (an input outside its `options`, invalid YAML) fails the run with GitLab's reason. `ci: <name>` takes the endpoint and token from a `gitlab-ci` host instead of `forge` | Seikika's | `dispatched`, then the pipeline's status (`manual` stays `dispatched`, with a note) | The postcondition after a refresh |
+| `in-image` | The executor protocol over stdio (D40): `command`, or a released `package` that `seikika install` pins | The executor's | Its `result`; an `accepted` with an `executor_run_id` stays `dispatched` and is asked with `status` | The postcondition, or the executor's `verify` when it declares `verify: true` |
 | `http` | The same protocol, POSTed to `url` with an optional bearer `token` | The executor's | As `in-image` | As `in-image` |
-| `webhook` | The `run` message POSTed to `url`; a 2xx is delivery only | Toolbox's | Delivery | The postcondition, else `unverified` |
-| `toolbox` (federated) | The child's `toolbox run` | The child's | The child's state | The child |
+| `webhook` | The `run` message POSTed to `url`; a 2xx is delivery only | Seikika's | Delivery | The postcondition, else `unverified` |
+| `seikika` (federated) | The child's `seikika run` | The child's | The child's state | The child |
 
 ### 6.3 Lifecycle, tokens and records
 
@@ -294,11 +294,11 @@ actions:
   unverified (the executor finished, but nothing observed its effect).
 - **Records.** Every run is a JSON record, carrying who requested it, through which surface, the
   approvals with notes, every state change with time and actor, the effects, the outputs and the
-  verification. `toolbox run` writes it to the state directory, and `toolbox run --verify <id>`
+  verification. `seikika run` writes it to the state directory, and `seikika run --verify <id>`
   checks a waiting run again; it takes only a run id, never a file, and re-derives the executor
   from the manifest. `via` is `api`, `mcp` or `parent:<portal>/<run>`, set by the surface, never
   by the caller. A served portal writes every run change and spent token through to Postgres
-  (`toolbox.runs`, `toolbox.spent_tokens`) or, without one, to `<state>/served/<portal>/runs`,
+  (`seikika.runs`, `seikika.spent_tokens`) or, without one, to `<state>/served/<portal>/runs`,
   and reads them back at start. A run whose executor a restart cut off fails with that said;
   waiting runs are re-checked every 10 seconds.
 
@@ -308,14 +308,14 @@ The CLI works on a checkout (repo or parent, no server) or, with `--url <server>
 portal through its REST API, with the same flags, output and exit codes. A parent's checkout
 covers the whole loop, approvals included; a server adds sign-in, the UI, REST and MCP, and keeps
 its runs apart from the checkout's. `--wait` follows a run
-until it succeeds, fails or waits for a person. `toolbox serve <portal> --detach` starts the
+until it succeeds, fails or waits for a person. `seikika serve <portal> --detach` starts the
 served portal in the background and returns once it is ready, printing the approval key its
 children pin; `--stop` stops it.
 
 | Need | CLI | REST (served) | MCP (served) |
 |---|---|---|---|
-| List | `toolbox run` | `GET /v1/actions` | `list_actions` |
-| Preview | `toolbox run <action> -i k=v` | `POST /v1/actions/{name}/previews` | `preview_action` |
+| List | `seikika run` | `GET /v1/actions` | `list_actions` |
+| Preview | `seikika run <action> -i k=v` | `POST /v1/actions/{name}/previews` | `preview_action` |
 | Run | `--confirm <token>`, or `--yes` | `POST /v1/actions/{name}/runs` | `run_action` |
 | Approve | `--approve <id>` / `--reject <id>`, in the parent's checkout or with `--url` (a repository's holds none, T4) | `POST /v1/runs/{id}/approvals`, interactive sign-in only (T6) | — (D57) |
 | Check | `--verify <id>`, `--runs` | `GET /v1/runs/{id}`, `POST /v1/runs/{id}/verify`, `GET /v1/runs` | `get_run`, `list_runs` |
@@ -324,14 +324,14 @@ children pin; `--stop` stops it.
 ### 6.5 Testing an action before anyone runs it
 
 An action's owners test it the way they test a scorecard: with cases in a test file the manifest
-lists, run by `toolbox test`. A case under `runs:` names the action, the requester (`as`), the
+lists, run by `seikika test`. A case under `runs:` names the action, the requester (`as`), the
 inputs, who approves (`approve`, in order) and, optionally, a push the origin refuses
 (`rejectPush: <message>`). It expects a state (a run state, or `invalid`, `blocked`, `refused`),
 the approvals that were refused, text in the error, and each file's content on the base (`null`:
 absent). A file's `defaults` are the fields every case starts from: a case's own fields replace
 them, and its `inputs` merge into theirs key by key (`null` leaves one out), so a case states only
 what it varies. In round 4 of the actions benchmark the test files were the largest part of each
-Toolbox run, about 70 lines in each of three repositories, mostly the same action, requester,
+Seikika run, about 70 lines in each of three repositories, mostly the same action, requester,
 inputs and approver restated per case.
 
 Each case runs the same `prepare`, approval and `execute` code a served portal does, in a scratch
@@ -342,7 +342,7 @@ repository's own index and refs are untouched. Nothing reaches the real origin, 
 written, so testing a refusal or a rejected push needs no live server, no throwaway runs in the
 history and no hook on the real origin. A case may test `change` and `command` actions; a child's
 action is tested in the child, and a postcondition is checked against the portal's fixtures. In
-round 3 of the actions benchmark, every Toolbox run spent about ten tool calls rehearsing those
+round 3 of the actions benchmark, every Seikika run spent about ten tool calls rehearsing those
 refusals against the live org portal, where the vanilla arm spent one call on a scratch copy
 (D01M86J769VGE6K5FJJQ76EP4AA §15).
 
@@ -363,8 +363,8 @@ network and no Postgres.
 | 5 | The org offers every child's actions, packages included; a federated run is verified by the child | S6, S10 (T1, T8) |
 | 6 | A fleet change: one org action, three pull requests, three verified runs | S3 |
 | 7 | The served org: a child without a runner is refused; a child that pins no key is flagged before approval; a reused confirm token, the requester, someone not listed and a forged grant are refused; another maintainer's approval is signed, accepted by the child and verified; MCP offers no approval tool, and its run records `via: mcp`; concurrent approvals and cancels run a run at most once | S5, S6, S7 (T1, T5, T6) |
-| 8 | `toolbox run --url`: a `land: push` change waits for approval (exit 3) and pushes nothing; `--approve` by another maintainer lands it on the child's main, where the child observes it; the run is listed again after the server restarts | S5, S7 (T4, T6, T8) |
-| 9 | An org portal that lists four children by git URL: the minimal repo's `toolbox test` cases (approval, refusals, a rejected push) pass in a scratch copy and leave its origin unchanged; the children's actions are offered with no connector, kind or key declared; a request to a child that hasn't pinned the kept key is refused with the line to pin; once pinned and pushed, the minimal repo's action previews, waits for bob (the requester and carol refused), lands with its trailers and is recorded; a push the origin rejects fails with the origin's message | S5, S6, S7 (T5, T6, T8) |
+| 8 | `seikika run --url`: a `land: push` change waits for approval (exit 3) and pushes nothing; `--approve` by another maintainer lands it on the child's main, where the child observes it; the run is listed again after the server restarts | S5, S7 (T4, T6, T8) |
+| 9 | An org portal that lists four children by git URL: the minimal repo's `seikika test` cases (approval, refusals, a rejected push) pass in a scratch copy and leave its origin unchanged; the children's actions are offered with no connector, kind or key declared; a request to a child that hasn't pinned the kept key is refused with the line to pin; once pinned and pushed, the minimal repo's action previews, waits for bob (the requester and carol refused), lands with its trailers and is recorded; a push the origin rejects fails with the origin's message | S5, S6, S7 (T5, T6, T8) |
 | 10 | The same org portal with no server: its checkout prints the kept key, records a request (exit 3, naming `--approve`), refuses the requester and carol, signs bob's approval with the kept key so the child lands and verifies it, refuses a second approval of the finished run, and a rejected run lands nothing | S5, S6 (T4, T5, T6) |
 | GitLab | `scripts/gitlab-acceptance.sh`, against GitLab CE in Docker: the same lifecycle on GitLab-hosted children and a bare repository in one org ([forges.md](./forges.md) §3, §6) | F1–F5, F7, F8 (T1, T5, T8) |
 
@@ -373,7 +373,7 @@ network and no Postgres.
 | Item | Why not now |
 |---|---|
 | Runs shared by several server instances (D39) | Runs are written through and survive a restart, but one instance owns them: a second instance on the same database does not see them live, and an executor cut off by a restart is failed, not resumed. Durable steps are the durable-runtime track |
-| A `toolbox run` GitHub Action for `runner: github-workflow` children | The dispatch is built and tested against a fake API; the composite action that receives it is next |
+| A `seikika run` GitHub Action for `runner: github-workflow` children | The dispatch is built and tested against a fake API; the composite action that receives it is next |
 | A federated github-workflow run's verification | The parent sees the workflow's conclusion; the child's own verification needs the child's run record as a workflow artifact. On GitLab it is collected ([forges.md](./forges.md) §4.4); GitHub artifacts are zip archives |
 | Fan-out in one command | A fleet change is one run per child (a loop); `--all` waits for a use beyond scripts |
 | S8, S9, S11, S12 | §4 |
@@ -389,18 +389,18 @@ network and no Postgres.
 
 The benchmark [experiments/actions-ab](../../experiments/actions-ab/README.md) measures this table
 with agents. **Result (round 8, held-out task, [write-up](../../experiments/actions-ab/results/r8/README.md)):**
-Toolbox passes the pre-registered bar. All twelve runs, three per arm, delivered every
-probe. Toolbox's median lines to maintain were 241, against GitHub Actions 1330, Backstage 1882
+Seikika passes the pre-registered bar. All twelve runs, three per arm, delivered every
+probe. Seikika's median lines to maintain were 241, against GitHub Actions 1330, Backstage 1882
 and a vanilla app 952, each gap wider than both arms' spreads. Its tool calls (median 36) beat
 Backstage's (81), and against GitHub Actions (52) and vanilla (20) the gap is inside the spread.
-The calls carry the fit audit's label: Toolbox's agents had a shipped skill tuned on earlier
+The calls carry the fit audit's label: Seikika's agents had a shipped skill tuned on earlier
 rounds.
 
 The table below is the designer's reading, not a result.
 
-| Property | Toolbox | GitHub Actions (`workflow_dispatch`) | Backstage scaffolder | A vanilla app |
+| Property | Seikika | GitHub Actions (`workflow_dispatch`) | Backstage scaffolder | A vanilla app |
 |---|---|---|---|---|
-| Definition lives in the repo | Yes (`.toolbox/`) | Yes (`.github/workflows/`) | A `Template` entity in any registered location, if catalog rules allow it | Wherever it is written |
+| Definition lives in the repo | Yes (`.seikika/`) | Yes (`.github/workflows/`) | A `Template` entity in any registered location, if catalog rules allow it | Wherever it is written |
 | Typed, validated inputs before any effect | JSON Schema, checked at preview | Typed inputs (string, choice, boolean, number, environment), no pattern | JSON Schema parameters | Hand-written |
 | Preview of the effect | Every run, bound to a confirm token | None | Dry run for actions that support it | Hand-written |
 | Approval, self-approval refused | Approvers in the action; requester refused | Environment reviewers, "prevent self-review" (repo settings) | Not built in | Hand-written |
@@ -439,6 +439,6 @@ The table below is the designer's reading, not a result.
     after the brief: primary);
   - DORA's [platform engineering capability](https://dora.dev/capabilities/platform-engineering/);
     Team Topologies key concepts; Parnas (1972); Conway (1968); Vogels (2006).
-- Toolbox: [federation.md](./federation.md), [action-runs.md](./action-runs.md),
+- Seikika: [federation.md](./federation.md), [action-runs.md](./action-runs.md),
   [action-entities.md](./action-entities.md), [packages.md](./packages.md),
   [repo-portals.md](./repo-portals.md), D49, D64, D68, D89.

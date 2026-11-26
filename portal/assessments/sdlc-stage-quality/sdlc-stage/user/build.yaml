@@ -1,4 +1,4 @@
-apiVersion: toolbox.dev/assessment/v1
+apiVersion: seikika.com/assessment/v1
 entity: sdlc-stage:user/build
 rubric: sdlc-stage-quality
 subjectHash: 5d797c4fd3e7
@@ -10,19 +10,19 @@ verdicts:
     reason: >-
       The exit criterion is a typed client compiled from the portal's OpenAPI.
       No crate generates OpenAPI (`rg -i openapi crates/` finds nothing),
-      though docs/v1-spec.md:96 and §7.2 (line 291) assign it to toolbox-api.
-      The only check, crates/toolbox-api/tests/mcp.rs, tests MCP tool schemas
+      though docs/v1-spec.md:96 and §7.2 (line 291) assign it to seikika-api.
+      The only check, crates/seikika-api/tests/mcp.rs, tests MCP tool schemas
       and results (tools_list_describes_every_input at line 80), not a REST
       contract or a client.
     suggestion: >-
-      Generate /v1/openapi.json per portal in toolbox-api. Add a test that
+      Generate /v1/openapi.json per portal in seikika-api. Add a test that
       generates a TypeScript client from it for the reference portal and
       type-checks a small app against it, and list that test as the check.
   - criterion: agent-can-complete
     verdict: fail
     reason: >-
       An agent can build on MCP today (described inputs, mcp.rs:80-121) or on
-      `toolbox query -o json`. It cannot reach the exit criterion, because
+      `seikika query -o json`. It cannot reach the exit criterion, because
       there is no OpenAPI document and no client generator, and no generated
       user plugin (docs/design/user-sdlc.md:47-48, "Planned").
     suggestion: >-
@@ -33,15 +33,15 @@ verdicts:
     verdict: pass
     reason: >-
       An app calls a running portal over /v1 or /mcp, or through the released
-      `toolbox mcp` bridge. Nothing in Toolbox is rebuilt (user-sdlc.md §2,
+      `seikika mcp` bridge. Nothing in Seikika is rebuilt (user-sdlc.md §2,
       lines 33-41).
   - criterion: decoupled-from-core
     verdict: fail
     reason: >-
       The typed-client exit cannot be met without adding OpenAPI generation to
-      toolbox-api (docs/v1-spec.md:96, user-sdlc.md §5 item 1, line 78). A
+      seikika-api (docs/v1-spec.md:96, user-sdlc.md §5 item 1, line 78). A
       user cannot produce the document from outside, since REST response
-      shapes are defined only in Rust (crates/toolbox-api/src/routes.rs).
+      shapes are defined only in Rust (crates/seikika-api/src/routes.rs).
     suggestion: >-
       Ship the OpenAPI document from the server, so users generate clients
       with off-the-shelf tools and never touch this repository.
@@ -49,7 +49,7 @@ verdicts:
   - criterion: fast-feedback
     verdict: fail
     reason: >-
-      portal/sdlc/stages/user.yaml lists toolbox query. docs/design/user-
+      portal/sdlc/stages/user.yaml lists seikika query. docs/design/user-
       sdlc.md gives no measured local time to the stage exit.
     suggestion: >-
       Measure and record the fastest local check that demonstrates this stage
@@ -57,7 +57,7 @@ verdicts:
   - criterion: beyond-one-reference
     verdict: fail
     reason: >-
-      portal/sdlc/stages/user.yaml lists crates/toolbox-api/tests/mcp.rs as
+      portal/sdlc/stages/user.yaml lists crates/seikika-api/tests/mcp.rs as
       evidence. The declared checks name no second exercised reference for
       this stage exit.
     suggestion: >-

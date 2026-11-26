@@ -1,4 +1,4 @@
-apiVersion: toolbox.dev/assessment/v1
+apiVersion: seikika.com/assessment/v1
 entity: rule:acme/github-app-hygiene/only-approved-apps
 rubric: rule-quality
 subjectHash: 8d4f1b24ddd0
@@ -9,13 +9,13 @@ verdicts:
     verdict: fail
     reason: >-
       Passing means every installed slug is a key of `policy.approvedApps`
-      (examples/reference-portal/toolbox.yaml:246), which is approval in
+      (examples/reference-portal/seikika.yaml:246), which is approval in
       general, not approval for this repository. Each policy entry has an
       `eligible` condition (:26, :32), e.g. renovate only on non-deprecated
       repos. `rg eligible` finds no code that evaluates it, so an approved app
       on an ineligible repository passes. `installedApps` also depends on `GET
       /user/installations/{id}/repositories`
-      (crates/toolbox-connector-github/src/main.rs:207-215), which lists only
+      (crates/seikika-connector-github/src/main.rs:207-215), which lists only
       repositories the token's user can see (Q14,
       docs/examples/approved-github-apps.md:148). Installs the token can't see
       are missed, and the rule passes.
@@ -28,7 +28,7 @@ verdicts:
     verdict: pass
     reason: >-
       The cheap passes are removing the app, which the `remove-app` action
-      does (examples/reference-portal/toolbox.yaml:341-364), or adding its
+      does (examples/reference-portal/seikika.yaml:341-364), or adding its
       slug to `approvedApps`. A bare key then falls under `app-approval`
       (appliesTo `entity.slug in policy.approvedApps`, :268), whose check
       reads `.permissions` and doesn't pass without a real snapshot. So
@@ -38,7 +38,7 @@ verdicts:
     reason: >-
       The fix sends the reader to a `request-new-app` action that the manifest
       doesn't define: the only actions are `install-approved-app` and
-      `remove-app` (examples/reference-portal/toolbox.yaml:304-364).
+      `remove-app` (examples/reference-portal/seikika.yaml:304-364).
       `request-new-app` exists only in the design
       (docs/examples/approved-github-apps.md:70). There is also no evidence,
       so the failing score for checkout-web doesn't name `sketchy-bot`
@@ -53,7 +53,7 @@ verdicts:
     reason: >-
       There is no number. The scorecard rationale says one bronze rule is
       enough because any install outside the list is a finding
-      (examples/reference-portal/toolbox.yaml:233-237), and the design lists
+      (examples/reference-portal/seikika.yaml:233-237), and the design lists
       this rule first under continuous governance
       (docs/examples/approved-github-apps.md:89-91).
 summary: >-

@@ -1,5 +1,5 @@
-# Runtime observability for Toolbox (OTel design / D6). Maintainer SDLC.
-# Included by portal/toolbox.yaml; see portal/README.md for the layout.
+# Runtime observability for Seikika (OTel design / D6). Maintainer SDLC.
+# Included by portal/seikika.yaml; see portal/README.md for the layout.
 
 kinds:
   - name: Observability
@@ -92,7 +92,7 @@ scorecards:
     title: Runtime observability
     kind: Observability
     description: >-
-      Toolbox's runtime telemetry checklist: the OTel crate, metric catalog,
+      Seikika's runtime telemetry checklist: the OTel crate, metric catalog,
       structured logs, alert stubs and an exported trace, each a file that
       exists (docs/design/observability.md).
     rationale: >-
@@ -103,11 +103,11 @@ scorecards:
       stage, and gold a trace exported to a real collector.
     links:
     - title: Observability design
-      url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/observability.md
+      url: https://github.com/seikika/seikika/blob/main/docs/design/observability.md
     - title: Telemetry crate decision
-      url: https://github.com/loganvolkers/toolbox/blob/main/docs/decisions/D01M81ADN8C10EA1Z1VNRY3A5JZ.md
+      url: https://github.com/seikika/seikika/blob/main/docs/decisions/D01M81ADN8C10EA1Z1VNRY3A5JZ.md
     - title: 'Decision: observability'
-      url: https://github.com/loganvolkers/toolbox/blob/main/docs/decisions/D01M7TCJ31X0000000000000000.md
+      url: https://github.com/seikika/seikika/blob/main/docs/decisions/D01M7TCJ31X0000000000000000.md
     owner: group:maintainers
     track: maintainer
     levels: [bronze, silver, gold]
@@ -118,7 +118,7 @@ scorecards:
       check: entity.missingCrate.size() == 0
       evidence: entity.missingCrate
       fix: >-
-        Add crates/toolbox-telemetry to the workspace with opentelemetry
+        Add crates/seikika-telemetry to the workspace with opentelemetry
         dependencies (plan §4, D6).
       rationale: >-
         Without one crate that owns the bootstrap, each crate sets up its own
@@ -132,7 +132,7 @@ scorecards:
         README.
       rationale: >-
         Backends group every signal by `service.name`; an operator who doesn't
-        know to set it sees Toolbox's telemetry under a generic default, mixed
+        know to set it sees Seikika's telemetry under a generic default, mixed
         with other services.
       links:
       - title: OTEL_SERVICE_NAME
@@ -145,19 +145,19 @@ scorecards:
         Add METRIC_CATALOG.md listing the v1 required metric names (v1-spec
         §10.5).
       rationale: >-
-        Metric names, units and labels are part of Toolbox's SemVer surface, and
+        Metric names, units and labels are part of Seikika's SemVer surface, and
         operators' dashboards and alerts depend on them; without a written
         catalog a rename breaks them silently.
       links:
       - title: Metric catalog
-        url: https://github.com/loganvolkers/toolbox/blob/main/crates/toolbox-telemetry/METRIC_CATALOG.md
+        url: https://github.com/seikika/seikika/blob/main/crates/seikika-telemetry/METRIC_CATALOG.md
     - name: prom-endpoint
       level: bronze
       check: entity.missingPromTest.size() == 0
       evidence: entity.missingPromTest
       fix: >-
         Add a unit/integration test that asserts metrics_text() contains the
-        catalog names (including toolbox_snapshot_lag_seconds).
+        catalog names (including seikika_snapshot_lag_seconds).
       rationale: >-
         A catalog protects operators only if `/metrics` really serves it; a test
         pinning the names catches a dropped or renamed metric before it ships.
@@ -188,7 +188,7 @@ scorecards:
       check: entity.missingAssessment.size() == 0
       evidence: entity.missingAssessment
       fix: >-
-        Write portal/assessments/.../operator/monitor.yaml via toolbox assess
+        Write portal/assessments/.../operator/monitor.yaml via seikika assess
         (sdlc-stage-quality).
       rationale: >-
         Every file can exist while the operator's monitor stage still can't be
@@ -207,5 +207,5 @@ scorecards:
         backends depend on.
       links:
       - title: OTel testbed
-        url: https://github.com/loganvolkers/toolbox/blob/main/experiments/otel-testbed/README.md
+        url: https://github.com/seikika/seikika/blob/main/experiments/otel-testbed/README.md
     facets: {summary: public, details: public}

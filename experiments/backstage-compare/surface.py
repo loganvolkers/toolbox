@@ -3,7 +3,7 @@
 every interface, the configuration a new adopter deploys, and the one credential an operator
 issues to an API client. Prints one JSON object. Usage: surface.py <arm> <catalog-dir> <out.json>.
 
-Toolbox: `toolbox serve` on 0.0.0.0 with no TOOLBOX_AUTH_MODE (its default off loopback), a
+Seikika: `seikika serve` on 0.0.0.0 with no SEIKIKA_AUTH_MODE (its default off loopback), a
 personal access token for the client and the portal's OpenFGA model.
 Backstage: the create-app backend with app-config.yaml + app-config.production.yaml (the
 Dockerfile's CMD), plus the bench overlay (database, a read-only static externalAccess token for
@@ -50,21 +50,21 @@ def rpc_result(raw):
 MCP_HEADERS = {"accept": "application/json, text/event-stream"}
 
 
-class Toolbox(measure.Toolbox):
+class Seikika(measure.Seikika):
     port = 18092
 
     def start(self, catalog, fresh=True):
-        psql("DROP DATABASE IF EXISTS surface_toolbox")
-        psql("CREATE DATABASE surface_toolbox")
-        env = {k: v for k, v in os.environ.items() if not k.startswith("TOOLBOX_")}
-        env.update(TOOLBOX_CONNECTORS="off", RUST_LOG="warn",
-                   TOOLBOX_PATS=f"bench=tbx_{TOKEN}",
-                   TOOLBOX_CONNECTOR_TOKENS=f"catalog=conn_{TOKEN}",
-                   TOOLBOX_OPENFGA_BIN=os.environ.get("TOOLBOX_OPENFGA_BIN",
+        psql("DROP DATABASE IF EXISTS surface_seikika")
+        psql("CREATE DATABASE surface_seikika")
+        env = {k: v for k, v in os.environ.items() if not k.startswith("SEIKIKA_")}
+        env.update(SEIKIKA_CONNECTORS="off", RUST_LOG="warn",
+                   SEIKIKA_PATS=f"bench=tbx_{TOKEN}",
+                   SEIKIKA_CONNECTOR_TOKENS=f"catalog=conn_{TOKEN}",
+                   SEIKIKA_OPENFGA_BIN=os.environ.get("SEIKIKA_OPENFGA_BIN",
                                                       "/tmp/tools/openfga"))
         return subprocess.Popen(
-            [measure.TOOLBOX, "serve", str(HERE / "portal"), "--listen", f"0.0.0.0:{self.port}",
-             "--database-url", PG + "/surface_toolbox"],
+            [measure.SEIKIKA, "serve", str(HERE / "portal"), "--listen", f"0.0.0.0:{self.port}",
+             "--database-url", PG + "/surface_seikika"],
             env=env, stdout=self.log, stderr=subprocess.STDOUT)
 
     @property
@@ -74,7 +74,7 @@ class Toolbox(measure.Toolbox):
     entity = property(lambda self: f"{self.base}/v1/entities/component:c1")
     mcp = property(lambda self: f"{self.base}/mcp")
     mcp_headers = property(lambda self: self.headers)
-    forged = {"x-toolbox-user": "admin"}
+    forged = {"x-seikika-user": "admin"}
 
     def delete(self, headers):
         return call("DELETE", self.entity, headers)[0]
@@ -140,7 +140,7 @@ def refused(status):
 
 
 def main():
-    arm = {"toolbox": Toolbox, "backstage": Backstage}[sys.argv[1]]()
+    arm = {"seikika": Seikika, "backstage": Backstage}[sys.argv[1]]()
     catalog = Path(sys.argv[2])
     n = sum(1 for line in (catalog / "catalog.ndjson").open() if '"component"' in line)
     arm.log = open(Path(sys.argv[3]).with_suffix(".log"), "w")

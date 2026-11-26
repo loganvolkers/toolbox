@@ -1,0 +1,81 @@
+apiVersion: seikika.com/assessment/v1
+entity: assessment:crate-design/crate:seikika-authz
+rubric: assessment-quality
+subjectHash: cbed2b51a8fb
+assessor: {kind: agent, name: cursor-reviewer-19, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: supported
+    verdict: fail
+    reason: >-
+      Most citations in
+      portal/assessments/crate-design/crate/seikika-authz.yaml hold. The crate
+      docs are crates/seikika-authz/src/lib.rs:1-8 and the trait is
+      lib.rs:18-34. The v1-spec row is docs/v1-spec.md:92. `has_relation` is
+      at seikika-api/src/access.rs:86 and `dyn Authorizer` at state.rs:90.
+      `install_tuple_view(&sqlx::PgPool)` is openfga.rs:414, called with
+      `&pg.pool` at seikika-cli/src/server.rs:90. The batch-error test is
+      openfga.rs:499, the four Local cases are local.rs:144-200, and the
+      wrong-denial root cause is docs/research-log.md:99. Two citations point
+      to the wrong place. First, small-contract says seikika-cli calls
+      `local::Local` and `fgatest::run_file` within server.rs:61-92 and
+      415-423. Those calls are at seikika-cli/src/run.rs:612,
+      action_tests.rs:242 and main.rs:850, and server.rs never names either.
+      Second, tests-match-risk cites "the tuple view's `user_type` mapping
+      (src/openfga.rs:405-413)". Those lines are the doc comment that
+      describes the mapping. The mapping itself is the CASE at
+      openfga.rs:477-478 in `tuple_view_sql`.
+    suggestion: >-
+      Cite seikika-cli/src/run.rs:612, action_tests.rs:242 and main.rs:850 for
+      the `Local` and `fgatest` calls. Cite openfga.rs:458-491, with the CASE
+      at 477-478, for the user_type mapping.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      The verdicts match the sources. one-responsibility passes on lib.rs:1-8.
+      small-contract passes because callers use module-level public items (rg
+      `seikika_authz::` across crates/). tests-match-risk is unsure because
+      nothing in the crate calls `tuple_view_sql`: openfga.rs's tests at
+      498-575 cover batch errors, the config file and the co-process
+      environment. `install_tuple_view` is only called at server.rs:90, so the
+      view is reached only through the acceptance scripts. The Local tests are
+      hand-written cases with no OpenFGA differential. replaceable-defaults
+      passes, and the reason names the sqlx `PgPool` in `install_tuple_view`.
+      That view is the documented design (docs/authorization.md:204), so
+      passing it is defensible.
+  - criterion: reproducible
+    verdict: unsure
+    reason: >-
+      Three verdicts rest on code a second assessor would read the same way.
+      replaceable-defaults is the exception. The rubric fails "when a public
+      signature names the default's types"
+      (portal/standards/crates.yaml:482-485), and Postgres is a charter
+      default. `pub async fn install_tuple_view(pool: &sqlx::PgPool, …)`
+      (openfga.rs:414) is such a signature, and seikika-cli reaches into
+      PgStore's `pool` field to call it (server.rs:90). The assessment calls
+      this a rough edge because OpenFGA is the crate's wrapped default. A
+      second assessor reading the guidance literally could fail it instead.
+    suggestion: >-
+      Say in the replaceable-defaults reason which default the criterion
+      applies to (OpenFGA only, with Postgres left to seikika-store). Or mark
+      it unsure and cite docs/authorization.md:204 as the decision that ties
+      the tuple view to Postgres.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      The one non-pass is tests-match-risk (unsure), and its suggestion
+      (portal/assessments/crate-design/crate/seikika-authz.yaml:72-76) targets
+      both gaps it names. A Local-versus-OpenFGA differential run on the
+      reference model.fga.yaml would test local.rs:1-6's "never grants more"
+      claim directly. A unit test of `tuple_view_sql`'s user_type CASE
+      (openfga.rs:477-478) for a user, a userset, `*` and `type:*` would pin
+      the regression in docs/research-log.md:99. Both would move the verdict
+      to pass.
+summary: >-
+  The verdicts are sound and the tests-match-risk analysis is careful. Two
+  citations point to the wrong place, though: the CLI's `Local`/`fgatest`
+  calls are not in server.rs, and openfga.rs:405-413 is the doc comment,
+  not the user_type CASE at 477-478. The replaceable-defaults pass rests
+  on reading the rule as about OpenFGA only, while `install_tuple_view`
+  puts sqlx's `PgPool` in a public signature, so a second assessor could
+  differ.

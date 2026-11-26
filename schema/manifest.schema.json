@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://toolbox.dev/schemas/manifest/v1alpha1.json",
-  "title": "Toolbox portal manifest (v1alpha1)",
+  "$id": "https://seikika.com/schemas/manifest/v1alpha1.json",
+  "title": "Seikika portal manifest (v1alpha1)",
   "description": "The v1 configuration contract (docs/v1-spec.md §5). Produced by hand in YAML/JSON or printed by the TypeScript builder. The server refuses any configuration that does not come from a manifest (D2).",
   "type": "object",
   "additionalProperties": false,
@@ -12,7 +12,7 @@
   ],
   "properties": {
     "apiVersion": {
-      "const": "toolbox.dev/v1alpha1"
+      "const": "seikika.com/v1alpha1"
     },
     "portal": {
       "type": "object",
@@ -20,7 +20,7 @@
       "required": [
         "name",
         "owner",
-        "toolbox"
+        "seikika"
       ],
       "properties": {
         "name": {
@@ -32,9 +32,9 @@
         "owner": {
           "$ref": "#/$defs/entityRef"
         },
-        "toolbox": {
+        "seikika": {
           "type": "string",
-          "description": "Pinned Toolbox version (major.minor)."
+          "description": "Pinned Seikika version (major.minor)."
         }
       }
     },
@@ -143,7 +143,7 @@
     },
     "tools": {
       "type": "object",
-      "description": "Upstream tools the portal's connectors and rules need (D90, D01M800DHD0Z1RTPH7CM46GZS3B). Toolbox doesn't download them: `toolbox doctor` checks each pin, `toolbox tools config --for mise|aqua|pypi` prints an installer's input, and `toolbox tools install --via` runs the installer.",
+      "description": "Upstream tools the portal's connectors and rules need (D90, D01M800DHD0Z1RTPH7CM46GZS3B). Seikika doesn't download them: `seikika doctor` checks each pin, `seikika tools config --for mise|aqua|pypi` prints an installer's input, and `seikika tools install --via` runs the installer.",
       "additionalProperties": {
         "type": "object",
         "additionalProperties": false,
@@ -169,7 +169,7 @@
           "install": {
             "type": "object",
             "additionalProperties": false,
-            "description": "The tool's id for each installer: Toolbox derives the installer's input from `version` and runs it. Declare any you support; none is required.",
+            "description": "The tool's id for each installer: Seikika derives the installer's input from `version` and runs it. Declare any you support; none is required.",
             "properties": {
               "mise": {
                 "type": "string",
@@ -226,7 +226,7 @@
           "token": {
             "type": "string",
             "pattern": "^[A-Za-z_][A-Za-z0-9_]*$",
-            "description": "The environment variable holding the API token (default GITHUB_TOKEN or GITLAB_TOKEN). Toolbox's HTTP client reads it; no action's process gets it."
+            "description": "The environment variable holding the API token (default GITHUB_TOKEN or GITLAB_TOKEN). Seikika's HTTP client reads it; no action's process gets it."
           },
           "projects": {
             "type": "array",
@@ -237,7 +237,7 @@
           },
           "identity": {
             "type": "boolean",
-            "description": "A checkout of this portal takes who you are from your own token on this forge, not from --as: toolbox run asks the forge who owns the token in --identity-token-file or TOOLBOX_IDENTITY_TOKEN, and refuses to request, approve or reject without one. At most one forge sets it. Default false."
+            "description": "A checkout of this portal takes who you are from your own token on this forge, not from --as: seikika run asks the forge who owns the token in --identity-token-file or SEIKIKA_IDENTITY_TOKEN, and refuses to request, approve or reject without one. At most one forge sets it. Default false."
           },
           "ci": {
             "type": "string",
@@ -269,7 +269,7 @@
               "gitlab-ci",
               "http"
             ],
-            "description": "github-actions (workflow_dispatch, run tracked by id, record from the toolbox-run artifact), gitlab-ci (a pipeline with typed inputs, record from the toolbox job's artifact), or http: a service that speaks the executor protocol (run, status, cancel) and bridges to any other CI; its result's outputs.record is the child's run record."
+            "description": "github-actions (workflow_dispatch, run tracked by id, record from the seikika-run artifact), gitlab-ci (a pipeline with typed inputs, record from the seikika job's artifact), or http: a service that speaks the executor protocol (run, status, cancel) and bridges to any other CI; its result's outputs.record is the child's run record."
           },
           "url": {
             "type": "string",
@@ -328,7 +328,7 @@
     },
     "include": {
       "type": "array",
-      "description": "Source-only (D54, D89): globs of further YAML files, or packages `{package, with}` (a directory or github:owner/repo[/subdir]@version, with typed parameters), merged by `toolbox build`. Never present in the canonical manifest.",
+      "description": "Source-only (D54, D89): globs of further YAML files, or packages `{package, with}` (a directory or github:owner/repo[/subdir]@version, with typed parameters), merged by `seikika build`. Never present in the canonical manifest.",
       "items": {
         "anyOf": [
           {
@@ -363,7 +363,7 @@
         },
         "children": {
           "type": "array",
-          "description": "A parent's child portals, by git repository. Each is cloned into the state directory and kept at its branch: the portal offers the actions committed there, and syncs the clone again before each preview and run, so only what is on the branch counts. Listing a child also lets `toolbox serve` run it in that clone (`runners.local.portals`) unless `runners.local` is declared. Declares, unless already declared, the `federation` connector (builtin:workspace) and the `Portal` kind its records map to.",
+          "description": "A parent's child portals, by git repository. Each is cloned into the state directory and kept at its branch: the portal offers the actions committed there, and syncs the clone again before each preview and run, so only what is on the branch counts. Listing a child also lets `seikika serve` run it in that clone (`runners.local.portals`) unless `runners.local` is declared. Declares, unless already declared, the `federation` connector (builtin:workspace) and the `Portal` kind its records map to.",
           "items": {
             "type": "object",
             "additionalProperties": false,
@@ -383,7 +383,7 @@
               "key": {
                 "type": "string",
                 "pattern": "^[a-z0-9][a-z0-9._-]*$",
-                "description": "The child's identity here: its entity is `portal:<key>` (default: the URL's last segment, without `.git`). Its manifest is `.toolbox/toolbox.yaml` in the repository."
+                "description": "The child's identity here: its entity is `portal:<key>` (default: the URL's last segment, without `.git`). Its manifest is `.seikika/seikika.yaml` in the repository."
               }
             }
           }
@@ -398,7 +398,7 @@
           "required": [
             "type"
           ],
-          "description": "How a parent may dispatch this portal's actions: `local` (the parent runs `toolbox run` in its clone of this repository), `ci` (the parent starts this repository's own CI on the forge it cloned it from: a GitLab pipeline, or a GitHub workflow), or `github-workflow` (the older GitHub-only form). The parent supplies the forge, project, API and token from where it cloned the child; a child never names them.",
+          "description": "How a parent may dispatch this portal's actions: `local` (the parent runs `seikika run` in its clone of this repository), `ci` (the parent starts this repository's own CI on the forge it cloned it from: a GitLab pipeline, or a GitHub workflow), or `github-workflow` (the older GitHub-only form). The parent supplies the forge, project, API and token from where it cloned the child; a child never names them.",
           "properties": {
             "type": {
               "enum": [
@@ -413,7 +413,7 @@
             },
             "workflow": {
               "type": "string",
-              "description": "ci on GitHub and github-workflow: the workflow file that runs `toolbox run` (ci default toolbox.yml). GitLab runs the project's .gitlab-ci.yml."
+              "description": "ci on GitHub and github-workflow: the workflow file that runs `seikika run` (ci default seikika.yml). GitLab runs the project's .gitlab-ci.yml."
             },
             "ref": {
               "type": "string",
@@ -438,7 +438,7 @@
               "key": {
                 "type": "string",
                 "pattern": "^ed25519:[0-9a-f]{64}$",
-                "description": "The parent's approval signing key, as `toolbox serve` prints it at start."
+                "description": "The parent's approval signing key, as `seikika serve` prints it at start."
               }
             }
           },
@@ -455,7 +455,7 @@
               "required": [
                 "portals"
               ],
-              "description": "Children `toolbox serve` may run with `toolbox run` in its own checkout of them, as its own OS user.",
+              "description": "Children `seikika serve` may run with `seikika run` in its own checkout of them, as its own OS user.",
               "properties": {
                 "portals": {
                   "type": "array",
@@ -552,7 +552,7 @@
         },
         "package": {
           "type": "string",
-          "description": "builtin:<name> (shipped with toolbox), github:owner/repo[/app]@version (a released executable, installed by `toolbox install` and pinned in toolbox.lock, D90), or a path inside the image."
+          "description": "builtin:<name> (shipped with seikika), github:owner/repo[/app]@version (a released executable, installed by `seikika install` and pinned in seikika.lock, D90), or a path inside the image."
         },
         "runtime": {
           "enum": [
@@ -855,7 +855,7 @@
         },
         "description": {
           "type": "string",
-          "description": "What the standard is and why: shown by reports and `toolbox describe`."
+          "description": "What the standard is and why: shown by reports and `seikika describe`."
         },
         "rationale": {
           "type": "string",
@@ -899,7 +899,7 @@
           "properties": {
             "subject": {
               "$ref": "#/$defs/entityRef",
-              "description": "The entity the comparison is about (`product:toolbox`)."
+              "description": "The entity the comparison is about (`product:seikika`)."
             },
             "peers": {
               "type": "array",
@@ -946,11 +946,11 @@
               },
               "evidence": {
                 "$ref": "#/$defs/cel",
-                "description": "CEL evaluated when the rule fails: the items that make it fail (usually a list), shown with the fix and counted by `toolbox report` baselines."
+                "description": "CEL evaluated when the rule fails: the items that make it fail (usually a list), shown with the fix and counted by `seikika report` baselines."
               },
               "measure": {
                 "$ref": "#/$defs/cel",
-                "description": "CEL evaluated when the rule fails: a number (lines in a file, occurrences of a pattern) that `toolbox report` baselines compare instead of the evidence count. Larger is worse; campaigns sum it to measure paydown."
+                "description": "CEL evaluated when the rule fails: a number (lines in a file, occurrences of a pattern) that `seikika report` baselines compare instead of the evidence count. Larger is worse; campaigns sum it to measure paydown."
               },
               "value": {
                 "$ref": "#/$defs/cel",
@@ -1010,7 +1010,7 @@
         "ratchet": {
           "type": "object",
           "additionalProperties": false,
-          "description": "How `toolbox report --baseline` treats this scorecard.",
+          "description": "How `seikika report --baseline` treats this scorecard.",
           "properties": {
             "newEntitiesAtLeast": {
               "type": "string",
@@ -1018,7 +1018,7 @@
             },
             "advisory": {
               "type": "boolean",
-              "description": "Report this scorecard but never gate on it: `toolbox report --baseline` leaves it out of the baseline and the comparison. For judgement-based scorecards (agent assessments), which go stale when their subject changes."
+              "description": "Report this scorecard but never gate on it: `seikika report --baseline` leaves it out of the baseline and the comparison. For judgement-based scorecards (agent assessments), which go stale when their subject changes."
             }
           }
         },
@@ -1392,15 +1392,15 @@
             },
             "package": {
               "type": "string",
-              "description": "in-image: a released executor, github:owner/repo[/app]@version, which toolbox install downloads and pins in toolbox.lock (D90), as it does connectors."
+              "description": "in-image: a released executor, github:owner/repo[/app]@version, which seikika install downloads and pins in seikika.lock (D90), as it does connectors."
             },
             "verify": {
               "type": "boolean",
-              "description": "in-image and http: the executor answers protocol verify with a read-back of the run's effect, which Toolbox asks for when the action declares no expect."
+              "description": "in-image and http: the executor answers protocol verify with a read-back of the run's effect, which Seikika asks for when the action declares no expect."
             },
             "url": {
               "type": "string",
-              "description": "http: where Toolbox POSTs each protocol message and reads the replies (NDJSON or one JSON value). webhook: where it POSTs the protocol run message, and only its status counts."
+              "description": "http: where Seikika POSTs each protocol message and reads the replies (NDJSON or one JSON value). webhook: where it POSTs the protocol run message, and only its status counts."
             },
             "workflow": {
               "type": "string"
@@ -1432,11 +1432,11 @@
                   }
                 }
               ],
-              "description": "command and change: what to run, from the directory toolbox started in (a change runs in a worktree of the base branch)."
+              "description": "command and change: what to run, from the directory seikika started in (a change runs in a worktree of the base branch)."
             },
             "preview": {
               "type": "boolean",
-              "description": "command: the command supports TOOLBOX_PHASE=preview and prints its effects without changing anything."
+              "description": "command: the command supports SEIKIKA_PHASE=preview and prints its effects without changing anything."
             },
             "base": {
               "type": "string",
@@ -1448,11 +1448,11 @@
             },
             "branch": {
               "type": "string",
-              "description": "change: the branch name; {action} and {run} are replaced (default toolbox/{action}/{run}). Inputs are not: they go only in message."
+              "description": "change: the branch name; {action} and {run} are replaced (default seikika/{action}/{run}). Inputs are not: they go only in message."
             },
             "message": {
               "type": "string",
-              "description": "change: the commit message; {action}, {run}, {entity} and {inputs.<name>} are replaced, and toolbox validate refuses any other placeholder."
+              "description": "change: the commit message; {action}, {run}, {entity} and {inputs.<name>} are replaced, and seikika validate refuses any other placeholder."
             },
             "land": {
               "enum": [

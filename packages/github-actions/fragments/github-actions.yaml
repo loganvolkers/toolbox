@@ -1,6 +1,6 @@
 # GitHub Actions standards (docs/design/github-actions-standards.md, D70), packaged (D89, D90).
 # Requires a `workspace` connector with `workflows` globs (workflow and action-ref records).
-# Box and tools (docs/design/toolbox-and-tools.md): a kit carrying two existing tools. zizmor fits
+# Box and tools (docs/design/seikika-and-tools.md): a kit carrying two existing tools. zizmor fits
 # the box's SARIF slot; actionlint, which has no SARIF output, comes in through a fitting. Neither
 # gets settings the tool can't read itself: actionlint's ignores belong in the repository's
 # `.github/actionlint.yaml` (this package's actionlint.yaml is a starting point), so running the
@@ -54,8 +54,8 @@ connectors:
     refresh: {workflow-runs: [external_ids]}
     freshness: {workflow-runs: 15m}
 
-# One pin per tool; `toolbox tools install --via <installer>` (or `tools config --for …`) uses any
-# of these ids (D01M800DHD0Z1RTPH7CM46GZS3B). Toolbox downloads nothing itself.
+# One pin per tool; `seikika tools install --via <installer>` (or `tools config --for …`) uses any
+# of these ids (D01M800DHD0Z1RTPH7CM46GZS3B). Seikika downloads nothing itself.
 tools:
   zizmor:
     version: 1.32.0
@@ -67,7 +67,7 @@ tools:
 
 
 kinds:
-  # ── CI: the workflows and actions that build, test and ship Toolbox ──────────────────────
+  # ── CI: the workflows and actions that build, test and ship Seikika ──────────────────────
   - name: Workflow
     description: >-
       A GitHub Actions workflow or action metadata file, with lint findings
@@ -186,9 +186,9 @@ scorecards:
       leaves nothing zizmor flags unexplained.
     links:
     - title: 'Decision: GitHub Actions standards'
-      url: https://github.com/loganvolkers/toolbox/blob/main/docs/decisions/D01M7VZ2DPR0000000000000000.md
+      url: https://github.com/seikika/seikika/blob/main/docs/decisions/D01M7VZ2DPR0000000000000000.md
     - title: GitHub Actions standards design
-      url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/github-actions-standards.md
+      url: https://github.com/seikika/seikika/blob/main/docs/design/github-actions-standards.md
     - title: GitHub Actions secure use
       url: https://docs.github.com/en/actions/reference/security/secure-use
     owner: ${param:owner}
@@ -340,9 +340,9 @@ scorecards:
       failures a reader must check, over enough runs to tell the tiers apart.
     links:
     - title: Thresholds and levels
-      url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/thresholds.md
+      url: https://github.com/seikika/seikika/blob/main/docs/design/thresholds.md
     - title: GitHub Actions standards design
-      url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/github-actions-standards.md
+      url: https://github.com/seikika/seikika/blob/main/docs/design/github-actions-standards.md
     owner: ${param:owner}
     track: ${param:track}
     levels: [bronze, silver, gold]
@@ -489,7 +489,7 @@ scorecards:
       holding a reliable workflow back.
     links:
     - title: Thresholds and levels
-      url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/thresholds.md
+      url: https://github.com/seikika/seikika/blob/main/docs/design/thresholds.md
     owner: ${param:owner}
     track: ${param:track}
     levels: [bronze, silver]
@@ -544,9 +544,9 @@ scorecards:
       is the only level because an action is either pinned everywhere or not.
     links:
     - title: GitHub Actions standards design
-      url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/github-actions-standards.md
+      url: https://github.com/seikika/seikika/blob/main/docs/design/github-actions-standards.md
     - title: 'Decision: GitHub Actions standards'
-      url: https://github.com/loganvolkers/toolbox/blob/main/docs/decisions/D01M7VZ2DPR0000000000000000.md
+      url: https://github.com/seikika/seikika/blob/main/docs/decisions/D01M7VZ2DPR0000000000000000.md
     owner: ${param:owner}
     track: ${param:track}
     levels: [bronze]

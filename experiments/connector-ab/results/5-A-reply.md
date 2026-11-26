@@ -1,4 +1,4 @@
-From [Connector A/B phase5 Toolbox](bc-aed9ef19-68c7-59a6-b8a6-93a12448a427):
+From [Connector A/B phase5 Seikika](bc-aed9ef19-68c7-59a6-b8a6-93a12448a427):
 
 Answers: 1 project; GAMMA-1/GAMMA-2; u-cara; core; baseUrl+token. See `5-A-read-answers.md`. Score 5/5.
 

@@ -1,10 +1,10 @@
 # Supply-Chain Standards: The Files That Turn GitHub Advanced Security On
 
-*Status: deterministic catalog and scorecard built, 2026-11-20 (D85); `code-scanning` and `security-policy` retired for OpenSSF Scorecard's SAST and Security-Policy (D01M82E93XAPNE0WFXEPJZ59WG4, [openssf-template.md](./openssf-template.md)). Toolbox for Toolbox scores the
+*Status: deterministic catalog and scorecard built, 2026-11-20 (D85); `code-scanning` and `security-policy` retired for OpenSSF Scorecard's SAST and Security-Policy (D01M82E93XAPNE0WFXEPJZ59WG4, [openssf-template.md](./openssf-template.md)). Seikika for Seikika scores the
 repository record with `maintainer-supply-chain`. Alert counts are not a gate. Related:
 [github-actions-standards.md](./github-actions-standards.md),
 [repo-level.md](./repo-level.md),
-[toolbox-for-toolbox.md](./toolbox-for-toolbox.md).*
+[seikika-for-seikika.md](./seikika-for-seikika.md).*
 
 ---
 

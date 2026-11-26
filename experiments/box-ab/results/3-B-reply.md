@@ -5,6 +5,6 @@
 3. DX feedback:
    1. sarif README, countSuppressed: says inline suppressions count and its zizmor row implies so; zizmor drops ignored findings from SARIF. A hole in the ratchet the README should name.
    2. The sarif README's zizmor row uses "{files}", which needs a files glob; zizmor is usually run over .github/ (composite actions, dependabot.yml); a glob list easily misses .github/actions/**/action.yml. Show the directory form.
-   3. `toolbox report -o standard`: a fix text with backticks renders as broken nested inline code in STANDARD.md's parameter list. Removed the backticks.
+   3. `seikika report -o standard`: a fix text with backticks renders as broken nested inline code in STANDARD.md's parameter list. Removed the backticks.
    4. One workflow file is two entities in two kinds (Workflow for actionlint, ZizmorFile for zizmor); nothing in the docs says how to give one file several tools' findings.
-   5. `toolbox campaign` takes one campaign name, so progress chains one call per campaign, each rerunning connectors unless the others are listed in --skip (lists to update whenever a tool is added). Wants all campaigns in one run, or --only <connector>.
+   5. `seikika campaign` takes one campaign name, so progress chains one call per campaign, each rerunning connectors unless the others are listed in --skip (lists to update whenever a tool is added). Wants all campaigns in one run, or --only <connector>.

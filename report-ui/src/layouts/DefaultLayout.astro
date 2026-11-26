@@ -1,5 +1,5 @@
 ---
-const { title = "Toolbox report" } = Astro.props;
+const { title = "Seikika report" } = Astro.props;
 ---
 <!doctype html>
 <html lang="en">
@@ -8,10 +8,10 @@ const { title = "Toolbox report" } = Astro.props;
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{title}</title>
   </head>
-  <body class="toolbox-ui">
+  <body class="seikika-ui">
     <slot />
   </body>
 </html>
 <style is:global>
-  body.toolbox-ui { margin: 0; }
+  body.seikika-ui { margin: 0; }
 </style>

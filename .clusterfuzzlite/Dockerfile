@@ -7,6 +7,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     make pkg-config \
  && rm -rf /var/lib/apt/lists/*
 
-COPY . $SRC/toolbox
-WORKDIR $SRC/toolbox
+COPY . $SRC/seikika
+WORKDIR $SRC/seikika
 COPY .clusterfuzzlite/build.sh $SRC/

@@ -1,10 +1,10 @@
 # DX Benchmark catalog entry (docs/design/dx-benchmarks.md §6), scored by maintainer-benchmark.
 records:
   - id: connector-ab
-    title: 'Cloud/SaaS connector authoring: Toolbox vs Ocean vs Backstage'
+    title: 'Cloud/SaaS connector authoring: Seikika vs Ocean vs Backstage'
     question: >-
       When an agent authors a cloud/SaaS connector that syncs projects and
-      issues from an HTTP API, does Toolbox cost less than Port Ocean or a
+      issues from an HTTP API, does Seikika cost less than Port Ocean or a
       Backstage entity provider across the package-author lifecycle?
     layers: [package-author]
     stages:
@@ -24,13 +24,13 @@ records:
     outcome: >-
       v1, the round the bar was written for: C1 and C2 failed (calls 1+3 A 65,
       B 63, C 46; phase 4 A 15, B 15, C 16) and C3 held. v2 and v3 are
-      overfitted and within noise, not wins: only the Toolbox arm changed
+      overfitted and within noise, not wins: only the Seikika arm changed
       between rounds, a product format was shaped to the harness, and the v3
       C1 margin of 1 call is inside Backstage's 21-call spread across rounds
       (ADJUDICATION.md, D01M83RDWR52WVNER0MV5T84NSX)
     changed:
     - >-
-      Scaffold ships rust-toolchain.toml so toolbox-connect edition2024 builds
+      Scaffold ships rust-toolchain.toml so seikika-connect edition2024 builds
       (phase-1 friction)
     - >-
       FORGE.md notes components as a bare array (not paginated like

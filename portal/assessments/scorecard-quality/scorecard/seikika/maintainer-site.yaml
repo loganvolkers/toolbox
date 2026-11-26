@@ -1,0 +1,61 @@
+apiVersion: seikika.com/assessment/v1
+entity: scorecard:seikika/maintainer-site
+rubric: scorecard-quality
+subjectHash: d9db070ea011
+assessor: {kind: agent, name: cursor-assessor-13, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: one-concern
+    verdict: pass
+    reason: >-
+      All six rules judge one public docs page as an outside reader meets it:
+      named, described, linked, findable, distinct and free of credentials
+      (portal/standards/site.yaml:78-152). It is owned by maintainers on track
+      `docs` (site.yaml:74-75). No rule reaches into build speed or the report
+      the site also hosts, which docs/design/site-standards.md §4 explicitly
+      leaves out.
+  - criterion: levels-are-a-ladder
+    verdict: pass
+    reason: >-
+      Bronze is a page that stands on its own: titled, described, links
+      resolve, no credential. Silver adds a place in the sidebar, and gold
+      adds a title no other page shares (site.yaml:63-68). Distinct titles
+      only matter once a page is listed, so gold builds on silver, and
+      docs/design/thresholds.md:38, 40 justify the bronze and gold placements.
+      Bronze is reachable: all 30 live pages are gold (portal/results.json).
+      D91 and site-standards.md:23-25 still show the old ladder, with secrets
+      at gold and no unique-title, and should be updated.
+  - criterion: no-obvious-gap
+    verdict: fail
+    reason: >-
+      The card promises links that resolve, but the fact behind it reads only
+      inline `[x](y)` links and drops the `#fragment` unchecked
+      (crates/seikika-connector-workspace/src/site.rs:136). A link to a
+      renamed heading, the most common broken link in a docs site, passes.
+      Reference-style and HTML links aren't read at all. Relative links are
+      resolved on disk, not as served (site.rs:213-220). AGENTS.md asks that
+      before writing an extractor we say why no existing tool covers the fact,
+      and site-standards.md gives no reason for not using an existing link
+      checker that handles fragments offline.
+    suggestion: >-
+      Run an existing offline link checker (for example lychee with `--offline
+      --include-fragments` over the built site/dist) as a runner job, and have
+      links-resolve read its findings. Or extend `missing_links` to check
+      fragments against heading slugs and to read reference-style and `href=`
+      links. Record the choice in site-standards.md.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      I tried the fixture draft.md, at bronze and failing reachable. The
+      evidence says `not in the sidebar`, and the fix names
+      site/astro.config.mjs, the `autogenerate` list and "Leave `draft` unset"
+      (site.yaml:125-127). Unsetting draft and placing the page under a listed
+      directory raises it to silver. It then fails gold on its shared title,
+      and the unique-title fix names site/src/content/docs. Every rule's fix
+      names the frontmatter key or file to change.
+summary: >-
+  A focused, actionable card for the public site, with a sensible ladder
+  that every live page already tops. The obvious hole is in "links
+  resolve": only inline links are read, anchors are never checked, and
+  relative links are resolved on disk. The site design doc and D91 still
+  describe the old ladder.

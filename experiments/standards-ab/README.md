@@ -2,16 +2,16 @@
 
 **Question** ([repo-value.md](../../docs/design/repo-value.md) R3, second round): over the life of a
 standard (writing it, enforcing it with a ratchet, running a campaign on it, changing it, reusing it
-in another repository, and letting another agent read its state), does Toolbox cost an agent fewer
+in another repository, and letting another agent read its state), does Seikika cost an agent fewer
 tokens and less time than bespoke scripts, with at least the same correctness?
 
 **Answer (2026-11-21, one run per phase and arm): no, and R3 is closed as failed
 ([D01M7Z2ZZ97VZQNTDT4QQHM3HQD](../../docs/decisions/D01M7Z2ZZ97VZQNTDT4QQHM3HQD.md)). After the
-measured friction was fixed and the Toolbox arm rerun (B′), Toolbox cost 15% more tokens than
+measured friction was fixed and the Seikika arm rerun (B′), Seikika cost 15% more tokens than
 bespoke scripts over the whole lifecycle (510k against 445k), at equal correctness. The bar
 set before the rerun was "fewer tokens".**
 
-| | Arm A: bespoke scripts | Arm B: Toolbox, round 2 | Arm B′: Toolbox after the fixes |
+| | Arm A: bespoke scripts | Arm B: Seikika, round 2 | Arm B′: Seikika after the fixes |
 |---|---|---|---|
 | Correct (reports, 18 gate cases, 5 questions) | All | All | All |
 | Tokens, all phases | **445k** | 582k | 510k |
@@ -21,7 +21,7 @@ set before the rerun was "fewer tokens".**
 | Code and configuration the team maintains, per repository | 204 to 250 lines | 130 to 237 lines | **77 to 92 lines**, plus a vendored package |
 
 - **The fixes closed most of the gap:** 12% fewer tokens than round 2, 23% fewer tool calls, and
-  59% less time. After the standard is written, Toolbox is within 3% of the scripts on tokens.
+  59% less time. After the standard is written, Seikika is within 3% of the scripts on tokens.
   In the reuse phase, where B′ included the same package with OpenFGA's parameters, it used
   fewer calls (11 against 12) and less time (98 s against 105 s) than arm A copying its script.
 - **What remains is learning the format.** Writing the first standard cost B′ 55k tokens more
@@ -31,7 +31,7 @@ set before the rerun was "fewer tokens".**
 - **Tokens are a blunt measure here.** Every agent starts with about 85k tokens of fixed context,
   so the phases after the first differ by a few thousand tokens. Calls and time separate the arms
   more clearly, and on those B′ is close to the scripts after phase 1, not ahead.
-- **Two things Toolbox did better are outside the bar:** about a third as much code to maintain,
+- **Two things Seikika did better are outside the bar:** about a third as much code to maintain,
   and reuse by `include` instead of copying a script. The first A/B's guardrail finding (no
   regressions, no suppressions) also stands. None of them was the pre-registered question.
 - **A design error in round 2:** PostHog already enforces S1 in CI, with a semgrep rule and inline
@@ -58,9 +58,9 @@ checks duplicate two rules in `packages/github-actions`.
 
 ## Method
 
-| | Arm A: bespoke | Arm B: Toolbox |
+| | Arm A: bespoke | Arm B: Seikika |
 |---|---|---|
-| Given | The standard's text, Python, the shell, git | The same, plus the `toolbox` binaries and pointers to its docs, packages and starter |
+| Given | The standard's text, Python, the shell, git | The same, plus the `seikika` binaries and pointers to its docs, packages and starter |
 | Budget | 40 tool calls per phase; no network or installs | The same |
 
 Every phase starts a fresh general-purpose agent on the same model. It sees only the repository and
@@ -123,8 +123,8 @@ Lines of code and configuration, then documentation, then generated or recorded 
 
 | Repository | Arm A | Arm B |
 |---|---|---|
-| PostHog | 204 (script 180, CI 24); 85 docs; 164 baseline | 237 (`toolbox.yaml` 86, wrapper `s1.sh` 98, CI 53); 94 docs; `results.json` 26,960 lines (948 KB) plus a 153-line campaign start |
-| Codex | 250 (script 210, config 6, CI 34); 118 docs; 236 baseline | 130 (`toolbox.yaml` 70, measuring script 25, CI 35) plus a 261-line hand-frozen campaign list; 128 docs; `results.json` 13,798 lines (444 KB) |
+| PostHog | 204 (script 180, CI 24); 85 docs; 164 baseline | 237 (`seikika.yaml` 86, wrapper `s1.sh` 98, CI 53); 94 docs; `results.json` 26,960 lines (948 KB) plus a 153-line campaign start |
+| Codex | 250 (script 210, config 6, CI 34); 118 docs; 236 baseline | 130 (`seikika.yaml` 70, measuring script 25, CI 35) plus a 261-line hand-frozen campaign list; 128 docs; `results.json` 13,798 lines (444 KB) |
 | OpenFGA | 250, of which about 49 lines changed from Codex; 113 docs; 22 baseline | 128 plus a 46-line campaign list, of which about 59 lines changed from Codex; 116 docs; `results.json` 2,854 lines |
 
 Arm B's declarative part is smaller, but it still needed a script per standard: a regex-count
@@ -141,20 +141,20 @@ The friction arm B's agents reported, classified by what would fix it. "P" is th
 | 1 | The ratchet compares pass or fail and evidence lists, not a number. To catch "a violating file grew by one line", arm B emitted one evidence item per line over the limit (`lineNumbers`) from its own script. That is also why `results.json` is so large | P1, P4 | Missing feature: ratchet on a declared numeric field |
 | 2 | A new entity that fails is a "change", not a regression, unless `newEntitiesAtLeast` is set. Arm B's PostHog wrapper checks for it separately | P1, P3 | Missing feature (a default) |
 | 3 | No flat "failing entities" output. Every report command is a `jq` pipeline over internal JSON, such as `.scores[…].evidence[…][0] \| split(" ")` | P1, P4 | Missing feature |
-| 4 | Campaign status isn't in `report -o json`, and `toolbox campaign` needs a server. Arm B read `report.json` out of an `-o web` directory | P1, P4 | Missing feature |
+| 4 | Campaign status isn't in `report -o json`, and `seikika campaign` needs a server. Arm B read `report.json` out of an `-o web` directory | P1, P4 | Missing feature |
 | 5 | No frozen campaign start. Arm B wrote a start file from its wrapper, or pasted 229 paths into `appliesTo`. There is no freeze or restart command | P1, P3, P4 | Missing feature |
 | 6 | No way to accept an intended change. `--update` refuses regressions, so tightening a standard meant deleting `results.json`, which also accepts any real regression mixed in. Arm B diffed old and new with `jq` by hand | P3 | Missing feature: accept with a summary of what changed |
 | 7 | No portal parameters, and no size or regex-count package. Reuse means copying and substituting literals in YAML, scripts, `jq` and docs | P1, P4 | Missing feature |
 | 8 | No `reason` field on an exemption. A `#` reason inside a folded CEL block would become CEL text | P3 | Missing feature |
 | 9 | Scorecards reject `title` and `description` | P1 | Missing feature |
 | 10 | The baseline records every entity: 948 KB for PostHog | P1 | Design |
-| 11 | No reference for the workspace connector's configuration. Agents read `crates/toolbox-connector-workspace/src/main.rs` | P1, P4 | Docs |
+| 11 | No reference for the workspace connector's configuration. Agents read `crates/seikika-connector-workspace/src/main.rs` | P1, P4 | Docs |
 | 12 | `examples/repo-portal-starter` has no README and no regex-count or file-size example | P1, P4 | Starter |
 | 13 | `root:` and the report action's install path aren't documented | P1 | Docs |
 | 14 | No guidance on changing a standard mid-campaign (keep the scope, or restart it) | P3 | Docs |
-| 15 | `toolbox describe \| head` panics on a broken pipe | P1 | Bug |
+| 15 | `seikika describe \| head` panics on a broken pipe | P1 | Bug |
 | 16 | The campaign percentage rounds down | P1 | Bug |
-| 17 | Whether `toolbox validate` catches a stray `#` in CEL wasn't tested | P3 | Unverified |
+| 17 | Whether `seikika validate` catches a stray `#` in CEL wasn't tested | P3 | Unverified |
 | 18 | Each PostHog run takes about 40 s: the workspace scan is 36 s, against under 2 s for arm A's script. Arm B's reader waited on four runs | P1, P3, P5 | Performance |
 
 **Friction both arms hit:**
@@ -170,7 +170,7 @@ The friction arm B's agents reported, classified by what would fix it. "P" is th
   bespoke script is cheapest. MCP's and LSP's value appears with many consumers: editors, CI, UIs
   and other repositories speaking one protocol. Here the readers read the STANDARD.md and a JSON
   report command in both arms. A bespoke script's output turned out to be just as readable as
-  Toolbox's, and the reader did no better with Toolbox's format.
+  Seikika's, and the reader did no better with Seikika's format.
 - **Sharing was not tested.** Phase 4 was copy against copy, because the package mechanism can't
   yet express "a file-size standard with these thresholds" or "count this regex outside these
   paths". So this round can't separate the strategy from the implementation on reuse. On writing,
@@ -178,7 +178,7 @@ The friction arm B's agents reported, classified by what would fix it. "P" is th
 - **The semgrep finding is the most direct evidence for the strategy's opportunity, and it
   changes the target.** Teams already encode standards in tools (semgrep, linters, custom
   scripts), and they keep the baseline as inline suppressions or bespoke files. What they don't
-  have is the counted, per-file, over-time campaign. Toolbox's job may be to ingest those tools'
+  have is the counted, per-file, over-time campaign. Seikika's job may be to ingest those tools'
   output and suppressions as the evidence and baseline, rather than to re-express the rule. A
   runner parser for semgrep JSON would make PostHog's existing rule the source, and its 34 files of
   suppressions the campaign.
@@ -186,7 +186,7 @@ The friction arm B's agents reported, classified by what would fix it. "P" is th
 ## Rerun (B′)
 
 **What changed between the rounds** ([D01M7Z2ZZ97VZQNTDT4QQHM3HQD](../../docs/decisions/D01M7Z2ZZ97VZQNTDT4QQHM3HQD.md)):
-round 2's friction items 1 to 9, 11, 12, 14 to 16 and 18 were fixed in Toolbox. That includes a
+round 2's friction items 1 to 9, 11, 12, 14 to 16 and 18 were fixed in Seikika. That includes a
 rule's `measure`, `-o failures`, campaign paydown from a recorded start, `--accept`, and the
 `file-size`, `pattern-count` and `semgrep` packages, with a connector reference and starter docs.
 Before the rerun, the package and starter examples were made generic, because they had been
@@ -195,7 +195,7 @@ written after seeing these standards.
 **How it ran:** the same prompts as arm B ([rerun/prompts/](rerun/prompts/)), on fresh copies at
 the same commits, with the same truth, gate harness and phase 5 setup, which was checked byte for
 byte. Two changes:
-- The agents could read only Toolbox's `README.md`, `docs/v1-spec.md`, `docs/design/`,
+- The agents could read only Seikika's `README.md`, `docs/v1-spec.md`, `docs/design/`,
   `docs/reference/`, `examples/`, `packages/`, `crates/`, `schema/` and `plugins/`. This repository
   now holds the ground truth and the answer key, under `experiments/` and in the research log.
 - The first phase 1 launch was cut off by an account usage limit partway through. Its partial
@@ -223,21 +223,21 @@ Its reader also caught the synthetic fake fix, and said the campaign's 2.9% wasn
 
 **How B′ worked:**
 - Both phase 1 agents included a package (`pattern-count`, `file-size`) and wrote 25 to 30 lines
-  of `toolbox.yaml`.
+  of `seikika.yaml`.
 - Phase 3 changed one parameter in each repository and ran `--update --accept <scorecard>`, which
   restarted the campaigns.
-- Phase 4 copied Codex's portal, changed 13 lines of `toolbox.yaml`, and reused the package
+- Phase 4 copied Codex's portal, changed 13 lines of `seikika.yaml`, and reused the package
   unchanged.
 
 **Friction B′ still reported:**
 
 | Friction | Phases | Kind |
 |---|---|---|
-| Including a package offline means copying it into the repository. `toolbox install` fetches `github:` packages over the network, and there is no vendoring command | P1, P4 | Missing feature |
+| Including a package offline means copying it into the repository. `seikika install` fetches `github:` packages over the network, and there is no vendoring command | P1, P4 | Missing feature |
 | The default Markdown lists every passing entity (6,331 files on PostHog), which overflows an agent's tool output. A quiet gate needs `--out /dev/null` | P1 | Design |
 | `-o failures` needs a `jq` reshape for a given output shape | P1, P4 | Missing feature (field selection) |
-| Campaign progress is under `.campaigns[…].sinceStart` in `-o json`; `toolbox campaign` needs a server. The top-level `percent` read 100 while 28 files failed (6,331 of 6,359, rounded) | P1 | Missing feature, and a bug this change introduced: rounding must not reach 100 before every entity meets the goal |
-| No copy-paste CI workflow that installs Toolbox. The report action's README is under `actions/`, which the rerun's read list left out | P1, P4 | Experiment's read list, and docs |
+| Campaign progress is under `.campaigns[…].sinceStart` in `-o json`; `seikika campaign` needs a server. The top-level `percent` read 100 while 28 files failed (6,331 of 6,359, rounded) | P1 | Missing feature, and a bug this change introduced: rounding must not reach 100 before every entity meets the goal |
+| No copy-paste CI workflow that installs Seikika. The report action's README is under `actions/`, which the rerun's read list left out | P1, P4 | Experiment's read list, and docs |
 | `--ci` fails on an unrecorded improvement, while the task said improvements pass | P1 | Docs (two modes, two uses) |
 | The baseline records every clean file, so a pull request that adds a clean file makes it stale | P1 | Design (round 2's item 10) |
 | `tighten: lower` isn't enforced for a parameter without a default, so raising a required limit passes | P1 | Bug |
@@ -254,9 +254,9 @@ Its reader also caught the synthetic fake fix, and said the campaign's 2.9% wasn
 
 ## Outcome
 
-R3 is closed as failed. With its friction fixed, Toolbox matched bespoke scripts after a standard
+R3 is closed as failed. With its friction fixed, Seikika matched bespoke scripts after a standard
 was written, and on reuse, but didn't beat them, and learning the format costs more than writing
-a script. For a single agent applying simple textual standards to one repository, Toolbox saves
+a script. For a single agent applying simple textual standards to one repository, Seikika saves
 no tokens. The stop condition's consequence: the single-repository value claim rests on the
 packaged standards, not on agent efficiency.
 

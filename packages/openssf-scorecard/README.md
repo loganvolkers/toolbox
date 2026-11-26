@@ -1,4 +1,4 @@
-# openssf-scorecard: a Toolbox package
+# openssf-scorecard: a Seikika package
 
 **Box or tool:** this package is a **kit**. It carries an existing standard and its tool, OpenSSF
 Scorecard, as they are ([openssf-template.md](../../docs/design/openssf-template.md)). The checks,
@@ -10,20 +10,19 @@ their 0–10 scores, reasons, details and documentation are OpenSSF's. The box a
 | Brings | Named |
 |---|---|
 | Connector | `<name>` (`builtin:runner`, `parse: scorecard`, `tracked: true`) |
-| Tool pin | `scorecard` at `<version>` (`toolbox doctor` reads `scorecard version`) |
+| Tool pin | `scorecard` at `<version>` (`seikika doctor` reads `scorecard version`) |
 | Kind | `<kind>`: `check`, `score` (null when inconclusive), `reason`, `details`, `documentation`, `aggregate`, `command` |
 | Scorecard | `<name>`, one level `ten`, rule `ten`; new checks don't fail the gate (`newEntitiesAtLeast: none`) |
 | Campaign | `<name>-ten` |
 
 ## Use it
 
-**Minimum Toolbox:** post-**0.1.1** (needs `parse: scorecard` and array `with:` params). Prefer
-`toolbox vendor` (or a path include) over `github:…@main` — v0.1.1 prefixes `v` on the ref
-(`@main` → `vmain`). `vendor` itself is also post-0.1.1.
+**Minimum Seikika:** **0.2.0** supports `parse: scorecard` and array `with:` parameters. To
+work with an unreleased package revision, use `seikika vendor` or a path include.
 
 ```yaml
 include:
-  - package: github:loganvolkers/toolbox/packages/openssf-scorecard@<tag>   # or path / toolbox vendor
+  - package: github:seikika/seikika/packages/openssf-scorecard@<tag>   # or path / seikika vendor
     with: {}
 ```
 
@@ -34,24 +33,24 @@ Results then match a fresh CI checkout. `--local` needs no GitHub token.
 **Ratchet-safe `--local` checks:** Binary-Artifacts, Dangerous-Workflow, Dependency-Update-Tool,
 Fuzzing, License, Pinned-Dependencies, SAST, Security-Policy, Token-Permissions. **Omit**
 Packaging (often `-1` / inconclusive offline — blocks `--update` / `--ci`) and **Vulnerabilities**
-(OSV at runtime; not reproducible). T4T “green” means those nine (or ten when Packaging scores) at
+(OSV at runtime; not reproducible). S4S “green” means those nine (or ten when Packaging scores) at
 level `ten` — not Scorecard’s default aggregate including Vulnerabilities.
 
-**Installing Scorecard:** from a toolbox checkout that includes the pin,
+**Installing Scorecard:** from a seikika checkout that includes the pin,
 `scripts/ci-tools.sh <dir> scorecard` downloads the release named in the package’s `tools:` entry
 and checks its SHA-256. A **stale** consumer checkout of this repo (or of `actions/report`) that
 predates the scorecard case in that script prints `unknown tool scorecard` — fetch / pin a SHA that
 contains the pin before installing. Consumers who do not vendor the script can still install the
 same version from Scorecard’s GitHub Releases and verify the published checksum.
 
-**Consumer CI:** pin `uses: loganvolkers/toolbox/actions/report@<sha>`, **omit** `toolbox-version`
+**Consumer CI:** pin `uses: seikika/seikika/actions/report@<sha>`, **omit** `seikika-version`
 so the action builds from that SHA; install Scorecard with `scripts/ci-tools.sh <dir> scorecard`
 from the same SHA.
 
 **Refreshing OpenSSF scores:** the kit’s connector is the **runner**. Do **not** pass
 `--skip runner` when you need live `maintainer-openssf` / Scorecard facts. After recording those
 scores, rewrite a CI baseline that skips the runner with the usual
-`toolbox report portal --skip runner,github-actions --baseline … --update` so crate clippy/test
+`seikika report portal --skip runner,github-actions --baseline … --update` so crate clippy/test
 facts are not left `unknown` under the skip.
 
 **Why a fitting, not a slot:** Scorecard's SARIF output needs a policy file and `ENABLE_SARIF`
@@ -84,7 +83,7 @@ top-level `contents: read`, job-level write on plan/host/announce, and
 (`curl -o file; python3 … < file`, or use `jq`). Actions SHA pins alone do not clear pip /
 installer / Dockerfile probe classes.
 
-**npm:** OpenSSF Pinned-Dependencies and Toolbox’s package scorecard both want lockfile-faithful
+**npm:** OpenSSF Pinned-Dependencies and Seikika’s package scorecard both want lockfile-faithful
 CI: `npm ci` (or `pnpm install --frozen-lockfile`). The workspace fact `ciUsesInstall: true` means
 an **unlocked** install (`npm install`) was detected — keep that name; do not invert the signal.
 

@@ -5,5 +5,5 @@ defineProps<{ level: unknown }>();
 
 <template>
   <DataValue v-if="level !== null && typeof level === 'object'" :value="level" />
-  <span v-else class="tb-level" :data-level="String(level ?? 'none')">{{ level ?? "none" }}</span>
+  <span v-else class="seikika-level" :data-level="String(level ?? 'none')">{{ level ?? "none" }}</span>
 </template>

@@ -1,0 +1,53 @@
+apiVersion: seikika.com/assessment/v1
+entity: crate:seikika-connector-gitlab
+rubric: crate-design
+subjectHash: 46a25a76e700
+assessor: {kind: agent, name: cursor-assessor-19, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: one-responsibility
+    verdict: pass
+    reason: >-
+      One job: read a GitLab group's subgroups, with members, and its
+      projects, as `group` and `project` records
+      (crates/seikika-connector-gitlab/src/main.rs:1-19). The crate docs name
+      the config, both record shapes and the exact endpoints. They also say
+      why `parent` is reported rather than inherited members computed
+      (main.rs:13-14). That matches the `gitlab` entry of docs/v1-spec.md:100
+      and the F6 story in docs/design/forges.md:78.
+  - criterion: small-contract
+    verdict: pass
+    reason: >-
+      A binary with no dependents. It uses only `Out`, `Source` and
+      `run_stdio` from the SDK
+      (crates/seikika-connector-gitlab/src/main.rs:22;
+      crates/seikika-connect/src/sdk.rs:9-132). Its capabilities declare
+      exactly the two kinds it emits (main.rs:198-201), which the conformance
+      kit checks against the manifest (main.rs:7-8).
+  - criterion: replaceable-defaults
+    verdict: pass
+    reason: >-
+      It wraps none of the charter defaults. Its dependencies are reqwest,
+      serde_json, tokio and seikika-connect
+      (crates/seikika-connector-gitlab/Cargo.toml). GitLab is the source it
+      reads, not a default behind a Seikika contract.
+  - criterion: tests-match-risk
+    verdict: pass
+    reason: >-
+      The riskiest path is who counts as a member, since approvals hang on it
+      (forges.md:78). It has a direct test: blocked users and access below
+      `minAccess` are excluded, members are sorted and `parent` is set
+      (main.rs:255-271). Config defaults and path encoding are tested at
+      main.rs:273-291. The protocol and the real API are covered end to end:
+      scripts/gitlab-acceptance.sh:213-217 runs the conformance kit against
+      GitLab CE 19.6.1 in CI (.github/workflows/ci.yml:178-200). There, a
+      member removed in GitLab lost their approval (docs/research-log.md:147).
+      Pagination past 100 items is only covered indirectly (main.rs:74-91). A
+      resync skips archived projects (main.rs:133), but a refresh by id
+      returns them (main.rs:144-151); no test pins that asymmetry.
+summary: >-
+  A compact, single-purpose connector whose crate docs read like a spec.
+  Its riskiest logic, membership at a minimum access level, has a unit
+  test, and the whole connector passed the conformance kit against a real
+  GitLab in CI. The minor gaps are pagination and the archived-project
+  asymmetry between resync and refresh.

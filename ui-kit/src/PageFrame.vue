@@ -3,9 +3,9 @@ defineProps<{ label?: string }>();
 </script>
 
 <template>
-  <div class="toolbox-ui">
+  <div class="seikika-ui">
     <slot name="navigation" />
-    <main class="tb-frame" :aria-label="label">
+    <main class="seikika-frame" :aria-label="label">
       <slot />
     </main>
     <slot name="footer" />

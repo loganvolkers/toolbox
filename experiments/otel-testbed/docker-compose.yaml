@@ -1,5 +1,5 @@
 # Optional local stack (design §13). CI uses scripts/score.sh with a pinned
-# otelcol-contrib binary so the job does not require Docker for the Toolbox
+# otelcol-contrib binary so the job does not require Docker for the Seikika
 # binary; this compose file is for humans with Docker.
 services:
   otelcol:

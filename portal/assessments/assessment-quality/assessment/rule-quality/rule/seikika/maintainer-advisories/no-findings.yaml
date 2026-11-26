@@ -1,0 +1,58 @@
+apiVersion: seikika.com/assessment/v1
+entity: assessment:rule-quality/rule:seikika/maintainer-advisories/no-findings
+rubric: assessment-quality
+subjectHash: 4d821d325432
+assessor: {kind: agent, name: cursor-reviewer-24, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: supported
+    verdict: pass
+    reason: >-
+      portal/assessments/rule-quality/rule/seikika/maintainer-advisories/no-findings.yaml
+      cites the rule at portal/seikika.yaml:414-442. The check is the active
+      count, the fix names osv-scanner.toml, and the title is "No unexplained
+      advisories in Cargo.lock". The two ignores at osv-scanner.toml:6-17 both
+      have reasons and no effectiveUntil. scripts/ci-tools.sh:35 pins RustSec
+      at 944cab37. .github/CODEOWNERS is only the line `.github/
+      @loganvolkers`, so it does not cover osv-scanner.toml. The fixture pair
+      is portal/tests/standards.test.yaml:1107-1118.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      hard-to-game is the fail the sources show: an IgnoredVulns entry drops
+      the advisory from the SARIF (packages/sarif/README.md:50) and the check
+      never reads the toml. measures-intent passes because the rule's name is
+      the scanner's own count, and the assessment says so rather than
+      pretending the rule checks the ignore text. fix-leads-to-pass passes:
+      the evidence line names chrono and RUSTSEC-2026-0543, and the fix says
+      cargo update -p or an ignore with a reason. There is no numeric
+      threshold; clean is the SARIF slot's only level
+      (packages/sarif/fragments/sarif.yaml:67-72).
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      The fail is a route anyone can see: add an IgnoredVulns id with an empty
+      reason and the finding disappears from the count. The pass on
+      measures-intent follows the rule text at seikika.yaml:414, not a
+      preference about whether ignores should count.
+  - criterion: actionable
+    verdict: fail
+    reason: >-
+      The suggestion adds a sibling rule over osv-scanner.toml that fails an
+      empty reason or an effectiveUntil. That is a different rule, and this
+      rule's check would still be the scanner count, so hard-to-game on
+      no-findings would stay a fail if the sibling is the only change. The
+      suggestion also says to keep this rule as the scanner's count, which
+      leaves the cheap ignore in place. A change that would flip this verdict
+      is the check reading the toml, which the suggestion does not require.
+    suggestion: >-
+      Say what would make this rule's own check fail an unexplained ignore:
+      count an IgnoredVulns entry with an empty reason as a finding, or
+      document that hard-to-game stays a fail until the check itself reads
+      osv-scanner.toml. A sibling rule fixes the scorecard, not this verdict.
+summary: >-
+  The no-findings assessment is right that the rule is the scanner's
+  active count and that an osv-scanner.toml ignore is a cheap pass the
+  check cannot see. The citations match seikika.yaml, the two chrono
+  ignores, the RustSec pin and CODEOWNERS. The suggestion adds a sibling
+  rule, which would not by itself change this rule's hard-to-game fail.

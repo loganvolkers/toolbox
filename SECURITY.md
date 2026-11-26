@@ -10,14 +10,14 @@ Older tags are not backported unless a release notes exception says otherwise.
 A **vulnerability** is a weakness that could allow unauthorized access, data
 exfiltration, privilege escalation, supply-chain compromise of released
 artifacts, or denial of service against a default or documented deployment of
-Toolbox. Speculative issues without a plausible exploit path are treated as
+Seikika. Speculative issues without a plausible exploit path are treated as
 hardening suggestions, not vulnerabilities.
 
 ## How to report
 
 Prefer **GitHub private vulnerability reporting** on this repository: open the
 Security tab and choose *Report a vulnerability*
-(https://github.com/loganvolkers/toolbox/security/advisories/new).
+(https://github.com/seikika/seikika/security/advisories/new).
 
 If private reporting is unavailable, email the maintainers using the address
 published on the repository owner’s GitHub profile for loganvolkers, with subject

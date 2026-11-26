@@ -1,0 +1,56 @@
+apiVersion: seikika.com/assessment/v1
+entity: assessment:rule-quality/rule:seikika/maintainer-crate/short-functions
+rubric: assessment-quality
+subjectHash: ee4c0c491b59
+assessor: {kind: agent, name: cursor-reviewer-31, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: supported
+    verdict: fail
+    reason: >-
+      The span claim in
+      portal/assessments/rule-quality/rule/seikika/maintainer-crate/short-functions.yaml
+      is right: lines_of counts the whole span
+      (crates/seikika-connector-workspace/src/rust.rs:70-72 and :163),
+      longFunctions is lines > 80 (portal/standards/crates.yaml:98-103), and
+      the live fail count is 9. analyse at src/portals.rs:74-152 is 79 lines
+      and undocumented, and the crate is gold in portal/results.json. One
+      added line makes 80, and the check is lines > 80, so one doc line does
+      not drop the crate. change_run's span is the doc at
+      crates/seikika-exec/src/executor/change.rs:338 through the brace at :452
+      (115 lines), not :337-451. The 80-line bar is
+      seikika-for-seikika.md:89-90 and :103, and thresholds.md has no row.
+    suggestion: >-
+      Say two added lines (79 to 81) would fail lines > 80, and cite
+      change.rs:338-452. The three fail verdicts still follow from docs
+      counting toward the span.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      measures-intent and hard-to-game should fail: a documented function is
+      longer than its body (rust.rs:163), and deleting docs is cheaper than
+      splitting. fix-leads-to-pass is right: the fixture pins three
+      short-functions rows (portal/tests/standards.test.yaml:82-86) and the
+      fix says to split (crates.yaml:307). threshold-justified should fail:
+      thresholds.md has no row, and the clippy link (crates.yaml:312-314) does
+      not state 80. The arithmetic slip does not flip a verdict.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      A second assessor reading rust.rs:70-72 and crates.yaml:102 reaches the
+      same three fails. Whether one line or two crosses 80 is arithmetic on
+      those lines, not taste.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      Counting body lines only, as the suggestion says, would stop a doc
+      comment from failing measures-intent and would remove the delete-docs
+      route in hard-to-game. A thresholds.md row that states 80 against
+      clippy's 100 would pass threshold-justified. fix-leads-to-pass already
+      passes.
+summary: >-
+  The three fails are the right verdicts: length includes docs and
+  attributes, and 80 has no thresholds.md row. The "one doc line drops a
+  79-line function" claim does not, because the check is lines > 80
+  (crates.yaml:102) and analyse is 79 lines (portals.rs:74-152). Cite two
+  lines, and change.rs:338-452.

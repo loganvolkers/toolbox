@@ -79,9 +79,9 @@ scorecards:
     - title: Scorecard checks
       url: https://github.com/ossf/scorecard/blob/main/docs/checks.md
     - title: OpenSSF as the template
-      url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/openssf-template.md
+      url: https://github.com/seikika/seikika/blob/main/docs/design/openssf-template.md
     - title: Carry OpenSSF Scorecard decision
-      url: https://github.com/loganvolkers/toolbox/blob/main/docs/decisions/D01M82E93XAPNE0WFXEPJZ59WG4.md
+      url: https://github.com/seikika/seikika/blob/main/docs/decisions/D01M82E93XAPNE0WFXEPJZ59WG4.md
     kind: ${param:kind}
     owner: ${param:owner}
     track: ${param:track}

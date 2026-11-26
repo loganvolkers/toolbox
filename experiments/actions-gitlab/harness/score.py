@@ -8,7 +8,7 @@
 **Lines to maintain** are actions-ab's measure (its score.py) over two places: the `main` of every
 project in the run's GitLab group, subgroups included, cloned into <dest>.remote/ (a project's
 files compare against its import), then the workspace, skipping the platform copies (`bin/`,
-`toolbox-docs/`, `gitlab-docs/`), `home/` (git's and glab's configuration, written by setup) and
+`seikika-docs/`, `gitlab-docs/`), `home/` (git's and glab's configuration, written by setup) and
 `people/` (the tokens). A file whose content was already counted, or is in the baseline, is a
 copy. GitLab settings changed through the API or the UI are not lines; settings.py reports them.
 """
@@ -27,7 +27,7 @@ spec = importlib.util.spec_from_file_location(
     "ab", os.path.join(HERE, "..", "..", "actions-ab", "harness", "score.py"))
 ab = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(ab)
-ab.SKIP_TOP = {"bin", "toolbox-docs", "gitlab-docs", "home", "people"}
+ab.SKIP_TOP = {"bin", "seikika-docs", "gitlab-docs", "home", "people"}
 REPOS = ["alpha", "beta", "gamma"]
 RULES = {
     "alpha": ("*", "@acme/proxy-maintainers"),

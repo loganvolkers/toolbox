@@ -1,4 +1,4 @@
-// The reference portal (examples/reference-portal/toolbox.yaml) written with the builder.
+// The reference portal (examples/reference-portal/seikika.yaml) written with the builder.
 // `tsx portal/acme.ts` prints the canonical manifest JSON; scripts/roundtrip.ts compares it to the YAML.
 import { action, canonical, cel, connector, field, kind, scorecard, toManifest, uiBundle } from "../src/index.js";
 
@@ -122,9 +122,9 @@ const ownership = scorecard("ownership", {
     approvals depend on, and a protected branch, since a claim is only as safe as the branch that holds it.`,
   links: [
     { title: "CODEOWNERS-backed claims",
-      url: "https://github.com/loganvolkers/toolbox/blob/main/docs/authorization.md#48-authority-of-permission-relevant-claims-codeowners" },
+      url: "https://github.com/seikika/seikika/blob/main/docs/authorization.md#48-authority-of-permission-relevant-claims-codeowners" },
     { title: "D17 CODEOWNERS authority",
-      url: "https://github.com/loganvolkers/toolbox/blob/main/docs/decisions/D01M7TCJ3280000000000000000.md" },
+      url: "https://github.com/seikika/seikika/blob/main/docs/decisions/D01M7TCJ3280000000000000000.md" },
   ],
   owner: "group:platform", levels: ["bronze", "silver"],
   appliesTo: cel`!${R.archived}`,
@@ -137,7 +137,7 @@ const ownership = scorecard("ownership", {
       rationale: `Ownership grants permissions, so anyone who can edit catalog-info.yaml could otherwise name any team as
         owner. Requiring that team to own the file in CODEOWNERS means the claimed team reviews the claim.` },
     { name: "has-tier", level: "silver", check: cel`has(${R.tier})`,
-      fix: "Set spec.tier in catalog-info.yaml, or ask the platform team to set it in Toolbox.",
+      fix: "Set spec.tier in catalog-info.yaml, or ask the platform team to set it in Seikika.",
       rationale: `The tier decides whether installing an approved GitHub App on the repository needs security's approval;
         without one, the policy cannot tell a critical repository from a sandbox.` },
     { name: "branch-protected", level: "silver", check: cel`${R.defaultBranchProtected}`,
@@ -150,7 +150,7 @@ const ownership = scorecard("ownership", {
   facets: { summary: "public", details: "owner" },
 });
 const appsExample = { title: "Approved GitHub Apps example",
-  url: "https://github.com/loganvolkers/toolbox/blob/main/docs/examples/approved-github-apps.md" };
+  url: "https://github.com/seikika/seikika/blob/main/docs/examples/approved-github-apps.md" };
 const hygiene = scorecard("github-app-hygiene", {
   kind: Repository,
   rationale: `Every GitHub App installed on a repository acts on it with its own token, so each installation widens who
@@ -161,7 +161,7 @@ const hygiene = scorecard("github-app-hygiene", {
   rules: [{ name: "only-approved-apps", level: "bronze", check: cel`${R.installedApps}.all(a, a in policy.approvedApps)`,
             fix: "Remove unapproved apps, or request approval with the request-new-app action.",
             rationale: `An app installed outside the approved list has had no security review of its permissions or
-              vendor. Toolbox's own app gets no webhook for other apps' installs, so this check is how such drift is caught.` }],
+              vendor. Seikika's own app gets no webhook for other apps' installs, so this check is how such drift is caught.` }],
   facets: { summary: "public", details: "owner" },
 });
 const appApproval = scorecard("app-approval", {
@@ -213,7 +213,7 @@ const remove = action("remove-app", {
 });
 
 export const manifest = toManifest({
-  portal: { name: "acme", title: "Acme developer portal", owner: "group:platform", toolbox: "0.1" },
+  portal: { name: "acme", title: "Acme developer portal", owner: "group:platform", seikika: "0.1" },
   policies: { approvedApps },
   connectors: [github, gitFiles, idp],
   kinds: [Group, User, Repository, GitHubApp, GitHubAppInstallation],

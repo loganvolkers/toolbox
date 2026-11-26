@@ -10,13 +10,13 @@ GitHub because agent-plugins.org and agentskills.io aren't reachable from this e
 **Agent Plugins** is a vendor-neutral package format for agent extensions.
 - Core maintainers come from Amazon, Cursor, Microsoft, OpenAI and Vercel.
 - The spec text is CC-BY-4.0 and the schemas are Apache-2.0.
-- **1.0.0 is the published version and 1.1.0 is a working draft.** Toolbox targets 1.0.0, and adds
+- **1.0.0 is the published version and 1.1.0 is a working draft.** Seikika targets 1.0.0, and adds
   1.1.0 hooks only when that version is published.
 
-| Rule (1.0.0) | Consequence for Toolbox |
+| Rule (1.0.0) | Consequence for Seikika |
 |---|---|
 | A plugin is a directory with a **`plugin.json`** manifest whose schema is closed: `$schema`, `name`, `version`, `description`, `author`, `homepage`, `repository`, `license`, `keywords`, `extensions` | Generated manifests are validated against `schemas/1.0.0/plugin.schema.json` in CI |
-| `name`: 1–64 chars, `a-z0-9-.`, alphanumeric at both ends, no `--` or `..` | Portal names are normalised (`acme-portal`); `toolbox build` fails on invalid names |
+| `name`: 1–64 chars, `a-z0-9-.`, alphanumeric at both ends, no `--` or `..` | Portal names are normalised (`acme-portal`); `seikika build` fails on invalid names |
 | Exactly two portable component types, at **fixed locations**: `skills/<name>/SKILL.md` and **`mcp.json`** | Everything else (client-specific marketplaces, extras) goes under reverse-domain extension directories (§8 of the spec) |
 | Skills must conform to the **Agent Skills** spec: `name` (≤ 64 chars, lowercase/digits/hyphens, **must match its directory**), `description` (≤ 1024, says what *and when*); optional `license`, `compatibility` (≤ 500), `metadata`, `allowed-tools` (experimental). Name/description load at startup; the body loads on activation (< 5,000 tokens recommended) | Generated skills are small, keyword-rich and validated with `skills-ref`; detail lives in `references/`. Skills that exist in this repo are catalogued and scored by `maintainer-skill` ([skill-standards.md](./skill-standards.md), D72) |
 | `mcp.json`: `$schema` + `mcpServers`. Variants: `stdio` (`command` is a single token, bare or `./…`; `${PLUGIN_ROOT}`/`${PLUGIN_DATA}` expansion) or `streamable-http` (`url`, HTTPS unless loopback; optional `headers`) | The operator plugin uses **stdio** for local authoring. The user plugin uses **streamable-http** pointing at production |
@@ -24,29 +24,29 @@ GitHub because agent-plugins.org and agentskills.io aren't reachable from this e
 | Paths must stay within the plugin root; symlinks that escape are rejected | Bundled scripts and references are copied, never linked |
 | 1.1.0 draft: portable **hooks** (`hooks.json`: `SessionStart`, `UserPromptSubmit`, `PreToolUse`, `PostToolUse`, `Stop`) | Planned for the operator plugin (§2.4) once 1.1.0 is published |
 
-## 2. Plugin 1: `toolbox-operator` (shipped in this repo)
+## 2. Plugin 1: `seikika-operator` (shipped in this repo)
 
-**Audience:** Toolbox operators and their coding agents, working *in a portal repo*: authoring kinds,
+**Audience:** Seikika operators and their coding agents, working *in a portal repo*: authoring kinds,
 connectors, scorecards, actions, permissions and views, then testing, planning, upgrading and
 operating.
 
 **Location and lifecycle:**
-- It lives at `plugins/toolbox-operator/` in the Toolbox repository and is **versioned and released with
-  Toolbox**: plugin `version` = Toolbox version.
+- It lives at `plugins/seikika-operator/` in the Seikika repository and is **versioned and released with
+  Seikika**: plugin `version` = Seikika version.
 - Generated reference material (SDK API, CLI help, error codes, the manifest schema) is regenerated
   at release from the same sources as the docs, so skills never drift from the binary.
 
 ### 2.1 Layout
 
 ```
-plugins/toolbox-operator/
+plugins/seikika-operator/
 ├── plugin.json
 ├── mcp.json                       # stdio: the local authoring MCP server
 ├── bin/
-│   ├── toolbox-mcp                # launcher (POSIX): finds or fetches the pinned `toolbox`, verifies its signature, execs `toolbox mcp --dev`
-│   └── toolbox-mcp.cmd            # launcher (Windows)
+│   ├── seikika-mcp                # launcher (POSIX): finds or fetches the pinned `seikika`, verifies its signature, execs `seikika mcp --dev`
+│   └── seikika-mcp.cmd            # launcher (Windows)
 ├── skills/
-│   ├── toolbox-authoring/         # the core loop: spec → tests → implement → test → simulate → plan → PR
+│   ├── seikika-authoring/         # the core loop: spec → tests → implement → test → simulate → plan → PR
 │   ├── add-kind/
 │   ├── extend-connector/          # record kinds, CEL mappings, act handlers, conformance kit
 │   ├── add-scorecard/             # rules, levels, declassification, fixtures
@@ -54,13 +54,13 @@ plugins/toolbox-operator/
 │   ├── add-permission/            # OpenFGA modules, .fga.yaml tests, derivation, CODEOWNERS authority
 │   ├── write-cel/                 # typed CEL: predicates and object construction, common errors
 │   ├── write-executor/            # in-image executors (WASM functions deferred, D41)
-│   ├── add-view/                  # operator UI views (React/TSX on @toolbox/ui), story first
+│   ├── add-view/                  # operator UI views (React/TSX on @seikika/ui), story first
 │   ├── add-action-ui/             # generated → field widget → custom action UI; Storybook page stories + play tests
 │   ├── review-plan/               # reading plan output and gates; when to acknowledge
 │   ├── debug-simulation/          # replaying seeds, reading invariant failures
-│   ├── upgrade-toolbox/           # version bumps, codemods, manifest migrations
+│   ├── upgrade-seikika/           # version bumps, codemods, manifest migrations
 │   ├── operate-portal/            # admin ops, revocation/lag/backup runbooks
-│   └── migrate-from-backstage/    # import catalog-info, map plugins to Toolbox features
+│   └── migrate-from-backstage/    # import catalog-info, map plugins to Seikika features
 └── README.md                      # licence field added once the project licence is decided
 ```
 
@@ -70,7 +70,7 @@ plugins/toolbox-operator/
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/mcp.schema.json",
   "mcpServers": {
-    "toolbox-dev": { "type": "stdio", "command": "./bin/toolbox-mcp", "args": ["--data", "${PLUGIN_DATA}"] }
+    "seikika-dev": { "type": "stdio", "command": "./bin/seikika-mcp", "args": ["--data", "${PLUGIN_DATA}"] }
   }
 }
 ```
@@ -79,8 +79,8 @@ plugins/toolbox-operator/
   `docs_search`, `example`, `preview_url`, `scaffold` (new kind/action/scorecard from templates).
 - **Workspace:** the spec runs stdio servers with the *plugin root* as the working directory, and MCP
   roots are deprecated. So every tool takes an explicit `workspace` argument, the portal repo root,
-  and the `toolbox-authoring` skill tells agents to pass it.
-- **Version pinning:** the launcher reads `toolbox.lock` in the workspace and runs exactly that Toolbox
+  and the `seikika-authoring` skill tells agents to pass it.
+- **Version pinning:** the launcher reads `seikika.lock` in the workspace and runs exactly that Seikika
   version. Binaries are cached under `${PLUGIN_DATA}` and verified with Sigstore/cosign before
   execution. It never relies on whatever happens to be on `PATH` (the spec says plugins must not
   depend on that).
@@ -89,7 +89,7 @@ plugins/toolbox-operator/
 
 - **Each skill is one task,** and its description names the trigger words agents see ("add a
   scorecard", "OpenFGA", "fga.yaml", "permission", "declassify"…).
-- **Bodies stay short.** They give the procedure and the exact `toolbox` commands, and link to
+- **Bodies stay short.** They give the procedure and the exact `seikika` commands, and link to
   `references/` (generated API and schema excerpts, worked examples like
   [approved-github-apps.md](../examples/approved-github-apps.md)).
 - **Test-first by default:** every authoring skill starts by writing properties and failing tests
@@ -100,9 +100,9 @@ plugins/toolbox-operator/
 
 ### 2.4 Hooks (when Agent Plugins 1.1.0 is published)
 
-- `SessionStart`: print the portal status (Toolbox version vs. lock, last test result, pending plan
+- `SessionStart`: print the portal status (Seikika version vs. lock, last test result, pending plan
   gates).
-- `PostToolUse` (file modification under `modules/`, `authz/` or `src/`): run `toolbox check
+- `PostToolUse` (file modification under `modules/`, `authz/` or `src/`): run `seikika check
   --changed` and return diagnostics, so the agent sees type and CEL errors immediately.
 
 ## 3. Plugin 2: the user plugin (generated from the portal's config)
@@ -110,7 +110,7 @@ plugins/toolbox-operator/
 **Audience:** everyone who uses the portal from an agent (engineers in Claude Code, Codex, Cursor,
 VS Code and others).
 - It **points at the production MCP URL**.
-- It is **generated by `toolbox build`** from the manifest, so it always matches the deployed portal.
+- It is **generated by `seikika build`** from the manifest, so it always matches the deployed portal.
 
 ### 3.1 What gets generated
 
@@ -148,7 +148,7 @@ dist/agent-plugin/acme-portal/
   `plan` lists everything that would enter the plugin, so nothing is published by accident.
 - **Names are validated** against both specs. Skill directory names equal their `name`.
 - **Environment binding:** the MCP URL is an environment value
-  (`toolbox build --plugin-env prod`), consistent with "deploy time can only bind values". Staging
+  (`seikika build --plugin-env prod`), consistent with "deploy time can only bind values". Staging
   and preview environments get their own plugin builds pointing at their own URLs.
 
 ```json
@@ -162,13 +162,13 @@ dist/agent-plugin/acme-portal/
 
 ### 3.2 How it stays current
 
-- **Part of the build:** `toolbox build` emits the plugin next to the OCI image. The plugin's
+- **Part of the build:** `seikika build` emits the plugin next to the OCI image. The plugin's
   `version` is the portal release version, which clients use for update checks.
-- **Part of the plan:** the "Agent surface" section of `toolbox plan` now includes *plugin* changes
+- **Part of the plan:** the "Agent surface" section of `seikika plan` now includes *plugin* changes
   (skills added, removed or changed, and the MCP URL) alongside MCP tool changes.
 - **Published by CI after deploy and verify,** so the plugin never points at tools that aren't live:
   - a release artifact
-  - the portal serves it for download (`/agent-plugin.tgz`, with `toolbox plugin install
+  - the portal serves it for download (`/agent-plugin.tgz`, with `seikika plugin install
     https://portal.acme.dev` as a one-liner)
   - optional thin wrappers for client marketplaces, generated under reverse-domain extension
     directories, or as separate marketplace manifests where a client requires its own format
@@ -183,10 +183,10 @@ dist/agent-plugin/acme-portal/
 
 | | Operator plugin | User plugin |
 |---|---|---|
-| Source | Toolbox repo (`plugins/toolbox-operator/`) | Generated from each portal's manifest |
-| Versioned with | Toolbox releases | The portal's releases |
-| MCP | stdio, local authoring server (`toolbox mcp --dev`) | streamable-http, production `/mcp` |
-| Skills | Authoring, testing, planning, operating Toolbox | Using *this* portal: ownership, standards, actions, dashboards |
+| Source | Seikika repo (`plugins/seikika-operator/`) | Generated from each portal's manifest |
+| Versioned with | Seikika releases | The portal's releases |
+| MCP | stdio, local authoring server (`seikika mcp --dev`) | streamable-http, production `/mcp` |
+| Skills | Authoring, testing, planning, operating Seikika | Using *this* portal: ownership, standards, actions, dashboards |
 | Auth | Local; remote `plan` uses the developer's identity | Client-managed MCP OAuth against the portal |
 | Evaluated by | Agent-authoring eval suite | User-agent eval suite on the preview environment |
 
@@ -196,15 +196,15 @@ putting them in `agent/skills/<name>/SKILL.md` in the portal repo. They are vali
 
 ## 5. Status in this repo
 
-A validated skeleton is committed at [`plugins/toolbox-operator/`](../../plugins/toolbox-operator/):
+A validated skeleton is committed at [`plugins/seikika-operator/`](../../plugins/seikika-operator/):
 - `plugin.json` and `mcp.json` pass the official 1.0.0 JSON schemas.
-- Four skills (`toolbox-authoring`, `add-scorecard`, `add-permission`, `review-plan`) pass
+- Four skills (`seikika-authoring`, `add-scorecard`, `add-permission`, `review-plan`) pass
   `skills-ref validate`.
-- The MCP launcher is a placeholder until the `toolbox` binary exists.
+- The MCP launcher is a placeholder until the `seikika` binary exists.
 
 ## 6. Changes to the plan
 
-- `toolbox build` emits the user plugin. `toolbox plugin build|validate|install` are new CLI commands.
+- `seikika build` emits the user plugin. `seikika plugin build|validate|install` are new CLI commands.
 - The plan's agent-surface section covers plugin changes.
 - The release pipeline validates and publishes the operator plugin.
 - The meta catalog gains `AgentPlugin` and `Skill` (plugin-sourced) entities with owners. A new

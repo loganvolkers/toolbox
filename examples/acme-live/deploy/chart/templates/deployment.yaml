@@ -21,10 +21,10 @@ spec:
               value: {{ .Values.githubApiUrl | quote }}
             - name: GITHUB_TOKEN
               value: {{ .Values.githubToken | quote }}
-            - {name: TOOLBOX_AUTH_MODE, value: dev}
-            - {name: TOOLBOX_ALLOW_DEV_AUTH_OFF_LOOPBACK, value: "1"}
-            - {name: TOOLBOX_CONNECTOR_TOKENS, value: idp=idp-token}
-            - {name: TOOLBOX_CONNECTOR_TOKEN, value: idp-token}
-            - {name: TOOLBOX_SCIM_TOKEN, value: scim-token}
+            - {name: SEIKIKA_AUTH_MODE, value: dev}
+            - {name: SEIKIKA_ALLOW_DEV_AUTH_OFF_LOOPBACK, value: "1"}
+            - {name: SEIKIKA_CONNECTOR_TOKENS, value: idp=idp-token}
+            - {name: SEIKIKA_CONNECTOR_TOKEN, value: idp-token}
+            - {name: SEIKIKA_SCIM_TOKEN, value: scim-token}
           readinessProbe: {httpGet: {path: /readyz, port: http}}
           livenessProbe: {httpGet: {path: /healthz, port: http}}

@@ -1,8 +1,8 @@
-{"data": {"crate": "toolbox-expr", "durationMs": 900, "failed": 0, "ignored": 0, "passed": 6, "status": "pass", "suites": 2}, "externalId": "test:toolbox-expr", "kind": "test", "type": "record"}
-{"data": {"crate": "toolbox-expr", "durationMs": 800, "errors": 0, "messages": [], "status": "pass", "warnings": 0}, "externalId": "clippy:toolbox-expr", "kind": "clippy", "type": "record"}
-{"data": {"crate": "toolbox-derive", "durationMs": 3000, "failed": 1, "ignored": 1, "output": "test reference_outputs_match ... FAILED", "passed": 5, "status": "fail", "suites": 3}, "externalId": "test:toolbox-derive", "kind": "test", "type": "record"}
-{"data": {"crate": "toolbox-derive", "durationMs": 800, "errors": 0, "messages": [], "status": "pass", "warnings": 0}, "externalId": "clippy:toolbox-derive", "kind": "clippy", "type": "record"}
-{"data": {"crate": "toolbox-connector-git-files", "durationMs": 400, "failed": 0, "ignored": 0, "passed": 0, "status": "pass", "suites": 1}, "externalId": "test:toolbox-connector-git-files", "kind": "test", "type": "record"}
-{"data": {"crate": "toolbox-connector-git-files", "durationMs": 700, "errors": 0, "messages": ["src/main.rs:12 clippy::needless_return unneeded `return` statement"], "status": "fail", "warnings": 1}, "externalId": "clippy:toolbox-connector-git-files", "kind": "clippy", "type": "record"}
+{"data": {"crate": "seikika-expr", "durationMs": 900, "failed": 0, "ignored": 0, "passed": 6, "status": "pass", "suites": 2}, "externalId": "test:seikika-expr", "kind": "test", "type": "record"}
+{"data": {"crate": "seikika-expr", "durationMs": 800, "errors": 0, "messages": [], "status": "pass", "warnings": 0}, "externalId": "clippy:seikika-expr", "kind": "clippy", "type": "record"}
+{"data": {"crate": "seikika-derive", "durationMs": 3000, "failed": 1, "ignored": 1, "output": "test reference_outputs_match ... FAILED", "passed": 5, "status": "fail", "suites": 3}, "externalId": "test:seikika-derive", "kind": "test", "type": "record"}
+{"data": {"crate": "seikika-derive", "durationMs": 800, "errors": 0, "messages": [], "status": "pass", "warnings": 0}, "externalId": "clippy:seikika-derive", "kind": "clippy", "type": "record"}
+{"data": {"crate": "seikika-connector-git-files", "durationMs": 400, "failed": 0, "ignored": 0, "passed": 0, "status": "pass", "suites": 1}, "externalId": "test:seikika-connector-git-files", "kind": "test", "type": "record"}
+{"data": {"crate": "seikika-connector-git-files", "durationMs": 700, "errors": 0, "messages": ["src/main.rs:12 clippy::needless_return unneeded `return` statement"], "status": "fail", "warnings": 1}, "externalId": "clippy:seikika-connector-git-files", "kind": "clippy", "type": "record"}
 {"data": {"calls": 2, "errors": 2, "tool": "get"}, "externalId": "mcp-calls:get", "kind": "mcp-calls", "type": "record"}
 {"data": {"calls": 4, "errors": 1, "tool": "search"}, "externalId": "mcp-calls:search", "kind": "mcp-calls", "type": "record"}

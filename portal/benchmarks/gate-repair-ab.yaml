@@ -1,10 +1,10 @@
 # DX Benchmark catalog entry (docs/design/dx-benchmarks.md §6), scored by maintainer-benchmark.
 records:
   - id: gate-repair-ab
-    title: 'Gate repair: Toolbox ratchet vs reviewdog (R4)'
+    title: 'Gate repair: Seikika ratchet vs reviewdog (R4)'
     question: >-
       When a coding agent's pull request fails the repository's quality gate,
-      does Toolbox's ratchet get it to a correct pass for less effort than
+      does Seikika's ratchet get it to a correct pass for less effort than
       reviewdog over the same tools?
     layers: [operator]
     stages: [operator/monitor]
@@ -39,25 +39,25 @@ records:
     status: complete
     ran: 2026-11-23
     outcome: >-
-      Round 1: Toolbox lost to reviewdog. G1 held, and G2 (calls 7 vs 4) and
+      Round 1: Seikika lost to reviewdog. G1 held, and G2 (calls 7 vs 4) and
       G3 (read 29,767 vs 11,160 characters) failed. Round 2, after the change,
       showed nothing: G4 and G5 were inconclusive, because exploration noise
-      moved both arms. Round 3 ran the previous and the changed Toolbox side
+      moved both arms. Round 3 ran the previous and the changed Seikika side
       by side, five runs each, and showed the improvement under its
       pre-registered rule. G7 held, and G8 held: gate read fell from a median
       of 18,751 to 3,876 characters, with W 3,189. G9 and G10 were
-      inconclusive, not failed. Toolbox is not shown to beat reviewdog on any
+      inconclusive, not failed. Seikika is not shown to beat reviewdog on any
       measure (G11, G2″ and G3″ inconclusive). Round 3's measure was chosen
       after rounds 1 and 2. Round 4, after a second change, asked whether
-      Toolbox beats reviewdog. It doesn't: G13 failed, with median calls 7 vs
+      Seikika beats reviewdog. It doesn't: G13 failed, with median calls 7 vs
       3 and W 1, half from how the agents edited and half from arm A's extra
       exploration. G14 (read) and G15 (gate read) were inconclusive, and arm
       A's read is undercounted by missing read_file results. G12 and G16 held:
       gate read fell from 3,952 to 2,527 characters. Round 5, after a third
-      change, asked again. Toolbox doesn't beat reviewdog, and no longer
+      change, asked again. Seikika doesn't beat reviewdog, and no longer
       loses: G18 held, and G19 to G23 were inconclusive (calls 3 vs 4, read
       10,859 vs 13,960, gate read 3,102 vs 5,918, each inside W). Round 4's
-      unchanged Toolbox also tied reviewdog, so the tie is not the change's
+      unchanged Seikika also tied reviewdog, so the tie is not the change's
       doing. Every run in every arm printed the workflows before editing,
       which sets a floor the gate's output can't remove (ADJUDICATION.md)
     changed:

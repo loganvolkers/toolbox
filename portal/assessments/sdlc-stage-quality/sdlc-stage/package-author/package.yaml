@@ -1,4 +1,4 @@
-apiVersion: toolbox.dev/assessment/v1
+apiVersion: seikika.com/assessment/v1
 entity: sdlc-stage:package-author/package
 rubric: sdlc-stage-quality
 subjectHash: 4f3352a84b34
@@ -9,17 +9,17 @@ verdicts:
     verdict: fail
     reason: >-
       `checks: []` (portal/sdlc/stages/package-author.yaml:81). The nearest
-      thing is crates/toolbox-model/src/package.rs:105-106 `content_hash`, a
-      SHA-256 over a directory tree that is pinned in toolbox.lock. It is not
+      thing is crates/seikika-model/src/package.rs:105-106 `content_hash`, a
+      SHA-256 over a directory tree that is pinned in seikika.lock. It is not
       an archive, and nothing builds a package twice and compares digests.
     suggestion: >-
-      Add `toolbox package build` (tar with sorted entries, zeroed mtimes and
+      Add `seikika package build` (tar with sorted entries, zeroed mtimes and
       owners), and a CI step that builds packages/github-actions twice and
       diffs the SHA-256.
   - criterion: agent-can-complete
     verdict: fail
     reason: >-
-      There are no commands (`commands: []`, line 80), and `toolbox --help`
+      There are no commands (`commands: []`, line 80), and `seikika --help`
       has no package subcommand. The deterministic archive and OCI mirror are
       a proposal in docs/design/packages.md §4.4 (lines 206-213). Package tool
       pins carry a version and installer ids but no checksum
@@ -31,7 +31,7 @@ verdicts:
     verdict: fail
     reason: >-
       With no archive, consumers clone the package source at a tag
-      (crates/toolbox-model/src/package.rs:85-91), and its tools are pinned by
+      (crates/seikika-model/src/package.rs:85-91), and its tools are pinned by
       version only (`zizmor: {version: 1.32.0, install: …}`,
       packages/github-actions/fragments/github-actions.yaml:60-62). Checksums
       come only if each consumer's mise or aqua adds them.
@@ -42,9 +42,9 @@ verdicts:
     verdict: fail
     reason: >-
       An author could tar a package themselves, but the resolver pins
-      directory content hashes (crates/toolbox-model/src/load.rs:344-351) and
+      directory content hashes (crates/seikika-model/src/load.rs:344-351) and
       cannot fetch or verify an archive. Producing a consumable archive
-      therefore needs a change in toolbox-model and toolbox-cli.
+      therefore needs a change in seikika-model and seikika-cli.
     suggestion: >-
       Specify the archive format and digest in the package schema, so third
       parties can produce it with standard tools and the resolver accepts it.
@@ -70,5 +70,5 @@ verdicts:
 summary: >-
   Missing. Git packages are pinned by directory content hash, but there is
   no deterministic archive, no command, no check and no checksummed tool
-  pins. Every criterion fails until `toolbox package build` and an archive
+  pins. Every criterion fails until `seikika package build` and an archive
   resolver exist.

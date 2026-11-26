@@ -2,24 +2,24 @@
 
 **Outcome against the bar in [README.md](./README.md) §5, §5.1, §5.2 and §5.3:**
 
-- **Round 1: Toolbox lost to reviewdog.** G1 holds, but G2 (calls) and G3 (read) **fail**.
+- **Round 1: Seikika lost to reviewdog.** G1 holds, but G2 (calls) and G3 (read) **fail**.
 - **Round 2: the improvement is not shown under §5.** G1′ and G6 hold, and every other hypothesis
   is inconclusive. G5 is inconclusive twice over: its gap is inside the noise, and arm B's read
   moved more than its range allows. The designer's reading in §0.3 is correct.
 - **Round 3: the improvement is shown under §5.1.** G7 and G8 hold, and G9 and G10 are
   inconclusive, not failed. G11, G2″ and G3″ are inconclusive.
-- **Round 4: Toolbox does not beat reviewdog under §5.2.** G12 and G16 hold. G13 (calls)
+- **Round 4: Seikika does not beat reviewdog under §5.2.** G12 and G16 hold. G13 (calls)
   **fails**. G14, G15 and G17 are inconclusive. The designer's labels in §0.5 are correct, but
   four of its explanations are wrong or unsupported (see *The designer's reading of round 4,
   checked*).
-- **Round 5: Toolbox does not beat reviewdog under §5.3.** G18 holds. G19 (calls), G20 (read) and
+- **Round 5: Seikika does not beat reviewdog under §5.3.** G18 holds. G19 (calls), G20 (read) and
   G21 (gate read) are inconclusive, and so are G22 and G23 (attribution). None fails. The
   designer's labels in §0.6 are correct, but two of its factual claims are wrong and one is
   unsupported (see *The designer's reading of round 5, checked*).
 
 What round 3 shows is narrow. The change cut what an agent reads from the gate, from a median of
 18,751 characters to 3,876. That gap is more than four times the wider range. It does not show
-that a repair costs fewer calls or less reading in all, or that Toolbox's gate is cheaper than
+that a repair costs fewer calls or less reading in all, or that Seikika's gate is cheaper than
 reviewdog's: every such hypothesis in rounds 2 and 3 is inconclusive, and round 1's are failures.
 The round 3 measure was chosen after rounds 1 and 2 were seen, and it measures the product change
 almost directly. Read G8 as confirming that the change does what it says, not as an independent
@@ -35,13 +35,13 @@ confirms that the second change shortened the gate's output, as G8 did for the f
 Round 5 neither wins nor loses: no comparison separates the arms. Arm A's medians are below reviewdog's on all three measures: 3 calls
 against 4, 10,859 characters read against 13,960, and 3,102 of gate output against 5,918. Every gap
 is inside the wider range, and no correction of the missing results changes that (threat 24). That
-Toolbox no longer loses is not the change's doing. Round 4's Toolbox, run alongside as A⁻, also ties reviewdog on every
-measure. And the same Toolbox that took a median of 7 calls in round 4 took 4 in round 5
+Seikika no longer loses is not the change's doing. Round 4's Seikika, run alongside as A⁻, also ties reviewdog on every
+measure. And the same Seikika that took a median of 7 calls in round 4 took 4 in round 5
 (threat 22). Calls still turn on how the agent edits (threat 23). The gate-read gap is mostly what
 B's agents chained onto their gate runs: on the gates' own output, the arms are 52 characters apart
 (threat 25).
 
-**The Toolbox changes between rounds (`dc42499` before round 2, `76a1140` before round 4,
+**The Seikika changes between rounds (`dc42499` before round 2, `76a1140` before round 4,
 `c1f9b22` before round 5) fit (P5). The rival changes (`3f1b225` before round 4, `eb45c5d` before
 round 5) and the measure change `295b0d3` are harness-only (P4).** One caution on `c1f9b22`: its
 five-line gap fill is what quotes the planted typo (fit audit). No run was excluded or rerun, every
@@ -60,7 +60,7 @@ and reproduced each arm's first gate output from a fresh copy of the planted bra
 ## Per hypothesis
 
 Medians are over an arm's runs in a round. The range is maximum minus minimum, and *W* is the wider
-of the two ranges compared. A is the changed Toolbox, A⁻ (rounds 3 to 5) the previous one, and B
+of the two ranges compared. A is the changed Seikika, A⁻ (rounds 3 to 5) the previous one, and B
 is reviewdog. Subscripts in G4–G5 are round numbers. Round 5's *read* is `read` in `r5.tsv`, with a
 missing `read_file` result imputed (§5.3).
 
@@ -114,18 +114,18 @@ Not registered, and reported only:
 - In round 5, arm A's gate read is above A⁻'s, as §5.3 expected: 3,102 against 2,603, a gap of
   499 ≤ *W* = 1,486.
 
-## Is the improvement shown? Does Toolbox beat reviewdog?
+## Is the improvement shown? Does Seikika beat reviewdog?
 
 | Rule | Requires | Result |
 |---|---|---|
 | §5 (round 2) | G6 holds, at least one of G4 and G5 holds, neither fails | **Not shown.** G6 holds. G4 and G5 are both inconclusive |
 | §5.1 (round 3) | G7 holds, G8 holds, neither G9 nor G10 fails | **Shown.** G7 and G8 hold. G9 and G10 are inconclusive |
-| §5.2 (round 4): Toolbox beats reviewdog | G12 holds, at least one of G13, G14 and G15 holds, none of them fails | **Not shown.** G12 holds. G13 fails, and G14 and G15 are inconclusive. The rule fails on both of its last two conditions |
-| §5.3 (round 5): Toolbox beats reviewdog | G18 holds, at least one of G19, G20 and G21 holds, none of them fails | **Not shown.** G18 holds. G19, G20 and G21 are inconclusive. The rule fails on its second condition only |
+| §5.2 (round 4): Seikika beats reviewdog | G12 holds, at least one of G13, G14 and G15 holds, none of them fails | **Not shown.** G12 holds. G13 fails, and G14 and G15 are inconclusive. The rule fails on both of its last two conditions |
+| §5.3 (round 5): Seikika beats reviewdog | G18 holds, at least one of G19, G20 and G21 holds, none of them fails | **Not shown.** G18 holds. G19, G20 and G21 are inconclusive. The rule fails on its second condition only |
 
 The §5.1 verdict follows the rule as written, and the rule was committed before round 3's
 workspaces were built. Its scope is that the gate is cheaper to read. The total cost of a repair is
-unproven, and Toolbox is not shown to beat reviewdog on any measure.
+unproven, and Seikika is not shown to beat reviewdog on any measure.
 
 The §5.2 verdict is robust. Correcting the undercounted read can't make G14 or G15 hold (threats 13
 and 14). G13's failure survives removing either cause of the gap (threat 12). §5.2 says the round
@@ -141,7 +141,7 @@ The §5.3 verdict is robust to every correction this adjudication could make:
 | Both | 4,588 ≤ 12,023 | 2,816 ≤ 4,342 | 345 ≤ 12,023 |
 
 No correction of `reviewdog-3` could make G21 hold: B's other four runs alone span 4,342. G20's
-*W* is arm A's own spread. Even without `toolbox-1`, the one A run with an imputed result, arm A's
+*W* is arm A's own spread. Even without `seikika-1`, the one A run with an imputed result, arm A's
 read ranges 9,576. §5.3 says the round is not rerun.
 
 ## Fit audit (P5)
@@ -150,19 +150,19 @@ read ranges 9,576. §5.3 says the round is not rerun.
 
 | Check | Finding |
 |---|---|
-| Touches no harness file | `git show --stat dc42499` lists `crates/toolbox-cli/src/{causes,report}.rs`, `crates/toolbox-cli/tests/ratchet.rs`, the new decision, `docs/design/{ratchets,results-spec,root-causes}.md`, the `report` skill, `portal/results.json` and one site page. None is under `experiments/gate-repair-ab/` (0 of 10 files). No harness schema or convention is referenced in the code |
+| Touches no harness file | `git show --stat dc42499` lists `crates/seikika-cli/src/{causes,report}.rs`, `crates/seikika-cli/tests/ratchet.rs`, the new decision, `docs/design/{ratchets,results-spec,root-causes}.md`, the `report` skill, `portal/results.json` and one site page. None is under `experiments/gate-repair-ab/` (0 of 10 files). No harness schema or convention is referenced in the code |
 | box-ab friction #4 existed before 60723d6 | Yes. `experiments/box-ab/README.md` at `703b53a`, line 87, reads "The gate's regression lists every finding in the file and doesn't mark the new ones; the baseline keeps only counts (B6, A6) · **Open:** needs a fingerprint per finding". It was added in `144caf2` (2026-11-22 17:48), before 60723d6 (2026-11-23 10:59) |
 | root-causes C1 existed before 60723d6 | Yes. At `703b53a`, `docs/design/root-causes.md` line 75 reads "C1 · Evidence identity: say which evidence items are new … by recording items (or their fingerprints) in the baseline". The file's history goes back to `0b9b225` and `567ed12` (2026-11-21). The results spec's "fingerprints per finding" row also predates it |
 | Uses outside the harness are real | Mostly. (a) The bare `--baseline` gate that the stdout change targets is the command `AGENTS.md` tells maintainers to run on this repo. (b) Evidence keys and `+` marking reach the regression detail and therefore `--verdict` and the action's annotations. (c) `--against` gets the same keys (`results_at` now returns them). One overstatement: README §0.2 lists "`actions/report` and CI logs" as uses, but `actions/report/run.sh` passes `-o md --out`, so the verdict-on-stdout half of the change does not reach the action or CI. Only the evidence-marking half does |
-| Shaped to the measure? | Partly motivated by it, but it doesn't favour Toolbox. The decision says the verdict moved to stdout because "some agent harnesses record only stdout", and README §0.2 says "so the measure now counts it". That brings A's verdict *into* the count, which raises A's measured read. The part that cut A's read is dropping the full report from a gate's default output. A user reading a terminal benefits from that just as much |
+| Shaped to the measure? | Partly motivated by it, but it doesn't favour Seikika. The decision says the verdict moved to stdout because "some agent harnesses record only stdout", and README §0.2 says "so the measure now counts it". That brings A's verdict *into* the count, which raises A's measured read. The part that cut A's read is dropping the full report from a gate's default output. A user reading a terminal benefits from that just as much |
 | Other changes between rounds | Between rounds 1 and 2: `3762524` (README, round 2 prompts). Between rounds 2 and 3: `d30dcb2` (harness: `count.py` adds `gateChars`, `collect.py` reads `arms.tsv`, `round.sh` adds the A⁻ arm, rounds 1–2 re-collected) and `d53569d` (README). No product change. `git diff --stat dc42499 d53569d -- crates ui schema packages` is empty. The re-collection added `gateRead` and left every round 1–2 call and read figure unchanged. Every harness change applies to all arms |
 
 ### Before round 4: `76a1140` fits, and `3f1b225` is a harness-only rival fix (P4)
 
 | Check | Finding |
 |---|---|
-| `76a1140` touches no harness file | `git show --stat 76a1140` lists 12 files: `crates/toolbox-cli/src/{causes,report}.rs`, `tests/ratchet.rs`, the new decision, two design docs, `packages/github-actions` (fragment and tests), the `report` skill, `portal/STANDARD.md`, `portal/results.json` and `portal/tests`. None is under `experiments/gate-repair-ab/`. The code and package diffs never mention openfga, `pr-summary`, reviewdog or the benchmark. The decision cites the benchmark as its motivation, which P5 allows |
-| `76a1140` names uses outside the harness, and they are real | Yes. (a) The bare `--baseline` gate, the command `AGENTS.md` gives maintainers, and `--against`. (b) `actions/report`: `run.sh` passes `--out`, so the summary goes to stderr (`report.rs`). `run.sh` captures that stderr in `ratchet.txt`, then prints it to the CI log and the job summary. Unlike `dc42499`'s stdout half, this change does reach the action. The annotations come from `--verdict`, which is unchanged, as the decision says. (c) `packages/github-actions` is included by Toolbox for Toolbox and the starter, and the same commit updates `portal/results.json` and `portal/tests`. The decision's `short-functions` example was not re-run here |
+| `76a1140` touches no harness file | `git show --stat 76a1140` lists 12 files: `crates/seikika-cli/src/{causes,report}.rs`, `tests/ratchet.rs`, the new decision, two design docs, `packages/github-actions` (fragment and tests), the `report` skill, `portal/STANDARD.md`, `portal/results.json` and `portal/tests`. None is under `experiments/gate-repair-ab/`. The code and package diffs never mention openfga, `pr-summary`, reviewdog or the benchmark. The decision cites the benchmark as its motivation, which P5 allows |
+| `76a1140` names uses outside the harness, and they are real | Yes. (a) The bare `--baseline` gate, the command `AGENTS.md` gives maintainers, and `--against`. (b) `actions/report`: `run.sh` passes `--out`, so the summary goes to stderr (`report.rs`). `run.sh` captures that stderr in `ratchet.txt`, then prints it to the CI log and the job summary. Unlike `dc42499`'s stdout half, this change does reach the action. The annotations come from `--verdict`, which is unchanged, as the decision says. (c) `packages/github-actions` is included by Seikika for Seikika and the starter, and the same commit updates `portal/results.json` and `portal/tests`. The decision's `short-functions` example was not re-run here |
 | Shaped to the measure? | Tuned on this task, but not shaped to the harness. Each part came from round 3's transcripts of this one task (decision §1), and each has a general reading. Two cautions. First, the SHA hint helps only when the repository already pins the action elsewhere, which the planted task guarantees (README §3). Second, `zizmor-clean` no longer counts `unpinned-uses` in any portal, which changes a gold rule's meaning; `pinned-to-sha` still fails on it. Neither is a harness file, schema or convention |
 | `3f1b225` is harness-only | Yes: two files, `harness/quality-gate.sh` and `harness/round.sh` |
 | `3f1b225` fixes rival friction recorded in round 3 | Yes. README §0.4 records "A pass says nothing" (two of five round 3 B agents ran zizmor by hand after a pass). The fix prints `quality gate: passed` (21 characters with the newline) only when both tools pass, and it worked: every B pass printed it, and no round 4 B run ran a tool by hand. The `round.sh` change vendors A⁻'s package from `PREV_CHECKOUT`, because the package changed, and stops discarding `setup.sh`'s stderr. It affects only how A⁻ is set up |
@@ -170,12 +170,12 @@ read ranges 9,576. §5.3 says the round is not rerun.
 
 ### Before round 5: `c1f9b22` fits, with one caution; `eb45c5d` and `295b0d3` are harness-only
 
-**`c1f9b22`, the Toolbox change (P5):**
+**`c1f9b22`, the Seikika change (P5):**
 
 | Check | Finding |
 |---|---|
-| Touches no harness file | `git show --stat c1f9b22` lists 12 files: `crates/toolbox-cli/src/causes.rs`, `crates/toolbox-connector-workspace/src/workflows.rs`, the decision, two design docs, `packages/github-actions` (fragment, fixture and tests), the `report` skill, and `portal/{fixtures,results.json,tests}`. None is under `experiments/gate-repair-ab/`. The code never names openfga, `pr-summary`, reviewdog or the benchmark. Its doc comment and unit test use `# v6.0.2`, the version the planted fork pins, as the example comment. That is text, not behaviour |
-| Names uses outside the harness, and they are real | Yes, verified. (a) This repository's own gate. On an exported copy with one `ci.yml` checkout unpinned, `toolbox report portal --skip runner,github-actions --baseline portal/results.json` quotes `17 \|       - uses: actions/checkout@v6`. Its hint reads `pinned elsewhere as actions/checkout@11d5960a… # v4`, as the decision says. (b) `actions/report/run.sh` passes `--out` and captures stderr in `ratchet.txt`, which it prints to the log and the job summary. So the quote reaches the action. (c) Toolbox for Toolbox includes the package: the same commit updates `portal/results.json`, `portal/fixtures` and `portal/tests` |
+| Touches no harness file | `git show --stat c1f9b22` lists 12 files: `crates/seikika-cli/src/causes.rs`, `crates/seikika-connector-workspace/src/workflows.rs`, the decision, two design docs, `packages/github-actions` (fragment, fixture and tests), the `report` skill, and `portal/{fixtures,results.json,tests}`. None is under `experiments/gate-repair-ab/`. The code never names openfga, `pr-summary`, reviewdog or the benchmark. Its doc comment and unit test use `# v6.0.2`, the version the planted fork pins, as the example comment. That is text, not behaviour |
+| Names uses outside the harness, and they are real | Yes, verified. (a) This repository's own gate. On an exported copy with one `ci.yml` checkout unpinned, `seikika report portal --skip runner,github-actions --baseline portal/results.json` quotes `17 \|       - uses: actions/checkout@v6`. Its hint reads `pinned elsewhere as actions/checkout@11d5960a… # v4`, as the decision says. (b) `actions/report/run.sh` passes `--out` and captures stderr in `ratchet.txt`, which it prints to the log and the job summary. So the quote reaches the action. (c) Seikika for Seikika includes the package: the same commit updates `portal/results.json`, `portal/fixtures` and `portal/tests` |
 | General, not tailored to the planted branch | **Mostly.** The quote applies to any entity with a `path` field and any finding text with `at line N`, read from the working tree, at most 16 lines of 120 characters. `unpinnedAt` and `shaPins` are computed for every workflow. One caution: gaps of up to five lines are filled. On the planted branch the findings name lines 31, 36, 37, 39 and 40. The four-line gap from 31 to 36 holds `needs: lnt`, which no finding names, because actionlint points at the job key on line 31. So the quote shows the typo only because of the gap fill. Five lines is a plausible default, but a designer who had seen this task chose it. The pin hint still helps only where the repository already pins the action (threat 19) |
 | Other product changes | None. No product file differs between `76a1140` and `39d1114`, and `git diff c1f9b22 HEAD -- crates packages schema ui Cargo.toml Cargo.lock` is empty. So arm A is exactly A⁻ plus `c1f9b22` |
 
@@ -184,7 +184,7 @@ read ranges 9,576. §5.3 says the round is not rerun.
 | Check | Finding |
 |---|---|
 | Harness-only | Yes: one file, `harness/quality-gate.sh` |
-| Fixes rival friction recorded in round 4 | **Not as framed.** §0.5's friction list records no reviewdog friction ("reviewdog's pass line worked"). The friction §5.3 cites is true of round 4's transcripts: all five B runs printed `git diff main` and `sed -n` output, four after the gate and `reviewdog-5` just before it in the same command. But arm A did the same (D01M84EPMMR9740K4N25G7A6FAY §1), and the friction was first written down in §5.3 itself. The change is better read as P4's first rule, the same level of help in every arm: Toolbox's gate now quotes code, so the rival's does too. That is a legitimate reason |
+| Fixes rival friction recorded in round 4 | **Not as framed.** §0.5's friction list records no reviewdog friction ("reviewdog's pass line worked"). The friction §5.3 cites is true of round 4's transcripts: all five B runs printed `git diff main` and `sed -n` output, four after the gate and `reviewdog-5` just before it in the same command. But arm A did the same (D01M84EPMMR9740K4N25G7A6FAY §1), and the friction was first written down in §5.3 itself. The change is better read as P4's first rule, the same level of help in every arm: Seikika's gate now quotes code, so the rival's does too. That is a legitimate reason |
 | Filtering unchanged | Yes. On the planted branch it reports the same six findings (four from zizmor, two from actionlint), all five B runs passed with it, and all five score correct. actionlint prints no snippet for the expression finding inside a `run:` block, so one finding of six stays unquoted. That is actionlint's own output, passed through |
 | Makes the rival stronger | **Not shown.** It quotes the source, as §5.3 says. But in round 5 every B run still printed the files (5 of 5). The failing output grew by 1,003 characters, against arm A's 562: the quoted source, plus zizmor's notes and documentation links. On the registered measures, that counts against B (threat 26). It changes no label, since no comparison with B holds |
 
@@ -193,14 +193,14 @@ read ranges 9,576. §5.3 says the round is not rerun.
 | Check | Finding |
 |---|---|
 | Harness-only, every arm | Yes: `harness/count.py` and `harness/collect.py`. `collect.py` passes every run's checkout to `count.py`, whatever its arm. Registered in §5.3 before the run, so P6's "never swapped after the run" holds |
-| Correct | Yes. On round 4's `toolbox-5`, the imputed `release.yaml` result equals the recorded one character for character (9,562). Round 4's three missing `pull_request.yaml` reads impute to 13,515 each |
-| For or against arm A | **Against it on G20, both ways on G23.** Only `read_file` is imputed, and only A and A⁻ used it (`toolbox-1`, `toolbox-10`). It raised A's median read from 9,372 to 10,859 and A⁻'s from 9,027 to 9,238. It also widened A⁻'s range from 2,403 to 13,886, which is G23's *W*. The call it doesn't impute is in arm B (`reviewdog-3`). Leaving that at 0 widens B's ranges, which also works against A on G21. No label depends on it (threat 24) |
+| Correct | Yes. On round 4's `seikika-5`, the imputed `release.yaml` result equals the recorded one character for character (9,562). Round 4's three missing `pull_request.yaml` reads impute to 13,515 each |
+| For or against arm A | **Against it on G20, both ways on G23.** Only `read_file` is imputed, and only A and A⁻ used it (`seikika-1`, `seikika-10`). It raised A's median read from 9,372 to 10,859 and A⁻'s from 9,027 to 9,238. It also widened A⁻'s range from 2,403 to 13,886, which is G23's *W*. The call it doesn't impute is in arm B (`reviewdog-3`). Leaving that at 0 widens B's ranges, which also works against A on G21. No label depends on it (threat 24) |
 
 **Other changes between rounds 4 and 5.** After round 4's results (`bb5aa20`) come `866caec`
 (reading), `1794e9c` (adjudication), `2b1d3a3` (publication) and `39d1114` (a merge of `main`).
 Then `c1f9b22`, `295b0d3`, `eb45c5d`, `0249ecb` (pre-registration), `9ca1605` (prompts), `eb2c1af`
 (results) and `c8efdea` (reading). `git diff 0249ecb HEAD -- experiments/gate-repair-ab/harness` is
-empty. The prompt templates, `setup.sh`, `round.sh` and `harness/toolbox.yaml` are unchanged since
+empty. The prompt templates, `setup.sh`, `round.sh` and `harness/seikika.yaml` are unchanged since
 round 4's prompts (`ac040c8`).
 
 ## Protocol checks
@@ -209,9 +209,9 @@ round 4's prompts (`ac040c8`).
 
 | Rule | Verdict | Evidence |
 |---|---|---|
-| P1 committed prompts | **Pass** | All 27 launched prompts (each transcript's first user message) equal `prompts/rendered/r<n>/<run>.md` at that round's prompt commit, byte for byte. Runtime creation times are after the prompt commits: round 1 launched 11:00:06 (prompts in `60723d6`, 10:59:31), round 2 at 11:15:49 (`3762524`, 11:14:48), round 3 at 11:21:28 (`21a2a44`, 11:20:17). Results commits follow (`19d6965`, `967a508`, `94258f7`). Round 3's bar (`d53569d`, 11:19:27) predates its workspaces (built 11:19:35–11:20:09). `prompts/toolbox.md` and `prompts/reviewdog.md` differ only in the gate line. A and A⁻ share one template. Caveat: commit times are set by the author and the branch is unpushed; the runtime's `createdAtMs` corroborates them |
+| P1 committed prompts | **Pass** | All 27 launched prompts (each transcript's first user message) equal `prompts/rendered/r<n>/<run>.md` at that round's prompt commit, byte for byte. Runtime creation times are after the prompt commits: round 1 launched 11:00:06 (prompts in `60723d6`, 10:59:31), round 2 at 11:15:49 (`3762524`, 11:14:48), round 3 at 11:21:28 (`21a2a44`, 11:20:17). Results commits follow (`19d6965`, `967a508`, `94258f7`). Round 3's bar (`d53569d`, 11:19:27) predates its workspaces (built 11:19:35–11:20:09). `prompts/seikika.md` and `prompts/reviewdog.md` differ only in the gate line. A and A⁻ share one template. Caveat: commit times are set by the author and the branch is unpushed; the runtime's `createdAtMs` corroborates them |
 | P2 repeated runs | **Pass** | Rounds 1–2 had 3 runs per arm and round 3 had 5. Listing every cloud agent created since 10:30 gives 31: 27 scored runs, 2 dry runs, 1 telemetry probe and this adjudicator. Nothing was excluded or rerun. The TSVs report every run |
-| P3 frozen rounds | **Pass, with notes** | No Rust changed in `703b53a..60723d6` (or `7c8dc45..703b53a`), or in `dc42499..d53569d`. `packages/github-actions` is the same at `703b53a` and `d53569d`. Round 1's workspaces were built at 10:58:00, before `60723d6` was committed (10:59:31), from a tree whose Toolbox content was identical. The round 1 results commit names `7c8dc45`, the README names `60723d6`/`703b53a`, and these agree in substance. A⁻'s binary (built in `/tmp/tb-old` at `703b53a`) hashes differently from round 1's, but its first gate output equals round 1's arm A byte for byte apart from commit hashes. Round 3's arm A output likewise equals round 2's |
+| P3 frozen rounds | **Pass, with notes** | No Rust changed in `703b53a..60723d6` (or `7c8dc45..703b53a`), or in `dc42499..d53569d`. `packages/github-actions` is the same at `703b53a` and `d53569d`. Round 1's workspaces were built at 10:58:00, before `60723d6` was committed (10:59:31), from a tree whose Seikika content was identical. The round 1 results commit names `7c8dc45`, the README names `60723d6`/`703b53a`, and these agree in substance. A⁻'s binary (built in `/tmp/tb-old` at `703b53a`) hashes differently from round 1's, but its first gate output equals round 1's arm A byte for byte apart from commit hashes. Round 3's arm A output likewise equals round 2's |
 | P4 symmetric arms | **Pass** | Neither prompt has a recipe, and the workspaces differ only in the gate (`setup.sh`). No rival friction was fixed or deferred, and the transcripts show none that blocks B. In round 3, two B agents (`reviewdog-3`, `reviewdog-4`) ran zizmor directly after their gate passed, to confirm. That may hint that a silent pass is under-informative; it wasn't triaged, and there is no further round |
 | P5 no harness-shaped product | **Pass** | Fit audit above |
 | P6 a reported measure | **Pass, with gaps** | *Calls* and *read* were shown for both arms in the dry run. *Gate read* is derived from the same transcript field by `count.py` and was computed for both arms of rounds 1–2 before round 3 was registered. Gaps: stdout only (threat 1), two `read_file` results missing (threat 2), and how gate commands are matched (threat 3). None removes a measure for an arm, so no label is void |
@@ -223,7 +223,7 @@ round 4's prompts (`ac040c8`).
 |---|---|---|
 | P1 committed prompts | **Pass** | All 15 launched prompts (each transcript's only user message) equal `prompts/rendered/r4/<run>.md` at `ac040c8` exactly, not just modulo trailing whitespace. Runs were launched between 14:27:00.249 and 14:27:01.104 (runtime `createdAtMs`), after `ac040c8` (14:25:48). A and A⁻ share one template. A and B differ only in the workspace path and the gate line |
 | P2 repeated runs | **Pass** | 5 runs per arm. The runtime lists exactly 15 agents named "Repair run r4 …" since 11:30, plus this adjudicator. None was excluded or rerun. `count.py` on each transcript reproduces every calls, read, gate runs and gate read figure in `r4.tsv` |
-| P3 frozen round | **Pass, with notes** | Order: `76a1140` (14:21:58), `3f1b225` (14:24:10), pre-registration `02f9de5` (14:24:57), workspaces (14:25:07–14:25:42), prompts `ac040c8` (14:25:48), launches (14:27:00), results `bb5aa20` (14:29:46), reading `866caec` (14:30:29). §5.2 is unchanged since `02f9de5`. Every workspace's `quality-gate.sh` and `.toolbox/toolbox.yaml` equal `02f9de5`'s. A's vendored package equals `02f9de5`'s, and A⁻'s equals `d163449`'s. A's binary is byte-identical to `target/debug/toolbox`. It was built at 14:20:39, before `76a1140` was committed, but no source file is newer than it and the tree is clean. A⁻'s was built at 14:24:59 in a clean worktree of `d163449`. From a fresh copy of the planted branch, A's binary prints 1,541 bytes (1,529 characters) on stdout and nothing on stderr. That equals all five A transcripts' first gate output and the 1,541 in §5.2. A⁻ prints 2,892 bytes, byte-identical to round 3's arm A transcripts. Commit times are set by the author. The runtime's times and file mtimes agree with them |
+| P3 frozen round | **Pass, with notes** | Order: `76a1140` (14:21:58), `3f1b225` (14:24:10), pre-registration `02f9de5` (14:24:57), workspaces (14:25:07–14:25:42), prompts `ac040c8` (14:25:48), launches (14:27:00), results `bb5aa20` (14:29:46), reading `866caec` (14:30:29). §5.2 is unchanged since `02f9de5`. Every workspace's `quality-gate.sh` and `.seikika/seikika.yaml` equal `02f9de5`'s. A's vendored package equals `02f9de5`'s, and A⁻'s equals `d163449`'s. A's binary is byte-identical to `target/debug/seikika`. It was built at 14:20:39, before `76a1140` was committed, but no source file is newer than it and the tree is clean. A⁻'s was built at 14:24:59 in a clean worktree of `d163449`. From a fresh copy of the planted branch, A's binary prints 1,541 bytes (1,529 characters) on stdout and nothing on stderr. That equals all five A transcripts' first gate output and the 1,541 in §5.2. A⁻ prints 2,892 bytes, byte-identical to round 3's arm A transcripts. Commit times are set by the author. The runtime's times and file mtimes agree with them |
 | P4 symmetric arms | **Pass** | Fit audit above. No rival friction is left deferred |
 | P5 no harness-shaped product | **Pass** | Fit audit above |
 | P6 a reported measure | **Pass, with a larger gap** | All three measures are reported for every run. Three of the five A runs' `read_file` results are missing, which cuts their read by about 13.5k characters each. One A⁻ result appears cut short (threat 13). As in round 3, a measure is reported for every arm, so no label is void. But G14's and G17's labels rest on incomplete data |
@@ -239,10 +239,10 @@ adjudication does not edit it.
 |---|---|---|
 | P1 committed prompts | **Pass** | All 15 launched prompts (each transcript's only user message) equal `prompts/rendered/r5/<run>.md` at `9ca1605` exactly, not just modulo trailing whitespace, and the files are unchanged at HEAD. Runs were launched between 15:10:01.202 and 15:10:01.694 (runtime `createdAtMs`), after `9ca1605` (15:08:29). A and A⁻ share one template. A and B differ only in the workspace path (two lines) and the gate line. The templates are unchanged since round 4, and each rendered prompt equals round 4's apart from the round number |
 | P2 repeated runs | **Pass** | 5 runs per arm. Since 14:30 UTC the runtime lists exactly 15 agents named "Repair run r5 …", plus round 4's adjudicator and this one. The three transcript fetches between 15:01 and 15:08 re-read round 4's runs only. None was excluded or rerun. `count.py` on each transcript reproduces every calls, read, `readRecorded`, `missing`, gate runs and gate read figure in `r5.tsv` |
-| P3 frozen round | **Pass** | Order: `c1f9b22` (15:04:07), `295b0d3` and `eb45c5d` (15:05:43), pre-registration `0249ecb` (15:06:32), A⁻'s binary (15:07:25, in a clean worktree of `76a1140`), A's binary (15:07:34), workspaces (15:07:39–15:08:14), prompts `9ca1605` (15:08:29), launches (15:10:01), results `eb2c1af` (15:11:54), reading `c8efdea` (15:13:19). §5.3 is unchanged since `0249ecb`. Every B workspace's `quality-gate.sh` and every Toolbox workspace's `.toolbox/toolbox.yaml` equal `0249ecb`'s harness. A's vendored package equals `packages/github-actions` at `0249ecb` file by file, and A⁻'s equals `76a1140`'s. A's binary is byte-identical to `target/debug/toolbox`. Unlike rounds 1 and 4, it was built after its commit, and no source file is newer. From fresh copies of the planted branch: A prints 2,091 characters (2,103 bytes) on stdout, nothing on stderr, quoting 11 lines. A⁻ prints 1,529, and B prints 2,225 on stdout and 192 on stderr. All three match §5.3. Every recorded first gate result contains that output exactly (14 of 15; `reviewdog-3`'s is missing). A⁻'s output also appears verbatim in all five of round 4's arm A transcripts. Commit times are set by the author, but the runtime's times and file mtimes agree with them |
+| P3 frozen round | **Pass** | Order: `c1f9b22` (15:04:07), `295b0d3` and `eb45c5d` (15:05:43), pre-registration `0249ecb` (15:06:32), A⁻'s binary (15:07:25, in a clean worktree of `76a1140`), A's binary (15:07:34), workspaces (15:07:39–15:08:14), prompts `9ca1605` (15:08:29), launches (15:10:01), results `eb2c1af` (15:11:54), reading `c8efdea` (15:13:19). §5.3 is unchanged since `0249ecb`. Every B workspace's `quality-gate.sh` and every Seikika workspace's `.seikika/seikika.yaml` equal `0249ecb`'s harness. A's vendored package equals `packages/github-actions` at `0249ecb` file by file, and A⁻'s equals `76a1140`'s. A's binary is byte-identical to `target/debug/seikika`. Unlike rounds 1 and 4, it was built after its commit, and no source file is newer. From fresh copies of the planted branch: A prints 2,091 characters (2,103 bytes) on stdout, nothing on stderr, quoting 11 lines. A⁻ prints 1,529, and B prints 2,225 on stdout and 192 on stderr. All three match §5.3. Every recorded first gate result contains that output exactly (14 of 15; `reviewdog-3`'s is missing). A⁻'s output also appears verbatim in all five of round 4's arm A transcripts. Commit times are set by the author, but the runtime's times and file mtimes agree with them |
 | P4 symmetric arms | **Pass, with a note** | `eb45c5d` is harness-only and gives the rival the same kind of help. It is not a fix of friction §0.5 recorded, and it is not shown to make the rival stronger (fit audit). No rival friction from round 4 is left deferred |
 | P5 no harness-shaped product | **Pass, with a caution** | Fit audit above: the gap fill |
-| P6 a reported measure | **Pass, with gaps** | All three measures are reported for every run. Three calls have no recorded result: two `read_file` calls, imputed (`toolbox-1` in A, `toolbox-10` in A⁻), and one terminal command, not imputed (`reviewdog-3` in B). The measure change was registered before the run. No label rests on the missing data (threat 24) |
+| P6 a reported measure | **Pass, with gaps** | All three measures are reported for every run. Three calls have no recorded result: two `read_file` calls, imputed (`seikika-1` in A, `seikika-10` in A⁻), and one terminal command, not imputed (`reviewdog-3` in B). The measure change was registered before the run. No label rests on the missing data (threat 24) |
 | P7 independent adjudication | **Pass, with a caveat** | See threat 30 |
 
 The catalog entry `portal/benchmarks/gate-repair-ab.yaml` has nothing on round 5: `frozenAt`
@@ -256,13 +256,13 @@ there are smaller errors elsewhere in the record. None changes a label.
 | Claim | Finding |
 |---|---|
 | The per-arm table and the six readings | **Correct.** Every figure matches `r4.tsv` and this recomputation |
-| "The gap comes from how the agents edited, not from what the gate told them … it decides G13" | **Wrong in part.** Edits and gate runs account for 2 of the 4-call gap, and exploration for the other 2 (threat 12). Either half alone fails G13. In `toolbox-3` and `toolbox-4`, the separate lookup was for the version comment, which the gate's SHA hint leaves out. Their notes say "I'll search for that comment to match it" and "Next I'm looking for the version comment". Those calls follow from what the gate's output left out |
+| "The gap comes from how the agents edited, not from what the gate told them … it decides G13" | **Wrong in part.** Edits and gate runs account for 2 of the 4-call gap, and exploration for the other 2 (threat 12). Either half alone fails G13. In `seikika-3` and `seikika-4`, the separate lookup was for the version comment, which the gate's SHA hint leaves out. Their notes say "I'll search for that comment to match it" and "Next I'm looking for the version comment". Those calls follow from what the gate's output left out |
 | "arm A's read fell to reviewdog's level" | **Not supported.** It holds for the recorded figures only. Three A runs' reads of `pull_request.yaml` have no recorded result. Corrected, A's median is about 23.1k, over twice B's (threat 13) |
-| Arm A: every run made two search-and-replace edits; "Four of five first read a file, which that tool requires" | **The count is correct, the reason is wrong.** The tool doesn't require a read. `toolbox-2` read no file, and `toolbox-5` read only `release.yaml` before editing `pull_request.yaml` too. A⁻'s `toolbox-6` and `toolbox-10` also edited without a read. All of those edits succeeded |
+| Arm A: every run made two search-and-replace edits; "Four of five first read a file, which that tool requires" | **The count is correct, the reason is wrong.** The tool doesn't require a read. `seikika-2` read no file, and `seikika-5` read only `release.yaml` before editing `pull_request.yaml` too. A⁻'s `seikika-6` and `seikika-10` also edited without a read. All of those edits succeeded |
 | Arm B: both edits in one `python3` heredoc, with the gate rerun in the same command | **Correct** for all five runs |
-| Arm A⁻: two runs (`toolbox-7`, `toolbox-8`) used a heredoc, three used search-and-replace, "with the same gate output as round 3's arm A" | **Correct.** The output is byte-identical |
+| Arm A⁻: two runs (`seikika-7`, `seikika-8`) used a heredoc, three used search-and-replace, "with the same gate output as round 3's arm A" | **Correct.** The output is byte-identical |
 | "So this is agent style, not a property of either gate" | **Not shown.** Heredoc editing was 0 of 5 in A, 2 of 5 in A⁻ and 5 of 5 in B. The arms differ in more than the gate's output; for example, every B agent printed the gate's shell script before its first gate run. The split doesn't say what caused it |
-| Every A run looked up `upload-artifact` after the gate named its SHA; three in a separate call, a fourth with the grep tool | **Correct.** `toolbox-2`, `-3` and `-4` used a separate call. The result of `toolbox-1`'s grep matched the `actions/upload-artifact` lines in `release.yaml` and `scorecard.yml` |
+| Every A run looked up `upload-artifact` after the gate named its SHA; three in a separate call, a fourth with the grep tool | **Correct.** `seikika-2`, `-3` and `-4` used a separate call. The result of `seikika-1`'s grep matched the `actions/upload-artifact` lines in `release.yaml` and `scorecard.yml` |
 | Every diff copies the version comments (`# v6.0.2`, `# v7.0.1`), and the hint doesn't print them | **Correct.** All 15 diffs are identical and carry both comments. The first gate output contains no `# v` |
 | reviewdog-5's 5,099 characters came from `git diff main` in its first gate command and an edit in its second | **Correct.** 3,236 + 1,863 |
 | No B run checked a pass by running a tool by hand | **Correct.** No round 4 command ran zizmor or actionlint outside a gate |
@@ -290,24 +290,24 @@ supported for only one run of three. None changes a label.
 |---|---|
 | The per-arm table and the six readings | **Correct.** Every figure matches `r5.tsv`, `count.py`'s recount of all 15 transcripts, and this recomputation |
 | "The designer predicted that G20, G22 and G23 would hold, and none did" | **Correct.** The other three predictions were right |
-| "Two A runs (`toolbox-1`, `toolbox-10`) read `pull_request.yaml` with no recorded result" | **Wrong.** `toolbox-10` is arm A⁻ (`arms.tsv`). One A run and one A⁻ run have the missing read. The 13,515 imputed for each is correct |
+| "Two A runs (`seikika-1`, `seikika-10`) read `pull_request.yaml` with no recorded result" | **Wrong.** `seikika-10` is arm A⁻ (`arms.tsv`). One A run and one A⁻ run have the missing read. The 13,515 imputed for each is correct |
 | `reviewdog-3` chained `git diff main` onto its first gate run, and its result is missing; about 4,300 characters; corrected ranges about 4,900 and 4,300; no label changes | **Correct.** Rebuilt as a recorded result is (`git diff main` is 1,645 characters, then the gate's 2,225), it is 4,272. The corrected ranges are 4,925 and 4,342 |
 | "Every run printed the branch's files or diff (15 of 15)" before editing, "from about 3,500 to more than 15,000 characters a run" | **Correct.** Every run printed them with `git show`, `git diff`, `sed -n`, `cat` or `read_file`, including all five A runs after a gate that had quoted the lines. The range is right, but those commands also carry chained lookups, so not all of it is reading the branch |
-| The gate leaves out the fix for `needs: lnt`; actionlint doesn't name the jobs that exist | **Correct.** Neither gate names `lint`. Arm A's quote shows lines 31–40, and `needs: lnt` only through the gap fill. Four runs grepped for the job names (`toolbox-6`, `toolbox-10`, `reviewdog-2`, `reviewdog-3`). The rest read them in the files they printed |
-| Three A runs made both edits in one `python3` heredoc, with the gate rerun in the same command, in 3 calls each; the two that used search-and-replace took 6 | **Correct.** `toolbox-2`, `-3` and `-5`; `toolbox-1` and `-4` |
-| "Editing style moved" (round 4: no A heredoc runs) | **Correct as a count, but not caused by the change.** The same Toolbox went from 0 heredoc runs of 5 in round 4 (as arm A) to 3 of 5 in round 5 (as A⁻). The move happened in both Toolbox arms (threat 22) |
+| The gate leaves out the fix for `needs: lnt`; actionlint doesn't name the jobs that exist | **Correct.** Neither gate names `lint`. Arm A's quote shows lines 31–40, and `needs: lnt` only through the gap fill. Four runs grepped for the job names (`seikika-6`, `seikika-10`, `reviewdog-2`, `reviewdog-3`). The rest read them in the files they printed |
+| Three A runs made both edits in one `python3` heredoc, with the gate rerun in the same command, in 3 calls each; the two that used search-and-replace took 6 | **Correct.** `seikika-2`, `-3` and `-5`; `seikika-1` and `-4` |
+| "Editing style moved" (round 4: no A heredoc runs) | **Correct as a count, but not caused by the change.** The same Seikika went from 0 heredoc runs of 5 in round 4 (as arm A) to 3 of 5 in round 5 (as A⁻). The move happened in both Seikika arms (threat 22) |
 | All five B runs used a heredoc | **Correct** |
 | "four made a separate SHA lookup (4 calls)" | **Wrong in one run.** `reviewdog-2`, `-4` and `-5` looked up the `upload-artifact` pin in a later call of its own. `reviewdog-3` looked up both pins in the same call as its file print, as `reviewdog-1` did. Its extra call is its first: it printed the gate script without running the gate |
-| "No A heredoc run made a separate lookup: they copied the pin from the gate's hint" | **The first half is correct; the second is supported for one run of three.** No A run made a separate SHA lookup. But `toolbox-3` and `toolbox-5` grepped for `actions/checkout` and `upload-artifact` in the same call as their file print. Only `toolbox-2` ran no lookup, so only there is the hint clearly the source of the pin. A⁻'s heredoc runs, whose hint lacks the version comment, took 3, 3 and 4 calls. `toolbox-7` and `-8` chained the lookup into their print, as A's did |
-| The status list: Toolbox "no longer loses" to reviewdog | **Correct as a summary of the labels, but not due to the change.** Round 4's Toolbox (A⁻) also ties reviewdog on every measure in round 5 |
+| "No A heredoc run made a separate lookup: they copied the pin from the gate's hint" | **The first half is correct; the second is supported for one run of three.** No A run made a separate SHA lookup. But `seikika-3` and `seikika-5` grepped for `actions/checkout` and `upload-artifact` in the same call as their file print. Only `seikika-2` ran no lookup, so only there is the hint clearly the source of the pin. A⁻'s heredoc runs, whose hint lacks the version comment, took 3, 3 and 4 calls. `seikika-7` and `-8` chained the lookup into their print, as A's did |
+| The status list: Seikika "no longer loses" to reviewdog | **Correct as a summary of the labels, but not due to the change.** Round 4's Seikika (A⁻) also ties reviewdog on every measure in round 5 |
 | §5.3: "This makes the rival stronger" | **Not shown** (fit audit) |
 | §5.3: the first gate output rose from 1,529 characters to 2,091 and quotes 11 lines; reviewdog's from 1,222 to 2,225 on stdout, with 192 on stderr | **Correct, and reproduced.** These are characters now (2,091 is 2,103 bytes) |
-| §5.3: the measure change reproduces round 4's `toolbox-5` (9,562) and the 13,515 | **Correct** |
+| §5.3: the measure change reproduces round 4's `seikika-5` (9,562) and the 13,515 | **Correct** |
 
 Smaller errors in the record:
 
-- D01M84EPMMR9740K4N25G7A6FAY §1 says "four of five Toolbox runs read `pull_request.yaml` before
-  editing it" in round 4. Three did (`toolbox-1`, `-3` and `-4`). `toolbox-5` read only
+- D01M84EPMMR9740K4N25G7A6FAY §1 says "four of five Seikika runs read `pull_request.yaml` before
+  editing it" in round 4. Three did (`seikika-1`, `-3` and `-4`). `seikika-5` read only
   `release.yaml`.
 - That decision's `decided: 2026-11-23T15:10:00Z` is later than its commit (15:04:07). It is the
   minute the round was launched.
@@ -327,7 +327,7 @@ Smaller errors in the record:
    - G10 becomes about 7.8k ≤ 22.8k;
    - G5 becomes 20,229 ≤ 20,880. That is close, but G5 is inconclusive by its noise control anyway.
 2. **Two `read_file` results are missing from the transcript (not disclosed in the README).** In
-   round 2 `toolbox-3` and round 3 `toolbox-5`, both arm A, the call to read `pull_request.yaml` has
+   round 2 `seikika-3` and round 3 `seikika-5`, both arm A, the call to read `pull_request.yaml` has
    no `tool_result`, so *read* counts 0 for it. The whole file is 12,932 characters. Adding about
    13.5k to both runs changes no label:
    - G3′ becomes B − A = 895;
@@ -341,30 +341,30 @@ Smaller errors in the record:
    scripts/quality-gate.sh`, `ls ../bin`, and Python edits chained before the gate. What the gates
    alone print when failing on the planted branch:
    - reviewdog: 1,222 characters;
-   - the changed Toolbox: 2,867;
-   - the previous Toolbox: about 15.7k on stdout plus stderr.
+   - the changed Seikika: 2,867;
+   - the previous Seikika: about 15.7k on stdout plus stderr.
 
    G8 is robust to this: the first gate run alone differs by about 12.8k, against *W* = 3,189. G11
    is not. With the gate's own output only, reviewdog's would very likely be the smaller, so G11's
-   inconclusive label is generous to Toolbox. The label stands because it follows the measure as
+   inconclusive label is generous to Seikika. The label stands because it follows the measure as
    registered.
 4. **Read includes the runtime's wrapper.** `count.py` measures `str(tool_result)`, which adds
    about 520 characters of JSON per terminal call (16,200 counted against 15,677 of output). The
    overhead scales with calls, and it is the same per call in every arm.
 5. **The round 3 measure was chosen after rounds 1 and 2 were seen (disclosed in §5.1).** G8 is
    close to a manipulation check: the change shrank the gate's output, and G8 measures the gate's
-   output. It was registered before round 3, and the comparison between both Toolboxes in one round
+   output. It was registered before round 3, and the comparison between both Seikikaes in one round
    removes drift between rounds. Both are real strengths. But round 3's guards (G9, G10) and the
    comparisons with the rival (G11, G2″, G3″) all stayed inconclusive.
 6. **The agents are close to deterministic, and correctness is at its ceiling.** Round 2
-   `toolbox-3` and round 3 `toolbox-5` are separate sessions in separate workspaces, yet they made
+   `seikika-3` and round 3 `seikika-5` are separate sessions in separate workspaces, yet they made
    the same six tool calls with the same result sizes (read 11,021, gate read 3,876). All 27 runs
    produced the same diff. The spread in *read* comes mostly from whether an agent ran one broad
    `cat`/`grep` over the workflows (14–22k characters), which is a choice unrelated to the gate. So
    with 3–5 runs, *read* has a few modes rather than a distribution. The correctness hypotheses
    can't separate arms on this task.
 7. **Asymmetry between arms is inherent, not added.** A's gate scores the whole portal, so it
-   reports eight regressions, including Toolbox's own pin rules, where B reports six findings. B's
+   reports eight regressions, including Seikika's own pin rules, where B reports six findings. B's
    gate is a short script that every B agent read with `cat`, and that counts toward B's read. The
    prompts differ only in the gate command. The planted job sets `timeout-minutes`, so A's extra
    timeout rule adds no work.
@@ -408,10 +408,10 @@ Smaller errors in the record:
     - If arm A explored as little as B, its median would be 5, which also fails.
 
     So the label doesn't hinge on editing style.
-13. **Read is undercounted for arm A, more than in round 3.** In `toolbox-1`, `-3` and `-4`, the
+13. **Read is undercounted for arm A, more than in round 3.** In `seikika-1`, `-3` and `-4`, the
     `read_file` of `pull_request.yaml` has no `tool_result`, so `count.py` counts 0 for it. Using
-    `toolbox-5`'s recorded `read_file` as a template, a full read of the file on `pr` would be
-    13,515 characters. In A⁻'s `toolbox-9`, the same read records only the first 49 of 347 lines,
+    `seikika-5`'s recorded `read_file` as a template, a full read of the file on `pr` would be
+    13,515 characters. In A⁻'s `seikika-9`, the same read records only the first 49 of 347 lines,
     1,758 characters, even though its arguments ask for the whole file. Whether that agent saw more
     is unknown. Sensitivity:
     - Correcting A, A becomes 10,692; 20,464; 23,057; 23,276; 23,812 (median 23,057, range
@@ -431,7 +431,7 @@ Smaller errors in the record:
 
     Measured on the gates' output alone, G15 would fail. It is inconclusive because the registered
     measure counts what B's agents chained. The label stands as registered, and it is generous to
-    Toolbox, as G11's was in round 3. The pre-registration disclosed this (§5.2).
+    Seikika, as G11's was in round 3. The pre-registration disclosed this (§5.2).
 15. **The P4 fix made the rival stronger.** It added 21 characters to each B run's gate read, and no
     B agent ran a tool by hand to confirm a pass. Round 3's B median was 4 calls, and round 4's is 3.
     That may be the fix or chance. Either way, it widened G13's gap. That is what P4 asks for.
@@ -463,7 +463,7 @@ Smaller errors in the record:
     before writing §5.3. Two tries at "beats reviewdog" raise the chance of a win by chance. No
     comparison with the rival held, so nothing here needs discounting. A later win on this task
     should be read against all five rounds.
-22. **The same Toolbox moved by 3 calls between rounds.** Round 4's arm A and round 5's A⁻ run the
+22. **The same Seikika moved by 3 calls between rounds.** Round 4's arm A and round 5's A⁻ run the
     same product. No product file differs between `76a1140` and `39d1114`, the first gate output is
     byte-identical, and the prompts and set-up are equal apart from the round number. Yet its calls
     went from 6, 6, 7, 7, 7 (median 7, range 1) to 3, 3, 4, 6, 7 (median 4, range 4). Its heredoc
@@ -487,14 +487,14 @@ Smaller errors in the record:
     can hold only if arm A also explores less than B in nearly every run.
 24. **Missing results, and an imputation that covers only `read_file`.** Three calls have no
     recorded result:
-    - the `read_file` of `pull_request.yaml` in `toolbox-1` (A) and `toolbox-10` (A⁻), each imputed
+    - the `read_file` of `pull_request.yaml` in `seikika-1` (A) and `seikika-10` (A⁻), each imputed
       as 13,515;
     - `reviewdog-3`'s first gate command, counted as 0. Rebuilt as a recorded result is, it would be
       4,272 characters.
 
-    The robustness table under *Does Toolbox beat reviewdog?* shows that no label moves with
+    The robustness table under *Does Seikika beat reviewdog?* shows that no label moves with
     `readRecorded`, with `reviewdog-3` corrected, or with both. The imputation also assumes the agent
-    received the whole file. Round 4's A⁻ `toolbox-9` shows that a read can come back cut short
+    received the whole file. Round 4's A⁻ `seikika-9` shows that a read can come back cut short
     (threat 13).
 25. **Gate read counts whole commands, and on the gates' own output the arms are 52 characters
     apart.**
@@ -522,8 +522,8 @@ Smaller errors in the record:
     byte-identical, and equal to those of rounds 1–3. Three A runs have a gate read of exactly 3,102,
     and two B runs 5,918. With so little spread inside an arm, one run's habit sets *W*, as in round
     4 (threat 16). G21's *W* comes from `reviewdog-3`'s missing result and `reviewdog-4`'s chained
-    print. G20's comes from the two A runs that read the whole of `pull_request.yaml`: `toolbox-1`
-    (imputed) and `toolbox-2` (with `cat`).
+    print. G20's comes from the two A runs that read the whole of `pull_request.yaml`: `seikika-1`
+    (imputed) and `seikika-2` (with `cat`).
 29. **Tuned on this task; external validity.** Each part of `c1f9b22` answers something round 4's
     agents did on this one planted pull request. Its gap fill is just wide enough to quote the
     planted typo (fit audit). The decision's example on this repository reproduces, so the change
@@ -558,9 +558,9 @@ Smaller errors in the record:
   frozen commits, and the planted branch re-gated in copies with A's, A⁻'s and B's gates. Round 4's
   transcripts, re-read for §5.3's account of round 4 and for A⁻'s gate output.
 - An exported copy of this repository at `c8efdea`, with one `ci.yml` checkout unpinned, gated with
-  `toolbox report portal` (the decision's example).
+  `seikika report portal` (the decision's example).
 - `git log`/`git show` of `60723d6`, `19d6965`, `dc42499`, `3762524`, `967a508`, `d30dcb2`,
   `d53569d`, `21a2a44`, `94258f7`, `144caf2` (box-ab friction table), `703b53a` (root-causes C1),
   `d163449`, `76a1140`, `3f1b225`, `02f9de5`, `ac040c8`, `bb5aa20`, `866caec`, `39d1114`,
   `c1f9b22`, `295b0d3`, `eb45c5d`, `0249ecb`, `9ca1605`, `eb2c1af` and `c8efdea`;
-  `actions/report/run.sh` and `crates/toolbox-cli/src/report.rs` (where the summary goes).
+  `actions/report/run.sh` and `crates/seikika-cli/src/report.rs` (where the summary goes).

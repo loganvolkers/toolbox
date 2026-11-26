@@ -16,7 +16,7 @@ FPID=$!
 trap 'kill $FPID; $RUNAS "$PGBIN/pg_ctl" -D "$PGDIR/data" -m fast stop >/dev/null' EXIT
 until curl -s 127.0.0.1:8080/healthz | grep -q SERVING; do sleep 0.5; done
 export FGA_API_URL=http://127.0.0.1:8080
-STORE=$("$FGA" store create --name toolbox | python3 -c "import json,sys; print(json.load(sys.stdin)['store']['id'])")
+STORE=$("$FGA" store create --name seikika | python3 -c "import json,sys; print(json.load(sys.stdin)['store']['id'])")
 "$FGA" model write --store-id "$STORE" --file model.fga >/dev/null
 P="psql -q -X -h $PGDIR -p 54329 -U postgres -v ON_ERROR_STOP=1"
 $P -v store="$STORE" -f tuple-view.sql

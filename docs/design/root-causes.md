@@ -1,7 +1,7 @@
 # Root Causes: Every Regression Says Why
 
 *Status: built, 2026-11-21 (D01M7ZZYZ1SXSTHDZQK8A1CZMMN). About the box
-([toolbox-and-tools.md](./toolbox-and-tools.md)): what the box remembers about its tools, and how
+([seikika-and-tools.md](./seikika-and-tools.md)): what the box remembers about its tools, and how
 it explains a change. It serves the operator SDLC (a gate that explains itself) and the user SDLC
 (an agent fixing what failed).*
 
@@ -9,12 +9,12 @@ it explains a change. It serves the operator SDLC (a gate that explains itself) 
 
 ## 1. Conclusion
 
-**A failing gate must say why, down to a file, a line, a rule and a command.** Toolbox's ratchet
+**A failing gate must say why, down to a file, a line, a rule and a command.** Seikika's ratchet
 compares each entity's scorecard results with a baseline (or another commit, `--against`). Every
 regression it reports now carries a root-cause chain:
 
 ```
-✗ worse   maintainer-repo · repo:loganvolkers/toolbox: constituents-at-least-bronze now fails
+✗ worse   maintainer-repo · repo:seikika/seikika: constituents-at-least-bronze now fails
     constituents-at-least-bronze: maintainer-docs is none
   ↳ maintainer-docs · its lowest entity: fell silver → none
     ↳ maintainer-docs · doc:docs/design/zz-probe.md: new (none)
@@ -66,7 +66,7 @@ entity was removed, the chain says so instead of guessing.
 
 | Surface | Form |
 |---|---|
-| `toolbox report --baseline` and `--against` | New findings, each once, under their entity, with the rules that report them; the chain indented under every other `✗ worse` line (D01M84CCDH1ZWF9726SVDDM1JDX). The lines of the entity's file those findings name, quoted (D01M84EPMMR9740K4N25G7A6FAY). Without `-o` or `--out`, the verdict is the whole output, on stdout (D01M841J2SN4V3AVZZ5D91YAR51) |
+| `seikika report --baseline` and `--against` | New findings, each once, under their entity, with the rules that report them; the chain indented under every other `✗ worse` line (D01M84CCDH1ZWF9726SVDDM1JDX). The lines of the entity's file those findings name, quoted (D01M84EPMMR9740K4N25G7A6FAY). Without `-o` or `--out`, the verdict is the whole output, on stdout (D01M841J2SN4V3AVZZ5D91YAR51) |
 | `--verdict FILE` | Each regression has `detail` (strings, including the source record) and `causes` (nested regressions of the same shape) |
 | The `actions/report` action | One annotation per regression, with the whole chain |
 
@@ -92,6 +92,6 @@ not their explanations).
 
 ## Sources
 
-- [crates/toolbox-cli/src/causes.rs](../../crates/toolbox-cli/src/causes.rs): the chain
-- [crates/toolbox-cli/tests/ratchet.rs](../../crates/toolbox-cli/tests/ratchet.rs): `a_repository_level_regression_names_its_root_cause`, and the evidence on a rule's regression
+- [crates/seikika-cli/src/causes.rs](../../crates/seikika-cli/src/causes.rs): the chain
+- [crates/seikika-cli/tests/ratchet.rs](../../crates/seikika-cli/tests/ratchet.rs): `a_repository_level_regression_names_its_root_cause`, and the evidence on a rule's regression
 - [actions/report/run.sh](../../actions/report/run.sh): the annotations

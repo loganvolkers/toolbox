@@ -1,0 +1,53 @@
+apiVersion: seikika.com/assessment/v1
+entity: rule:seikika/operator-cli/args-described
+rubric: rule-quality
+subjectHash: b0a4f588cbfe
+assessor: {kind: agent, name: cursor-assessor-14, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: measures-intent
+    verdict: pass
+    reason: >-
+      `undocumentedArgs` lists every argument of the leaf command, positional
+      ones included, whose clap `get_help()` is empty, skipping only `help`
+      and `version` (crates/seikika-cli/src/main.rs:1215-1227). That is the
+      text `--help` shows next to each flag, and clap appends `[default: …]`
+      and `[env: …]` itself, so a passing command tells an agent each flag's
+      meaning and default, which is the rationale
+      (portal/standards/cli.yaml:126-128). It covers the 24 arguments of `run`
+      and the 15 of `report` as well as the small commands.
+  - criterion: hard-to-game
+    verdict: fail
+    reason: >-
+      Any non-empty help passes: unlike has-help's 10-character floor
+      (cli.yaml:100), there is no minimum, so `/// x` or `/// The out.` on
+      `derive --out` clears it. For a command with many arguments, such as
+      `run` (24) or `report` (15), a one-word comment per field is the
+      cheapest way through.
+    suggestion: >-
+      Have `seikika describe` also report arguments whose help is shorter than
+      10 characters or only restates the argument id, and check that list too,
+      so a one-word comment fails like a missing one.
+  - criterion: fix-leads-to-pass
+    verdict: pass
+    reason: >-
+      The evidence gives clap argument ids per command and the fix says to
+      give each a `///` comment; doing so makes `get_help()` non-empty and the
+      rule pass. The fix names no file, and the ids are field names, not flags
+      (`installer` for `tools config --for`, `as_user` for `--as`), but
+      grepping the id finds the field: in the `Command` variants of
+      crates/seikika-cli/src/main.rs, `ServeArgs` (main.rs:688) or the
+      `Options` structs of run.rs and report.rs.
+  - criterion: threshold-justified
+    verdict: pass
+    reason: >-
+      No number: every argument. Silver is set in
+      docs/design/seikika-for-seikika.md:105 and follows the prerequisite
+      principle in docs/design/thresholds.md:22-23: knowing that a command
+      exists and what it does (bronze has-help, documented) comes before using
+      each flag correctly.
+summary: >-
+  It measures what it says and its fix works, though the fix could name
+  the four places operator arguments are declared. Its weakness is that
+  any non-empty help counts, so a one-word comment per flag passes the
+  rule that is meant to stop an agent guessing formats.

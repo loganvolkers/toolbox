@@ -1,5 +1,5 @@
 # Examples and experiments (docs/design/example-standards.md).
-# Included by portal/toolbox.yaml; see portal/README.md for the layout.
+# Included by portal/seikika.yaml; see portal/README.md for the layout.
 
 kinds:
   # Example and experiment write-ups (docs/design/example-standards.md).
@@ -43,9 +43,9 @@ scorecards:
       source of truth.
     links:
     - title: Example standards
-      url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/example-standards.md
+      url: https://github.com/seikika/seikika/blob/main/docs/design/example-standards.md
     - title: 'Decision: examples are catalogued'
-      url: https://github.com/loganvolkers/toolbox/blob/main/docs/decisions/D01M7W5G0T00000000000000000.md
+      url: https://github.com/seikika/seikika/blob/main/docs/decisions/D01M7W5G0T00000000000000000.md
     owner: group:maintainers
     track: docs
     levels: [bronze, silver, gold]
@@ -77,7 +77,7 @@ scorecards:
       check: entity.commandLines > 0
       evidence: "[string(entity.commandLines) + ' command lines']"
       fix: >-
-        Name the command that checks this example (toolbox, cargo, npm, python,
+        Name the command that checks this example (seikika, cargo, npm, python,
         fga, or a ./run script). A reader should be able to reproduce it.
       rationale: >-
         An example nobody can run is a claim, not a procedure. Naming the check

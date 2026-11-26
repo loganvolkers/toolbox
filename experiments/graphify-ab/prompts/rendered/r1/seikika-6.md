@@ -1,0 +1,37 @@
+You are answering questions about the Seikika repository, checked out at /tmp/graphify-ab/r1/seikika-6. The project root is /tmp/graphify-ab/r1/seikika-6.
+
+Rules:
+- Work offline. Don't use the web or any network tool.
+- Read only files under /tmp/graphify-ab/r1/seikika-6. Don't read or search anything elsewhere on this machine.
+- Don't change any file under /tmp/graphify-ab/r1/seikika-6, except to write /tmp/graphify-ab/r1/seikika-6/ANSWERS.md.
+- Don't start subagents.
+- This project has a Cursor rule, `.cursor/rules/graphify.mdc`, that applies to you. Its text:
+
+<rule>
+This project has a graphify knowledge graph at graphify-out/.
+
+**MANDATORY: Before using Read, Grep, Glob, or Bash to explore the codebase, you MUST run graphify first:**
+- `graphify query "<question>"` — scoped subgraph for any codebase or architecture question
+- `graphify path "<A>" "<B>"` — dependency path between two symbols
+- `graphify explain "<concept>"` — all nodes related to a concept
+
+This applies to YOU and to every subagent you spawn. Include this rule explicitly in every subagent prompt that involves code exploration. Do not skip graphify because files are "already known" or because you are executing a plan — the graph surfaces cross-file dependencies and INFERRED edges that grep and Read cannot find.
+
+Only use Read/Grep/Glob directly when:
+1. graphify has already oriented you and you need to modify or debug specific lines
+2. `graphify-out/graph.json` does not exist yet
+
+- If `graphify-out/wiki/index.md` exists, navigate it instead of reading raw files
+- Read `graphify-out/GRAPH_REPORT.md` only for broad architecture review when query/path/explain do not surface enough context
+- After modifying code files, run `graphify update .` to keep the graph current (AST-only, no API cost)
+</rule>
+
+Answer the five questions below in /tmp/graphify-ab/r1/seikika-6/ANSWERS.md, with one `## Qn` heading per question. In each answer, state the facts and cite where they come from: the file, and the function, type or section. Answer from the code and docs as they are in /tmp/graphify-ab/r1/seikika-6. Where you are not sure, say so instead of guessing. Don't describe how you searched.
+
+- **Q1.** When a scorecard rule's connector data is missing, what outcome does the rule get, how does that affect the entity's level, and how does `seikika report --baseline` (the ratchet) treat it compared with a rule that fails? Name the decision and the functions involved.
+- **Q2.** When `seikika serve` runs an in-image connector, how do the connector's records get into the store and trigger a recompute? Name the functions, the transport, and the checks applied to the records on the way.
+- **Q3.** The oldest decision files have ids ending in a long run of zeros and a `legacy:` field, and newer ones don't. Why do decisions have these ids, how were the old ids' timestamps chosen, and what checks that a decision id cited in a document exists?
+- **Q4.** If `schema/connector-messages.schema.json` changed, which code would enforce the new schema, and at which points (runtime and check time) would a message that doesn't conform be rejected?
+- **Q5.** Trace `seikika get <id> --url <server>` from the CLI to the code that reads the entity. How is the request carried, and where are identity and visibility applied?
+
+When ANSWERS.md is written, reply with one line: DONE.

@@ -1,5 +1,5 @@
 ---
-"toolbox": minor
+"seikika": minor
 "alpha": minor
 "actions/demo": minor
 ---

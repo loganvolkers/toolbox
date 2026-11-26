@@ -3,10 +3,10 @@
 Is OpenFGA at least at parity with SpiceDB on the factors a team weighs when it picks a
 Zanzibar-style authorization server? The factors are performance, footprint, supply chain,
 modelling, operability and ecosystem. This experiment exists for the box, not for either tool:
-it is the second comparison Toolbox's report shows, after
+it is the second comparison Seikika's report shows, after
 [backstage-compare](../backstage-compare/README.md). It checks that the comparative scorecards
 (D01M857ZB468ZM2YS6GNSEG6YB9) and the report's Compare view work for a portal that is not
-Toolbox's own ([design-loop-efficiency-2026-11-24.md](../../docs/audits/design-loop-efficiency-2026-11-24.md),
+Seikika's own ([design-loop-efficiency-2026-11-24.md](../../docs/audits/design-loop-efficiency-2026-11-24.md),
 [design-audit.md](../../docs/design/design-audit.md)).
 
 The portal that scores it is [examples/openfga-portal](../../examples/openfga-portal/README.md).
@@ -82,7 +82,7 @@ output and either upholds the verdict or rescores it in `ADJUDICATION.md`.
 
 ### Known biases
 
-- The factors come from Toolbox's maintainers, the same people who own the portal that shows them.
+- The factors come from Seikika's maintainers, the same people who own the portal that shows them.
 - The modelling list was written from OpenFGA's feature names. Two of the facts, contextual
   tuples and multiple stores, are OpenFGA features, while consistency tokens and the change feed are
   SpiceDB strengths. The list may still favour OpenFGA.

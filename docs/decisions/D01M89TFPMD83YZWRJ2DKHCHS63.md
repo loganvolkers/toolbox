@@ -9,7 +9,7 @@ files missing a verdict for any rubric criterion. A change to a rubric and its a
 files should land together. This keeps routine changes from requiring a new judgment and an
 independent review when a source hash changes.
 
-Release preflight and explicitly high-risk changes use `toolbox assess check --require-fresh`.
+Release preflight and explicitly high-risk changes use `seikika assess check --require-fresh`.
 The self-portal CI job selects this mode for pull requests labeled `require-fresh-assessments`.
 Reviewers use the reported missing judgments to identify any additional independent review needed.
 

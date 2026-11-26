@@ -1,6 +1,6 @@
 # Read answers (tenant B)
 
-Answers from `OUT/entities.ndjson`, `RUN.md`, `FORGE.md`, and `portal/toolbox.yaml`.
+Answers from `OUT/entities.ndjson`, `RUN.md`, `FORGE.md`, and `portal/seikika.yaml`.
 
 1. **Projects on tenant B:** 1 (`GAMMA`)
 

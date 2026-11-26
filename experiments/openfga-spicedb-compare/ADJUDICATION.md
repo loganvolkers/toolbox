@@ -58,8 +58,8 @@ published. SpiceDB fails **7**, not 8, because `sbom` passes.
 | 4 | RESULTS.md:229–230 | SpiceDB's images "may carry build attestations; they were not checked" | They carry SLSA v1 provenance and an SPDX SBOM, both unsigned | BuildKit attestation manifests in the image index. The provenance has an empty `builder.id`. There is no cosign `sha256-….sig` tag, the registry gives 404 for referrers, and the GitHub attestations API gives 404 for both the index and the amd64 digest | No. `provenance` asks for signed, verifiable provenance, so false stands |
 | 5 | RESULTS.md:222 | "consistent with log sampling (unverified)" | **Verified** | OpenFGA builds its logger with `zap.NewProductionConfig()` (`pkg/logger/logger.go:178`). In zap v1.28.0, which OpenFGA's go.mod pins, that config sets `Sampling{Initial: 100, Thereafter: 100}` | No |
 | 6 | RESULTS.md:220 | SpiceDB logged "about 140 MB per round" | 120–217 MB (139, 211, 209, 217 and 120 MB) | `logs/round-*-spicedb.log` sizes | No |
-| 7 | RESULTS.md:238–241 | The scorecard description and track text "say '23k-relationship corpus'" | Both say 33k. `6d83040` changed them, after the run | `git show 6d83040 -- examples/openfga-portal/standards/vs-spicedb.yaml examples/openfga-portal/toolbox.yaml` | No, but it is a post-run edit to a pre-registered file and belongs under *Deviations* (§1) |
-| 8 | RESULTS.md:61 | The any-rule verdict is in `toolbox-report.js` | Derive computes it (`crates/toolbox-derive/src/lib.rs:763–766`, per D01M857ZB468ZM2YS6GNSEG6YB9), and the report renders it | Source | No |
+| 7 | RESULTS.md:238–241 | The scorecard description and track text "say '23k-relationship corpus'" | Both say 33k. `6d83040` changed them, after the run | `git show 6d83040 -- examples/openfga-portal/standards/vs-spicedb.yaml examples/openfga-portal/seikika.yaml` | No, but it is a post-run edit to a pre-registered file and belongs under *Deviations* (§1) |
+| 8 | RESULTS.md:61 | The any-rule verdict is in `seikika-report.js` | Derive computes it (`crates/seikika-derive/src/lib.rs:763–766`, per D01M857ZB468ZM2YS6GNSEG6YB9), and the report renders it | Source | No |
 | 9 | RESULTS.md:163, *Deviations* | The harness was `a411799+uncommitted` | Also, two harness files changed **after** the run: `load/main.go` at 22:19:35 and `facts.py` at 22:19:34. The run ended at 22:11:41, `load/loadgen` was rebuilt at 22:19:37, and `6d83040` was committed at 22:24:10. The committed harness is not proven to be the one that ran | File mtimes. The round and facts JSON have exactly the fields the committed code writes | Unknown, probably no. Disclose it |
 | 10 | run.sh:39 at `6d83040` | Tools pinned | The run's harness installed govulncheck `@latest`, unlike slsa-verifier and cosign. The version that ran is recorded (v1.10.0, DB 2026-11-24T15:56Z), and `c2f7219` pinned it to v1.10.0 after the run | Source | No. My rerun with the same version and DB reproduces all 7 binary-mode ids, and 0 for OpenFGA |
 
@@ -72,7 +72,7 @@ published. SpiceDB fails **7**, not 8, because `sbom` passes.
 - `vs-spicedb.yaml`: two commits. `6d83040` changes one line, the performance scorecard's
   description, from "23k-relationship corpus" to "33k-relationship corpus". No `check`, `value`,
   `better`, `tolerance`, level or factor grouping changed.
-- `examples/openfga-portal/toolbox.yaml`: the track text got the same 23k → 33k change in
+- `examples/openfga-portal/seikika.yaml`: the track text got the same 23k → 33k change in
   `6d83040`. Later, `c21955f` added a "Not covered" sentence that names the datastores, nodes and
   durations the comparison omits. Both are descriptions only.
 
@@ -152,7 +152,7 @@ errors, check mismatches and list errors are 0 in all ten rounds.
 - govulncheck in binary mode, 0 and 7 ids, the same as `raw/`, but see correction 1.
 
 **The records and the report agree.** `comparisons/openfga.yaml` and `spicedb.yaml` hold these
-medians and facts, field for field. `target/debug/toolbox report .. -o json --skip
+medians and facts, field for field. `target/debug/seikika report .. -o json --skip
 runner,github-actions`, run from the portal's checkout with output to `/tmp`, gives the same 30
 per-rule standings as RESULTS.md. My own standing code, which does not reuse snapshot.py, agrees
 with both.
@@ -310,7 +310,7 @@ OpenFGA's off-by-default cache over a development-only adapter.
    - the 23k slip was fixed in `6d83040`;
    - SpiceDB's images carry unsigned provenance and an SPDX SBOM;
    - the any-rule verdict is computed in derive.
-4. **Deviations.** Add the post-run edit to `vs-spicedb.yaml` and `toolbox.yaml`, the post-run
+4. **Deviations.** Add the post-run edit to `vs-spicedb.yaml` and `seikika.yaml`, the post-run
    harness edits, and the three list passes.
 5. **The performance headline.** Qualify it with the cache defaults and the memory adapter. The
    cache probes above are a cheap way to show readers both configurations. A Postgres arm, which
@@ -326,9 +326,9 @@ OpenFGA's off-by-default cache over a development-only adapter.
   `774f45a`.
 - [examples/openfga-portal/standards/vs-spicedb.yaml](../../examples/openfga-portal/standards/vs-spicedb.yaml),
   [comparisons/](../../examples/openfga-portal/comparisons),
-  [toolbox.yaml](../../examples/openfga-portal/toolbox.yaml).
+  [seikika.yaml](../../examples/openfga-portal/seikika.yaml).
 - [D01M857ZB468ZM2YS6GNSEG6YB9](../../docs/decisions/D01M857ZB468ZM2YS6GNSEG6YB9.md);
-  `crates/toolbox-derive/src/lib.rs:755–766, 1224–1262`; `report-ui/src/views/compare.js` at
+  `crates/seikika-derive/src/lib.rs:755–766, 1224–1262`; `report-ui/src/views/compare.js` at
   `c21955f`; [dx-benchmarks.md](../../docs/design/dx-benchmarks.md) §2.
 - OpenFGA at [v1.23.0](https://github.com/openfga/openfga/tree/v1.23.0) (`d67ba7b`): `README.md:226`,
   `cmd/run/run.go:525–545`, `pkg/server/config/config.go:43, 46, 893–900, 936–942`,
@@ -353,5 +353,5 @@ OpenFGA's off-by-default cache over a development-only adapter.
 - The GitHub REST API, read-only: contributors with `anon=1`, releases, org repositories, and
   attestations (404 for both SpiceDB image digests).
 - Tools: govulncheck v1.10.0 (vuln DB 2026-11-24T15:56Z) in binary and source mode, slsa-verifier
-  v2.7.1, cosign v2.6.1, gh 2.103.0, go1.27.3 and go1.27.4, and `target/debug/toolbox` (built
+  v2.7.1, cosign v2.6.1, gh 2.103.0, go1.27.3 and go1.27.4, and `target/debug/seikika` (built
   22:24, before `c21955f`; its derive output is unaffected by that commit).

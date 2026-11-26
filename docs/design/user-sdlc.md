@@ -1,7 +1,7 @@
 # User SDLC (Layer 4): Building Apps on a Portal
 
 *Status: design, 2026-11-20 (D63). Layer 4 of [the four SDLC layers](../sdlc.md). A **user** is
-anyone who builds on a running portal rather than on Toolbox or the portal itself. Examples:*
+anyone who builds on a running portal rather than on Seikika or the portal itself. Examples:*
 - *an agent answering "who owns this?";*
 - *a team's on-call bot;*
 - *a dashboard in Claude Artifacts;*
@@ -33,30 +33,30 @@ The parts that make layer 4 first-class are still to build:
 
 | App | Interface | Example |
 |---|---|---|
-| Agent (in a harness) | MCP (`/mcp`, or `toolbox mcp` over stdio) | "Who owns ledger, and why isn't it verified?" → `owner_of` |
+| Agent (in a harness) | MCP (`/mcp`, or `seikika mcp` over stdio) | "Who owns ledger, and why isn't it verified?" → `owner_of` |
 | Dashboard / artifact | MCP or REST from Claude Artifacts, Cursor Canvas | A team scorecard view built on `query` and `scorecard_status` |
-| Script / CI check | CLI (`toolbox score … -o json`) or REST with a PAT | Fail a deploy when `ownership` is below bronze |
+| Script / CI check | CLI (`seikika score … -o json`) or REST with a PAT | Fail a deploy when `ownership` is below bronze |
 | Internal tool / bot | REST (`/v1/views/*`, `/v1/entities`) | On-call bot that posts owners and failing rules |
 | Self-service flow | REST/MCP previews and runs (M5) | Install an approved GitHub App with preview, confirm and verification |
 | Custom portal UI | UI extension contract (operator-owned bundle) | A rich action form; owned by operators, used by users |
 
 ## 3. The loop
 
-| Step | What the user does | What Toolbox provides | State |
+| Step | What the user does | What Seikika provides | State |
 |---|---|---|---|
 | **Discover** | Find tools, entities and actions | MCP `tools/list` with schemas and annotations; `list_actions`; `/v1/views/home` | ✅ |
 | | Get a typed contract | Per-portal OpenAPI 3.1 and generated TS/Python clients | Planned (v1-spec §7.2) |
 | | Get guidance for agents | Generated user plugin (skills per promoted action, portal instructions) | Planned ([agent-plugins.md](./agent-plugins.md)) |
-| **Develop** | Run against realistic data | `toolbox serve --fixtures` on the portal repo (or the reference portal); preview portals per operator PR | ✅ local; previews in M6 |
-| | Authenticate | PATs (`toolbox token create`), OIDC bearer tokens, the identity-aware proxy; dev header locally | ✅ |
+| **Develop** | Run against realistic data | `seikika serve --fixtures` on the portal repo (or the reference portal); preview portals per operator PR | ✅ local; previews in M6 |
+| | Authenticate | PATs (`seikika token create`), OIDC bearer tokens, the identity-aware proxy; dev header locally | ✅ |
 | | Authenticate an app | Service identities with their own relations (not a person's PAT) | Planned (§5) |
 | **Test** | Get deterministic reads | Snapshot ids on every response; `min_snapshot` to read your own writes | ✅ |
 | | Test the hidden-data path | Facet redaction markers that say which relation is needed, so apps handle "hidden" explicitly | ✅ |
-| | Check contracts | Schema-checked MCP tool inputs; stable problem codes (`not-found`, `forbidden`, `snapshot-not-ready` …) | ✅ codes; every built-in MCP tool contract-tested over `tools/call` (`crates/toolbox-api/tests/mcp.rs`, D65); a kit for users' own CI planned |
+| | Check contracts | Schema-checked MCP tool inputs; stable problem codes (`not-found`, `forbidden`, `snapshot-not-ready` …) | ✅ codes; every built-in MCP tool contract-tested over `tools/call` (`crates/seikika-api/tests/mcp.rs`, D65); a kit for users' own CI planned |
 | | Test actions | Previews are side-effect free; confirm tokens; postconditions | Preview gate ✅ (M3); runs in M5 |
 | **Deploy** | Run the app with least privilege | PAT or service identity scoped by OpenFGA relations | PATs ✅; service identities planned |
-| **Monitor** | See usage and failures | `toolbox_mcp_tool_calls_total`, audit of denials and runs | Partly (metrics planned per v1-spec §10.5) |
-| | Hear about changes | Versioned `/v1`, deprecation headers and notices, `toolbox plan` listing removed MCP tools for operators | `/v1` ✅; policy planned (§4) |
+| **Monitor** | See usage and failures | `seikika_mcp_tool_calls_total`, audit of denials and runs | Partly (metrics planned per v1-spec §10.5) |
+| | Hear about changes | Versioned `/v1`, deprecation headers and notices, `seikika plan` listing removed MCP tools for operators | `/v1` ✅; policy planned (§4) |
 
 ## 4. Stability contract (proposed)
 
@@ -68,7 +68,7 @@ layer 4 needs explicit promises:
 | REST paths and response shapes under `/v1` | Additive changes only within `/v1` | API tests + OpenAPI diff in CI (layer 1) |
 | MCP tool names, input schemas, `structuredContent` shapes | Additive within a major version | Tool-list snapshot tests (layer 1) |
 | Problem `code` values | Never repurposed | Tests |
-| Portal-defined kinds, fields, actions | Operators may change them; `toolbox plan` shows removed fields, actions and MCP tools so the operator sees which apps could break | `plan` (layer 2) |
+| Portal-defined kinds, fields, actions | Operators may change them; `seikika plan` shows removed fields, actions and MCP tools so the operator sees which apps could break | `plan` (layer 2) |
 | Snapshot ids | Monotonic per portal; `min_snapshot` semantics stable | Acceptance tests |
 
 Open: how users declare which portal fields they depend on, so `plan` can name the affected apps.

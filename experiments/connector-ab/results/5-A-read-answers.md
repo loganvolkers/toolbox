@@ -1,6 +1,6 @@
 # Phase 5 (Read) — arm A answers
 
-Source of truth: `OUT/entities.ndjson` (tenant B sync), `RUN.md`, `portal/toolbox.yaml`.
+Source of truth: `OUT/entities.ndjson` (tenant B sync), `RUN.md`, `portal/seikika.yaml`.
 
 ## 1. How many projects does tenant B have?
 
@@ -21,7 +21,7 @@ Source of truth: `OUT/entities.ndjson` (tenant B sync), `RUN.md`, `portal/toolbo
 
 ## 5. Which config fields switch tenants?
 
-`baseUrl` and `token` (in `TOOLBOX_CONNECTOR_CONFIG` and/or `portal/toolbox.yaml` → `connectors[].config`).
+`baseUrl` and `token` (in `SEIKIKA_CONNECTOR_CONFIG` and/or `portal/seikika.yaml` → `connectors[].config`).
 
 | Tenant | baseUrl                   | token            |
 |--------|---------------------------|------------------|

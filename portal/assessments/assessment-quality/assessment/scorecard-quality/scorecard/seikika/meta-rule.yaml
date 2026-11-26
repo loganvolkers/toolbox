@@ -1,0 +1,54 @@
+apiVersion: seikika.com/assessment/v1
+entity: assessment:scorecard-quality/scorecard:seikika/meta-rule
+rubric: assessment-quality
+subjectHash: cebe5a9ecac8
+assessor: {kind: agent, name: cursor-reviewer-35, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: supported
+    verdict: fail
+    reason: >-
+      The rule list, the explained fact and the design lines hold.
+      portal/standards/meta.yaml:413-573 is the meta-rule card. explains-why
+      starts at 426 and checks entity.explained; meta.rs:263 sets explained
+      from a filled rationale. The description at meta.yaml:389-394 names
+      Rules, reviewed by agents. Bronze is 414-441, the ratchet comment is
+      412, readable is 496 and thresholds.md:41, and pins-both-outcomes is
+      541-557. The explains-why fix at 431-433 names rationale:. Both outcomes
+      are pinned at portal/tests/standards.test.yaml:256-262.
+      scorecards-for-scorecards.md:138 says explains-why is built, :84 is L4,
+      and :140-144 lists the rules still proposed. Zero rules fail
+      explains-why in portal/results.json, and 71 fail pins-both-outcomes. The
+      spread does not match. The assessment says 272 rules, 21 none, 6 bronze,
+      44 silver and 201 gold. portal/results.json has 273 meta-rule entities:
+      21 none, 6 bronze, 44 silver and 202 gold.
+    suggestion: >-
+      Update the spread to portal/results.json as it is now: 273 rules, 21
+      none, 6 bronze, 44 silver and 202 gold. Keep 71 for pins-both-outcomes.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      The four passes survive the off-by-one. The card judges one rule's form,
+      bronze is reachable because explains-why fails nowhere, gold still
+      separates rules (71 fail pins-both-outcomes), and the open items at
+      scorecards-for-scorecards.md:140-144 are either not one rule's form or
+      owned by review-rule. Dropping a rationale clears explained, which is
+      what the experiment claims.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      The verdicts are the manifest and the design, not the exact headcount. A
+      second assessor counting 273 and 202 gold still passes every criterion
+      for the same reasons.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      The assessment has no fail or unsure verdict, so there is no suggestion
+      to apply. The experiment it reports, removing a rationale and seeing the
+      evidence name the rule, matches the check and the evidence string at
+      meta.yaml:428-433.
+summary: >-
+  The meta-rule assessment gets the card right: one concern, a real
+  ladder, and a rationale the check actually reads. It fails supported on
+  the headcount. portal/results.json has 273 rules and 202 at gold, not
+  272 and 201. The 71 pins-both-outcomes failures are correct.

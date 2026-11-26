@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { computed, shallowRef, watchPostEffect } from "vue";
-import EntityPage from "@toolbox-dev/ui/components/EntityPage.vue";
-import ScorecardPage from "@toolbox-dev/ui/components/ScorecardPage.vue";
-import { entityOverview } from "@toolbox-dev/ui/entity";
+import EntityPage from "@seikika/ui/components/EntityPage.vue";
+import ScorecardPage from "@seikika/ui/components/ScorecardPage.vue";
+import { entityOverview } from "@seikika/ui/entity";
 import type { ReportData } from "./types";
 import { kindTitle } from "./lib/kinds";
 import { plural } from "./lib/words";

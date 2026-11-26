@@ -1,0 +1,51 @@
+apiVersion: seikika.com/assessment/v1
+entity: assessment:rule-quality/rule:seikika/maintainer-crate/crate-docs
+rubric: assessment-quality
+subjectHash: 0cad12c468e3
+assessor: {kind: agent, name: cursor-reviewer-07, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: supported
+    verdict: pass
+    reason: >-
+      The citations in
+      portal/assessments/rule-quality/rule/seikika/maintainer-crate/crate-docs.yaml
+      land. `has_doc` matches any `doc` attribute
+      (crates/seikika-connector-workspace/src/rust.rs:40-42), and `crateDoc`
+      is set from the entry file's inner attributes (rust.rs:430-432). An
+      empty `//!` desugars to `#![doc = ""]`, so it passes. The entry is the
+      lib target, else the first bin
+      (crates/seikika-connector-workspace/src/main.rs:536-553). The evidence,
+      fix and rationale are portal/standards/crates.yaml:170, 171-173 and
+      174-177. The fixtures' three applicable crates all have `crateDoc: true`
+      (portal/fixtures/workspace.ndjson lines 1, 2 and 4; seikika-durable is
+      skipped at 0 lines). The only test mention is the absence check at
+      portal/tests/standards.test.yaml:89-93. A rerun of the connector shows
+      all 17 scored crates with `crateDoc: true`.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      Nothing tests `crateDoc` itself either. The only rust.rs unit test
+      (rust.rs:495-534) checks tests and disabled tests, so the "untested"
+      point goes further than the assessment says. Both fails match the
+      rubric's "an empty doc comment would pass it"
+      (portal/standards/meta.yaml:1165). fix-leads-to-pass and
+      threshold-justified are right for a yes/no bronze rule placed by
+      docs/design/seikika-for-seikika.md:103.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      The fails follow from rust.rs:40-42 alone, and a one-file scratch crate
+      reproduces them. Nothing rests on taste.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      Reporting the crate doc's text or length and requiring a sentence and a
+      spec reference would fail an empty `//!`. That flips both
+      measures-intent and hard-to-game. The failing fixture and evidence test
+      it proposes would also make the rule tested.
+summary: >-
+  An accurate assessment. Every code and manifest citation checks out, an
+  empty `//!` really does pass, and neither the fixtures nor rust.rs's own
+  unit test ever exercise `crateDoc: false`. The two fails are the
+  rubric's named cases, and the suggestions would turn both.

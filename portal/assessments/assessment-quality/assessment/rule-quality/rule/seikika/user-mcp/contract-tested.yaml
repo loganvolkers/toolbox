@@ -1,0 +1,58 @@
+apiVersion: seikika.com/assessment/v1
+entity: assessment:rule-quality/rule:seikika/user-mcp/contract-tested
+rubric: assessment-quality
+subjectHash: 0ebdf366681a
+assessor: {kind: agent, name: cursor-reviewer-36, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: supported
+    verdict: fail
+    reason: >-
+      Two claims in
+      portal/assessments/rule-quality/rule/seikika/user-mcp/contract-tested.yaml
+      do not match the lines they cite. measures-intent says campaign_report
+      is the one live failure because it is only in the tool list at
+      crates/seikika-api/tests/mcp.rs:99. The same list also names run_action,
+      get_run and list_runs (:106-108) and never calls them, and
+      portal/results.json fails contract-tested on all four. fix-leads-to-pass
+      cites portal/standards/cli.yaml:329-332 as the fix and :327-328 as the
+      body shape. :327-328 is the check, :329-332 is the evidence, and the fix
+      (tools/call in crates/seikika-api/tests, viaCli does not count) is
+      :333-336. The "asserts on each result" comment is :323-324, not
+      :319-320. The capture regex at portal/seikika.yaml:115-117, the skip at
+      .github/workflows/ci.yml:113, thresholds.md:49 and the call helper at
+      mcp.rs:63-70 do say what the other sentences claim.
+    suggestion: >-
+      Say the four tools that appear only in the tools/list assertion fail
+      contract-tested, and cite cli.yaml:333-336 for the fix and :331-332 for
+      the {"name", "arguments"} evidence sentence.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      The verdicts still hold. The static capture requires a tools/call body
+      (portal/seikika.yaml:117), and thresholds.md:49 scopes the rule to
+      reach, so measures-intent passing is right. hard-to-game fails: in the
+      skip: runner,github-actions mode (.github/workflows/ci.yml:113) a dead
+      json! literal or a block-comment line matches the regex. Following the
+      fix text at cli.yaml:333-336 passes in both modes. Gold is stated at
+      thresholds.md:49.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      The regex, the four uncalled names and the CI skip are text a second
+      assessor can read. The hard-to-game fail does not depend on the wrong
+      "one live failure" count.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      The hard-to-game suggestion in
+      portal/assessments/rule-quality/rule/seikika/user-mcp/contract-tested.yaml
+      makes CI use the runner's mcp-calls job, or also drops lines starting
+      with *. Either one stops a dead literal or a block comment from passing.
+      The three passes need no suggestion.
+summary: >-
+  The verdicts are right: static mode now wants a real tools/call body,
+  and a dead json! literal or a block-comment line still passes in CI. The
+  write-up is not. campaign_report is one of four live failures, and the
+  fix and the evidence shape are cited a few lines above the text that
+  actually says them.

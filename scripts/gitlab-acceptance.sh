@@ -2,18 +2,18 @@
 # GitLab acceptance (docs/design/forges.md §6): federated actions on a real GitLab started on this
 # machine (scripts/gitlab/harness.sh: GitLab CE and a GitLab Runner in Docker). An org portal
 # lists private GitLab projects and a plain git repository; changes become merge requests; a
-# child that runs in its own CI gets a pipeline, whose job runs `toolbox run` with the parent's
+# child that runs in its own CI gets a pipeline, whose job runs `seikika run` with the parent's
 # signed grant and keeps the run record as an artifact. No Postgres.
 # Usage: scripts/gitlab-acceptance.sh   (starts the harness if it isn't running; KEEP=1 keeps $WORK)
 set -euo pipefail
 trap 'echo "FAIL: line $LINENO exited $?; last output: ${OUT:-}" >&2' ERR
 cd "$(dirname "$0")/.."
-BIN=$(cd "${TOOLBOX_BIN_DIR:-target/debug}" && pwd); EX=$PWD/examples/federated-actions; WORK=$(mktemp -d)
-export TOOLBOX_BIN_DIR=$BIN
+BIN=$(cd "${SEIKIKA_BIN_DIR:-target/debug}" && pwd); EX=$PWD/examples/federated-actions; WORK=$(mktemp -d)
+export SEIKIKA_BIN_DIR=$BIN
 ENVFILE=$(scripts/gitlab/harness.sh env 2>/dev/null || scripts/gitlab/harness.sh up)
 eval "$(echo "$ENVFILE" | grep -E '^GITLAB_(URL|ROOT_TOKEN)=')"
 HOST=${GITLAB_URL#http://}
-export TOOLBOX_STATE_DIR=$WORK/state TOOLBOX_CONNECTORS_DIR=$BIN HOME=$WORK/home
+export SEIKIKA_STATE_DIR=$WORK/state SEIKIKA_CONNECTORS_DIR=$BIN HOME=$WORK/home
 mkdir -p "$HOME"
 git config --global user.name acceptance && git config --global user.email acceptance@example.com
 git config --global credential.helper store && git config --global init.defaultBranch main
@@ -21,7 +21,7 @@ cleanup() { [ -n "${KEEP:-}" ] && echo "kept $WORK" || rm -rf "$WORK"; }
 trap cleanup EXIT
 fail() { echo "FAIL: $*" >&2; exit 1; }
 field() { python3 -c "import json,sys; d=json.load(sys.stdin); print(eval('d'+sys.argv[1]))" "$1"; }
-run() { (cd "$1" && shift && "$BIN/toolbox" run "$@" -o json); }
+run() { (cd "$1" && shift && "$BIN/seikika" run "$@" -o json); }
 # gl METHOD PATH [curl args]: the GitLab API as root; prints the JSON body, fails on an HTTP error.
 gl() { local m=$1 p=$2; shift 2; curl -sf -X "$m" -H "PRIVATE-TOKEN: $GITLAB_ROOT_TOKEN" "$GITLAB_URL/api/v4$p" "$@"; }
 enc() { python3 -c "import sys, urllib.parse; print(urllib.parse.quote(sys.argv[1], safe=''))" "$1"; }
@@ -50,10 +50,10 @@ publish() { # publish DIR PROJECT: push DIR's files as PROJECT's main (a new pro
 ORG=acme-$(date +%s)
 echo "0. a GitLab org ($ORG): users, a group and a subgroup, private projects with repo portals; a plain git repository"
 for u in ann bob carol dave erin; do user $u >/dev/null; done
-BOT=$(user toolbox)
+BOT=$(user seikika)
 BOT_TOKEN=$(gl POST "/users/$BOT/personal_access_tokens" --data name=acceptance --data "scopes[]=api" \
   --data "scopes[]=write_repository" --data "expires_at=$(date -d '+2 days' +%F)" | field "['token']")
-printf 'http://toolbox:%s@%s\n' "$BOT_TOKEN" "$HOST" > "$HOME/.git-credentials"
+printf 'http://seikika:%s@%s\n' "$BOT_TOKEN" "$HOST" > "$HOME/.git-credentials"
 G=$(gl POST /groups --data "name=$ORG" --data "path=$ORG" --data visibility=private | field "['id']")
 PLATFORM=$(gl POST /groups --data name=platform --data path=platform --data "parent_id=$G" --data visibility=private | field "['id']")
 gl POST "/groups/$G/members" --data "user_id=$BOT" --data access_level=40 >/dev/null
@@ -67,19 +67,19 @@ ALPHA=$(project "$G" alpha); GAMMA=$(project "$PLATFORM" gamma)
 mkdir -p "$WORK/src"
 cp -r "$EX/gitlab-repo" "$WORK/src/alpha" && cp -r "$EX/gitlab-repo" "$WORK/src/gamma"
 rm "$WORK/src/alpha/.gitlab-ci.yml"
-sed -i 's/name: gitlab-repo/name: alpha/; s/runner: {type: ci}/runner: {type: local}/' "$WORK/src/alpha/.toolbox/toolbox.yaml"
-sed -i 's/name: gitlab-repo/name: gamma/' "$WORK/src/gamma/.toolbox/toolbox.yaml"
+sed -i 's/name: gitlab-repo/name: alpha/; s/runner: {type: ci}/runner: {type: local}/' "$WORK/src/alpha/.seikika/seikika.yaml"
+sed -i 's/name: gitlab-repo/name: gamma/' "$WORK/src/gamma/.seikika/seikika.yaml"
 for r in alpha gamma; do echo "# $r" > "$WORK/src/$r/README.md"; done
 publish "$WORK/src/alpha" "$ORG/alpha"; publish "$WORK/src/gamma" "$ORG/platform/gamma"
 git init -q --bare -b main "$WORK/hosts/delta.git" && cp -r "$EX/minimal-repo" "$WORK/src/delta"
-sed -i 's/name: minimal-repo/name: delta/' "$WORK/src/delta/.toolbox/toolbox.yaml"
+sed -i 's/name: minimal-repo/name: delta/' "$WORK/src/delta/.seikika/seikika.yaml"
 git -C "$WORK/src/delta" init -q && git -C "$WORK/src/delta" add -A && git -C "$WORK/src/delta" commit -qm init
 git -C "$WORK/src/delta" push -q "$WORK/hosts/delta.git" HEAD:main
 cp -r "$EX/gitlab-org" "$WORK/org"
-sed "s#https://gitlab.acme.dev#$GITLAB_URL#; s#acme/#$ORG/#g; s#group: acme\$#group: $ORG#" "$EX/gitlab-org/toolbox.yaml" > "$WORK/org/toolbox.yaml"
-echo "    - git: ../hosts/delta.git" >> "$WORK/org/toolbox.yaml"
+sed "s#https://gitlab.acme.dev#$GITLAB_URL#; s#acme/#$ORG/#g; s#group: acme\$#group: $ORG#" "$EX/gitlab-org/seikika.yaml" > "$WORK/org/seikika.yaml"
+echo "    - git: ../hosts/delta.git" >> "$WORK/org/seikika.yaml"
 export GITLAB_TOKEN=$BOT_TOKEN
-"$BIN/toolbox" validate "$WORK/org" | tail -1
+"$BIN/seikika" validate "$WORK/org" | tail -1
 
 echo "1. the org portal lists every child's actions: two private GitLab projects and a plain git repository"
 OUT=$(run "$WORK/org") || fail "listing the org's actions: $OUT"
@@ -108,7 +108,7 @@ echo "   $MR, squash-merged: succeeded"
 
 echo "3. a child with runner {type: ci} runs in its own pipeline, with the org's signed approval"
 git clone -q "$GITLAB_URL/$ORG/platform/gamma.git" "$WORK/review/gamma"
-sed -i "s/ed25519:0\{64\}/$KEY/" "$WORK/review/gamma/.toolbox/toolbox.yaml"
+sed -i "s/ed25519:0\{64\}/$KEY/" "$WORK/review/gamma/.seikika/seikika.yaml"
 git -C "$WORK/review/gamma" commit -qam "accept the org portal's approvals" && git -C "$WORK/review/gamma" push -q 2>/dev/null
 set +e; OUT=$(run "$WORK/org" add-code-of-conduct --entity portal:gamma -i contact=conduct@acme.dev --as ann --yes); CODE=$?; set -e
 [ $CODE = 3 ] || fail "add-code-of-conduct on gamma should await approval ($CODE): $OUT"
@@ -121,7 +121,7 @@ echo "$OUT" | field "['verification']['by']" | grep -qx "child pipeline" || fail
 echo "   $PIPE: ann requested, bob approved, gamma's own job ran it and pushed to main; the org read the record from the job's artifact"
 
 echo "4. inputs reach the child's job as data: quotes, \$VARS, \$(commands), newlines and GitLab's own \$[[ ]]"
-cat > "$WORK/review/gamma/.toolbox/actions/fingerprint.yaml" <<'YAML'
+cat > "$WORK/review/gamma/.seikika/actions/fingerprint.yaml" <<'YAML'
 actions:
   - name: fingerprint
     kind: Portal
@@ -132,7 +132,7 @@ actions:
       type: command
       run: >-
         printf '{"sha256": "%s"}\n'
-        "$(printf '%s' "$TOOLBOX_INPUT_TEXT" | sha256sum | cut -c1-64)"
+        "$(printf '%s' "$SEIKIKA_INPUT_TEXT" | sha256sum | cut -c1-64)"
 YAML
 git -C "$WORK/review/gamma" pull -q --rebase && git -C "$WORK/review/gamma" add -A
 git -C "$WORK/review/gamma" commit -qm fingerprint && git -C "$WORK/review/gamma" push -q 2>/dev/null
@@ -146,16 +146,16 @@ PID=$(echo "$OUT" | field "['outputs']['pipeline_id']")
 echo "   the job hashed exactly the text sent; unverified (exit 4: the job is a warning, the pipeline passed)"
 
 echo "5. what a child can't choose, a project the forge entry doesn't admit, and a protected main"
-sed -i 's/runner: {type: ci}/runner: {type: ci, project: someone\/else}/' "$WORK/review/gamma/.toolbox/toolbox.yaml"
+sed -i 's/runner: {type: ci}/runner: {type: ci, project: someone\/else}/' "$WORK/review/gamma/.seikika/seikika.yaml"
 git -C "$WORK/review/gamma" commit -qam "point the runner elsewhere" && git -C "$WORK/review/gamma" push -q 2>/dev/null
 COC=(add-code-of-conduct --entity portal:gamma -i contact=other@acme.dev --as ann)
 set +e; OUT=$(run "$WORK/org" "${COC[@]}" --yes 2>&1); CODE=$?; set -e
 [ $CODE = 2 ] && echo "$OUT" | grep -q "portal:gamma offers no actions: .*project" || fail "a child naming its own project should be refused ($CODE): $OUT"
 git -C "$WORK/review/gamma" revert --no-edit HEAD >/dev/null && git -C "$WORK/review/gamma" push -q 2>/dev/null
-sed -i "s#projects: \[$ORG/\*, $ORG/\*/\*\]#projects: [$ORG/*]#" "$WORK/org/toolbox.yaml"
+sed -i "s#projects: \[$ORG/\*, $ORG/\*/\*\]#projects: [$ORG/*]#" "$WORK/org/seikika.yaml"
 set +e; OUT=$(run "$WORK/org" "${COC[@]}" --yes 2>&1); CODE=$?; set -e
 [ $CODE = 1 ] && echo "$OUT" | grep -q "does not list" || fail "a project outside forges[].projects should be refused ($CODE): $OUT"
-sed -i "s#projects: \[$ORG/\*\]#projects: [$ORG/*, $ORG/*/*]#" "$WORK/org/toolbox.yaml"
+sed -i "s#projects: \[$ORG/\*\]#projects: [$ORG/*, $ORG/*/*]#" "$WORK/org/seikika.yaml"
 gl DELETE "/projects/$GAMMA/protected_branches/main" >/dev/null
 gl POST "/projects/$GAMMA/protected_branches" --data name=main --data push_access_level=0 --data merge_access_level=40 >/dev/null
 set +e; OUT=$(run "$WORK/org" "${COC[@]}" --yes); CODE=$?; set -e
@@ -168,7 +168,7 @@ echo "   and a push to a protected main failed the run with GitLab's words: $(ec
 
 echo "6. one org, two kinds of host: the plain git child runs in the org's clone"
 git clone -q "$WORK/hosts/delta.git" "$WORK/review/delta"
-sed -i "s/ed25519:0\{64\}/$KEY/" "$WORK/review/delta/.toolbox/actions/add-code-of-conduct.yaml"
+sed -i "s/ed25519:0\{64\}/$KEY/" "$WORK/review/delta/.seikika/actions/add-code-of-conduct.yaml"
 git -C "$WORK/review/delta" commit -qam "accept the org portal's approvals" && git -C "$WORK/review/delta" push -q
 set +e; OUT=$(run "$WORK/org" add-code-of-conduct --entity portal:delta -i contact=conduct@acme.dev --as ann --yes); set -e
 RID=$(echo "$OUT" | field "['id']")
@@ -183,17 +183,17 @@ cat > "$WORK/src/deploy/.gitlab-ci.yml" <<'YAML'
 spec:
   inputs:
     environment: {options: [staging, production]}
-    toolbox_run: {default: ""}
+    seikika_run: {default: ""}
 ---
 deploy:
   variables:
     ENVIRONMENT: $[[ inputs.environment ]]
-    RUN: $[[ inputs.toolbox_run ]]
+    RUN: $[[ inputs.seikika_run ]]
   script:
     - echo "deploying to $ENVIRONMENT for $RUN"
 YAML
 publish "$WORK/src/deploy" "$ORG/deploy"
-cat >> "$WORK/org/toolbox.yaml" <<YAML
+cat >> "$WORK/org/seikika.yaml" <<YAML
 actions:
   - name: deploy
     kind: Portal
@@ -202,7 +202,7 @@ actions:
     inputs: {type: object, required: [environment], properties: {environment: {type: string}}}
     executor: {type: gitlab-pipeline, forge: "$GITLAB_URL", project: $ORG/deploy}
 YAML
-"$BIN/toolbox" validate "$WORK/org" | tail -1
+"$BIN/seikika" validate "$WORK/org" | tail -1
 set +e; OUT=$(run "$WORK/org" deploy --entity portal:gamma -i environment=staging --as ann --yes --wait); CODE=$?; set -e
 [ $CODE = 4 ] && [ "$(echo "$OUT" | field "['state']")" = unverified ] || fail "deploy to staging ($CODE): $OUT"
 JOB=$(gl GET "/projects/$DEPLOY/pipelines/$(echo "$OUT" | field "['outputs']['pipeline_id']")/jobs" | field "[0]['id']")
@@ -214,9 +214,9 @@ echo "8. approvers are a GitLab group: the org portal reads it with its gitlab c
 RELEASE=$(gl POST /groups --data name=release --data path=release --data "parent_id=$G" --data visibility=private | field "['id']")
 for u in dave erin; do gl POST "/groups/$RELEASE/members" --data "user_id=$(user $u)" --data access_level=30 >/dev/null; done
 gl POST "/groups/$RELEASE/members" --data "user_id=$(user carol)" --data access_level=10 >/dev/null
-"$BIN/toolbox" connector test --name gitlab --portal "$WORK/org" -- "$BIN/toolbox-connector-gitlab" | tail -1
+"$BIN/seikika" connector test --name gitlab --portal "$WORK/org" -- "$BIN/seikika-connector-gitlab" | tail -1
 git -C "$WORK/review/delta" pull -q
-sed -i "s#approval: .*#approval: \"['group:$ORG/release']\"#" "$WORK/review/delta/.toolbox/actions/add-code-of-conduct.yaml"
+sed -i "s#approval: .*#approval: \"['group:$ORG/release']\"#" "$WORK/review/delta/.seikika/actions/add-code-of-conduct.yaml"
 git -C "$WORK/review/delta" commit -qam "the release group approves" && git -C "$WORK/review/delta" push -q
 set +e; OUT=$(run "$WORK/org" add-code-of-conduct --entity portal:delta -i contact=release@acme.dev --as dave --yes); CODE=$?; set -e
 RID=$(echo "$OUT" | field "['id']")
@@ -234,8 +234,8 @@ OUT=$(run "$WORK/org" --approve "$RID" --as erin --wait) || fail "erin, back in 
 git --git-dir "$WORK/hosts/delta.git" log -1 --format=%B main | grep -q "Approved-By: user:erin" || fail "no Approved-By trailer for erin"
 echo "   group:$ORG/release from GitLab: dave (the requester) and carol (a Guest) refused; erin refused once removed in GitLab, then approved once re-added, and it landed"
 echo "9. identity: true on the forge: who asks and who approves is whoever GitLab says owns their token"
-sed -i '/^    type: gitlab$/a\    identity: true' "$WORK/org/toolbox.yaml"
-"$BIN/toolbox" validate "$WORK/org" | tail -1
+sed -i '/^    type: gitlab$/a\    identity: true' "$WORK/org/seikika.yaml"
+"$BIN/seikika" validate "$WORK/org" | tail -1
 pat() { # pat NAME: a read_user token for NAME, in a file
   gl POST "/users/$(user "$1")/personal_access_tokens" --data name=identity --data "scopes[]=read_user" \
     --data "expires_at=$(date -d '+2 days' +%F)" | field "['token']" > "$WORK/$1.token"
@@ -252,10 +252,10 @@ echo "$OUT" | grep -q -- "--identity-token-file <approver" || fail "the waiting 
 RID=$(echo "$OUT" | field "['id']")
 set +e; run "$WORK/org" --approve "$RID" --as erin >/dev/null 2>&1; CODE=$?; set -e
 [ $CODE = 2 ] || fail "an approval with --as erin alone should be refused ($CODE)"
-set +e; TOOLBOX_IDENTITY_TOKEN=glpat-not-a-token run "$WORK/org" --approve "$RID" >/dev/null 2>&1; CODE=$?; set -e
+set +e; SEIKIKA_IDENTITY_TOKEN=glpat-not-a-token run "$WORK/org" --approve "$RID" >/dev/null 2>&1; CODE=$?; set -e
 [ $CODE = 2 ] || fail "a token GitLab refuses should be refused ($CODE)"
-OUT=$(TOOLBOX_IDENTITY_TOKEN=$(cat "$WORK/erin.token") run "$WORK/org" --approve "$RID" --wait) || fail "erin's token: $OUT"
+OUT=$(SEIKIKA_IDENTITY_TOKEN=$(cat "$WORK/erin.token") run "$WORK/org" --approve "$RID" --wait) || fail "erin's token: $OUT"
 [ "$(echo "$OUT" | field "['state']")" = succeeded ] || fail "approved with erin's token: $OUT"
-grep -rqs "$(cat "$WORK/erin.token")" "$TOOLBOX_STATE_DIR" && fail "a run record holds an identity token"
+grep -rqs "$(cat "$WORK/erin.token")" "$SEIKIKA_STATE_DIR" && fail "a run record holds an identity token"
 echo "   --as alone refused, --as against another's token refused, a bad token refused; dave's token requested, erin's approved, and no record holds a token"
 echo "GitLab acceptance: all checks passed"

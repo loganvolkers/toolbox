@@ -1,22 +1,22 @@
-diff --git a/.github/workflows/ci-toolbox-standards.yml b/.github/workflows/ci-toolbox-standards.yml
+diff --git a/.github/workflows/ci-seikika-standards.yml b/.github/workflows/ci-seikika-standards.yml
 new file mode 100644
 index 00000000..154420e5
 --- /dev/null
-+++ b/.github/workflows/ci-toolbox-standards.yml
++++ b/.github/workflows/ci-seikika-standards.yml
 @@ -0,0 +1,62 @@
-+name: Toolbox standards (S1 person ORM ratchet)
++name: Seikika standards (S1 person ORM ratchet)
 +
-+# Gate for .toolbox/STANDARD.md (S1: no direct ORM queries on person tables). Fails a pull request that
++# Gate for .seikika/STANDARD.md (S1: no direct ORM queries on person tables). Fails a pull request that
 +# adds a direct `Person.objects` / `PersonDistinctId.objects` / `CohortPeople.objects` / `Group.objects` /
-+# `GroupTypeMapping.objects` query outside the routed helpers, the person model module and tests, against the committed baseline .toolbox/results.json. Fewer violations pass
++# `GroupTypeMapping.objects` query outside the routed helpers, the person model module and tests, against the committed baseline .seikika/results.json. Fewer violations pass
 +# and are listed as "better", so the baseline can be tightened with --update.
 +
 +on:
 +    pull_request:
 +        paths:
 +            - '**/*.py'
-+            - .toolbox/**
-+            - .github/workflows/ci-toolbox-standards.yml
++            - .seikika/**
++            - .github/workflows/ci-seikika-standards.yml
 +
 +concurrency:
 +    group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
@@ -26,8 +26,8 @@ index 00000000..154420e5
 +    contents: read
 +
 +env:
-+    TOOLBOX_GIT: https://github.com/loganvolkers/toolbox
-+    TOOLBOX_TAG: v0.1.1
++    SEIKIKA_GIT: https://github.com/seikika/seikika
++    SEIKIKA_TAG: v0.1.1
 +
 +jobs:
 +    person-orm-ratchet:
@@ -43,17 +43,17 @@ index 00000000..154420e5
 +              with:
 +                  toolchain: stable
 +
-+            - name: Install toolbox (pinned tag, built from source)
++            - name: Install seikika (pinned tag, built from source)
 +              run: |
 +                  set -euo pipefail
-+                  cargo install --locked --git "$TOOLBOX_GIT" --tag "$TOOLBOX_TAG" --root "$RUNNER_TEMP/toolbox" toolbox-cli toolbox-connector-workspace
-+                  echo "$RUNNER_TEMP/toolbox/bin" >> "$GITHUB_PATH"
++                  cargo install --locked --git "$SEIKIKA_GIT" --tag "$SEIKIKA_TAG" --root "$RUNNER_TEMP/seikika" seikika-cli seikika-connector-workspace
++                  echo "$RUNNER_TEMP/seikika/bin" >> "$GITHUB_PATH"
 +
-+            - name: Gate (ratchet against .toolbox/results.json)
++            - name: Gate (ratchet against .seikika/results.json)
 +              run: |
 +                  set -uo pipefail
-+                  toolbox --version
-+                  toolbox report .toolbox --baseline .toolbox/results.json -o failures --out /dev/null --verdict "$RUNNER_TEMP/verdict.json" 2> "$RUNNER_TEMP/gate.txt"
++                  seikika --version
++                  seikika report .seikika --baseline .seikika/results.json -o failures --out /dev/null --verdict "$RUNNER_TEMP/verdict.json" 2> "$RUNNER_TEMP/gate.txt"
 +                  rc=$?
 +                  cat "$RUNNER_TEMP/gate.txt"
 +                  {
@@ -63,14 +63,14 @@ index 00000000..154420e5
 +                      grep -v '^· changed' "$RUNNER_TEMP/gate.txt" || true
 +                      echo '```'
 +                      echo
-+                      echo "See .toolbox/STANDARD.md for how to fix a regression or tighten the baseline."
++                      echo "See .seikika/STANDARD.md for how to fix a regression or tighten the baseline."
 +                  } >> "$GITHUB_STEP_SUMMARY"
 +                  exit $rc
-diff --git a/.toolbox/STANDARD.md b/.toolbox/STANDARD.md
+diff --git a/.seikika/STANDARD.md b/.seikika/STANDARD.md
 new file mode 100644
 index 00000000..533bafc7
 --- /dev/null
-+++ b/.toolbox/STANDARD.md
++++ b/.seikika/STANDARD.md
 @@ -0,0 +1,102 @@
 +# S1: no direct ORM queries on person tables
 +
@@ -84,12 +84,12 @@ index 00000000..533bafc7
 +| Exempt: tests | Any file under a `test/` or `tests/` directory, `test_*.py`, `*_test.py`, `conftest.py` |
 +| Exempt: routed helpers | `posthog/models/person/util.py` (the routed person helpers), `posthog/models/group_type_mapping.py` (a routed helper), `posthog/models/person/person.py` (the model module; its managers back the routed helpers) |
 +| Fix | Use (or add) a routed helper in `posthog/models/person/util.py` |
-+| Enforcement | A ratchet: the counts per file recorded in `.toolbox/results.json` may only go down. A new file must arrive with none. CI: `.github/workflows/ci-toolbox-standards.yml` |
++| Enforcement | A ratchet: the counts per file recorded in `.seikika/results.json` may only go down. A new file must arrive with none. CI: `.github/workflows/ci-seikika-standards.yml` |
 +| Campaign | `person-orm-zero`: matches and files with matches, from the recorded start (102 matches in 37 files, 2026-11-21) to zero. See [Campaign history](#campaign-history) |
 +
-+It is scored by [Toolbox](https://github.com/loganvolkers/toolbox) (`toolbox report`), from
-+`.toolbox/toolbox.yaml`, which includes a vendored copy of Toolbox's `pattern-count` package
-+(`.toolbox/packages/pattern-count`, v0.1.0). Install `toolbox` and `toolbox-connector-workspace` (0.1.1)
++It is scored by [Seikika](https://github.com/seikika/seikika) (`seikika report`), from
++`.seikika/seikika.yaml`, which includes a vendored copy of Seikika's `pattern-count` package
++(`.seikika/packages/pattern-count`, v0.1.0). Install `seikika` and `seikika-connector-workspace` (0.1.1)
 +on your `PATH`, plus `jq`.
 +
 +## Commands (run from the repository root)
@@ -97,7 +97,7 @@ index 00000000..533bafc7
 +**Report**: every violation, by file, as JSON (`[{"file": ..., "count": ...}]`):
 +
 +```bash
-+toolbox report .toolbox -o failures | jq '[.[] | select(.scorecard == "person-orm") | {file: .path, count: .measure}] | sort_by(.file)'
++seikika report .seikika -o failures | jq '[.[] | select(.scorecard == "person-orm") | {file: .path, count: .measure}] | sort_by(.file)'
 +```
 +
 +For the line numbers too, drop the `jq` (each failure's `evidence` is `line N`, one per match).
@@ -107,7 +107,7 @@ index 00000000..533bafc7
 +--update", which means the baseline can be tightened:
 +
 +```bash
-+toolbox report .toolbox --baseline .toolbox/results.json -o failures --out /dev/null
++seikika report .seikika --baseline .seikika/results.json -o failures --out /dev/null
 +```
 +
 +`✗ worse` lines name each regression (`evidence grew 2 → 3`, or `new, at none`). `· changed ... new
@@ -116,7 +116,7 @@ index 00000000..533bafc7
 +**Campaign**: progress toward zero (matches and files with matches, baseline vs now, percent done):
 +
 +```bash
-+toolbox report .toolbox --baseline .toolbox/results.json -o json 2>/dev/null | jq '.campaigns["person-orm-zero"].sinceStart | {baseline: .measure.from, current: .measure.now, percentDone: .measure.percentDone, files: {baseline: .entitiesShort.from, current: .entitiesShort.now, percentDone: .entitiesShort.percentDone}}'
++seikika report .seikika --baseline .seikika/results.json -o json 2>/dev/null | jq '.campaigns["person-orm-zero"].sinceStart | {baseline: .measure.from, current: .measure.now, percentDone: .measure.percentDone, files: {baseline: .entitiesShort.from, current: .entitiesShort.now, percentDone: .entitiesShort.percentDone}}'
 +```
 +
 +The gate also prints it as one line: `campaign person-orm-zero since <date>: ... measure 102 → 101 (1.0% of the way)`.
@@ -126,23 +126,23 @@ index 00000000..533bafc7
 +## After fixing violations: tighten the baseline
 +
 +```bash
-+toolbox report .toolbox --baseline .toolbox/results.json --update -o failures --out /dev/null
-+git add .toolbox/results.json && git commit -m "chore(toolbox): tighten S1 baseline"
++seikika report .seikika --baseline .seikika/results.json --update -o failures --out /dev/null
++git add .seikika/results.json && git commit -m "chore(seikika): tighten S1 baseline"
 +```
 +
-+`--update` refuses to write while anything regressed. Never hand-merge `.toolbox/results.json`: on a
++`--update` refuses to write while anything regressed. Never hand-merge `.seikika/results.json`: on a
 +conflict, take the target branch's copy and rerun `--update`.
 +
 +## Changing the standard
 +
-+All of it lives in the `with:` block of `.toolbox/toolbox.yaml`.
++All of it lives in the `with:` block of `.seikika/seikika.yaml`.
 +
 +- **Add a model** (for example `GroupPerson`): add it to `pattern`, e.g.
 +  `'\b(Person|PersonDistinctId|CohortPeople|Group|GroupTypeMapping|GroupPerson)\.objects\b'`. Then record its existing
 +  violations as intended, not as regressions, and commit both files:
 +
 +  ```bash
-+  toolbox report .toolbox --baseline .toolbox/results.json --update --accept person-orm -o failures --out /dev/null
++  seikika report .seikika --baseline .seikika/results.json --update --accept person-orm -o failures --out /dev/null
 +  ```
 +
 +  `--accept person-orm` lists the newly recorded violations; review them. The campaign restarts from
@@ -153,11 +153,11 @@ index 00000000..533bafc7
 +- **Exempt a whole kind of file** (for example migrations): add a glob under `exclude`, e.g.
 +  `"**/migrations/**"`, then `--update`. In globs `**` spans directories (including none, so
 +  `"**/test_*.py"` also matches a root-level `test_x.py`) and `*` does not.
-+- After any change: `toolbox validate .toolbox`, then check the Report output.
++- After any change: `seikika validate .seikika`, then check the Report output.
 +
 +## Campaign history
 +
-+The campaign's starting point is recorded in `.toolbox/results.json` (`campaigns.person-orm-zero`).
++The campaign's starting point is recorded in `.seikika/results.json` (`campaigns.person-orm-zero`).
 +
 +| Date | Change | Start (matches / files) | Why |
 +|---|---|---|---|
@@ -174,24 +174,24 @@ index 00000000..533bafc7
 +
 +A textual pattern can be gamed (an alias such as `P = Person; P.objects`); reviewers still apply the
 +standard's intent.
-diff --git a/.toolbox/packages/pattern-count/README.md b/.toolbox/packages/pattern-count/README.md
+diff --git a/.seikika/packages/pattern-count/README.md b/.seikika/packages/pattern-count/README.md
 new file mode 100644
 index 00000000..d2f1f81b
 --- /dev/null
-+++ b/.toolbox/packages/pattern-count/README.md
++++ b/.seikika/packages/pattern-count/README.md
 @@ -0,0 +1,82 @@
-+# pattern-count: a Toolbox package
++# pattern-count: a Seikika package
 +
 +**Every match of a regular expression is a violation.** One `include` gives a repository the
 +standard, a ratchet and a campaign:
 +
-+- `toolbox report` lists every file with matches, with the line of each and the fix;
++- `seikika report` lists every file with matches, with the line of each and the fix;
 +- the ratchet fails a pull request that adds a match to any file (including a new file), and
 +  reports the files that lost matches;
 +- the campaign `<name>-zero` counts files with matches, and matches, from the day the baseline
 +  first records it.
 +
-+It needs nothing but the `toolbox` binaries: files are read by `builtin:workspace`. If the pattern is
++It needs nothing but the `seikika` binaries: files are read by `builtin:workspace`. If the pattern is
 +already a semgrep rule, use [`packages/semgrep`](../semgrep/README.md) instead: it keeps the rule
 +in one place and counts its `nosemgrep` suppressions.
 +
@@ -204,13 +204,13 @@ index 00000000..d2f1f81b
 +
 +## Use it
 +
-+`.toolbox/toolbox.yaml`:
++`.seikika/seikika.yaml`:
 +
 +```yaml
-+apiVersion: toolbox.dev/v1alpha1
-+portal: {name: my-repo, owner: group:maintainers, toolbox: "0.1"}
++apiVersion: seikika.com/v1alpha1
++portal: {name: my-repo, owner: group:maintainers, seikika: "0.1"}
 +include:
-+  - package: github:loganvolkers/toolbox/packages/pattern-count@<tag>   # or a relative path
++  - package: github:seikika/seikika/packages/pattern-count@<tag>   # or a relative path
 +    with:
 +      name: no-console
 +      kind: SourceFile
@@ -225,10 +225,10 @@ index 00000000..d2f1f81b
 +Then, from the repository root:
 +
 +```bash
-+toolbox report .toolbox -o failures                                     # every file with matches, as JSON
-+toolbox report .toolbox --baseline .toolbox/results.json --update      # record the baseline; commit it
-+toolbox report .toolbox --baseline .toolbox/results.json               # the gate: exit 1 on a regression
-+toolbox report .toolbox --baseline .toolbox/results.json -o json | jq '.campaigns'   # campaign progress
++seikika report .seikika -o failures                                     # every file with matches, as JSON
++seikika report .seikika --baseline .seikika/results.json --update      # record the baseline; commit it
++seikika report .seikika --baseline .seikika/results.json               # the gate: exit 1 on a regression
++seikika report .seikika --baseline .seikika/results.json -o json | jq '.campaigns'   # campaign progress
 +```
 +
 +Each failure in `-o failures` has `path`, `measure` (its matches), `evidence` (`line 55`, one per
@@ -245,12 +245,12 @@ index 00000000..d2f1f81b
 +| `name` | `pattern-count` | Names the connector, scorecard and campaign |
 +| `kind` | `PatternFile` | The kind (PascalCase). Include the package twice with different `name` and `kind` for two patterns |
 +| `title`, `owner`, `fix` | | The scorecard's heading, owner and fix text |
-+| `root` | `.` | The checkout, relative to where `toolbox report` runs |
++| `root` | `.` | The checkout, relative to where `seikika report` runs |
 +
 +## Changing the standard
 +
 +- **Widen the pattern** (another call): edit `pattern`, then
-+  `toolbox report .toolbox --baseline .toolbox/results.json --update --accept no-console`. The new
++  `seikika report .seikika --baseline .seikika/results.json --update --accept no-console`. The new
 +  matches are recorded and listed, regressions in other scorecards still fail, and the campaign
 +  restarts from the new state. Review the list, then commit the manifest and `results.json`.
 +- **Exempt a file**: add it to `exempt` with its reason, then `--update`.
@@ -262,11 +262,11 @@ index 00000000..d2f1f81b
 +
 +- [docs/design/ratchets.md](../../docs/design/ratchets.md): the ratchet, measures and campaign starts
 +- [docs/reference/workspace-connector.md](../../docs/reference/workspace-connector.md): `counts` and `matchLines`
-diff --git a/.toolbox/packages/pattern-count/fragments/pattern-count.yaml b/.toolbox/packages/pattern-count/fragments/pattern-count.yaml
+diff --git a/.seikika/packages/pattern-count/fragments/pattern-count.yaml b/.seikika/packages/pattern-count/fragments/pattern-count.yaml
 new file mode 100644
 index 00000000..8ab6f80a
 --- /dev/null
-+++ b/.toolbox/packages/pattern-count/fragments/pattern-count.yaml
++++ b/.seikika/packages/pattern-count/fragments/pattern-count.yaml
 @@ -0,0 +1,63 @@
 +# Pattern count: matches of `pattern` per file. One connector, kind, scorecard and campaign, all
 +# named from the parameters, so a portal can include the package more than once.
@@ -331,15 +331,15 @@ index 00000000..8ab6f80a
 +      No matches in any scanned file. Progress is counted from the start the
 +      baseline records: files with matches, and matches.
 +    includes: [{scorecard: '${param:name}', rules: [no-matches]}]
-diff --git a/.toolbox/packages/pattern-count/toolbox-package.yaml b/.toolbox/packages/pattern-count/toolbox-package.yaml
+diff --git a/.seikika/packages/pattern-count/seikika-package.yaml b/.seikika/packages/pattern-count/seikika-package.yaml
 new file mode 100644
 index 00000000..5ac367e0
 --- /dev/null
-+++ b/.toolbox/packages/pattern-count/toolbox-package.yaml
++++ b/.seikika/packages/pattern-count/seikika-package.yaml
 @@ -0,0 +1,60 @@
-+# A Toolbox package (D89): occurrences of a pattern, ratcheted per file, with a campaign to zero
++# A Seikika package (D89): occurrences of a pattern, ratcheted per file, with a campaign to zero
 +# (D01M7Z2ZZ97VZQNTDT4QQHM3HQD).
-+apiVersion: toolbox.dev/package/v0
++apiVersion: seikika.com/package/v0
 +name: pattern-count
 +version: 0.1.0
 +description: >-
@@ -369,7 +369,7 @@ index 00000000..5ac367e0
 +    type: string
 +    default: .
 +    description: >-
-+      The checkout the files are read from, relative to where `toolbox report`
++      The checkout the files are read from, relative to where `seikika report`
 +      runs.
 +  files:
 +    type: array
@@ -397,22 +397,22 @@ index 00000000..5ac367e0
 +    default: Remove the match, using the alternative the standard names.
 +    description: What to do about a violation (shown with each one).
 +fragments: [fragments/*.yaml]
-diff --git a/.toolbox/toolbox.yaml b/.toolbox/toolbox.yaml
+diff --git a/.seikika/seikika.yaml b/.seikika/seikika.yaml
 new file mode 100644
 index 00000000..4562958b
 --- /dev/null
-+++ b/.toolbox/toolbox.yaml
++++ b/.seikika/seikika.yaml
 @@ -0,0 +1,30 @@
-+# PostHog repo portal (Toolbox). Enforces S1 from AGENTS.md: no new direct ORM queries on the person
-+# tables. See .toolbox/STANDARD.md for the commands. Run every command from the repository root.
-+apiVersion: toolbox.dev/v1alpha1
++# PostHog repo portal (Seikika). Enforces S1 from AGENTS.md: no new direct ORM queries on the person
++# tables. See .seikika/STANDARD.md for the commands. Run every command from the repository root.
++apiVersion: seikika.com/v1alpha1
 +portal:
 +  name: posthog
 +  title: PostHog repository standards
 +  owner: group:maintainers
-+  toolbox: "0.1"
++  seikika: "0.1"
 +include:
-+  # Vendored copy of Toolbox's packages/pattern-count (v0.1.0), so CI needs no network.
++  # Vendored copy of Seikika's packages/pattern-count (v0.1.0), so CI needs no network.
 +  - package: ./packages/pattern-count
 +    with:
 +      name: person-orm

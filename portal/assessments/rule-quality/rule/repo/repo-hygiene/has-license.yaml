@@ -1,4 +1,4 @@
-apiVersion: toolbox.dev/assessment/v1
+apiVersion: seikika.com/assessment/v1
 entity: rule:repo/repo-hygiene/has-license
 rubric: rule-quality
 subjectHash: 459be139df7a
@@ -10,9 +10,9 @@ verdicts:
     reason: >-
       `license` is the first root or .github/ file whose lowercased name
       starts with `license` or `copying`
-      (crates/toolbox-connector-workspace/src/repo.rs:55-65). A LICENCE file
+      (crates/seikika-connector-workspace/src/repo.rs:55-65). A LICENCE file
       (the British spelling this rule's own rationale uses,
-      examples/repo-portal-starter/toolbox.yaml:149) fails, though GitHub
+      examples/repo-portal-starter/seikika.yaml:149) fails, though GitHub
       recognises it as a licence. An empty LICENSE or a LICENSE-notes.txt
       passes, though it grants nothing.
     suggestion: >-
@@ -32,7 +32,7 @@ verdicts:
     verdict: fail
     reason: >-
       The fix offers "a note in the README if the code is internal-only"
-      (examples/repo-portal-starter/toolbox.yaml:145-146). The check reads
+      (examples/repo-portal-starter/seikika.yaml:145-146). The check reads
       only file names (repo.rs:65), so following that branch leaves the rule
       failing, and the repository can't reach silver.
     suggestion: >-
@@ -43,7 +43,7 @@ verdicts:
     verdict: pass
     reason: >-
       There is no number. Silver is set by the scorecard rationale
-      (examples/repo-portal-starter/toolbox.yaml:79-81), the rule's rationale
+      (examples/repo-portal-starter/seikika.yaml:79-81), the rule's rationale
       on default copyright (:148-150) and its GitHub link (:151-153).
 summary: >-
   The right concern, but a file-name check: an empty LICENSE passes, a

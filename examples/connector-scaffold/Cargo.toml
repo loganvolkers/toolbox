@@ -10,4 +10,4 @@ publish = false
 [dependencies]
 serde_json = "1"
 tokio = { version = "1", features = ["rt-multi-thread", "macros"] }
-toolbox-connect = { path = "../../crates/toolbox-connect" }
+seikika-connect = { path = "../../crates/seikika-connect" }

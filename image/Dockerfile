@@ -1,7 +1,7 @@
-# The Toolbox server image (charter G1, D90): the released Linux binaries of toolbox and its builtin
-# connectors, plus OpenFGA, which `toolbox serve` supervises. Built by .github/workflows/image.yml
+# The Seikika server image (charter G1, D90): the released Linux binaries of seikika and its builtin
+# connectors, plus OpenFGA, which `seikika serve` supervises. Built by .github/workflows/image.yml
 # from a release's own archives (nothing is compiled here). Operators build FROM it and add their
-# portal:  FROM ghcr.io/<owner>/toolbox:<version>  then  COPY portal/ /portal/
+# portal:  FROM ghcr.io/<owner>/seikika:<version>  then  COPY portal/ /portal/
 # Digest for debian:bookworm-slim (multi-arch index); OpenSSF Pinned-Dependencies.
 FROM debian:bookworm-slim@sha256:734a72b3d6142a71993b4bc580ca01d8ca687f77a2c422d96a961d3376b179bc
 ARG TARGETARCH
@@ -18,11 +18,11 @@ RUN set -eu; \
     tar -xzf /tmp/openfga.tgz -C /usr/local/bin openfga; \
     rm /tmp/openfga.tgz
 COPY bin/${TARGETARCH}/ /usr/local/bin/
-ENV TOOLBOX_OPENFGA_BIN=/usr/local/bin/openfga
+ENV SEIKIKA_OPENFGA_BIN=/usr/local/bin/openfga
 # Cloud Run injects PORT and does not pass --listen. The default matches the image's
-# published port; `docker run -e PORT=9090` overrides it. TOOLBOX_LISTEN still wins.
+# published port; `docker run -e PORT=9090` overrides it. SEIKIKA_LISTEN still wins.
 ENV PORT=8080
 USER 65532:65532
 EXPOSE 8080
-ENTRYPOINT ["toolbox"]
+ENTRYPOINT ["seikika"]
 CMD ["serve", "/portal"]

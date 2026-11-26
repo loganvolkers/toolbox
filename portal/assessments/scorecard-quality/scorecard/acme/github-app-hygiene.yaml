@@ -1,4 +1,4 @@
-apiVersion: toolbox.dev/assessment/v1
+apiVersion: seikika.com/assessment/v1
 entity: scorecard:acme/github-app-hygiene
 rubric: scorecard-quality
 subjectHash: 2d84b325fb8f
@@ -9,7 +9,7 @@ verdicts:
     verdict: pass
     reason: >-
       One concern for security: which GitHub Apps can act on a repository
-      (examples/reference-portal/toolbox.yaml:230-237, owner
+      (examples/reference-portal/seikika.yaml:230-237, owner
       `group:security`). Permission drift is kept in the separate
       `app-approval` card on the GitHubApp kind, so this card's level means
       one thing.
@@ -18,7 +18,7 @@ verdicts:
     reason: >-
       Bronze is the only level, and the rationale argues for it: any install
       outside the list is a finding
-      (examples/reference-portal/toolbox.yaml:235-237). Bronze is reachable
+      (examples/reference-portal/seikika.yaml:235-237). Bronze is reachable
       (platform-infra passes, checkout-web fails,
       examples/reference-portal/tests/apps.test.yaml).
   - criterion: no-obvious-gap
@@ -29,7 +29,7 @@ verdicts:
       no unused installations (docs/examples/approved-github-apps.md:89-91).
       Only the first exists here, and the second moved to app-approval. The
       policy's per-app `eligible` condition
-      (examples/reference-portal/toolbox.yaml:26, :32) is evaluated nowhere
+      (examples/reference-portal/seikika.yaml:26, :32) is evaluated nowhere
       (`rg eligible` finds only the manifest and one test fixture), so an
       approved app on an ineligible, e.g. deprecated, repository is never
       flagged.
@@ -42,7 +42,7 @@ verdicts:
     verdict: fail
     reason: >-
       The only rule's fix names a `request-new-app` action the manifest
-      doesn't define (examples/reference-portal/toolbox.yaml:248 against the
+      doesn't define (examples/reference-portal/seikika.yaml:248 against the
       actions at :304-364), and there is no evidence naming the unapproved
       app. An agent can still raise checkout-web by working out
       `installedApps` minus the policy keys and running `remove-app`, but the

@@ -1,0 +1,32 @@
+{
+ "linesToMaintain": 1725,
+ "files": {
+  "gitlab:alpha/.seikika/actions/set-codeowners.yaml": 40,
+  "gitlab:alpha/.seikika/scripts/set-codeowners.py": 49,
+  "gitlab:alpha/.seikika/tests/set-codeowners.test.yaml": 53,
+  "gitlab:alpha/.seikika/tests/set_codeowners_test.py": 45,
+  "gitlab:alpha/.seikika/seikika.yaml": 5,
+  "gitlab:alpha/CODEOWNERS": 1,
+  "gitlab:beta/.seikika/seikika.yaml": 5,
+  "gitlab:beta/CODEOWNERS": 1,
+  "gitlab:gamma/.seikika/seikika.yaml": 5,
+  "gitlab:gamma/CODEOWNERS": 1,
+  "gitlab:org/bin/acme-actions": 65,
+  "gitlab:org/bin/setup-service": 42,
+  "gitlab:org/groups.fga": 6,
+  "gitlab:org/seikika.yaml": 43,
+  "service/home/.git-credentials": 1,
+  "service/home/.gitconfig": 9,
+  "service/state/runs/run_2fzn5e9byho5.json": 217,
+  "service/state/runs/run_2fznb278q2je.json": 92,
+  "service/state/runs/run_2fznk4tjvms3.json": 159,
+  "service/state/runs/run_2fznkspwf2eb.json": 77,
+  "service/state/runs/run_2fznolcprbz6.json": 104,
+  "service/state/runs/run_2fznpd359ul7.json": 217,
+  "service/state/runs/run_2fznpur9gx71.json": 217,
+  "service/state/runs/run_2fznqht9vxyn.json": 104,
+  "service/state/runs/run_2fznrccmhhks.json": 104,
+  "service/state/runs/run_2fzpr48zik7i.json": 62,
+  "service/state/served/org/signing-key": 1
+ }
+}

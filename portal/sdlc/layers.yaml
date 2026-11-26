@@ -4,13 +4,13 @@ records:
   - id: maintainer
     title: Maintainer SDLC
     who: People and agents working on this repository
-    builds: Toolbox itself and its first-party connectors, packages and actions
+    builds: Seikika itself and its first-party connectors, packages and actions
     doc: docs/design/maintainer-sdlc.md
     stages: [plan, build, test, verify, design-review, release, monitor]
   - id: package-author
     title: Package author SDLC
     who: >-
-      Anyone publishing Toolbox packages, connectors or standards for others
+      Anyone publishing Seikika packages, connectors or standards for others
       to consume
     builds: >-
       Packages (standards as data), connector binaries, and the tool

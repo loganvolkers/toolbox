@@ -1,9 +1,9 @@
 # CLI commands and MCP tools: operator and user SDLC contracts (docs/sdlc.md).
-# Included by portal/toolbox.yaml; see portal/README.md for the layout.
+# Included by portal/seikika.yaml; see portal/README.md for the layout.
 
 kinds:
   - name: Command
-    description: A `toolbox` CLI (sub)command, from `toolbox describe`.
+    description: A `seikika` CLI (sub)command, from `seikika describe`.
     identityFrom: [connector:surfaces]
     fields:
       name: {type: string}
@@ -37,7 +37,7 @@ kinds:
         callsTool: "record.mcpTool == null ? [] : ['mcp-tool:' + record.mcpTool]"
 
   - name: McpTool
-    description: A built-in MCP tool the server exposes, from `toolbox describe`.
+    description: A built-in MCP tool the server exposes, from `seikika describe`.
     identityFrom: [connector:surfaces]
     fields:
       name: {type: string}
@@ -86,10 +86,10 @@ scorecards:
       silver means it can use every flag and a test fails when the command
       breaks.
     links:
-    - title: Toolbox for Toolbox
-      url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/toolbox-for-toolbox.md
+    - title: Seikika for Seikika
+      url: https://github.com/seikika/seikika/blob/main/docs/design/seikika-for-seikika.md
     - title: Operator SDLC
-      url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/sdlc.md
+      url: https://github.com/seikika/seikika/blob/main/docs/design/sdlc.md
     owner: group:maintainers
     track: operator
     levels: [bronze, silver]
@@ -100,9 +100,9 @@ scorecards:
       check: has(entity.about) && entity.about.size() >= 10
       evidence: >-
         [has(entity.about) ? 'help "' + entity.about + '" is under 10
-        characters' : 'toolbox ' + entity.name + ' has no help text']
+        characters' : 'seikika ' + entity.name + ' has no help text']
       fix: >-
-        Give the command's variant in `crates/toolbox-cli/src/main.rs` a `///`
+        Give the command's variant in `crates/seikika-cli/src/main.rs` a `///`
         doc comment; clap shows it as the command's help.
       rationale: >-
         `--help` is the first thing an agent runs on an unfamiliar command;
@@ -111,9 +111,9 @@ scorecards:
     - name: documented
       level: bronze
       check: entity.documentedIn.size() > 0
-      evidence: "['not mentioned as `toolbox ' + entity.name + '` in any doc']"
+      evidence: "['not mentioned as `seikika ' + entity.name + '` in any doc']"
       fix: >-
-        Describe `toolbox <command>` in docs/v1-spec.md §7.7 or the operator
+        Describe `seikika <command>` in docs/v1-spec.md §7.7 or the operator
         SDLC doc.
       rationale: >-
         Help is read only by someone who already knows the command exists. An
@@ -131,11 +131,11 @@ scorecards:
       level: silver
       check: entity.exercisedBy.size() > 0
       evidence: >-
-        ['no script under scripts/ and no test under crates/*/tests runs toolbox
+        ['no script under scripts/ and no test under crates/*/tests runs seikika
         ' + entity.name]
       fix: >-
         Run the command in an acceptance script (`scripts/m*-acceptance.sh`) or
-        an integration test under `crates/toolbox-cli/tests/`.
+        an integration test under `crates/seikika-cli/tests/`.
       rationale: >-
         A command that no script or test runs can break without CI noticing, and
         an operator finds out halfway through a change to their portal.
@@ -155,9 +155,9 @@ scorecards:
       explained and a test runs the command.
     links:
     - title: User SDLC
-      url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/user-sdlc.md
-    - title: Toolbox for Toolbox
-      url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/toolbox-for-toolbox.md
+      url: https://github.com/seikika/seikika/blob/main/docs/design/user-sdlc.md
+    - title: Seikika for Seikika
+      url: https://github.com/seikika/seikika/blob/main/docs/design/seikika-for-seikika.md
     owner: group:maintainers
     track: operator
     levels: [bronze, silver]
@@ -168,9 +168,9 @@ scorecards:
       check: has(entity.about) && entity.about.size() >= 10
       evidence: >-
         [has(entity.about) ? 'help "' + entity.about + '" is under 10
-        characters' : 'toolbox ' + entity.name + ' has no help text']
+        characters' : 'seikika ' + entity.name + ' has no help text']
       fix: >-
-        Give the command's variant in `crates/toolbox-cli/src/main.rs` a `///`
+        Give the command's variant in `crates/seikika-cli/src/main.rs` a `///`
         doc comment; clap shows it as the command's help.
       rationale: >-
         `--help` is the first thing an agent runs on an unfamiliar command;
@@ -179,13 +179,13 @@ scorecards:
     - name: structured-output
       level: bronze
       check: entity.name == 'mcp' || entity.structuredOutput
-      evidence: "['toolbox ' + entity.name + ' has no -o json output']"
+      evidence: "['seikika ' + entity.name + ' has no -o json output']"
       fix: >-
         Support `-o json` (or `--format json`) so scripts and apps can parse the
         output.
       rationale: >-
         A script that parses Markdown or table text breaks when the wording
-        changes; JSON gives a CI check a shape it can depend on. `toolbox mcp`
+        changes; JSON gives a CI check a shape it can depend on. `seikika mcp`
         is exempt because it is a stdio bridge, not a read.
     - name: args-described
       level: silver
@@ -199,18 +199,18 @@ scorecards:
       level: silver
       check: entity.exercisedBy.size() > 0
       evidence: >-
-        ['no script under scripts/ and no test under crates/*/tests runs toolbox
+        ['no script under scripts/ and no test under crates/*/tests runs seikika
         ' + entity.name]
       fix: >-
         Run the command in an acceptance script (`scripts/m*-acceptance.sh`) or
-        an integration test under `crates/toolbox-cli/tests/`.
+        an integration test under `crates/seikika-cli/tests/`.
       rationale: >-
         Users' scripts depend on this command's behaviour; if no script or test
         runs it, a regression reaches them before CI sees it.
     facets: {summary: public, details: public}
 
   # Every CLI command has a skill that names its invocation (D94). The doc capture already
-  # turns `toolbox <command>` in a SKILL.md into documentedIn.
+  # turns `seikika <command>` in a SKILL.md into documentedIn.
   - name: cli-skill
     title: Every CLI command has a skill
     kind: Command
@@ -224,9 +224,9 @@ scorecards:
       level is enough: maintainer-skill scores the skill file itself.
     links:
     - title: CLI skills design
-      url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/cli-skills.md
+      url: https://github.com/seikika/seikika/blob/main/docs/design/cli-skills.md
     - title: 'Decision: one skill per command'
-      url: https://github.com/loganvolkers/toolbox/blob/main/docs/decisions/D01M7X1Y5T00000000000000000.md
+      url: https://github.com/seikika/seikika/blob/main/docs/decisions/D01M7X1Y5T00000000000000000.md
     owner: group:maintainers
     track: operator
     levels: [bronze]
@@ -235,10 +235,10 @@ scorecards:
     - name: has-skill
       level: bronze
       check: entity.documentedIn.filter(p, p.endsWith('SKILL.md')).size() > 0
-      evidence: "['missing skill for toolbox ' + entity.name]"
+      evidence: "['missing skill for seikika ' + entity.name]"
       fix: >-
-        Add plugins/toolbox-operator/skills/<slug>/SKILL.md that includes the
-        invocation toolbox <command>, with the flags and the exit codes.
+        Add plugins/seikika-operator/skills/<slug>/SKILL.md that includes the
+        invocation seikika <command>, with the flags and the exit codes.
       rationale: >-
         An agent that cannot find a command will not run it. The skill routes a
         coding agent to the invocation when its task calls for it; matching the
@@ -260,9 +260,9 @@ scorecards:
       tests found bugs the CLI path did not show.
     links:
     - title: User SDLC
-      url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/user-sdlc.md
-    - title: Toolbox for Toolbox
-      url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/toolbox-for-toolbox.md
+      url: https://github.com/seikika/seikika/blob/main/docs/design/user-sdlc.md
+    - title: Seikika for Seikika
+      url: https://github.com/seikika/seikika/blob/main/docs/design/seikika-for-seikika.md
     owner: group:maintainers
     track: operator
     levels: [bronze, silver, gold]
@@ -287,19 +287,19 @@ scorecards:
         Set annotations.readOnlyHint (and idempotent/openWorld hints for
         writes).
       rationale: >-
-        Toolbox leaves prompt-injection defence to the client's approval layer
+        Seikika leaves prompt-injection defence to the client's approval layer
         and owes it accurate annotations; without `readOnlyHint` a client cannot
         tell a safe read from a call that needs the user's approval.
       links:
       - title: Authorization and MCP
-        url: https://github.com/loganvolkers/toolbox/blob/main/docs/authorization.md
+        url: https://github.com/seikika/seikika/blob/main/docs/authorization.md
     - name: inputs-described
       level: silver
       check: entity.undescribedProperties.size() == 0
       evidence: entity.undescribedProperties
       fix: >-
         Add a description to each input property in the evidence
-        (crates/toolbox-api/src/mcp.rs).
+        (crates/seikika-api/src/mcp.rs).
       rationale: >-
         An agent fills a tool's inputs from the schema it is given; without
         descriptions it guesses formats and defaults. The fresh-agent run had to
@@ -321,7 +321,7 @@ scorecards:
         # Observed calls when the runner has run the contract tests; otherwise a tools/call body that
         # names the tool (static mode, weaker: it can't see whether the call happens).
       # Only successful calls count: the contract tests' helper asserts on each result
-      # (crates/toolbox-api/tests/mcp.rs, `call`), so a call that errors proves nothing.
+      # (crates/seikika-api/tests/mcp.rs, `call`), so a call that errors proves nothing.
       check: >-
         has(entity.observed) ? entity.observed.calls - entity.observed.errors >
         0 : entity.exercisedBy.size() > 0
@@ -332,7 +332,7 @@ scorecards:
         naming this tool outside a comment in tests or scripts (static mode)']
       fix: >-
         Call the tool directly (tools/call) in a test, e.g.
-        crates/toolbox-api/tests; the CLI path in `viaCli` doesn't pin the MCP
+        crates/seikika-api/tests; the CLI path in `viaCli` doesn't pin the MCP
         contract.
       rationale: >-
         A tool reached only through the CLI leaves its MCP schema and
@@ -342,5 +342,5 @@ scorecards:
         names the tool.
       links:
       - title: Thresholds
-        url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/thresholds.md
+        url: https://github.com/seikika/seikika/blob/main/docs/design/thresholds.md
     facets: {summary: public, details: public}

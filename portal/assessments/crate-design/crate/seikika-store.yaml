@@ -1,0 +1,98 @@
+apiVersion: seikika.com/assessment/v1
+entity: crate:seikika-store
+rubric: crate-design
+subjectHash: 5c6d4217ed64
+assessor: {kind: agent, name: cursor-assessor-20, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: one-responsibility
+    verdict: fail
+    reason: >-
+      The spec row is "`Store` trait; `MemStore`; `PgStore` (sqlx);
+      migrations" (docs/v1-spec.md:91). The crate docs describe a narrower and
+      older crate: "Inputs to the derived-state pipeline … `PgStore` arrives
+      with M2" (crates/seikika-store/src/lib.rs:1-3). PgStore has existed
+      since M2 (src/pg.rs), and it now does much more than inputs: - snapshot
+      publication and the tuple delta (pg.rs:220-305); - personal access
+      tokens (pg.rs:307-335); - action run records and spent confirm tokens
+      (pg.rs:337-377, with migrations 0002_tokens.sql and 0003_runs.sql). The
+      crate as a whole is plausibly one job, "Seikika's Postgres persistence",
+      but its docs are stale and say otherwise.
+    suggestion: >-
+      Rewrite the crate doc in lib.rs:1-3: drop "PgStore arrives with M2" and
+      say that the crate owns inputs (the Store trait, MemStore and fixtures)
+      plus PgStore's other tables: snapshots and tuples, tokens, runs and
+      spent tokens. Or move the token and run tables behind their own small
+      traits, so that the "inputs" description becomes true again.
+  - criterion: small-contract
+    verdict: fail
+    reason: >-
+      Most callers use documented items: the Store trait, MemStore, SharedMem,
+      load_fixtures and read_fixtures (seikika-derive tests/reference.rs:21,
+      52; seikika-api tests/api.rs:21; seikika-cli server.rs:179-198). The
+      exceptions: - `PgStore` exposes `pub pool: PgPool` (pg.rs:17-20).
+      seikika-cli reaches into it to hand a raw sqlx pool to seikika-authz:
+      `install_tuple_view(&pg.pool, …)` (crates/seikika-cli/src/server.rs:90,
+      crates/seikika-authz/src/openfga.rs:414). - `try_lead` returns
+      `sqlx::pool::PoolConnection<Postgres>` (pg.rs:238-247), which
+      seikika-api holds as its leader guard
+      (crates/seikika-api/src/state.rs:278). - The trait and its
+      implementations disagree. The trait says a non-zero revision "must be
+      the next revision" (lib.rs:68). PgStore enforces that with a Conflict
+      (pg.rs:132-138), but MemStore keeps the highest revision and never
+      conflicts (lib.rs:135-148). So routes.rs:647's 409 can only happen on
+      Postgres. - StoreError, PgStore and MemStore::new/snapshot are
+      undocumented (facts: undocumented).
+    suggestion: >-
+      Make `pool` private. Add a PgStore method that installs the tuple view,
+      or pass a URL to seikika-authz. Return an opaque `LeaderGuard` from
+      try_lead. Have SharedMem enforce the same next-revision rule as PgStore,
+      so both meet one documented contract, and document the four undocumented
+      items.
+  - criterion: replaceable-defaults
+    verdict: fail
+    reason: >-
+      The Store trait itself is a Seikika-owned contract with no sqlx types in
+      it (lib.rs:64-74), and MemStore proves it can be swapped. But the
+      Postgres driver leaks past the crate. A public field and a public return
+      type name sqlx (pg.rs:19, pg.rs:240). seikika-authz depends on sqlx
+      directly and takes a `&sqlx::PgPool` (crates/seikika-authz/
+      Cargo.toml:18, openfga.rs:414), fed from PgStore's pool by seikika-cli
+      (server.rs:90). Replacing sqlx, or wrapping Postgres differently, would
+      change seikika-authz, seikika-cli and seikika-api, not only this crate.
+    suggestion: >-
+      Keep sqlx types inside seikika-store. Expose a Seikika type for the
+      leader lock. Give PgStore (or a small `TupleView` trait it implements)
+      the job of installing OpenFGA's tuple view, so that seikika-authz no
+      longer needs sqlx.
+  - criterion: tests-match-risk
+    verdict: fail
+    reason: >-
+      MemStore and the fixture loader have direct tests: ordering and deletes,
+      revision precedence, and a bad NDJSON line naming its place
+      (lib.rs:232-295). PgStore, which is the riskier half, has no test in the
+      crate. Some of its paths are covered only indirectly, through the binary
+      in CI (.github/workflows/ci.yml:160-177): - ingest, delete, restart and
+      tuple publication (scripts/m2-acceptance.sh:4-6, 59-71); - PAT lookup
+      and an unknown token returning 401 (scripts/m3-acceptance.sh:49-52).
+      Three paths have no test at all: - PgStore's optimistic-lock Conflict
+      (pg.rs:132-138); - revoked or expired tokens (pg.rs:327-328); - runs and
+      spent confirm tokens surviving a restart (pg.rs:337-377, read back in
+      crates/seikika-api/src/actions.rs:158-159). The last one is what stops a
+      confirm token being replayed after a restart, and
+      scripts/m5-acceptance.sh runs without Postgres.
+    suggestion: >-
+      Add a Postgres-backed test, gated on a database URL as the acceptance
+      scripts are, that checks four things: - a stale revision gets Conflict;
+      - a revoked or expired token resolves to None; - put_run, runs,
+      put_spent and spent round-trip; - a snapshot read during a concurrent
+      ingest sees one version. Add one MemStore-and-PgStore contract test for
+      put_native.
+summary: >-
+  A small crate whose Store trait is a sound contract, but whose Postgres
+  half has outgrown its docs and leaks sqlx. The crate doc still says
+  PgStore "arrives with M2". The public pool and the leader connection
+  carry sqlx into seikika-cli, seikika-api and seikika-authz. MemStore and
+  PgStore disagree on native revisions. The Postgres paths that guard
+  writes and token replay are untested, or tested only through acceptance
+  scripts.

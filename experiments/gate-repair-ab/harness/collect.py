@@ -5,7 +5,7 @@
 
 <transcripts-dir> is the directory `batch-fetch-details` wrote, with <bcId>/transcript.json. A run's
 arm is read from prompts/rendered/r<round>/arms.tsv when `round.sh` wrote one, and is otherwise the
-run's name without its number. Arms named `toolbox…` are scored and counted as Toolbox.
+run's name without its number. Arms named `seikika…` are scored and counted as Seikika.
 
 *read* is `resultCharsImputed`: a `read_file` whose result the transcript lacks counts as that file
 on `pr` (count.py). `readRecorded` is the read as recorded, and `missing` names the calls without a
@@ -37,7 +37,7 @@ def main() -> None:
     for spec in runs:
         run, bc = spec.split("=")
         arm = arm_of.get(run, run.rsplit("-", 1)[0])
-        kind = "toolbox" if arm.startswith("toolbox") else arm
+        kind = "seikika" if arm.startswith("seikika") else arm
         dest = f"/tmp/gate-repair-ab/r{rnd}/{run}"
         score = json.loads(subprocess.run([sys.executable, HERE / "score.py", kind, dest],
                                           capture_output=True, text=True, check=True).stdout)

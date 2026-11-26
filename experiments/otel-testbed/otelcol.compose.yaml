@@ -1,4 +1,4 @@
-# Collector config for docker-compose.yaml (host Toolbox on :18180).
+# Collector config for docker-compose.yaml (host Seikika on :18180).
 # CI prefers scripts/score.sh + the host binary path in otelcol.yaml.
 
 receivers:
@@ -7,7 +7,7 @@ receivers:
   prometheus:
     config:
       scrape_configs:
-        - job_name: toolbox
+        - job_name: seikika
           scrape_interval: 1s
           scrape_timeout: 1s
           static_configs: [{targets: [host.docker.internal:18180]}]

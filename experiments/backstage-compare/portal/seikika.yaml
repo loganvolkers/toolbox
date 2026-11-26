@@ -1,0 +1,60 @@
+# The Seikika arm of the Backstage comparison (../README.md): the same catalog the Backstage arm
+# reads from catalog.yaml (groups, systems, components), fed through the ingest API.
+apiVersion: seikika.com/v1alpha1
+
+portal:
+  name: bench
+  title: Backstage comparison
+  owner: group:g0
+  seikika: "0.1"
+
+connectors:
+  - name: catalog
+    package: builtin:scim
+    runtime: remote
+    records: [group, system, component]
+
+kinds:
+  - name: Group
+    identityFrom: [connector:catalog]
+    fields: {title: {type: string}}
+    sources: {default: [connector:catalog]}
+    map:
+    - from: catalog/group
+      id: "'group:' + record.name"
+      set: "{'title': record.title}"
+
+  - name: System
+    identityFrom: [connector:catalog]
+    fields: {title: {type: string}, owner: {type: ref, to: Group}}
+    sources: {default: [connector:catalog]}
+    map:
+    - from: catalog/system
+      id: "'system:' + record.name"
+      set: "{'title': record.title, 'owner': 'group:' + record.owner}"
+
+  - name: Component
+    identityFrom: [connector:catalog]
+    fields:
+      title: {type: string}
+      lifecycle: {type: enum, values: [experimental, production, deprecated]}
+      owner: {type: ref, to: Group}
+      system: {type: ref, to: System}
+    sources: {default: [connector:catalog]}
+    map:
+    - from: catalog/component
+      id: "'component:' + record.name"
+      set: >-
+        {'title': record.title, 'lifecycle': record.lifecycle,
+         'owner': 'group:' + record.owner, 'system': 'system:' + record.system}
+
+# Like Backstage's permission framework with a policy: every entity read is checked, here by the
+# OpenFGA co-process, with tuples derived from the catalog.
+authz:
+  model: authz/model.fga
+  tuples:
+    - {static: [{user: user:*, relation: viewer, object: portal:bench}]}
+    - kind: Component
+      emit: >-
+        [{'user': 'portal:bench', 'relation': 'portal', 'object': entity.id},
+         {'user': entity.owner, 'relation': 'owner', 'object': entity.id}]

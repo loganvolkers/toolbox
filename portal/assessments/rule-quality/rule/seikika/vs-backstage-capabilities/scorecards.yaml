@@ -1,0 +1,47 @@
+apiVersion: seikika.com/assessment/v1
+entity: rule:seikika/vs-backstage-capabilities/scorecards
+rubric: rule-quality
+subjectHash: 84b886f46c3b
+assessor: {kind: agent, name: cursor-assessor-15, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: measures-intent
+    verdict: pass
+    reason: >-
+      "Score entities against standards" (backstage-comparison.yaml:147-149)
+      is met by Seikika's core scorecards
+      (experiments/backstage-compare/facts.yaml:84-86) and by Backstage only
+      through the Tech Insights community add-on
+      (experiments/backstage-compare/facts.yaml:169-174), which the brief
+      allows if recorded as an add-on (RESEARCH.md:126-127). The brief's
+      scenario said "scorecard with levels" (RESEARCH.md:117); the rule
+      dropped "with levels", which is what lets the add-on pass, and the
+      rationale says so openly (backstage-comparison.yaml:1000-1003).
+  - criterion: hard-to-game
+    verdict: fail
+    reason: >-
+      Both sides are booleans in experiments/backstage-compare/facts.yaml
+      (84-86 and 169-174) merged by snapshot.py:85. An earlier version of this
+      very fact was wrong for Backstage (ADJUDICATION.md:285-288), which shows
+      how easily a hand-written capability drifts.
+    suggestion: >-
+      Have the harness score one corpus component on each arm (Seikika's
+      `seikika score`, a Tech Insights check on Backstage) and set
+      `capScorecards` from a returned result, keeping the add-on noted.
+  - criterion: fix-leads-to-pass
+    verdict: pass
+    reason: >-
+      The fix names the definition to keep, scorecards in the manifest as the
+      v1 spec defines them (docs/v1-spec.md §5), which is the evidence
+      experiments/backstage-compare/facts.yaml:84-86 cites; a regression there
+      is what would flip the fact.
+  - criterion: threshold-justified
+    verdict: pass
+    reason: >-
+      Boolean with no threshold; pre-registered "true" in
+      experiments/backstage-compare/README.md:53 (ADJUDICATION.md:114).
+summary: >-
+  A fair rule, and its rationale discloses the add-on that lets Backstage
+  pass. It quietly drops the brief's "with levels", and its fact is a
+  boolean that has already been wrong once, so a scored probe would make
+  it sturdier.

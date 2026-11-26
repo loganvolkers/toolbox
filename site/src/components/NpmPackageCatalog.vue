@@ -9,7 +9,7 @@ defineProps<{ packages: Array<{ name: string; registry: string; description: str
       <tr v-for="pkg in packages" :key="pkg.name">
         <th scope="row">
           <a :href="pkg.registry"><code>{{ pkg.name }}</code></a>
-          <a class="source" :href="'https://github.com/loganvolkers/toolbox/tree/main/' + pkg.source"
+          <a class="source" :href="'https://github.com/seikika/seikika/tree/main/' + pkg.source"
             :aria-label="'GitHub source for ' + pkg.name">GitHub</a>
         </th>
         <td>{{ pkg.description }}</td>

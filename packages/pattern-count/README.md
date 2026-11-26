@@ -1,21 +1,21 @@
-# pattern-count: a Toolbox package
+# pattern-count: a Seikika package
 
 **Every match of a regular expression is a violation.** One `include` gives a repository the
 standard, a ratchet and a campaign:
 
-- `toolbox report` lists every file with matches, with the line of each and the fix;
+- `seikika report` lists every file with matches, with the line of each and the fix;
 - the ratchet fails a pull request that adds a match to any file (including a new file), and
   reports the files that lost matches;
 - the campaign `<name>-zero` counts files with matches, and matches, from the day the baseline
   first records it.
 
-It needs nothing but the `toolbox` binaries: files are read by `builtin:workspace`. If the pattern is
+It needs nothing but the `seikika` binaries: files are read by `builtin:workspace`. If the pattern is
 already a semgrep rule, use [`packages/semgrep`](../semgrep/README.md) instead: it keeps the rule
 in one place and counts its `nosemgrep` suppressions.
 
-**Box or tool:** this package is a **jig**, a quick tool made from Toolbox's own primitives
-([toolbox-and-tools.md](../../docs/design/toolbox-and-tools.md) §4). It suits a proof of concept in
-one repository. A regex matches text, so a rename can fool it. For a standard that lasts, write the pattern as a semgrep or ast-grep rule, which runs without Toolbox, and carry it with [`semgrep`](../semgrep/README.md).
+**Box or tool:** this package is a **jig**, a quick tool made from Seikika's own primitives
+([seikika-and-tools.md](../../docs/design/seikika-and-tools.md) §4). It suits a proof of concept in
+one repository. A regex matches text, so a rename can fool it. For a standard that lasts, write the pattern as a semgrep or ast-grep rule, which runs without Seikika, and carry it with [`semgrep`](../semgrep/README.md).
 
 | Brings | Named |
 |---|---|
@@ -26,13 +26,13 @@ one repository. A regex matches text, so a rename can fool it. For a standard th
 
 ## Use it
 
-`.toolbox/toolbox.yaml`:
+`.seikika/seikika.yaml`:
 
 ```yaml
-apiVersion: toolbox.dev/v1alpha1
-portal: {name: my-repo, owner: group:maintainers, toolbox: "0.1"}
+apiVersion: seikika.com/v1alpha1
+portal: {name: my-repo, owner: group:maintainers, seikika: "0.1"}
 include:
-  - package: github:loganvolkers/toolbox/packages/pattern-count@<tag>   # or a relative path
+  - package: github:seikika/seikika/packages/pattern-count@<tag>   # or a relative path
     with:
       name: no-console
       kind: SourceFile
@@ -47,13 +47,13 @@ include:
 Then, from the repository root:
 
 ```bash
-toolbox vendor <toolbox checkout>/packages/pattern-count --portal .toolbox    # offline: copy the package in (or include github:…@tag)
-toolbox report .toolbox -o failures                                     # every violation, as JSON
-toolbox report .toolbox --baseline .toolbox/results.json --update      # record the baseline; commit it
-toolbox report .toolbox --baseline .toolbox/results.json               # the gate: exit 1 on a regression
-toolbox report .toolbox --against origin/main                          # what this branch changed, no baseline needed
-toolbox campaign --portal .toolbox --baseline .toolbox/results.json    # campaign progress since its start
-toolbox report .toolbox -o standard --out .toolbox/STANDARD.md         # the standard's docs, from the manifest
+seikika vendor <seikika checkout>/packages/pattern-count --portal .seikika    # offline: copy the package in (or include github:…@tag)
+seikika report .seikika -o failures                                     # every violation, as JSON
+seikika report .seikika --baseline .seikika/results.json --update      # record the baseline; commit it
+seikika report .seikika --baseline .seikika/results.json               # the gate: exit 1 on a regression
+seikika report .seikika --against origin/main                          # what this branch changed, no baseline needed
+seikika campaign --portal .seikika --baseline .seikika/results.json    # campaign progress since its start
+seikika report .seikika -o standard --out .seikika/STANDARD.md         # the standard's docs, from the manifest
 ```
 
 The baseline records only files that violate, so adding clean files never makes it stale. In CI,
@@ -75,13 +75,13 @@ match) and `fix`.
 | `name` | `pattern-count` | Names the connector, scorecard and campaign |
 | `kind` | `PatternFile` | The kind (PascalCase). Include the package twice with different `name` and `kind` for two patterns |
 | `title`, `owner`, `fix` | | The scorecard's heading, owner and fix text |
-| `root` | `.` | The checkout, relative to where `toolbox report` runs |
+| `root` | `.` | The checkout, relative to where `seikika report` runs |
 | `track` | none | The portal track its scorecard and campaign belong to; leave unset if the portal has no tracks |
 
 ## Changing the standard
 
 - **Widen the pattern** (another call): edit `pattern`, then
-  `toolbox report .toolbox --baseline .toolbox/results.json --update --accept no-console`. The new
+  `seikika report .seikika --baseline .seikika/results.json --update --accept no-console`. The new
   matches are recorded and listed, regressions in other scorecards still fail, and the campaign
   restarts from the new state. Review the list, then commit the manifest and `results.json`.
 - **Exempt a file**: add it to `exempt` with its reason, then `--update`.

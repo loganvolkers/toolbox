@@ -1,12 +1,12 @@
 import { h } from "vue";
-import PageFrame from "@toolbox-dev/ui/components/PageFrame.vue";
+import PageFrame from "@seikika/ui/components/PageFrame.vue";
 import ReportApp from "../src/ReportApp.vue";
 import ReportContent from "../src/ReportContent.vue";
 import type { ReportData } from "../src/types";
 
 type Pins = Partial<Record<"scorecard" | "kind" | "entity" | "track" | "campaign" | "rule" | "compare", string>>;
 
-// Fixtures are written by `toolbox report`, whose tests hold the shape; a JSON import types its
+// Fixtures are written by `seikika report`, whose tests hold the shape; a JSON import types its
 // strings too loosely to check against ReportData.
 export function fixture(json: unknown): ReportData {
   return json as ReportData;
@@ -51,7 +51,7 @@ export function routes(D: ReportData, pins: Pins = {}) {
 export function component(build: () => Node | Node[]) {
   return {
     render: () => ({
-      setup: () => () => h(PageFrame, { class: "toolbox-report" }, {
+      setup: () => () => h(PageFrame, { class: "seikika-report" }, {
         default: () => h(ReportContent, { build }),
       }),
     }),

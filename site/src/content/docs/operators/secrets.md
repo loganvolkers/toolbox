@@ -6,15 +6,15 @@ sidebar:
 ---
 
 Connector configs in the manifest use `${env:…}` and `${secret:…}` placeholders. They are not
-resolved at build time (one manifest for every environment). The server and `toolbox report`
+resolved at build time (one manifest for every environment). The server and `seikika report`
 resolve them when a connector starts.
 
 ## Local and CI
 
 ```bash
-export TOOLBOX_SECRETS_DIR=$PWD/.secrets
+export SEIKIKA_SECRETS_DIR=$PWD/.secrets
 echo "$PEM" > .secrets/github-app-private-key
-# or: export TOOLBOX_SECRET_GITHUB_APP_PRIVATE_KEY=…
+# or: export SEIKIKA_SECRET_GITHUB_APP_PRIVATE_KEY=…
 ```
 
 Unresolved secrets are left out of the connector config (with a warning) so a connector can tell
@@ -22,10 +22,10 @@ Unresolved secrets are left out of the connector config (with a warning) so a co
 
 ## Production backends
 
-Configure a chain with `TOOLBOX_SECRETS_CONFIG` (JSON or YAML file). Env and file stay first; then
+Configure a chain with `SEIKIKA_SECRETS_CONFIG` (JSON or YAML file). Env and file stay first; then
 opt in to Vault, AWS Secrets Manager, GCP Secret Manager or Azure Key Vault. Map logical names to
 provider ids so `${secret:github-app-private-key}` keeps working when the backing store changes.
 
 The GCP worked example (GitHub App PEM, Jira token, GCP SA JSON) lives in the repository at
-[`examples/secret-vault-gcp`](https://github.com/loganvolkers/toolbox/tree/main/examples/secret-vault-gcp).
-Design notes: [`docs/design/secret-vault.md`](https://github.com/loganvolkers/toolbox/blob/main/docs/design/secret-vault.md).
+[`examples/secret-vault-gcp`](https://github.com/seikika/seikika/tree/main/examples/secret-vault-gcp).
+Design notes: [`docs/design/secret-vault.md`](https://github.com/seikika/seikika/blob/main/docs/design/secret-vault.md).

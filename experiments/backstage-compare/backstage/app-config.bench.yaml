@@ -1,5 +1,5 @@
 # The Backstage arm of the comparison (../README.md), layered over the create-app default
-# app-config.yaml: the same Postgres 16 as the Toolbox arm, a read-only static token for the load
+# app-config.yaml: the same Postgres 16 as the Seikika arm, a read-only static token for the load
 # client, a token for the agent, and the generated catalog in place of the examples.
 backend:
   database:

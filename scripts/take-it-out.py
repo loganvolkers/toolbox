@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-"""Take-it-out check (docs/design/toolbox-and-tools.md, promise B1): every tool in the box must give
+"""Take-it-out check (docs/design/seikika-and-tools.md, promise B1): every tool in the box must give
 the same findings when it is run on its own.
 
 For each record a portal's connector reports with a `command` (lint records from the runner), run
 that command alone, count the findings for the record's file from the tool's own output, and
-compare with the record's `total`. For OpenSSF Scorecard records, compare the check's score. The counting here is independent of Toolbox's parsers, so a
+compare with the record's `total`. For OpenSSF Scorecard records, compare the check's score. The counting here is independent of Seikika's parsers, so a
 box that dropped, added or filtered findings fails the check.
 
     python3 scripts/take-it-out.py portal ci-lint      # run from the repository root
@@ -58,12 +58,12 @@ def score(text, check):
 
 
 def main(portal, connectors):
-    toolbox = os.environ.get("TOOLBOX", "toolbox")
+    seikika = os.environ.get("SEIKIKA", "seikika")
     outputs = {}  # a whole-tree command runs once
     checked = mismatched = 0
     for name in connectors:
         res = subprocess.run(
-            [toolbox, "connector", "records", "--portal", portal, "--name", name],
+            [seikika, "connector", "records", "--portal", portal, "--name", name],
             capture_output=True, text=True,
         )
         if res.returncode != 0:

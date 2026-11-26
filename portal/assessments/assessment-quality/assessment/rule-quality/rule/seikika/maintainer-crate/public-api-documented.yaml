@@ -1,0 +1,54 @@
+apiVersion: seikika.com/assessment/v1
+entity: assessment:rule-quality/rule:seikika/maintainer-crate/public-api-documented
+rubric: assessment-quality
+subjectHash: d85f7a758a5f
+assessor: {kind: agent, name: cursor-reviewer-07, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: supported
+    verdict: pass
+    reason: >-
+      The citations in
+      portal/assessments/rule-quality/rule/seikika/maintainer-crate/public-api-documented.yaml
+      hold. `Walker::public` checks only for the `pub` keyword outside test
+      code (crates/seikika-connector-workspace/src/rust.rs:114-125), so an
+      item in a private module or a binary-only crate counts. `has_doc`
+      accepts `#[doc(hidden)]` and an empty `///` (rust.rs:40-42). The
+      rationale, evidence, fix and links are
+      portal/standards/crates.yaml:255-258, 253, 254 and 259-261. A connector
+      rerun puts seikika-telemetry at 24 of 54 (44%). Five crates are below 80
+      (authz 66, connect 60, model 78, secrets 57, telemetry 44), which
+      matches results.json. 80% appears at
+      docs/design/seikika-for-seikika.md:103 with no reason.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      The rubric says threshold-justified is unsure "when no source states the
+      number" (portal/standards/meta.yaml:1179-1180). Here a source states 80%
+      (seikika-for-seikika.md:103) but justifies nothing. The repository's own
+      bar is that every number is measured or labelled chosen
+      (docs/design/thresholds.md:13-16), so fail is the right verdict.
+      measures-intent and hard-to-game fail for the rubric's named reasons (an
+      empty doc comment, meta.yaml:1165), and fix-leads-to-pass passes. I
+      found no missed failure.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      The measure is in rust.rs:40-42 and 114-125, and the live coverages can
+      be recomputed from the workspace records. On threshold-justified, a
+      second assessor could read "states the number" as enough. The rubric's
+      question asks whether the number is justified, though, and
+      thresholds.md:13-16 settles what that means here.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      Counting only reachable items, or reading rustc's `missing_docs`, makes
+      the count mean public API. Requiring a non-empty doc and excluding
+      `#[doc(hidden)]` closes both cheap routes. A thresholds.md row for 80%
+      would justify the number. Each suggestion would change its own verdict.
+summary: >-
+  A correct assessment. The connector counts `pub` keywords rather than
+  reachable API, accepts `#[doc(hidden)]` and an empty `///`, and the live
+  figures (telemetry 44%, five crates under 80) match a connector rerun.
+  80% is stated in seikika-for-seikika.md but never justified, so the
+  threshold fail stands.

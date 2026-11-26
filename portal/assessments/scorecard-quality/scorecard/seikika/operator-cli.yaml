@@ -1,0 +1,74 @@
+apiVersion: seikika.com/assessment/v1
+entity: scorecard:seikika/operator-cli
+rubric: scorecard-quality
+subjectHash: b2d795ba8fae
+assessor: {kind: agent, name: cursor-assessor-14, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: one-concern
+    verdict: fail
+    reason: >-
+      It applies to every command that is not a read (`appliesTo: entity.layer
+      == 'operator'`, portal/standards/cli.yaml:96), and `layer` is 'user'
+      only for commands with an MCP tool or `mcp` (cli.yaml:15-18,
+      crates/seikika-cli/src/main.rs:401-413). So its 22 commands mix three
+      layers: `run` is the app developer's day-2 tool
+      (docs/design/federated-actions.md:117, story S1); `token create` is the
+      user SDLC's authenticate stage (docs/design/user-sdlc.md:51); `install`,
+      `vendor`, `tools install` and `doctor` are the package author's
+      distribution loop (docs/design/package-author-sdlc.md:49-50, 192-193);
+      `assess *` are judgement tools. Its level averages all of them as
+      "operator".
+    suggestion: >-
+      Give `Command` an explicit layer per command (a table beside
+      `CLI_MCP_TOOLS`, emitted by `seikika describe`) instead of a fallback,
+      and either move `run` and `token create` to user-cli or rename this card
+      to what it covers (portal-authoring commands).
+  - criterion: levels-are-a-ladder
+    verdict: pass
+    reason: >-
+      Bronze is help and a mention in the docs, silver is help for every
+      argument and a run in CI (cli.yaml:98-141), matching
+      docs/design/seikika-for-seikika.md:105. Silver costs more than bronze
+      for every command, bronze is met by all 22 and silver by 16
+      (portal/results.json), so silver is still worth reaching for `plan`,
+      `push`, `token create`, `vendor` and the two connector commands.
+  - criterion: no-obvious-gap
+    verdict: fail
+    reason: >-
+      Operators' agents run these commands in CI as gates, but nothing checks
+      that they can be parsed: `serve`, `push`, `derive`, `install`, `doctor`,
+      `token create`, `connector test` and `connector records` have no
+      `--format`/`--output` (from `seikika describe`), and user-cli already
+      holds reads to `-o json` (cli.yaml:179-189). Exit codes, which a CI step
+      or an agent branches on, are stated in the help of `validate` and `test`
+      only.
+    suggestion: >-
+      Add a silver rule that an operator command whose output a pipeline reads
+      (doctor, connector test, install) offers `--format json`, as validate,
+      test, plan and report do; and a bronze or silver rule that the help
+      names the exit codes (`seikika describe` can report whether `about`
+      mentions "exit").
+  - criterion: actionable
+    verdict: fail
+    reason: >-
+      The fixes for has-help and documented work as written, but the silver
+      `exercised` fix does not: it suggests an integration test under
+      crates/seikika-cli/tests/, and tests there run the binary through
+      `seikika(&[...])` helpers or
+      `Command::new(env!("CARGO_BIN_EXE_seikika"))`
+      (crates/seikika-cli/tests/assess.rs:68, ratchet.rs:54), which the
+      capture never matches (portal/seikika.yaml:111-114). An agent raising
+      `plan` or `push` that way stays at bronze. The args-described fix names
+      no file, though operator arguments sit in four places (main.rs,
+      `ServeArgs` at main.rs:688, run.rs, report.rs).
+    suggestion: >-
+      Make the `commands` capture see test argument arrays and skip comments,
+      or say in the fix that the test must contain `seikika <command>`
+      literally; and name the files in args-described's fix.
+summary: >-
+  The ladder is sensible and most fixes are concrete, but the card is
+  defined as "every command that is not a read", which sweeps user and
+  package-author commands into the operator layer. Its silver route
+  through a CLI test is invisible to the check, and parseable output and
+  exit codes, which operator pipelines depend on, go unscored.

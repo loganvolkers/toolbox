@@ -1,4 +1,4 @@
-apiVersion: toolbox.dev/assessment/v1
+apiVersion: seikika.com/assessment/v1
 entity: sdlc-stage:user/test
 rubric: sdlc-stage-quality
 subjectHash: bde8f8cf4af6
@@ -10,7 +10,7 @@ verdicts:
     reason: >-
       `min_snapshot` is a lower bound, not a pin. snapshot_for waits until the
       published snapshot is at least the one asked for, then answers from the
-      latest (crates/toolbox-api/src/routes.rs:105-139; P8 in
+      latest (crates/seikika-api/src/routes.rs:105-139; P8 in
       docs/v1-spec.md:568 is read-your-writes). scripts/m2-acceptance.sh:44-56
       checks read-your-writes and :59-64 a stable snapshot across restarts.
       Neither would fail if two reads with the same min_snapshot returned
@@ -23,11 +23,11 @@ verdicts:
   - criterion: agent-can-complete
     verdict: fail
     reason: >-
-      The stage's command, `toolbox get`, has no snapshot option (`toolbox get
+      The stage's command, `seikika get`, has no snapshot option (`seikika get
       --help` lists --fields, --url, --token, --as, -o), so an agent must fall
       back to curl on REST. An app's own CI also has no recorded-fixture mode
       (stage gap, docs/design/user-sdlc.md:84-85). It needs the operator's
-      portal checkout to run `toolbox serve --fixtures`.
+      portal checkout to run `seikika serve --fixtures`.
     suggestion: >-
       Add `--min-snapshot` (and an exact pin, if adopted) to the read commands
       and MCP tools, and ship the contract test kit of user-sdlc.md §5 item 5.
@@ -35,23 +35,23 @@ verdicts:
     verdict: pass
     reason: >-
       A deterministic test portal needs only the released binary. Two restarts
-      of `toolbox serve examples/reference-portal --fixtures` both published
+      of `seikika serve examples/reference-portal --fixtures` both published
       snapshot 4.a88f99fe9321, and `GET /v1/entities/repository:ledger`
       returned byte-identical bodies (same md5). Nothing is compiled.
   - criterion: decoupled-from-core
     verdict: pass
     reason: >-
-      Reproducible app tests are possible today without a Toolbox change: an
-      in-memory fixture server (`toolbox serve --fixtures`,
-      crates/toolbox-cli/src/main.rs:701-703) yields the same snapshot id and
+      Reproducible app tests are possible today without a Seikika change: an
+      in-memory fixture server (`seikika serve --fixtures`,
+      crates/seikika-cli/src/main.rs:701-703) yields the same snapshot id and
       data on every start, as observed above, because the id is the input
       version plus the manifest hash
-      (crates/toolbox-api/src/state.rs:180-181).
+      (crates/seikika-api/src/state.rs:180-181).
 # Codex evaluated the two added criteria. Earlier verdicts retain their original attribution.
   - criterion: fast-feedback
     verdict: fail
     reason: >-
-      portal/sdlc/stages/user.yaml lists toolbox get. docs/v1-spec.md gives no
+      portal/sdlc/stages/user.yaml lists seikika get. docs/v1-spec.md gives no
       measured local time to the stage exit.
     suggestion: >-
       Measure and record the fastest local check that demonstrates this stage

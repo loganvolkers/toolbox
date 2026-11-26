@@ -1,5 +1,5 @@
 # Public docs site (docs/design/site-standards.md).
-# Included by portal/toolbox.yaml; see portal/README.md for the layout.
+# Included by portal/seikika.yaml; see portal/README.md for the layout.
 
 kinds:
   - name: SitePage
@@ -61,16 +61,16 @@ scorecards:
       sidebar, free of credentials, and not sharing its title
       (docs/design/site-standards.md).
     rationale: >-
-      The site is what outside readers see of Toolbox, served from GitHub
+      The site is what outside readers see of Seikika, served from GitHub
       Pages, so an untitled page, a dead link or a leaked credential is a
       public defect. Bronze is a page that stands on its own; silver puts it
       where readers can find it; gold keeps pages distinguishable in search
       and navigation.
     links:
     - title: Site standards
-      url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/site-standards.md
+      url: https://github.com/seikika/seikika/blob/main/docs/design/site-standards.md
     - title: 'Decision: a Starlight docs site'
-      url: https://github.com/loganvolkers/toolbox/blob/main/docs/decisions/D01M7X0RYD00000000000000000.md
+      url: https://github.com/seikika/seikika/blob/main/docs/decisions/D01M7X0RYD00000000000000000.md
     owner: group:maintainers
     track: docs
     levels: [bronze, silver, gold]
@@ -115,7 +115,7 @@ scorecards:
         include the site base and name a content page, a file under site/public,
         or an Astro page under site/src/pages.
       rationale: >-
-        GitHub Pages serves the site under /toolbox and Starlight does not
+        GitHub Pages serves the site under /seikika and Starlight does not
         rewrite a link that already starts with /, so a link that misses the
         base or names no page is a 404 for every reader.
     - name: reachable

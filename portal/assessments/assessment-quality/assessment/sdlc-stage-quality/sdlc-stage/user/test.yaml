@@ -1,4 +1,4 @@
-apiVersion: toolbox.dev/assessment/v1
+apiVersion: seikika.com/assessment/v1
 entity: assessment:sdlc-stage-quality/sdlc-stage:user/test
 rubric: assessment-quality
 subjectHash: aa92d9230e27
@@ -14,17 +14,17 @@ verdicts:
       with tools/reference.py. P8, read-your-writes via min_snapshot, is
       v1-spec.md:574. The rest holds. snapshot_for waits until the published
       input version is at least the one asked for and returns that published
-      snapshot (crates/toolbox-api/src/routes.rs:105-139;
-      crates/toolbox-api/src/state.rs:142-150). m2 checks read-your-writes at
+      snapshot (crates/seikika-api/src/routes.rs:105-139;
+      crates/seikika-api/src/state.rs:142-150). m2 checks read-your-writes at
       scripts/m2-acceptance.sh:44-56 and a stable snapshot across restart at
       :59-64. The stage exit criterion is "Reads pinned with min_snapshot
       return the same data" (portal/sdlc/stages/user.yaml:34), and the gap is
       no recorded-fixture mode (user.yaml:39; docs/design/user-sdlc.md:84-85).
-      toolbox get's flags are fields and Remote's url, token, as and -o
-      (crates/toolbox-cli/src/main.rs:127-135 and :415-428), with no snapshot
+      seikika get's flags are fields and Remote's url, token, as and -o
+      (crates/seikika-cli/src/main.rs:127-135 and :415-428), with no snapshot
       option. serve --fixtures is main.rs:701-703, and the snapshot id is the
       input version plus the manifest hash
-      (crates/toolbox-api/src/state.rs:180-181).
+      (crates/seikika-api/src/state.rs:180-181).
     suggestion: >-
       Cite docs/v1-spec.md:574 for P8. Leave the snapshot_for and m2 citations
       as they are.
@@ -34,7 +34,7 @@ verdicts:
       The exit criterion asks for pinned reads. wait_for returns the latest
       snapshot once its version is high enough (state.rs:147-150), and m2
       never re-reads an old min_snapshot after a later ingest, so
-      executable-exit fails. toolbox get cannot pass a snapshot, so
+      executable-exit fails. seikika get cannot pass a snapshot, so
       agent-can-complete fails. A released binary with --fixtures publishes
       the same id without compiling, and that needs no crate change, so the
       two passes are right.
@@ -54,6 +54,6 @@ verdicts:
 summary: >-
   The stage's exit criterion asks for pinned reads, and min_snapshot is a
   lower bound that then answers from the latest snapshot, so m2 cannot
-  fail that property. toolbox get has no snapshot flag. The assessment
+  fail that property. seikika get has no snapshot flag. The assessment
   cites P8 at v1-spec.md:568, which is P2; P8 is line 574. The verdicts
   stand after that correction.

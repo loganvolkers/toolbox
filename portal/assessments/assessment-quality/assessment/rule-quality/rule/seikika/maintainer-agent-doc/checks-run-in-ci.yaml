@@ -1,0 +1,53 @@
+apiVersion: seikika.com/assessment/v1
+entity: assessment:rule-quality/rule:seikika/maintainer-agent-doc/checks-run-in-ci
+rubric: assessment-quality
+subjectHash: 6013aae06121
+assessor: {kind: agent, name: cursor-reviewer-11, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: supported
+    verdict: pass
+    reason: >-
+      The citations in
+      portal/assessments/rule-quality/rule/seikika/maintainer-agent-doc/checks-run-in-ci.yaml
+      hold. crates/seikika-connector-workspace/src/agentsmd.rs:40-61 is the
+      backtick scan, :41 lists the eight tools, :49-51 skips table rows, and
+      the needle is tool plus `[A-Za-z][A-Za-z0-9-]*`, so `python3
+      scripts/x.py` becomes "python3 scripts". The workflow text is every
+      workflow and action file whole (main.rs:215-222,
+      portal/seikika.yaml:126), so comments and step names match. A scratch
+      checkout whose CI ran only `python3 scripts/other.py` and whose
+      AGENTS.md named `python3 scripts/never-run.py` gave ciMissingCommands []
+      from target/debug/seikika-connector-workspace. The test pin is
+      portal/tests/standards.test.yaml:660-671, D83 decides the rule and the
+      table exemption, and agents-md-standards.md:23,71 are the gold rows. One
+      slip: the fix is agent-docs.yaml:132-135, not 131-134.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      The two fails are the routes the code shows, and fix-leads-to-pass and
+      threshold-justified are right (agent-docs.yaml:132-135; D83 has no
+      number). Note that D83 itself decides "tool plus a subcommand" matching
+      (docs/decisions/D01M7WMSMS20000000000000000.md), so the coarse match is
+      the decided design. That does not rescue measures-intent, which asks
+      whether an entity could pass while missing the intent
+      (portal/standards/meta.yaml:1158-1161).
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      Both fails rest on a regex and a scratch run that a second assessor can
+      repeat in seconds (agentsmd.rs:40-61); I repeated the "python3 scripts"
+      case and got the same result the assessment records.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      Matching the script path rather than its directory, and reading only
+      `run:` values, makes the never-run script appear in the evidence, which
+      flips measures-intent. Narrowing the table exemption closes the
+      hard-to-game route. That narrowing changes what D83 decided, so it needs
+      a new decision file first, which the suggestion doesn't say.
+summary: >-
+  A sound assessment: every code citation checks out and the "one script
+  in CI covers them all" route reproduces on the built connector. The only
+  error is an off-by-one on the fix's lines (132-135). The table-exemption
+  suggestion would need a decision superseding D83.

@@ -1,8 +1,8 @@
-# Adversarial Critique: Should Toolbox Be Built at All?
+# Adversarial Critique: Should Seikika Be Built at All?
 
 *Written 2026-11-19 from the point of view of a skeptical platform-engineering lead at a company with
 500–5,000 engineers, who asks: "Why invent a framework instead of vibe-coding something on Backstage,
-Next.js or Django, or just buying something?" The aim is to **disprove** that Toolbox is a worthwhile
+Next.js or Django, or just buying something?" The aim is to **disprove** that Seikika is a worthwhile
 investment. Each core claim is stated as a falsifiable hypothesis and attacked with evidence.*
 
 *Scope: whether to build at all, not design details. [red-team.md](./red-team.md) (competitive gaps)
@@ -18,10 +18,10 @@ metr.org, dora.dev and thenewstack.io were unreachable from this environment
 
 ## 1. Verdict
 
-**Do not build Toolbox as currently scoped.** The need it targets is real: agents that answer "who owns
+**Do not build Seikika as currently scoped.** The need it targets is real: agents that answer "who owns
 X, does it meet our standards, and why not", with permissions. But between November 2025 and November
 2026 every incumbent shipped that agent surface. That includes the open-source default: Backstage now
-has MCP over OAuth, audit events, published agent skills and an `AiResource` kind. Toolbox puts its
+has MCP over OAuth, audit events, published agent skills and an `AiResource` kind. Seikika puts its
 novelty budget into internals buyers never see: a DBSP circuit, embedded Go OpenFGA via a C ABI,
 Pulumi-style polyglot SDKs, a new connector protocol and a deterministic simulator. Meanwhile the
 visible value is becoming a commodity, and the most common way platforms fail, low adoption for
@@ -32,22 +32,22 @@ Rust crates **[P]**. It depends on three pre-1.0 or pre-production libraries, an
 production features it needs are enterprise-gated in the reference product (§3, H5). A lean wedge
 could still be worth building (§11). The full framework is not.
 
-| # | Hypothesis (Toolbox's claim) | Verdict | One-line reason |
+| # | Hypothesis (Seikika's claim) | Verdict | One-line reason |
 |---|---|---|---|
-| H1 | Agents need a **dedicated agent-first portal** to work well | **Unresolved, leaning weakened** | No evidence either way that catalog context improves agent outcomes. The best adjacent evidence (ETH 2026) found extra context files *lowered* success and raised cost by >20%. Toolbox defers its own test of this to Phase 4 |
+| H1 | Agents need a **dedicated agent-first portal** to work well | **Unresolved, leaning weakened** | No evidence either way that catalog context improves agent outcomes. The best adjacent evidence (ETH 2026) found extra context files *lowered* success and raised cost by >20%. Seikika defers its own test of this to Phase 4 |
 | H2 | Incumbents' agent surfaces are thin and "bolted on", leaving room for an agent-first entrant | **Weakened** | Backstage 1.50–1.57 added MCP OAuth (CIMD), audit, skills, `AiResource` and durable scaffolder recovery. Harness cut 130+ tools to 11. OpsLevel, Cortex, Roadie, Port and RHDH all ship MCP |
 | H3 | Config as code in *real languages* (Pulumi model) is a buyer-valued differentiator | **Weakened** | Config as code is wanted (GitOps lock-outs, Terraform providers), but nothing shows that buyers pick a portal for TS/Python SDKs. The cost is Pulumi-scale, and Pulumi raised ~$100M–250M [S] |
 | H4 | Incremental computation (DBSP) is **required** at the target scale | **Refuted at the stated scale** | My naive full recompute of 100 CEL rules × 100k entities took **6.3 s single-threaded, 2.0 s on 4 threads** [P], against a full-rescore SLO of < 5 min. The ownership closure took 7 ms |
 | H5 | The technology bets are mature enough to build on | **Weakened, close to refuted for v1** | `dbsp` is at v0.385 (388 tags) and Feldera gates checkpoints and state-preserving pipeline changes behind Enterprise. DBOS Rust is 0.6 "pre-production". cel-rust skips 688 of ~2,771 conformance tests and has no type checker. No precedent found for an OpenFGA c-archive [P] |
-| H6 | "Built with agents" makes the scope tractable (D25: no estimates) | **Weakened** | METR's RCT found experienced developers 19% *slower* while believing they were 20% faster. Its 2026 update is "very weak evidence" of a speed-up. Agents do best on well-trodden stacks, and Toolbox is the opposite [S/I] |
+| H6 | "Built with agents" makes the scope tractable (D25: no estimates) | **Weakened** | METR's RCT found experienced developers 19% *slower* while believing they were 20% faster. Its 2026 update is "very weak evidence" of a speed-up. Agents do best on well-trodden stacks, and Seikika is the opposite [S/I] |
 | H7 | Operators will adopt a new framework over Backstage, Port and the rest | **Unresolved, no demand evidence** | Backstage has ~3,400 known adopters [S]. Port raised $100M at $800M [S]. 45.3% of platform teams cite adoption as their main struggle, and culture outweighs tech [S]. The docs name no design partner |
 | H8 | An open-source project can sustain this scope | **Refuted as currently staffed** | One human. Rust + Go FFI + TS/Python SDKs + React + a protocol spec + a simulator. 60% of maintainers are unpaid [S]. Precedents: Earthly's open-source project went to maintenance mode (2025) and Lyft Clutch was archived (Feb 2026) [S/P] |
 | H9 | No open-source project fits, so the gap is worth filling | **Survives literally; doesn't imply value** | True that nothing combines all the pillars. But the "Rust agent-first niche filling" evidence is projects with 2–3 stars [P], which shows no demand |
-| H10 | Self-hosted open source avoids vendor risk | **Survives** | Atlassian ended Compass sales on 13 May 2026, and scorecards don't migrate to DX [S]. This is the strongest argument *for* Toolbox, but Backstage already offers it |
+| H10 | Self-hosted open source avoids vendor risk | **Survives** | Atlassian ended Compass sales on 13 May 2026, and scorecards don't migrate to DX [S]. This is the strongest argument *for* Seikika, but Backstage already offers it |
 
-**Strongest single argument against (§8):** Toolbox's value to a buyer is permission-aware agent access to
+**Strongest single argument against (§8):** Seikika's value to a buyer is permission-aware agent access to
 ownership and standards. That is now a feature every incumbent ships, and its cheapest form costs
-almost nothing (CODEOWNERS plus GitHub custom properties plus the GitHub MCP server). Toolbox's
+almost nothing (CODEOWNERS plus GitHub custom properties plus the GitHub MCP server). Seikika's
 distinctive costs sit in internals that solve problems buyers don't report, at a scale where a full
 recompute measures in seconds.
 
@@ -60,7 +60,7 @@ Backstage should switch on its MCP actions backend instead.
 
 ## 2. Method
 
-1. I extracted Toolbox's claims from [plan.md](./plan.md) §1, §6.6, §8 and §9, from
+1. I extracted Seikika's claims from [plan.md](./plan.md) §1, §6.6, §8 and §9, from
    [decisions.md](./decisions/README.md) and from [research.md](./research.md) §7.
 2. For each claim I wrote down the evidence that would falsify it *before* searching.
 3. Research:
@@ -99,7 +99,7 @@ the IdP) or an incumbent's MCP server; or curated context failing to improve out
 - A *consolidating* layer has some support: tool overload hurts, and "which source do I trust" is a
   real problem. That is the best case for a portal.
 - But the measured effect of adding curated context is unproven and can be negative.
-- Toolbox has put the one experiment that tests its thesis last (Phase 4), after building everything
+- Seikika has put the one experiment that tests its thesis last (Phase 4), after building everything
   it depends on.
 
 **Verdict: unresolved, leaning weakened.**
@@ -200,15 +200,15 @@ Supporting facts:
 |---|---|---|
 | **DBSP (`dbsp` crate)** | Workspace version **0.385.0**; **388 release tags**. Every release is 0.x, so each minor bump may break. Recent changelog entries are full of "Incompatible change" | [P] |
 | DBSP / Feldera | Feldera's docs: "Checkpoints, fault tolerance, and disaster recovery features are only available in Feldera Enterprise Edition." **"Modifying a pipeline while preserving its state" (bootstrapping) is Enterprise-only.** Object-store checkpoint pull/push is behind `#[cfg(feature = "feldera-enterprise")]` in `crates/connectors/src/controller.rs` | [P] |
-| DBSP / Feldera | The MIT `dbsp` crate does contain `checkpointer.rs` and `bootstrap.rs`. The production orchestration around them is what Feldera monetises. Toolbox's Q9 (sub-circuit state reuse) and its object-storage checkpoints are exactly these features | [P] / [I] |
+| DBSP / Feldera | The MIT `dbsp` crate does contain `checkpointer.rs` and `bootstrap.rs`. The production orchestration around them is what Feldera monetises. Seikika's Q9 (sub-circuit state reuse) and its object-storage checkpoints are exactly these features | [P] / [I] |
 | DBSP adoption | ~100 code-search hits for `dbsp` in `Cargo.toml`, mostly Feldera, experiments and theses | [P] |
 | **DBOS Rust SDK** | README: "**Pre-production release.** DBOS Transact for Rust 0.6 … isn't yet supported for production use. Its API may still change in breaking ways." The repo has 50 stars and the main branch is at 0.7.0-dev. DBOS Inc. raised an $8.5M seed (2024); no later round found | [P] / [S] |
-| **cel-rust** | `conformance/src/bin/ignored.txt` lists **688 skipped conformance tests** out of ~2,771 generated (~25%), including 66 `type_deduction` tests. **There is no type checker** in `cel/src`. Toolbox's "typed CEL" (D24) means writing one | [P] |
+| **cel-rust** | `conformance/src/bin/ignored.txt` lists **688 skipped conformance tests** out of ~2,771 generated (~25%), including 66 `type_deduction` tests. **There is no type checker** in `cel/src`. Seikika's "typed CEL" (D24) means writing one | [P] |
 | **OpenFGA as a c-archive in Rust** | No precedent found. OpenFGA's own datastore semantics are still being fixed (open issues #3346 "ReadChanges on Postgres skips changes under concurrent writes"; #3393 "preserve ReadChanges ordering"). A custom read-only datastore must match semantics the project itself is still stabilising | [P] / [I] |
 | Rust UI | Not a risk: the UI is React (D31) | [P] |
 
 **Verdict: weakened, close to refuted for v1.** Each bet has a fallback, but the fallbacks are boring
-technology. That raises the question of why Toolbox doesn't start there.
+technology. That raises the question of why Seikika doesn't start there.
 
 ### H6. "Built with agents" makes the scope tractable
 
@@ -230,10 +230,10 @@ codebases, or that AI-written code accrues maintenance debt.
 **Inference.** The evidence is symmetric, and it matters which side benefits.
 - **Vibe-coding a portal** (Next.js/Django CRUD over Postgres) is the best case for agents: abundant
   training data and stable APIs. It suffers the debt and security costs above.
-- **Toolbox** is the worst case: novel APIs (`dbsp` 0.38x, cel-rust without a type checker, a
+- **Seikika** is the worst case: novel APIs (`dbsp` 0.38x, cel-rust without a type checker, a
   hand-rolled C ABI to Go, a new protocol), where agents have little prior knowledge and subtle
   correctness matters.
-- "Agents make it cheap" therefore applies *more* to the alternatives than to Toolbox. Spotify's
+- "Agents make it cheap" therefore applies *more* to the alternatives than to Seikika. Spotify's
   Portal Studio shows the incumbents capturing the same speed-up on their own platforms.
 
 **Verdict: weakened.**
@@ -254,7 +254,7 @@ adoption failures being organisational rather than technical.
 | Perforce 2026 (n=820): platform maturity correlates with AI success (73% vs 44%) | [S] (vendor survey; correlational) |
 | Funding: Port $100M Series C at $800M (Dec 2025); Cortex $60M Series C at ~$470M (Sept 2024); Atlassian bought DX for ~$1B (Sept 2025); Feldera $21.5M | [S] |
 | Consolidation: Atlassian Compass end of sale **13 May 2026**, end of renewals 31 Dec 2026, folded into DX, and **scorecards don't migrate** | [S] |
-| The Toolbox docs name **no design partner or interviewed buyer** | [P] |
+| The Seikika docs name **no design partner or interviewed buyer** | [P] |
 
 **Inference.**
 - The market is consolidating around Backstage (open source) and a few funded SaaS products.
@@ -293,7 +293,7 @@ burnout; precedents of stalled ambitious frameworks.
   - Kuzu archived in Oct 2025 ([research.md](./research.md)).
   - Torii stale since 2024 ([research.md](./research.md)).
 - **Monetisation tension** [P/I]: Feldera keeps the hard production features (checkpoints, state-preserving
-  changes) in its Enterprise edition. An open-source Toolbox has to rebuild them for free, with no
+  changes) in its Enterprise edition. An open-source Seikika has to rebuild them for free, with no
   revenue model ([red-team.md](./red-team.md) A6 is still open).
 
 **Verdict: refuted as currently staffed.** It could survive with a funded team or a foundation, but
@@ -320,8 +320,8 @@ be a gap because the combination isn't wanted.
 - Port and Cortex price per seat with enterprise tiers by quote.
 - Feldera's open-core gating shows how vendors move features behind licences.
 
-**Verdict: survives.** This is the strongest point *for* Toolbox. Backstage (Apache-2.0, CNCF) already
-satisfies it, though, so it argues for open source, not specifically for Toolbox.
+**Verdict: survives.** This is the strongest point *for* Seikika. Backstage (Apache-2.0, CNCF) already
+satisfies it, though, so it argues for open source, not specifically for Seikika.
 
 ---
 
@@ -343,7 +343,7 @@ contributing developers; enterprise discounts are typical and unknown [I].
 | **Vibe-coded portal** (Next.js/Django/Retool + an agent) | Agent + engineer time; no licence | Fast for CRUD screens [I] | **Unknown and likely high:** duplication and churn (GitClear), ~45% insecure output (Veracode); 93% of tech leaders worry about vibe-coded tools in production (Retool, n=307) [S] | Whatever you build | OK for a narrow catalog; poor for permissions and audit |
 | **No portal / minimal** (catalog-info + CODEOWNERS + custom properties + existing MCP servers + Steampipe/CloudQuery MCP) | Near zero | GitHub did ownership in < 45 days [S] | Low | GitHub MCP (34.6k stars), Steampipe MCP, CloudQuery MCP; **no unified permission model** | Good for ownership; weak for cross-tool scorecards and actions |
 | **Other OSS** (OpenChoreo, ForgePortal, OpsCat, Frontkeep, idp-core) | Free | Varies | Your own risk | Some MCP | Only OpenChoreo has traction, and it is Kubernetes- and Backstage-based |
-| **Toolbox** | Free licence; self-hosted Postgres + object storage + connector hosting + on-call | Unmeasured ([red-team.md](./red-team.md) A1; starter portals deferred) | Framework maintenance on an unproven project with one maintainer | Designed agent-first (unbuilt) | Unproven; no reference deployment |
+| **Seikika** | Free licence; self-hosted Postgres + object storage + connector hosting + on-call | Unmeasured ([red-team.md](./red-team.md) A1; starter portals deferred) | Framework maintenance on an unproven project with one maintainer | Designed agent-first (unbuilt) | Unproven; no reference deployment |
 
 ---
 
@@ -365,18 +365,18 @@ contributing developers; enterprise discounts are typical and unknown [I].
 
 ## 6. Build-vs-maintain economics
 
-| Cost driver | Toolbox | Backstage | Buy (Port/Cortex) |
+| Cost driver | Seikika | Backstage | Buy (Port/Cortex) |
 |---|---|---|---|
-| Who maintains the framework | The Toolbox project: currently one person and agents | Spotify + CNCF community (36 contributors in one release) [P] | The vendor |
+| Who maintains the framework | The Seikika project: currently one person and agents | Spotify + CNCF community (36 contributors in one release) [P] | The vendor |
 | Languages in the core | Rust, Go (cgo), TS, Python, React/TSX, CEL, OpenFGA DSL, WIT | TypeScript | n/a |
 | Pre-1.0 dependencies on the critical path | `dbsp` 0.385, DBOS Rust 0.6, cel-rust 0.16 (+ a new type checker) [P] | Mostly stable; frontend system 1.0 in v1.57 [P] | n/a |
 | Production features that are paid elsewhere | DBSP checkpoints and state-preserving reconfiguration (Feldera Enterprise) [P] | None | Included |
 | Adopter-side staffing | Unknown. Self-host + connector hosting + on-call ([red-team.md](./red-team.md) A1) | "3+ FTE" (secondary) | Low |
 | Exit cost if the project stalls | High: a bespoke runtime, protocol and SDKs | Medium: large ecosystem, many vendors | Medium: data export, Compass-style migrations |
 
-**Inference.** The adopter pays twice: once to run Toolbox, and again as risk on a framework whose
+**Inference.** The adopter pays twice: once to run Seikika, and again as risk on a framework whose
 maintenance is unfunded. For a 500–5,000-engineer company, that is strictly worse than Backstage on
-risk, and worse than buying on time to value. Toolbox wins only on licence cost and on a set of
+risk, and worse than buying on time to value. Seikika wins only on licence cost and on a set of
 design properties no survey says buyers rank.
 
 ---
@@ -418,9 +418,9 @@ design properties no survey says buyers rank.
 
 ---
 
-## 8. The strongest single argument against building Toolbox
+## 8. The strongest single argument against building Seikika
 
-> **Toolbox spends its novelty where buyers can't see it, and competes where the market has already
+> **Seikika spends its novelty where buyers can't see it, and competes where the market has already
 > converged.**
 >
 > What a platform lead buys is permission-aware, agent-accessible answers about ownership and standards,
@@ -428,7 +428,7 @@ design properties no survey says buyers rank.
 > RHDH all ship this over MCP. The minimal version (CODEOWNERS + custom properties + the GitHub MCP
 > server) costs almost nothing, and GitHub did its own ownership cleanup in under 45 days.
 >
-> Toolbox's distinctive investments are:
+> Seikika's distinctive investments are:
 > - an incremental circuit, unnecessary at the stated scale (§7);
 > - embedded Go-in-Rust authorization with no precedent;
 > - polyglot SDKs that Pulumi needed a nine-figure company to sustain;
@@ -436,7 +436,7 @@ design properties no survey says buyers rank.
 >
 > None of these appears in any survey of why platforms fail. The surveys say platforms fail on adoption,
 > measurement and culture. One maintainer cannot carry this scope, and the one experiment that would
-> justify the thesis (agents do better with Toolbox's context) is scheduled last.
+> justify the thesis (agents do better with Seikika's context) is scheduled last.
 
 ---
 
@@ -446,7 +446,7 @@ For an organisation **without** a portal today:
 
 1. **Ownership record:**
    - `catalog-info.yaml` in each repo, so it stays Backstage-compatible and portable.
-   - CODEOWNERS as the authority, as Toolbox itself chose in D17.
+   - CODEOWNERS as the authority, as Seikika itself chose in D17.
    - GitHub custom properties (`ownership-type`, `ownership-name`) synced from them, the pattern
      GitHub used.
 2. **Standards:** a scheduled GitHub Action (or rulesets plus a small script) that evaluates checks
@@ -462,7 +462,7 @@ For an organisation **with** Backstage: enable `@backstage/plugin-mcp-actions-ba
 (CIMD) and add Tech Insights or Soundcheck scorecards. If the budget allows, buy Roadie or Spotify
 Portal to offload upgrades.
 
-**What this loses vs. Toolbox [I]:**
+**What this loses vs. Seikika [I]:**
 - field-level source of truth;
 - `plan` previews of permission and score diffs;
 - facet-level information-flow control;
@@ -481,18 +481,18 @@ pre-registered threshold. No dates are given (D25); order them by cost.
 
 | # | Experiment (cheap) | Falsifies | Kill or pivot if… |
 |---|---|---|---|
-| E1 | **Demand interviews:** platform leads at ten 500–5,000-engineer organisations; ask them to rank Toolbox's differentiators against their top three portal pains, and ask for a design-partner commitment | H7 | Fewer than 3 commit to a pilot with a named problem that Backstage MCP or Port doesn't solve → **kill** |
-| E2 | **Agent-value A/B, moved from Phase 4 to first:** 30 scripted "who owns / what depends / is X compliant and why" tasks on a real org. Arms: (a) GitHub MCP + CODEOWNERS only; (b) Backstage MCP actions; (c) the thin ownership MCP from §9; (d) a Toolbox prototype. Measure success, tokens and wrong answers | H1, H2 | (d) does not beat the best of (a)–(c) by ≥ 15 percentage points at equal tokens → **kill the framework**; ship (c) |
+| E1 | **Demand interviews:** platform leads at ten 500–5,000-engineer organisations; ask them to rank Seikika's differentiators against their top three portal pains, and ask for a design-partner commitment | H7 | Fewer than 3 commit to a pilot with a named problem that Backstage MCP or Port doesn't solve → **kill** |
+| E2 | **Agent-value A/B, moved from Phase 4 to first:** 30 scripted "who owns / what depends / is X compliant and why" tasks on a real org. Arms: (a) GitHub MCP + CODEOWNERS only; (b) Backstage MCP actions; (c) the thin ownership MCP from §9; (d) a Seikika prototype. Measure success, tokens and wrong answers | H1, H2 | (d) does not beat the best of (a)–(c) by ≥ 15 percentage points at equal tokens → **kill the framework**; ship (c) |
 | E3 | **Thin-server ceiling:** an agent builds §9's ownership MCP on Postgres with full recompute. Score it against the Phase 1 exit criteria ([plan.md](./plan.md) §8) | H1, H4 | It meets ≥ 80% of the Phase 1 exit criteria → **pivot** to that architecture |
 | E4 | **Extend §7:** add aggregate rules, 2M relations and authz tuple derivation at 100k entities | H4 | A full recompute stays < 30 s → **drop DBSP from v1** (D21 reversed) |
 | E5 | **Novel-stack agent productivity:** have agents implement the Phase 0 "manifest → DBSP circuit with recursive closure" spike, and an equivalent feature on Next.js + Postgres. Log human interventions and defects found by tests | H6 | The novel stack needs ≥ 3× the human interventions → **drop** the "built with agents, so scope is fine" premise and cut scope |
 | E6 | **Backstage parity audit:** for every Phase 1 feature, check Backstage 1.57 + existing plugins | H2, H9 | ≥ 80% present → **pivot** to Backstage modules (CODEOWNERS-authority processor, OpenFGA permission policy, `plan`-style catalog diff in CI) |
 | E7 | **Sustainability gate** | H8 | No second committed human maintainer and no funding or foundation path before Phase 1 → **do not release** a framework that others would depend on |
-| E8 | **Dependency gate:** DBOS Rust reaches a production-supported release; cel-rust or Toolbox ships a type checker passing the cel-spec checker tests; an OpenFGA c-archive passes the conformance corpus under signal and shutdown stress | H5 | Any of these fails in Phase 0 → use the boring fallback (Temporal or Restate, or a Postgres job table; cel-go via a sidecar or a CEL subset; OpenFGA as a sidecar) |
+| E8 | **Dependency gate:** DBOS Rust reaches a production-supported release; cel-rust or Seikika ships a type checker passing the cel-spec checker tests; an OpenFGA c-archive passes the conformance corpus under signal and shutdown stress | H5 | Any of these fails in Phase 0 → use the boring fallback (Temporal or Restate, or a Postgres job table; cel-go via a sidecar or a CEL subset; OpenFGA as a sidecar) |
 
 ---
 
-## 11. What would have to be true for Toolbox to be worth it
+## 11. What would have to be true for Seikika to be worth it
 
 1. **E2 passes.** Agents measurably do better with a curated, permission-shaped ownership and standards
    graph than with direct MCP access to sources and incumbents. Today there is no evidence for this,
@@ -506,7 +506,7 @@ pre-registered threshold. No dates are given (D25); order them by cost.
    - an OpenFGA sidecar;
    - a YAML manifest plus one TypeScript SDK;
    - no TCP spec yet.
-   This is what [principal-review.md](./principal-review.md) §5 proposed. Toolbox's real
+   This is what [principal-review.md](./principal-review.md) §5 proposed. Seikika's real
    differentiators (`plan` on the PR, CODEOWNERS authority, field-level sources, facets) survive this
    cut.
 4. **People and money:** at least two committed human maintainers and a funding or foundation path
@@ -514,7 +514,7 @@ pre-registered threshold. No dates are given (D25); order them by cost.
 5. **Backstage compatibility as a bridge:** read `catalog-info.yaml` and be usable *from* Backstage, so
    adopters don't have to bet the organisation on a new framework.
 
-If 1 and 2 hold, a narrowed Toolbox is defensible. If 1 fails, nothing else in the design rescues it.
+If 1 and 2 hold, a narrowed Seikika is defensible. If 1 fails, nothing else in the design rescues it.
 
 ---
 
@@ -525,7 +525,7 @@ If 1 and 2 hold, a narrowed Toolbox is defensible. If 1 fails, nothing else in t
 | [research.md](./research.md) §2, §4 | Backstage MCP "external auth relies on static tokens … a temporary workaround" | Out of date. Backstage MCP actions support **OAuth via CIMD**; static tokens are a fallback only for apps on the old frontend system (`docs/ai/mcp-actions.md`, v1.50–1.54) [P] |
 | [research.md](./research.md) §5 | The Rust agent-first niche "is beginning to fill … validates both the language choice and the timing" | Frontkeep has 3 stars and OpsCat 2 [P]. This is not validation |
 | [research.md](./research.md) §3 | Compass "offers `compass.yml` config as code" | Compass reached **end of sale on 13 May 2026** and is being folded into DX [S] |
-| [design/incremental-computation.md](./design/incremental-computation.md) §2 | DBSP is "embeddable" with checkpoints and spill as mitigations | True of the MIT crate, but Feldera ships checkpoints, fault tolerance and state-preserving pipeline changes **only in Enterprise**. Toolbox must build that orchestration itself [P] |
+| [design/incremental-computation.md](./design/incremental-computation.md) §2 | DBSP is "embeddable" with checkpoints and spill as mitigations | True of the MIT crate, but Feldera ships checkpoints, fault tolerance and state-preserving pipeline changes **only in Enterprise**. Seikika must build that orchestration itself [P] |
 | [decisions.md](./decisions/README.md) Q10 | "cel-rust conformance level: measure in Phase 0" | Measured: 688 of ~2,771 cel-spec conformance tests skipped; no type checker (commit `004a4b8`) [P] |
 
 ---

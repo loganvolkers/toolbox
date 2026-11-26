@@ -32,7 +32,7 @@ Yamark 0.6.1 is not idempotent on the first pass over those sequences: the first
 
 ## Values that must survive
 
-Yamark emits YAML 1.2. A plain `2026-09-02` is a string, `true`/`false` are booleans, and `yes`/`on` are strings. Toolbox's parser (serde_norway) agrees. PyYAML 1.1 does not: it reads a plain timestamp as a `datetime`. The reference tools load YAML through [`yamlutil.py`](../../examples/reference-portal/tools/yamlutil.py), which drops that resolver, so `tools/reference.py` and `tools/validate.py` keep the string. Quoted dates are not a style we preserve, because the formatter removes quotes that YAML 1.2 does not need.
+Yamark emits YAML 1.2. A plain `2026-09-02` is a string, `true`/`false` are booleans, and `yes`/`on` are strings. Seikika's parser (serde_norway) agrees. PyYAML 1.1 does not: it reads a plain timestamp as a `datetime`. The reference tools load YAML through [`yamlutil.py`](../../examples/reference-portal/tools/yamlutil.py), which drops that resolver, so `tools/reference.py` and `tools/validate.py` keep the string. Quoted dates are not a style we preserve, because the formatter removes quotes that YAML 1.2 does not need.
 
 Yamark 0.6.1 corrupts an unquoted flow value that contains an apostrophe, turning `{type: string, description: The assessor's summary.}` into `{type: "string, description: The assessor's summary.}"}`. Double-quote that value. The formatter leaves the quoted form alone, and the parsed string is the same.
 

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Reference evaluator for the Toolbox reference portal.
+"""Reference evaluator for the Seikika reference portal.
 
 A deliberately small, readable model of the v1 derived-state pipeline (docs/v1-spec.md §6):
 
@@ -65,7 +65,7 @@ def cel(expr, activation, functions=None):
 
 # ------------------------------------------------------------------------------------------ inputs
 def load():
-    manifest = load_yaml(os.path.join(ROOT, "toolbox.yaml"))
+    manifest = load_yaml(os.path.join(ROOT, "seikika.yaml"))
     records = []  # (connector, record kind, data)
     for path in sorted(glob.glob(os.path.join(ROOT, "fixtures", "*.ndjson"))):
         connector = os.path.splitext(os.path.basename(path))[0]

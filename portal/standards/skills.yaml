@@ -1,5 +1,5 @@
 # Agent skills we ship (docs/design/skill-standards.md).
-# Included by portal/toolbox.yaml; see portal/README.md for the layout.
+# Included by portal/seikika.yaml; see portal/README.md for the layout.
 
 kinds:
   # Agent skills we ship (docs/design/skill-standards.md). The connector reports facts; the
@@ -69,9 +69,9 @@ scorecards:
       is not gated.
     links:
     - title: Skill standards
-      url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/skill-standards.md
+      url: https://github.com/seikika/seikika/blob/main/docs/design/skill-standards.md
     - title: 'Decision: a skill scorecard'
-      url: https://github.com/loganvolkers/toolbox/blob/main/docs/decisions/D01M7W3PWP00000000000000000.md
+      url: https://github.com/seikika/seikika/blob/main/docs/decisions/D01M7W3PWP00000000000000000.md
     - title: Agent Skills specification
       url: https://agentskills.io/specification
     owner: group:maintainers
@@ -248,7 +248,7 @@ scorecards:
         bronze, the lowest level, so such a skill cannot pass the ratchet.
       links:
       - title: 'Thresholds: why hidden text sits at bronze'
-        url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/thresholds.md
+        url: https://github.com/seikika/seikika/blob/main/docs/design/thresholds.md
     - name: no-hardcoded-secrets
       level: bronze
       check: entity.secretHits.size() == 0
@@ -262,7 +262,7 @@ scorecards:
         bronze so such a skill cannot pass the ratchet.
       links:
       - title: Thresholds
-        url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/thresholds.md
+        url: https://github.com/seikika/seikika/blob/main/docs/design/thresholds.md
     - name: one-level-deep
       level: gold
       check: entity.linkDepth <= 1 && entity.supportFiles <= 3
