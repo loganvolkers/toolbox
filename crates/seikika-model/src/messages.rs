@@ -1,5 +1,5 @@
 //! Validation of fixture files: `fixtures/<connector>.ndjson` lines are connector messages
-//! (schema/connector-messages.schema.json), and record kinds must be declared by that connector.
+//! (crates/seikika-model/schema/connector-messages.schema.json), and record kinds must be declared by that connector.
 
 use crate::diagnostics::Diagnostic;
 use crate::manifest::Manifest;

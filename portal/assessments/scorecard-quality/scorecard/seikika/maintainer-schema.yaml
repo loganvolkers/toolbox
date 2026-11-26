@@ -8,12 +8,12 @@ verdicts:
   - criterion: one-concern
     verdict: pass
     reason: >-
-      Every rule asks whether a schema/*.json document is the contract the
-      binary actually enforces: its dialect, identity, self-description,
-      whether it is compiled, whether it is self-contained, and whether it is
-      clean (portal/standards/schemas.yaml:35-58). One audience: the
-      maintainers who own those contracts (track maintainer, :55;
-      portal/README.md:31).
+      Every rule asks whether a crates/seikika-model/schema/*.json document is
+      the contract the binary actually enforces: its dialect, identity,
+      self-description, whether it is compiled, whether it is self-contained,
+      and whether it is clean (portal/standards/schemas.yaml:35-58). One
+      audience: the maintainers who own those contracts (track maintainer,
+      :55; portal/README.md:31).
   - criterion: levels-are-a-ladder
     verdict: fail
     reason: >-
@@ -41,7 +41,7 @@ verdicts:
       schema carries its version or that a change stays compatible. Three
       `$id`s carry one (`.../manifest/v1alpha1.json`,
       `.../connector-messages/v1.json`, `.../executor-messages/v1.json`).
-      schema/assessment.schema.json:3 uses
+      crates/seikika-model/schema/assessment.schema.json:3 uses
       `https://seikika.com/schema/assessment.schema.json`, with no version and
       a different path, though its documents must say `apiVersion:
       seikika.com/assessment/v1` (:10). The design doc's research stops at the

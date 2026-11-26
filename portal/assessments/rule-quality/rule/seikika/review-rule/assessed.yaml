@@ -29,10 +29,10 @@ verdicts:
     reason: >-
       Any file with the right subjectHash passes, whatever it says. `seikika
       assess check` asks only for every criterion and 10-character reasons
-      (schema/assessment.schema.json:36), and the ratchet asks for a name and
-      suggestions (portal/standards/assessments.yaml:165). An all-pass file
-      with one stock citation per reason is the cheapest way to pass, and it
-      also passes gold. Unlike review-crate's gold
+      (crates/seikika-model/schema/assessment.schema.json:36), and the ratchet
+      asks for a name and suggestions (portal/standards/assessments.yaml:165).
+      An all-pass file with one stock citation per reason is the cheapest way
+      to pass, and it also passes gold. Unlike review-crate's gold
       (portal/standards/crates.yaml:433-450), nothing on this card asks for a
       second look.
     suggestion: >-

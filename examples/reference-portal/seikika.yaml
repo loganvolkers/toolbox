@@ -1,6 +1,6 @@
 # Seikika reference portal: "acme" on GitHub + an IdP.
 # This manifest is the v1 contract in practice (docs/v1-spec.md §5). It is validated against
-# the repo-root schema/manifest.schema.json (`seikika validate`), and tools/reference.py executes its
+# the repo-root crates/seikika-model/schema/manifest.schema.json (`seikika validate`), and tools/reference.py executes its
 # CEL against fixtures/.
 apiVersion: seikika.com/v1alpha1
 

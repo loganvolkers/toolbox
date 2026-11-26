@@ -21,7 +21,7 @@ verdicts:
     reason: >-
       Silver accepts any schema-valid file: one verdict for each of the four
       scorecard-quality criteria, with reasons of at least 10 characters
-      (schema/assessment.schema.json:32-36,
+      (crates/seikika-model/schema/assessment.schema.json:32-36,
       crates/seikika-api/src/assess.rs:157-166). Four `pass` verdicts saying
       "Looked at it, fine." pass, with no sign that the scorecard's YAML or
       its design doc was opened. The fixture shows citations matter only at

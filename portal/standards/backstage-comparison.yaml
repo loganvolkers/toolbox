@@ -882,7 +882,7 @@ scorecards:
       evidence: "['extensionAnyLanguage is ' + string(entity.extensionAnyLanguage)]"
       fix: >-
         Keep the connector protocol language-neutral, as
-        schema/connector-messages.schema.json defines it.
+        crates/seikika-model/schema/connector-messages.schema.json defines it.
       rationale: >-
         If integrations must be written in the portal's own language and
         framework, the teams who own the data cannot write them, and the

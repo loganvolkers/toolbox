@@ -61,7 +61,7 @@ verdicts:
     verdict: fail
     reason: >-
       Reads go through `Arc<dyn Store>` and `Arc<dyn Authorizer>`
-      (src/state.rs:88-94). The UI host serves whatever bundle is in ui/dist,
+      (src/state.rs:88-94). The UI host serves whatever bundle is in crates/seikika-api/ui-dist,
       with no React dependency (src/ui.rs:7-9). But the public
       `app_state_with` and `AppState` take a concrete
       `Option<seikika_store::PgStore>` next to the trait object

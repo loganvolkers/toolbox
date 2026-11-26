@@ -3,8 +3,8 @@
 use axum::http::{StatusCode, Uri, header};
 use axum::response::{IntoResponse, Response};
 
-const INDEX: &str = include_str!("../../../ui/dist/index.html");
-include!("../../../ui/dist/assets.rs");
+const INDEX: &str = include_str!("../ui-dist/index.html");
+include!("../ui-dist/assets.rs");
 
 const CSP: &str = "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; frame-ancestors 'none'";
 

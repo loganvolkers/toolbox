@@ -22,7 +22,7 @@ verdicts:
       target/debug/seikika-connector-workspace, passed. A placeholder is the
       cheapest pass, and nothing checks that ids are unique across documents
       or follow one scheme. The live ids already differ in shape:
-      schema/assessment.schema.json uses
+      crates/seikika-model/schema/assessment.schema.json uses
       `https://seikika.com/schema/assessment.schema.json`, while the other
       three use `https://seikika.com/schemas/<name>/v1...json`.
     suggestion: >-

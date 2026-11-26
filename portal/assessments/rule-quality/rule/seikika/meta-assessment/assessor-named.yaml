@@ -21,26 +21,28 @@ verdicts:
     verdict: fail
     reason: >-
       `size() > 0` accepts a whitespace-only name such as `name: " "`, and the
-      schema has no pattern on it (schema/assessment.schema.json:20). That is
-      the "empty doc comment" case, and D01M831P5QWJQ4A2FT85N5MXJQF already
-      ruled that blank descriptions and guidance don't count. A blank name
-      also defeats what the rationale says the name is for: `selfReviewed`
-      compares names verbatim (assessments.yaml:105-112), and link_reviews
-      treats any non-empty string as a named, different assessor
+      schema has no pattern on it
+      (crates/seikika-model/schema/assessment.schema.json:20). That is the
+      "empty doc comment" case, and D01M831P5QWJQ4A2FT85N5MXJQF already ruled
+      that blank descriptions and guidance don't count. A blank name also
+      defeats what the rationale says the name is for: `selfReviewed` compares
+      names verbatim (assessments.yaml:105-112), and link_reviews treats any
+      non-empty string as a named, different assessor
       (crates/seikika-connect/src/assessment.rs:289-291).
     suggestion: >-
       Change the check to `has(entity.assessorName) &&
       entity.assessorName.matches('\\S')` and add `"pattern": "\\S"` to
-      `assessor.name` in schema/assessment.schema.json, with a fixture
-      assessment whose name is " " that fails the rule. Trim the name in
-      link_reviews too.
+      `assessor.name` in crates/seikika-model/schema/assessment.schema.json,
+      with a fixture assessment whose name is " " that fails the rule. Trim
+      the name in link_reviews too.
   - criterion: fix-leads-to-pass
     verdict: pass
     reason: >-
       The evidence is the fixed sentence "assessor.name is empty"
       (assessments.yaml:180), which is all a yes/no check of 8 nodes needs
       (docs/design/thresholds.md:46). Setting `assessor.name`, a field the
-      schema already has (schema/assessment.schema.json:20), sets
+      schema already has
+      (crates/seikika-model/schema/assessment.schema.json:20), sets
       `assessorName` and passes the check.
   - criterion: threshold-justified
     verdict: pass

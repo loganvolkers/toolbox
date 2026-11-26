@@ -14,7 +14,7 @@ verdicts:
       []`. crates/seikika-telemetry/src/metrics_prom.rs:75 is "Deprecated
       alias for seikika_snapshot_lag_seconds". `rg -i deprecat crates/` finds
       nothing else but a CEL string in a scale example.
-      schema/manifest.schema.json has no "deprecat" key.
+      crates/seikika-model/schema/manifest.schema.json has no "deprecat" key.
       crates/seikika-derive/src/plan.rs:89-91 and 265 count removed actions
       and MCP tools. user-sdlc.md:59 is the "Hear about changes" row, and
       lines 61-73 are the §4 stability contract.

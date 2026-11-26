@@ -1,6 +1,6 @@
 //! Agent assessments as connector records (docs/design/scorecards-for-scorecards.md §6). An
 //! assessment is one agent's or person's judgement of one entity against one rubric, written as a
-//! file (`schema/assessment.schema.json`) or pushed by `seikika assess submit`. Both paths produce
+//! file (`crates/seikika-model/schema/assessment.schema.json`) or pushed by `seikika assess submit`. Both paths produce
 //! the same `assessment` record, so a portal maps it once.
 
 use serde_json::{Value, json};

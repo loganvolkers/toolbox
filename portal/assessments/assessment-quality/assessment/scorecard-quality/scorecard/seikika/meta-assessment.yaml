@@ -18,9 +18,10 @@ verdicts:
       entities, 28 at gold and operator/monitor at silver with two
       cites-everything items. fix-names-a-place is
       docs/design/scorecards-for-scorecards.md:109 with L1 and L2, and
-      docs/design/thresholds.md:46. schema/assessment.schema.json:37 types a
-      suggestion as a bare string, and
-      crates/seikika-connect/src/assessment.rs:199-201 is `unsuggested`.
+      docs/design/thresholds.md:46.
+      crates/seikika-model/schema/assessment.schema.json:37 types a suggestion
+      as a bare string, and crates/seikika-connect/src/assessment.rs:199-201
+      is `unsuggested`.
   - criterion: complete
     verdict: pass
     reason: >-

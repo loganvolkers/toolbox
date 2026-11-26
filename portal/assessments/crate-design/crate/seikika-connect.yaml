@@ -59,7 +59,7 @@ verdicts:
       (crates/seikika-connect/Cargo.toml). The hub is in memory on purpose,
       and its docs say so: commands are lost on restart (src/hub.rs:1-3). No
       DBOS or Postgres type appears in its API. The wire format is Seikika's
-      own schema/connector-messages.schema.json.
+      own crates/seikika-model/schema/connector-messages.schema.json.
   - criterion: tests-match-risk
     verdict: fail
     reason: >-

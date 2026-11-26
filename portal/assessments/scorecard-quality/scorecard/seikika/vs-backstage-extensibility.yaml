@@ -52,7 +52,8 @@ verdicts:
       succeeding on the unchanged release binary), so that rerunning the
       harness is the fix's last step, and name
       crates/seikika-api/src/routes.rs and
-      schema/connector-messages.schema.json as the places.
+      crates/seikika-model/schema/connector-messages.schema.json as the
+      places.
 summary: >-
   A focused scorecard Seikika clearly leads. It keeps only F11's yes/no
   measures and drops the reference extension's size, the measure that

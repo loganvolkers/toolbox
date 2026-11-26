@@ -12,9 +12,10 @@ verdicts:
       (crates/seikika-cli/src/model.rs:156). A `list` with no `items` is just
       as shapeless but isn't flagged, and neither is `items: json` or any
       other string: the schema makes `items` optional and free text
-      (schema/manifest.schema.json, `$defs/field`). The miss is latent today.
-      Every `list` field in portal/, the starter, the reference portal and
-      packages/ declares `items` (160 by my count), 155 of them scalar.
+      (crates/seikika-model/schema/manifest.schema.json, `$defs/field`). The
+      miss is latent today. Every `list` field in portal/, the starter, the
+      reference portal and packages/ declares `items` (160 by my count), 155
+      of them scalar.
     suggestion: >-
       Treat a `list` without `items`, or with `items` outside the scalar and
       ref types (string, integer, number, boolean, ref), as opaque.

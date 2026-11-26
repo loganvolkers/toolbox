@@ -2,4 +2,4 @@
 portal/results.json linguist-generated=true
 # Generated and drift-checked in CI: `seikika report portal -o standard` and `npm run build` in ui/.
 portal/STANDARD.md linguist-generated=true
-ui/dist/** linguist-generated=true
+crates/seikika-api/ui-dist/** linguist-generated=true

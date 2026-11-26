@@ -30,7 +30,7 @@ verdicts:
     reason: >-
       Silver accepts any schema-valid file with a verdict for each of the four
       criteria and reasons of at least 10 characters
-      (schema/assessment.schema.json:32-36,
+      (crates/seikika-model/schema/assessment.schema.json:32-36,
       crates/seikika-api/src/assess.rs:157-166). The rubric asks the assessor
       to try the stage's commands, but nothing records whether anyone did.
       Four `pass` verdicts saying "Commands look right." reach silver for

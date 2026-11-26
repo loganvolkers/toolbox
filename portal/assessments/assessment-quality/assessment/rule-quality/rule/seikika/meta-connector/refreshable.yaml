@@ -22,9 +22,9 @@ verdicts:
       items. The workspace connector drops `assessment` from refresh at
       crates/seikika-connector-workspace/src/main.rs:1330-1333, and the
       schema's `refresh` items are an enum with no minItems
-      (schema/manifest.schema.json:516-529). I found nothing that compares the
-      manifest with registered capabilities. The conformance kit reads
-      `refresh` only to pick a sample
+      (crates/seikika-model/schema/manifest.schema.json:516-529). I found
+      nothing that compares the manifest with registered capabilities. The
+      conformance kit reads `refresh` only to pick a sample
       (crates/seikika-connect/src/conformance.rs:194-197).
   - criterion: complete
     verdict: pass

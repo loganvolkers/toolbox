@@ -13,7 +13,7 @@ jsonwebtoken.workspace = true
 reqwest.workspace = true
 serde_json.workspace = true
 tokio.workspace = true
-seikika-connect = { path = "../seikika-connect" }
+seikika-connect.workspace = true
 
 [lints]
 workspace = true

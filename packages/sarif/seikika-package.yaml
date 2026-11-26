@@ -2,7 +2,7 @@
 # campaign to zero (docs/design/seikika-and-tools.md: the SARIF slot, as one include).
 apiVersion: seikika.com/package/v0
 name: sarif
-version: 0.1.0
+version: 0.2.0
 description: >-
   Put any SARIF-emitting tool (ruff, semgrep, zizmor, gitleaks, an ESLint
   SARIF formatter) in the box: one record per file, a scorecard that every

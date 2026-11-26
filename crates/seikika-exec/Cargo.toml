@@ -4,6 +4,7 @@ description = "Seikika: action runs — the Seikika layer of a preview, confirm 
 version.workspace = true
 edition.workspace = true
 license.workspace = true
+repository.workspace = true
 rust-version.workspace = true
 publish.workspace = true
 
@@ -14,7 +15,7 @@ serde.workspace = true
 serde_json.workspace = true
 sha2.workspace = true
 tokio.workspace = true
-seikika-connect = { path = "../seikika-connect" }
+seikika-connect.workspace = true
 seikika-derive.workspace = true
 seikika-expr.workspace = true
 seikika-model.workspace = true

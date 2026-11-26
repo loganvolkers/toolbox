@@ -4,3 +4,7 @@ members = []
 [workspace.package]
 version = "0.1.0"
 edition = "2021"
+
+[workspace.dependencies]
+seikika-model = { path = "crates/seikika-model", version = "=0.1.0" }
+external = "=0.1.0"

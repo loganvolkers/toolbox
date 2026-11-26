@@ -15,7 +15,7 @@ and the outputs must match byte for byte.
 | Differential tests | Rust pipeline ≡ reference model (P2); Rust ≡ Postgres SQL views; OpenFGA over the tuple view ≡ the SQL permission view (P13) | Reference portal; [experiments/derived-state-scale](../../experiments/derived-state-scale/README.md) |
 | Property tests | Generated portals and worlds (proptest) for P1, P3–P6; run-lifecycle properties P9–P12 with simulated executors and connectors, including crash injection between steps | Rust test suite |
 | Authorization tests | OpenFGA `.fga.yaml` over the *derived* tuples | `authz/*.fga.yaml` |
-| Contract tests | JSON Schemas for the manifest and the connector/executor messages; golden transcripts | `schema/`, `protocol/` |
+| Contract tests | JSON Schemas for the manifest and the connector/executor messages; golden transcripts | `crates/seikika-model/schema/`, `protocol/` |
 | Integration | The local simulation: Postgres, the image, a GitHub façade over Forgejo, a SCIM feed, and catalog probes (Q19). A sandbox GitHub org remains the later step that needs a real account | [local-simulation.md](./local-simulation.md); CI |
 
 Keep the `Env` seam (clock, randomness, network, store, process spawning behind one crate) from day one,

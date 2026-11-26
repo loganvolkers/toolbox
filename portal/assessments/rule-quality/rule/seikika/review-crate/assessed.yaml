@@ -32,8 +32,8 @@ verdicts:
     reason: >-
       What counts as a review is only a schema-valid file. The schema needs a
       reason of at least 10 characters per verdict
-      (schema/assessment.schema.json:32-36), and `assess check` adds only that
-      every crate-design criterion has a verdict
+      (crates/seikika-model/schema/assessment.schema.json:32-36), and `assess
+      check` adds only that every crate-design criterion has a verdict
       (crates/seikika-api/src/assess.rs:137-168). Four `pass` verdicts that
       each say "Reviewed it, fine." with the brief's subjectHash make
       reviewState `fresh` (crates.yaml:56-62) and pass silver without opening

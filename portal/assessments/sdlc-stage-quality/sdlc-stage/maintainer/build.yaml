@@ -10,8 +10,8 @@ verdicts:
     reason: >-
       .github/workflows/ci.yml runs `cargo build --locked` in the rust job
       (line 39), with the toolchain from rust-toolchain.toml (1.97.0), and the
-      ui job fails when ui/dist differs from its source (`npm run build && git
-      diff --exit-code -- dist`, line 270).
+      ui job fails when crates/seikika-api/ui-dist differs from its source
+      (`npm run build && git diff --exit-code -- dist`, line 270).
   - criterion: agent-can-complete
     verdict: pass
     reason: >-

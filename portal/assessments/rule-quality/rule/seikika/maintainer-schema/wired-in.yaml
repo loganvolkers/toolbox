@@ -20,7 +20,7 @@ verdicts:
     suggestion: >-
       Match `include_str!("…/<full path>")` in schema.rs, or have
       seikika-model export the list of embedded paths and add a test that
-      every schema/*.json is in it.
+      every crates/seikika-model/schema/*.json is in it.
   - criterion: hard-to-game
     verdict: fail
     reason: >-

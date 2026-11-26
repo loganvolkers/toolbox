@@ -26,6 +26,11 @@ BUMP_RANK = {"patch": 1, "minor": 2, "major": 3}
 SKIP_NAMES = {"readme.md", "config.json", "config.schema.json"}
 FRONTMATTER_RE = re.compile(r"\A---\s*\n(.*?)\n---\s*\n?(.*)\Z", re.S)
 VERSION_LINE_RE = re.compile(r'^(\s*version\s*=\s*")([^"]+)("\s*)$', re.M)
+CARGO_PIN_RE = re.compile(
+    r'^(\s*seikika-[\w-]+\s*=\s*\{[^}\n]*\bpath\s*=\s*"crates/[^"\n]+"'
+    r'[^}\n]*\bversion\s*=\s*"=)([^"\n]+)(")',
+    re.M,
+)
 YAML_VERSION_RE = re.compile(r"^(\s*version:\s*)(\S+)(\s*)$", re.M)
 YAML_NAME_RE = re.compile(r"^name:\s*[\"']?([^\"'#\s]+)[\"']?\s*(?:#.*)?$")
 SEMVER_RE = re.compile(r"^(\d+)\.(\d+)\.(\d+)$")
@@ -107,6 +112,7 @@ def write_cargo_workspace_version(cargo_toml: Path, new_version: str) -> None:
     if not m:
         raise ValueError("no version line in [workspace.package]")
     rest2 = VERSION_LINE_RE.sub(rf"\g<1>{new_version}\g<3>", rest, count=1)
+    rest2 = CARGO_PIN_RE.sub(rf"\g<1>{new_version}\g<3>", rest2)
     cargo_toml.write_text(head + "[workspace.package]" + rest2, encoding="utf-8")
 
 

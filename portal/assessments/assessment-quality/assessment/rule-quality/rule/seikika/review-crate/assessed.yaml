@@ -20,8 +20,8 @@ verdicts:
       crates/seikika-cli/src/report.rs:1401-1402 and
       crates/seikika-cli/src/find.rs:19, and tests/cases.json is pulled in by
       crates/seikika-model/tests/reference.rs:69. The schema's `minLength: 10`
-      is at schema/assessment.schema.json:36. The CI step is at
-      .github/workflows/ci.yml:95-98, and the stale exit at
+      is at crates/seikika-model/schema/assessment.schema.json:36. The CI step
+      is at .github/workflows/ci.yml:95-98, and the stale exit at
       crates/seikika-cli/src/assess.rs:134-142. One small imprecision:
       crates/seikika-api/src/assess.rs:137-168 also rejects an unknown rubric
       or criterion, not "only" a missing verdict. That leaves the gaming route
@@ -43,8 +43,9 @@ verdicts:
     reason: >-
       Each verdict rests on code a second assessor can read: the extension
       filter at crates/seikika-connector-workspace/src/rust.rs:368 and the
-      schema's single length constraint (schema/assessment.schema.json:36).
-      Neither fail depends on taste.
+      schema's single length constraint
+      (crates/seikika-model/schema/assessment.schema.json:36). Neither fail
+      depends on taste.
   - criterion: actionable
     verdict: unsure
     reason: >-

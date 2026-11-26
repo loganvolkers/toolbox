@@ -16,8 +16,8 @@ verdicts:
       version. docs/design/packages.md:206-213 is the §4.4 archive and OCI
       proposal. packages/github-actions/fragments/github-actions.yaml:59-66
       pins tools by version and installer ids, with no checksum, and
-      schema/manifest.schema.json has no checksum field. load.rs:344-351
-      compares the directory hash with seikika.lock.
+      crates/seikika-model/schema/manifest.schema.json has no checksum field.
+      load.rs:344-351 compares the directory hash with seikika.lock.
   - criterion: complete
     verdict: fail
     reason: >-

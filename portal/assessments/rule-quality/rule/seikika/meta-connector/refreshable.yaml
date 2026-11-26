@@ -38,8 +38,8 @@ verdicts:
       (crates/seikika-connector-workspace/src/main.rs:1330-1333). The check
       reads only keys, so `assessment: []` or `assessment: [since]` also
       passes, although the fix says "by external id". The schema allows an
-      empty scope list (schema/manifest.schema.json, `$defs/connector`
-      `refresh`).
+      empty scope list (crates/seikika-model/schema/manifest.schema.json,
+      `$defs/connector` `refresh`).
     suggestion: >-
       Require `external_ids` in the record's scope list, and check it against
       the connector's registered capabilities as above.

@@ -12,8 +12,8 @@ verdicts:
       Deprecation or Sunset header or an MCP notice. The only "deprecated" in
       the server is a Prometheus alias's help text
       (crates/seikika-telemetry/src/metrics_prom.rs:75), and
-      schema/manifest.schema.json has no way to mark a field or action
-      deprecated.
+      crates/seikika-model/schema/manifest.schema.json has no way to mark a
+      field or action deprecated.
     suggestion: >-
       Add `deprecated: {since, removeAfter}` to fields, actions and MCP tools
       in the manifest. Emit it as Deprecation/Sunset headers and MCP tool

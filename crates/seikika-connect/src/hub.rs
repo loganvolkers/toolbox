@@ -49,7 +49,7 @@ pub struct Command {
 }
 
 impl Command {
-    /// The wire form (schema/connector-messages.schema.json `command`).
+    /// The wire form (crates/seikika-model/schema/connector-messages.schema.json `command`).
     pub fn message(&self) -> Value {
         let mut m = json!({"type": "command", "command_id": self.id, "command": self.command,
                            "reason": self.reason, "priority": self.priority,

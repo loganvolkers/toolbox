@@ -41,6 +41,9 @@ def test_cargo_changelog() -> None:
         run_apply(work)
         data = tomllib.loads((work / "Cargo.toml").read_text(encoding="utf-8"))
         assert data["workspace"]["package"]["version"] == "0.2.0", data
+        deps = data["workspace"]["dependencies"]
+        assert deps["seikika-model"]["version"] == "=0.2.0"
+        assert deps["external"] == "=0.1.0"
         cl = (work / "CHANGELOG.md").read_text(encoding="utf-8")
         assert "## 0.2.0" in cl
         assert "demo cargo bump" in cl

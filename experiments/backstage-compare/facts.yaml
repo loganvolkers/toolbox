@@ -61,7 +61,8 @@ seikika:
     value: true
     evidence: >-
       connectors speak NDJSON over stdio or HTTP
-      (schema/connector-messages.schema.json), so any language can write one
+      (crates/seikika-model/schema/connector-messages.schema.json), so any
+      language can write one
   extensionWithoutRebuild:
     value: true
     evidence: >-

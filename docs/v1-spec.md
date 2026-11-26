@@ -103,7 +103,7 @@ Small, shallow workspace; heavy dependencies isolated in leaf crates (D44, D46):
 
 ## 5. The manifest
 
-The schema is [`schema/manifest.schema.json`](../schema/manifest.schema.json)
+The schema is [`crates/seikika-model/schema/manifest.schema.json`](../crates/seikika-model/schema/manifest.schema.json)
 (`apiVersion: seikika.com/v1alpha1`), compiled into the `seikika` binary;
 [`seikika.yaml`](../examples/reference-portal/seikika.yaml) uses every v1 feature.
 
@@ -345,7 +345,7 @@ preview → run flow.
 
 ### 7.4 Connector API
 
-Messages: [`schema/connector-messages.schema.json`](../schema/connector-messages.schema.json);
+Messages: [`crates/seikika-model/schema/connector-messages.schema.json`](../crates/seikika-model/schema/connector-messages.schema.json);
 semantics: [connector-control.md](./design/connector-control.md). Golden conversation:
 [`protocol/install-approved-app.connector.ndjson`](../examples/reference-portal/protocol/install-approved-app.connector.ndjson).
 In-image connectors: NDJSON over stdin/stdout, started and supervised by the server (restart with
@@ -358,7 +358,7 @@ webhooks for repository and push events; installation visibility per Q14), `git-
 
 ### 7.5 Executor protocol
 
-Messages: [`schema/executor-messages.schema.json`](../schema/executor-messages.schema.json);
+Messages: [`crates/seikika-model/schema/executor-messages.schema.json`](../crates/seikika-model/schema/executor-messages.schema.json);
 semantics: [action-runs.md](./design/action-runs.md) §5. Golden conversation:
 [`protocol/install-approved-app.executor.ndjson`](../examples/reference-portal/protocol/install-approved-app.executor.ndjson).
 In-image executors are child processes over stdio, started with a cleared environment: a fixed

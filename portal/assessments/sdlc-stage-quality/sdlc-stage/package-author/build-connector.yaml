@@ -24,8 +24,8 @@ verdicts:
       examples/connector-scaffold/README.md give exact steps: copy the
       scaffold, implement Source, add a portal stub, then run `connector test`
       and `connector drive`. A non-Rust author has
-      schema/connector-messages.schema.json. No step needs a secret or a
-      person.
+      crates/seikika-model/schema/connector-messages.schema.json. No step
+      needs a secret or a person.
   - criterion: reuses-artifacts
     verdict: fail
     reason: >-

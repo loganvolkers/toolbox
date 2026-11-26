@@ -235,7 +235,7 @@ exercised by fixtures. **First run, over 20 kinds, 190 fields and 9 connectors:*
    [`assess-entity`](../../plugins/seikika-operator/skills/assess-entity/SKILL.md) skill is the
    procedure.
 4. **`seikika assess check <dir>`** validates every file against
-   [`schema/assessment.schema.json`](../../schema/assessment.schema.json) and the rubric (every
+   [`crates/seikika-model/schema/assessment.schema.json`](../../crates/seikika-model/schema/assessment.schema.json) and the rubric (every
    criterion answered, none invented, the entity exists), and lists entities as fresh, stale or
    missing. CI runs it.
 5. **Storage**, either:
@@ -390,6 +390,6 @@ The assessment record carries what the deterministic card needs (`seikika_connec
   `model.rs` (`describe portal`), `crates/seikika-cli/src/report.rs` (`newEntitiesAtLeast`,
   `advisory`), `crates/seikika-cli/src/assess.rs`, `crates/seikika-api/src/assess.rs`
   (`assessment_brief`), `crates/seikika-connect/src/assessment.rs`,
-  [`schema/assessment.schema.json`](../../schema/assessment.schema.json), `portal/seikika.yaml`
+  [`crates/seikika-model/schema/assessment.schema.json`](../../crates/seikika-model/schema/assessment.schema.json), `portal/seikika.yaml`
   (`Kind`, `Field`, `Connector`, `Assessment`, the meta and review scorecards, the rubrics),
   `portal/assessments/`.

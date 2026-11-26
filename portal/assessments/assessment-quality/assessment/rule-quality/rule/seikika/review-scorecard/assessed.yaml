@@ -17,7 +17,7 @@ verdicts:
       portal/tests/standards.test.yaml:907-909 has user-cli `assessed` fail
       and meta-rule pass, and user-cli has no fixture review. Lines 897-902
       show maintainer-ci-security at silver with an uncited `actionable`.
-      schema/assessment.schema.json:32-36,
+      crates/seikika-model/schema/assessment.schema.json:32-36,
       crates/seikika-api/src/assess.rs:157-166, ci.yml:95-98 and
       docs/design/thresholds.md:55 say what is claimed.
   - criterion: complete
@@ -32,7 +32,8 @@ verdicts:
     verdict: pass
     reason: >-
       Each verdict follows from the check and the schema (meta.yaml:1032,
-      schema/assessment.schema.json:36). Nothing rests on taste.
+      crates/seikika-model/schema/assessment.schema.json:36). Nothing rests on
+      taste.
   - criterion: actionable
     verdict: unsure
     reason: >-

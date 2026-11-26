@@ -1,7 +1,7 @@
 // The Rust release embeds the complete Astro output and needs no JavaScript tooling at runtime.
 import { readdir, readFile, writeFile } from "node:fs/promises";
 
-const dist = new URL("../dist/", import.meta.url);
+const dist = new URL("../../crates/seikika-api/ui-dist/", import.meta.url);
 const files = await readdir(new URL("assets/", dist));
 const types = { ".js": "text/javascript; charset=utf-8", ".css": "text/css; charset=utf-8" };
 const manifest = files.sort().map(file => {
