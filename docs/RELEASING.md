@@ -141,9 +141,12 @@ distributed from the PNPM workspace. Their versions live in their package manife
 The frontend CI job checks the catalog and packs the same files a registry release ships.
 
 On `main`, run **Publish npm packages** with `publish=true` to release versions listed in
-the two manifests. The workflow checks and packs the workspace with pnpm, then publishes
-new versions with npm trusted publishing. It publishes the UI before the Astro integration
-and skips versions already in the registry. Dispatch with `publish=false` to check the build
+the two manifests. The workflow checks and packs the workspace with pnpm and tests both
+tarballs in a clean Astro project. It publishes the UI before the Astro integration using
+npm Trusted Publishing and skips versions already in the registry. Wait for the
+**registry-smoke** job to pass. It installs the exact versions from npm, checks their
+signed provenance against this repository's publish workflow, and builds an Astro report
+and a page using the UI exports. Dispatch with `publish=false` to run the tarball checks
 and download the `npm-packages` artifact. See [the publishing decision](decisions/D01M8BBPE4KN9NF9E9K3F9ZEE4Q.md).
 
 For the first version of a new package name, publish the tarball from the pack job with
@@ -156,6 +159,14 @@ run the following for each package while signed in as its maintainer.
 ```bash
 npm trust github @seikika/ui --repo seikika/seikika --file publish-npm.yml --env npm-publish --allow-publish
 npm trust github @seikika/astro-report --repo seikika/seikika --file publish-npm.yml --env npm-publish --allow-publish
+```
+
+**npm registry smoke tests** runs every Monday and on manual dispatch against both
+packages' `latest` tags. It uses a fresh install to detect registry, dependency, and build
+regressions. Use Node 24 and npm 11 to repeat the published package check locally.
+
+```sh
+node scripts/check-npm-release.mjs registry latest latest
 ```
 
 The `npm-publish` environment permits only the `main` branch. Publish a new version through

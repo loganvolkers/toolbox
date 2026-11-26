@@ -1,0 +1,44 @@
+name: npm registry smoke tests
+
+on:
+  workflow_call:
+    inputs:
+      ui-version:
+        description: Published version of @seikika/ui
+        type: string
+        required: true
+      report-version:
+        description: Published version of @seikika/astro-report
+        type: string
+        required: true
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - .github/workflows/npm-registry-smoke.yml
+      - .github/workflows/publish-npm.yml
+      - scripts/check-npm-release.mjs
+      - report-ui/fixtures/starter-empty.json
+  schedule: [{cron: 43 14 * * 1}]
+
+permissions: {contents: read}
+
+concurrency:
+  group: "${{ github.workflow }}-${{ github.ref }}-npm-smoke"
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with: {persist-credentials: false}
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with: {node-version: 24, package-manager-cache: false}
+      - name: Verify published packages in a clean Astro project
+        env:
+          UI_VERSION: ${{ inputs.ui-version || 'latest' }}
+          REPORT_VERSION: ${{ inputs.report-version || 'latest' }}
+        run: >-
+          node scripts/check-npm-release.mjs registry "$UI_VERSION"
+          "$REPORT_VERSION"
