@@ -34,4 +34,4 @@ Call `scorecard_status` with the following arguments on the fixture portal:
 
 Look for a bronze ownership level. As Bob, you can use `explain` with `id` set to `repository:checkout-web` and `rule` set to `ownership/branch-protected` to see why the next level failed. The portal applies the same permissions to MCP and HTTP reads. A response can show the level and redact rule details.
 
-If a user asks you to change something, check which [self-service actions](/users/actions/) the portal offers and review the preview before you request a run.
+If you need a newer source value, ask the portal to [refresh one entity](/users/refresh/). For writes, use `list_actions` and `preview_action` to see what the portal offers and review the effects. `run_action` requires the preview token. Use `get_run` to check the result. Pass approval requests to an eligible person. See [Test and run an action](/users/actions/).

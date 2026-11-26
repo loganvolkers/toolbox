@@ -42,9 +42,22 @@ All paths below use `GET`. Replace each path parameter with a URL-encoded value 
 
 For connector and operator endpoints, see the [HTTP router](https://github.com/seikika/seikika/blob/main/crates/seikika-api/src/routes.rs) and [API design](https://github.com/seikika/seikika/blob/main/docs/v1-spec.md#72-rest-api-v1-openapi-31-generated-per-portal). Check [releases and upgrades](/start/versions/) before changing a client or the portal version.
 
+## Action runs
+
+| Request | Purpose |
+|---|---|
+| `GET /v1/actions?entity=ENTITY_ID` | List actions available on an entity. Use an ID like `portal:service` for a child. |
+| `POST /v1/actions/{name}/previews` | Send `entity` and an `inputs` object. Review the returned effects, blockers, approvers, and `confirm_token`. |
+| `POST /v1/actions/{name}/runs` | Send the same entity and inputs with the `confirm_token` to request the run. |
+| `GET /v1/runs/{id}` | Read the run record and state. |
+| `POST /v1/runs/{id}/verify` | Check the run again for the expected result. |
+| `POST /v1/runs/{id}/approvals` | Submit `decision` with `approve` or `reject` and an optional `note`. This route requires an eligible person signed in through the portal's interactive authentication. |
+
+A preview request can return blockers. Review them before requesting a run. Read the run's `state` to tell whether it is waiting on an approval, a Git merge, or a workflow. The [action guide](/users/actions/) describes each state and how to follow it.
+
 ## Snapshots and errors
 
-Many catalog reads include an `x-seikika-snapshot` response header. For entity and entity scorecard reads, pass `min_snapshot` with a version or a full snapshot ID to wait for a catalog at least that recent. The server returns 503 with `snapshot-not-ready` if it cannot serve that version within its wait limit. Retry with backoff when the application still needs the update.
+Many catalog reads include an `x-seikika-snapshot` response header. To ask for new connector facts first, see [Refresh an entity](/users/refresh/). For entity and entity scorecard reads, pass `min_snapshot` with a version or a full snapshot ID to wait for a catalog at least that recent. The server returns 503 with `snapshot-not-ready` if it cannot serve that version within its wait limit. Retry with backoff when the application still needs the update.
 
 | Result | What to do |
 |---|---|

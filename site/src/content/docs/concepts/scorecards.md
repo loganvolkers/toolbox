@@ -13,6 +13,9 @@ Each rule declares a check and can explain why the rule matters, what evidence t
 | Fail | The facts show a problem. Use the evidence to find it. |
 | Unknown | The check could not finish, for example because a tool did not run. Treat the result as incomplete. |
 | Skipped | The scorecard does not apply to this entity under its conditions. |
+| Waived | A recorded decision accepts this specific failure. The report still shows its evidence. |
+
+Use a [campaign](/operators/standards/) to track a goal over existing scorecards. Use an [assessment](/operators/assessments/) when a criterion needs judgment from a person or agent.
 
 ## The ratchet
 
