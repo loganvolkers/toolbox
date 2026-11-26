@@ -1,6 +1,6 @@
 # Federation: Standards That Start in One Repo and Graduate to the Company
 
-*Unpaused (D01M80Y0XEK069GD08VCCNF0WB8): federation is the likely middle where bottom-up repo portals ([repo-value.md](./repo-value.md)) and the top-down central portal meet, decided once both are proven.*
+*Status: Unpaused (D01M80Y0XEK069GD08VCCNF0WB8): federation is the likely middle where bottom-up repo portals ([repo-value.md](./repo-value.md)) and the top-down central portal meet, decided once both are proven.*
 
 > **Partly built (D01M86BY3YQX3SA1W99QXF1QA1H):** [federated-actions.md](./federated-actions.md)
 > revises this design and builds two flows: *actions up* (a parent offers its children's declared
@@ -10,8 +10,8 @@
 > becomes "no portal queries another; a run is the one call that goes down". Results up and the
 > rest of this document remain design.
 
-*Status: design only, 2026-11-20 (D68). **Nothing here is implemented, and no implementation is
-planned until repo portals have been used by a few teams.** Builds on
+The remaining design covers standards distribution, catalog and score roll-up, and graduation of
+standards. It builds on
 [repo-portals.md](./repo-portals.md) (what exists today), [ratchets.md](./ratchets.md),
 [meta-catalog.md](./meta-catalog.md), [source-of-truth.md](./source-of-truth.md) and
 [authorization.md](../authorization.md).*

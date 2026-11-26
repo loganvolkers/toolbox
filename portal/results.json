@@ -4719,6 +4719,16 @@
           "still-running"
         ]
       },
+      "workflow:.github/workflows/image-rehearsal.yml": {
+        "level": "bronze",
+        "unknown": [
+          "fail-rate-under-10",
+          "fail-rate-under-20",
+          "fail-rate-under-5",
+          "main-not-stuck-red",
+          "still-running"
+        ]
+      },
       "workflow:.github/workflows/image.yml": {
         "level": "bronze",
         "unknown": [
@@ -4816,6 +4826,9 @@
       "workflow:.github/workflows/crates-registry-smoke.yml": {
         "level": "gold"
       },
+      "workflow:.github/workflows/image-rehearsal.yml": {
+        "level": "gold"
+      },
       "workflow:.github/workflows/image.yml": {
         "level": "gold"
       },
@@ -4870,6 +4883,12 @@
           "cancels-superseded-runs": 1
         },
         "level": "none",
+        "unknown": [
+          "fast-feedback"
+        ]
+      },
+      "workflow:.github/workflows/image-rehearsal.yml": {
+        "level": "bronze",
         "unknown": [
           "fast-feedback"
         ]

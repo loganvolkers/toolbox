@@ -5,8 +5,8 @@ on:
   push: {branches: [main]}
   pull_request: {types: [opened, synchronize, reopened, labeled, unlabeled]}
 permissions: {contents: read}
-# A new push to a pull request cancels its superseded run; every run on main finishes
-# (maintainer-ci-reliability, cancels-superseded-runs).
+# A new push to a pull request cancels its superseded run. On main, a running
+# workflow can finish, while GitHub can replace a pending run in the same group.
 concurrency:
   group: "${{ github.workflow }}-${{ github.ref }}"
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
@@ -357,3 +357,23 @@ jobs:
         with: {node-version: "22"}
       - run: npm ci --no-audit --no-fund
       - run: npm run check
+
+  merge-readiness:
+    if: ${{ always() }}
+    needs:
+      - rust
+      - otel-testbed
+      - github-connector
+      - acceptance
+      - gitlab-acceptance
+      - report-action
+      - scale-gate
+      - reference-portal
+      - ui
+      - typescript-builder
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Require all test jobs to pass
+        env: {RESULTS: "${{ toJSON(needs) }}"}
+        run: jq -e 'all(.[]; .result == "success")' <<< "$RESULTS"
