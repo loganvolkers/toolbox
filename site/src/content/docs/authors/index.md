@@ -47,7 +47,7 @@ include:
     with: {githubOrg: acme, githubRepo: payments, failRateBronze: 15}
 ```
 
-The `@ref` may be a semver tag (`@1.2.0` / `@v1.2.0` → clone `v1.2.0`), a branch (`@main`), or a commit SHA. Prefer a release tag for consumers; use a SHA or `main` only while dogfooding before a tag exists. That tag must **contain** the package directory — package `seikika-package.yaml` `version:` can lag the Seikika release tag that first ships the package; consumer pins follow the **git tag**. The first Seikika release is [v0.2.0](https://github.com/seikika/seikika/releases/tag/v0.2.0). Packages pin by git ref or local path until an OCI mirror exists.
+The `@ref` may be a semver tag (`@1.2.0` / `@v1.2.0` → clone `v1.2.0`), a branch (`@main`), or a commit SHA. Prefer a release tag for consumers; use a SHA or `main` only while dogfooding before a tag exists. That tag must **contain** the package directory — package `seikika-package.yaml` `version:` can lag the Seikika release tag that first ships the package; consumer pins follow the **git tag**. Check [GitHub Releases](https://github.com/seikika/seikika/releases) for tags. Packages pin by git ref or local path until an OCI mirror exists.
 
 `seikika install` clones that ref into the cache and records the package's content hash in `seikika.lock`. Later loads read the lock and do not touch the network. Commit the lock file. The [report action](https://github.com/seikika/seikika/tree/main/actions/report) runs `seikika install --frozen` whenever the lock is present so clean CI runners do not see an empty package hash.
 
@@ -72,7 +72,7 @@ The fixtures include a workflow that passes the scorecard and a workflow that fa
 | Step | What you run | State |
 |---|---|---|
 | Author the package | `seikika-package.yaml` and fragments | Built for a package in a directory. There is no `seikika package new` scaffold |
-| Build a connector | Copy [`examples/connector-scaffold/`](https://github.com/seikika/seikika/tree/main/examples/connector-scaffold), then `seikika connector test` and `seikika connector drive` | Scaffold + drive landed (D01M83FFM2K6XS4EAVHVP92TBDZ). Rust SDK still path/git, not crates.io. See [Write a connector](/authors/connectors/) |
+| Build a connector | Copy [`examples/connector-scaffold/`](https://github.com/seikika/seikika/tree/main/examples/connector-scaffold), then `seikika connector test` and `seikika connector drive` | Scaffold + drive landed (D01M83FFM2K6XS4EAVHVP92TBDZ). The scaffold uses a path dependency. See [Write a connector](/authors/connectors/) |
 | Test | `seikika test` on the package's tests | Built. A matrix of released Seikika versions waits on a Seikika release |
 | Install and pin | `seikika install`, `seikika.lock` | Built for a git tag, branch, commit SHA, or a local path |
 | Publish an archive, attest it, roll it across a fleet | | Specified. No release archive is produced, and the package registry is still an open question |

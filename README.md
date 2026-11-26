@@ -16,14 +16,14 @@ The public docs are a Starlight site in [site/](site/src/content/docs/index.md),
 
 **SDLC has four layers** ([docs/sdlc.md](docs/sdlc.md)): the *maintainer* SDLC for building Seikika, the *package author* SDLC for publishing packages and connectors others consume, the *operator* SDLC for building a portal, and the *user* SDLC for building apps on a portal.
 
-**Install a Seikika release (v0.2.0 onward):** the shell and PowerShell installers on the GitHub release ([Install a release](site/src/content/docs/start/install.md), [docs/RELEASING.md](docs/RELEASING.md)). An operator running a repo portal installs the CLI and the workspace connector. Writing a connector is the CLI plus the scaffold in [examples/connector-scaffold](examples/connector-scaffold/README.md). For a repo portal:
+**Install a Seikika release (v0.2.0 onward):** the shell and PowerShell installers come with the GitHub release ([Install a release](site/src/content/docs/start/install.md), [docs/RELEASING.md](docs/RELEASING.md)). An operator running a repo portal installs the CLI and the workspace connector. Writing a connector is the CLI plus the scaffold in [examples/connector-scaffold](examples/connector-scaffold/README.md). Until v0.2.0 appears on [GitHub Releases](https://github.com/seikika/seikika/releases), you can [try a repo portal from source](site/src/content/docs/start/run.md#try-a-repo-portal-from-source). Once the release is available, install both binaries for a repo portal:
 
 ```bash
 curl --proto '=https' --tlsv1.2 -LsSf https://github.com/seikika/seikika/releases/download/v0.2.0/seikika-cli-installer.sh | sh
 curl --proto '=https' --tlsv1.2 -LsSf https://github.com/seikika/seikika/releases/download/v0.2.0/seikika-connector-workspace-installer.sh | sh
 ```
 
-**Build from source** (changing Seikika itself):
+**Validate the reference portal** (changing Seikika itself):
 
 ```bash
 cargo build && target/debug/seikika validate examples/reference-portal

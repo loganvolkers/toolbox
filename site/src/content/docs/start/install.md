@@ -5,7 +5,7 @@ sidebar:
   order: 2
 ---
 
-Install the Seikika binaries from GitHub Releases (D90). These instructions target **v0.2.0**. Each app in that release has a shell installer and a PowerShell installer; the release notes print the same commands. New to Seikika? Start at [Quickstart](/start/quickstart/).
+Install the Seikika binaries from GitHub Releases (D90). These commands use **v0.2.0**, the first release under the Seikika name. Check [GitHub Releases](https://github.com/seikika/seikika/releases) for that tag. Until it is available, [build from source](/start/run/#try-a-repo-portal-from-source). For a first repo portal, follow [Quickstart](/start/quickstart/).
 
 The installers pick the archive for this machine, check its SHA-256, and place the binaries in `$CARGO_HOME/bin` (`~/.cargo/bin` when `CARGO_HOME` is unset). Open a new shell after installing, or export `PATH` in the current one.
 
@@ -72,16 +72,12 @@ Pin the action ref and the binary version. With `seikika-version` set, the actio
 2. Add the workflow above (see [actions/report README](https://github.com/seikika/seikika/blob/main/actions/report/README.md)).
 3. First run with `mode: update`, commit `.seikika/results.json`.
 
-## Public repository required for external CI
-
-If `seikika/seikika` is **private**, another repository's workflow cannot resolve `uses: seikika/seikika/...` (`repository not found`), and its default `GITHUB_TOKEN` cannot download release assets. Make the repo public (Settings → Change repository visibility → Public), or give each consumer a fine-scoped read token / collaborator access (see [docs/RELEASING.md](https://github.com/seikika/seikika/blob/main/docs/RELEASING.md)).
-
 ## Archives
 
 The release also has a `.tar.xz` (Windows: `.zip`) per app and platform, and a sibling `.sha256`. Unpack the `seikika*` files onto `PATH` when you want the bytes without the installer. `gh attestation verify <file> --repo seikika/seikika` checks the build provenance.
 
-## Later channels
+## Package registries
 
-Homebrew, npm and aqua are still deferred (D90). The crates carry cargo-binstall metadata and are not published to crates.io, so `cargo binstall` does not resolve them yet.
+The [Rust release guide](https://github.com/seikika/seikika/blob/main/docs/RELEASING.md#rust-crates-on-cratesio) covers the separate crates.io release. The [npm catalog](/authors/npm/) covers the frontend packages.
 
 Building Seikika itself is documented under [Run Seikika locally](/start/run/).

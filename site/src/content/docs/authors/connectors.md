@@ -9,12 +9,10 @@ A connector is a process that speaks Seikika's control channel and emits records
 
 ## Install
 
-1. Install the `seikika` CLI from the [v0.2.0 release](/start/install/#run-a-portal). The first-party connector installers on that page are for a portal that runs those connectors.
-2. Copy the scaffold. Its `rust-toolchain.toml` pins Rust 1.97 (edition 2024), which the SDK needs.
+1. Install the `seikika` CLI with the [release installers](/start/install/) or use the [source build](/start/run/#try-a-repo-portal-from-source).
+2. Open the scaffold in a checkout. Its `rust-toolchain.toml` pins Rust 1.97, which the SDK needs.
 
 ```bash
-curl --proto '=https' --tlsv1.2 -LsSf https://github.com/seikika/seikika/releases/download/v0.2.0/seikika-cli-installer.sh | sh
-export PATH="${CARGO_HOME:-$HOME/.cargo}/bin:$PATH"
 git clone --depth 1 https://github.com/seikika/seikika.git
 cd seikika/examples/connector-scaffold
 cargo build
@@ -22,7 +20,7 @@ cargo build
 
 The clone is the scaffold source
 ([`examples/connector-scaffold/`](https://github.com/seikika/seikika/tree/main/examples/connector-scaffold)).
-`cargo build` produces your connector. A test portal that names a `builtin:` still needs that released connector binary, the same as any other portal.
+`cargo build` produces your connector. A test portal that names a `builtin:` also needs that connector binary on `PATH`.
 
 Agents should follow the `author-connector` skill in
 [`plugins/seikika-operator/skills/author-connector/`](https://github.com/seikika/seikika/tree/main/plugins/seikika-operator/skills/author-connector).
@@ -49,11 +47,12 @@ seikika connector drive --kinds example-item --format catalog --out OUT/entities
 
 Put logical placeholders in example manifests (`${secret:…}`). Operators map them. See [Secrets in connector config](/authors/secrets/).
 
+The scaffold uses a workspace path dependency. See the [Rust release guide](https://github.com/seikika/seikika/blob/main/docs/RELEASING.md#rust-crates-on-cratesio) for the crates.io release.
+
 ## What is still missing
 
 | Gap | State |
 |---|---|
-| Published `seikika-connect` crate on crates.io | Not yet; path-dep or git dep against a Seikika release |
 | SDKs for languages other than Rust | Protocol is language-agnostic; only the Rust SDK ships today |
 | `seikika connector new` generator | Scaffold directory is the substitute |
 

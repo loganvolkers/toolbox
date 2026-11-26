@@ -5,7 +5,7 @@ sidebar:
   order: 3
 ---
 
-Prefer a [released install](/start/install/) for another repository. Build from source when you are changing Seikika itself. The binary is `target/debug/seikika`.
+Build from source to try the current checkout or contribute to Seikika. The repo pins its Rust toolchain in `rust-toolchain.toml`, which rustup installs on first use.
 
 ```bash
 cargo build
@@ -13,6 +13,27 @@ target/debug/seikika validate examples/reference-portal
 ```
 
 `validate` checks a portal manifest. The reference portal under `examples/reference-portal` is the anchor for v1: its expected outputs are the oracle.
+
+## Try a repo portal from source
+
+Build the CLI and the starter's workspace connector. Set `SEIKIKA_SRC` from the clone so
+you can use the same binaries and manifest from a different checkout.
+
+```bash
+git clone https://github.com/seikika/seikika.git
+cd seikika
+export SEIKIKA_SRC="$PWD"
+cargo build --locked -p seikika-cli -p seikika-connector-workspace
+export PATH="$SEIKIKA_SRC/target/debug:$PATH"
+```
+
+In the Git repository you want to score, copy the starter and continue at
+[Score once](/start/quickstart/#3-score-once).
+
+```bash
+mkdir -p .seikika
+cp "$SEIKIKA_SRC/examples/repo-portal-starter/seikika.yaml" .seikika/seikika.yaml
+```
 
 ## Score this repository
 

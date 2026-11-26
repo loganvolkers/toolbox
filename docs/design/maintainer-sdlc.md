@@ -30,7 +30,7 @@ The inner loop takes seconds, so this stays cheap enough to run after every chan
 | **Review** | `cargo fmt --check`, `cargo clippy -D warnings`; read your own diff | CI |
 | **Design review** (`design-review`) | For a change readers see: story probes, then a blind panel of three auditors over two reference portals, until the stop rule holds (D01M87PSM9YQGGW3YQ5X4XCJP63) | `report-ui` (`npm run probe`), [design-audit](./design-audit.md) |
 | **Record** | Results in [research-log.md](../research-log.md); decisions in [decisions.md](../decisions/README.md); spec status in v1-spec §3 | Working rules in AGENTS.md |
-| **Ship** | Small commits straight to `main` (D32), pulled with rebase first | `git` |
+| **Ship** | Open a focused PR against current `main` and merge after checks (D01M8BGV74Y3HZ8FGVER94F2JXG) | GitHub Actions |
 | **Monitor** | CI on every push; the scale budget and acceptance jobs catch regressions | `.github/workflows/ci.yml` |
 
 ## 3. Measured loop (4 vCPU container, warm caches)

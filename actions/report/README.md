@@ -12,7 +12,7 @@ secrets ([docs/design/repo-portals.md](../../docs/design/repo-portals.md)).
    personal handles), and LICENSE, and checks the docs' relative links. Edit or add scorecards as
    the team likes. In JS/TS repos, ignore `.seikika/**` in ESLint so fixture YAML is not parsed as
    code (see the [starter README](../../examples/repo-portal-starter/README.md)).
-2. Add the workflow:
+2. Add the workflow when v0.2.0 is available on [GitHub Releases](https://github.com/seikika/seikika/releases). To try CI before then, pin the action to a commit SHA and omit `seikika-version` so the action builds from that source.
 
    ```yaml
    # .github/workflows/seikika.yml

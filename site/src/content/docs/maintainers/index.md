@@ -40,7 +40,7 @@ seikika test portal
 
 `seikika test portal` runs this repository's own expectations: the rules, scored against fixture entities, both the passing cases and the failing ones. Acceptance scripts for milestones M2, M3 and M4 need Postgres 16. M3 and M4 also need OpenFGA (`SEIKIKA_OPENFGA_BIN`). M4 needs Node and Playwright for the browser check.
 
-The toolchain is pinned in `rust-toolchain.toml`. YAML in the repository is formatted with Yamark 0.6.1 (`yamark format --check`). The public [CLI reference](/start/cli/) is an Astro page built from the live binary (`seikika describe`); `npm run check:cli-docs` in the pages workflow fails if the committed fingerprint is stale.
+The toolchain is pinned in `rust-toolchain.toml`. YAML in the repository is formatted with Yamark 0.6.1 (`yamark format --check`). The public [CLI reference](/start/cli/) is an Astro page built from `seikika describe`. The pages workflow runs `pnpm --filter seikika-site check:cli-docs` to check the committed fingerprint.
 
 ## Stop a standard from regressing
 
@@ -67,10 +67,10 @@ The v1 spec says what the binary must do. The design docs say why. When they dis
 | Step | What you run | State |
 |---|---|---|
 | Decide | A new file in `docs/decisions/` | Built |
-| Build | `cargo build`, `npm --prefix ui run build`, `npm --prefix site run build` | Built |
+| Build | `cargo build`, `pnpm build`, `pnpm docs:build` | Built |
 | Test | `cargo test`, clippy, `seikika test`, the parity script | Built |
-| Verify a milestone | `scripts/m2-acceptance.sh`, `m3-acceptance.sh`, `m4-acceptance.sh` | Built through M4. M5 (actions) is paused |
-| Release | `dist plan`, tag `v0.2.0`, the release and image workflows | First installable release: [v0.2.0](https://github.com/seikika/seikika/releases/tag/v0.2.0). See [docs/RELEASING.md](https://github.com/seikika/seikika/blob/main/docs/RELEASING.md) |
+| Verify a milestone | `scripts/m2-acceptance.sh`, `m3-acceptance.sh`, `m4-acceptance.sh`, `m5-acceptance.sh` | M5 checks federated actions. Cross-instance durable steps and action UI pages are still planned |
+| Release | `dist plan`, tag `v0.2.0`, the release and image workflows | The Seikika-branded installers start with v0.2.0. See [docs/RELEASING.md](https://github.com/seikika/seikika/blob/main/docs/RELEASING.md) |
 | Watch this repository | `seikika report portal` and the ratchet | Built |
 
 [Run Seikika locally](/start/run/) is the short form of the build. [The four SDLC layers](/concepts/layers/) says which loop a sentence is about.

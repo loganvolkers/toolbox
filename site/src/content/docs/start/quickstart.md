@@ -5,11 +5,11 @@ sidebar:
   order: 1
 ---
 
-Fifteen minutes to a scored repository. No Postgres and no portal server — only the CLI, a checkout, and a committed baseline. Prefer this path before choosing an [operator](/operators/), [user](/users/), or [maintainer](/maintainers/) loop.
+Score a repository with the CLI, a checkout, and a committed baseline. This path uses a local connector. Prefer this path before choosing an [operator](/operators/), [user](/users/), or [maintainer](/maintainers/) loop.
 
 ## 1. Install the binaries
 
-These instructions require a Seikika release from **v0.2.0** onward. This path runs a repo portal, so it installs the `seikika` CLI and `seikika-connector-workspace` (the starter's manifest names `builtin:workspace`). These are the shell installers on the [v0.2.0 release](https://github.com/seikika/seikika/releases/tag/v0.2.0).
+The starter uses the `seikika` CLI and the `seikika-connector-workspace` binary. Use the installers when **v0.2.0** is listed on [GitHub Releases](https://github.com/seikika/seikika/releases). Before that, follow the [source setup](/start/run/#try-a-repo-portal-from-source) to build both binaries and copy the starter, then continue at [Score once](#3-score-once).
 
 ```bash
 curl --proto '=https' --tlsv1.2 -LsSf https://github.com/seikika/seikika/releases/download/v0.2.0/seikika-cli-installer.sh | sh
@@ -53,6 +53,8 @@ git commit -m "Add Seikika repo portal and baseline"
 Later runs with the same `--baseline` fail when a rule newly fails or evidence grows. `--ci` also fails when the file is stale after an improvement. That ratchet is the same idea as Betterer’s results file — see [Scorecards](/concepts/scorecards/) and [Seikika ratchets vs Betterer](/compare/betterer/).
 
 ## 5. Gate pull requests
+
+Once the v0.2.0 release is available, use the matching action ref and binaries in CI.
 
 ```yaml
 - uses: seikika/seikika/actions/report@v0.2.0
