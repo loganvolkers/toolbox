@@ -34,15 +34,17 @@ Look for passing expectations that cover both passing and failing rule outcomes.
 
 ## Share the package and pin it
 
-Publish the package directory in a Git repository. In the consuming portal's manifest, add an entry like this and substitute a real repository, ref, and parameter values:
+Publish the package directory in a Git repository. In the consuming portal's manifest, add an entry like this one. Set the GitHub organization and repository to the repository you score.
 
 ```yaml
 include:
-  - package: github:owner/repo/packages/github-actions@1.2.0
+  - package: github:seikika/seikika/packages/github-actions@c14c9fbb60405f9fea12d86de3d0b32b717755d9
     with: {githubOrg: acme, githubRepo: payments, failRateBronze: 15}
 ```
 
-The version in the include selects a Git ref. Seikika resolves `@1.2.0` to the `v1.2.0` tag. The tag must contain the package directory. A commit SHA also pins the source. Use a relative path such as `../packages/github-actions` to work on a package and consumer in the same checkout.
+This package needs a workspace connector that reports `workflow` and `action-ref` records. Copy the connector configuration from the [package test portal](https://github.com/seikika/seikika/blob/c14c9fbb60405f9fea12d86de3d0b32b717755d9/packages/github-actions/tests/seikika.yaml) and install the binaries and tools named in the [package README](https://github.com/seikika/seikika/tree/main/packages/github-actions).
+
+The include pins the source to a commit. If you use a release tag, Seikika resolves a version such as `@1.2.0` to `v1.2.0`. That tag must contain the package directory. Use a relative path such as `../packages/github-actions` to work on a package in the same checkout.
 
 From the consuming portal directory, run:
 

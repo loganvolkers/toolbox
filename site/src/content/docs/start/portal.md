@@ -17,7 +17,7 @@ seikika serve examples/reference-portal --fixtures --listen 127.0.0.1:8080
 
 Keep this terminal open. The server uses sample data called **fixtures** and stores the catalog in memory. The address accepts connections from your machine only.
 
-Open [the local portal](http://127.0.0.1:8080/) in your browser and choose a fixture identity if the interface asks. You can also check that the catalog is ready from a second terminal:
+Open [the local portal as Alice](http://127.0.0.1:8080/?as=alice) in your browser. The `as` query parameter selects the fixture identity in the local development server. You can also check that the catalog is ready from a second terminal:
 
 ```bash
 curl -fsS http://127.0.0.1:8080/readyz

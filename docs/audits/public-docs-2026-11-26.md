@@ -68,4 +68,6 @@ The style guide also draws on Diátaxis for page intent, Google and Backstage fo
 
 ## Verification boundaries
 
-The tutorial, API, MCP and connector examples were checked against the pinned 0.2 source on Linux. The source deployment was checked with Postgres 16, OpenFGA 1.22.1, and a personal access token. The federated actions acceptance suite ran in disposable repositories and passed. Release installers, cloud provider deployments, and a full Backstage migration were outside this verification. The repo CI gate and the docs site build are separate checks from the editorial score.
+The tutorial, API, MCP, connector, and Git package examples were checked against the pinned 0.2 source on Linux. The source deployment was checked with Postgres 16, OpenFGA 1.22.1, and a personal access token. The federated actions acceptance suite ran in disposable repositories and passed. Release installers, cloud provider deployments, and a full Backstage migration were outside this verification.
+
+All 41 content pages reached gold on Seikika's structural scorecard. The Astro build, rendered route and anchor checks, and browser smoke checks passed. The mobile browser check covered keyboard entry, the quickstart route, and copying a command. These checks complement the editorial review and workflow tests.
