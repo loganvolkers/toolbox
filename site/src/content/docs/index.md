@@ -5,6 +5,10 @@ description: Score a repository or serve a software catalog that developers and 
 
 Seikika is an open-source framework for building an internal developer portal in code. Use it to track software and ownership, see which standards a repository meets, and offer self-service actions. You can start by scoring one repository with the command-line interface (CLI), then run a portal that developers and agents can query.
 
+Bring data into your portal from GitHub, GitLab, local tools, or an identity provider. [Browse connectors](/connectors/) · [Set up GitHub](/connectors/github/)
+
+Add ready-to-use checks for your repository or service. [Browse standards packages](/packages/)
+
 ## Start with one task
 
 | If you want to | Start here |

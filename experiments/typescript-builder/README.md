@@ -23,4 +23,4 @@ npm run check      # tsc (including the negative type tests) + round-trip agains
 npm run print      # canonical manifest JSON
 ```
 
-Pinned: typescript 7.0.2, tsx 4.23.15, yaml 2.9.1, @types/node 24.10.1.
+The compiler, runner, YAML library, and Node type pins are in [package.json](package.json). Use `npm ci` to install the versions in [package-lock.json](package-lock.json).

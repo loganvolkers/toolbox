@@ -20,6 +20,8 @@ export default defineConfig({
       ],
       sidebar: [
         { label: 'Start', items: [{ autogenerate: { directory: 'start' } }] },
+        { label: 'Connectors', items: [{ autogenerate: { directory: 'connectors' } }] },
+        { label: 'Packages', items: [{ autogenerate: { directory: 'packages' } }] },
         { label: 'Operators', items: [{ autogenerate: { directory: 'operators' } }] },
         { label: 'Package authors', items: [{ autogenerate: { directory: 'authors' } }] },
         { label: 'Users', items: [{ autogenerate: { directory: 'users' } }] },

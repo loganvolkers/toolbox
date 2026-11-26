@@ -25,6 +25,9 @@ updates:
     # Move Node and its types together after choosing the supported runtime.
     - dependency-name: '@types/node'
       update-types: [version-update:semver-major]
+  - package-ecosystem: npm
+    directories: [/scripts/github-emulate, /scripts/playwright-ci]
+    schedule: {interval: weekly}
   - package-ecosystem: github-actions
     directory: /
     schedule: {interval: weekly}

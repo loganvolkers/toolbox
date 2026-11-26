@@ -14,6 +14,7 @@ These capabilities are available in the [0.2 source build](/start/install/#build
 | Score a checkout and catch regressions | A repo portal with `seikika report` and a committed baseline | [Quickstart](/start/quickstart/) |
 | Read a current catalog, with permissions for each caller | A served portal and its browser, CLI, HTTP, or Model Context Protocol (MCP) interface | [Explore a portal](/start/portal/) |
 | Ask a connector for updated facts about one entity | A targeted refresh and a read on the new snapshot | [Refresh an entity](/users/refresh/) |
+| Collect facts from a data source | Records from GitHub, GitLab, local tools, or an identity provider | [Connector directory](/connectors/) |
 | Offer repository actions from one place | A parent portal that discovers, approves, and runs child actions | [Federate repository actions](/operators/federate-actions/) |
 | Define a change and check that it worked | An action with inputs, an executor, and tests | [Define a self-service action](/operators/actions/) |
 | Share a snapshot that works offline or on a static host | One HTML file, or a snapshot published through Astro | [Generate and host a static report](/operators/publish/) |

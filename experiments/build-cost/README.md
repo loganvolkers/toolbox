@@ -50,6 +50,19 @@ cd fga-carchive && GOTOOLCHAIN=go1.26.11 go build -buildmode=c-archive -o /scrat
 changes) and times the rebuilds. Raw output: [results-rustc-1.99.0.txt](./results-rustc-1.99.0.txt) and,
 for the failed attempt, [results-rustc-1.97.0.txt](./results-rustc-1.97.0.txt).
 
+## Advisory checks
+
+The root advisory scorecard scans the shipped workspace lockfile. Scan this experiment's
+separate lockfile before rerunning it. From the repository root, use the same pinned tools
+and RustSec database as CI:
+
+```bash
+tools=$(mktemp -d)
+scripts/ci-tools.sh "$tools" osv-scanner rustsec-osv
+OSV_SCANNER_LOCAL_DB_CACHE_DIRECTORY="$tools" "$tools/osv-scanner" scan source \
+  --offline --offline-vulnerabilities --lockfile experiments/build-cost/Cargo.lock
+```
+
 ## The rustc 1.97.0 internal compiler error
 
 Compiling `dbsp` 0.384.0 with `-C opt-level=2 -C debug-assertions=on` panicked in

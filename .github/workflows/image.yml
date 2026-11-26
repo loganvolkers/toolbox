@@ -44,17 +44,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          for pair in amd64:x86_64 arm64:aarch64; do
-            arch=${pair%%:*}; cpu=${pair##*:}
-            mkdir -p "image/bin/$arch" dl
-            for app in seikika-cli seikika-connector-github seikika-connector-git-files seikika-connector-runner seikika-connector-workspace seikika-connector-scim; do
-              f="$app-$cpu-unknown-linux-gnu.tar.xz"
-              gh release download "$TAG" --repo "$GITHUB_REPOSITORY" --dir dl --pattern "$f" --pattern "$f.sha256" --clobber
-              (cd dl && sha256sum -c <(sed "s| \*\?$f| $f|" "$f.sha256"))
-              tar -xJf "dl/$f" -C dl
-              find "dl/${f%.tar.xz}" -maxdepth 1 -type f -name 'seikika*' -exec cp {} "image/bin/$arch/" \;
-            done
-          done
+          scripts/stage-image-archives.sh dl image "$TAG"
           echo "image=ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/seikika" >> "$GITHUB_OUTPUT"
           echo "version=${TAG#v}" >> "$GITHUB_OUTPUT"
       - uses: docker/setup-qemu-action@c7c53464625b32c7a7e944ae62b3e17d2b600130 # v3.7.0

@@ -65,6 +65,8 @@ The release also supplies shell and PowerShell installers, archives, and checksu
 
 ## Install a connector
 
+Choose a connector and check its prerequisites and record kinds in the [connector directory](/connectors/).
+
 If the manifest contains `package: builtin:NAME`, install the `seikika-connector-NAME`
 executable. The starter mise config above includes the workspace connector for the tutorial.
 For `builtin:runner`, add these entries to the corresponding tables in your config. Use the

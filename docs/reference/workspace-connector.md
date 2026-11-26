@@ -42,6 +42,7 @@ walked.
 | `workflows` | `[]` | Globs: `workflow` records for GitHub Actions workflows, and `action-ref` records for the actions they use |
 | `betterer` | `[]` | Globs: one `betterer` record per test in each Betterer results file |
 | `skills`, `connectors`, `agentDocs`, `plugins`, `packages`, `schemas`, `examples`, `pages`, `assessments` | `[]` | Globs for Seikika's own standards (`skill`, `connector`, `agent-doc`, `plugin`, `package-json`, `json-schema`, `example`, `site-page`, `assessment` records) |
+| `standardPackages` | `[]` | Globs for Seikika package manifests, usually `packages/*/seikika-package.yaml` |
 | `dependencies` | `false` | One `dependency` record per direct external Cargo dependency |
 | `jsWorkspace` | `false` | One `js-workspace` record: pnpm or npm workspace, lockfile, `packageManager` pin |
 | `expoApps`, `storybooks` | `[]` | Globs: `expo-app` and `storybook` records ([packages/pnpm-expo](../../packages/pnpm-expo/), [packages/storybook](../../packages/storybook/)) |
@@ -60,6 +61,8 @@ The external id is `<kind>:<path>` for per-file records.
 | `repo` | README, LICENSE, CODEOWNERS and `.github` facts ([repo-portals.md](../design/repo-portals.md)) |
 | `portal` | `key`, `name`, `title`, `owner`, `path`, `dir`, `file`, `actions`, `runner`, `acceptApprovalsFrom`, `scorecards`, `packages`, `packageError`, `error`; `git` for a cloned child; `warning` when two share a name ([federated-actions.md](../design/federated-actions.md) §5.2) |
 | `workflow`, `action-ref` | Triggers, permissions, timeouts, `uses:` and how each is pinned ([github-actions-standards.md](../design/github-actions-standards.md)) |
+| `connector` | Package, protocol, test, and public guide facts used by the first-party connector scorecard ([connector standards](../design/connector-standards.md#3-the-catalog)) |
+| `standard-package` | Manifest `path`, `name`, `version`, and `publicGuide`. The guide route is null when the directory or guide is missing, a draft, or hidden from the sidebar. [Package directory decision](../decisions/D01M8CRS50G5086P5DCFQN636BA.md) |
 | Others | Described in the design docs that use them (`seikika describe portal .seikika` lists a portal's kinds and fields) |
 
 `lines` counts lines as `wc -l` would, plus a last line without a newline. `matchLines` is 1-based.

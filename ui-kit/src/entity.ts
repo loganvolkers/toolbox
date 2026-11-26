@@ -1,15 +1,26 @@
+/** A labeled web link shown on an entity page. */
 export interface EntityLink {
+  /** Text displayed to the reader. */
   label: string;
+  /** Destination URL. {@link entityOverview} accepts absolute HTTP and HTTPS links. */
   href: string;
 }
 
+/** Data displayed by the `EntityPage` component. */
 export interface EntityOverview {
+  /** Catalog entity ID, such as `service:checkout`. */
   id: string;
+  /** Display label for the kind of entity, such as `Service`. */
   kind: string;
+  /** Heading displayed for the entity. */
   title: string;
+  /** Optional text below the heading. Omit it when the catalog has no description. */
   description?: string;
+  /** Owner's entity ID, such as `group:payments`. */
   owner?: string;
+  /** Ownership status supplied by the catalog, if available. */
   ownershipStatus?: string;
+  /** Links displayed in order. An empty array hides the link list. */
   links: EntityLink[];
 }
 
@@ -47,6 +58,18 @@ function safeLink(value: unknown): string | undefined {
   }
 }
 
+/**
+ * Builds the data displayed by an entity page from catalog fields.
+ *
+ * The title uses the first nonempty value from `title`, `displayName`, `name`, and `id`.
+ * `ownership.owner` takes precedence over `owner`. Explicit `links` come before known
+ * URL fields such as `repositoryUrl` and `runbookUrl`. Only absolute HTTP and HTTPS
+ * URLs without embedded credentials are included. The first link for each URL wins.
+ *
+ * @param id - Catalog entity ID, such as `service:checkout`.
+ * @param kind - Kind label displayed on the page, such as `Service`.
+ * @param fields - Optional catalog fields. Omit them to use the ID as the title.
+ */
 export function entityOverview(id: string, kind: string, fields: Record<string, unknown> = {}): EntityOverview {
   const ownership = record(fields.ownership);
   const links = new Map<string, EntityLink>();
@@ -72,4 +95,11 @@ export function entityOverview(id: string, kind: string, fields: Record<string, 
   };
 }
 
+/**
+ * Builds the hosted portal's root-relative entity URL.
+ *
+ * @param id - An unencoded entity ID. The helper encodes it as one path segment.
+ * @returns A path such as `/e/service%3Acheckout`. Supply your own resolver on hosts with other routes.
+ * @throws URIError if `id` contains an unpaired UTF-16 surrogate.
+ */
 export const entityHref = (id: string) => "/e/" + encodeURIComponent(id);

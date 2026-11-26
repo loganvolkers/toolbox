@@ -3,6 +3,20 @@
 # rule means; the live portal applies the same rules to the whole repository.
 name: standards
 assert:
+  - name: a standards package reaches bronze with a public guide
+    expect: >-
+      score('maintainer-standard-package',
+      'standard-package:packages/demo-listed/seikika-package.yaml').level ==
+      'bronze' && score('maintainer-standard-package',
+      'standard-package:packages/demo-listed/seikika-package.yaml').rules['public-guide']
+      == 'pass'
+  - name: a standards package without a guide fails bronze
+    expect: >-
+      score('maintainer-standard-package',
+      'standard-package:packages/demo-unlisted/seikika-package.yaml').level ==
+      'none' && score('maintainer-standard-package',
+      'standard-package:packages/demo-unlisted/seikika-package.yaml').rules['public-guide']
+      == 'fail'
   # Layer 1: crates
   - name: >-
       a crate with passing tests and clippy, 80%+ documented, no huge
@@ -368,7 +382,7 @@ assert:
       secret
     expect: |-
       score('maintainer-skill', 'skill:plugins/demo/unsafe').level == 'none' && score('maintainer-skill', 'skill:plugins/demo/unsafe').evidence['valid-frontmatter'] == ["Directory name 'unsafe' must match skill name 'Unsafe'"] && score('maintainer-skill', 'skill:plugins/demo/unsafe').evidence['description-says-when'] == ['12 characters'] && score('maintainer-skill', 'skill:plugins/demo/unsafe').evidence['third-person'] == ['pronoun: you'] && score('maintainer-skill', 'skill:plugins/demo/unsafe').evidence['no-hidden-instructions'] == ['3 hidden characters, Markdown comments or unreadable text files'] && score('maintainer-skill', 'skill:plugins/demo/unsafe').evidence['no-hardcoded-secrets'] == ['SKILL.md:9 github-token'] && score('maintainer-skill', 'skill:plugins/demo/unsafe').evidence['portable-paths'] == ['SKILL.md:4'] && score('maintainer-skill', 'skill:plugins/demo/unsafe').rules['has-procedure'] == 'fail'
-  # Connectors (synthetic fixtures: one gold, one bronze, one below bronze)
+  # Connectors (synthetic fixtures: one gold, one bronze, two below bronze)
   - name: a documented connector that CI conformance-tests reaches gold
     expect: >-
       score('maintainer-connector', 'connector:crates/demo/focused').level ==
@@ -376,6 +390,8 @@ assert:
       'connector:crates/demo/focused').rules['described'] == 'pass' &&
       score('maintainer-connector',
       'connector:crates/demo/focused').rules['config-documented'] == 'pass' &&
+      score('maintainer-connector',
+      'connector:crates/demo/focused').rules['public-guide'] == 'pass' &&
       score('maintainer-connector',
       'connector:crates/demo/focused').rules['speaks-the-protocol'] == 'pass'
       && score('maintainer-connector',
@@ -390,6 +406,13 @@ assert:
       'connector:crates/demo/focused').rules['exercised-in-ci'] == 'pass' &&
       score('maintainer-connector',
       'connector:crates/demo/focused').rules['no-hardcoded-secrets'] == 'pass'
+  - name: a connector with crate documentation alone fails the public guide rule
+    expect: >-
+      score('maintainer-connector', 'connector:crates/demo/unlisted').level ==
+      'none' && score('maintainer-connector',
+      'connector:crates/demo/unlisted').rules['config-documented'] == 'pass'
+      && score('maintainer-connector',
+      'connector:crates/demo/unlisted').rules['public-guide'] == 'fail'
   - name: a configured connector with no kinds, tests or CI stops at bronze
     expect: >-
       score('maintainer-connector', 'connector:crates/demo/partial').level ==
@@ -1588,3 +1611,43 @@ assert:
       campaign('close-review-findings').inScope > 0 &&
       campaign('close-review-findings').meeting <
       campaign('close-review-findings').inScope
+  # SDK documentation
+  - name: an SDK with no public entry point fails bronze
+    expect: >-
+      score('maintainer-sdk-docs', 'sdk-docs:fixture-empty').level == 'none'
+      && score('maintainer-sdk-docs',
+      'sdk-docs:fixture-empty').rules['has-entry-point'] == 'fail' &&
+      score('maintainer-sdk-docs',
+      'sdk-docs:fixture-empty').evidence['has-entry-point'] ==
+      ['fixture-empty/package.json: no public entry point found']
+  - name: >-
+      an import path with missing prop and slot docs stops at bronze and names
+      each gap
+    expect: >-
+      score('maintainer-sdk-docs', 'sdk-docs:fixture-gaps').level == 'bronze'
+      && score('maintainer-sdk-docs',
+      'sdk-docs:fixture-gaps').rules['has-entry-point'] == 'pass' &&
+      score('maintainer-sdk-docs',
+      'sdk-docs:fixture-gaps').rules['documented-items'] == 'fail' &&
+      score('maintainer-sdk-docs',
+      'sdk-docs:fixture-gaps').rules['reference-complete'] == 'fail' &&
+      score('maintainer-sdk-docs',
+      'sdk-docs:fixture-gaps').evidence['documented-items'] ==
+      ['fixture-gaps/component.vue props.title'] &&
+      score('maintainer-sdk-docs',
+      'sdk-docs:fixture-gaps').evidence['reference-complete'] ==
+      ['fixture-gaps/component.vue: default slot']
+  - name: a complete SDK reference reaches gold
+    expect: >-
+      score('maintainer-sdk-docs', 'sdk-docs:fixture-complete').level ==
+      'gold' && score('maintainer-sdk-docs',
+      'sdk-docs:fixture-complete').rules['documented-items'] == 'pass' &&
+      score('maintainer-sdk-docs',
+      'sdk-docs:fixture-complete').rules['reference-complete'] == 'pass'
+  - name: a documented component with a missing slot reference stops at silver
+    expect: >-
+      score('maintainer-sdk-docs', 'sdk-docs:fixture-reference-gap').level ==
+      'silver' && score('maintainer-sdk-docs',
+      'sdk-docs:fixture-reference-gap').rules['documented-items'] == 'pass' &&
+      score('maintainer-sdk-docs',
+      'sdk-docs:fixture-reference-gap').rules['reference-complete'] == 'fail'

@@ -5,8 +5,8 @@ on:
   push: {branches: [main]}
   pull_request: {types: [opened, synchronize, reopened, labeled, unlabeled]}
 permissions: {contents: read}
-# A new push to a pull request cancels its superseded run; every run on main finishes
-# (maintainer-ci-reliability, cancels-superseded-runs).
+# A new push to a pull request cancels its superseded run. On main, a running
+# workflow can finish, while GitHub can replace a pending run in the same group.
 concurrency:
   group: "${{ github.workflow }}-${{ github.ref }}"
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
@@ -39,7 +39,9 @@ jobs:
         run: cargo build --locked && python scripts/validate-parity.py
       - name: Verify the crates.io archives
         env: {CARGO_PROFILE_DEV_DEBUG: "0", CARGO_INCREMENTAL: "0"}
-        run: cargo package --workspace --locked
+        run: |
+          cargo package --workspace --locked
+          python3 scripts/check-crates-release.py sdk target/package
       - name: >-
           Install OpenFGA, actionlint, OpenSSF Scorecard and osv-scanner from
           their releases, SHA-256-pinned (no compile, D90), and the pinned RustSec
@@ -74,6 +76,10 @@ jobs:
             target/debug/seikika validate "$t"
             target/debug/seikika test "$t"
           done
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with: {node-version: 24}
+      - run: corepack enable pnpm
+      - run: pnpm install --frozen-lockfile
       # The ratchet, through the same action pilot repos use (D66, D69), with the binaries built above.
       # Fails on any regression, and when portal/results.json is out of date (update it with
       # `seikika report portal --skip runner --baseline portal/results.json --update`).
@@ -355,3 +361,23 @@ jobs:
         with: {node-version: "22"}
       - run: npm ci --no-audit --no-fund
       - run: npm run check
+
+  merge-readiness:
+    if: ${{ always() }}
+    needs:
+      - rust
+      - otel-testbed
+      - github-connector
+      - acceptance
+      - gitlab-acceptance
+      - report-action
+      - scale-gate
+      - reference-portal
+      - ui
+      - typescript-builder
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Require all test jobs to pass
+        env: {RESULTS: "${{ toJSON(needs) }}"}
+        run: jq -e 'all(.[]; .result == "success")' <<< "$RESULTS"

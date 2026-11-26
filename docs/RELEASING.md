@@ -27,7 +27,7 @@ Changeset frontmatter still uses logical names: package YAML `name:` for package
    ```
 
 5. `.github/workflows/release.yml` (cargo-dist) builds archives, installers, attestations,
-   and a GitHub Release. Its last job calls `.github/workflows/image.yml`, which builds the GHCR image.
+   and a GitHub Release. After publication, it builds the GHCR image and checks operator installs with mise.
 
 Maintainer-run apply (without the Version PR):
 
@@ -64,6 +64,13 @@ python3 scripts/test-apply-changesets.py
    archives. A release made with `GITHUB_TOKEN` starts no other workflow, so the image is not
    built on a `release` event. For a tag released before this job existed, run
    `gh workflow run image.yml -f tag=vX.Y.Z`.
+6. The `custom-mise` job [checks the operator install](#install-what-a-consumer-needs) after
+   the stable release is announced.
+
+Before tagging, run the **image rehearsal** workflow against the release commit. It builds
+both Linux release archives with cargo-dist, verifies checksums, and builds the amd64 and
+arm64 images. It exports an OCI archive on the runner without publishing it. The same
+archive staging script runs in the release workflow.
 
 Verify an artifact with `gh attestation verify <file> --repo <owner>/seikika`.
 
@@ -74,10 +81,12 @@ The version applicator updates exact workspace
 dependency pins along with the workspace version. Refresh `Cargo.lock` with
 `cargo update --workspace` when preparing a version by hand.
 
-Verify the archives from the release commit.
+Verify the archives and build the standalone connector scaffold against the packaged SDK
+from the release commit. CI and the publishing workflow both run these checks.
 
 ```bash
 cargo package --workspace --locked
+python3 scripts/check-crates-release.py sdk target/package
 ```
 
 For new crate names, use an authenticated crates.io account with permission to publish new
@@ -91,7 +100,27 @@ After the first publish, register a GitHub Actions trusted publisher for each pu
 Use repository owner and name `seikika/seikika`, workflow filename `publish-crates.yml`,
 and environment `crates-io-publish`. In GitHub, restrict that environment to the `main`
 branch. Run **Publish Rust crates** from `main` with `publish=true` to publish with OIDC.
-The default dispatch verifies the archives without publishing.
+The default dispatch verifies the archives and downstream SDK without publishing.
+
+Wait for the publish run's **registry-smoke** jobs to pass before tagging the release.
+They install the exact published version with its lockfiles in fresh Cargo directories on
+all five release targets. They validate the reference portal, check workspace connector
+conformance, and start the other installed connectors. Linux x86-64 also runs the portal's
+authorization suite and the GitHub, git-files, and SCIM integration smoke test. A successful
+upload records GitHub OIDC in the publish job summary. A rerun of an already published
+version repeats the smoke tests without uploading another version.
+
+**Crates.io smoke tests** also runs every Monday and on manual dispatch. It resolves the
+latest stable, non-yanked CLI release once, then tests that exact version across all release
+targets with both locked and fresh dependency resolution. Check the failed platform and
+resolution mode in Actions if the scheduled run fails.
+
+Use the pinned Rust toolchain and Python 3.13 to reproduce the portable checks locally.
+
+```bash
+python3 scripts/check-crates-release.py install 0.2.0
+python3 scripts/check-crates-release.py install 0.2.0 --resolution fresh
+```
 
 The GitHub Release and installer artifacts are built by cargo-dist from the version tag.
 See [the crates.io decision](decisions/D01M8BEC7ZX7TFBTSC47W1XQVV4.md) and the
@@ -142,14 +171,16 @@ entries. The [starter config](../examples/repo-portal-starter/mise.example.toml)
 connector together.
 
 When updating the recommended operator version, update both starter pins and the matching
-examples in the public docs. After the release is published, copy the config and starter manifest
-into a test Git repository (`mise.toml` and `.seikika/seikika.yaml`) and run the release smoke check.
+examples in the public docs. After cargo-dist announces a stable release, it calls the
+[mise workflow](../.github/workflows/mise.yml) for that tag. The workflow installs the CLI and
+workspace connector on Linux using the starter config, checks connector discovery and the
+report baseline, and resolves the release assets for all five targets with `mise lock`.
+The weekly workflow run repeats the install for the version pinned in the starter.
+
+To repeat the check locally for a published tag, run the following from the repository root.
 
 ```sh
-mise trust
-mise install
-mise exec -- seikika --version
-mise exec -- seikika doctor .seikika
+mise exec -- python3 scripts/check-mise.py release v0.2.0
 ```
 
 `scripts/install-release.sh` unpacks `seikika`, `seikika-connector-workspace`

@@ -12,7 +12,23 @@ T=${T:-target/debug}; PORTAL=examples/reference-portal; WORK=$(mktemp -d); RUNAS
 [ "$(id -u)" = 0 ] && RUNAS="runuser -u postgres --"
 API=127.0.0.1:${API_PORT:-18085}; URL=http://$API; GH=${GH_PORT:-18996}; SCIM=127.0.0.1:${SCIM_PORT:-19101}
 : "${SEIKIKA_OPENFGA_BIN:?set SEIKIKA_OPENFGA_BIN}"; export SEIKIKA_OPENFGA_BIN
-PIDS=(); cleanup() { kill "${PIDS[@]}" 2>/dev/null || true; sleep 0.5; $RUNAS "$PGBIN/pg_ctl" -D "$PGDIR/data" -m fast stop >/dev/null 2>&1 || true; rm -rf "$WORK"; }
+PIDS=()
+cleanup() {
+  local status=$? log
+  if ((status != 0)); then
+    for log in "$PGDIR/pg.log" "$WORK/server.log" "$WORK/scim.log"; do
+      if [[ -r "$log" ]]; then
+        printf '\n--- %s ---\n' "$log" >&2
+        tail -n 100 -- "$log" >&2 || true
+      fi
+    done
+  fi
+  kill "${PIDS[@]}" 2>/dev/null || true
+  sleep 0.5
+  $RUNAS "$PGBIN/pg_ctl" -D "$PGDIR/data" -m fast stop >/dev/null 2>&1 || true
+  rm -rf "$WORK"
+  return "$status"
+}
 trap cleanup EXIT
 $RUNAS rm -rf "$PGDIR"; $RUNAS mkdir -p "$PGDIR"
 $RUNAS "$PGBIN/initdb" -A trust -U postgres -D "$PGDIR/data" >/dev/null

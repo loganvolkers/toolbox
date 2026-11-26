@@ -61,7 +61,7 @@ kindGroups:
     description: >-
       What people and agents read: design and reference docs, the public site,
       examples and agent instruction files.
-    kinds: [Doc, SitePage, Example, AgentDoc]
+    kinds: [Doc, SitePage, Example, AgentDoc, SdkDocs]
   - name: delivery
     title: CI and supply chain
     description: >-
@@ -73,7 +73,15 @@ kindGroups:
     description: >-
       The portal's own model, scored like any other code: scorecards, rules,
       kinds, fields, connectors, rubrics, and the agents' assessments.
-    kinds: [Scorecard, Rule, Kind, Field, PortalConnector, Rubric, Assessment]
+    kinds:
+    - Scorecard
+    - Rule
+    - Kind
+    - Field
+    - PortalConnector
+    - Rubric
+    - Assessment
+    - StandardPackage
   - name: evidence
     title: SDLC and evidence
     description: >-
@@ -148,6 +156,7 @@ connectors:
       repo: true
       # npm manifests (docs/design/package-standards.md). One record per package.json.
       packages: ["**/package.json"]
+      standardPackages: [packages/*/seikika-package.yaml]
       # JSON Schema documents (docs/design/schema-standards.md). The contracts compiled into the binary.
       schemas: [crates/seikika-model/schema/*.json]
       # Example and experiment write-ups (docs/design/example-standards.md).
@@ -198,6 +207,7 @@ connectors:
     - agent-doc
     - plugin
     - package-json
+    - standard-package
     - json-schema
     - example
     - site-page
@@ -220,6 +230,7 @@ connectors:
       agent-doc: [external_ids]
       plugin: [external_ids]
       package-json: [external_ids]
+      standard-package: [external_ids]
       json-schema: [external_ids]
       example: [external_ids]
       site-page: [external_ids]
@@ -241,6 +252,7 @@ connectors:
       agent-doc: 5m
       plugin: 5m
       package-json: 5m
+      standard-package: 5m
       json-schema: 5m
       example: 5m
       site-page: 5m
@@ -307,6 +319,11 @@ connectors:
           command: [target/debug/seikika, describe]
           parse: ndjson
           kinds: [command, mcp-tool]
+        # Use rustdoc and the npm export targets to score the SDK reference consumers see.
+        - name: sdk-docs
+          command: [node, scripts/sdk-docs.mjs]
+          parse: ndjson
+          kinds: [sdk-docs]
         # Every part of a portal as entities (docs/design/scorecards-for-scorecards.md): this
         # portal, the starter pilots copy, and the reference portal. Live outcomes come from the
         # committed results and are information only, so meta scorecards never depend on their own output.
@@ -325,6 +342,7 @@ connectors:
     records:
     - command
     - mcp-tool
+    - sdk-docs
     - scorecard
     - rule
     - kind
@@ -334,6 +352,7 @@ connectors:
     refresh:
       command: [external_ids]
       mcp-tool: [external_ids]
+      sdk-docs: [external_ids]
       scorecard: [external_ids]
       rule: [external_ids]
       kind: [external_ids]
@@ -343,6 +362,7 @@ connectors:
     freshness:
       command: 5m
       mcp-tool: 5m
+      sdk-docs: 5m
       scorecard: 5m
       rule: 5m
       kind: 5m
@@ -463,12 +483,13 @@ mcp:
     Dependency requirements, versions, sources, usedBy; AgentDoc
     missingFiles, commandLines, ciMissingCommands, secretHits, hiddenChars;
     PackageJson wildcardRanges, gitRanges, lockfile, checkScripts,
-    ciUsesInstall; JsonSchema dialect, schemaId, externalRefs; Example
-    missingFiles, commandLines; Plugin misplacedSkills, headerSecrets,
-    pathEscapes, commandToken; SitePage missingFiles, inSidebar, secretHits;
-    Repository dependabotGaps, codeScanning, securityPolicy, workflowOwners.
-    Change the code, refresh_entity, and check the score again. Contract
-    tests count when a test or script contains a tools/call body (name and
-    arguments) naming the tool, outside a comment.
+    ciUsesInstall; SdkDocs entryPoints, undocumented, referenceGaps;
+    JsonSchema dialect, schemaId, externalRefs; Example missingFiles,
+    commandLines; Plugin misplacedSkills, headerSecrets, pathEscapes,
+    commandToken; SitePage missingFiles, inSidebar, secretHits; Repository
+    dependabotGaps, codeScanning, securityPolicy, workflowOwners. Change the
+    code, refresh_entity, and check the score again. Contract tests count
+    when a test or script contains a tools/call body (name and arguments)
+    naming the tool, outside a comment.
 
 tests: [tests/standards.test.yaml]

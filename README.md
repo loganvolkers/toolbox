@@ -10,6 +10,7 @@ ownership, scorecards, and self-service actions for developers and agents.
 | --- | --- |
 | Check one repository | [Follow the repository quickstart](https://seikika.com/start/quickstart/) to record a baseline and catch a broken link. A baseline saves the results you compare later. |
 | Run a catalog locally | [Explore a portal](https://seikika.com/start/portal/) to look up a service, see who owns it, and inspect its score. |
+| Bring GitHub or other data into a portal | [Browse the connector directory](https://seikika.com/connectors/) for setup guides. |
 | Find the right CLI and connector | [Install Seikika](https://seikika.com/start/install/) for release and source build options. |
 
 See [versions and upgrades](https://seikika.com/start/versions/) for compatibility
@@ -20,7 +21,7 @@ and the [releases](https://github.com/seikika/seikika/releases) for available bi
 - **Portal operators** can [enforce standards in CI](https://seikika.com/operators/ci/)
   or [deploy a shared portal](https://seikika.com/operators/deploy/).
 - **Package authors** can [share standards and write connectors](https://seikika.com/authors/) or
-  browse the [first-party standards packages](packages/README.md).
+  browse the [first-party standards packages](https://seikika.com/packages/).
 - **Developers and agents** can [read the catalog and request actions](https://seikika.com/users/).
 - **Maintainers** can [build and check a source checkout](https://seikika.com/start/run/).
   See the [contribution workflow](AGENTS.md), [workspace crates](crates/README.md),

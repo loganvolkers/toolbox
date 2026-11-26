@@ -7,6 +7,8 @@ sidebar:
 
 Write for a capable developer who is new to Seikika. Give them a result they can recognize, explain the terms they need, and show them how to check their work.
 
+For public Rust and npm APIs, use the [SDK documentation comments guide](/maintainers/sdk-docs/).
+
 ## Audience and reading level
 
 - Assume readers of **Start** know Git, files, and a terminal. Introduce continuous integration (CI), the portal manifest, and scorecards before relying on those concepts. Assume no Rust, Kubernetes, or platform engineering experience unless the page needs it.

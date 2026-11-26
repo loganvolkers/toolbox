@@ -326,6 +326,7 @@ Scorecard `maintainer-connector` over `Connector` entities, owned by group:maint
 | `described` | bronze | measured | `entity.descriptionChars > 0 && entity.crateDoc` | An operator choosing a connector reads its package description and crate docs, not its source; without them they cannot tell what it emits. | Add a Cargo.toml description and a //! crate doc that says what the connector emits. |
 | `config-documented` | bronze | measured | `entity.configDocumented` | A connector reads its settings from SEIKIKA_CONNECTOR_CONFIG or its flags; when they are undocumented an operator has to read the source to wire it into a manifest. | Document the configuration in the crate doc: SEIKIKA_CONNECTOR_CONFIG for an in-image connector, or the --seikika and --listen flags for a remote one. |
 | `speaks-the-protocol` | bronze | measured | `entity.transport == 'stdio' \|\| entity.transport == 'remote' \|\| entity.transport == 'both'` | Seikika asks connectors for data only over the control channel; a connector that serves neither stdio nor long-poll can never be told to refresh or resync. | Serve commands with run_stdio (in-image) or run_remote (long-poll). A connector that does neither is not on the control channel. |
+| `public-guide` | bronze | measured | `entity.publicGuide != ''` | Operators need to find the guide before they can judge whether the connector suits their portal or learn how to run and verify it. [Decision: public docs for every shipped connector](https://github.com/seikika/seikika/blob/main/docs/decisions/D01M8CHMD6TH2AXRWT9E49G4V6V.md) | Add a titled and described page at `site/src/content/docs/connectors/<name>.md`. The directory and sidebar pick up published guides automatically. Remove draft or hidden flags when the guide is ready to publish. |
 | `names-its-kinds` | silver | measured | `entity.documentedKinds.size() > 0 \|\| entity.genericKinds` | An operator must declare a connector's kinds in the manifest, and the conformance kit rejects capabilities that name undeclared ones; unnamed kinds leave both to guesswork. | Name each record kind in the connector's source (in a `record` or `snapshot_complete` message) or, for a generic runner, say in its `//!` crate doc that kinds come from the job config. |
 | `closes-snapshots` | silver | measured | `entity.pushOnly \|\| entity.snapshotComplete` | A resync is the only command that can remove records by omission, and only once the snapshot is closed; without `snapshot_complete`, records deleted upstream stay in the catalog. | End every resync kind with a `snapshot_complete` message. A push-only connector is exempt: it has no resync. |
 | `reports-missing-ids` | silver | measured | `entity.pushOnly \|\| entity.reportsNotFound` | A refresh never deletes by omission, so without `not_found` an entity deleted upstream stays in the catalog and the requester sees it as unresolved. | Send `not_found` when a refresh names an unknown external id. A push-only connector is exempt: the provider sends deletes. |
@@ -692,6 +693,22 @@ Scorecard `maintainer-schema` over `JsonSchema` entities, owned by group:maintai
 | `local-refs` | gold | measured | `entity.externalRefs.size() == 0` | A remote $ref cannot be resolved where the contract runs, and its target can change without a review in this repository. | Point $ref at a fragment in this file. The compiler embeds the document and does not fetch a remote schema. |
 | `no-hardcoded-secrets` | bronze | measured | `entity.secretHits.size() == 0` | A credential in a schema ships inside every build of the binary, where it cannot be removed without a new release. | Remove the credential in the evidence. A schema is compiled into the binary and published with the repository. |
 
+## SDK documentation
+
+Checks the Rust connector SDK and public npm packages for entry points, comments, and reference coverage.
+
+**Why:** Readers arrive through rustdoc, an editor, or a package README. Use the compiler and package exports to find the declarations and import paths readers see, then report concrete gaps for maintainers.
+
+See [SDK documentation comments guide](https://seikika.com/maintainers/sdk-docs/), [SDK documentation standard decision](https://github.com/seikika/seikika/blob/main/docs/decisions/D01M8CK6XW8PR5AXSA1FQEZ5YD8.md).
+
+Scorecard `maintainer-sdk-docs` over `SdkDocs` entities, owned by group:maintainers. `seikika report` lists what fails now. *Measured* rules check facts a tool or connector read; *judged* rules pass on an agent's assessment (`seikika assess`).
+
+| Rule | Level | Basis | Passes when | Why | Fix |
+|---|---|---|---|---|---|
+| `has-entry-point` | bronze | measured | `entity.entryPoints.size() > 0` | A consumer needs an import path that belongs to the package's public interface. | Expose the supported entry point in Cargo.toml or in the exports map in package.json. |
+| `documented-items` | silver | measured | `entity.undocumented.size() == 0` | Item comments supply the description that consumers see in rustdoc and in editor hovers. | Add a summary and caller-facing details to each named Rust item, TypeScript declaration, or component prop. |
+| `reference-complete` | gold | measured | `entity.referenceGaps.size() == 0` | A consumer needs working links and a reference for entry points and options that editors cannot fully describe. | Repair the rustdoc diagnostics or fill the named missing export, slot, or token in the package README. |
+
 ## SDLC stages
 
 Each stage of an SDLC layer, checked against facts: an exit criterion, a doc that exists, commands that resolve, checks CI runs, and status built (D87, docs/sdlc.md).
@@ -788,6 +805,20 @@ Scorecard `maintainer-skill` over `Skill` entities, owned by group:maintainers. 
 | `no-hidden-instructions` | bronze | measured | `entity.hiddenChars == 0` | A model reads characters and comments that a reviewer cannot see, so hidden text is a way to slip instructions past review. It sits at bronze, the lowest level, so such a skill cannot pass the ratchet. [Thresholds: why hidden text sits at bronze](https://github.com/seikika/seikika/blob/main/docs/design/thresholds.md) | Remove from the skill's files what a reader can't see and a model can: zero-width and other default-ignorable characters, bidi controls, variation selectors outside emoji, Unicode tags, HTML comments (`<!-- -->`) and Markdown link-reference comments (`[//]: # (...)`); save any non-UTF-8 text file as UTF-8 or remove it. Images, fonts and archives are not scanned. |
 | `no-hardcoded-secrets` | bronze | measured | `entity.secretHits.size() == 0` | A skill is published with its plugin and pasted into model prompts, so a credential in it reaches every install and every transcript. It sits at bronze so such a skill cannot pass the ratchet. [Thresholds](https://github.com/seikika/seikika/blob/main/docs/design/thresholds.md) | Remove the hardcoded credentials in the evidence. Refer to a secret by name instead of pasting it into the skill. |
 | `one-level-deep` | gold | measured | `entity.linkDepth <= 1 && entity.supportFiles <= 3` | Agents read deeply nested references only in part, so detail two hops away is easily missed. SkillsBench found focused skills with at most three modules beat larger bundles. [Anthropic skill best practices](https://docs.anthropic.com/en/docs/agents-and-tools/agent-skills/best-practices) | Keep references one hop from SKILL.md and the skill to at most three supporting files. Focused skills outperform large bundles. |
+
+## First-party standards packages
+
+Every first-party standards package has a published operator guide.
+
+**Why:** Publishing a package creates an adoption path for operators. Require a discoverable guide at bronze so they can choose an appropriate package, configure it and verify its results.
+
+See [Standards package directory decision](https://github.com/seikika/seikika/blob/main/docs/decisions/D01M8CRS50G5086P5DCFQN636BA.md).
+
+Scorecard `maintainer-standard-package` over `StandardPackage` entities, owned by group:maintainers. `seikika report` lists what fails now. *Measured* rules check facts a tool or connector read; *judged* rules pass on an agent's assessment (`seikika assess`).
+
+| Rule | Level | Basis | Passes when | Why | Fix |
+|---|---|---|---|---|---|
+| `public-guide` | bronze | measured | `entity.publicGuide != ''` | Operators need to find the package's expected inputs, configuration and results before adding checks to a portal. [Standards package directory decision](https://github.com/seikika/seikika/blob/main/docs/decisions/D01M8CRS50G5086P5DCFQN636BA.md) | Publish a titled and described guide at `site/src/content/docs/packages/<directory-name>.md`. The package directory and sidebar pick it up automatically. |
 
 ## CI security
 

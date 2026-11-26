@@ -1,5 +1,10 @@
 <script setup lang="ts">
-defineProps<{ label?: string }>();
+/** Wraps themed page content in a main landmark, with optional navigation and footer slots. */
+interface Props {
+  /** Accessible label for the main landmark when the page needs one. */
+  label?: string;
+}
+defineProps<Props>();
 </script>
 
 <template>

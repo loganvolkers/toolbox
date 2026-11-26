@@ -28,6 +28,53 @@ pub fn analyse(root: &Path, rel: &str) -> Value {
     })
 }
 
+/// The directory builds its entries from public connector landing pages.
+pub(crate) fn connector_guide(root: &Path, package: &str) -> Option<String> {
+    let name = package.strip_prefix("seikika-connector-")?;
+    public_guide(root, "connectors", name)
+}
+
+pub(crate) fn public_guide(root: &Path, section: &str, name: &str) -> Option<String> {
+    if name.is_empty()
+        || !name
+            .bytes()
+            .all(|c| c.is_ascii_lowercase() || c.is_ascii_digit() || c == b'-')
+    {
+        return None;
+    }
+    let slug = format!("{section}/{name}");
+    if !is_published_page(
+        root,
+        &format!("site/src/content/docs/{section}/index.mdx"),
+        section,
+    ) {
+        return None;
+    }
+    [
+        format!("{slug}.md"),
+        format!("{slug}.mdx"),
+        format!("{slug}/index.md"),
+        format!("{slug}/index.mdx"),
+    ]
+    .iter()
+    .any(|page| is_published_page(root, &format!("site/src/content/docs/{page}"), &slug))
+    .then(|| format!("/{slug}/"))
+}
+
+fn is_published_page(root: &Path, rel: &str, slug: &str) -> bool {
+    let Ok(text) = std::fs::read_to_string(root.join(rel)) else {
+        return false;
+    };
+    let fm = parsed(frontmatter(&text));
+    if fm_string(&fm, "title").is_empty() || fm_string(&fm, "description").is_empty() {
+        return false;
+    }
+    let slug_override = fm_string(&fm, "slug");
+    let hidden = fm["sidebar"]["hidden"] == true || fm["hidden"] == true;
+    (slug_override.is_empty() || slug_override == slug)
+        && in_sidebar(root, rel, slug, fm["draft"] == true, hidden)
+}
+
 fn frontmatter(text: &str) -> &str {
     let rest = text
         .strip_prefix("---\n")
@@ -133,12 +180,11 @@ fn in_sidebar(root: &Path, rel: &str, slug: &str, draft: bool, hidden: bool) -> 
 }
 
 fn missing_links(root: &Path, rel: &str, text: &str) -> Vec<String> {
-    let re = compile(r"\]\(([^)\s#]+)(?:#[^)]*)?\)");
+    static LINKS: std::sync::LazyLock<Regex> =
+        std::sync::LazyLock::new(|| compile(r"\]\(([^)\s#]+)(?:#[^)]*)?\)"));
     let mut missing = Vec::new();
-    for c in re.captures_iter(text) {
-        let Some(target) = c.get(1).map(|m| m.as_str()) else {
-            continue;
-        };
+    for capture in LINKS.captures_iter(text) {
+        let (_, [target]) = capture.extract();
         if target.starts_with("http://")
             || target.starts_with("https://")
             || target.starts_with("mailto:")
@@ -273,6 +319,44 @@ mod tests {
             std::fs::write(path, body).unwrap();
         }
         Tmp(root)
+    }
+
+    #[test]
+    fn a_public_connector_guide_requires_no_manual_directory_link() {
+        let config = "site/astro.config.mjs";
+        let directory = "site/src/content/docs/connectors/index.mdx";
+        let guide = "site/src/content/docs/connectors/github.md";
+        let header = "---\ntitle: Connector\ndescription: What it reads.\n---\n";
+        let tmp = scratch(
+            "connector-guide",
+            &[
+                (
+                    config,
+                    "sidebar: [{ autogenerate: { directory: 'connectors' } }]",
+                ),
+                (directory, header),
+                (guide, header),
+            ],
+        );
+        let route = || connector_guide(&tmp.0, "seikika-connector-github");
+        assert_eq!(route().as_deref(), Some("/connectors/github/"));
+        for change in [
+            "draft: true",
+            "sidebar: {hidden: true}",
+            "slug: another-url",
+        ] {
+            std::fs::write(
+                tmp.0.join(guide),
+                header.replace("\n---", &format!("\n{change}\n---")),
+            )
+            .unwrap();
+            assert_eq!(route(), None, "{change}");
+        }
+        std::fs::remove_file(tmp.0.join(guide)).unwrap();
+        assert_eq!(route(), None, "the connector needs its own landing page");
+        std::fs::write(tmp.0.join(guide), header).unwrap();
+        std::fs::write(tmp.0.join(config), "sidebar: ['connectors']").unwrap();
+        assert_eq!(route(), None, "sidebar only lists the directory");
     }
 
     #[test]

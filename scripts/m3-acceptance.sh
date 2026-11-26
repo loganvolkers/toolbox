@@ -13,7 +13,21 @@ API=127.0.0.1:${API_PORT:-18081}; URL=http://$API; RUNAS=""
 SEIKIKA=${SEIKIKA:-target/debug/seikika}; PORTAL=examples/reference-portal
 : "${SEIKIKA_OPENFGA_BIN:?set SEIKIKA_OPENFGA_BIN to the openfga binary}"; export SEIKIKA_OPENFGA_BIN
 WORK=$(mktemp -d); SERVER_PID=""
-cleanup() { [ -n "$SERVER_PID" ] && kill "$SERVER_PID" 2>/dev/null || true; sleep 0.5; $RUNAS "$PGBIN/pg_ctl" -D "$PGDIR/data" -m fast stop >/dev/null 2>&1 || true; rm -rf "$WORK"; }
+cleanup() {
+  local status=$? log
+  if ((status != 0)); then
+    for log in "$PGDIR/pg.log" "$WORK/server.log"; do
+      if [[ -r "$log" ]]; then
+        printf '\n--- %s ---\n' "$log" >&2
+        tail -n 100 -- "$log" >&2 || true
+      fi
+    done
+  fi
+  [ -n "$SERVER_PID" ] && kill "$SERVER_PID" 2>/dev/null || true
+  $RUNAS "$PGBIN/pg_ctl" -D "$PGDIR/data" -m fast stop >/dev/null 2>&1 || true
+  rm -rf "$WORK"
+  return "$status"
+}
 trap cleanup EXIT
 $RUNAS rm -rf "$PGDIR"; $RUNAS mkdir -p "$PGDIR"
 $RUNAS "$PGBIN/initdb" -A trust -U postgres -D "$PGDIR/data" >/dev/null

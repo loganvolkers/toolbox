@@ -1,5 +1,12 @@
 <script setup lang="ts">
-defineProps<{ title: string; heading?: "h2" | "h3" | "h4" }>();
+/** Groups related content under a section heading. */
+interface Props {
+  /** Heading text used when the `title` slot is empty. */
+  title: string;
+  /** Heading level. Defaults to `h2`. Match the surrounding page outline. */
+  heading?: "h2" | "h3" | "h4";
+}
+defineProps<Props>();
 </script>
 
 <template>

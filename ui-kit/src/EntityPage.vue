@@ -2,7 +2,18 @@
 import PageHeader from "./PageHeader.vue";
 import type { EntityOverview } from "./entity";
 
-defineProps<{ entity: EntityOverview; ownerHref?: string; heading?: "h1" | "h2"; snapshot?: string | number | null }>();
+/** Displays an entity's identity, ownership, and links with slots for portal-specific details. */
+interface Props {
+  /** Entity to display. Use `entityOverview` to prepare it from catalog fields. */
+  entity: EntityOverview;
+  /** Destination for the owner link. Omit it to display the owner as text. */
+  ownerHref?: string;
+  /** Heading level for the built-in header. Defaults to `h1`. */
+  heading?: "h1" | "h2";
+  /** Snapshot ID displayed in the built-in metadata. Omit it to hide the snapshot label. */
+  snapshot?: string | number | null;
+}
+defineProps<Props>();
 </script>
 
 <template>

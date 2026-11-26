@@ -1,0 +1,39 @@
+---
+title: Standards package directory
+description: Find, install, and verify reusable Seikika scorecards for your repository or service.
+sidebar:
+  order: 1
+---
+
+import { globSync } from 'node:fs';
+import { basename, dirname } from 'node:path';
+import GuideDirectory from '../../../components/GuideDirectory.astro';
+import { REPO_ROOT } from '../../../lib/cli-describe';
+
+export const packageSlugs = globSync('packages/*/seikika-package.yaml', { cwd: REPO_ROOT })
+  .map(path => basename(dirname(path)));
+
+Add reusable checks to your portal with a **standards package**. A package can supply scorecards, catalog kinds, connectors, and tool requirements. The Seikika project maintains the packages in this directory. Each guide shows what the package checks and how to verify it. For JavaScript libraries, see the [public npm packages](/authors/npm/).
+
+## Available packages
+
+<GuideDirectory section="packages" slugs={packageSlugs} />
+
+## Pin and install
+
+These examples use a Seikika 0.2 source revision that contains the packages. Build the CLI and any connector binaries from that revision, or use a matching release when available. See the [source build instructions](/start/install/#build-from-source) and [release guide](/start/versions/).
+
+1. Add the guide's entry to the `include` list in your portal's `seikika.yaml`. The part after `@` pins the package to a Git commit. You can also pin a release that contains the package directory. Its manifest's own version does not select the Git revision.
+2. From the checkout root, run the commands below. They assume your portal directory is `.seikika`. Pass your directory if it has another name. If `doctor` names a missing tool or connector, install the named version and run it again.
+3. Read the scorecard named in the guide. Confirm that it has the entities you expect before saving your first baseline.
+
+```bash
+seikika install .seikika
+seikika validate .seikika
+seikika doctor .seikika
+seikika report .seikika
+```
+
+Commit `.seikika/seikika.lock` with the manifest. Use `seikika install --frozen .seikika` in continuous integration (CI) to use the locked package. For a local package, set `package` to a path relative to the portal directory. For CI setup and upgrades, see [Gate pull requests](/operators/ci/) and [Change a standard](/operators/standards/).
+
+For your own package, follow [Publish a standard](/authors/). A first-party package gets a directory entry when its published guide is available.

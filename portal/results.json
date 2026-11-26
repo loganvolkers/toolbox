@@ -157,6 +157,11 @@
           "12d08aa6"
         ]
       },
+      "workflow:.github/workflows/crates-registry-smoke.yml": {
+        "cancels-superseded-runs": [
+          "12d08aa6"
+        ]
+      },
       "workflow:.github/workflows/release.yml": {
         "cancels-superseded-runs": [
           "12d08aa6"
@@ -247,48 +252,8 @@
         "few-unwraps": [
           "a75cfd43"
         ],
-        "fully-documented": [
-          "046eb778",
-          "0b55c501",
-          "193cf60a",
-          "2b78e41f",
-          "32ff5745",
-          "3ee3ac68",
-          "44e6a802",
-          "6abe917c",
-          "7964d0bf",
-          "92cb9926",
-          "9d218165",
-          "a236aca3",
-          "afdfa1ad",
-          "c0906b0d",
-          "c998b948",
-          "d245fb47",
-          "dfb3229a",
-          "f54398a5"
-        ],
         "no-huge-functions": [
           "39c55bc5"
-        ],
-        "public-api-documented": [
-          "046eb778",
-          "0b55c501",
-          "193cf60a",
-          "2b78e41f",
-          "32ff5745",
-          "3ee3ac68",
-          "44e6a802",
-          "6abe917c",
-          "7964d0bf",
-          "92cb9926",
-          "9d218165",
-          "a236aca3",
-          "afdfa1ad",
-          "c0906b0d",
-          "c998b948",
-          "d245fb47",
-          "dfb3229a",
-          "f54398a5"
         ],
         "short-functions": [
           "39c55bc5"
@@ -4559,6 +4524,9 @@
       "action:github/codeql-action": {
         "level": "bronze"
       },
+      "action:jdx/mise-action": {
+        "level": "bronze"
+      },
       "action:rust-lang/crates-io-auth-action": {
         "level": "bronze"
       }
@@ -4701,7 +4669,37 @@
           "still-running"
         ]
       },
+      "workflow:.github/workflows/crates-registry-smoke.yml": {
+        "level": "bronze",
+        "unknown": [
+          "fail-rate-under-10",
+          "fail-rate-under-20",
+          "fail-rate-under-5",
+          "main-not-stuck-red",
+          "still-running"
+        ]
+      },
+      "workflow:.github/workflows/image-rehearsal.yml": {
+        "level": "bronze",
+        "unknown": [
+          "fail-rate-under-10",
+          "fail-rate-under-20",
+          "fail-rate-under-5",
+          "main-not-stuck-red",
+          "still-running"
+        ]
+      },
       "workflow:.github/workflows/image.yml": {
+        "level": "bronze",
+        "unknown": [
+          "fail-rate-under-10",
+          "fail-rate-under-20",
+          "fail-rate-under-5",
+          "main-not-stuck-red",
+          "still-running"
+        ]
+      },
+      "workflow:.github/workflows/mise.yml": {
         "level": "bronze",
         "unknown": [
           "fail-rate-under-10",
@@ -4785,7 +4783,16 @@
       "workflow:.github/workflows/codeql.yml": {
         "level": "gold"
       },
+      "workflow:.github/workflows/crates-registry-smoke.yml": {
+        "level": "gold"
+      },
+      "workflow:.github/workflows/image-rehearsal.yml": {
+        "level": "gold"
+      },
       "workflow:.github/workflows/image.yml": {
+        "level": "gold"
+      },
+      "workflow:.github/workflows/mise.yml": {
         "level": "gold"
       },
       "workflow:.github/workflows/pages.yml": {
@@ -4831,7 +4838,28 @@
           "fast-feedback"
         ]
       },
+      "workflow:.github/workflows/crates-registry-smoke.yml": {
+        "failing": {
+          "cancels-superseded-runs": 1
+        },
+        "level": "none",
+        "unknown": [
+          "fast-feedback"
+        ]
+      },
+      "workflow:.github/workflows/image-rehearsal.yml": {
+        "level": "bronze",
+        "unknown": [
+          "fast-feedback"
+        ]
+      },
       "workflow:.github/workflows/image.yml": {
+        "level": "bronze",
+        "unknown": [
+          "fast-feedback"
+        ]
+      },
+      "workflow:.github/workflows/mise.yml": {
         "level": "bronze",
         "unknown": [
           "fast-feedback"
@@ -4941,9 +4969,7 @@
       "crate:seikika-connect": {
         "failing": {
           "few-unwraps": 1,
-          "fully-documented": 18,
           "no-huge-functions": 1,
-          "public-api-documented": 18,
           "short-functions": 1
         },
         "level": "bronze",
@@ -5220,16 +5246,25 @@
       "doc:docs/audits/astro-vue-portal-2026-11-25.md": {
         "level": "silver"
       },
+      "doc:docs/audits/connector-directory.md": {
+        "level": "silver"
+      },
       "doc:docs/audits/design-loop-efficiency-2026-11-24.md": {
         "level": "silver"
       },
       "doc:docs/audits/internal-capabilities-2026-11-26.md": {
         "level": "silver"
       },
+      "doc:docs/audits/package-directory.md": {
+        "level": "silver"
+      },
       "doc:docs/audits/public-docs-2026-11-26.md": {
         "level": "silver"
       },
       "doc:docs/audits/readmes-2026-11-26.md": {
+        "level": "silver"
+      },
+      "doc:docs/audits/sdk-documentation-2026-11-26.md": {
         "level": "silver"
       },
       "doc:docs/audits/seikika-report-2026-11-24-2.md": {
@@ -5737,6 +5772,15 @@
         "level": "skipped"
       },
       "doc:docs/decisions/D01M8BJDPAP97XH4AQSQCN1C0X2.md": {
+        "level": "skipped"
+      },
+      "doc:docs/decisions/D01M8CHMD6TH2AXRWT9E49G4V6V.md": {
+        "level": "skipped"
+      },
+      "doc:docs/decisions/D01M8CK6XW8PR5AXSA1FQEZ5YD8.md": {
+        "level": "skipped"
+      },
+      "doc:docs/decisions/D01M8CRS50G5086P5DCFQN636BA.md": {
         "level": "skipped"
       },
       "doc:docs/decisions/README.md": {
@@ -6501,6 +6545,7 @@
         "level": "gold"
       }
     },
+    "maintainer-sdk-docs": {},
     "maintainer-site": {
       "site-page:site/src/content/docs/agents/reads.md": {
         "level": "gold"
@@ -6565,6 +6610,27 @@
       "site-page:site/src/content/docs/concepts/scorecards.md": {
         "level": "gold"
       },
+      "site-page:site/src/content/docs/connectors/git-files.md": {
+        "level": "gold"
+      },
+      "site-page:site/src/content/docs/connectors/github.md": {
+        "level": "gold"
+      },
+      "site-page:site/src/content/docs/connectors/gitlab.md": {
+        "level": "gold"
+      },
+      "site-page:site/src/content/docs/connectors/index.mdx": {
+        "level": "gold"
+      },
+      "site-page:site/src/content/docs/connectors/runner.md": {
+        "level": "gold"
+      },
+      "site-page:site/src/content/docs/connectors/scim.md": {
+        "level": "gold"
+      },
+      "site-page:site/src/content/docs/connectors/workspace.md": {
+        "level": "gold"
+      },
       "site-page:site/src/content/docs/demo/report.md": {
         "level": "gold"
       },
@@ -6572,6 +6638,9 @@
         "level": "gold"
       },
       "site-page:site/src/content/docs/maintainers/index.md": {
+        "level": "gold"
+      },
+      "site-page:site/src/content/docs/maintainers/sdk-docs.md": {
         "level": "gold"
       },
       "site-page:site/src/content/docs/maintainers/writing.md": {
@@ -6611,6 +6680,36 @@
         "level": "gold"
       },
       "site-page:site/src/content/docs/operators/standards.md": {
+        "level": "gold"
+      },
+      "site-page:site/src/content/docs/packages/file-size.md": {
+        "level": "gold"
+      },
+      "site-page:site/src/content/docs/packages/github-actions.md": {
+        "level": "gold"
+      },
+      "site-page:site/src/content/docs/packages/index.mdx": {
+        "level": "gold"
+      },
+      "site-page:site/src/content/docs/packages/openssf-scorecard.md": {
+        "level": "gold"
+      },
+      "site-page:site/src/content/docs/packages/pattern-count.md": {
+        "level": "gold"
+      },
+      "site-page:site/src/content/docs/packages/pnpm-expo.md": {
+        "level": "gold"
+      },
+      "site-page:site/src/content/docs/packages/sarif.md": {
+        "level": "gold"
+      },
+      "site-page:site/src/content/docs/packages/semgrep.md": {
+        "level": "gold"
+      },
+      "site-page:site/src/content/docs/packages/sre.md": {
+        "level": "gold"
+      },
+      "site-page:site/src/content/docs/packages/storybook.md": {
         "level": "gold"
       },
       "site-page:site/src/content/docs/start/cli.mdx": {
@@ -6912,6 +7011,7 @@
         "level": "silver"
       }
     },
+    "maintainer-standard-package": {},
     "maintainer-supply-chain": {
       "repo:seikika/seikika": {
         "level": "gold"
@@ -10318,6 +10418,9 @@
         },
         "level": "bronze"
       },
+      "field:seikika/Connector.publicGuide": {
+        "level": "gold"
+      },
       "field:seikika/Connector.pushOnly": {
         "failing": {
           "described": 1
@@ -11630,6 +11733,21 @@
         },
         "level": "bronze"
       },
+      "field:seikika/SdkDocs.entryPoints": {
+        "level": "gold"
+      },
+      "field:seikika/SdkDocs.name": {
+        "level": "gold"
+      },
+      "field:seikika/SdkDocs.path": {
+        "level": "gold"
+      },
+      "field:seikika/SdkDocs.referenceGaps": {
+        "level": "gold"
+      },
+      "field:seikika/SdkDocs.undocumented": {
+        "level": "gold"
+      },
       "field:seikika/SdlcLayer.builds": {
         "level": "gold"
       },
@@ -11878,6 +11996,18 @@
           "described": 1
         },
         "level": "bronze"
+      },
+      "field:seikika/StandardPackage.name": {
+        "level": "gold"
+      },
+      "field:seikika/StandardPackage.path": {
+        "level": "gold"
+      },
+      "field:seikika/StandardPackage.publicGuide": {
+        "level": "gold"
+      },
+      "field:seikika/StandardPackage.version": {
+        "level": "gold"
       },
       "field:seikika/Workflow.actionlint": {
         "failing": {
@@ -12167,6 +12297,9 @@
         },
         "level": "silver"
       },
+      "kind:seikika/SdkDocs": {
+        "level": "gold"
+      },
       "kind:seikika/SdlcLayer": {
         "level": "gold"
       },
@@ -12181,6 +12314,9 @@
           "fields-described": 22
         },
         "level": "silver"
+      },
+      "kind:seikika/StandardPackage": {
+        "level": "gold"
       },
       "kind:seikika/Workflow": {
         "failing": {
@@ -12469,6 +12605,9 @@
       "rule:seikika/maintainer-connector/no-hardcoded-secrets": {
         "level": "gold"
       },
+      "rule:seikika/maintainer-connector/public-guide": {
+        "level": "gold"
+      },
       "rule:seikika/maintainer-connector/reports-missing-ids": {
         "level": "gold"
       },
@@ -12731,6 +12870,15 @@
       "rule:seikika/maintainer-schema/wired-in": {
         "level": "gold"
       },
+      "rule:seikika/maintainer-sdk-docs/documented-items": {
+        "level": "gold"
+      },
+      "rule:seikika/maintainer-sdk-docs/has-entry-point": {
+        "level": "gold"
+      },
+      "rule:seikika/maintainer-sdk-docs/reference-complete": {
+        "level": "gold"
+      },
       "rule:seikika/maintainer-site/described": {
         "level": "gold"
       },
@@ -12786,6 +12934,9 @@
         "level": "gold"
       },
       "rule:seikika/maintainer-skill/within-body-budget": {
+        "level": "gold"
+      },
+      "rule:seikika/maintainer-standard-package/public-guide": {
         "level": "gold"
       },
       "rule:seikika/maintainer-supply-chain/code-scanning-pinned": {
@@ -13424,6 +13575,9 @@
         },
         "level": "silver"
       },
+      "scorecard:seikika/maintainer-sdk-docs": {
+        "level": "gold"
+      },
       "scorecard:seikika/maintainer-site": {
         "failing": {
           "fixtures-reach-every-level": 1
@@ -13435,6 +13589,9 @@
           "fixtures-reach-every-level": 1
         },
         "level": "silver"
+      },
+      "scorecard:seikika/maintainer-standard-package": {
+        "level": "gold"
       },
       "scorecard:seikika/maintainer-supply-chain": {
         "failing": {
