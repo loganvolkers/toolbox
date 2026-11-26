@@ -157,6 +157,11 @@
           "12d08aa6"
         ]
       },
+      "workflow:.github/workflows/crates-registry-smoke.yml": {
+        "cancels-superseded-runs": [
+          "12d08aa6"
+        ]
+      },
       "workflow:.github/workflows/release.yml": {
         "cancels-superseded-runs": [
           "12d08aa6"
@@ -4704,6 +4709,16 @@
           "still-running"
         ]
       },
+      "workflow:.github/workflows/crates-registry-smoke.yml": {
+        "level": "bronze",
+        "unknown": [
+          "fail-rate-under-10",
+          "fail-rate-under-20",
+          "fail-rate-under-5",
+          "main-not-stuck-red",
+          "still-running"
+        ]
+      },
       "workflow:.github/workflows/image-rehearsal.yml": {
         "level": "bronze",
         "unknown": [
@@ -4808,6 +4823,9 @@
       "workflow:.github/workflows/codeql.yml": {
         "level": "gold"
       },
+      "workflow:.github/workflows/crates-registry-smoke.yml": {
+        "level": "gold"
+      },
       "workflow:.github/workflows/image-rehearsal.yml": {
         "level": "gold"
       },
@@ -4852,6 +4870,15 @@
         ]
       },
       "workflow:.github/workflows/codeql.yml": {
+        "failing": {
+          "cancels-superseded-runs": 1
+        },
+        "level": "none",
+        "unknown": [
+          "fast-feedback"
+        ]
+      },
+      "workflow:.github/workflows/crates-registry-smoke.yml": {
         "failing": {
           "cancels-superseded-runs": 1
         },

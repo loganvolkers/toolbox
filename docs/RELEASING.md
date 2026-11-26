@@ -81,10 +81,12 @@ The version applicator updates exact workspace
 dependency pins along with the workspace version. Refresh `Cargo.lock` with
 `cargo update --workspace` when preparing a version by hand.
 
-Verify the archives from the release commit.
+Verify the archives and build the standalone connector scaffold against the packaged SDK
+from the release commit. CI and the publishing workflow both run these checks.
 
 ```bash
 cargo package --workspace --locked
+python3 scripts/check-crates-release.py sdk target/package
 ```
 
 For new crate names, use an authenticated crates.io account with permission to publish new
@@ -98,7 +100,27 @@ After the first publish, register a GitHub Actions trusted publisher for each pu
 Use repository owner and name `seikika/seikika`, workflow filename `publish-crates.yml`,
 and environment `crates-io-publish`. In GitHub, restrict that environment to the `main`
 branch. Run **Publish Rust crates** from `main` with `publish=true` to publish with OIDC.
-The default dispatch verifies the archives without publishing.
+The default dispatch verifies the archives and downstream SDK without publishing.
+
+Wait for the publish run's **registry-smoke** jobs to pass before tagging the release.
+They install the exact published version with its lockfiles in fresh Cargo directories on
+all five release targets. They validate the reference portal, check workspace connector
+conformance, and start the other installed connectors. Linux x86-64 also runs the portal's
+authorization suite and the GitHub, git-files, and SCIM integration smoke test. A successful
+upload records GitHub OIDC in the publish job summary. A rerun of an already published
+version repeats the smoke tests without uploading another version.
+
+**Crates.io smoke tests** also runs every Monday and on manual dispatch. It resolves the
+latest stable, non-yanked CLI release once, then tests that exact version across all release
+targets with both locked and fresh dependency resolution. Check the failed platform and
+resolution mode in Actions if the scheduled run fails.
+
+Use the pinned Rust toolchain and Python 3.13 to reproduce the portable checks locally.
+
+```bash
+python3 scripts/check-crates-release.py install 0.2.0
+python3 scripts/check-crates-release.py install 0.2.0 --resolution fresh
+```
 
 The GitHub Release and installer artifacts are built by cargo-dist from the version tag.
 See [the crates.io decision](decisions/D01M8BEC7ZX7TFBTSC47W1XQVV4.md) and the
