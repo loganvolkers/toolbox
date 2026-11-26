@@ -12,5 +12,5 @@ Run it with commands and a checkout you trust. Jobs execute with the connector p
 permissions. Use each finding’s recorded command to reproduce it with the original tool.
 
 - [Install Seikika and connectors](https://seikika.com/start/install/)
-- [Set up and check a connector](https://seikika.com/authors/connectors/)
+- [See local runner jobs](https://github.com/seikika/seikika/blob/25a208a3bc1a97f184588c512afcb12d636ce7be/portal/seikika.yaml)
 - [Connector source and tests](https://github.com/seikika/seikika/blob/25a208a3bc1a97f184588c512afcb12d636ce7be/crates/seikika-connector-runner/src)

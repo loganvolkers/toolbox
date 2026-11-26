@@ -11,5 +11,5 @@ Configure a group and a token with `read_api`. Declare both `group` and `project
 kinds. Group membership records cover direct members who meet the configured access level.
 
 - [Install Seikika and connectors](https://seikika.com/start/install/)
-- [Set up and check a connector](https://seikika.com/authors/connectors/)
+- [Build and check the GitLab example](https://github.com/seikika/seikika/blob/25a208a3bc1a97f184588c512afcb12d636ce7be/docs/design/forges.md#6-testing-against-a-real-gitlab)
 - [Connector source and tests](https://github.com/seikika/seikika/blob/25a208a3bc1a97f184588c512afcb12d636ce7be/crates/seikika-connector-gitlab/src)

@@ -13,5 +13,5 @@ identity-provider requests and a separate connector token for Seikika. It pushes
 as they arrive.
 
 - [Install Seikika and connectors](https://seikika.com/start/install/)
-- [Set up and check a connector](https://seikika.com/authors/connectors/)
+- [Inspect sample identity records](https://github.com/seikika/seikika/blob/25a208a3bc1a97f184588c512afcb12d636ce7be/examples/reference-portal/fixtures/idp.ndjson)
 - [Connector source and tests](https://github.com/seikika/seikika/blob/25a208a3bc1a97f184588c512afcb12d636ce7be/crates/seikika-connector-scim/src)

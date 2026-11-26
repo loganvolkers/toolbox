@@ -12,5 +12,5 @@ This connector reads checkout data for repository scorecards. Use the repository
 quickstart to verify it and see the Markdown link check in action.
 
 - [Install Seikika and connectors](https://seikika.com/start/install/)
-- [Set up and check a connector](https://seikika.com/start/quickstart/)
+- [Run the repository quickstart](https://seikika.com/start/quickstart/)
 - [Connector source and tests](https://github.com/seikika/seikika/blob/25a208a3bc1a97f184588c512afcb12d636ce7be/crates/seikika-connector-workspace/src)

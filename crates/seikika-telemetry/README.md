@@ -27,12 +27,12 @@ standard `OTEL_*` env vars; does not override operator-set samplers.
 | `OTEL_METRIC_EXPORT_INTERVAL` | Periodic OTLP metric flush, milliseconds (default 1000) |
 | `OTEL_TRACES_SAMPLER` (+ `_ARG`) | Honored when set |
 | `SEIKIKA_TELEMETRY` | `local` \| `ci` \| `prod` |
-| `SEIKIKA_METRICS_PROMETHEUS` | Keep catalog scrapable (default true for serve) |
 | `SEIKIKA_LOG_FORMAT` | `json` \| `pretty` |
 | `TELEMETRY_PROM_ALIASES` | Dual-export `seikika_snapshot_age_seconds` (default on) |
 
 Local/CI completeness: [Telemetry testbed](https://github.com/seikika/seikika/tree/25a208a3bc1a97f184588c512afcb12d636ce7be/experiments/otel-testbed).
 
-Scrape: `GET /metrics` → `seikika_telemetry::metrics_text()`.
+The server exposes the catalog at `GET /metrics`. The crate records metrics in
+process even when it has no OpenTelemetry export endpoint.
 
 See [metric catalog](https://github.com/seikika/seikika/blob/25a208a3bc1a97f184588c512afcb12d636ce7be/crates/seikika-telemetry/METRIC_CATALOG.md).

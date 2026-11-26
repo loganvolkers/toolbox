@@ -13,5 +13,5 @@ access to the data you want to collect. Use the reference portal fixtures to ins
 record shapes.
 
 - [Install Seikika and connectors](https://seikika.com/start/install/)
-- [Set up and check a connector](https://seikika.com/authors/connectors/)
+- [Inspect sample GitHub records](https://github.com/seikika/seikika/blob/25a208a3bc1a97f184588c512afcb12d636ce7be/examples/reference-portal/fixtures/github.ndjson)
 - [Connector source and tests](https://github.com/seikika/seikika/blob/25a208a3bc1a97f184588c512afcb12d636ce7be/crates/seikika-connector-github/src)
