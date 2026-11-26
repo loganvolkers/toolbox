@@ -4559,6 +4559,9 @@
       "action:github/codeql-action": {
         "level": "bronze"
       },
+      "action:jdx/mise-action": {
+        "level": "bronze"
+      },
       "action:rust-lang/crates-io-auth-action": {
         "level": "bronze"
       }
@@ -4711,6 +4714,16 @@
           "still-running"
         ]
       },
+      "workflow:.github/workflows/mise.yml": {
+        "level": "bronze",
+        "unknown": [
+          "fail-rate-under-10",
+          "fail-rate-under-20",
+          "fail-rate-under-5",
+          "main-not-stuck-red",
+          "still-running"
+        ]
+      },
       "workflow:.github/workflows/pages.yml": {
         "level": "bronze",
         "unknown": [
@@ -4788,6 +4801,9 @@
       "workflow:.github/workflows/image.yml": {
         "level": "gold"
       },
+      "workflow:.github/workflows/mise.yml": {
+        "level": "gold"
+      },
       "workflow:.github/workflows/pages.yml": {
         "level": "gold"
       },
@@ -4832,6 +4848,12 @@
         ]
       },
       "workflow:.github/workflows/image.yml": {
+        "level": "bronze",
+        "unknown": [
+          "fast-feedback"
+        ]
+      },
+      "workflow:.github/workflows/mise.yml": {
         "level": "bronze",
         "unknown": [
           "fast-feedback"
