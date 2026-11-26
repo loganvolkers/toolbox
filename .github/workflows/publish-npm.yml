@@ -53,7 +53,7 @@ jobs:
         shell: bash
         run: |
           for package in ui astro-report; do
-            archives=(npm-packages/seikika-"$package"-*.tgz)
+            archives=("$PWD"/npm-packages/seikika-"$package"-*.tgz)
             if [[ ${#archives[@]} != 1 || ! -f "${archives[0]}" ]]; then
               echo "Expected one tarball for @seikika/$package" >&2
               exit 1
