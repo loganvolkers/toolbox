@@ -15,7 +15,10 @@ cd "$(dirname "$0")/.."
 T=target/debug
 PORTAL=portal
 
-build() { cargo build -q -p seikika-cli -p seikika-connector-workspace -p seikika-connector-runner; }
+build() {
+  pnpm build
+  cargo build -q -p seikika-cli -p seikika-connector-workspace -p seikika-connector-runner
+}
 
 # The connector's config from the manifest, as JSON.
 config() {

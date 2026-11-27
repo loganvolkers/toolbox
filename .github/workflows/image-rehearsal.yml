@@ -5,6 +5,7 @@ on:
     paths:
       - .github/workflows/image*.yml
       - .github/workflows/release.yml
+      - .github/actions/build-embedded-ui/**
       - dist-workspace.toml
       - image/**
       - mise.toml
@@ -44,6 +45,7 @@ jobs:
           env: false
           export_path: false
           add_shims_to_path: false
+      - uses: ./.github/actions/build-embedded-ui # zizmor: ignore[self-repository] actionlint 1.7.12 rejects $/
       - name: Build release archives
         env: {TARGET: "${{ matrix.target }}"}
         run: |

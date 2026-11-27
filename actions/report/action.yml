@@ -96,7 +96,16 @@ runs:
       shell: bash
       run: |
         root="$GITHUB_ACTION_PATH/../.."
-        h=$(cd "$root" && cat Cargo.lock rust-toolchain.toml $(find crates schema -type f -not -path '*/target/*' | LC_ALL=C sort) | sha256sum | cut -c1-16)
+        cd "$root"
+        h=$(
+          {
+            sha256sum Cargo.toml Cargo.lock rust-toolchain.toml package.json pnpm-lock.yaml pnpm-workspace.yaml
+            find crates ui ui-kit report-ui \
+              \( -name target -o -name node_modules -o -name .astro -o -name dist \
+                -o -name storybook-static -o -name ui-dist -o -name report-dist \) -prune \
+              -o -type f -print0 | LC_ALL=C sort -z | xargs -0 sha256sum
+          } | sha256sum | cut -c1-16
+        )
         echo "key=seikika-bin-${RUNNER_OS}-${RUNNER_ARCH}-$h" >> "$GITHUB_OUTPUT"
     - name: Restore seikika binaries
       id: cache
@@ -117,13 +126,23 @@ runs:
           ${{ runner.temp }}/seikika-target
         key: ${{ steps.key.outputs.key }}-target
         restore-keys: seikika-bin-${{ runner.os }}-${{ runner.arch }}-
+    - name: Set up Node for the source build
+      if: >-
+        inputs.seikika-dir == '' && inputs.seikika-version == '' &&
+        steps.cache.outputs.cache-hit != 'true'
+      uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+      with: {node-version: 24}
     - name: Build seikika from the action's source
       if: >-
         inputs.seikika-dir == '' && inputs.seikika-version == '' &&
         steps.cache.outputs.cache-hit != 'true'
       shell: bash
+      env: {ASTRO_TELEMETRY_DISABLED: "1"}
       run: |
         cd "$GITHUB_ACTION_PATH/../.."          # rust-toolchain.toml pins the toolchain here
+        corepack enable pnpm
+        pnpm install --frozen-lockfile
+        pnpm build
         cargo build --locked --target-dir "$RUNNER_TEMP/seikika-target" \
           -p seikika-cli -p seikika-connector-workspace -p seikika-connector-runner
         mkdir -p "$RUNNER_TEMP/seikika-bin"

@@ -88,13 +88,15 @@ Seikika also looks beside the CLI and in `SEIKIKA_CONNECTORS_DIR`.
 
 ## Build from source
 
-Install [Git](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git), [Rust through rustup](https://www.rust-lang.org/tools/install), and a native linker. On Linux, install a C compiler and build tools, such as `build-essential` on Debian or Ubuntu. On macOS, install the Xcode Command Line Tools. On Windows, use a Rust-supported C++ toolchain and run the shell examples in a Unix-compatible environment such as WSL.
+Install Git, Rust through rustup, a native linker, and the Node.js and pnpm versions pinned by the checkout. On Linux, install a C compiler and build tools, such as `build-essential` on Debian or Ubuntu. On macOS, install the Xcode Command Line Tools. On Windows, use a Rust-supported C++ toolchain and run the shell examples in a Unix-compatible environment such as WSL. [Git setup](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git) · [Rust setup](https://www.rust-lang.org/tools/install) · [Pinned development tools](/start/run/#set-up-the-checkout)
 
 From a directory where you can create a checkout, run these commands in Bash.
 
 ```bash
 git clone https://github.com/seikika/seikika.git seikika-source
 cd seikika-source
+pnpm install --frozen-lockfile
+pnpm build
 cargo build --locked -p seikika-cli -p seikika-connector-workspace
 export PATH="$PWD/target/debug:$PATH"
 seikika --version

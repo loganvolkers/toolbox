@@ -1091,8 +1091,11 @@ fn standard(o: &Options, m: &seikika_model::Manifest) -> String {
 /// A self-contained page built from the same Astro integration used by GitHub Pages.
 fn html_page(data_json: &str) -> String {
     let embedded = data_json.replace('<', "\\u003c");
-    include_str!("report.html")
-        .replace("/*CLIENT*/", include_str!("seikika-report.js"))
+    include_str!("../report-dist/report.html")
+        .replace(
+            "/*CLIENT*/",
+            include_str!("../report-dist/seikika-report.js"),
+        )
         .replace("/*DATA*/", &embedded)
 }
 
@@ -1107,7 +1110,10 @@ fn write_web_parts(dir: &std::path::Path, data_json: &str) -> Result<(), String>
         let path = dir.join(name);
         std::fs::write(&path, body).map_err(|e| format!("{}: {e}", path.display()))
     };
-    write("seikika-report.js", include_str!("seikika-report.js"))?;
+    write(
+        "seikika-report.js",
+        include_str!("../report-dist/seikika-report.js"),
+    )?;
     write("report.json", data_json)?;
     write("index.html", &html_page(data_json))?;
     Ok(())
@@ -2065,7 +2071,7 @@ kinds:
         write_web_parts(&dir, data).unwrap();
         assert_eq!(
             std::fs::read_to_string(dir.join("seikika-report.js")).unwrap(),
-            include_str!("seikika-report.js")
+            include_str!("../report-dist/seikika-report.js")
         );
         assert_eq!(
             std::fs::read_to_string(dir.join("report.json")).unwrap(),

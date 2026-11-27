@@ -149,6 +149,8 @@ jobs:
             /tmp/rustup-init -y
             echo "$HOME/.cargo/bin" >> "$GITHUB_PATH"
           fi
+      - name: "Build embedded UI"
+        uses: "./.github/actions/build-embedded-ui" # zizmor: ignore[self-repository] actionlint 1.7.12 rejects $/
       - name: Install dist
         run: ${{ matrix.install_dist.run }}
       # Get the dist-manifest

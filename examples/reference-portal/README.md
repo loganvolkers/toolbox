@@ -91,7 +91,8 @@ Playwright. Run them from the repo root, for example `scripts/m4-acceptance.sh`.
 
 ## Validation
 
-Run from this directory (Python 3.11+):
+Run from this directory with Python 3.11 or later. For the Rust command, generate the
+embedded assets from the repository root with `pnpm install --frozen-lockfile` and `pnpm build`.
 
 ```bash
 python -m venv .venv && .venv/bin/pip install -r tools/requirements.txt

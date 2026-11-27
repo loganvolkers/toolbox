@@ -3,3 +3,6 @@ __pycache__/
 
 node_modules/
 .astro/
+
+/crates/seikika-api/ui-dist/
+/crates/seikika-cli/report-dist/
