@@ -1,6 +1,6 @@
 {
   "name": "@seikika/astro-report",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Astro integration for publishing Seikika catalog and scorecard snapshots.",
   "license": "MIT",
   "type": "module",
