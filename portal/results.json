@@ -6135,6 +6135,9 @@
       "doc:examples/acme-live/README.md": {
         "level": "silver"
       },
+      "doc:examples/cloudflare-containers/README.md": {
+        "level": "silver"
+      },
       "doc:examples/connector-scaffold/README.md": {
         "level": "silver"
       },
@@ -6395,6 +6398,9 @@
         },
         "level": "bronze"
       },
+      "example:examples/cloudflare-containers/README.md": {
+        "level": "gold"
+      },
       "example:examples/connector-scaffold/README.md": {
         "level": "gold"
       },
@@ -6602,6 +6608,9 @@
       }
     },
     "maintainer-package": {
+      "package-json:examples/cloudflare-containers/package.json": {
+        "level": "gold"
+      },
       "package-json:experiments/typescript-builder/package.json": {
         "failing": {
           "described": 1,

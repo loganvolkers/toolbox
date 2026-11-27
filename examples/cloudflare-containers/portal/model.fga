@@ -1,0 +1,13 @@
+model
+  schema 1.1
+
+type user
+
+type portal
+  relations
+    define parent: [portal]
+    define admin: [user] or admin from parent
+    define viewer: [user] or viewer from parent
+    define can_view: viewer or admin
+    define can_view_details: admin
+    define can_run_actions: admin

@@ -1,0 +1,15 @@
+{
+  "name": "seikika-cloudflare-containers",
+  "private": true,
+  "description": "Wrangler tooling for the Seikika Cloudflare Containers deployment example",
+  "license": "MIT",
+  "engines": {
+    "node": ">=24"
+  },
+  "devDependencies": {
+    "wrangler": "4.168.0"
+  },
+  "scripts": {
+    "check": "node --check worker.mjs"
+  }
+}

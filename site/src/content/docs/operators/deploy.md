@@ -29,6 +29,8 @@ A container host can set `PORT` to bind on all interfaces inside the container. 
 
 For a full local simulation with Postgres, a Git service, and connector inputs, follow [the Acme example](https://github.com/seikika/seikika/tree/main/examples/acme-live). Its credentials and development identity settings are for a practice environment.
 
+For Cloudflare, deploy a Worker and one Container with a direct PostgreSQL connection. The example includes authorization for a parent portal and the configuration for passing secrets into the container. [Cloudflare Containers example](https://github.com/seikika/seikika/tree/main/examples/cloudflare-containers)
+
 ## Verify the rollout
 
 ```bash
