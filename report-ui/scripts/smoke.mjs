@@ -111,6 +111,44 @@ try {
   const sidebarPackages = await page.locator('#starlight__sidebar a[href^="/packages/"]')
     .evaluateAll(links => links.map(link => link.pathname).filter(path => /^\/packages\/[^/]+\/$/.test(path)).sort());
   assert.deepEqual(sidebarPackages, packageRoutes, "Every package guide is reachable from the sidebar.");
+
+  await page.goto(docsOrigin);
+  await page.getByRole("main").getByRole("link", { name: "Browse Reference", exact: true }).click();
+  await page.getByRole("heading", { name: "Reference", exact: true }).waitFor();
+  const sidebar = page.locator("#starlight__sidebar .top-level");
+  const referenceGroup = sidebar.locator(":scope > li").filter({
+    has: page.locator("summary > .group-label").getByText("Reference", { exact: true }),
+  });
+  const guideGroup = sidebar.locator(":scope > li").filter({
+    has: page.locator("summary > .group-label").getByText("Guides", { exact: true }),
+  });
+  assert.equal(await referenceGroup.count(), 1, "Reference is a top-level navigation group.");
+  assert.equal(await guideGroup.count(), 1, "Guides is a sibling of Reference.");
+  const lookups = await page.getByRole("main").locator(".sl-link-card a").evaluateAll(
+    links => links.map(link => link.pathname));
+  assert.deepEqual(lookups, [
+    "/users/api/", "/reference/mcp/", "/start/cli/", "/reference/sdks/",
+    "/operators/manifest/", "/reference/contracts/",
+  ]);
+  for (const path of lookups) {
+    assert.equal(await referenceGroup.locator(`a[href="${path}"]`).count(), 1, path);
+    assert.equal((await page.request.get(new URL(path, docsOrigin).href)).status(), 200, path);
+  }
+  await page.getByRole("main").getByRole("link", { name: "MCP tools", exact: true }).click();
+  const toolIndex = page.getByRole("navigation", { name: "Built-in tools" });
+  const advertisedTools = execFileSync(seikika, ["describe"], { encoding: "utf8" }).trim().split("\n")
+    .map(line => JSON.parse(line)).filter(record => record.kind === "mcp-tool").map(record => record.data.name).sort();
+  assert.deepEqual((await toolIndex.getByRole("link").allTextContents()).sort(), advertisedTools);
+  await toolIndex.getByRole("link", { name: "graph", exact: true }).click();
+  const graph = page.getByRole("region", { name: "graph", exact: true });
+  const direction = graph.getByRole("row").filter({ hasText: "direction" });
+  assert.deepEqual(await direction.getByRole("cell").allTextContents().then(cells => cells.slice(0, 2)), ["No", "in, out, both"]);
+  await graph.getByRole("link", { name: "seikika graph", exact: true }).click();
+  await page.locator("#graph").getByRole("heading", { name: "seikika graph" }).waitFor();
+  assert.equal(new URL(page.url()).hash, "#graph");
+  await page.goto(docsOrigin + "users/api/#action-runs");
+  await page.locator("#action-runs").waitFor();
+
   await page.goto(docsOrigin + "report/");
   await page.getByRole("tab", { name: /Catalog/ }).click();
   await page.locator("#report-body").getByRole("heading", { name: "Catalog", exact: true }).waitFor();
@@ -124,6 +162,18 @@ try {
   await page.getByRole("link", { name: "@seikika/ui", exact: true }).waitFor();
 
   await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto(docsOrigin);
+  await page.locator('button[popovertarget="starlight__sidebar"]').click();
+  const mobileReference = page.locator("#starlight__sidebar").getByRole("link", { name: "Reference overview" });
+  await mobileReference.focus();
+  await page.keyboard.press("Enter");
+  await page.getByRole("heading", { name: "Reference", exact: true }).waitFor();
+  assert(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth),
+    "The Reference home fits the mobile viewport.");
+  await page.getByRole("main").getByRole("link", { name: "MCP tools", exact: true }).click();
+  await page.getByRole("table", { name: "Arguments for graph" }).waitFor();
+  assert(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth),
+    "The MCP argument tables fit the mobile viewport.");
   const story = id => docsOrigin + "storybook/iframe.html?viewMode=story&id=" + id;
   await page.goto(story("pages-seikika-for-seikika--scorecards"));
   await page.getByRole("button", { name: "Standards that check themselves", exact: true }).click();
@@ -139,7 +189,7 @@ try {
   await filterJump.click();
   await page.waitForFunction(() => document.activeElement?.textContent === "Entities");
   assert.deepEqual(errors, []);
-  console.log("Hosted portal, offline report, Pages report, Storybook, CLI reference, and npm, connector, and package directories passed.");
+  console.log("Hosted portal, offline report, Pages report, Storybook, reference navigation, CLI and MCP references, and npm, connector, and package directories passed.");
 } finally {
   await browser?.close();
   portal?.kill();

@@ -1,0 +1,15 @@
+---
+title: MCP tool reference
+description: Look up the arguments and descriptions for Seikika's built-in Model Context Protocol tools.
+---
+
+import McpReference from '../../../components/McpReference.astro';
+import { loadCliCatalog } from '../../../lib/cli-describe';
+
+export const catalog = loadCliCatalog({ enrichHelp: false });
+
+Seikika serves Model Context Protocol (MCP) tools at `POST /mcp` over Streamable HTTP. The CLI also provides a stdio bridge. For setup and a fixture example, follow [Read the catalog from an agent](/agents/reads/).
+
+This page reads the built-in tool definitions from `seikika describe` at build time. For a running portal, use `tools/list` to discover the schemas it actually serves, including any actions that the operator has promoted. Send arguments as an object in `tools/call`. Tool responses follow the caller's authorization and can redact fields or rule details. [MCP tools specification](https://modelcontextprotocol.io/specification/2025-06-18/server/tools)
+
+<McpReference tools={catalog.mcpTools} />

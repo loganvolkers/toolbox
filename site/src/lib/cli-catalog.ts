@@ -21,6 +21,10 @@ export type McpTool = {
   name: string;
   description: string | null;
   cliCommands: string[];
+  inputSchema: {
+    properties: Record<string, { type?: string; enum?: string[]; description?: string }>;
+    required: string[];
+  };
 };
 
 export type CliCatalog = {

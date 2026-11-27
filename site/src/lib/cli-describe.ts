@@ -1,6 +1,5 @@
 /**
- * Build-time CLI catalog loader for the Starlight CLI reference.
- * Copy to site/src/lib/cli-describe.ts
+ * Build-time catalog loader for the Starlight CLI and MCP references.
  *
  * Invokes `seikika describe` (+ optional --help enrichment) from the repo root.
  */
@@ -83,10 +82,14 @@ export function loadCliCatalog(opts: { enrichHelp?: boolean } = {}): CliCatalog 
       });
     } else if (rec.kind === 'mcp-tool') {
       const d = rec.data;
+      if (!d.inputSchema) {
+        throw new Error('The reference needs the tool input schemas from seikika describe. Rebuild seikika from this checkout.');
+      }
       mcpTools.push({
         name: String(d.name),
         description: (d.description as string | null) ?? null,
         cliCommands: (d.cliCommands as string[]) ?? [],
+        inputSchema: d.inputSchema as McpTool['inputSchema'],
       });
     }
   }
@@ -107,26 +110,4 @@ export function loadCliCatalog(opts: { enrichHelp?: boolean } = {}): CliCatalog 
   }
 
   return { commands, mcpTools };
-}
-
-/** Stable JSON for drift checks (sorted, no helpText churn from whitespace). */
-export function catalogFingerprint(catalog: CliCatalog): string {
-  const slim = {
-    commands: catalog.commands.map((c) => ({
-      name: c.name,
-      about: c.about,
-      mcpTool: c.mcpTool,
-      args: c.args.map((a) => ({
-        name: a.name,
-        long: a.long,
-        positional: a.positional,
-      })),
-      usage: c.usage ?? null,
-    })),
-    mcpTools: catalog.mcpTools.map((t) => ({
-      name: t.name,
-      cliCommands: t.cliCommands,
-    })),
-  };
-  return `${JSON.stringify(slim, null, 2)}\n`;
 }

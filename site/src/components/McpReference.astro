@@ -1,0 +1,43 @@
+---
+import type { McpTool } from '../lib/cli-catalog';
+
+interface Props {
+  tools: McpTool[];
+}
+
+const { tools } = Astro.props;
+const inline = (text: string) => text.split(/(`[^`]+`)/);
+---
+
+<nav aria-label="Built-in tools">
+  <ul>
+    {tools.map(tool => <li><a href={`#${tool.name}`}><code>{tool.name}</code></a></li>)}
+  </ul>
+</nav>
+
+{tools.map(({ name, description, cliCommands, inputSchema }) => (
+  <section aria-labelledby={name}>
+    <h2 id={name}><code>{name}</code></h2>
+    {description && <p>{inline(description).map(part => part.startsWith('`') ? <code>{part.slice(1, -1)}</code> : part)}</p>}
+    {cliCommands.length > 0 && (
+      <p>CLI equivalent {cliCommands.map((command, index) => (
+        <Fragment>{index > 0 && ', '}<a href={`/start/cli/#${command.replaceAll(' ', '-')}`}><code>seikika {command}</code></a></Fragment>
+      ))}</p>
+    )}
+    <table aria-label={`Arguments for ${name}`}>
+      <thead><tr><th scope="col">Argument</th><th scope="col">Required</th><th scope="col">Type or values</th><th scope="col">Description</th></tr></thead>
+      <tbody>
+        {Object.entries(inputSchema.properties).map(([argument, property]) => (
+          <tr>
+            <th scope="row"><code>{argument}</code></th>
+            <td>{inputSchema.required.includes(argument) ? 'Yes' : 'No'}</td>
+            <td>{property.enum ? property.enum.map((value, index) => (
+              <Fragment>{index > 0 && ', '}<code>{value}</code></Fragment>
+            )) : <code>{property.type}</code>}</td>
+            <td>{inline(property.description ?? '').map(part => part.startsWith('`') ? <code>{part.slice(1, -1)}</code> : part)}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </section>
+))}

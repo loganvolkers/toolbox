@@ -39,7 +39,7 @@ The driver starts the connector and requests records for `example-item`. Look fo
 
 ## Adapt the connector
 
-1. Update the scaffold's SDK path if you move it outside this repository. Choose a published version and open its API reference. [Connector SDK on docs.rs](https://docs.rs/seikika-connect), [Release notes](/start/versions/)
+1. Update the scaffold's SDK path if you move it outside this repository. Choose a published version and open its API reference. [SDK reference](/reference/sdks/), [Release notes](/start/versions/)
 2. Implement the SDK's `Source` trait with a name, the version from `CARGO_PKG_VERSION`, capabilities, and a handler. Start it with `run_stdio`.
 3. Read connector configuration from the `SEIKIKA_CONNECTOR_CONFIG` JSON. Use [logical secret names](/authors/secrets/) for credentials.
 4. Update the example manifest's `records` and mappings. Run both commands again and check that the expected kind, ID, and fields arrive.

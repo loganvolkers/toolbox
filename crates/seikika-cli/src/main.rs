@@ -1271,6 +1271,7 @@ fn describe() -> ExitCode {
             .collect();
         out.push(json!({"type": "record", "kind": "mcp-tool", "externalId": format!("mcp:{name}"),
             "data": {"name": name, "description": t["description"], "annotations": t["annotations"],
+                     "inputSchema": t["inputSchema"],
                      "properties": props.keys().collect::<Vec<_>>(), "required": t["inputSchema"]["required"],
                      "undescribedProperties": undescribed, "cliCommands": cli}}));
     }
