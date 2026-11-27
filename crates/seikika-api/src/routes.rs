@@ -357,6 +357,14 @@ async fn list_entities(State(s): S, headers: HeaderMap, Query(q): Query<ListQuer
             q.limit,
         );
     }
+    list_authenticated_entities(s, headers, q).await
+}
+
+async fn list_authenticated_entities(
+    s: Arc<AppState>,
+    headers: HeaderMap,
+    q: ListQuery,
+) -> Response {
     let caller = match s.caller(&headers).await {
         Ok(c) => c,
         Err(r) => return r,
