@@ -13,11 +13,13 @@ function containerEnvironment(env) {
   const publicCatalog = env.SEIKIKA_PUBLIC_REPOSITORIES
     ? { SEIKIKA_PUBLIC_REPOSITORIES: env.SEIKIKA_PUBLIC_REPOSITORIES }
     : {};
+  const organization = env.SEIKIKA_ORG_GITHUB_TOKEN ? { GH_TOKEN: env.SEIKIKA_ORG_GITHUB_TOKEN } : {};
   if (SEIKIKA_PREVIEW_ACCESS_ISSUER || SEIKIKA_PREVIEW_ACCESS_AUDIENCE || SEIKIKA_PREVIEW_ACCESS_ADMIN) {
     if (!SEIKIKA_PREVIEW_ACCESS_ISSUER || !SEIKIKA_PREVIEW_ACCESS_AUDIENCE || !SEIKIKA_PREVIEW_ACCESS_ADMIN) {
       throw new Error("Set all three managed Preview Access bindings");
     }
     return {
+      ...organization,
       ...publicCatalog,
       DATABASE_URL,
       SEIKIKA_SIGNING_KEY,
@@ -27,7 +29,7 @@ function containerEnvironment(env) {
       SEIKIKA_SEED_ADMIN: SEIKIKA_PREVIEW_ACCESS_ADMIN,
     };
   }
-  const values = { DATABASE_URL, SEIKIKA_SIGNING_KEY, SEIKIKA_AUTH_MODE };
+  const values = { ...organization, DATABASE_URL, SEIKIKA_SIGNING_KEY, SEIKIKA_AUTH_MODE };
   if (SEIKIKA_AUTH_MODE === "cloudflare-access") {
     const { SEIKIKA_CF_TEAM_DOMAIN, SEIKIKA_AUDIENCE } = env;
     if (!SEIKIKA_CF_TEAM_DOMAIN || !SEIKIKA_AUDIENCE) {

@@ -1,4 +1,25 @@
 apiVersion: seikika.com/v1alpha1
+include:
+  - ../../github-org-federation/repositories.yaml
+  - ../../github-org-federation/standards.yaml
+  - ../../github-org-federation/workflows.yaml
+  - ../../github-org-federation/meta.yaml
+  - ../../github-org-federation/public-connector.yaml
+  - package: ../../../packages/meta-scoring
+    with:
+      track: portal-quality
+      describeCommand:
+        - seikika
+        - describe
+        - portal
+        - examples/github-org-federation/public.yaml
+      manifest: examples/github-org-federation/public.yaml
+      assessments: [examples/github-org-federation/assessments/**/*.y*ml]
+
+policies:
+  reportNamespace: seikika-organization
+  publicReportSources: [github-org, meta-catalog, meta-assessments]
+
 portal:
   name: seikika-federation
   title: Seikika Open Source Projects

@@ -4,6 +4,7 @@ include:
   - standards.yaml
   - workflows.yaml
   - meta.yaml
+  - public-connector.yaml
   - package: ../../packages/meta-scoring
     with:
       track: portal-quality
@@ -20,21 +21,5 @@ portal:
   title: Seikika organization
   owner: group:maintainers
   seikika: "0.2"
-
-connectors:
-  - name: github-org
-    package: builtin:workspace
-    runtime: in-image
-    config:
-      githubOrg:
-        organization: seikika
-        workflows: true
-        reports: true
-        publicOnly: true
-    records: [federated-repo, federated-workflow]
-    refresh:
-      federated-repo: [external_ids]
-      federated-workflow: [external_ids]
-    freshness: {federated-repo: 1h, federated-workflow: 1h}
 
 tests: [standards.test.yaml]

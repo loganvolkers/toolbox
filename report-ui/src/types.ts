@@ -138,6 +138,7 @@ export interface ReportData {
   portalName?: string;
   organization?: string;
   viewer?: string;
+  viewerMethod?: "guest";
   publicCatalog?: boolean;
   federationStatus?: { code: string; detail: string; pending: boolean };
   actions?: ReportAction[];

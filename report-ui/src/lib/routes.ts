@@ -139,6 +139,11 @@ export function canonicalDetailHash(data: CatalogReport, hash: string): string {
 
 /** Resolve catalog and section links to the same detail and keep their existing URL formats. */
 export function reportRoute(data: CatalogReport, route: Route): Route {
+  if (data.viewerMethod === "guest" && data.organization && route.mode === "entity" && route.id) {
+    const legacy = /^repository:([^/]+)$/.exec(route.id);
+    const id = legacy && `repository:${data.organization.toLowerCase()}/${legacy[1]}`;
+    if (id && data.catalog.Repository?.includes(id)) route = { ...route, id };
+  }
   if (route.mode === "campaigns") {
     const name = campaignNamesSorted(data)[0];
     if (name) route = { ...route, mode: "campaign", name };

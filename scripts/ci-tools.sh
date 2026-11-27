@@ -2,7 +2,7 @@
 # Install CI's third-party tools from their releases, SHA-256-pinned, instead of compiling them
 # with `go install` on every run (D90: reuse released artifacts). Linux x86_64 only, like CI.
 # Usage: scripts/ci-tools.sh <bin-dir> <tool>...
-#   (tools: openfga actionlint fga scorecard staticcheck osv-scanner rustsec-osv shellcheck shfmt bats)
+#   (tools: openfga actionlint fga scorecard staticcheck osv-scanner rustsec-osv shellcheck shfmt bats zizmor)
 # For the site report preview (pages.yml pins), prefer scripts/regen-site-report.sh, which
 # installs actionlint from here plus zizmor==1.32.0, then runs doctor + report.
 set -euo pipefail
@@ -21,6 +21,8 @@ for tool in "$@"; do
   case "$tool" in
     openfga) fetch openfga https://github.com/openfga/openfga/releases/download/v1.22.1/openfga_1.22.1_linux_amd64.tar.gz \
       80d2d4b582762c02dc86b1246f7f6f54d6854259727b36e5b5c43ba90792814a openfga ;;
+    zizmor) fetch zizmor https://github.com/zizmorcore/zizmor/releases/download/v1.32.0/zizmor-x86_64-unknown-linux-gnu.tar.gz \
+      bb110cc765eca9cd7efb2e284a956be5974c60027b0970f16397d86208a9957b zizmor ;;
     actionlint) fetch actionlint https://github.com/rhysd/actionlint/releases/download/v1.7.12/actionlint_1.7.12_linux_amd64.tar.gz \
       8aca8db96f1b94770f1b0d72b6dddcb1ebb8123cb3712530b08cc387b349a3d8 actionlint ;;
     fga) fetch fga https://github.com/openfga/cli/releases/download/v0.8.2/fga_0.8.2_linux_amd64.tar.gz \

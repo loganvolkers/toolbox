@@ -10,6 +10,7 @@ import PortalLiveView from "./PortalLiveView.vue";
 import PortalEntityTools from "./PortalEntityTools.vue";
 import PortalTeams from "./PortalTeams.vue";
 
+const publicOrganizationReport = "https://seikika.com/demo/organization/";
 const props = defineProps<{ initialRoute?: string }>();
 const publicEntry = !/^\/(report|ops)(\/|$)/.test(location.pathname);
 if (props.initialRoute === undefined) restorePortalRoute(new URL(location.href));
@@ -20,7 +21,8 @@ const extraViews = ["search", "operations"];
 const readReport: PortalApi = async (path, init) => {
   if (publicEntry) {
     const catalog = await api("/v1/views/home?public_catalog=true", init).catch(() => null);
-    if (catalog?.status === 200 && catalog.body?.publicCatalog) return catalog;
+    if (catalog?.status === 503 || (catalog?.status === 200
+      && (catalog.body?.publicCatalog || catalog.body?.viewerMethod === "guest"))) return catalog;
   }
   return api(path, init);
 };
@@ -28,7 +30,8 @@ const { result, reload } = usePortalRequest(() => "/v1/views/report?partial=true
   retryUnavailable: true, request: readReport,
 });
 const report = computed<ReportData | undefined>(() => result.value?.status === 200 ? result.value.body : undefined);
-const guest = computed(() => report.value?.publicCatalog === true);
+const guest = computed(() => report.value?.publicCatalog === true || report.value?.viewerMethod === "guest");
+const guestReport = computed(() => report.value?.viewerMethod === "guest");
 const federation = computed(() => report.value?.federationStatus);
 watch(report, (current, _, onCleanup) => {
   if (current?.federationStatus?.pending) {
@@ -67,7 +70,7 @@ let poll: ReturnType<typeof setInterval>;
 onMounted(() => {
   poll = setInterval(async () => {
     const displayed = report.value;
-    if (!displayed?.snapshot) return;
+    if (guest.value || !displayed?.snapshot) return;
     const next = await api("/v1/snapshot").catch(() => null);
     if (displayed === report.value && next?.snapshot) newer.value = next.snapshot !== String(displayed.snapshot);
   }, 10_000);
@@ -83,7 +86,10 @@ onUnmounted(() => clearInterval(poll));
         <form role="search" @submit.prevent="search">
           <input v-model="query" type="search" aria-label="Search" placeholder="Search entities" />
         </form>
-        <a v-if="guest" href="https://seikika.com/demo/organization/">Public scorecards</a>
+        <template v-if="guest">
+          <a :href="guestReport ? '#scorecards' : publicOrganizationReport">Public scorecards</a>
+          <a :href="(guestReport ? '' : publicOrganizationReport) + '#scorecard/meta-scorecard'">Meta scoring</a>
+        </template>
         <a :href="guest ? '/ops' : '#operations'" :aria-current="route.mode === 'operations' ? 'page' : undefined">Operations</a>
         <button v-if="newer || updating" type="button" :disabled="updating" @click="update">
           {{ updating ? "Updating data…" : "Newer data — update" }}
@@ -100,8 +106,8 @@ onUnmounted(() => clearInterval(poll));
     <template #pending>
       <PortalStatus :result="result" loading="Loading portal snapshot…" @retry="reload" />
     </template>
-    <template #extra-view="{ route }">
-      <PortalLiveView :mode="route.mode" :query="route.query?.q ?? ''" />
+    <template #extra-view="{ route, data }">
+      <PortalLiveView :mode="route.mode" :query="route.query?.q ?? ''" :guest-report="guestReport ? data : undefined" />
     </template>
     <template #entity-tools="{ id, source, snapshot }">
       <PortalEntityTools v-if="!guest && !source?.startsWith('child:')" :key="id" :id="id"

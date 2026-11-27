@@ -528,7 +528,7 @@ pub async fn view_home(
     let guest = crate::public_catalog::guest(&s, &headers);
     if query.public_catalog {
         return if guest {
-            crate::public_catalog::report(&s)
+            crate::report::guest_view(&s).unwrap_or_else(|| crate::public_catalog::report(&s))
         } else {
             StatusCode::NO_CONTENT.into_response()
         };

@@ -2,7 +2,7 @@
 
 use crate::access::{Caller, Visibility, facet_needs, redacted};
 use crate::routes::problem;
-use crate::state::AppState;
+use crate::state::{AppState, Published};
 use axum::{
     Json,
     extract::{Query, State},
@@ -283,12 +283,12 @@ pub fn unassessed(m: &seikika_model::Manifest, d: &Derived) -> Map<String, Value
         .collect()
 }
 
-fn rubric_defs(m: &Manifest) -> Map<String, Value> {
+fn rubric_defs(m: &Manifest, namespace: &str) -> Map<String, Value> {
     m.rubrics
         .iter()
         .map(|rubric| {
             (
-                format!("rubric:{}/{}", m.portal.name, rubric.name),
+                format!("rubric:{}/{}", namespace, rubric.name),
                 json!(rubric),
             )
         })
@@ -305,6 +305,11 @@ pub fn snapshot(
     let filtered = audience.map(|a| restrict(m, d, a));
     let collection = d;
     let d = filtered.as_ref().unwrap_or(d);
+    let namespace = m
+        .policies
+        .get("reportNamespace")
+        .and_then(Value::as_str)
+        .unwrap_or(&m.portal.name);
     let tracks: Map<String, Value> = m
         .tracks
         .iter()
@@ -348,13 +353,13 @@ pub fn snapshot(
         .collect();
     json!({
         "portal": m.portal.title.as_deref().unwrap_or(&m.portal.name),
-        "portalName": m.portal.name,
+        "portalName": namespace,
         "organization": organization(m),
         "snapshot": d.snapshot,
         "catalog": catalog,
         "entityOverview": public_entity_overviews(m, d),
         "entities": entity_details(m, d, collection, audience),
-        "actions": actions(m, collection, d, audience),
+        "actions": if audience.is_some_and(|a| a.guest) { Vec::new() } else { actions(m, collection, d, audience) },
         "children": children(m, collection, audience),
         "kinds": kinds,
         "kindGroups": kind_groups,
@@ -363,7 +368,7 @@ pub fn snapshot(
         "scorecards": scorecard_defs(m),
         "scores": own_scores(d),
         "assessmentKinds": judged::assessment_kinds(m),
-        "rubrics": rubric_defs(m),
+        "rubrics": rubric_defs(m, namespace),
         "unassessed": unassessed(m, d),
         "comparisons": comparison_defs(m, d),
         "repoRollup": m.policies.get("repoRollup").cloned().unwrap_or(Value::Null),
@@ -427,9 +432,10 @@ pub fn public_entity_overviews(m: &seikika_model::Manifest, d: &Derived) -> Map<
         .collect()
 }
 
-/// Per-entity access for an authenticated report request.
+/// Per-entity access for a live report request.
 pub struct Audience<'a> {
-    caller: &'a Caller,
+    admin: bool,
+    guest: bool,
     entities: BTreeMap<&'a str, Visibility>,
 }
 
@@ -443,7 +449,7 @@ impl Audience<'_> {
         access.view
             && match facet {
                 None | Some("public") => true,
-                Some("operator") => self.caller.admin,
+                Some("operator") => self.admin,
                 Some(_) => access.details,
             }
     }
@@ -647,7 +653,7 @@ fn entity_fields(
             let Some(needs) = facet_needs(facet) else {
                 return Some((field.clone(), value.clone()));
             };
-            audience.map(|a| {
+            audience.filter(|a| !a.guest).map(|a| {
                 let visible = if a.facet(id, facet) {
                     value.clone()
                 } else {
@@ -673,32 +679,75 @@ fn organization(m: &Manifest) -> Option<&str> {
 fn children(m: &Manifest, d: &Derived, audience: Option<&Audience<'_>>) -> Vec<Value> {
     let kind = m.federation.as_ref().and_then(|f| f.portals.as_deref());
     let github = organization(m).is_some();
+    let guest = audience.is_some_and(|a| a.guest);
     let own = format!("portal:{}", m.portal.name);
-    d.entities.iter().filter(|(id, e)| {
-        let github_report = github && e.kind == "Repository"
-            && (e.fields.get("report").is_some_and(Value::is_object)
-                || e.fields.get("reportError").is_some_and(Value::is_string));
-        (kind == Some(&e.kind) && **id != own) || github_report
-    })
-    .filter(|(id, _)| audience.is_none_or(|a| {
+    d.entities.iter().filter(|(id, _)| audience.is_none_or(|a| {
         let v = a.visibility(id);
-        v.view && (v.details || a.caller.admin)
+        v.view && (v.details || a.admin || guest)
     }))
-    .map(|(id, e)| {
+    .filter_map(|(id, e)| {
         let f = &e.fields;
+        let published = |field| {
+            (if guest { public_child_field(m, e, field) } else { f.get(field) })
+                .filter(|value| !value.is_null())
+        };
+        let report = published("report").filter(|value| value.is_object());
+        let error = published("reportError").and_then(Value::as_str);
+        let github_report = github && e.kind == "Repository" && (report.is_some() || error.is_some());
+        let child_portal = !guest && kind == Some(&e.kind) && *id != own;
+        if !github_report && !child_portal {
+            return None;
+        }
         let name = f.get("key").or_else(|| f.get("name")).and_then(Value::as_str).unwrap_or(id);
-        json!({
+        let mut child = json!({
             "key": name,
             "title": f.get("title").and_then(Value::as_str).unwrap_or(name),
             "commit": f.get("git").and_then(|git| git["commit"].as_str())
                 .or_else(|| f.get("commit").and_then(Value::as_str)),
-            "report": f.get("report"),
-            "error": f.get("reportError").and_then(Value::as_str)
+            "report": report,
+            "error": error
                 .or_else(|| f.get("error").and_then(Value::as_str))
                 .map(|_| "The child snapshot could not be read.")
-                .or_else(|| (!f.get("report").is_some_and(Value::is_object)).then_some("No child snapshot has been published.")),
-        })
+                .or_else(|| report.is_none().then_some("No child snapshot has been published.")),
+        });
+        if guest {
+            remove_child_actions(&mut child["report"]);
+        }
+        Some(child)
     }).collect()
+}
+
+fn public_child_field<'a>(
+    manifest: &Manifest,
+    entity: &'a seikika_derive::Entity,
+    field: &str,
+) -> Option<&'a Value> {
+    let source = entity.provenance.get(field)?.strip_prefix("connector:")?;
+    let connector = manifest.connectors.iter().find(|c| c.name == source)?;
+    let github = connector.config.as_ref()?.get("githubOrg")?;
+    // The raw operator field stays private. Only a committed public publication enters this view.
+    if crate::connectors::is_github_org(connector)
+        && github["reports"] == true
+        && github["publicOnly"] == true
+        && entity.records.iter().any(|(name, _, _)| name == source)
+    {
+        entity.fields.get(field)
+    } else {
+        None
+    }
+}
+
+fn remove_child_actions(report: &mut Value) {
+    if let Some(report) = report.as_object_mut() {
+        report.remove("actions");
+        if let Some(children) = report.get_mut("children").and_then(Value::as_array_mut) {
+            for child in children {
+                if let Some(nested) = child.get_mut("report") {
+                    remove_child_actions(nested);
+                }
+            }
+        }
+    }
 }
 
 fn actions(
@@ -713,7 +762,7 @@ fn actions(
             offered.entity.as_ref().is_none_or(|id| {
                 audience.is_none_or(|a| {
                     let v = a.visibility(id);
-                    v.view && (v.details || a.caller.admin)
+                    v.view && (v.details || a.admin)
                 })
             })
         })
@@ -745,7 +794,8 @@ fn actions(
 fn federation_problem(
     state: &AppState,
     input_version: u64,
-) -> Option<(StatusCode, &'static str, &'static str)> {
+    public_sources: Option<&BTreeSet<&str>>,
+) -> Option<FederationProblem> {
     if crate::connectors::disabled() {
         return None;
     }
@@ -755,30 +805,52 @@ fn federation_problem(
             .first_sync(connector, record)
             .is_none_or(|version| input_version < version)
     };
-    let mut waiting = crate::connectors::reads_children(state)
+    let failed = |connector, record| {
+        state.hub.first_sync(connector, record).is_some()
+            && state.hub.last_read(connector, record).is_none()
+    };
+    let mut waiting = public_sources.is_none()
+        && crate::connectors::reads_children(state)
         && pending(seikika_model::federation::CONNECTOR, "portal");
-    for connector in state.manifest.connectors.iter().filter(|connector| {
-        connector.runtime == "in-image" && crate::connectors::is_github_org(connector)
-    }) {
-        if state
-            .hub
-            .first_sync(&connector.name, "federated-repo")
-            .is_some()
-            && state
-                .hub
-                .last_read(&connector.name, "federated-repo")
-                .is_none()
-        {
+    for connector in &state.manifest.connectors {
+        let organization = crate::connectors::is_github_org(connector);
+        let published = public_sources
+            .map_or(organization && connector.runtime == "in-image", |sources| {
+                sources.contains(connector.name.as_str())
+            });
+        if !published {
+            continue;
+        }
+        if organization && failed(&connector.name, "federated-repo") {
             return Some((
                 StatusCode::BAD_GATEWAY,
                 "organization-read-failed",
                 "Unable to read the GitHub organization. Check the connector status and GitHub credential.",
             ));
         }
+        if public_sources.is_some()
+            && connector
+                .records
+                .iter()
+                .any(|record| failed(&connector.name, record))
+        {
+            return Some((
+                StatusCode::BAD_GATEWAY,
+                "public-source-read-failed",
+                "Unable to read one of the public report sources",
+            ));
+        }
         waiting |= connector
             .records
             .iter()
             .any(|kind| pending(&connector.name, kind));
+    }
+    if public_sources.is_some() {
+        return waiting.then_some((
+            StatusCode::SERVICE_UNAVAILABLE,
+            "reading-public-sources",
+            "Waiting for the first read of the public report sources",
+        ));
     }
     waiting.then_some((
         StatusCode::SERVICE_UNAVAILABLE,
@@ -810,7 +882,7 @@ pub(crate) async fn view(
             "no snapshot yet",
         );
     };
-    let federation = federation_problem(&state, published.input_version);
+    let federation = federation_problem(&state, published.input_version, None);
     if !query.partial
         && let Some((status, code, detail)) = federation
     {
@@ -827,23 +899,139 @@ pub(crate) async fn view(
         Err(response) => return response,
     };
     let audience = Audience {
-        caller: &caller,
+        admin: caller.admin,
+        guest: false,
         entities: ids.into_iter().zip(access).collect(),
     };
-    let mut report = snapshot(
+    live_report(
         &state.manifest,
-        &published.derived,
-        &Map::new(),
-        Some(&audience),
-    );
+        &published,
+        &audience,
+        Some(&caller),
+        federation,
+    )
+}
+
+pub(crate) fn guest_view(state: &AppState) -> Option<Response> {
+    let sources: BTreeSet<&str> = state
+        .manifest
+        .policies
+        .get("publicReportSources")?
+        .as_array()?
+        .iter()
+        .filter_map(Value::as_str)
+        .collect();
+    if sources.is_empty() {
+        return None;
+    }
+    let Some(published) = state.snapshot() else {
+        return Some(problem(
+            StatusCode::SERVICE_UNAVAILABLE,
+            "starting",
+            "no snapshot yet",
+        ));
+    };
+    let audience = Audience {
+        admin: false,
+        guest: true,
+        entities: published
+            .derived
+            .entities
+            .iter()
+            .filter(|(_, entity)| {
+                !entity.records.is_empty()
+                    && entity
+                        .records
+                        .iter()
+                        .all(|(name, _, _)| sources.contains(name.as_str()))
+                    && (!matches!(entity.kind.as_str(), "Repository" | "Workflow")
+                        || entity.fields.get("visibility").and_then(Value::as_str)
+                            == Some("public"))
+            })
+            .map(|(id, _)| {
+                (
+                    id.as_str(),
+                    Visibility {
+                        view: true,
+                        details: false,
+                    },
+                )
+            })
+            .collect(),
+    };
+    let federation = federation_problem(state, published.input_version, Some(&sources));
+    Some(live_report(
+        &state.manifest,
+        &published,
+        &audience,
+        None,
+        federation,
+    ))
+}
+
+type FederationProblem = (StatusCode, &'static str, &'static str);
+
+fn live_report(
+    manifest: &Manifest,
+    published: &Published,
+    audience: &Audience<'_>,
+    caller: Option<&Caller>,
+    federation: Option<FederationProblem>,
+) -> Response {
+    let mut report = snapshot(manifest, &published.derived, &Map::new(), Some(audience));
     report["snapshot"] = json!(published.snapshot_id);
-    report["viewer"] = json!(caller.user);
+    if let Some(caller) = caller {
+        report["viewer"] = json!(caller.user);
+    } else {
+        report["viewerMethod"] = json!("guest");
+        guest_definitions(&mut report);
+    }
     if let Some((status, code, detail)) = federation {
         report["federationStatus"] = json!({
             "code": code, "detail": detail, "pending": status == StatusCode::SERVICE_UNAVAILABLE
         });
     }
     ([(header::CACHE_CONTROL, "private, no-store")], Json(report)).into_response()
+}
+
+fn guest_definitions(report: &mut Value) {
+    let Some(catalog) = report["catalog"].as_object() else {
+        return;
+    };
+    let kinds: BTreeSet<String> = catalog.keys().cloned().collect();
+    let visible_kind = |definition: &Value| {
+        definition["kind"]
+            .as_str()
+            .is_some_and(|kind| kinds.contains(kind))
+    };
+    for key in ["scorecards", "rubrics"] {
+        if let Some(definitions) = report[key].as_object_mut() {
+            definitions.retain(|_, definition| visible_kind(definition));
+        }
+    }
+    if let Some(definitions) = report["kinds"].as_object_mut() {
+        definitions.retain(|kind, _| kinds.contains(kind));
+    }
+    let Some(cards) = report["scorecards"].as_object() else {
+        return;
+    };
+    let cards: BTreeSet<String> = cards.keys().cloned().collect();
+    for key in ["scores", "unassessed", "comparisons"] {
+        if let Some(results) = report[key].as_object_mut() {
+            results.retain(|name, _| cards.contains(name));
+        }
+    }
+    if let Some(campaigns) = report["campaigns"].as_object_mut() {
+        campaigns.retain(|_, campaign| {
+            campaign["includes"].as_array().is_some_and(|includes| {
+                includes.iter().all(|include| {
+                    include["scorecard"]
+                        .as_str()
+                        .is_some_and(|name| cards.contains(name))
+                })
+            })
+        });
+    }
 }
 
 #[cfg(test)]
@@ -918,14 +1106,9 @@ mod tests {
                 },
             );
         }
-        let caller = Caller {
-            user: "user:reader".into(),
-            subject: "reader".into(),
-            method: "test",
-            admin: false,
-        };
         let audience = Audience {
-            caller: &caller,
+            admin: false,
+            guest: false,
             entities: BTreeMap::from([(
                 "portal:public",
                 Visibility {
@@ -1006,5 +1189,181 @@ mod tests {
         let report: Value = serde_json::from_slice(&body).unwrap();
         assert_eq!(report["catalog"]["Service"], json!(["service:local"]));
         assert_eq!(report["federationStatus"]["pending"], true);
+    }
+
+    #[tokio::test]
+    async fn guest_report_uses_live_public_scores_and_excludes_private_data() {
+        let document = json!({
+            "apiVersion": "seikika.com/v1alpha1",
+            "portal": {"name": "demo", "owner": "group:operators", "seikika": "0.2"},
+            "policies": {"publicReportSources": ["public-feed", "meta-catalog"]},
+            "kinds": [
+                {"name": "Repository", "identityFrom": [], "sources": {"default": []},
+                    "fields": {"internal": {"type": "string", "facet": "owner"}}},
+                {"name": "Scorecard", "identityFrom": [], "sources": {"default": []}, "fields": {}}
+            ],
+            "scorecards": [
+                {"name": "meta-scorecard", "kind": "Scorecard", "owner": "group:operators",
+                    "levels": ["bronze"], "rules": [], "facets": {"details": "public"}},
+                {"name": "private-evidence", "kind": "Scorecard", "owner": "group:operators",
+                    "levels": ["bronze"], "rules": [], "facets": {"details": "owner"}}
+            ],
+        });
+        let manifest = serde_json::from_value(document.clone()).unwrap();
+        let store = Arc::new(seikika_store::SharedMem(Default::default()));
+        let state = crate::app_state(manifest, &document, store, None, Default::default());
+        let repo = |connector: &str, visibility: &str| Entity {
+            kind: "Repository".into(),
+            fields: Map::from_iter([
+                ("visibility".into(), json!(visibility)),
+                ("internal".into(), json!("private-field")),
+            ]),
+            provenance: BTreeMap::from([("internal".into(), "private-source".into())]),
+            inbound: BTreeMap::new(),
+            records: vec![(connector.into(), "repository".into(), "1".into())],
+        };
+        let mut card = repo("meta-catalog", "public");
+        card.kind = "Scorecard".into();
+        card.fields.clear();
+        card.provenance.clear();
+        let card_id = "scorecard:demo/repo-hygiene".to_owned();
+        let score = Score {
+            level: "bronze".into(),
+            rules: Some(BTreeMap::from([("defined".into(), "pass".into())])),
+            evidence: BTreeMap::from([("defined".into(), json!(["Fixture evidence"]))]),
+            measures: BTreeMap::new(),
+            values: BTreeMap::new(),
+        };
+        let derived = Derived {
+            entities: BTreeMap::from([
+                ("repository:public".into(), repo("public-feed", "public")),
+                ("repository:private".into(), repo("public-feed", "private")),
+                (
+                    "repository:internal".into(),
+                    repo("internal-feed", "public"),
+                ),
+                (card_id.clone(), card),
+            ]),
+            scores: ["meta-scorecard", "private-evidence"]
+                .into_iter()
+                .map(|name| {
+                    (
+                        name.into(),
+                        BTreeMap::from([(card_id.clone(), score.clone())]),
+                    )
+                })
+                .collect(),
+            ..Default::default()
+        };
+        state.current.send_replace(Some(Arc::new(Published {
+            snapshot_id: "2.fixture".into(),
+            derived: Arc::new(derived),
+            input_version: 2,
+            recompute: Default::default(),
+            published_at: std::time::SystemTime::now(),
+            decisions: None,
+            by_field: Default::default(),
+        })));
+        let response = guest_view(&state).unwrap();
+        assert_eq!(response.status(), StatusCode::OK);
+        let body = axum::body::to_bytes(response.into_body(), 16_384)
+            .await
+            .unwrap();
+        let report: Value = serde_json::from_slice(&body).unwrap();
+        assert_eq!(report["viewerMethod"], "guest");
+        assert_eq!(
+            report["catalog"]["Repository"],
+            json!(["repository:public"])
+        );
+        assert_eq!(report["catalog"]["Scorecard"], json!([card_id]));
+        assert_eq!(
+            report["scores"]["meta-scorecard"][&card_id]["evidence"]["defined"],
+            json!(["Fixture evidence"])
+        );
+        assert_eq!(
+            report["scores"]["private-evidence"][&card_id]["level"],
+            "bronze"
+        );
+        assert!(report["scores"]["private-evidence"][&card_id]["evidence"].is_null());
+        assert!(
+            report["entities"]["repository:public"]["fields"]
+                .get("internal")
+                .is_none()
+        );
+        assert!(
+            report["entities"]["repository:public"]["provenance"]
+                .get("internal")
+                .is_none()
+        );
+        assert_eq!(report["actions"], json!([]));
+    }
+
+    #[test]
+    fn guest_children_require_public_publication_provenance() {
+        let manifest = serde_json::from_value(json!({
+            "apiVersion": "seikika.com/v1alpha1",
+            "portal": {"name": "demo", "owner": "group:operators", "seikika": "0.2"},
+            "kinds": [],
+            "connectors": [
+                {"name": "public-feed", "package": "builtin:workspace", "runtime": "in-image", "records": ["federated-repo"],
+                    "config": {"githubOrg": {"organization": "demo", "reports": true, "publicOnly": true}}},
+                {"name": "internal-feed", "package": "builtin:workspace", "runtime": "in-image", "records": ["federated-repo"],
+                    "config": {"githubOrg": {"organization": "demo", "reports": true}}}
+            ]
+        })).unwrap();
+        let repo = |source: &str, provenance: &str| Entity {
+            kind: "Repository".into(),
+            fields: Map::from_iter([(
+                "report".into(),
+                json!({
+                    "catalog": {"Package": ["package:published"]}, "actions": [{"name": "replace"}],
+                    "children": [{"report": {"actions": [{"name": "deploy"}]}}]
+                }),
+            )]),
+            provenance: BTreeMap::from([("report".into(), format!("connector:{provenance}"))]),
+            inbound: BTreeMap::new(),
+            records: vec![(source.into(), "federated-repo".into(), "1".into())],
+        };
+        let derived = Derived {
+            entities: BTreeMap::from([
+                (
+                    "repository:public".into(),
+                    repo("public-feed", "public-feed"),
+                ),
+                (
+                    "repository:internal".into(),
+                    repo("internal-feed", "internal-feed"),
+                ),
+                (
+                    "repository:wrong".into(),
+                    repo("internal-feed", "public-feed"),
+                ),
+            ]),
+            ..Default::default()
+        };
+        let audience = Audience {
+            admin: false,
+            guest: true,
+            entities: derived
+                .entities
+                .keys()
+                .map(|id| {
+                    (
+                        id.as_str(),
+                        Visibility {
+                            view: true,
+                            details: false,
+                        },
+                    )
+                })
+                .collect(),
+        };
+        let publications = children(&manifest, &derived, Some(&audience));
+        assert_eq!(publications.len(), 1);
+        assert_eq!(publications[0]["key"], "repository:public");
+        let report = &publications[0]["report"];
+        assert_eq!(report["catalog"]["Package"], json!(["package:published"]));
+        assert!(report.get("actions").is_none());
+        assert!(report["children"][0]["report"].get("actions").is_none());
     }
 }
