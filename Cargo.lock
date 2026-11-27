@@ -2529,7 +2529,7 @@ dependencies = [
 
 [[package]]
 name = "seikika-api"
-version = "0.2.0"
+version = "0.2.1"
 dependencies = [
  "axum",
  "landlock",
@@ -2553,7 +2553,7 @@ dependencies = [
 
 [[package]]
 name = "seikika-authz"
-version = "0.2.0"
+version = "0.2.1"
 dependencies = [
  "async-trait",
  "jsonwebtoken",
@@ -2568,7 +2568,7 @@ dependencies = [
 
 [[package]]
 name = "seikika-cli"
-version = "0.2.0"
+version = "0.2.1"
 dependencies = [
  "async-trait",
  "clap",
@@ -2596,7 +2596,7 @@ dependencies = [
 
 [[package]]
 name = "seikika-connect"
-version = "0.2.0"
+version = "0.2.1"
 dependencies = [
  "regex",
  "reqwest",
@@ -2610,7 +2610,7 @@ dependencies = [
 
 [[package]]
 name = "seikika-connector-git-files"
-version = "0.2.0"
+version = "0.2.1"
 dependencies = [
  "reqwest",
  "seikika-connect",
@@ -2621,7 +2621,7 @@ dependencies = [
 
 [[package]]
 name = "seikika-connector-github"
-version = "0.2.0"
+version = "0.2.1"
 dependencies = [
  "jsonwebtoken",
  "reqwest",
@@ -2632,7 +2632,7 @@ dependencies = [
 
 [[package]]
 name = "seikika-connector-gitlab"
-version = "0.2.0"
+version = "0.2.1"
 dependencies = [
  "reqwest",
  "seikika-connect",
@@ -2642,7 +2642,7 @@ dependencies = [
 
 [[package]]
 name = "seikika-connector-runner"
-version = "0.2.0"
+version = "0.2.1"
 dependencies = [
  "regex",
  "seikika-connect",
@@ -2652,7 +2652,7 @@ dependencies = [
 
 [[package]]
 name = "seikika-connector-scim"
-version = "0.2.0"
+version = "0.2.1"
 dependencies = [
  "axum",
  "seikika-connect",
@@ -2662,7 +2662,7 @@ dependencies = [
 
 [[package]]
 name = "seikika-connector-workspace"
-version = "0.2.0"
+version = "0.2.1"
 dependencies = [
  "proc-macro2",
  "regex",
@@ -2678,7 +2678,7 @@ dependencies = [
 
 [[package]]
 name = "seikika-derive"
-version = "0.2.0"
+version = "0.2.1"
 dependencies = [
  "mimalloc",
  "rayon",
@@ -2692,7 +2692,7 @@ dependencies = [
 
 [[package]]
 name = "seikika-exec"
-version = "0.2.0"
+version = "0.2.1"
 dependencies = [
  "aws-lc-rs",
  "reqwest",
@@ -2708,7 +2708,7 @@ dependencies = [
 
 [[package]]
 name = "seikika-expr"
-version = "0.2.0"
+version = "0.2.1"
 dependencies = [
  "cel",
  "serde_json",
@@ -2716,7 +2716,7 @@ dependencies = [
 
 [[package]]
 name = "seikika-model"
-version = "0.2.0"
+version = "0.2.1"
 dependencies = [
  "jsonschema",
  "seikika-expr",
@@ -2729,7 +2729,7 @@ dependencies = [
 
 [[package]]
 name = "seikika-secrets"
-version = "0.2.0"
+version = "0.2.1"
 dependencies = [
  "reqwest",
  "serde",
@@ -2744,7 +2744,7 @@ dependencies = [
 
 [[package]]
 name = "seikika-store"
-version = "0.2.0"
+version = "0.2.1"
 dependencies = [
  "async-trait",
  "serde",
@@ -2755,7 +2755,7 @@ dependencies = [
 
 [[package]]
 name = "seikika-telemetry"
-version = "0.2.0"
+version = "0.2.1"
 dependencies = [
  "opentelemetry",
  "opentelemetry-appender-tracing",

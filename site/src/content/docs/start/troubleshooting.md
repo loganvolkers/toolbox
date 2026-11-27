@@ -9,6 +9,20 @@ Find the symptom you see, run the check, and confirm that the original command w
 
 ## Installation and scoring
 
+### Mise setup
+
+Run these checks from the root of the checkout whose mise config you want to use.
+
+| Symptom | Check | Recover |
+|---|---|---|
+| Your shell cannot find `mise` | Run `mise --version` in that shell. | Install mise 2026.11.14 or later and add it to your shell's `PATH`. [Mise installation](https://mise.jdx.dev/installing-mise.html) |
+| Mise reports an untrusted config | Check the config path in the error. | Review that file, run `mise trust` from its directory, then retry `mise install`. |
+| Mise cannot find a release archive | Check the pinned version, your platform, and the release's assets. | Choose a published version with the right assets or [build from source](/start/install/#build-from-source). |
+| A tool is missing or the version is wrong | Run `mise ls --current` to see which config supplies the pin. Run `mise which seikika` to see the CLI path. | Install from the intended checkout with `mise install`. Use `mise exec -- seikika --version` to check the result. |
+| The CLI runs but `doctor` cannot find the connector | Run `mise which seikika-connector-workspace`, or substitute the binary your manifest names. | Add the connector to your config, run `mise install`, and retry with `mise exec -- seikika doctor .seikika`. [Connector setup](/start/install/#install-a-connector) |
+
+### Portal checks
+
 | Symptom | Check | Recover |
 |---|---|---|
 | Installer URL returns 404, or `seikika` is missing after installing | Check the release's assets and your shell's `PATH`. The 0.1 release assets use `toolbox`. | Choose a release with Seikika assets or [build from source](/start/install/#build-from-source). |

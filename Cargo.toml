@@ -5,7 +5,7 @@ members = ["crates/*"]
 exclude = ["experiments"]
 
 [workspace.package]
-version = "0.2.0"
+version = "0.2.1"
 edition = "2024"
 rust-version = "1.97"
 publish = ["crates-io"]
@@ -13,12 +13,12 @@ repository = "https://github.com/seikika/seikika"
 license = "MIT"
 
 [workspace.dependencies]
-seikika-connect = { path = "crates/seikika-connect", version = "=0.2.0" }
-seikika-model = { path = "crates/seikika-model", version = "=0.2.0" }
-seikika-expr = { path = "crates/seikika-expr", version = "=0.2.0" }
-seikika-store = { path = "crates/seikika-store", version = "=0.2.0" }
-seikika-derive = { path = "crates/seikika-derive", version = "=0.2.0" }
-seikika-exec = { path = "crates/seikika-exec", version = "=0.2.0" }
+seikika-connect = { path = "crates/seikika-connect", version = "=0.2.1" }
+seikika-model = { path = "crates/seikika-model", version = "=0.2.1" }
+seikika-expr = { path = "crates/seikika-expr", version = "=0.2.1" }
+seikika-store = { path = "crates/seikika-store", version = "=0.2.1" }
+seikika-derive = { path = "crates/seikika-derive", version = "=0.2.1" }
+seikika-exec = { path = "crates/seikika-exec", version = "=0.2.1" }
 cel = "0.16"
 clap = { version = "4.6", features = ["derive", "env"] }
 jsonschema = { version = "0.63", default-features = false }
@@ -32,16 +32,16 @@ axum = "0.8"
 tower = { version = "0.5", features = ["util"] }
 reqwest = { version = "0.13", default-features = false, features = ["json", "query", "rustls"] }
 jsonwebtoken = { version = "12", default-features = false, features = ["use_pem", "aws_lc_rs"] }
-seikika-authz = { path = "crates/seikika-authz", version = "=0.2.0" }
+seikika-authz = { path = "crates/seikika-authz", version = "=0.2.1" }
 sha2 = "0.11"
 # Ed25519 for approval grants between portals (seikika-exec::grant); already built for rustls.
 aws-lc-rs = "1.19"
 walkdir = "2"
 sqlx = { version = "0.9", default-features = false, features = ["runtime-tokio", "postgres", "json", "tls-rustls-aws-lc-rs-native-roots"] }
 tokio = { version = "1", features = ["rt-multi-thread", "macros", "signal", "sync", "time", "process", "io-util", "io-std", "net", "fs"] }
-seikika-api = { path = "crates/seikika-api", version = "=0.2.0" }
-seikika-secrets = { path = "crates/seikika-secrets", version = "=0.2.0" }
-seikika-telemetry = { path = "crates/seikika-telemetry", version = "=0.2.0" }
+seikika-api = { path = "crates/seikika-api", version = "=0.2.1" }
+seikika-secrets = { path = "crates/seikika-secrets", version = "=0.2.1" }
+seikika-telemetry = { path = "crates/seikika-telemetry", version = "=0.2.1" }
 # Operational telemetry (D6, plan §6.3): OTel contract + Prometheus /metrics.
 opentelemetry = { version = "0.33.1", default-features = false, features = ["trace", "metrics", "logs"] }
 opentelemetry_sdk = { version = "0.33.1", default-features = false, features = ["trace", "metrics", "logs", "rt-tokio"] }

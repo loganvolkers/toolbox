@@ -12,7 +12,7 @@ secrets ([docs/design/repo-portals.md](../../docs/design/repo-portals.md)).
    personal handles), and LICENSE, and checks the docs' relative links. Edit or add scorecards as
    the team likes. In JS/TS repos, ignore `.seikika/**` in ESLint so fixture YAML is not parsed as
    code (see the [starter README](../../examples/repo-portal-starter/README.md)).
-2. Add the workflow when v0.2.0 is available on [GitHub Releases](https://github.com/seikika/seikika/releases). To try CI before then, pin the action to a commit SHA and omit `seikika-version` so the action builds from that source.
+2. Add the workflow when v0.2.1 is available on [GitHub Releases](https://github.com/seikika/seikika/releases). To try CI before then, pin the action to a commit SHA and omit `seikika-version` so the action builds from that source.
 
    ```yaml
    # .github/workflows/seikika.yml
@@ -44,7 +44,7 @@ secrets ([docs/design/repo-portals.md](../../docs/design/repo-portals.md)).
    `seikika-version` new enough to understand the package's facts. The action runs
    `seikika install --frozen` whenever that lock file is present, so a clean CI runner populates
    `~/.cache/seikika/packages` before `report` (without this, the lock check sees the empty-hash
-   `e3b0c442…`). Package refs may be a semver tag (`@0.2.0` → `v0.2.0`), a branch (`@main`), or a
+   `e3b0c442…`). Package refs may be a semver tag (`@0.2.1` → `v0.2.1`), a branch (`@main`), or a
    commit SHA.
 
 From then on:
@@ -67,7 +67,7 @@ The job summary says which, and how to update the baseline.
 | `html` | `true` | Also produce the one-page HTML report |
 | `artifact-name` | `seikika-report` | Name of the uploaded artifact (Markdown and HTML reports; the baseline in `update` mode) |
 | `seikika-dir` | | A directory with prebuilt `seikika` and `seikika-connector-*` binaries. When empty, the action builds them from its own source at the pinned commit and caches them, so the first run per commit compiles and later runs restore |
-| `seikika-version` | — | A released Seikika version (e.g. `0.2.0`): download its binaries, SHA-256-verified, instead of building from source (D90) |
+| `seikika-version` | — | A released Seikika version (e.g. `0.2.1`): download its binaries, SHA-256-verified, instead of building from source (D90) |
 
 **Outputs:**
 - `result`: `pass`, `regressed`, `stale`, `missing-baseline`, `unknown` or `error`;
@@ -108,7 +108,7 @@ system's format (for example a GitLab Code Quality report, or a comment).
 
 ## Notes
 
-- Prefer `seikika-version: "0.2.0"` (or later) so the action downloads attested binaries (D90).
+- Prefer `seikika-version: "0.2.1"` (or later) so the action downloads attested binaries (D90).
   When that input is empty it still builds from the action's source (Linux runners; cold start is
   slow). If the Seikika repository is private, the job token needs `contents: read` on it.
 - **`seikika.lock`:** when the file exists, the action runs `seikika install --frozen` before

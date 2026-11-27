@@ -2,7 +2,7 @@
 # (D01M7Z2ZZ97VZQNTDT4QQHM3HQD).
 apiVersion: seikika.com/package/v0
 name: file-size
-version: 0.2.0
+version: 0.2.1
 description: >-
   Files over a line limit are violations. The ratchet fails a pull request
   that grows a violating file or brings a new one over the limit, and a

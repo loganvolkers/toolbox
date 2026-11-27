@@ -74,6 +74,52 @@ archive staging script runs in the release workflow.
 
 Verify an artifact with `gh attestation verify <file> --repo <owner>/seikika`.
 
+## Verify public container access
+
+The image workflow pushes and attests the release tag. GHCR initially makes a new image
+package private, even when the source repository is public. To enable anonymous pulls,
+approve the visibility change with the organization owner and review the package's existing
+versions. Making the package public exposes its published versions and is permanent.
+
+1. If **Public** is disabled in the package settings, an organization owner can allow it
+   under **Package Creation** in the organization settings. This permission applies to the
+   organization. [Seikika organization package settings](https://github.com/organizations/seikika/settings/packages)
+2. In the `seikika` container's **Package settings**, open **Danger Zone → Change visibility**,
+   select **Public**, and confirm. The existing release tag then becomes publicly pullable.
+   [Seikika container package settings](https://github.com/orgs/seikika/packages/container/seikika/settings)
+3. Run `docker manifest inspect` with an empty Docker config. Check that the index lists
+   `linux/amd64` and `linux/arm64`.
+
+   ```bash
+   DOCKER_CONFIG="$(mktemp -d)" docker manifest inspect ghcr.io/seikika/seikika:0.2.1
+   ```
+
+When the organization keeps the package private, give approved teams and Actions repositories
+read access. For Docker outside Actions, use a classic personal access token with `read:packages`
+from an account that can read the package. [Authenticate to GHCR](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-container-registry#authenticating-to-the-container-registry)
+
+Public operators can [install the CLI and connectors with mise](#install-what-a-consumer-needs)
+or build the image locally from the release archives.
+
+### Build a release image locally
+
+Use Bash with Git, an authenticated GitHub CLI, `sha256sum`, and `tar` with xz support.
+Use Docker Buildx with Linux containers on amd64 or arm64. The release's staging script
+downloads and verifies the public release binaries. The tagged Dockerfile assembles them
+into a local image.
+
+```bash
+tag=v0.2.1
+work=$(mktemp -d)
+git clone --depth 1 --branch "$tag" https://github.com/seikika/seikika.git "$work/source"
+GITHUB_REPOSITORY=seikika/seikika bash "$work/source/scripts/stage-image-archives.sh" \
+  "$work/archives" "$work/source/image" "$tag"
+docker buildx build --load --tag "seikika:${tag#v}" "$work/source/image"
+docker run --rm --network none "seikika:${tag#v}" --version
+```
+
+Use `seikika:0.2.1` as the local base image for your portal.
+
 ## Rust crates on crates.io
 
 The workspace publishes the CLI, connectors, SDK, and their Rust libraries in lockstep.
@@ -118,8 +164,8 @@ resolution mode in Actions if the scheduled run fails.
 Use the pinned Rust toolchain and Python 3.13 to reproduce the portable checks locally.
 
 ```bash
-python3 scripts/check-crates-release.py install 0.2.0
-python3 scripts/check-crates-release.py install 0.2.0 --resolution fresh
+python3 scripts/check-crates-release.py install 0.2.1
+python3 scripts/check-crates-release.py install 0.2.1 --resolution fresh
 ```
 
 The GitHub Release and installer artifacts are built by cargo-dist from the version tag.
@@ -141,9 +187,12 @@ distributed from the PNPM workspace. Their versions live in their package manife
 The frontend CI job checks the catalog and packs the same files a registry release ships.
 
 On `main`, run **Publish npm packages** with `publish=true` to release versions listed in
-the two manifests. The workflow checks and packs the workspace with pnpm, then publishes
-new versions with npm trusted publishing. It publishes the UI before the Astro integration
-and skips versions already in the registry. Dispatch with `publish=false` to check the build
+the two manifests. The workflow checks and packs the workspace with pnpm and tests both
+tarballs in a clean Astro project. It publishes the UI before the Astro integration using
+npm Trusted Publishing and skips versions already in the registry. Wait for the
+**registry-smoke** job to pass. It installs the exact versions from npm, checks their
+signed provenance against this repository's publish workflow, and builds an Astro report
+and a page using the UI exports. Dispatch with `publish=false` to run the tarball checks
 and download the `npm-packages` artifact. See [the publishing decision](decisions/D01M8BBPE4KN9NF9E9K3F9ZEE4Q.md).
 
 For the first version of a new package name, publish the tarball from the pack job with
@@ -156,6 +205,14 @@ run the following for each package while signed in as its maintainer.
 ```bash
 npm trust github @seikika/ui --repo seikika/seikika --file publish-npm.yml --env npm-publish --allow-publish
 npm trust github @seikika/astro-report --repo seikika/seikika --file publish-npm.yml --env npm-publish --allow-publish
+```
+
+**npm registry smoke tests** runs every Monday and on manual dispatch against both
+packages' `latest` tags. It uses a fresh install to detect registry, dependency, and build
+regressions. Use Node 24 and npm 11 to repeat the published package check locally.
+
+```sh
+node scripts/check-npm-release.mjs registry latest latest
 ```
 
 The `npm-publish` environment permits only the `main` branch. Publish a new version through
@@ -180,7 +237,7 @@ The weekly workflow run repeats the install for the version pinned in the starte
 To repeat the check locally for a published tag, run the following from the repository root.
 
 ```sh
-mise exec -- python3 scripts/check-mise.py release v0.2.0
+mise exec -- python3 scripts/check-mise.py release v0.2.1
 ```
 
 `scripts/install-release.sh` unpacks `seikika`, `seikika-connector-workspace`
@@ -188,7 +245,7 @@ and `seikika-connector-runner` into one directory after checking each
 `.sha256`, for a checkout that already exists (the same layout as
 `actions/report/install.sh`).
 
-In CI, set `seikika-version: "0.2.0"` on `seikika/seikika/actions/report` so the action
+In CI, set `seikika-version: "0.2.1"` on `seikika/seikika/actions/report` so the action
 downloads checksum-verified binaries instead of compiling.
 
 ## Public vs private (required for external consumers)
@@ -206,9 +263,9 @@ GitHub App token) with `contents: read` on `seikika/seikika`, stored as a secret
 
 ```yaml
 - uses: actions/checkout@v4
-- uses: seikika/seikika/actions/report@v0.2.0
+- uses: seikika/seikika/actions/report@v0.2.1
   with:
-    seikika-version: "0.2.0"
+    seikika-version: "0.2.1"
   env:
     GH_TOKEN: ${{ secrets.SEIKIKA_READ_TOKEN }}   # install.sh / gh release download
 ```

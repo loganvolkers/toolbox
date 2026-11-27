@@ -13,6 +13,24 @@ These docs describe the current Seikika source. Check what your build can do wit
 | 0.2 documentation | The revision in [Install Seikika](/start/install/#build-from-source) or a matching published release. Check the release assets before relying on installer or container examples. |
 | Planned | Design documents describe work such as live remote planning and a generated portal client. Check [what Seikika supports](/concepts/capabilities/) for available workflows and proposed features. |
 
+## Change a release pin with mise
+
+In your portal repository's mise config, set `version` for the CLI and each Seikika
+connector to the same published release. Keep each entry's `matching` value so mise
+selects the right archive. Review the config, then install and verify the candidate.
+
+```sh
+mise trust
+mise install
+mise exec -- seikika --version
+mise exec -- seikika doctor .seikika
+```
+
+Use your portal directory in place of `.seikika` if needed. Confirm the version and
+connector checks before verifying the upgrade. To roll back the tools, restore the
+previous version pins and repeat these commands. For a global CLI install, repeat the
+global install command with the chosen version. [Global CLI setup](/start/install/#install-the-cli-globally)
+
 ## Verify an upgrade
 
 1. Read the release notes for changes to manifests, connectors, and outputs that your scripts consume. Pin the CLI, connector binaries, and any CI action to known revisions. Record your current image digest or source revision and package lock.

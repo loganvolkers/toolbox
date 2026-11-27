@@ -2,7 +2,7 @@
 # with jsWorkspace: true and expoApps globs (facts from seikika-connector-workspace).
 apiVersion: seikika.com/package/v0
 name: pnpm-expo
-version: 0.2.0
+version: 0.2.1
 description: >-
   pnpm workspace and Expo app hygiene: packageManager pin, lockfile +
   frozen CI, linker policy, toolchain alignment, Expo SDK / EAS /

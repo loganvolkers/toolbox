@@ -70,16 +70,16 @@ def check_maintainer(config):
 
 
 def check_release(config_text, pinned_version, tag):
-    if not tag and pinned_version == "0.2.0":
+    if not tag and pinned_version == "0.2.1":
         # The first branded install cannot run before the tag exists. Once pushed,
         # even a missing GitHub release must fail the check.
         tagged = subprocess.run(
             ["git", "ls-remote", "--exit-code", "--refs", f"https://github.com/{REPOSITORY}.git",
-             "refs/tags/v0.2.0"],
+             "refs/tags/v0.2.1"],
             stdout=subprocess.DEVNULL,
         )
         if tagged.returncode == 2:
-            print("v0.2.0 has not been tagged. The live install starts with the first branded release.")
+            print("v0.2.1 has not been tagged. The live install starts with the first branded release.")
             return
         tagged.check_returncode()
 
