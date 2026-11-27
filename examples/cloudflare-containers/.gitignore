@@ -2,3 +2,5 @@
 /.env*
 /.wrangler/
 /bin/
+/.build/
+/.build.*/

@@ -2,7 +2,7 @@
 
 Run a Seikika portal and its OpenFGA co-process in one Cloudflare Container. The Worker routes HTTPS requests to one named instance. A direct PostgreSQL connection stores portal data, authorization tuples, personal access tokens, and action runs. This example is about the box, from packaging the portal to keeping its state across deployments. [Federated actions design](../../docs/design/federated-actions.md)
 
-Cloudflare offers PlanetScale PostgreSQL through its dashboard with billing on the Cloudflare account. Use the database's **direct primary endpoint** and `sslmode=verify-full`. A direct connection preserves the session-level advisory lock Seikika uses to keep action execution on one instance. Hyperdrive and PgBouncer transaction pooling cannot preserve that lock. [PlanetScale billing through Cloudflare](https://developers.cloudflare.com/changelog/post/2026-06-18-planetscale-databases-cloudflare-billing/) · [Hyperdrive connection pooling](https://developers.cloudflare.com/hyperdrive/concepts/connection-pooling/)
+Cloudflare offers PlanetScale PostgreSQL through its dashboard with billing on the Cloudflare account. Use the database's **direct primary endpoint** and `sslmode=verify-full`. For a PlanetScale connection string that includes `sslrootcert=system`, omit that parameter so Seikika uses the system trust store. A direct connection preserves the session-level advisory lock Seikika uses to keep action execution on one instance. Hyperdrive and PgBouncer transaction pooling cannot preserve that lock. [PlanetScale billing through Cloudflare](https://developers.cloudflare.com/changelog/post/2026-06-18-planetscale-databases-cloudflare-billing/) · [Hyperdrive connection pooling](https://developers.cloudflare.com/hyperdrive/concepts/connection-pooling/)
 
 ## Prepare your portal
 
@@ -42,22 +42,45 @@ Run the deployment commands from `$deployment`. The staging helper selects the D
 
 When a release includes SQLx TLS support, you can stage its checksum-verified Linux `amd64` binaries in place of building Seikika from source. [Stage release archives](../../scripts/stage-image-archives.sh)
 
-## Deploy from GitHub Actions
+## Deploy with Cloudflare Workers Builds
 
-The [Cloudflare portal workflow](../../.github/workflows/cloudflare-deploy.yml) builds the parent portal under `seikika-forks/`. To deploy a different manifest, stage that portal in the workflow checkout and update the first argument to `stage.sh`. The child projects can run their repository checks with `contents: read`. The parent reads their manifests and actions from public Git branches.
+Workers Builds compiles the checked-out Seikika revision and deploys the Worker and Container. The Cloudflare Workers & Pages GitHub App only needs access to the parent repository. Child repositories publish their public manifests and use GitHub Actions for repository checks. [GitHub integration](https://developers.cloudflare.com/workers/ci-cd/builds/git-integration/github-integration/)
 
-1. Create separate Cloudflare Workers for staging and production. Give each a dedicated database or database branch and its own `DATABASE_URL` and `SEIKIKA_SIGNING_KEY` runtime secrets. Complete the provisioning of Containers access and any custom domains with an account administrator.
-2. Create an account-owned API token for each environment. Use Workers Editor on the existing Worker and Containers Write on its account. If the workflow changes a route or custom domain, grant Workers Routes Write on the affected zone.
-3. In the parent repository, configure GitHub environments named `staging` and `production`. Select `main` as each environment's deployment branch. Require pull request checks on `main`. Put the following settings in each environment.
+Start with a separate Worker such as `seikika-portal-staging`. Create a staging PostgreSQL database or branch and add the direct connection URL and a signing seed as `DATABASE_URL` and `SEIKIKA_SIGNING_KEY` under **Settings → Variables & Secrets** for this Worker. Select **Production** within that Worker's settings to apply them to its tracked-branch deployment. Cloudflare also uses the term **Production branch** for the branch that deploys the live version of each Worker, including a staging Worker.
 
-| Setting | Where to put it | Value |
-| --- | --- | --- |
-| `CLOUDFLARE_API_TOKEN` | Environment secret | The Cloudflare deployment token for that Worker |
-| `CLOUDFLARE_ACCOUNT_ID` | Environment variable | ID of the account containing the Worker |
-| `CLOUDFLARE_WORKER_NAME` | Environment variable | Name of that environment's existing Worker |
-| `SEIKIKA_URL` | Environment variable | HTTPS portal origin whose `/readyz` endpoint the runner can reach |
+In the Worker's **Settings → Build**, connect the GitHub repository and use these settings.
 
-From the **Cloudflare portal** workflow, run **staging** from `main`. The workflow stages the release binaries, deploys the Worker and Container, and waits for a successful readiness response. Confirm the expected child actions using the verification steps below. Repeat for **production**. To deploy production automatically on subsequent changes to the portal or its build inputs on `main`, set the repository-level Actions variable `CLOUDFLARE_AUTO_DEPLOY` to `true`. [GitHub deployment environments](https://docs.github.com/en/actions/how-tos/deploy/configure-and-manage-deployments/manage-environments) · [Cloudflare Worker permissions](https://developers.cloudflare.com/workers/authorization/workers/) · [Container deployment](https://developers.cloudflare.com/containers/guides/deploy/)
+| Setting | Value |
+| --- | --- |
+| Repository | `seikika/seikika` |
+| Root directory | `examples/cloudflare-containers` |
+| Production branch | A trusted staging branch with this example, such as `codex/cloudflare-containers` while reviewing PR #142 |
+| Build command | `bash build.sh` |
+| Deploy command | `cd .build && npm exec -- wrangler deploy` |
+| Preview command | `cd .build && npm exec -- wrangler preview` |
+| Build variable | `SKIP_DEPENDENCY_INSTALL=1` |
+| API token | Cloudflare-managed build token |
+
+The build script uses the name of the connected Worker in the staged Wrangler configuration. The build script compiles with the repository's pinned Rust toolchain, stages the portal under `.build`, and installs the locked Wrangler dependencies. It uses `seikika-forks/` by default. Set the build command to `bash build.sh /path/to/portal` or pass a path relative to this example directory to stage another checked-out manifest. [Build settings](https://developers.cloudflare.com/workers/ci-cd/builds/configuration/) · [Worker name override](https://developers.cloudflare.com/workers/ci-cd/builds/troubleshoot/#workers-name-requirement)
+
+If a build gets a Cloudflare permission error publishing the Container, inspect the build token's permissions. A custom token selected in the Worker's Builds settings needs Workers Editor for the existing Worker, and Containers Write for its account. Add Workers Routes Write for any zone whose routes the deploy changes. Keep the token in Cloudflare's build settings and the runtime secrets in the Worker. [Build token configuration](https://developers.cloudflare.com/workers/ci-cd/builds/configuration/#api-token) · [Worker permissions](https://developers.cloudflare.com/workers/authorization/workers/)
+
+Verify the staging rollout before creating the production Worker. Use a separate database or branch and a separate signing key for production. Connect its full deploy to `main` once the example has landed there.
+
+### Preview a trusted branch
+
+Start with preview builds disabled while you verify the tracked-branch deployment. The Wrangler configuration declares a Container and Durable Object binding for each Preview. Use `wrangler preview` so each Preview gets its own image, Container application, and namespace. [Container Preview isolation](https://developers.cloudflare.com/workers/previews/resources/#containers)
+
+1. Protect the Preview URLs with Cloudflare Access and allow your testers. Treat every branch that can deploy a Preview as trusted code.
+2. Enable **Preview Builds** on the staging Worker and push a pilot branch other than its tracked branch. In Workers Builds, preview builds apply to non-production branches of the connected repository.
+3. Give the pilot Preview a dedicated test database or database branch and a different signing seed. Run the commands below from the example directory after `npm ci --ignore-scripts`. Replace the Worker and Preview names with those in the dashboard. Repeat with separate credentials for other Previews that will run concurrently. Seikika keeps an advisory lock in PostgreSQL, so sharing a database can keep one Container from becoming ready.
+
+```sh
+npm exec -- wrangler preview secret put DATABASE_URL --worker-name seikika-portal-staging --name preview-pilot
+npm exec -- wrangler preview secret put SEIKIKA_SIGNING_KEY --worker-name seikika-portal-staging --name preview-pilot
+```
+
+4. Open the Preview URL posted on the PR. Check `/readyz` and authenticated child discovery before expanding preview use. Delete the Preview when finished and check for a leftover Container application. [Preview secrets](https://developers.cloudflare.com/workers/previews/configuration/#secrets) · [Preview cleanup](https://developers.cloudflare.com/workers/previews/resources/#container-application-cleanup)
 
 ## Expose the portal
 
@@ -71,7 +94,7 @@ printf '%s\n' "$SEIKIKA_SIGNING_KEY" | npm exec -- wrangler secret put SEIKIKA_S
 npm exec -- wrangler deploy
 ```
 
-The defaults serve the Worker on `workers.dev` and use Seikika personal access tokens for API clients. For an interactive portal, provision a custom domain and a Cloudflare Access application for it. Set `workers_dev = false` and leave `preview_urls = false`. Add the domain as a Wrangler custom-domain route, set `SEIKIKA_AUTH_MODE` to `cloudflare-access`, and add `SEIKIKA_CF_TEAM_DOMAIN` (the HTTPS issuer URL without a trailing slash) and `SEIKIKA_AUDIENCE` (the Access application audience) under `[vars]`. Seikika validates the signed Access assertion. [Configure Seikika access](../../site/src/content/docs/operators/access.md) · [Cloudflare Worker custom domains](https://developers.cloudflare.com/workers/configuration/routing/custom-domains/)
+The defaults serve the Worker on `workers.dev` and use Seikika personal access tokens for API clients. For an interactive portal, provision a custom domain and a Cloudflare Access application for it. Set `workers_dev = false` and `preview_urls = false` if you want to use only the custom-domain hostname. Configure Access for any Preview hostnames you enable. Add the domain as a Wrangler custom-domain route, set `SEIKIKA_AUTH_MODE` to `cloudflare-access`, and add `SEIKIKA_CF_TEAM_DOMAIN` (the HTTPS issuer URL without a trailing slash) and `SEIKIKA_AUDIENCE` (the Access application audience) under `[vars]`. Seikika validates the signed Access assertion. [Configure Seikika access](../../site/src/content/docs/operators/access.md) · [Cloudflare Worker custom domains](https://developers.cloudflare.com/workers/configuration/routing/custom-domains/)
 
 ## Verify a rollout
 

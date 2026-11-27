@@ -2,7 +2,7 @@ name = "seikika-portal"
 main = "worker.mjs"
 compatibility_date = "2026-11-26"
 workers_dev = true
-preview_urls = false
+preview_urls = true
 
 [vars]
 SEIKIKA_AUTH_MODE = "token"
@@ -20,3 +20,16 @@ class_name = "SeikikaContainer"
 [[migrations]]
 tag = "v1"
 new_sqlite_classes = ["SeikikaContainer"]
+
+[previews.vars]
+SEIKIKA_AUTH_MODE = "token"
+
+[[previews.containers]]
+class_name = "SeikikaContainer"
+image = "./Dockerfile"
+instance_type = "standard-2"
+max_instances = 1
+
+[[previews.durable_objects.bindings]]
+name = "SEIKIKA"
+class_name = "SeikikaContainer"
