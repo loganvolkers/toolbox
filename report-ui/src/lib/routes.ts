@@ -128,6 +128,15 @@ export function catalogEntityPath(data: CatalogReport, id: string): string {
   }
 }
 
+/** Give old catalog detail links the same address as links from the report sections. */
+export function canonicalDetailHash(data: CatalogReport, hash: string): string {
+  if (data.publicCatalog || !hash.startsWith("#entity/")) return hash;
+  const { id } = parseHash(hash);
+  if (!id || !data.metaDetails[id]) return hash;
+  const query = hash.indexOf("?");
+  return "#" + catalogEntityPath(data, id) + (query >= 0 ? hash.slice(query) : "");
+}
+
 /** Resolve catalog and section links to the same detail and keep their existing URL formats. */
 export function reportRoute(data: CatalogReport, route: Route): Route {
   if (route.mode === "campaigns") {

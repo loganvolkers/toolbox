@@ -43,7 +43,7 @@ const contracts = {
       ["Campaign", "campaign:seikika/cli-skill-coverage", "campaign/cli-skill-coverage", "CLI skills present"],
       ["Track", "track:seikika/delivery", "track/ci-and-supply-chain", "CI and supply chain"],
       ["Scorecard", "scorecard:seikika/vs-backstage-capabilities", "compare/vs-backstage-capabilities", "Every factor"],
-      ["Rubric", "rubric:seikika/assessment-quality", "rubric/rubric%3Aseikika%2Fassessment-quality", "Rubric criteria"],
+      ["Rubric", "rubric:seikika/testing-contract-quality", "rubric/rubric%3Aseikika%2Ftesting-contract-quality", "Rubric criteria"],
       ["Assessment", "assessment:crate-design/crate:seikika-expr", "assessment/assessment%3Acrate-design%2Fcrate%3Aseikika-expr", "Criterion results"],
       ["Action", "action:seikika/Review skill", "action/action%3Aseikika%2FReview%20skill", "Review skill"],
     ];
@@ -68,9 +68,18 @@ const contracts = {
       assert.equal(await body.innerText(), detail, `${kind} detail from the catalog`);
       await backToKind.click();
       await list.waitFor();
-      await navigate("entity/" + encodeURIComponent(id));
+      const query = kind === "Rubric" ? "?q=testing%20contract" : "";
+      await navigate("entity/" + encodeURIComponent(id) + query);
+      await page.waitForURL(url => url.hash === "#" + path + query);
       await backToKind.waitFor();
       assert.equal(await body.innerText(), detail, `${kind} detail from an existing entity link`);
+      if (kind === "Rubric") {
+        await page.goBack();
+        await list.waitFor();
+        await page.goForward();
+        await page.waitForURL(url => url.hash === "#" + path + query);
+        await backToKind.waitFor();
+      }
     }
     await page.getByRole("tab", { name: /^Campaigns/ }).click();
     await body.getByRole("link", { name: "Browse Campaign in Catalog" }).waitFor();
@@ -87,6 +96,11 @@ const contracts = {
     await navigate("entity/" + encodeURIComponent("scorecard:example/maintainer-skill"));
     await body.getByText("Example portal catalog field", { exact: true }).waitFor();
     assert.equal(await body.getByRole("heading", { name: "Catalog details" }).count(), 0);
+  },
+  "pages-assessments--rubric-detail": async (page) => {
+    await page.waitForURL(url => url.hash === "#rubric/rubric%3Aseikika%2Ftesting-contract-quality");
+    await page.getByRole("heading", { name: "Testing contract quality", exact: true }).waitFor();
+    await page.getByRole("heading", { name: "Rubric criteria", exact: true }).waitFor();
   },
   "components--campaign-bars": async (page) => {
     const segments = await page.locator(".kpi-bar.short span.hollow").evaluateAll(

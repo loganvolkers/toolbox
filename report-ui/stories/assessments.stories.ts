@@ -6,7 +6,7 @@ export default { title: "Pages/Assessments" };
 
 const data = fixture(seikika);
 const id = "assessment:crate-design/crate:seikika-expr";
-const rubric = "rubric:seikika/assessment-quality";
+const rubric = "rubric:seikika/testing-contract-quality";
 const fields = data.entities![id].fields;
 const timed = {
   ...data,
@@ -23,7 +23,7 @@ export const ReviewDetail = page(data, "assessment/" + encodeURIComponent("asses
 export const TimedRun = page(timed, "assessments");
 export const TimedRunDetail = page(timed, "assessment/" + encodeURIComponent(id));
 export const Rubrics = page(data, "rubrics");
-export const RubricDetail = page(data, "rubric/" + encodeURIComponent(rubric));
+export const RubricDetail = page(data, "entity/" + encodeURIComponent(rubric));
 export const NoAssessments = page(fixture(openfga), "assessments");
 export const MissingRun = page(data, "assessment/missing");
 export const FederatedRuns = page({
