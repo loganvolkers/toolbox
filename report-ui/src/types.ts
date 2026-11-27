@@ -141,6 +141,8 @@ export interface ReportData {
   children?: ReportChild[];
   entities?: Record<string, ReportEntity>;
   assessmentKinds?: string[];
+  /** Assessment entities after combining reports, where the same kind can have different mappings. */
+  assessmentIds?: string[];
   rubrics?: Record<string, Rubric>;
   sources?: Record<string, { title: string; local?: boolean; repository?: boolean; commit?: string; error?: string }>;
   entitySources?: Record<string, { source: string; original: string }>;

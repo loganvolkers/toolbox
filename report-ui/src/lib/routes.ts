@@ -2,16 +2,15 @@ import type { ReportData } from "../types";
 import { el, enc, link } from "./dom";
 import { known } from "./levels";
 import { title } from "./rings";
+import type { AssessmentFilters } from "./assessments";
 
-export interface Query {
-  q?: string;
+export interface Query extends AssessmentFilters {
   level?: string;
   outcome?: string;
   rule?: string;
   entity?: string;
   group?: string;
   source?: string;
-  rubric?: string;
 }
 
 export interface Route {
@@ -31,7 +30,7 @@ export function parseHash(hash: string): Route {
   var qi = h.indexOf("?");
   if (qi >= 0) {
     var params = new URLSearchParams(h.slice(qi + 1));
-    ["q", "level", "outcome", "rule", "entity", "group", "source", "rubric"].forEach(function (k) {
+    ["q", "level", "outcome", "rule", "entity", "group", "source", "rubric", "verdict"].forEach(function (k) {
       if (params.has(k)) query[k as keyof Query] = params.get(k) || "";
     });
     h = h.slice(0, qi);

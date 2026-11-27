@@ -95,7 +95,7 @@ export function aggregateReport(parent: ReportData): ReportData {
   const out: ReportData = {
     ...parent, catalog: map(), scorecards: map(), scores: map(), campaigns: map(), tracks: map(),
     entityOverview: map(), entities: map(), kinds: map(), unassessed: map(), comparisons: map(), rubrics: map(),
-    sources: map(), entitySources: map(), actions: [], kindGroups: [],
+    sources: map(), entitySources: map(), actions: [], kindGroups: [], assessmentIds: [],
   };
   const sources = out.sources!;
   const entitySources = out.entitySources!;
@@ -113,7 +113,6 @@ export function aggregateReport(parent: ReportData): ReportData {
   }
   const matched = new Set<ReportAction>();
   const grouped = new Set<string>();
-  const assessmentKinds = new Set<string>();
   function add(doc: ReportData, key: string, path: string[], depth: number) {
     const mapped = new Map<string, string>();
     function id(original: string) {
@@ -128,12 +127,13 @@ export function aggregateReport(parent: ReportData): ReportData {
     }
     const owner = <T>(value: T) => typeof value === "string" && doc.entityOverview?.[value] ? id(value) : value;
     for (const [kind, metadata] of entries(doc.kinds)) out.kinds![kind] ??= metadata;
-    for (const kind of doc.assessmentKinds ?? (doc.catalog.Assessment ? ["Assessment"] : [])) assessmentKinds.add(kind);
+    const assessmentKinds = new Set(doc.assessmentKinds ?? (doc.catalog.Assessment ? ["Assessment"] : []));
     for (const [kind, ids] of entries(doc.catalog)) {
       const values = out.catalog[kind] ??= [];
       for (const original of [...new Set(ids)]) {
         const entity = id(original);
         values.push(entity);
+        if (assessmentKinds.has(kind)) out.assessmentIds!.push(entity);
         const overview = doc.entityOverview?.[original];
         const repository = !path.length && parent.organization
           ? overview?.repository ?? (kind === "Repository" ? overview?.name : undefined)
@@ -226,7 +226,6 @@ export function aggregateReport(parent: ReportData): ReportData {
     }
   }
   add(parent, parentKey, [], 0);
-  out.assessmentKinds = [...assessmentKinds];
   for (const action of parent.actions ?? []) {
     if (!action.portal || matched.has(action)) continue;
     const key = "child:" + JSON.stringify([action.portal.key]);

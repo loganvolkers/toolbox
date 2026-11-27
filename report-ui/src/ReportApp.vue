@@ -246,7 +246,7 @@ onUnmounted(() => {
     <div id="report-body" ref="content" tabindex="-1" :role="active ? 'tabpanel' : undefined" :aria-labelledby="active ? 'tab-' + active : undefined">
       <ReportActions v-if="route.mode === 'actions'" :data="data" :entity="route.query?.entity" :request="requestAction" />
       <div v-else-if="assessmentMode" class="view">
-        <AssessmentView :data="data" :mode="assessmentMode" :id="route.id" :filter="route.query?.rubric" />
+        <AssessmentView :data="data" :mode="assessmentMode" :id="route.id" :filters="route.query" />
       </div>
       <ReportView v-else :data="data" :summary="summary" :route="route" @ready="ready" />
     </div>

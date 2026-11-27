@@ -5310,6 +5310,9 @@
       "doc:docs/audits/agentic-assessments-2026-11-26.md": {
         "level": "silver"
       },
+      "doc:docs/audits/assessment-viewer-2026-11-27.md": {
+        "level": "silver"
+      },
       "doc:docs/audits/astro-vue-portal-2026-11-25.md": {
         "level": "silver"
       },

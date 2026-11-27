@@ -4,7 +4,8 @@ import LevelBadge from "@seikika/ui/components/LevelBadge.vue";
 import PageHeader from "@seikika/ui/components/PageHeader.vue";
 import SectionCard from "@seikika/ui/components/SectionCard.vue";
 import AssessmentScores from "./AssessmentScores.vue";
-import { assessmentIndex, hasRunTime, rubricTitle, runDate, uniqueLinks, verdictLabel } from "./lib/assessments";
+import { assessmentIndex, hasRunTime, rubricTitle, ruleProgress, runDate, uniqueLinks, verdictLabel, type AssessmentFilters } from "./lib/assessments";
+import { kindTitle } from "./lib/kind-title";
 import type { ReportData } from "./types";
 import "./assessments.css";
 
@@ -12,7 +13,7 @@ const props = defineProps<{
   data: ReportData;
   mode: "assessments" | "assessment" | "rubrics" | "rubric";
   id?: string;
-  filter?: string;
+  filters?: AssessmentFilters;
   portal?: boolean;
 }>();
 
@@ -25,10 +26,9 @@ const metaScore = computed(() => run.value?.scores.find(item => item.name.split(
   ?? run.value?.scores.find(item => item.name.split("/").at(-1) !== "review-assessment"));
 const reviewScore = computed(() => run.value?.scores.find(item => item.name.split("/").at(-1) === "review-assessment"));
 const reviewState = computed(() => {
-  if (run.value?.rubricName === "assessment-quality") return "No further review";
-  if (run.value?.reviewState === "stale") return "Stale review";
+  if (run.value?.rubricName === "assessment-quality") return "Reviews stop here";
+  if (run.value?.reviewState === "stale" || run.value?.sameAssessor) return "No current independent review";
   if (run.value?.reviewVerdict) return "Current independent review";
-  if (run.value?.sameAssessor) return "Same assessor";
   if (review.value) return "Independence unverified";
   return run.value?.reviewState === "missing" ? "No review recorded" : "Review status unavailable";
 });
@@ -60,12 +60,25 @@ const selectedVerdict = ref("");
 const query = ref("");
 const pageSize = 12;
 const limit = ref(pageSize);
-watch(() => [props.mode, props.filter], () => {
-  selected.value = props.filter ?? "";
-  selectedVerdict.value = "";
-  query.value = "";
+const verdictFilter = ["pass", "fail", "unsure"] as const;
+watch(() => [props.mode, props.filters], () => {
+  selected.value = props.filters?.rubric ?? "";
+  selectedVerdict.value = verdictFilter.find(item => item === props.filters?.verdict) ?? "";
+  query.value = props.filters?.q ?? "";
 }, { immediate: true });
-watch([selected, selectedVerdict, query], () => { limit.value = pageSize; });
+watch([selected, selectedVerdict, query], () => {
+  limit.value = pageSize;
+  if (props.mode !== "assessments") return;
+  const current = new URL(location.href);
+  if (props.portal && current.pathname.replace(/\/$/, "") !== "/assessments") return;
+  const params = props.portal ? current.searchParams : new URLSearchParams();
+  for (const [key, value] of [["rubric", selected.value], ["verdict", selectedVerdict.value], ["q", query.value]]) {
+    if (value) params.set(key, value);
+    else params.delete(key);
+  }
+  if (!props.portal) current.hash = "assessments" + (params.size ? "?" + params : "");
+  history.replaceState(history.state, "", current);
+});
 const filtered = computed(() => {
   const term = query.value.trim().toLowerCase();
   return runs.value.filter(item =>
@@ -77,7 +90,6 @@ const filtered = computed(() => {
 function clear() {
   selected.value = selectedVerdict.value = query.value = "";
 }
-const verdictFilter = ["pass", "fail", "unsure"] as const;
 const order = { fail: 0, unsure: 1, pass: 2, unknown: 3 };
 const results = computed(() => [...(run.value?.criteria ?? [])].sort((a, b) => order[a.verdict] - order[b.verdict]));
 const passed = computed(() => results.value.filter(result => result.verdict === "pass").length);
@@ -113,8 +125,8 @@ const runRubric = computed(() => run.value?.rubricName ? rubricTitle(run.value.r
         <p v-else>This portal has no published assessment results or rubrics in this snapshot.</p>
         <a v-if="rubrics.length" :href="view('rubrics')">Browse rubrics</a>
       </SectionCard>
-      <SectionCard v-else title="Recent runs" :heading="sectionHeading">
-        <p class="assessment-muted">Latest published result for each subject and rubric, newest first.</p>
+      <section v-else class="seikika-section" aria-label="Recent runs">
+        <p class="assessment-muted">Latest published result for each subject and rubric, newest first. Times appear when recorded.</p>
         <div class="assessment-filters">
           <label>Search runs <input v-model="query" type="search" placeholder="Subject, rubric or assessor"></label>
           <label v-if="rubrics.length">Rubric
@@ -146,7 +158,7 @@ const runRubric = computed(() => run.value?.rubricName ? rubricTitle(run.value.r
         </ul>
         <p v-else>No runs match your filters. <button type="button" class="assessment-button" @click="clear">Clear filters</button></p>
         <button v-if="limit < filtered.length" type="button" class="assessment-button" @click="limit += pageSize">Show more runs</button>
-      </SectionCard>
+      </section>
     </template>
 
     <template v-else-if="mode === 'rubrics'">
@@ -157,7 +169,7 @@ const runRubric = computed(() => run.value?.rubricName ? rubricTitle(run.value.r
             <div class="assessment-row">
               <div class="assessment-row-main">
                 <a class="assessment-primary" :href="view('rubric', item.id)">{{ rubricTitle(item.definition.name) }}</a>
-                <p class="assessment-muted">{{ item.definition.kind }}<template v-if="item.source"> · {{ item.source }}</template></p>
+                <p class="assessment-muted">{{ kindTitle(data, item.definition.kind) }}<template v-if="item.source"> · {{ item.source }}</template></p>
               </div>
               <div class="assessment-muted">{{ item.definition.criteria.length }} criteria · {{ item.runs.length }} {{ item.runs.length === 1 ? 'run' : 'runs' }}</div>
             </div>
@@ -170,7 +182,7 @@ const runRubric = computed(() => run.value?.rubricName ? rubricTitle(run.value.r
     <template v-else-if="mode === 'rubric' && rubric">
       <PageHeader :title="rubricTitle(rubric.definition.name)" :description="rubric.definition.description ?? undefined" :heading="heading">
         <template #meta>
-          <p class="assessment-muted">Subject kind · {{ rubric.definition.kind }}<template v-if="rubric.source"> · {{ rubric.source }}</template></p>
+          <p class="assessment-muted">Subject · {{ kindTitle(data, rubric.definition.kind) }}<template v-if="rubric.source"> · {{ rubric.source }}</template></p>
           <ul v-if="links.length" class="assessment-list assessment-doc-links assessment-meta" aria-label="Rubric documentation">
             <li v-for="link in links" :key="link.url"><a :href="link.url">{{ link.title }}</a></li>
           </ul>
@@ -220,12 +232,14 @@ const runRubric = computed(() => run.value?.rubricName ? rubricTitle(run.value.r
         </div>
         <div>
           <span class="assessment-muted">Scorecard checks</span>
-          <p v-if="metaScore"><LevelBadge :level="metaScore.score.level" /> <span class="assessment-muted">· {{ metaScore.definition.title || rubricTitle(metaScore.name) }}</span></p>
-          <p v-if="reviewScore"><LevelBadge :level="reviewScore.score.level" /> <span class="assessment-muted">· Review checks</span></p>
+          <div v-for="item in [metaScore, reviewScore].filter(item => item != null)" :key="item.name" class="assessment-score-summary">
+            <span>{{ item.definition.title || rubricTitle(item.name) }}</span>
+            <p><LevelBadge :level="item.score.level" /><span v-if="ruleProgress(item.score)" class="assessment-muted"> · {{ ruleProgress(item.score) }}</span></p>
+          </div>
           <p v-if="!metaScore && !reviewScore">No scores available</p>
         </div>
         <div class="assessment-review-summary">
-          <span class="assessment-muted">Independent review</span>
+          <span class="assessment-muted">Review of this assessment</span>
           <strong>{{ reviewState }}</strong>
           <p v-if="review || run.reviewVerdict">
             <span v-if="review && review.verdict !== 'unknown'">Recorded verdict <strong>{{ verdictLabel(review.verdict) }}</strong></span>
@@ -233,9 +247,10 @@ const runRubric = computed(() => run.value?.rubricName ? rubricTitle(run.value.r
             <template v-if="review?.at"> · <time :datetime="review.at">{{ runDate(review.at) }}</time></template>
           </p>
           <p v-if="run.reviewState === 'stale' || run.sameAssessor" class="assessment-muted">
-            <template v-if="run.reviewState === 'stale'">The assessment changed after the review.</template>
-            <template v-if="run.sameAssessor"> Same assessor.</template>
+            <template v-if="run.reviewState === 'stale'">Stale review. The assessment changed after it was written.</template>
+            <template v-if="run.sameAssessor"> Reviewed by the same assessor.</template>
           </p>
+          <p v-else-if="run.rubricName === 'assessment-quality'" class="assessment-muted">This record is itself an assessment review.</p>
           <a v-if="review" :href="view('assessment', review.id)">Read the review</a>
         </div>
       </div>

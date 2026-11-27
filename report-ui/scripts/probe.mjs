@@ -37,11 +37,17 @@ const contracts = {
     await page.getByRole("button", { name: "Show more runs" }).click();
     assert.ok(await page.locator(".assessment-runs li").count() > 12);
     await page.getByRole("searchbox", { name: "Search runs" }).fill("seikika-expr");
-    await page.locator(".assessment-runs").getByRole("link", { name: "seikika-expr", exact: true }).click();
+    const run = page.locator(".assessment-runs").getByRole("link", { name: "seikika-expr", exact: true });
+    await run.click();
+    await page.getByRole("heading", { name: "Criterion results" }).waitFor();
+    await page.goBack();
+    await page.getByRole("searchbox", { name: "Search runs" }).waitFor();
+    assert.equal(await page.getByRole("searchbox", { name: "Search runs" }).inputValue(), "seikika-expr");
+    await run.click();
     await page.getByRole("heading", { name: "Criterion results" }).waitFor();
     await page.getByRole("heading", { name: "Assessment quality scorecards" }).waitFor();
     await page.getByText("4 of 4 criteria passed", { exact: true }).waitFor();
-    await page.getByText("Stale review", { exact: true }).waitFor();
+    await page.getByText("No current independent review", { exact: true }).waitFor();
     await page.getByText("Recorded verdict", { exact: false }).waitFor();
     await page.locator(".assessment-criteria summary").first().focus();
     await page.keyboard.press("Enter");
@@ -52,7 +58,7 @@ const contracts = {
     await page.getByRole("heading", { name: "Rubric criteria" }).waitFor();
     assert.match(await page.getByRole("link", { name: "How assessments are reviewed" }).getAttribute("href"), /^https:/);
     await page.getByRole("link", { name: /^View \d+ run/ }).click();
-    await page.getByRole("heading", { name: "Recent runs" }).waitFor();
+    await page.getByRole("region", { name: "Recent runs" }).waitFor();
     assert.equal(await page.getByRole("combobox", { name: "Rubric" }).inputValue(), "rubric:seikika/assessment-quality");
     await page.getByRole("searchbox", { name: "Search runs" }).fill("this-does-not-match");
     await page.getByRole("button", { name: "Clear filters" }).click();
@@ -73,6 +79,18 @@ const contracts = {
     await page.getByRole("heading", { name: "No assessment runs yet" }).waitFor();
     await page.getByRole("link", { name: "Rubrics 0" }).click();
     await page.getByText("This snapshot has no rubric definitions.").waitFor();
+  },
+  "pages-assessments--federated-runs": async (page) => {
+    await page.getByRole("searchbox", { name: "Search runs" }).fill("seikika-expr");
+    const run = page.locator(".assessment-runs").getByRole("link", { name: "seikika-expr", exact: true });
+    assert.match(await run.getAttribute("href"), /^#assessment\/%40seikika/);
+    await run.click();
+    await page.getByRole("link", { name: "Crate design rubric" }).click();
+    await page.getByRole("link", { name: "Seikika workspace and crate boundaries" }).waitFor();
+    await page.getByRole("heading", { name: "Rubric quality" }).waitFor();
+    await page.getByRole("link", { name: "Assessments", exact: true }).click();
+    await page.getByRole("searchbox", { name: "Search runs" }).fill("unrelated");
+    await page.getByText("No runs match your filters.").waitFor();
   },
   "hosted-portal--assessments": async (page) => {
     assert.equal(await page.getByRole("link", { name: "Assessments", exact: true }).getAttribute("href"), "/assessments");

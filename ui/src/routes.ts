@@ -1,9 +1,11 @@
+import type { AssessmentFilters } from "../../report-ui/src/lib/assessments";
+
 export type PortalRoute =
   | { page: "home" | "ops"; api: string }
   | { page: "search"; api: string; query: string }
   | { page: "catalog"; api: string; id: string; filter: string }
   | { page: "entity" | "scorecard" | "campaign"; api: string; id: string }
-  | { page: "assessments"; api: string; mode: "assessments" | "assessment" | "rubrics" | "rubric"; id?: string; filter?: string }
+  | { page: "assessments"; api: string; mode: "assessments" | "assessment" | "rubrics" | "rubric"; id?: string; filters?: AssessmentFilters }
   | { page: "missing"; api: null };
 
 const encode = encodeURIComponent;
@@ -20,7 +22,11 @@ export function portalRoute(url: URL): PortalRoute {
   if (section === "ops" && !id) return { page: "ops", api: "/v1/views/ops" };
   if (section === "assessments" && segments.length <= 3) {
     const api = "/v1/views/report";
-    if (!id) return { page: "assessments", mode: "assessments", api, filter: url.searchParams.get("rubric") ?? undefined };
+    if (!id) return { page: "assessments", mode: "assessments", api, filters: {
+      q: url.searchParams.get("q") ?? undefined,
+      rubric: url.searchParams.get("rubric") ?? undefined,
+      verdict: url.searchParams.get("verdict") ?? undefined,
+    } };
     if (id === "rubrics") return { page: "assessments", mode: detail ? "rubric" : "rubrics", api, id: detail };
     if (id === "run" && detail) return { page: "assessments", mode: "assessment", api, id: detail };
   }

@@ -26,3 +26,11 @@ export const Rubrics = page(data, "rubrics");
 export const RubricDetail = page(data, "rubric/" + encodeURIComponent(rubric));
 export const NoAssessments = page(fixture(openfga), "assessments");
 export const MissingRun = page(data, "assessment/missing");
+export const FederatedRuns = page({
+  portal: "Engineering portal",
+  catalog: { Assessment: ["assessment:unrelated"] },
+  scorecards: {},
+  scores: {},
+  assessmentKinds: [],
+  children: [{ key: "seikika", title: "Seikika", report: data }],
+}, "assessments");

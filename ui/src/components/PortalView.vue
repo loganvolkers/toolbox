@@ -63,7 +63,7 @@ function filter() {
     </div>
 
     <AssessmentView v-else-if="route.page === 'assessments' && assessmentData"
-      :data="assessmentData" :mode="route.mode" :id="route.id" :filter="route.filter" portal />
+      :data="assessmentData" :mode="route.mode" :id="route.id" :filters="route.filters" portal />
 
     <template v-else-if="route.page === 'home'">
       <PageHeader :title="body.portal?.title ?? 'Seikika'">

@@ -6,6 +6,12 @@ export const verdictLabel = (value: Verdict) => verdictLabels[value];
 const verdict = (value: unknown): Verdict =>
   value === "pass" || value === "fail" || value === "unsure" ? value : "unknown";
 
+export interface AssessmentFilters {
+  q?: string;
+  rubric?: string;
+  verdict?: string;
+}
+
 const text = (value: unknown) => typeof value === "string" && value.trim() ? value.trim() : undefined;
 const strings = (value: unknown) => Array.isArray(value) ? value.filter((item): item is string => typeof item === "string") : [];
 
@@ -36,6 +42,18 @@ export interface AssessmentScore {
   name: string;
   definition: ScorecardDef;
   score: Score;
+}
+export function ruleProgress(score: Score) {
+  const results = Object.values(score.rules ?? {});
+  if (results.length) return results.filter(result => result === "pass").length + " of " + results.length + " rules passed";
+}
+
+export function nextRequirement({ definition, score }: AssessmentScore) {
+  const index = definition.levels.indexOf(score.level);
+  if (index < 0 && score.level !== "none") return;
+  const level = definition.levels[index + 1];
+  const rule = Object.entries(definition.rules).find(([name, rule]) => rule.level === level && score.rules?.[name] === "fail");
+  if (rule) return { level, name: rule[0], title: rule[1].title || rubricTitle(rule[0]) };
 }
 export interface CriterionResult {
   name: string;
@@ -94,7 +112,7 @@ export function runDate(at: string) {
 
 export function assessmentIndex(data: ReportData) {
   const kinds = data.assessmentKinds ?? (data.catalog.Assessment ? ["Assessment"] : []);
-  const ids = [...new Set(kinds.flatMap(kind => data.catalog[kind] ?? []))];
+  const ids = [...new Set(data.assessmentIds ?? kinds.flatMap(kind => data.catalog[kind] ?? []))];
   const visible = new Set(Object.values(data.catalog).flat());
   const original = (id: string) => data.entitySources?.[id]?.original ?? id;
   const source = (id: string) => data.entitySources?.[id]?.source ?? "local";

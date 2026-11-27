@@ -105,6 +105,7 @@
 .assessment-view .assessment-result > div:first-child { box-shadow: inset 3px 0 var(--judged); border-radius: 12px 0 0 12px; }
 .assessment-view .assessment-result > div > span:first-child { display: block; margin-block-end: 3px; }
 .assessment-view .assessment-result .assessment-verdict { font-size: 1.05rem; }
+.assessment-view .assessment-score-summary + .assessment-score-summary { margin-block-start: 8px; }
 .assessment-view .assessment-summary { margin-block: 12px 2px; max-width: 76ch; }
 .assessment-view .assessment-summary p { margin-block-start: 6px; }
 .assessment-view .assessment-detail-grid {

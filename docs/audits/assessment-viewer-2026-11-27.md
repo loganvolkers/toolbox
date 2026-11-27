@@ -28,6 +28,10 @@ Scores follow the rubric order U1–U10 and J1–J4. S is success, P is partial,
 | Round 1 | B | 3 2 2 3 3 3 3 3 3 2 | 2 2 2 2 | S S P S S |
 | Round 1 | C | 3 2 2 2 3 3 3 3 3 2 | 2 2 2 2 | S S P S S |
 | **Round 1 median** | | **3 2 2 3 3 3 3 3 3 2** | **2 2 2 2** | **S S P S S** |
+| Round 2 | A | 3 3 2 3 3 3 3 2 3 3 | 3 2 2 3 | S S S S S |
+| Round 2 | B | 3 2 3 3 3 3 3 3 3 3 | 3 2 2 3 | S S S S S |
+| Round 2 | C | 4 3 2 3 3 3 3 2 3 3 | 3 2 2 3 | S S S S S |
+| **Round 2 median** | | **3 3 2 3 3 3 3 2 3 3** | **3 2 2 3** | **S S S S S** |
 
 ## Findings and fixes
 
@@ -39,9 +43,11 @@ Scores follow the rubric order U1–U10 and J1–J4. S is success, P is partial,
 | 2 | The baseline OpenFGA Catalog required readers to infer both empty inventories. | Show the number of published runs and rubrics and give the empty state the scope of its report snapshot. |
 | 2 | Round 1 hosted screenshots counted four small targets in the list and five in the detail. The current section looked like a regular navigation link. | Give the portal navigation links a minimum target height and mark Assessments as current. |
 | 2 | Review runs in Round 1 led with long catalog IDs. Rubric documentation was below the mobile fold. | Lead with readable subject names and link the backing documentation beside the rubric description. Keep the full identifiers searchable. |
+| 3 | Round 2 readers identified the historical Pass and its staleness. The heading still suggested independent sign-off even though the reviewer was the same assessor. | Lead with the current review status. Put the dated historical verdict and the same-assessor explanation beneath it. Give reviews of assessments their own recorded scope. |
+| 2 | Round 2 readers matched the scorecard names and pass counts by comparing the summary with the rule list. Returning from details could lose the active filters. | Repeat the official scorecard name with the level and count above the fold. Link the first failed requirement for the next level when the result identifies one. Put filters into the run-list URL and verify restoration with browser Back. |
 
 ## Measured changes
 
-The existing 70 stories passed on all four desktop/mobile and light/dark views. Round 1 passed 79 stories across 316 views. Capture metrics had zero serious axe findings and zero mobile overflow in both sets. In the Round 1 report, the recent runs view used 0% monospace text, the run detail was 2,280 px on desktop and the comparable hosted detail was 2,057 px. The baseline comparison did not have a run detail view.
+The baseline passed 70 stories across 280 browser views. Round 1 passed 79 stories across 316 views and Round 2 passed 83 stories across 332 views. Capture metrics had zero serious axe findings and zero mobile overflow in all three sets. In Round 1 the recent runs list used 0% monospace text. From Round 1 to Round 2, desktop run detail fell from 2,280 to 1,495 px in the report and from 2,057 to 1,372 px in the hosted portal. The hosted list and detail went from four and five small targets to zero in both. The baseline had no dedicated run detail.
 
 The panel prioritized visible passed-criterion counts and direct links to evidence. It deferred additional charts because the verdict, scorecard level, and independent review answer separate reader questions and already fit in the summary.
