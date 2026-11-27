@@ -14,6 +14,8 @@ A shared portal needs a validated configuration, a persistent Postgres database,
 3. Configure [authentication and authorization](/operators/access/) and [connector secrets](/operators/secrets/). Keep the service behind HTTPS and limit access to internal endpoints such as `/metrics`. Set `SEIKIKA_CONNECTOR_CONFINEMENT=required` on a host with Landlock if the deployment depends on connector confinement.
 4. Run `seikika validate PATH_TO_PORTAL`, `seikika test PATH_TO_PORTAL`, and `seikika doctor PATH_TO_PORTAL`. Replace `PATH_TO_PORTAL` with the directory that holds the manifest.
 
+If your deployment cannot pull from GHCR, build the container locally from the public release archives. [Build a release image locally](https://github.com/seikika/seikika/blob/main/docs/RELEASING.md#build-a-release-image-locally)
+
 ## Start the service
 
 Set `DATABASE_URL`, the settings for your [authentication mode](/operators/access/), and the connector settings in your service environment. On a source-built host, set the shell variable `PATH_TO_PORTAL` to the absolute path to the portal directory. The following command uses token authentication and binds loopback for a reverse proxy on the same machine.
