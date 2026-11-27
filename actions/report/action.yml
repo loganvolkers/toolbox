@@ -100,7 +100,7 @@ runs:
         h=$(
           {
             sha256sum Cargo.toml Cargo.lock rust-toolchain.toml package.json pnpm-lock.yaml pnpm-workspace.yaml
-            find crates schema ui ui-kit report-ui \
+            find crates ui ui-kit report-ui \
               \( -name target -o -name node_modules -o -name .astro -o -name dist \
                 -o -name storybook-static -o -name ui-dist -o -name report-dist \) -prune \
               -o -type f -print0 | LC_ALL=C sort -z | xargs -0 sha256sum
