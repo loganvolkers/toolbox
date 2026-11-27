@@ -135,6 +135,7 @@ export interface KindGroup {
 
 export interface ReportData {
   portal: string;
+  portalName?: string;
   organization?: string;
   viewer?: string;
   publicCatalog?: boolean;
@@ -162,6 +163,15 @@ export interface ReportData {
   repoRollup?: string[] | null;
 }
 
+export type MetaDetail =
+  | { kind: "Scorecard" | "Campaign" | "Track" | "Rubric"; name: string }
+  | { kind: "Rule"; name: string; rule: string }
+  | { kind: "Assessment" | "Action" };
+
+export interface CatalogReport extends ReportData {
+  metaDetails: Record<string, MetaDetail>;
+}
+
 export interface ActionInput {
   title?: string;
   description?: string;
@@ -187,6 +197,7 @@ export interface ReportAction {
   source?: string;
   target?: string;
   previewOnly?: boolean;
+  catalogId?: string;
 }
 
 export interface ReportChild {

@@ -82,6 +82,13 @@ export const EntityRestricted = story(entityRoute, {
   scores: { readiness: { [id]: { level: "silver" } } },
 });
 export const Scorecard = story("scorecard/readiness");
+const cardId = "scorecard:acme/readiness";
+export const MetaScorecard = story("catalog/Scorecard", {
+  ...report,
+  portalName: "acme",
+  catalog: { ...report.catalog, Scorecard: [cardId] },
+  entities: { ...report.entities, [cardId]: { fields: { name: "readiness" } } },
+});
 export const Campaign = story("campaign/production");
 export const Operations = story("operations");
 export const Assessments = story("assessments", assessments);

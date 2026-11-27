@@ -1,4 +1,4 @@
-import type { ReportData } from "./types";
+import type { CatalogReport } from "./types";
 import type { Summary } from "./lib/summary";
 import { missingTarget, notFound, type Route } from "./lib/routes";
 import { overviewViews } from "./views/overview";
@@ -18,7 +18,7 @@ type Methods = typeof overviewViews & typeof scorecardsViews & typeof tracksView
   typeof campaignsViews & typeof catalogViews & typeof entityViews & typeof ruleViews & typeof compareViews;
 export interface ReportViews extends Methods {}
 
-export function buildView(data: ReportData, summary: Summary, route: Route, catalogIds?: ReadonlySet<string>): HTMLElement {
+export function buildView(data: CatalogReport, summary: Summary, route: Route, catalogIds?: ReadonlySet<string>): HTMLElement {
   const missing = missingTarget(data, route);
   if (missing) return notFound(missing);
   switch (route.mode) {

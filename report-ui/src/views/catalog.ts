@@ -1,6 +1,6 @@
 import type { ReportViews } from "../report-view";
 import type { Summary } from "../lib/summary";
-import type { ReportData } from "../types";
+import type { CatalogReport, ReportData } from "../types";
 import { entitySource, sourceLabel } from "../lib/federation";
 import { barEl, kindParts, legendEl, levelPill, unrunIn } from "../lib/bars";
 import { basisBadge, basisCounts } from "../lib/basis";
@@ -9,6 +9,7 @@ import { el, enc, link } from "../lib/dom";
 import { kindCount, kindDescription, kindGroupsOf, kindTitle, scorecardSplit } from "../lib/kinds";
 import { fill, ownLevel } from "../lib/levels";
 import { shortId, title } from "../lib/rings";
+import { catalogEntityPath, type Query } from "../lib/routes";
 import { memberLinks } from "../lib/rules";
 import { isFailing } from "../lib/status";
 import { scoredKinds } from "../lib/summary";
@@ -30,7 +31,7 @@ function worstEvidence(D: ReportData, cols: string[], id: string) {
 }
 
 export const catalogViews = {
-  catalog(D: ReportData, S: Summary, kind: string | undefined, query: import("../lib/routes").Query, catalogIds?: ReadonlySet<string>) {
+  catalog(D: CatalogReport, S: Summary, kind: string | undefined, query: Query, catalogIds?: ReadonlySet<string>) {
     query = query || {};
     var catalog = D.catalog || {};
     var groups = kindGroupsOf(D);
@@ -119,7 +120,9 @@ export const catalogViews = {
     var drawList = function () {
       var q = search.value.toLowerCase();
       var ids = (catalog[selected] || []).filter(function (id) {
-        return (!catalogIds || catalogIds.has(id)) && (!q || id.toLowerCase().includes(q));
+        const title = D.metaDetails[id] && D.entityOverview?.[id]?.title;
+        return (!catalogIds || catalogIds.has(id))
+          && (!q || id.toLowerCase().includes(q) || typeof title === "string" && title.toLowerCase().includes(q));
       });
       if (!ids.length) {
         list.replaceChildren(
@@ -168,8 +171,8 @@ export const catalogViews = {
           )
         : null;
       var rowOf = function (id) {
-        var short = shortId(id);
-        var r = link("entity/" + enc(id), "erow cols", [
+        var short = (D.metaDetails[id] && D.entityOverview?.[id]?.title as string | undefined) || shortId(id);
+        var r = link(catalogEntityPath(D, id), "erow cols", [
           el("div", { className: "name" }, short, short !== id ? el("small", { textContent: id, title: id }) : null),
           ...(cols.length
             ? cols.map(function (n) {
@@ -460,7 +463,7 @@ export const catalogViews = {
   },
 } satisfies ThisType<ReportViews>;
 
-function federatedList(D: ReportData, kind: string, query: import("../lib/routes").Query, catalogIds?: ReadonlySet<string>) {
+function federatedList(D: CatalogReport, kind: string, query: Query, catalogIds?: ReadonlySet<string>) {
   const ids = D.catalog[kind] ?? [];
   const search = el("input", { type: "search", ariaLabel: "Filter entities by name", value: query.q ?? "" });
   const group = el("select", { ariaLabel: "Group entities" },
@@ -506,7 +509,7 @@ function federatedList(D: ReportData, kind: string, query: import("../lib/routes
       const titleText = (D.entityOverview?.[id]?.title as string | undefined) ?? raw;
       const unavailable = kind === "Workflow" && typeof D.entities?.[id]?.fields.auditError === "string";
       return el("div", { className: "federated-catalog-row" },
-        el("div", {}, link("entity/" + enc(id), "", titleText), el("small", { className: "sub", textContent: entitySource(D, id) })),
+        el("div", {}, link(catalogEntityPath(D, id), "", titleText), el("small", { className: "sub", textContent: entitySource(D, id) })),
         el("ul", { className: standard ? "federated-catalog-score" : "" }, ...kindCards.flatMap(name => {
           const score = D.scores[name]?.[id];
           return score ? [el("li", {},

@@ -1,8 +1,9 @@
-import type { ReportData } from "../types";
+import type { CatalogReport, MetaDetail, ReportData } from "../types";
 import { el, enc, link } from "./dom";
 import { known } from "./levels";
 import { title } from "./rings";
 import type { AssessmentFilters } from "./assessments";
+import { campaignNamesSorted } from "./summary";
 
 export interface Query extends AssessmentFilters {
   level?: string;
@@ -23,6 +24,7 @@ export interface Route {
   rule?: string;
   bare?: boolean;
   query?: Query;
+  catalogId?: string;
 }
 
 export function parseHash(hash: string, extraViews: readonly string[] = []): Route {
@@ -46,6 +48,7 @@ export function parseHash(hash: string, extraViews: readonly string[] = []): Rou
 export function parsePath(h: string): Route {
   if (!h || h === "overview") return { mode: "overview" };
   if (h === "actions") return { mode: "actions" };
+  if (h.startsWith("action/")) return { mode: "action", id: decodeURIComponent(h.slice(7)) };
   if (h === "assessments" || h === "rubrics") return { mode: h };
   if (h.startsWith("assessment/")) return { mode: "assessment", id: decodeURIComponent(h.slice(11)) };
   if (h.startsWith("rubric/")) return { mode: "rubric", id: decodeURIComponent(h.slice(7)) };
@@ -91,6 +94,58 @@ export function trackByPath(D: ReportData, key) {
     return trackPath(D, n) === "track/" + enc(key);
   })[0];
   return hit || key;
+}
+
+type DetailRoute = Route & (
+  | { mode: "scorecard" | "compare" | "campaign" | "tracks"; name: string }
+  | { mode: "rule"; scorecard: string; rule: string }
+  | { mode: "rubric" | "assessment" | "action"; id: string }
+);
+
+function metaRoute(data: ReportData, id: string, detail: MetaDetail): DetailRoute {
+  switch (detail.kind) {
+    case "Scorecard": return { mode: data.comparisons?.[detail.name] ? "compare" : "scorecard", name: detail.name };
+    case "Rule": return { mode: "rule", scorecard: detail.name, rule: detail.rule };
+    case "Track": return { mode: "tracks", name: detail.name };
+    case "Campaign": return { mode: "campaign", name: detail.name };
+    case "Rubric": return { mode: "rubric", id: detail.name };
+    case "Assessment": return { mode: "assessment", id };
+    case "Action": return { mode: "action", id };
+  }
+}
+
+export function catalogEntityPath(data: CatalogReport, id: string): string {
+  const detail = data.metaDetails[id];
+  if (!detail) return "entity/" + enc(id);
+  const route = metaRoute(data, id, detail);
+  switch (route.mode) {
+    case "rule": return "rule/" + enc(route.scorecard) + "/" + enc(route.rule);
+    case "tracks": return trackPath(data, route.name);
+    case "scorecard":
+    case "compare":
+    case "campaign": return route.mode + "/" + enc(route.name);
+    default: return route.mode + "/" + enc(route.id);
+  }
+}
+
+/** Resolve catalog and section links to the same detail and keep their existing URL formats. */
+export function reportRoute(data: CatalogReport, route: Route): Route {
+  if (route.mode === "campaigns") {
+    const name = campaignNamesSorted(data)[0];
+    if (name) route = { ...route, mode: "campaign", name };
+  }
+  if (route.mode === "tracks" && route.name) route = { ...route, name: trackByPath(data, route.name) };
+  if (route.mode === "scorecard" && route.name && data.comparisons?.[route.name]) route = { ...route, mode: "compare" };
+  if (route.mode === "entity" && route.id && data.metaDetails[route.id]) {
+    return { ...metaRoute(data, route.id, data.metaDetails[route.id]), query: route.query, catalogId: route.id };
+  }
+  if (!route.id && !route.name && !route.rule) return route;
+  for (const [id, detail] of Object.entries(data.metaDetails)) {
+    const target = metaRoute(data, id, detail);
+    if (target.mode === route.mode && target.id === route.id && target.name === route.name
+        && target.scorecard === route.scorecard && target.rule === route.rule) return { ...route, catalogId: id };
+  }
+  return route;
 }
 
 export function missingTarget(D: ReportData, route: Route) {

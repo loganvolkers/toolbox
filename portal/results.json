@@ -5328,6 +5328,9 @@
       "doc:docs/audits/reference-docs-2026-11-26.md": {
         "level": "silver"
       },
+      "doc:docs/audits/report-meta-details-2026-11-27.md": {
+        "level": "silver"
+      },
       "doc:docs/audits/sdk-documentation-2026-11-26.md": {
         "level": "silver"
       },

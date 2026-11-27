@@ -1,4 +1,4 @@
-import type { ReportData } from "../types";
+import type { CatalogReport, ReportData } from "../types";
 import { title } from "./rings";
 import { catalogKindsSorted } from "./summary";
 import { fmt, plural } from "./words";
@@ -47,25 +47,22 @@ export function kindCount(D: ReportData, k, n) {
 }
 
 // The Scorecard kind counts more than the Scorecards tab: say what the surplus is wherever its total appears.
-export function scorecardSplit(D: ReportData, k) {
-  if (k !== "Scorecard") return "";
-  var ids = (D.catalog || {})[k] || [];
-  var hits = {};
-  var split = ids.map(function (id) {
-    var m = /^[^:]+:([^/]+)\/(.+)$/.exec(id);
-    if (m && (D.scorecards || {})[m[2]]) hits[m[1]] = (hits[m[1]] || 0) + 1;
-    return m;
-  });
-  var mine = Object.keys(hits).sort(function (a, b) {
-    return hits[b] - hits[a];
-  })[0];
-  var own = 0;
-  var cmp = 0;
-  split.forEach(function (m) {
-    if (!m || m[1] !== mine || !(D.scorecards || {})[m[2]]) return;
-    if ((D.comparisons || {})[m[2]]) cmp++;
-    else own++;
-  });
-  var parts = [fmt(own) + " of this portal's own", cmp ? plural(cmp, "comparison factor") : null, ids.length - own - cmp ? fmt(ids.length - own - cmp) + " in example portals" : null].filter(Boolean);
+export function scorecardSplit(D: ReportData & Partial<Pick<CatalogReport, "metaDetails">>, k: string) {
+  if (k !== "Scorecard" || !D.metaDetails) return "";
+  const ids = D.catalog[k] ?? [];
+  let standards = 0;
+  let comparisons = 0;
+  for (const id of ids) {
+    const detail = D.metaDetails[id];
+    if (detail?.kind !== "Scorecard") continue;
+    if (D.comparisons?.[detail.name]) comparisons++;
+    else standards++;
+  }
+  const examples = ids.length - standards - comparisons;
+  const parts = [
+    standards ? plural(standards, "report standard") : null,
+    comparisons ? plural(comparisons, "comparison factor") : null,
+    examples ? fmt(examples) + " from described portals" : null,
+  ].filter(Boolean);
   return parts.length > 1 ? " (" + parts.join(", ") + ")" : "";
 }

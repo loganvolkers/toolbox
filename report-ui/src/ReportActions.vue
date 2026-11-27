@@ -5,7 +5,8 @@ import type { ActionRequest } from "./action-request";
 import type { ActionInput, ReportAction, ReportData } from "./types";
 import { sourceLabel } from "./lib/federation";
 
-const props = defineProps<{ data: ReportData; entity?: string; request?: ActionRequest }>();
+const props = defineProps<{ data: ReportData; id?: string; entity?: string; request?: ActionRequest }>();
+const emit = defineEmits<{ select: [id: string] }>();
 const chosen = ref<number>(0);
 const target = ref("");
 const inputs = ref<Record<string, string | boolean>>(Object.create(null));
@@ -22,7 +23,9 @@ const action = computed(() => actions.value[chosen.value]);
 const live = computed(() => Boolean(props.request && action.value && !action.value.previewOnly));
 const properties = computed(() => Object.entries(action.value?.inputs?.properties ?? {}));
 
-watch(actions, () => { chosen.value = 0; });
+watch([actions, () => props.id], () => {
+  chosen.value = props.id ? actions.value.findIndex(action => action.catalogId === props.id) : 0;
+}, { immediate: true });
 watch([action, () => props.entity], () => {
   target.value = props.entity ?? action.value?.entities[0] ?? "";
   inputs.value = Object.assign(Object.create(null), Object.fromEntries(properties.value.map(([name, item]) => {
@@ -42,6 +45,12 @@ watch([action, target, inputs], () => {
 function title(item: ReportAction) {
   const source = sourceLabel(props.data, item.source) || item.portal?.name;
   return item.name + (source ? " · " + source : "");
+}
+
+function selectAction(event: Event) {
+  const { value } = event.target as HTMLSelectElement;
+  const id = actions.value[Number(value)]?.catalogId;
+  if (id) emit("select", id);
 }
 
 function label(id: string) {
@@ -131,13 +140,15 @@ async function submit(dispatch: boolean) {
   <section class="report-actions">
     <h2>Actions</h2>
     <p v-if="!actions.length" class="sub">No actions are available for this selection.</p>
-    <template v-else-if="action">
+    <template v-else>
       <label class="report-field">Action
-        <select v-model.number="chosen">
+        <select v-model.number="chosen" @change="selectAction">
+          <option v-if="!action" :value="-1" disabled>Choose an action</option>
           <option v-for="(item, index) in actions" :key="index" :value="index">{{ title(item) }}</option>
         </select>
       </label>
-      <SectionCard :title="action.name" :description="action.description">
+      <p v-if="!action" class="empty">This action is unavailable in this snapshot.</p>
+      <SectionCard v-else :title="action.name" :description="action.description">
         <p class="sub">{{ sourceLabel(data, action.source) || action.portal?.name || "Local portal" }} · {{ action.executor }}</p>
         <form @submit.prevent="submit(false)">
           <label v-if="action.entities.length" class="report-field">Target
@@ -176,6 +187,7 @@ async function submit(dispatch: boolean) {
           <p v-if="preview.approval">Approval <code>{{ show(preview.approval) }}</code></p>
         </div>
       </SectionCard>
+      <slot v-if="action?.catalogId" :id="action.catalogId" />
     </template>
   </section>
 </template>
