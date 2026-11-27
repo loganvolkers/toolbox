@@ -7,7 +7,7 @@ sidebar:
 
 ## Try the hosted demo
 
-[Open the hosted demo](https://demo.seikika.com/) and select **Repositories** to browse the public catalog. Open a repository to see its GitHub link. **Operations** requires an approved Cloudflare account and portal admin access.
+[Open the hosted demo](https://demo.seikika.com/) and select **Catalog** to browse public repositories, workflows, and standards. Open **Meta scoring** for the organization’s scorecard definitions and rule evidence. **Operations** requires an approved Cloudflare account and portal admin access.
 
 Anyone can [browse the public organization scorecards](/demo/organization/). Open the Workflow security track to see which checks passed and what needs attention.
 

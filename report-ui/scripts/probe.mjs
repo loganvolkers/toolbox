@@ -181,6 +181,8 @@ const contracts = {
   "hosted-portal--public-catalog": async (page) => {
     assert.equal(await page.getByRole("tab").count(), 1);
     await page.getByRole("link", { name: "Public scorecards" }).waitFor();
+    assert.equal(await page.getByRole("link", { name: "Meta scoring", exact: true }).getAttribute("href"),
+      "https://seikika.com/demo/organization/#scorecard/meta-scorecard");
     assert.equal(await page.getByRole("link", { name: "Operations" }).getAttribute("href"), "/ops");
     await page.locator('a[href="#catalog/Repository"]').first().click();
     assert.equal(await page.getByRole("textbox", { name: /CEL filter/ }).count(), 0);
@@ -188,6 +190,17 @@ const contracts = {
     await page.getByRole("heading", { name: "example/ledger", exact: true }).waitFor();
     assert.equal(await page.getByRole("link", { name: "Source" }).getAttribute("href"), "https://github.com/example/ledger");
     assert.equal(await page.getByRole("button", { name: "Refresh" }).count(), 0);
+  },
+  "hosted-portal--guest-report": async (page) => {
+    await page.getByRole("tab", { name: /Catalog/ }).waitFor();
+    await page.getByRole("link", { name: "Meta scoring", exact: true }).click();
+    await page.waitForURL(url => url.hash === "#scorecard/meta-scorecard");
+    await page.locator("#report-body").getByRole("heading", { name: /Scorecards are well-formed/ }).waitFor();
+    assert.equal(await page.getByRole("link", { name: "Operations" }).getAttribute("href"), "/ops");
+    const search = page.getByRole("searchbox", { name: "Search", exact: true });
+    await search.fill("meta-scorecard");
+    await search.press("Enter");
+    await page.getByRole("row").filter({ hasText: "meta-scorecard" }).first().waitFor();
   },
   "hosted-portal--assessments": async (page) => {
     await page.getByRole("tab", { name: "Assessments", exact: true }).waitFor();

@@ -274,7 +274,7 @@ onUnmounted(() => {
       </button>
     </div>
     <div id="report-body" ref="content" tabindex="-1" :role="active ? 'tabpanel' : undefined" :aria-labelledby="active ? 'tab-' + active : undefined">
-      <slot v-if="extra" name="extra-view" :route="route" />
+      <slot v-if="extra" name="extra-view" :route="route" :data="data" />
       <div v-else-if="pending" class="view"><slot name="pending" /></div>
       <ReportActions v-else-if="actionsMode" :data="data" :id="route.id" :entity="route.query?.entity" :request="requestAction" @select="selectAction">
         <template #default="{ id }">

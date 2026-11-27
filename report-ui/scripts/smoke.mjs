@@ -190,6 +190,9 @@ try {
   await page.getByRole("heading", { name: "Seikika organization scorecards", exact: true }).waitFor();
   if (process.env.SEIKIKA_ORG_REPORT_DATA) {
     const snapshot = JSON.parse(await readFile(process.env.SEIKIKA_ORG_REPORT_DATA, "utf8"));
+    await page.getByRole("link", { name: "Meta scoring scorecard", exact: true }).click();
+    await page.locator("#report-body").getByRole("heading", { name: /Scorecards are well-formed/ }).waitFor();
+    assert.equal(new URL(page.url()).hash, "#scorecard/meta-scorecard");
     const names = snapshot.catalog.Repository.map(id => snapshot.entityOverview[id].name.toLowerCase());
     const workflows = snapshot.catalog.Workflow;
     assert(workflows.length > 0, "The organization workflow inventory is populated.");

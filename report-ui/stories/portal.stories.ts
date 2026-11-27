@@ -3,6 +3,8 @@ import PortalApp from "../../ui/src/components/PortalApp.vue";
 import type { PortalApi } from "../../ui/src/api";
 import { portalApi } from "../../ui/src/requests";
 import assessments from "../fixtures/s4s-assessments.json";
+import standards from "../fixtures/s4s.json";
+import { fixture } from "./report";
 import type { ReportData } from "../src/types";
 import "../../ui/src/app.css";
 
@@ -41,7 +43,10 @@ function story(route: string, data: unknown = report, status = 200) {
     if (url.pathname === "/v1/views/report") return json(data, status);
     if (url.pathname === "/v1/entities") return json({ items: url.searchParams.get("q") === "missing" ? [] : [entity] });
     if (url.pathname === "/v1/views/home") {
-      if (url.searchParams.has("public_catalog")) return (data as ReportData | null)?.publicCatalog ? json(data) : json(null, 204);
+      if (url.searchParams.has("public_catalog")) {
+        const report = data as ReportData | null;
+        return report?.publicCatalog || report?.viewerMethod === "guest" ? json(data) : json(null, 204);
+      }
       return json({ owned: [{ id, levels: { readiness: "silver" }, failing: [] }] });
     }
     if (url.pathname === "/v1/views/ops") return json({
@@ -108,3 +113,5 @@ export const PublicCatalog = story("overview", {
   scorecards: {},
   scores: {},
 });
+
+export const GuestReport = story("overview", { ...fixture(standards), viewerMethod: "guest" });

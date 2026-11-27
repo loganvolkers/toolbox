@@ -77,7 +77,21 @@ For the hosted seven-fork portal, protect the production hostname with its own A
 
 ### Publish a public catalog
 
-Set the production build variable `SEIKIKA_PRODUCTION_PUBLIC_REPOSITORIES` to a comma-separated list of public GitHub `owner/repo` names. For an isolated Preview, use the `SEIKIKA_PUBLIC_REPOSITORIES` runtime variable on that Preview. Guests can search and open these repository links. The public catalog uses the configured list, and its scorecards link goes to the public organization report.
+Set the production build variable `SEIKIKA_PRODUCTION_PUBLIC_REPOSITORIES` to a comma-separated list
+of public GitHub `owner/repo` names. For an isolated preview, set the
+`SEIKIKA_PUBLIC_REPOSITORIES` runtime variable on that preview.
+
+The demo uses the same organization connector and meta-scoring package as the public organization
+report. Set the Worker secret `SEIKIKA_ORG_GITHUB_TOKEN` to a GitHub credential with read access to
+the public organization repositories. The scan can exceed GitHub’s unauthenticated API limit.
+
+The shared report accepts a signed-out audience on the public catalog route. The host manifest’s
+`policies.publicReportSources` lists the connectors whose records, public fields, and score evidence
+guests can browse. Include only sources approved for publication. A GitHub organization source
+with `publicOnly: true` and `reports: true` also includes child reports committed to its public
+repositories. The direct public repository endpoints use the configured repository list.
+`policies.reportNamespace` gives report catalog links and rubrics the same IDs as the organization
+report while the demo keeps its own portal identity for authorization and storage.
 
 On the public hostname's destination in the existing Cloudflare Access application, add public path overrides for `/`, `/search`, `/c/*`, `/e/*`, `/assets/*`, `/v1/views/home`, `/v1/entities`, and `/v1/views/entity/*`. Keep the full-host sign-in policy so Operations, action and run APIs, writes, and the live report still require authentication. Use the same application audience for protected paths. Apply the overrides after deploying the guest routes, then verify that a signed-out visitor can open a repository and gets an Access login for Operations and direct action API requests. [Access destination overrides](https://developers.cloudflare.com/api/resources/zero_trust/subresources/access/subresources/applications/methods/update/)
 

@@ -8,7 +8,7 @@ export function usePortalApi() {
 }
 
 export function usePortalRequest(
-  path: () => string,
+  path: () => string | null,
   options: { retryUnavailable?: boolean; request?: PortalApi } = {},
 ) {
   const request = options.request ?? usePortalApi();
@@ -22,9 +22,11 @@ export function usePortalRequest(
       clearTimeout(retry);
     });
     if (url !== old?.[0]) result.value = null;
+    if (!url) return;
+    const requestUrl = url;
     async function load() {
       try {
-        const response = await request(url, { signal: controller.signal });
+        const response = await request(requestUrl, { signal: controller.signal });
         if (controller.signal.aborted) return;
         if (options.retryUnavailable && response.status === 503) {
           retry = setTimeout(load, 1_000);

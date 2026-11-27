@@ -3,17 +3,31 @@ import { computed } from "vue";
 import DataValue from "@seikika/ui/components/DataValue.vue";
 import PageHeader from "@seikika/ui/components/PageHeader.vue";
 import SectionCard from "@seikika/ui/components/SectionCard.vue";
+import type { ReportData } from "../../../report-ui/src/types";
 import type { Json } from "../api";
 import { usePortalRequest } from "../requests";
 import PortalStatus from "./PortalStatus.vue";
 
-const props = defineProps<{ mode: string; query: string }>();
+const props = defineProps<{ mode: string; query: string; guestReport?: ReportData }>();
 const search = computed(() => props.mode === "search");
-const { result, reload } = usePortalRequest(() => search.value
-  ? "/v1/entities?" + new URLSearchParams({ q: props.query, limit: "50" })
-  : "/v1/views/ops");
+const guestSearch = computed(() => search.value ? props.guestReport : undefined);
+const { result, reload } = usePortalRequest(() => {
+  if (!search.value) return "/v1/views/ops";
+  return guestSearch.value ? null : "/v1/entities?" + new URLSearchParams({ q: props.query, limit: "50" });
+});
 const body = computed(() => result.value?.body);
-const guest = computed(() => body.value?.viewer?.method === "guest");
+const guest = computed(() => Boolean(guestSearch.value) || body.value?.viewer?.method === "guest");
+const items = computed(() => {
+  const data = guestSearch.value;
+  if (!data) return body.value?.items ?? [];
+  const term = props.query.trim().toLowerCase();
+  return Object.values(data.catalog).flat().map(id => ({
+    id,
+    label: data.entitySources?.[id]?.original ?? id,
+    fields: data.entityOverview?.[id] ?? {},
+  })).filter(({ label, fields }) => [label, fields.title, fields.displayName, fields.name]
+    .some(value => typeof value === "string" && value.toLowerCase().includes(term))).slice(0, 50);
+});
 const entityLink = (id: string) => "#entity/" + encodeURIComponent(id);
 const entries = (record: Record<string, Json> | undefined) => Object.entries(record ?? {});
 </script>
@@ -25,15 +39,15 @@ const entries = (record: Record<string, Json> | undefined) => Object.entries(rec
         <p class="sub">Snapshot <code>{{ body.snapshot }}</code> · input version {{ body.input_version }} · last recompute {{ body.recompute_ms }} ms</p>
       </template>
     </PageHeader>
-    <PortalStatus v-if="result?.status !== 200" :result="result"
+    <PortalStatus v-if="!guestSearch && result?.status !== 200" :result="result"
       :loading="search ? 'Searching entities…' : 'Loading operations…'" @retry="reload" />
     <SectionCard v-else-if="search" title="Results" heading="h3">
-      <p v-if="!body.items.length" class="sub">No entities match.</p>
+      <p v-if="!items.length" class="sub">No entities match.</p>
       <table v-else class="portal-table">
         <thead><tr><th>Entity</th><th>Title</th><th v-if="!guest">Owner</th></tr></thead>
         <tbody>
-          <tr v-for="entity in body.items" :key="entity.id">
-            <td><a :href="entityLink(entity.id)">{{ entity.id }}</a></td>
+          <tr v-for="entity in items" :key="entity.id">
+            <td><a :href="entityLink(entity.id)">{{ entity.label ?? entity.id }}</a></td>
             <td><DataValue :value="entity.fields.title ?? entity.fields.displayName" /></td>
             <td v-if="!guest">
               <DataValue :value="entity.fields.ownership?.owner ?? entity.fields.owner" :entity-href="entityLink" />
