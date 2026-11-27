@@ -74,6 +74,52 @@ archive staging script runs in the release workflow.
 
 Verify an artifact with `gh attestation verify <file> --repo <owner>/seikika`.
 
+## Verify public container access
+
+The image workflow pushes and attests the release tag. GHCR initially makes a new image
+package private, even when the source repository is public. To enable anonymous pulls,
+approve the visibility change with the organization owner and review the package's existing
+versions. Making the package public exposes its published versions and is permanent.
+
+1. If **Public** is disabled in the package settings, an organization owner can allow it
+   under **Package Creation** in the organization settings. This permission applies to the
+   organization. [Seikika organization package settings](https://github.com/organizations/seikika/settings/packages)
+2. In the `seikika` container's **Package settings**, open **Danger Zone → Change visibility**,
+   select **Public**, and confirm. The existing release tag then becomes publicly pullable.
+   [Seikika container package settings](https://github.com/orgs/seikika/packages/container/seikika/settings)
+3. Run `docker manifest inspect` with an empty Docker config. Check that the index lists
+   `linux/amd64` and `linux/arm64`.
+
+   ```bash
+   DOCKER_CONFIG="$(mktemp -d)" docker manifest inspect ghcr.io/seikika/seikika:0.2.1
+   ```
+
+When the organization keeps the package private, give approved teams and Actions repositories
+read access. For Docker outside Actions, use a classic personal access token with `read:packages`
+from an account that can read the package. [Authenticate to GHCR](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-container-registry#authenticating-to-the-container-registry)
+
+Public operators can [install the CLI and connectors with mise](#install-what-a-consumer-needs)
+or build the image locally from the release archives.
+
+### Build a release image locally
+
+Use Bash with Git, an authenticated GitHub CLI, `sha256sum`, and `tar` with xz support.
+Use Docker Buildx with Linux containers on amd64 or arm64. The release's staging script
+downloads and verifies the public release binaries. The tagged Dockerfile assembles them
+into a local image.
+
+```bash
+tag=v0.2.1
+work=$(mktemp -d)
+git clone --depth 1 --branch "$tag" https://github.com/seikika/seikika.git "$work/source"
+GITHUB_REPOSITORY=seikika/seikika bash "$work/source/scripts/stage-image-archives.sh" \
+  "$work/archives" "$work/source/image" "$tag"
+docker buildx build --load --tag "seikika:${tag#v}" "$work/source/image"
+docker run --rm --network none "seikika:${tag#v}" --version
+```
+
+Use `seikika:0.2.1` as the local base image for your portal.
+
 ## Rust crates on crates.io
 
 The workspace publishes the CLI, connectors, SDK, and their Rust libraries in lockstep.
