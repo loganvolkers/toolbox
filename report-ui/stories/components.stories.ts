@@ -29,4 +29,5 @@ export const CampaignBars = component(() => [
   goalBar("empty", 0, 80, true, [{ met: true }, { met: false }, { met: true }]),
   kpiBar(37, "37% of rules pass"),
   kpiBar(62, "62% pass, 20% only because no agent has assessed them yet", false, 20),
+  kpiBar(62, "Below target, 20% only because no agent has assessed them yet", true, 20),
 ]);

@@ -230,6 +230,9 @@ pub fn record_in(doc: &Value, path: Option<&str>, root: Option<&std::path::Path>
     if let Some(p) = path {
         data["path"] = json!(p);
     }
+    if let Some(hash) = doc["rubricHash"].as_str() {
+        data["rubricHash"] = json!(hash);
+    }
     if let Some(root) = root {
         let mut cited: Vec<String> = verdicts
             .iter()

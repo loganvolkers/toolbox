@@ -1,0 +1,216 @@
+{
+  "acceptance": {
+    "5818e03": {
+      "exit": 42,
+      "postgres_log": true,
+      "server_log": true,
+      "temporary_work_removed": true
+    },
+    "5818e03^": {
+      "exit": 42,
+      "postgres_log": false,
+      "server_log": false,
+      "temporary_work_removed": true
+    }
+  },
+  "assessment": {
+    "absent_required_criterion": {
+      "default_exit": 1,
+      "invalid_files": 1,
+      "pre_108_reconstructed_exit": 1,
+      "require_fresh_exit": 1,
+      "state": "missing",
+      "verdict": null
+    },
+    "conflicting_duplicate_criterion": {
+      "default_exit": 0,
+      "invalid_files": 0,
+      "pre_108_reconstructed_exit": 0,
+      "require_fresh_exit": 0,
+      "state": "fresh",
+      "verdict": "fail"
+    },
+    "fresh_fail": {
+      "default_exit": 0,
+      "invalid_files": 0,
+      "pre_108_reconstructed_exit": 0,
+      "require_fresh_exit": 0,
+      "state": "fresh",
+      "verdict": "fail"
+    },
+    "fresh_pass": {
+      "default_exit": 0,
+      "invalid_files": 0,
+      "pre_108_reconstructed_exit": 0,
+      "require_fresh_exit": 0,
+      "state": "fresh",
+      "verdict": "pass"
+    },
+    "missing": {
+      "default_exit": 0,
+      "invalid_files": 0,
+      "pre_108_reconstructed_exit": 0,
+      "require_fresh_exit": 0,
+      "state": "missing",
+      "verdict": null
+    },
+    "rubric_question_changed": {
+      "default_exit": 0,
+      "invalid_files": 0,
+      "pre_108_reconstructed_exit": 0,
+      "require_fresh_exit": 0,
+      "state": "fresh",
+      "subject_hash_unchanged": true,
+      "verdict": "pass"
+    },
+    "stale": {
+      "advisory_ratchet": [
+        0,
+        "pass"
+      ],
+      "default_exit": 0,
+      "invalid_files": 0,
+      "pre_108_reconstructed_exit": 1,
+      "require_fresh_exit": 1,
+      "state": "stale",
+      "verdict": "pass"
+    }
+  },
+  "browser": {
+    "08f071a": {
+      "empty_comparison_says_never_behind": false,
+      "empty_comparison_says_not_measured": true,
+      "hatched_segments": 2,
+      "short_bar_segments": 2
+    },
+    "b15820e": {
+      "empty_comparison_says_never_behind": true,
+      "empty_comparison_says_not_measured": false,
+      "hatched_segments": 0,
+      "short_bar_segments": 2
+    }
+  },
+  "coverage": {
+    "default": {
+      "exit": 0,
+      "invalid_files": 0,
+      "rubrics": {
+        "assessment-quality": {
+          "missing": 1,
+          "stale": 370
+        },
+        "crate-design": {
+          "stale": 17
+        },
+        "rule-quality": {
+          "fresh": 169,
+          "missing": 5,
+          "stale": 104
+        },
+        "scorecard-quality": {
+          "missing": 2,
+          "stale": 54
+        },
+        "sdlc-stage-quality": {
+          "fresh": 7,
+          "stale": 20
+        }
+      },
+      "total": {
+        "fresh": 176,
+        "missing": 8,
+        "stale": 565
+      }
+    },
+    "require_fresh": {
+      "exit": 1,
+      "invalid_files": 0,
+      "rubrics": {
+        "assessment-quality": {
+          "missing": 1,
+          "stale": 370
+        },
+        "crate-design": {
+          "stale": 17
+        },
+        "rule-quality": {
+          "fresh": 169,
+          "missing": 5,
+          "stale": 104
+        },
+        "scorecard-quality": {
+          "missing": 2,
+          "stale": 54
+        },
+        "sdlc-stage-quality": {
+          "fresh": 7,
+          "stale": 20
+        }
+      },
+      "total": {
+        "fresh": 176,
+        "missing": 8,
+        "stale": 565
+      }
+    }
+  },
+  "quickstart": {
+    "original_installer_links_to_unavailable_tag": 2,
+    "original_revision": "c14c9fbb60405f9fea12d86de3d0b32b717755d9",
+    "regression_named_expected_link": true,
+    "repaired_revision": "80252c2",
+    "repaired_walkthrough_exits": [
+      0,
+      1,
+      0
+    ]
+  },
+  "rounds": {
+    "loop_2": {
+      "audits": 36,
+      "counterfactual_calls_avoided": 20,
+      "counterfactual_two_more_admissions_after_round_14": 16,
+      "post_round_14_adjacent_rounds_without_ordinal_drop": 5,
+      "post_round_14_audits": 22,
+      "post_round_14_dimension_comparisons": 220,
+      "post_round_14_dimension_drops": 31,
+      "post_round_14_mean_usability": 34.23,
+      "usability_round_14": 34
+    },
+    "loop_3": {
+      "audits_counted_in_panels": 54,
+      "explicit_duplicate_panels": 2,
+      "recorded_panel_rounds": 18
+    }
+  },
+  "sdk": {
+    "25a208a": {
+      "@seikika/astro-report": {
+        "referenceGaps": 4,
+        "undocumented": 4
+      },
+      "@seikika/ui": {
+        "referenceGaps": 58,
+        "undocumented": 36
+      },
+      "seikika-connect": {
+        "referenceGaps": 1,
+        "undocumented": 55
+      }
+    },
+    "b727e5f": {
+      "@seikika/astro-report": {
+        "referenceGaps": 0,
+        "undocumented": 0
+      },
+      "@seikika/ui": {
+        "referenceGaps": 0,
+        "undocumented": 0
+      },
+      "seikika-connect": {
+        "referenceGaps": 0,
+        "undocumented": 0
+      }
+    }
+  }
+}

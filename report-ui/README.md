@@ -55,6 +55,7 @@ From the repository root:
 - `pnpm storybook` opens the shared component and page stories.
 - `pnpm storybook:build` builds the static Storybook.
 - `pnpm storybook:probe` checks all stories for runtime errors, mobile overflow, and serious accessibility violations across light and dark themes.
+- `pnpm storybook:probe -- --contracts-only` checks the campaign hatch and unmeasured comparison in the same views.
 - `pnpm docs:build` includes the report and Storybook in the docs artifact.
 
 Fixtures in `fixtures/` come from Seikika for Seikika, the OpenFGA portal, and the repository starter. Run `pnpm --filter @seikika/astro-report fixtures` to regenerate them with the pinned Seikika tooling.

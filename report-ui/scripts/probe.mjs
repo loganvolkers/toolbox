@@ -18,6 +18,21 @@ const opt = (name) => {
 };
 const dir = resolve(argv.find((a, i) => !a.startsWith("--") && !(i && argv[i - 1].startsWith("--"))) || "storybook-static");
 const filter = opt("filter");
+const contractsOnly = argv.includes("--contracts-only");
+const contracts = {
+  "components--campaign-bars": async (page) => {
+    const segments = await page.locator(".kpi-bar.short span.hollow").evaluateAll(
+      (nodes) => nodes.map((node) => getComputedStyle(node).backgroundImage),
+    );
+    return segments.length === 1 && segments[0].includes("repeating-linear-gradient")
+      ? [] : ["the unassessed part of a below-target campaign must render hatched"];
+  },
+  "states-comparison-not-measured-yet--tracks": async (page) => {
+    const tracks = await page.locator(".track").filter({ hasText: "SpiceDB" }).allInnerTexts();
+    return tracks.length === 1 && /not measured yet/i.test(tracks[0]) && !/never behind/i.test(tracks[0])
+      ? [] : ["an unmeasured comparison track must report that it has no measurements"];
+  },
+};
 const VIEWS = [
   { name: "desktop-light", viewport: { width: 1280, height: 800 }, colorScheme: "light" },
   { name: "desktop-dark", viewport: { width: 1280, height: 800 }, colorScheme: "dark" },
@@ -44,7 +59,14 @@ await new Promise((r) => server.listen(0, "127.0.0.1", r));
 const base = "http://127.0.0.1:" + server.address().port;
 
 const index = JSON.parse(readFileSync(join(dir, "index.json"), "utf8"));
-const stories = Object.values(index.entries).filter((e) => e.type === "story" && (!filter || e.id.includes(filter)));
+const stories = Object.values(index.entries).filter((e) => e.type === "story"
+  && (!filter || e.id.includes(filter)) && (!contractsOnly || Object.hasOwn(contracts, e.id)));
+const missingContracts = Object.keys(contracts).filter(id => (!filter || id.includes(filter))
+  && !stories.some(story => story.id === id));
+if (!stories.length || missingContracts.length) {
+  server.close();
+  throw new Error("No matching stories or missing reader-task stories: " + missingContracts.join(", "));
+}
 
 async function probe(context, story, view) {
   const page = await context.newPage();
@@ -99,6 +121,7 @@ async function check(page, story, view) {
     ...axe.map((v) => `axe ${v.id} (${v.impact}) on ${v.nodes} node(s), first ${v.first}`),
     ...(view.viewport.width < 600 && overflow > 0 ? ["scrolls sideways by " + overflow + " px"] : []),
     ...(stacked.length ? ["text squeezed into a narrow column: " + stacked.slice(0, 3).map((s) => JSON.stringify(s)).join(", ")] : []),
+    ...(await contracts[story.id]?.(page) ?? []),
   ];
   return { story: story.id, view: view.name, overflow, axe, errors, failures };
 }
