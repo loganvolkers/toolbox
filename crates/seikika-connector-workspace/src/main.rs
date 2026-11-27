@@ -1412,17 +1412,23 @@ async fn federated_repositories(
             out.snapshot_complete(kind);
         }
         Some("refresh") => {
-            let mut records = config.scan().await?;
-            for id in cmd["external_ids"]
+            let ids: BTreeSet<_> = cmd["external_ids"]
                 .as_array()
                 .into_iter()
                 .flatten()
                 .filter_map(Value::as_str)
-            {
-                let Some(name) = id.strip_prefix("federated-repo:") else {
-                    continue;
-                };
-                match records.remove(name) {
+                .collect();
+            let prefix = format!("{kind}:");
+            let mut records = if ids.iter().any(|id| id.starts_with(&prefix)) {
+                config.scan().await?
+            } else {
+                BTreeMap::new()
+            };
+            for id in ids {
+                match id
+                    .strip_prefix(&prefix)
+                    .and_then(|name| records.remove(name))
+                {
                     Some(record) => out.record(kind, id, record),
                     None => out.not_found(kind, id),
                 }
