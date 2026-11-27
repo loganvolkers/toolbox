@@ -59,7 +59,14 @@ pub(crate) fn sync(root: &Path, s: &Source) -> Result<String, String> {
     }
     if !dir.join(".git").is_dir() {
         std::fs::create_dir_all(root).map_err(|e| format!("{}: {e}", root.display()))?;
-        git(root, &["clone", "-q", "--", &s.url, &s.key])?;
+        // Preserve the commit history and refs while fetching blobs on demand from HTTP remotes.
+        // The checkout below materializes the configured branch without checking out the default branch first.
+        let mut args = vec!["clone", "-q", "--no-checkout"];
+        if s.url.starts_with("https://") || s.url.starts_with("http://") {
+            args.push("--filter=blob:none");
+        }
+        args.extend(["--", &s.url, &s.key]);
+        git(root, &args)?;
     }
     // Commits a parent makes here (a `change` that lands) are the portal's, not whoever the
     // host's global git config names; `GIT_AUTHOR_*` and `GIT_COMMITTER_*` still override.

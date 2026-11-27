@@ -25,7 +25,7 @@ function containerEnvironment(env) {
 
 export class SeikikaContainer extends DurableObject {
   #starting;
-  #ready = false;
+  #listening = false;
 
   async #start(container) {
     if (!container.running) {
@@ -35,25 +35,26 @@ export class SeikikaContainer extends DurableObject {
     const port = container.getTcpPort(PORT);
     const deadline = Date.now() + STARTUP_TIMEOUT_MS;
     while (Date.now() < deadline) {
-      const response = await port.fetch("http://seikika/readyz", {
+      // Wait for the HTTP listener. The portal's /readyz still reports whether federation is ready.
+      const response = await port.fetch("http://seikika/healthz", {
         signal: AbortSignal.timeout(1_000),
       }).catch(() => null);
       if (response) {
         await response.body?.cancel();
         if (response.ok) {
-          this.#ready = true;
+          this.#listening = true;
           return;
         }
       }
       await scheduler.wait(250);
     }
-    throw new Error("Seikika readiness check timed out");
+    throw new Error("Seikika HTTP startup timed out");
   }
 
   async fetch(request) {
     const container = this.ctx.container;
-    if (!container.running || !this.#ready) {
-      this.#ready = false;
+    if (!container.running || !this.#listening) {
+      this.#listening = false;
       this.#starting ??= this.#start(container).finally(() => {
         this.#starting = undefined;
       });
@@ -61,7 +62,7 @@ export class SeikikaContainer extends DurableObject {
         await this.#starting;
       } catch (error) {
         console.error(
-          "Seikika container did not become ready",
+          "Seikika container did not start serving HTTP",
           error instanceof Error ? error.name : "Unknown error",
         );
         return new Response("Seikika is unavailable", {

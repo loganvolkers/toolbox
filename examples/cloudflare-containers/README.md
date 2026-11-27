@@ -100,7 +100,7 @@ The defaults serve the Worker on `workers.dev` and use Seikika personal access t
 
 ## Verify a rollout
 
-Check `/readyz` at the deployed hostname. On a cold start, the Worker can return `503` with `Retry-After` while the first child Git clones finish. A successful readiness response confirms the first snapshot. To detect a child clone or manifest error, check the authenticated `/v1/actions` response and require an empty `unreadable` array and each expected action. In token mode, issue a token in a trusted shell using the same `DATABASE_URL`. Store the token in your secret manager and pass it to the CLI via `SEIKIKA_TOKEN`. [Token creation](../../site/src/content/docs/operators/access.md#issue-a-personal-access-token)
+Check `/readyz` at the deployed hostname. On a cold start, the Worker can return `503` with `Retry-After` while the HTTP server starts. The portal serves the homepage as soon as it is listening, and `/readyz` waits for the first snapshot that includes its child portals. To detect a child clone or manifest error, check the authenticated `/v1/actions` response and require an empty `unreadable` array and each expected action. In token mode, issue a token in a trusted shell using the same `DATABASE_URL`. Store the token in your secret manager and pass it to the CLI via `SEIKIKA_TOKEN`. [Token creation](../../site/src/content/docs/operators/access.md#issue-a-personal-access-token)
 
 ```sh
 curl -fsS --retry 12 "$SEIKIKA_URL/readyz"
