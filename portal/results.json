@@ -6114,6 +6114,9 @@
       "doc:examples/federated-actions/README.md": {
         "level": "silver"
       },
+      "doc:examples/github-org-federation/README.md": {
+        "level": "silver"
+      },
       "doc:examples/openfga-portal/README.md": {
         "level": "silver"
       },
@@ -6369,6 +6372,9 @@
         "level": "gold"
       },
       "example:examples/federated-actions/README.md": {
+        "level": "gold"
+      },
+      "example:examples/github-org-federation/README.md": {
         "level": "gold"
       },
       "example:examples/openfga-portal/README.md": {
@@ -6711,6 +6717,9 @@
         "level": "gold"
       },
       "site-page:site/src/content/docs/connectors/workspace.md": {
+        "level": "gold"
+      },
+      "site-page:site/src/content/docs/demo/organization.mdx": {
         "level": "gold"
       },
       "site-page:site/src/content/docs/demo/report.md": {

@@ -69,7 +69,9 @@ impl Entry {
     }
 
     fn regular(&self) -> bool {
-        matches!(self.mode.as_str(), "100644" | "100755") && self.kind == "blob"
+        matches!(self.mode.as_str(), "100644" | "100755")
+            && self.kind == "blob"
+            && !self.path.chars().any(char::is_control)
     }
 }
 
@@ -588,6 +590,7 @@ mod tests {
             (
                 format!("/repos/acme/claims/git/trees/{}", sha('b')),
                 tree(vec![
+                    item("README-\nextra-line.md", "100644", "blob", '8', 19),
                     item(
                         "README-<federation-marker>.md",
                         "100644",
