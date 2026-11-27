@@ -1,0 +1,35 @@
+name: Cloudflare Preview lifecycle
+on:
+  pull_request_target:
+    branches: [main]
+    types: [opened, reopened, synchronize, labeled, unlabeled, closed]
+  schedule: [{cron: "*/5 * * * *"}]
+  workflow_dispatch:
+permissions: {pull-requests: read, id-token: write}
+concurrency: {group: seikika-cloudflare-previews, cancel-in-progress: false}
+jobs:
+  reconcile:
+    if: >-
+      github.repository == 'seikika/seikika' && github.ref ==
+      'refs/heads/main' && (github.event_name != 'pull_request_target' ||
+      github.event.pull_request.head.repo.full_name == github.repository)
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      GH_TOKEN: ${{ github.token }}
+      OPERATOR: https://seikika-preview-operator.loganvolkers.workers.dev
+    steps:
+      - name: Reconcile trusted pull requests
+        run: |
+          set -euo pipefail
+          gh api --paginate "repos/$GITHUB_REPOSITORY/pulls?state=open&base=main&per_page=100" \
+            | jq -sc --arg repo "$GITHUB_REPOSITORY" '[.[][] |
+                select(.head.repo.full_name == $repo and any(.labels[]; .name == "cloudflare-preview")) |
+                {number, branch: .head.ref}]' > "$RUNNER_TEMP/seikika-previews.json"
+          audience=$(jq -nr --arg value "$OPERATOR" '$value | @uri')
+          token=$(printf 'Authorization: Bearer %s\n' "$ACTIONS_ID_TOKEN_REQUEST_TOKEN" |
+            curl -qfsS --max-time 20 --header @- "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=$audience" |
+            jq -er .value)
+          printf 'Authorization: Bearer %s\n' "$token" |
+            curl -qfsS --max-time 120 --header @- --header 'Content-Type: application/json' \
+              --data-binary "@$RUNNER_TEMP/seikika-previews.json" "$OPERATOR/reconcile"

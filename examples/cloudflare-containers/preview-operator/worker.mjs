@@ -1,8 +1,8 @@
 // Reconcile opted-in same-repository pull requests from the trusted controller.
 const cfOrigin = "https://api.cloudflare.com/client/v4";
 const psOrigin = "https://api.planetscale.com/v1";
-const ghOrigin = "https://api.github.com";
-const label = "cloudflare-preview";
+const githubIssuer = "https://token.actions.githubusercontent.com";
+const workflowPath = ".github/workflows/cloudflare-previews.yml";
 const appName = (number) => `Seikika managed PR ${number}`;
 const databaseName = (number) => `seikika-preview-pr-${number}`;
 const namePattern = /^Seikika managed PR ([1-9]\d*)$/;
@@ -26,7 +26,6 @@ function clients(env) {
   const account = "/accounts/" + env.CLOUDFLARE_ACCOUNT_ID;
   const worker = `/workers/workers/${env.CLOUDFLARE_WORKER}/previews`;
   const dbRoot = `/organizations/${env.PLANETSCALE_ORG}/databases`;
-  const ghRepo = `/repos/${env.GITHUB_REPOSITORY}`;
   const cf = async (path, options) => {
     const response = await request(cfOrigin, account + path, { ...options, auth: "Bearer " + env.CLOUDFLARE_API_TOKEN });
     if (response && response.success !== true) throw new Error("Cloudflare returned an unsuccessful API result");
@@ -35,13 +34,45 @@ function clients(env) {
   const ps = (path, options) => request(psOrigin, dbRoot + path, {
     ...options, auth: env.PLANETSCALE_SERVICE_TOKEN_ID + ":" + env.PLANETSCALE_SERVICE_TOKEN,
   });
-  const gh = (path, options) => request(ghOrigin, ghRepo + path, options);
-  return { cf, ps, gh, worker };
+  return { cf, ps, worker };
 }
 
-function trusted(pr, repo) {
-  return pr.state === "open" && pr.base.ref === "main" &&
-    pr.head.repo?.full_name === repo && pr.labels.some((l) => l.name === label);
+function decode(segment) {
+  const base64 = segment.replaceAll("-", "+").replaceAll("_", "/");
+  return Uint8Array.from(atob(base64), (c) => c.charCodeAt(0));
+}
+
+async function authorized(incoming, env) {
+  const header = incoming.headers.get("Authorization") ?? "";
+  if (!header.startsWith("Bearer ") || header.length > 10000) return false;
+  try {
+    const parts = header.slice(7).split(".");
+    if (parts.length !== 3 || !parts.every((part) => /^[A-Za-z0-9_-]+$/.test(part))) return false;
+    const [head, payload, signature] = parts;
+    const decodeText = (segment) => JSON.parse(new TextDecoder().decode(decode(segment)));
+    const key = decodeText(head);
+    const claims = decodeText(payload);
+    const now = Math.floor(Date.now() / 1000);
+    if (key.alg !== "RS256" || typeof key.kid !== "string" ||
+        claims.iss !== githubIssuer || claims.aud !== env.GITHUB_OIDC_AUDIENCE ||
+        claims.repository !== env.GITHUB_REPOSITORY || claims.repository_id !== env.GITHUB_REPOSITORY_ID ||
+        claims.ref !== "refs/heads/main" ||
+        claims.workflow_ref !== `${env.GITHUB_REPOSITORY}/${workflowPath}@refs/heads/main` ||
+        !["schedule", "pull_request_target", "workflow_dispatch"].includes(claims.event_name) ||
+        !Number.isInteger(claims.iat) || claims.iat < now - 600 || claims.iat > now + 30 ||
+        !Number.isInteger(claims.exp) || claims.exp <= now) return false;
+    const { keys } = await request(githubIssuer, "/.well-known/jwks");
+    const jwk = keys.find((j) => j.kid === key.kid && j.kty === "RSA" && j.alg === "RS256");
+    if (!jwk) return false;
+    const publicKey = await crypto.subtle.importKey(
+      "jwk", jwk, { name: "RSASSA-PKCS1-v1_5", hash: "SHA-256" }, false, ["verify"],
+    );
+    return crypto.subtle.verify(
+      "RSASSA-PKCS1-v1_5", publicKey, decode(signature), new TextEncoder().encode(`${head}.${payload}`),
+    );
+  } catch {
+    return false;
+  }
 }
 
 function directDatabaseUrl(role) {
@@ -140,7 +171,7 @@ async function setRuntimeSecrets(cf, ps, key, deploy, number, access) {
 
 async function provision(clients, env, apps, previews, pr) {
   const { cf, ps, worker } = clients;
-  const branch = pr.head.ref;
+  const branch = pr.branch;
   const preview = previews.find((item) => item.name === branch);
   if (!preview) return;
   const runtime = worker + "/" + preview.id;
@@ -178,10 +209,9 @@ async function cleanup(clients, env, app, number, previews) {
   console.log("Managed preview resources removed", number);
 }
 
-export async function reconcile(env) {
+export async function reconcile(env, pulls) {
   const client = clients(env);
-  const [openIssues, apps, previews] = await Promise.all([
-    client.gh(`/issues?state=open&labels=${label}&per_page=100`),
+  const [apps, previews] = await Promise.all([
     client.cf("/access/apps?per_page=100"),
     client.cf(client.worker),
   ]);
@@ -194,22 +224,31 @@ export async function reconcile(env) {
       console.error("Managed preview reconciliation failed", number);
     }
   };
-  for (const issue of openIssues.filter((issue) => issue.pull_request)) {
-    await safely(issue.number, async () => {
-      const pr = await client.gh("/pulls/" + issue.number);
-      if (trusted(pr, env.GITHUB_REPOSITORY)) await provision(client, env, apps, previews, pr);
-    });
+  for (const pr of pulls) {
+    await safely(pr.number, () => provision(client, env, apps, previews, pr));
   }
+  const wanted = new Set(pulls.map((pr) => pr.number));
   for (const app of apps) {
     const marker = namePattern.exec(app.name);
     if (!marker) continue;
     const number = Number(marker[1]);
-    await safely(number, async () => {
-      const pr = await client.gh("/pulls/" + number);
-      if (!trusted(pr, env.GITHUB_REPOSITORY)) await cleanup(client, env, app, number, previews);
-    });
+    if (!wanted.has(number)) await safely(number, () => cleanup(client, env, app, number, previews));
   }
   if (failures) throw new Error(`Managed Preview reconciliation failed for ${failures} PRs`);
 }
 
-export default { async scheduled(_event, env) { await reconcile(env); } };
+export default {
+  async fetch(incoming, env) {
+    if (incoming.method !== "POST" || new URL(incoming.url).pathname !== "/reconcile") {
+      return new Response("Not found", { status: 404 });
+    }
+    if (!await authorized(incoming, env)) return new Response("Unauthorized", { status: 401 });
+    const pulls = await incoming.json().catch(() => null);
+    if (!Array.isArray(pulls) || !pulls.every((pr) =>
+      Number.isSafeInteger(pr?.number) && pr.number > 0 &&
+      typeof pr.branch === "string" && pr.branch.length > 0 && pr.branch !== "main"
+    )) return new Response("Invalid pull request list", { status: 400 });
+    await reconcile(env, pulls);
+    return new Response(null, { status: 204 });
+  },
+};
