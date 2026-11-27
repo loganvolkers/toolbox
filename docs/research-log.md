@@ -233,3 +233,9 @@ The repository quickstart recorded a baseline, exited 1 after moving its linked 
 - Compared the published action metadata and recipes from Terraform, SonarQube, Trivy, golangci-lint, Docker, CodeQL, and GitHub Pages. Checked the Betterer CLI as a baseline enforcement alternative. [Comparison and gap analysis](audits/consumer-github-actions.md)
 - Downloaded and verified the published Seikika 0.2.1 Linux binaries through setup. Used them from a disposable checkout to validate and test the starter, build without a baseline, verify missing and failing ratchet verdicts, and build both HTML and web output. Compared the baseline byte for byte after scoring and building.
 - Seikika's ratchet found the CI workflow's last four missing job timeouts fixed and scored all three new actions gold for CI security. All 142 maintainer portal assertions passed.
+
+## Consumer action regression checks
+
+- Added a license to a fixture checkout after recording its baseline. Strict mode returned a stale verdict and exit 1. Regression-only mode returned the same verdict and exit 0. It then rejected a CODEOWNERS regression. The baseline stayed byte-identical.
+- Setup rejected a valid archive whose supplied checksum differed. The test failed against a scratch copy with the checksum check removed.
+- The scheduled, manual, and stable-release workflows exercise the published installer on Linux x64 and ARM64. The pinned release has the CLI and both connector archives with checksums for each target.
