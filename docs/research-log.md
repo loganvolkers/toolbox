@@ -262,3 +262,21 @@ The repository quickstart recorded a baseline, exited 1 after moving its linked 
 
 - Exported the tracked source files to a fresh directory, generated both embedded bundles with the frozen pnpm lockfile, and built the CLI with Node and pnpm absent from Cargo's `PATH`. The federation browser test passed on that binary for the served and offline reports.
 - Compared the packaged assets byte for byte with the local build output. The API crate contains the hosted UI and its asset manifest, and the CLI crate contains the offline report template and script. [Embedded asset build decision](decisions/D01M8EXN6P8HX02R74DA9X6MS0C.md)
+
+## Functional correctness scorecards
+
+- Applied the [testing guide](./design/correctness-testing.md) to the
+  derivation and plan contract, scorecard ratchet, and action lifecycle.
+  The live portal found all three sets of test evidence and assigned
+  silver for CI discovery. Initial agent assessments scored bronze on
+  all three because of gaps in the assertions.
+- Added checks for the complete reference artifact set and an empty plan
+  after reordered input, for advisory failures and explicitly skipped
+  evidence in the ratchet, and for an unchanged Git ref after a rejected
+  federated push. The Rust workspace passed with OpenFGA required and
+  M5 acceptance passed with info-level logging. The self-portal passed
+  151 fixture assertions. The Python model reproduced its fixtures and
+  the OpenFGA model passed 16 checks and three list-object assertions.
+- Reassessed the changed contracts and reran the live report. All three
+  advisory scores moved from bronze to silver. Both new scorecards and all
+  four of their rules reached gold on the portal's meta-standards.

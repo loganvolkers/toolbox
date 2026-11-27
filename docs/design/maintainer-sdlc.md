@@ -19,6 +19,9 @@ check:
 
 The inner loop takes seconds, so this stays cheap enough to run after every change.
 
+Use the [correctness testing guide](./correctness-testing.md) to choose tests
+and assess the evidence for high-consequence behaviors.
+
 ## 2. The loop
 
 | Step | What the maintainer does | Tooling |

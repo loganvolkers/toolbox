@@ -1306,8 +1306,8 @@ assert:
       score('maintainer-crate',
       'crate:seikika-derive').rules['tests-scale-with-code'] == 'pass' &&
       score('maintainer-crate',
-      'crate:seikika-derive').evidence['tests-pass'][0] == 'fail: 1 failed, 1
-      ignored' && 'tests::off (src/lib.rs:40) is compiled out' in
+      'crate:seikika-derive').evidence['tests-pass'][0] == 'fail: 5 passed, 1
+      failed, 1 ignored' && 'tests::off (src/lib.rs:40) is compiled out' in
       score('maintainer-crate', 'crate:seikika-derive').evidence['tests-pass']
   - name: >-
       a stage's claims are checked against facts: an unknown status, a command
@@ -1676,3 +1676,52 @@ assert:
       score('maintainer-shell',
       'maintainer-shell:scripts/format.sh').evidence['shfmt-clean'] == ['shfmt
       -i 2 -ci -w -- scripts/format.sh']
+  # Correctness testing
+  - name: >-
+      Cargo exiting successfully without running a test fails the crate
+      execution rule
+    expect: >-
+      score('maintainer-crate',
+      'crate:seikika-connector-git-files').rules['tests-pass'] == 'fail'
+  - name: >-
+      testing evidence reaches silver when references resolve and CI discovers
+      tests
+    expect: >-
+      score('maintainer-testing', 'testing-contract:verified').level ==
+      'silver'
+  - name: CI discovery failure names the unexecuted test
+    expect: >-
+      score('maintainer-testing', 'testing-contract:unwired').level ==
+      'bronze' && score('maintainer-testing',
+      'testing-contract:unwired').evidence['ci-discovers-tests'] ==
+      ['scripts/manual.sh']
+  - name: broken paths and an empty suite fail the evidence rule
+    expect: >-
+      score('maintainer-testing', 'testing-contract:broken').level == 'none'
+      && score('maintainer-testing',
+      'testing-contract:broken').evidence['evidence-resolves'] ==
+      ['docs/absent.md', 'no test paths']
+  - name: only a current and grounded testing review without gaps reaches silver
+    expect: >-
+      score('review-testing', 'testing-contract:verified').level == 'silver'
+      && score('review-testing', 'testing-contract:stale').level == 'none' &&
+      score('review-testing', 'testing-contract:unwired').level == 'none' &&
+      score('review-testing', 'testing-contract:uncertain').level == 'bronze'
+  - name: testing rules distinguish passing evidence, stale reviews and open gaps
+    expect: >-
+      score('maintainer-testing',
+      'testing-contract:verified').rules['evidence-resolves'] == 'pass' &&
+      score('maintainer-testing',
+      'testing-contract:broken').rules['evidence-resolves'] == 'fail' &&
+      score('maintainer-testing',
+      'testing-contract:verified').rules['ci-discovers-tests'] == 'pass' &&
+      score('maintainer-testing',
+      'testing-contract:unwired').rules['ci-discovers-tests'] == 'fail' &&
+      score('review-testing',
+      'testing-contract:verified').rules['current-review'] == 'pass' &&
+      score('review-testing',
+      'testing-contract:stale').rules['current-review'] == 'fail' &&
+      score('review-testing',
+      'testing-contract:verified').rules['risks-addressed'] == 'pass' &&
+      score('review-testing',
+      'testing-contract:uncertain').rules['risks-addressed'] == 'fail'

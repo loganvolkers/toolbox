@@ -327,6 +327,7 @@ echo "$OUT" | field "['verification']['child']['files'][0]['matches']" | grep -q
 OUT=$("${detached_run[@]}" --verify "$RID" --as ann) || fail "verify: $OUT"
 echo "$OUT" | grep -q "user:bob" || fail "the record should name the approver: $OUT"
 "${detached_run[@]}" --runs --as ann | grep -q "$RID" || fail "the run is not listed"
+MAIN_BEFORE_REJECTED_PUSH=$(git --git-dir "$WORK/hosts/mini.git" rev-parse refs/heads/main)
 printf '#!/bin/sh\necho "main is protected"\nexit 1\n' >"$WORK/hosts/mini.git/hooks/pre-receive" && chmod +x "$WORK/hosts/mini.git/hooks/pre-receive"
 set +e
 OUT=$("${detached_run[@]}" add-code-of-conduct --entity portal:mini -i contact=other@acme.dev --as ann --yes)
@@ -337,6 +338,8 @@ OUT=$("${detached_run[@]}" --approve "$RID" --as bob --wait 2>&1)
 CODE=$?
 set -e
 [ $CODE = 1 ] && echo "$OUT" | grep -q "main is protected" || fail "a rejected push should fail the run with the origin's message ($CODE): $OUT"
+MAIN_AFTER_REJECTED_PUSH=$(git --git-dir "$WORK/hosts/mini.git" rev-parse refs/heads/main)
+[ "$MAIN_BEFORE_REJECTED_PUSH" = "$MAIN_AFTER_REJECTED_PUSH" ] || fail "a rejected push changed main"
 echo "   minimal-repo: seikika test ran its 5 action cases in a scratch copy, leaving its origin as it was"
 echo "   minimal-repo: previewed, awaited bob (ann and carol refused), pushed CODE_OF_CONDUCT.md with trailers, recorded; a rejected push failed with the origin's message"
 echo "   no connector, kind or key declared: 16 actions from 4 git children; a pull request branch on beta's origin; alpha pinned the generated key on its origin, the clone followed, and bob's approval pushed SECURITY.md to alpha's main"

@@ -3394,6 +3394,15 @@
         ]
       }
     },
+    "meta-rubric": {
+      "rubric:seikika/testing-contract-quality": {
+        "discriminates": [
+          "4da7cf17",
+          "d5e1bb26",
+          "f03d58e5"
+        ]
+      }
+    },
     "meta-rule": {
       "rule:acme/app-approval/permissions-match-snapshot": {
         "always-explains": [
@@ -5898,6 +5907,9 @@
       "doc:docs/design/context-lake.md": {
         "level": "silver"
       },
+      "doc:docs/design/correctness-testing.md": {
+        "level": "silver"
+      },
       "doc:docs/design/dashboards.md": {
         "level": "silver"
       },
@@ -7141,6 +7153,17 @@
     "maintainer-supply-chain": {
       "repo:seikika/seikika": {
         "level": "gold"
+      }
+    },
+    "maintainer-testing": {
+      "testing-contract:action-lifecycle": {
+        "level": "silver"
+      },
+      "testing-contract:reference-derivation": {
+        "level": "silver"
+      },
+      "testing-contract:scorecard-ratchet": {
+        "level": "silver"
       }
     },
     "meta-assessment": {
@@ -9888,6 +9911,15 @@
       },
       "assessment:sdlc-stage-quality/sdlc-stage:user/test": {
         "level": "gold"
+      },
+      "assessment:testing-contract-quality/testing-contract:action-lifecycle": {
+        "level": "gold"
+      },
+      "assessment:testing-contract-quality/testing-contract:reference-derivation": {
+        "level": "gold"
+      },
+      "assessment:testing-contract-quality/testing-contract:scorecard-ratchet": {
+        "level": "gold"
       }
     },
     "meta-connector": {
@@ -12153,6 +12185,42 @@
       "field:seikika/StandardPackage.version": {
         "level": "gold"
       },
+      "field:seikika/TestingContract.ci": {
+        "level": "gold"
+      },
+      "field:seikika/TestingContract.contract": {
+        "level": "gold"
+      },
+      "field:seikika/TestingContract.fixtures": {
+        "level": "gold"
+      },
+      "field:seikika/TestingContract.hash": {
+        "level": "gold"
+      },
+      "field:seikika/TestingContract.implementation": {
+        "level": "gold"
+      },
+      "field:seikika/TestingContract.missingPaths": {
+        "level": "gold"
+      },
+      "field:seikika/TestingContract.notInCi": {
+        "level": "gold"
+      },
+      "field:seikika/TestingContract.reviewGaps": {
+        "level": "gold"
+      },
+      "field:seikika/TestingContract.reviewState": {
+        "level": "gold"
+      },
+      "field:seikika/TestingContract.specification": {
+        "level": "gold"
+      },
+      "field:seikika/TestingContract.tests": {
+        "level": "gold"
+      },
+      "field:seikika/TestingContract.title": {
+        "level": "gold"
+      },
       "field:seikika/Workflow.actionlint": {
         "failing": {
           "described": 1,
@@ -12465,6 +12533,9 @@
       "kind:seikika/StandardPackage": {
         "level": "gold"
       },
+      "kind:seikika/TestingContract": {
+        "level": "gold"
+      },
       "kind:seikika/Workflow": {
         "failing": {
           "fields-described": 15
@@ -12487,6 +12558,12 @@
       },
       "rubric:seikika/sdlc-stage-quality": {
         "level": "gold"
+      },
+      "rubric:seikika/testing-contract-quality": {
+        "failing": {
+          "discriminates": 3
+        },
+        "level": "silver"
       }
     },
     "meta-rule": {
@@ -13104,6 +13181,12 @@
         },
         "level": "silver"
       },
+      "rule:seikika/maintainer-testing/ci-discovers-tests": {
+        "level": "gold"
+      },
+      "rule:seikika/maintainer-testing/evidence-resolves": {
+        "level": "gold"
+      },
       "rule:seikika/meta-assessment/assessor-named": {
         "level": "gold"
       },
@@ -13359,6 +13442,12 @@
         "level": "silver"
       },
       "rule:seikika/review-sdlc-stage/passes-review": {
+        "level": "gold"
+      },
+      "rule:seikika/review-testing/current-review": {
+        "level": "gold"
+      },
+      "rule:seikika/review-testing/risks-addressed": {
         "level": "gold"
       },
       "rule:seikika/sdlc-layer/every-stage-built": {
@@ -13755,6 +13844,9 @@
         },
         "level": "silver"
       },
+      "scorecard:seikika/maintainer-testing": {
+        "level": "gold"
+      },
       "scorecard:seikika/meta-assessment": {
         "level": "gold"
       },
@@ -13818,6 +13910,9 @@
           "fixtures-reach-every-level": 1
         },
         "level": "silver"
+      },
+      "scorecard:seikika/review-testing": {
+        "level": "gold"
       },
       "scorecard:seikika/sdlc-layer": {
         "failing": {

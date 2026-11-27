@@ -349,7 +349,7 @@ Scorecard `maintainer-crate` over `Crate` entities, owned by group:maintainers. 
 | `crate-docs` | bronze | measured | `entity.crateDoc` | The crate doc is what a reader or an agent sees first when deciding whether to touch a crate; without it, the crate's purpose and the spec section it implements have to be worked out from the code. | Start the crate's `src/lib.rs` or `src/main.rs` with `//!` docs: what it is and which spec section it implements. |
 | `has-tests` | bronze | measured | `entity.unitTests + entity.integrationTests > 0 && entity.testsWithoutAsserts.size() == 0` | A crate without tests can change behaviour with nothing failing, and a test that asserts nothing gives the same false confidence while looking like coverage. | Add a #[test] for the crate's main behaviour (or an integration test in tests/), and give each listed test an assert: a test that checks nothing passes whatever the code does. |
 | `tests-scale-with-code` | silver | measured | `entity.testsPerKloc >= 2` | One test meets bronze however large a crate grows; a floor per thousand lines, set from the spread across this workspace, flags crates that are untested or nearly so. It is a floor, not a coverage target. [Thresholds and levels](https://github.com/seikika/seikika/blob/main/docs/design/thresholds.md) | Add tests for the crate's untested behaviour until it has at least 2 per 1,000 code lines (docs/design/thresholds.md says why 2). |
-| `tests-pass` | bronze | measured | `entity.tests.status == 'pass' && entity.tests.ignored == 0 && entity.disabledTests.size() == 0` | A failing, ignored or compiled-out test checks nothing, and an ignored one hides its failure from everyone; an authorization test that quietly skips without OpenFGA would let authorization changes through untested. | Run `cargo test -p <crate>` and fix the failures in the evidence. Remove `#[ignore]` from ignored tests, and the always-false `#[cfg(...)]` from listed tests, and make them pass: a test that doesn't run checks nothing. Tests that need OpenFGA run with SEIKIKA_REQUIRE_OPENFGA set, so install it (SEIKIKA_OPENFGA_BIN) rather than letting them skip. |
+| `tests-pass` | bronze | measured | `entity.tests.status == 'pass' && entity.tests.passed > 0 && entity.tests.failed == 0 && entity.tests.ignored == 0 && entity.disabledTests.size() == 0` | An empty run checks nothing even if Cargo exits successfully. Ignored or compiled-out tests leave gaps; an authorization test that quietly skips without OpenFGA would let authorization changes through untested. | Run `cargo test -p <crate>` and fix the failures in the evidence. If no tests passed, verify Cargo discovers the intended targets. Remove `#[ignore]` from ignored tests, and the always-false `#[cfg(...)]` from listed tests, and make them pass: a test that doesn't run checks nothing. Tests that need OpenFGA run with SEIKIKA_REQUIRE_OPENFGA set, so install it (SEIKIKA_OPENFGA_BIN) rather than letting them skip. |
 | `clippy-clean` | bronze | measured | `entity.clippy.status == 'pass'` | Clippy's lints catch common bugs and unidiomatic code before review, and CI runs it with `-D warnings`, so a warning here would fail the build anyway. [Clippy documentation](https://doc.rust-lang.org/clippy/) | Fix the clippy warnings in the evidence (`cargo clippy -p <crate> --all-targets`). |
 | `public-api-documented` | silver | measured | `entity.docCoverage >= 80` | Other crates and agents use a crate through its public items; an undocumented one makes them read the implementation, which a public API is meant to spare them. [Rust API Guidelines: documentation](https://rust-lang.github.io/api-guidelines/documentation.html) | Add /// docs to the public items in the evidence. |
 | `no-huge-functions` | silver | measured | `entity.maxFnLines <= 150` | A very long function is hard to review and can't be tested in parts, so a change inside it risks effects far from the edit. Silver catches the outliers; gold's short-functions tightens the limit. [Clippy lints (too_many_lines)](https://rust-lang.github.io/rust-clippy/master/index.html) | Split the functions in the evidence into named steps. |
@@ -819,6 +819,36 @@ Scorecard `maintainer-standard-package` over `StandardPackage` entities, owned b
 | Rule | Level | Basis | Passes when | Why | Fix |
 |---|---|---|---|---|---|
 | `public-guide` | bronze | measured | `entity.publicGuide != ''` | Operators need to find the package's expected inputs, configuration and results before adding checks to a portal. [Standards package directory decision](https://github.com/seikika/seikika/blob/main/docs/decisions/D01M8CRS50G5086P5DCFQN636BA.md) | Publish a titled and described guide at `site/src/content/docs/packages/<directory-name>.md`. The package directory and sidebar pick it up automatically. |
+
+## Correctness testing evidence
+
+Links from important behaviors to their specifications, tests and CI.
+
+**Why:** Crate-wide test totals cannot locate protection for a product behavior spanning several components. A small catalog makes that evidence findable and highlights tests disconnected from CI.
+
+See [Correctness testing guide](https://github.com/seikika/seikika/blob/main/docs/design/correctness-testing.md).
+
+Scorecard `maintainer-testing` over `TestingContract` entities, owned by group:maintainers. `seikika report` lists what fails now. *Measured* rules check facts a tool or connector read; *judged* rules pass on an agent's assessment (`seikika assess`).
+
+| Rule | Level | Basis | Passes when | Why | Fix |
+|---|---|---|---|---|---|
+| `evidence-resolves` | bronze | measured | `entity.contract != '' && entity.specification != '' && entity.implementation != [] && entity.tests != [] && entity.ci != '' && entity.missingPaths == []` | A test plan with missing or empty references cannot be reproduced. | Declare the behavior and link to its spec, implementation, test files and workflow. |
+| `ci-discovers-tests` | silver | measured | `entity.notInCi.size() == 0` | Tests that CI never discovers cannot catch regressions before merge. | Wire the listed test paths into CI using the suite's normal entry point. |
+
+## Correctness testing review
+
+Agent review of risk coverage, test oracles and execution.
+
+**Why:** A file link or CI invocation gives only structural evidence. An agent reads test bodies and their execution paths to judge what failures the tests would actually detect.
+
+See [Correctness testing guide](https://github.com/seikika/seikika/blob/main/docs/design/correctness-testing.md).
+
+Scorecard `review-testing` over `TestingContract` entities, owned by group:maintainers. `seikika report` lists what fails now. *Measured* rules check facts a tool or connector read; *judged* rules pass on an agent's assessment (`seikika assess`).
+
+| Rule | Level | Basis | Passes when | Why | Fix |
+|---|---|---|---|---|---|
+| `current-review` | bronze | judged | `entity.reviewState == 'fresh'` | Changing the contract or linked sources can invalidate earlier test judgments. | Brief and reassess the contract with seikika assess. |
+| `risks-addressed` | silver | judged | `entity.reviewGaps.size() == 0` | Missing evidence and weak assertions deserve investigation before claiming coverage. | Read the assessment, close or clarify the cited gaps, and reassess. |
 
 ## CI security
 
