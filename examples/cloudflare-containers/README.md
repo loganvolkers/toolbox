@@ -4,7 +4,7 @@ Run a Seikika portal and its OpenFGA co-process in one Cloudflare Container. The
 
 Cloudflare offers PlanetScale PostgreSQL through its dashboard with billing on the Cloudflare account. Use the database's **direct primary endpoint** and `sslmode=verify-full`. For a PlanetScale connection string that includes `sslrootcert=system`, omit that parameter so Seikika uses the system trust store. A direct connection preserves the session-level advisory lock Seikika uses to keep action execution on one instance. Hyperdrive and PgBouncer transaction pooling cannot preserve that lock. [PlanetScale billing through Cloudflare](https://developers.cloudflare.com/changelog/post/2026-06-18-planetscale-databases-cloudflare-billing/) · [Hyperdrive connection pooling](https://developers.cloudflare.com/hyperdrive/concepts/connection-pooling/)
 
-The image caps direct PostgreSQL connections at four for Seikika and four for OpenFGA per container. OpenFGA keeps at most two idle connections. When adjusting the limits, reserve capacity for database administration and overlapping containers during rollouts. Seikika needs at least two sessions because the publisher holds one for its advisory lock.
+The image caps direct PostgreSQL connections at four for Seikika and four for OpenFGA per container. OpenFGA reaps connections that have been idle for at least one minute. When adjusting the limits, reserve capacity for database administration and overlapping containers during rollouts. Seikika needs at least two sessions because the publisher holds one for its advisory lock.
 
 ## Prepare your portal
 
