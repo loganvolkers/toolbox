@@ -28,7 +28,7 @@ and assess the evidence for high-consequence behaviors.
 |---|---|---|
 | **Orient** | Read [AGENTS.md](../../AGENTS.md), [decisions.md](../decisions/README.md) and the milestone in [v1-spec.md](../v1-spec.md) §3 | `CLAUDE.md` → `AGENTS.md` |
 | **Plan** | Turn exit criteria into checks *before* coding: a test, an acceptance-script step, or a reference-model case | §4 |
-| **Build** | Small changes in a crate of the [workspace](../v1-spec.md) §4 | `cargo build` (toolchain pinned in `rust-toolchain.toml`) |
+| **Build** | Small changes in a crate of the [workspace](../v1-spec.md) §4 | `pnpm build` prepares embedded UI assets for `cargo build` |
 | **Test** | Unit and integration tests, the differential tests, the relevant acceptance script | §4 |
 | **Review** | `cargo fmt --check`, `cargo clippy -D warnings`; read your own diff | CI |
 | **Design review** (`design-review`) | For a change readers see: story probes, then a blind panel of three auditors over two reference portals, until the stop rule holds (D01M87PSM9YQGGW3YQ5X4XCJP63) | `report-ui` (`npm run probe`), [design-audit](./design-audit.md) |
@@ -68,7 +68,7 @@ caching) comes back only when these numbers regress (D44, [developer-velocity.md
 | Acceptance | One script per milestone, on real Postgres 16, OpenFGA, connectors and Chromium (M5 needs none of them) | Exit criteria | `scripts/m2-acceptance.sh`, `m3-…`, `m4-…`, `m5-…` |
 | Scale | 100k entities / 2M relations / 100 rules ≤ 10 s | Budget §10.4 | `cargo run --release -p seikika-derive --example scale` |
 | Format | Tracked `.yaml` and `.yml` match Yamark's fixed point (D97) | One style for embedded objects | `yamark format --check` |
-| Freshness | `crates/seikika-api/ui-dist` matches its source | Embedded UI is current | CI `ui` job |
+| Build output | Hosted UI and offline report assets | CI builds both from source and checks that Git ignores them | CI `ui` job |
 | Types and freshness | Shared Vue kit, hosted UI, report and package catalog | Astro documents and embedded assets are current | `pnpm check`, `pnpm build` |
 | Story probe | Every UI story across both fixtures and viewports, in light and dark | No serious accessibility violation, sideways scroll, or script error | `pnpm storybook:build`, `pnpm storybook:probe` |
 | Standards | Seikika for Seikika scorecards over crates, docs, CLI and MCP (report, not yet a gate) | Docs, tests, clippy, size and complexity, interface contracts | `scripts/self-portal.sh report`; `seikika test portal` |
@@ -138,6 +138,9 @@ The repository's [mise config](../../mise.toml) uses the Rust version and compon
 `rust-toolchain.toml` and selects Node 24 and Python 3.13 to match CI. Use an activated mise
 shell or run commands with `mise exec --`.
 
+The checkout generates the hosted portal and offline report before compiling the Rust binary.
+Release builders run the same frontend build and package the resulting assets. [Embedded asset build decision](../decisions/D01M8EXN6P8HX02R74DA9X6MS0C.md)
+
 The [mise workflow](../../.github/workflows/mise.yml) installs the toolchain with an empty
 Rust home and no Actions cache. Pull requests and pushes to main use the minimum supported
 mise version. The weekly run uses the newest stable version to catch upstream changes. It
@@ -150,7 +153,7 @@ that cargo-dist still plans the CLI and workspace connector archives for every r
 | OpenFGA and its `fga` CLI | Authorization tests, M3–M4 acceptance | The tests find `openfga` on `PATH`. The acceptance scripts need `SEIKIKA_OPENFGA_BIN="$(mise which openfga)"` |
 | Python and uv | Reference model, parity, mock GitHub, SCIM feeder | Sync the reference requirements before running the oracle |
 | Yamark, actionlint, zizmor, Ruff, Scorecard and OSV-Scanner | YAML and repository scorecard checks | Fetch the pinned RustSec snapshot with `scripts/ci-tools.sh <dir> rustsec-osv` when running the offline scan |
-| Node and pnpm | Astro builds, UI stories and probes | Run `mise exec -- pnpm install --frozen-lockfile`. For browser checks, run `mise exec -- pnpm --filter @seikika/astro-report exec playwright install chromium` |
+| Node and pnpm | Embedded UI, Astro builds, UI stories and probes | Run `mise exec -- pnpm install --frozen-lockfile` and `mise exec -- pnpm build` before compiling the CLI or server from source. For browser checks, run `mise exec -- pnpm --filter @seikika/astro-report exec playwright install chromium` |
 | cargo-dist | Release planning | Run `mise exec -- dist plan` |
 | Postgres 16 | M2–M4 acceptance | Install the system package separately. The scripts create a throwaway cluster |
 

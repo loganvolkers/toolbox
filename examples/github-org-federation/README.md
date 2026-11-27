@@ -14,6 +14,8 @@ repository access determines the inventory. Install the pinned `zizmor` from the
 for the workflow audit and ensure it is on `PATH`.
 
 ```bash
+pnpm install --frozen-lockfile
+pnpm build
 cargo build --locked -p seikika-cli -p seikika-connector-workspace
 target/debug/seikika tools install portal --via pipx
 target/debug/seikika validate examples/github-org-federation

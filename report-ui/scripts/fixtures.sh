@@ -14,6 +14,7 @@
 # missing, since rules would read `unknown` and drift from CI. Linux x86_64, like CI.
 set -euo pipefail
 cd "$(dirname "$0")/../.."
+pnpm build
 cargo build --locked -q
 seikika_bin="$PWD/target/debug/seikika"
 out="$PWD/report-ui/fixtures"

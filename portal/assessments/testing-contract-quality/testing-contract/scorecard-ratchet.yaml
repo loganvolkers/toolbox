@@ -1,7 +1,7 @@
 apiVersion: seikika.com/assessment/v1
 entity: testing-contract:scorecard-ratchet
 rubric: testing-contract-quality
-subjectHash: 084a076dce7a
+subjectHash: 5f2e3dbbed07
 rubricHash: 8fc4906aea03cad1a6948469884ba31acc9d4a0259296c9a643f6d7b612e198e
 assessor: {kind: agent, name: Codex, model: GPT-6}
 at: 2026-11-27

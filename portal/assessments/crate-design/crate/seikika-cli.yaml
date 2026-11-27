@@ -1,7 +1,7 @@
 apiVersion: seikika.com/assessment/v1
 entity: crate:seikika-cli
 rubric: crate-design
-subjectHash: 68e9f1b5d0f0
+subjectHash: 254749d43a3a
 rubricHash: 43a87759a8d84ce60684ab59e5e34ed4f95ac1a8bdf84ace55a1fda1aa6b4bae
 assessor: {kind: agent, name: Codex, model: GPT-6}
 at: 2026-11-27
