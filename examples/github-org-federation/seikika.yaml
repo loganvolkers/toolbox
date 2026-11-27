@@ -1,5 +1,19 @@
 apiVersion: seikika.com/v1alpha1
-include: [repositories.yaml, standards.yaml, workflows.yaml]
+include:
+  - repositories.yaml
+  - standards.yaml
+  - workflows.yaml
+  - meta.yaml
+  - package: ../../packages/meta-scoring
+    with:
+      track: portal-quality
+      describeCommand:
+        - target/debug/seikika
+        - describe
+        - portal
+        - examples/github-org-federation/seikika.yaml
+      manifest: examples/github-org-federation/seikika.yaml
+      assessments: [examples/github-org-federation/assessments/**/*.y*ml]
 
 portal:
   name: seikika-organization

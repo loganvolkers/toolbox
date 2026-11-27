@@ -126,7 +126,7 @@ campaigns:
     track: standards
     owner: group:maintainers
     description: >-
-      Act on every current rule-quality and scorecard-quality finding: fix the
+      Act on every open rule-quality and scorecard-quality finding: fix the
       standard, or answer the finding in a new, independent assessment
       (docs/design/meta-standards-review.md).
     start: 2026-11-23
@@ -136,6 +136,32 @@ campaigns:
     includes:
     - {scorecard: review-rule, atLeast: bronze}
     - {scorecard: review-scorecard, atLeast: bronze}
+  - name: review-standard-coverage
+    title: Review the standards in use
+    track: standards
+    owner: group:maintainers
+    description: >-
+      Obtain current, cited reviews for the rules and scorecards maintained by
+      Seikika.
+    start: 2026-11-27
+    end: 2027-03-31
+    targetPercent: 100
+    includes:
+    - {scorecard: review-rule, atLeast: gold}
+    - {scorecard: review-scorecard, atLeast: gold}
+  - name: review-assessment-evidence
+    title: Verify assessment evidence
+    track: standards
+    owner: group:maintainers
+    description: >-
+      Cite the evidence behind assessments and independently review their
+      findings.
+    start: 2026-11-27
+    end: 2027-03-31
+    targetPercent: 100
+    includes:
+    - {scorecard: meta-assessment, atLeast: gold}
+    - {scorecard: review-assessment, atLeast: gold}
   - name: ci-security-gold
     title: Workflows with no unexplained zizmor finding
     track: delivery

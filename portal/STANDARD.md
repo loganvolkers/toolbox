@@ -23,40 +23,6 @@ Scorecard `maintainer-agent-doc` over `AgentDoc` entities, owned by group:mainta
 | `no-hardcoded-secrets` | bronze | measured | `entity.secretHits.size() == 0` | The file is committed to the repository and loaded into every agent's prompt, so a credential in it is exposed to every reader and every transcript. It sits at bronze so such a file cannot pass the ratchet. [Thresholds](https://github.com/seikika/seikika/blob/main/docs/design/thresholds.md) | Remove the credential in the evidence. An instruction file is loaded into the agent's prompt. |
 | `no-hidden-instructions` | bronze | measured | `entity.hiddenChars == 0` | Hidden characters let text reach the model that a reviewer never sees, a way to slip instructions past review into every session. It sits at bronze so such a file cannot pass the ratchet. [Thresholds](https://github.com/seikika/seikika/blob/main/docs/design/thresholds.md) | Remove zero-width and other default-ignorable characters, bidi controls and variation selectors outside emoji from the file. They are invisible to a reviewer and visible to a model. |
 
-## Assessments are well-formed
-
-What every assessment must contain to be worth reading: a named assessor, suggestions for findings and citations that resolve in the repository (D80).
-
-**Why:** Agents act on assessments and review cards read them, so a malformed one misleads twice: a finding without a suggestion can't be acted on, and a reason without a citation can't be checked. Bronze is the ratcheted floor every new assessment must meet; silver and gold ask for citations, first on findings, then on every verdict.
-
-See [Decision: assessments are scored](https://github.com/seikika/seikika/blob/main/docs/decisions/D01M7WJVW700000000000000000.md), [Scorecards for scorecards](https://github.com/seikika/seikika/blob/main/docs/design/scorecards-for-scorecards.md#61-assessments-and-rubrics-are-standards-too-d80), [assess-entity skill](https://github.com/seikika/seikika/blob/main/plugins/seikika-operator/skills/assess-entity/SKILL.md).
-
-Scorecard `meta-assessment` over `Assessment` entities, owned by group:maintainers. `seikika report` lists what fails now. *Measured* rules check facts a tool or connector read; *judged* rules pass on an agent's assessment (`seikika assess`).
-
-| Rule | Level | Basis | Passes when | Why | Fix |
-|---|---|---|---|---|---|
-| `suggests-fixes` | bronze | measured | `entity.unsuggested.size() == 0` | A fail or unsure verdict with no suggested change leaves the reader to rediscover the fix, so the finding tends to go unacted. | Add a `suggestion:` to each listed fail or unsure verdict: the change that would make it pass. |
-| `assessor-named` | bronze | measured | `has(entity.assessorName) && entity.assessorName.size() > 0` | An unnamed assessment can't be weighed or challenged, and review-assessment needs the name to tell an independent review from a self-review. | Set `assessor.name` to the agent harness or person who made the assessment. |
-| `cites-for-findings` | silver | measured | `entity.uncited.filter(c, c in entity.failing \|\| c in entity.unsure).size() == 0` | A finding that cites nothing a reader can open can be neither verified nor disputed; on the first run, 6 of 9 assessments fell below silver because their reasons named a behaviour without a path or a number. | In the assessment file under portal/assessments/, cite what each listed fail or unsure reason rests on, in a form a reader can open: a repository path (`crates/x/src/lib.rs:40`), a file name only one file has, a decision or question id that exists (D71, Q10), or a full URL. A section sign or a bare number alone isn't checkable. |
-| `cites-everything` | gold | measured | `entity.uncited.size() == 0` | A pass is a claim too; without a citation a reviewer can't tell a checked pass from a guess, and a wrong pass hides a problem the assessment was meant to find. | Cite a source in every listed reason, passes included, in the same forms as cites-for-findings (a path, a unique file name, an existing decision or question id, a URL), so a reviewer can check the verdict. |
-
-## Assessments, reviewed
-
-Each assessment reviewed against assessment-quality by another assessor, advisory; reviews of reviews are not made (D80, D01M831P5QWJQ4A2FT85N5MXJQF).
-
-**Why:** A deterministic check sees that an assessment cites something, not that the source says what the reason claims; a second assessor's review checks that. Reviews stop at one level, so assessments made with assessment-quality are skipped, and the card is advisory because a review goes stale on every edit.
-
-See [Decision: assessments are reviewed](https://github.com/seikika/seikika/blob/main/docs/decisions/D01M7WJVW700000000000000000.md), [Findings first decision](https://github.com/seikika/seikika/blob/main/docs/decisions/D01M831P5QWJQ4A2FT85N5MXJQF.md), [Meta standards review](https://github.com/seikika/seikika/blob/main/docs/design/meta-standards-review.md).
-
-Scorecard `review-assessment` over `Assessment` entities, owned by group:maintainers. `seikika report` lists what fails now. *Measured* rules check facts a tool or connector read; *judged* rules pass on an agent's assessment (`seikika assess`).
-
-| Rule | Level | Basis | Passes when | Why | Fix |
-|---|---|---|---|---|---|
-| `no-open-findings` | bronze | judged | `entity.reviewFailing.size() == 0` | Failing reviews were lost among the unreviewed lines and went unacted for days; putting the assessment at none makes an open finding head the report until it is fixed or disputed. | A current assessment-quality assessment failed the listed criteria: act on its suggestions (portal/assessments/), then re-assess. If the finding is wrong, say why in a new assessment by another assessor. |
-| `assessed` | silver | judged | `entity.reviewState == 'fresh' && !entity.selfReviewed` | A review by the assessment's own assessor repeats its blind spots and is no independent check; one of the first three assessment reviews was a self-review. | Run `seikika assess brief <assessment id> --portal portal`; a different agent or person should review it. |
-| `passes-review` | gold | judged | `entity.reviewState == 'fresh' && entity.reviewFailing.size() == 0 && entity.reviewUncited.size() == 0 && entity.reviewGrounded` | Gold means an independent reviewer checked the assessment against its own sources and found it sound; a review that cites only unrelated files can't have checked it. | For a listed criterion, revise the assessment file in portal/assessments/ where the review found it unsupported or incomplete, then have it reviewed again. For an item marked "fix the review", the review file is at fault: its reasons must cite what they rest on, including this assessment's file or the sources it cites. |
-| `no-doubts` | gold | judged | `entity.reviewState == 'fresh' && entity.reviewUnsure.size() == 0` | A reviewer's doubt usually means a verdict rests on taste rather than a cited source, so a second assessor reading the same sources might reach a different one. | Resolve what the reviewer was unsure of, usually by citing the source a verdict rests on. |
-
 ## Performance
 
 Start, read and recover on a 10k-component catalog, with every read authorized (Seikika through OpenFGA, Backstage under allow-all). ISO 25010 performance efficiency and reliability.
@@ -431,152 +397,6 @@ Scorecard `maintainer-example` over `Example` entities, owned by group:maintaine
 | `cites-the-design` | gold | measured | `entity.citesDesign` | An example that does not point at its design drifts from it unnoticed, and a reader cannot tell which of the two to believe. | Link the write-up at the design doc (`docs/design/<topic>.md`) or the decision (`docs/decisions/<id>.md`) it demonstrates, so the example is not a second source of truth. |
 | `no-hardcoded-secrets` | bronze | measured | `entity.secretHits.size() == 0` | Examples are published with the repository and copied verbatim, so a credential in one is exposed to every reader and can end up reused in their own setup. | Remove the credential in the evidence. An example is copied and read by agents. |
 
-## Rules are well-formed
-
-Whether each rule is built properly: explained, tested, seen both passing and failing on fixtures, with evidence and a readable check. Gold here means well-formed, not good; whether a rule is good is the agents' review, Rules, reviewed by agents (D71, D01M831P5QWJQ4A2FT85N5MXJQF).
-
-**Why:** Every score in the portal is only as trustworthy as the rule behind it, and an untested or unexplained rule can pass everything, or fail for the wrong reason, unnoticed. Bronze is the floor every new rule must meet (tested, explained, decided on fixtures); silver adds both outcomes, evidence and a cost bound; gold asks for tests that pin both outcomes and for evidence and a fix that lead an agent to the change.
-
-See [Scorecards for scorecards](https://github.com/seikika/seikika/blob/main/docs/design/scorecards-for-scorecards.md), [D71 one meta level](https://github.com/seikika/seikika/blob/main/docs/decisions/D01M7W0J8YR0000000000000000.md), [Meta standards review](https://github.com/seikika/seikika/blob/main/docs/design/meta-standards-review.md).
-
-Scorecard `meta-rule` over `Rule` entities, owned by group:maintainers. `seikika report` lists what fails now. *Measured* rules check facts a tool or connector read; *judged* rules pass on an agent's assessment (`seikika assess`).
-
-| Rule | Level | Basis | Passes when | Why | Fix |
-|---|---|---|---|---|---|
-| `explains-fix` | bronze | measured | `entity.fixWords >= 5` | A failing rule without a usable fix leaves the reader to reverse-engineer the check. A fresh agent raised a scorecard to gold using only fix texts that said what and where (lesson L1). [Thresholds and levels](https://github.com/seikika/seikika/blob/main/docs/design/thresholds.md#2-the-numbers) | Write a fix an agent can act on: what to change, and where. |
-| `explains-why` | bronze | measured | `entity.explained` | A reader who sees a failing rule needs to know why it matters before deciding to act, and a reviewer can't tell whether a check is a proxy without its goal. Links carry the long story, so the portal doesn't become an encyclopedia. [Goals for rules (GQM)](https://github.com/seikika/seikika/blob/main/docs/design/meta-standards-review.md#3-the-literature-and-where-our-meta-standard-stands) | Give the rule a `rationale:` saying why it exists (the risk or the cost it guards against), and put the long story under `links:`. |
-| `tested` | bronze | measured | `entity.tested` | An untested rule can change outcome after an edit with nothing to catch it. The first rules here gave false positives on a numbered Sources heading and a quoted "SDLC" (lesson L4). | In the portal's tests (tests/*.test.yaml), add an expectation that pins the rule: `score('<card>', '<entity>').rules['<rule>'] == 'fail'`, or its evidence compared (`.evidence['<rule>'] == [...]`). A bare mention doesn't count. |
-| `decided-on-fixtures` | bronze | measured | `entity.fixture.pass + entity.fixture.fail > 0` | A rule that is unknown on every fixture never runs its check in tests, so an error in its CEL first shows on real data, as `join` and `flatten` did twice (lesson L5). | Add fixture records the rule applies to, so it evaluates in tests. |
-| `both-outcomes-on-fixtures` | silver | measured | `entity.fixture.pass > 0 && entity.fixture.fail > 0` | A rule seen only passing may pass everything, and one seen only failing may fail everything; only both outcomes show it separates entities and that its evidence reads. | Give the fixtures one entity that passes and one that fails, so both paths (and the evidence) are exercised. |
-| `no-nested-loops` | silver | measured | `entity.check.loops <= 1 && (!has(entity.evidence) \|\| entity.evidence.loops <= 1)` | Rules are evaluated once per entity, so a loop inside a loop multiplies cost with the data; the 100k-entity budget already fails on 2-vCPU runners (lesson L8). | Avoid a comprehension inside a comprehension: compute the inner list in the connector or a computed field. |
-| `readable` | silver | measured | `entity.check.nodes <= 30` | A long check hides its logic from the reader deciding whether a failure is fair, and costs more per entity. Logic in a computed field or the connector can be named and tested on its own. [Thresholds and levels](https://github.com/seikika/seikika/blob/main/docs/design/thresholds.md#2-the-numbers) | Move logic into a computed field or the connector, and keep the rule a short comparison. |
-| `always-explains` | silver | measured | `entity.hasEvidence` | Without evidence, an agent needed one `explain` call per rule per entity to find what failed; evidence shown with the fix removed that step (lesson L2, D66). [D66 scorecards say why](https://github.com/seikika/seikika/blob/main/docs/decisions/D01M7VWS4ZG0000000000000000.md) | Add `evidence:` even for simple checks: it is what an agent reads first. |
-| `evidence-tracks-check` | gold | measured | `entity.evidenceTracksCheck` | A fixed sentence says that a rule failed, not what failed on this entity, so the reader must redo the check. Agents fixed what the evidence named (lessons L1 and L2). [Thresholds and levels](https://github.com/seikika/seikika/blob/main/docs/design/thresholds.md#2-the-numbers) | Write `evidence:` from what the check reads (the failing list itself, or the value compared), so it names what failed on this entity. |
-| `pins-both-outcomes` | gold | measured | `'pass' in entity.testedOutcomes && 'fail' in entity.testedOutcomes` | A rule whose tests pin only failing can start passing everything, and the tests still pass (lesson L4). Pinning both outcomes catches a change in either direction. | In the portal's tests (tests/*.test.yaml), add an expectation that the rule passes for one fixture entity (`score('<card>', '<entity>').rules['<rule>'] == 'pass'`) and one that it fails for another (`== 'fail'`, or its evidence compared), so a change that flips either outcome is caught (lesson L4). |
-| `fix-names-a-place` | gold | measured | `entity.fixNamesPlace` | A fix that says what but not where sends an agent searching, which is where it guesses wrong. Fixes that named the file and field were what let a fresh agent raise a scorecard on its own (lesson L1). | Say in `fix:` where to act: the file or directory (a path), the field the check reads, a `seikika` command, or "the listed …" items of an evidence that names them (scorecards-for-scorecards.md, lesson L1). |
-
-## Scorecards are well-formed
-
-Each scorecard's form: described, tested, no empty level, fixtures that climb the ladder to every level. Gold means well-formed, not good (D71, D01M831P5QWJQ4A2FT85N5MXJQF).
-
-**Why:** A scorecard is the ladder readers climb, so its levels must exist and be exercised: an empty level is granted for nothing, and a level no fixture reaches has never been seen to work. Bronze, tested with no empty level, is the floor for every new scorecard; silver adds a description, a reason, a fixture ladder and tested rules; gold has a fixture at every level.
-
-See [Scorecards for scorecards](https://github.com/seikika/seikika/blob/main/docs/design/scorecards-for-scorecards.md), [The ladders](https://github.com/seikika/seikika/blob/main/docs/design/thresholds.md#3-the-ladders), [Meta gold is not good](https://github.com/seikika/seikika/blob/main/docs/decisions/D01M831P5QWJQ4A2FT85N5MXJQF.md).
-
-Scorecard `meta-scorecard` over `Scorecard` entities, owned by group:maintainers. `seikika report` lists what fails now. *Measured* rules check facts a tool or connector read; *judged* rules pass on an agent's assessment (`seikika assess`).
-
-| Rule | Level | Basis | Passes when | Why | Fix |
-|---|---|---|---|---|---|
-| `tested` | bronze | measured | `entity.tested` | A scorecard no expectation names can change its levels or lose a rule with no test noticing; on the first run, `user-cli` had no test of any kind. | Add at least one expectation for the scorecard in the portal's tests. |
-| `every-level-has-rules` | bronze | measured | `entity.levels.all(l, l in entity.rulesPerLevel && entity.rulesPerLevel[l] > 0)` | A level with no rules is granted to every entity that reaches the one below it, so it tells the reader nothing about the entities at it. | Give every level at least one rule, or drop the level. |
-| `described` | silver | measured | `entity.described` | Agents read a scorecard's description before its rules. Without one, they infer the standard's purpose from its checks and may work towards the wrong goal. | Give the scorecard a `description:` saying what the standard covers; agents read it before any rule. |
-| `explains-why` | silver | measured | `entity.explained` | A description says what a standard covers, not why anyone should meet it. Without the risk and the reason for its levels, a reader can't weigh a failure before acting, and links keep that long story out of the portal so it doesn't become an encyclopedia. [Goals for rules (GQM)](https://github.com/seikika/seikika/blob/main/docs/design/meta-standards-review.md#3-the-literature-and-where-our-meta-standard-stands) | Give the scorecard a `rationale:` saying why the standard exists and why its levels are where they are, with `links:` to the decision or design behind it. |
-| `fixtures-show-the-ladder` | silver | measured | `entity.fixtureRealLevels.size() >= 2 \|\| (entity.fixtureRealLevels.size() == 1 && 'none' in entity.fixtureLevels)` | Fixtures at one outcome never show the scorecard telling a better entity from a worse one. A ladder of `none` and `skipped` used to pass, so one real level is now required (D01M831P5QWJQ4A2FT85N5MXJQF). | Give the scorecard fixtures at two outcomes, one of them a real level: one entity at none and one at bronze or above, or two at different levels. Skipped entities show no ladder. |
-| `every-rule-tested` | silver | measured | `entity.untestedRules.size() == 0` | One untested rule is enough for a scorecard's levels to drift. A rule without a test was the most common scorecard gap on the first run, in 11 scorecards. | Add an expectation for each untested rule. |
-| `fixtures-reach-every-level` | gold | measured | `entity.fixtureRealLevels.size() == entity.levels.size()` | A level no fixture reaches is untested: its rules may never pass together, and nothing shows that an entity can reach it (lesson L12). | Add fixture entities that reach each listed level, so every rung of the ladder is exercised in tests (portal/fixtures/). |
-
-## Kinds are well-formed
-
-Each kind of entity: in the fixtures, tested and described with every field, since every rule reads it (docs/design/scorecards-for-scorecards.md §5).
-
-**Why:** Every rule reads a kind, so a kind absent from fixtures and tests leaves its map rules and computed fields unexercised, and an undescribed one leaves agents guessing what an entity is. Being exercised in tests is the floor for a new kind; descriptions sit above it because they help readers without making any score wrong.
-
-See [Which parts need standards](https://github.com/seikika/seikika/blob/main/docs/design/scorecards-for-scorecards.md#4-holistic-review-which-parts-of-a-portal-need-standards), [Decision: every part is scored](https://github.com/seikika/seikika/blob/main/docs/decisions/D01M7WHQA9G0000000000000000.md).
-
-Scorecard `meta-kind` over `Kind` entities, owned by group:maintainers. `seikika report` lists what fails now. *Measured* rules check facts a tool or connector read; *judged* rules pass on an agent's assessment (`seikika assess`).
-
-| Rule | Level | Basis | Passes when | Why | Fix |
-|---|---|---|---|---|---|
-| `in-fixtures` | bronze | measured | `entity.fixtureEntities > 0` | A kind with no fixture entities never runs its map rules or computed fields in tests, so a mapping error first shows on live data. | Add fixture records that map to the kind, so its map rules and computed fields run in tests. |
-| `tested` | bronze | measured | `entity.tested` | Fixture entities no expectation reads can change without any test failing; one expectation pins the kind's mapping. Three kinds were in no test on the first run. | Add a test expectation about one of the kind's fixture entities (a field, a relation or a score). |
-| `described` | silver | measured | `entity.described` | Agents read a kind's description before its fields. Without one, they infer what an entity is from field names and can act on the wrong thing. | Give the kind a `description:` saying what one entity is; agents read it before any field. |
-| `fields-described` | gold | measured | `entity.undescribedFields.size() == 0` | An undescribed field leaves its meaning, unit and origin to guesswork, and every rule and agent that reads it inherits the guess; 16 kinds had undescribed fields on the first run. | Give each listed field a `description:`: what it means, its unit, and where it comes from. |
-
-## Fields are well-formed
-
-Each field: populated in the fixtures, described and given a shape, so CEL, validation and agents know what it holds (docs/design/scorecards-for-scorecards.md §5).
-
-**Why:** Fields are what rules, evidence and agents read: one never populated in fixtures has an untested mapping, an undescribed one is guessed at, and an opaque object can't be type-checked or validated. A value in some fixture is the floor for a new field; a description and a declared shape sit above it.
-
-See [The rest of the model](https://github.com/seikika/seikika/blob/main/docs/design/scorecards-for-scorecards.md#5-the-rest-of-the-model-kinds-fields-connectors), [Decision: every part is scored](https://github.com/seikika/seikika/blob/main/docs/decisions/D01M7WHQA9G0000000000000000.md).
-
-Scorecard `meta-field` over `Field` entities, owned by group:maintainers. `seikika report` lists what fails now. *Measured* rules check facts a tool or connector read; *judged* rules pass on an agent's assessment (`seikika assess`).
-
-| Rule | Level | Basis | Passes when | Why | Fix |
-|---|---|---|---|---|---|
-| `populated-in-fixtures` | bronze | measured | `entity.fixtureWithValue > 0` | A field no fixture sets has a mapping or computation that no test runs, so it can be empty or wrong on every entity without anyone noticing. | Give at least one fixture record a value for the field, so its mapping (or computation) is exercised. |
-| `described` | silver | measured | `entity.described` | A field's meaning, unit and source aren't visible from its name, and a rule written against a misread field measures the wrong thing. | Add a `description:` to the field: what it means, its unit, and where it comes from. |
-| `has-shape` | gold | measured | `!entity.opaque` | With no declared shape, validation and CEL type checks can't see inside the object, so a renamed or missing key surfaces only as a wrong outcome in the rules that read it. | Replace the object with typed fields (or a list of strings), so CEL, validation and agents know its shape. |
-| `computed-readable` | gold | measured | `entity.computedNodes <= 60 && entity.computedLoops <= 1` | A long or doubly nested computed field is hard to review and costs more on every entity. Computed fields get twice a check's budget because they are where logic belongs. [Thresholds and levels](https://github.com/seikika/seikika/blob/main/docs/design/thresholds.md#2-the-numbers) | Split the field's `computed:` expression into simpler fields and rules, or move the logic into the connector, so it reads at a glance. |
-
-## Portal connectors are well-formed
-
-Each connector a portal configures: every record mapped, fixtures for tests, freshness declared and refresh by id (docs/design/scorecards-for-scorecards.md §5).
-
-**Why:** Every fact enters the portal through a connector, so its gaps become the portal's: unmapped records are lost, untested mappings break on live data, and stale data reads as current. The starter shipped without freshness or refresh, which pilots copying it would have inherited; a mapping and fixtures are the floor, freshness and refresh sit above it.
-
-See [The rest of the model](https://github.com/seikika/seikika/blob/main/docs/design/scorecards-for-scorecards.md#5-the-rest-of-the-model-kinds-fields-connectors), [Decision: every part is scored](https://github.com/seikika/seikika/blob/main/docs/decisions/D01M7WHQA9G0000000000000000.md).
-
-Scorecard `meta-connector` over `PortalConnector` entities, owned by group:maintainers. `seikika report` lists what fails now. *Measured* rules check facts a tool or connector read; *judged* rules pass on an agent's assessment (`seikika assess`).
-
-| Rule | Level | Basis | Passes when | Why | Fix |
-|---|---|---|---|---|---|
-| `records-mapped` | bronze | measured | `entity.unmapped.size() == 0` | Records of a kind no map rule reads never become entities, so the portal silently lacks those facts while the connector appears to cover them. | Map each listed record kind to a kind (`map: - from: <connector>/<record>`), or stop declaring it. |
-| `has-fixtures` | bronze | measured | `entity.fixtureRecords > 0` | Without fixture records, the connector's mappings run only against the live system, so tests and CI never exercise them. | Add fixtures/<connector>.ndjson with representative records, so tests run without the live system. |
-| `freshness-declared` | silver | measured | `entity.withoutFreshness.size() == 0` | With no freshness bound, data from a connector that stopped syncing reads as current, and rules pass or fail on stale facts. | Declare `freshness:` for each listed record kind, so stale data shows as stale rather than current. |
-| `refreshable` | gold | measured | `entity.records.all(r, r in entity.refreshable)` | An agent that fixes something needs to refresh that one entity to see the rule pass; without refresh by id it waits for a full sync, or can't confirm the fix at all. | Support refresh by external id for each listed record kind, so an agent can see its fix land. |
-
-## Rules, reviewed by agents
-
-Agents' judgement of each rule against rule-quality, advisory: an open finding is none, a current review is silver, a clean, cited one with no doubts is gold (D79, D01M831P5QWJQ4A2FT85N5MXJQF).
-
-**Why:** Form checks can't tell whether a rule measures its intent or can be gamed: of 19 rules and scorecards that reached gold on the form checks and that agents reviewed, none passed. Open findings rank lowest so they head the report; the card is advisory because a review goes stale whenever its subject changes, and gating on it would block every edit.
-
-See [Judgement pushed by agents](https://github.com/seikika/seikika/blob/main/docs/design/scorecards-for-scorecards.md#6-judgement-pushed-by-coding-agents-d79), [Decision: judgement is pushed](https://github.com/seikika/seikika/blob/main/docs/decisions/D01M7WHQA9G0000000000000000.md), [Meta standards review](https://github.com/seikika/seikika/blob/main/docs/design/meta-standards-review.md).
-
-Scorecard `review-rule` over `Rule` entities, owned by group:maintainers. `seikika report` lists what fails now. *Measured* rules check facts a tool or connector read; *judged* rules pass on an agent's assessment (`seikika assess`).
-
-| Rule | Level | Basis | Passes when | Why | Fix |
-|---|---|---|---|---|---|
-| `no-open-findings` | bronze | judged | `entity.reviewFailing.size() == 0` | A failing review names a way the rule misleads or can be gamed. Two such findings sat unacted for three days, buried among unreviewed rules, so an open finding now drops the rule to none. | A current rule-quality assessment failed the listed criteria: act on its suggestions (portal/assessments/), then re-assess. If the finding is wrong, say why in a new assessment by another assessor. |
-| `assessed` | silver | judged | `entity.reviewState == 'fresh'` | Without a current review, nobody has judged whether the rule as it now stands measures its intent; a verdict on an earlier version may not apply to the check. | Run `seikika assess brief <rule id> --portal portal`, have your agent write the assessment file it names, then `seikika assess check portal`. |
-| `passes-review` | gold | judged | `entity.reviewState == 'fresh' && entity.reviewFailing.size() == 0 && entity.reviewUncited.size() == 0` | A review that fails a criterion found a problem, and one whose reasons cite nothing that resolves can't be checked; either way the rule isn't known to be good. | Act on the failing criteria's suggestions in the assessment (portal/assessments/), then re-assess. |
-| `no-doubts` | gold | judged | `entity.reviewState == 'fresh' && entity.reviewUnsure.size() == 0` | An unsure verdict usually marks a threshold with no source or an intent nobody wrote down, which is where a rule drifts into a proxy (lesson L9). [Thresholds and levels](https://github.com/seikika/seikika/blob/main/docs/design/thresholds.md) | Resolve what the assessor was unsure of: usually a missing source for a threshold or an unstated intent. |
-
-## Scorecards, reviewed by agents
-
-An agent reviews whether each scorecard measures one concern and climbs a real ladder: no open finding is bronze, a current review is silver, and a clean, cited one with no doubts is gold. The card advises rather than gates (D79, D01M831P5QWJQ4A2FT85N5MXJQF).
-
-**Why:** Form checks can't tell whether a scorecard measures one concern, climbs a real ladder or leaves an obvious gap; an adversarial review failed every scorecard it sampled that had reached gold on the form checks. The ladder and advisory status match review-rule: open findings first, and never gating, because a review goes stale when the scorecard changes.
-
-See [Judgement pushed by agents](https://github.com/seikika/seikika/blob/main/docs/design/scorecards-for-scorecards.md#6-judgement-pushed-by-coding-agents-d79), [Decision: judgement is pushed](https://github.com/seikika/seikika/blob/main/docs/decisions/D01M7WHQA9G0000000000000000.md), [Meta standards review](https://github.com/seikika/seikika/blob/main/docs/design/meta-standards-review.md).
-
-Scorecard `review-scorecard` over `Scorecard` entities, owned by group:maintainers. `seikika report` lists what fails now. *Measured* rules check facts a tool or connector read; *judged* rules pass on an agent's assessment (`seikika assess`).
-
-| Rule | Level | Basis | Passes when | Why | Fix |
-|---|---|---|---|---|---|
-| `no-open-findings` | bronze | judged | `entity.reviewFailing.size() == 0` | A failing review names a gap or a broken ladder that every entity the scorecard scores inherits; dropping the scorecard to none keeps the finding at the top of the report until someone acts on it. | A current scorecard-quality assessment failed the listed criteria: act on its suggestions (portal/assessments/), then re-assess. If the finding is wrong, say why in a new assessment by another assessor. |
-| `assessed` | silver | judged | `entity.reviewState == 'fresh'` | A review is tied to the scorecard's content hash; once the scorecard changes, the old verdict may no longer describe its rules or levels. | Run `seikika assess brief <scorecard id> --portal portal`, have your agent write the assessment file it names, then `seikika assess check portal`. |
-| `passes-review` | gold | judged | `entity.reviewState == 'fresh' && entity.reviewFailing.size() == 0 && entity.reviewUncited.size() == 0` | A review that fails a criterion found a problem, and one whose reasons cite nothing that resolves can't be checked; either way the scorecard isn't known to be good. | Act on the failing criteria's suggestions in the assessment (portal/assessments/), then re-assess. |
-| `no-doubts` | gold | judged | `entity.reviewState == 'fresh' && entity.reviewUnsure.size() == 0` | An unsure verdict usually marks a level whose purpose nobody wrote down, and a level nobody can justify is one readers can't trust. [The ladders](https://github.com/seikika/seikika/blob/main/docs/design/thresholds.md#3-the-ladders) | Resolve what the assessor was unsure of: usually a level whose purpose isn't written down. |
-
-## Rubrics are well-formed
-
-Each rubric agents judge with: described, used, guided with what counts as fail, and shown to discriminate on real assessments (D80).
-
-**Why:** A rubric decides what agents judge, so a vague one yields reviews that disagree or pass everything. Described and used once is the floor for a new rubric; guidance on what counts as fail lets assessors agree; gold needs three assessments to show that each criterion can fail.
-
-See [Assessments and rubrics](https://github.com/seikika/seikika/blob/main/docs/design/scorecards-for-scorecards.md#61-assessments-and-rubrics-are-standards-too-d80), [Decision: rubrics are scored](https://github.com/seikika/seikika/blob/main/docs/decisions/D01M7WJVW700000000000000000.md).
-
-Scorecard `meta-rubric` over `Rubric` entities, owned by group:maintainers. `seikika report` lists what fails now. *Measured* rules check facts a tool or connector read; *judged* rules pass on an agent's assessment (`seikika assess`).
-
-| Rule | Level | Basis | Passes when | Why | Fix |
-|---|---|---|---|---|---|
-| `described` | bronze | measured | `entity.described` | The assessor reads the description to learn what to judge and which sources to read; without it, two assessors judge different things. | Describe what the rubric judges and which sources the assessor should read. |
-| `in-use` | bronze | measured | `entity.assessments > 0` | A rubric no assessment has used is untried configuration: nobody knows whether its questions can be answered from the sources it names. | Assess one entity with it (`seikika assess brief <id> --rubric <name>`), or remove the rubric. |
-| `guided` | silver | measured | `entity.unguided.size() == 0` | Without guidance on what counts as fail, assessors draw the line in different places and their verdicts can't be compared. Blank guidance used to pass (D01M831P5QWJQ4A2FT85N5MXJQF). [Thresholds and levels](https://github.com/seikika/seikika/blob/main/docs/design/thresholds.md#2-the-numbers) | Give each listed criterion `guidance:` saying what counts as fail, so assessors agree. |
-| `discriminates` | gold | measured | `entity.assessments >= 3 && entity.alwaysPass.size() == 0` | A criterion every assessment passes costs assessor effort and tells nothing apart: `rule-quality`'s `fix-leads-to-pass` passed all four of its first rule assessments. | Sharpen or drop a criterion that everything passes; a question nothing fails asks nothing. |
-
 ## Runtime observability
 
 Seikika's runtime telemetry checklist: the OTel crate, metric catalog, structured logs, alert stubs and an exported trace, each a file that exists (docs/design/observability.md).
@@ -850,6 +670,186 @@ Scorecard `review-testing` over `TestingContract` entities, owned by group:maint
 | `current-review` | bronze | judged | `entity.reviewState == 'fresh'` | Changing the contract or linked sources can invalidate earlier test judgments. | Brief and reassess the contract with seikika assess. |
 | `risks-addressed` | silver | judged | `entity.reviewGaps.size() == 0` | Missing evidence and weak assertions deserve investigation before claiming coverage. | Read the assessment, close or clarify the cited gaps, and reassess. |
 
+## Assessments are well-formed
+
+What every assessment must contain to be worth reading: a named assessor, suggestions for findings and citations that resolve in the repository (D80).
+
+**Why:** Agents act on assessments and review cards read them, so a malformed one misleads twice: a finding without a suggestion can't be acted on, and a reason without a citation can't be checked. Bronze is the ratcheted floor every new assessment must meet; silver and gold ask for citations, first on findings, then on every verdict.
+
+See [Decision: assessments are scored](https://github.com/seikika/seikika/blob/main/docs/decisions/D01M7WJVW700000000000000000.md), [Scorecards for scorecards](https://github.com/seikika/seikika/blob/main/docs/design/scorecards-for-scorecards.md#61-assessments-and-rubrics-are-standards-too-d80), [assess-entity skill](https://github.com/seikika/seikika/blob/main/plugins/seikika-operator/skills/assess-entity/SKILL.md).
+
+Scorecard `meta-assessment` over `Assessment` entities, owned by group:maintainers. `seikika report` lists what fails now. *Measured* rules check facts a tool or connector read; *judged* rules pass on an agent's assessment (`seikika assess`).
+
+| Rule | Level | Basis | Passes when | Why | Fix |
+|---|---|---|---|---|---|
+| `suggests-fixes` | bronze | measured | `entity.unsuggested.size() == 0` | A fail or unsure verdict with no suggested change leaves the reader to rediscover the fix, so the finding tends to go unacted. | Add a `suggestion:` to each listed fail or unsure verdict: the change that would make it pass. |
+| `assessor-named` | bronze | measured | `has(entity.assessorName) && entity.assessorName.matches('[[:alnum:]]\|\\p{L}\|\\p{N}') && !entity.assessorName.matches('(?i)^\\s*(tbd\|unknown\|anonymous\|n/a\|placeholder)\\s*$')` | An unnamed assessment can't be weighed or challenged, and review-assessment needs the name to tell an independent review from a self-review. | Set `assessor.name` to the agent harness or person who made the assessment. |
+| `cites-for-findings` | silver | measured | `entity.uncited.filter(c, c in entity.failing \|\| c in entity.unsure).size() == 0` | A finding that cites nothing a reader can open can be neither verified nor disputed; on the first run, 6 of 9 assessments fell below silver because their reasons named a behaviour without a path or a number. | In the assessment file under the portal's `assessments/` directory, cite what each listed fail or unsure reason rests on, in a form a reader can open: a repository path (`crates/x/src/lib.rs:40`), a file name only one file has, a decision or question id that exists (D71, Q10), or a full URL. A section sign or a bare number alone isn't checkable. |
+| `cites-everything` | gold | measured | `entity.uncited.size() == 0` | A pass is a claim too; without a citation a reviewer can't tell a checked pass from a guess, and a wrong pass hides a problem the assessment was meant to find. | Cite a source in every listed reason, passes included, in the same forms as cites-for-findings (a path, a unique file name, an existing decision or question id, a URL), so a reviewer can check the verdict. |
+
+## Assessments, reviewed
+
+Each assessment reviewed against assessment-quality by another assessor, advisory; reviews of reviews are not made (D80, D01M831P5QWJQ4A2FT85N5MXJQF).
+
+**Why:** A deterministic check sees that an assessment cites something, not that the source says what the reason claims; a second assessor's review checks that. Reviews stop at one level, so assessments made with assessment-quality are skipped, and the card is advisory because a review goes stale on every edit.
+
+See [Decision: assessments are reviewed](https://github.com/seikika/seikika/blob/main/docs/decisions/D01M7WJVW700000000000000000.md), [Findings first decision](https://github.com/seikika/seikika/blob/main/docs/decisions/D01M831P5QWJQ4A2FT85N5MXJQF.md), [Meta standards review](https://github.com/seikika/seikika/blob/main/docs/design/meta-standards-review.md).
+
+Scorecard `review-assessment` over `Assessment` entities, owned by group:maintainers. `seikika report` lists what fails now. *Measured* rules check facts a tool or connector read; *judged* rules pass on an agent's assessment (`seikika assess`).
+
+| Rule | Level | Basis | Passes when | Why | Fix |
+|---|---|---|---|---|---|
+| `no-open-findings` | bronze | judged | `entity.reviewFailing.size() == 0` | Failing reviews were lost among the unreviewed lines and went unacted for days; putting the assessment at none makes an open finding head the report until it is fixed or disputed. | A current assessment-quality assessment failed the listed criteria: act on its suggestions in the assessment file, then re-assess. If the finding is wrong, say why in a new assessment by another assessor. |
+| `assessed` | silver | judged | `entity.reviewState == 'fresh' && !entity.selfReviewed` | A review by the assessment's own assessor repeats its blind spots and is no independent check; one of the first three assessment reviews was a self-review. | Run `seikika assess brief <assessment id> --portal <manifest>`; a different agent or person should review it. |
+| `passes-review` | gold | judged | `entity.reviewState == 'fresh' && entity.reviewFailing.size() == 0 && entity.reviewUncited.size() == 0 && entity.reviewGrounded && entity.reviewVerified` | Gold means an independent reviewer checked the assessment against its own sources and found it sound; a review that cites only unrelated files can't have checked it. | For a listed criterion, revise the assessment file in the portal's `assessments/` directory where the review found it unsupported or incomplete, then have it reviewed again. For an item marked "fix the review", the review file is at fault: its reasons must cite what they rest on, including this assessment's file or the sources it cites. |
+| `no-doubts` | gold | judged | `entity.reviewState == 'fresh' && entity.reviewUnsure.size() == 0` | A reviewer's doubt usually means a verdict rests on taste rather than a cited source, so a second assessor reading the same sources might reach a different one. | Resolve what the reviewer was unsure of, usually by citing the source a verdict rests on. |
+
+## Rules are well-formed
+
+Whether each rule is built properly: explained, tested, seen both passing and failing on fixtures, with evidence and a readable check. Gold here means well-formed, not good; whether a rule is good is the agents' review, Rules, reviewed by agents (D71, D01M831P5QWJQ4A2FT85N5MXJQF).
+
+**Why:** Every score in the portal is only as trustworthy as the rule behind it, and an untested or unexplained rule can pass everything, or fail for the wrong reason, unnoticed. Bronze is the floor every new rule must meet (tested, explained, decided on fixtures); silver adds both outcomes, evidence and a cost bound; gold asks for tests that pin both outcomes and for evidence and a fix that lead an agent to the change.
+
+See [Scorecards for scorecards](https://github.com/seikika/seikika/blob/main/docs/design/scorecards-for-scorecards.md), [D71 one meta level](https://github.com/seikika/seikika/blob/main/docs/decisions/D01M7W0J8YR0000000000000000.md), [Meta standards review](https://github.com/seikika/seikika/blob/main/docs/design/meta-standards-review.md).
+
+Scorecard `meta-rule` over `Rule` entities, owned by group:maintainers. `seikika report` lists what fails now. *Measured* rules check facts a tool or connector read; *judged* rules pass on an agent's assessment (`seikika assess`).
+
+| Rule | Level | Basis | Passes when | Why | Fix |
+|---|---|---|---|---|---|
+| `explains-fix` | bronze | measured | `entity.fixWords >= 5` | A failing rule without a usable fix leaves the reader to reverse-engineer the check. A fresh agent raised a scorecard to gold using only fix texts that said what and where (lesson L1). [Thresholds and levels](https://github.com/seikika/seikika/blob/main/docs/design/thresholds.md#2-the-numbers) | Write a fix an agent can act on: what to change, and where. |
+| `explains-why` | bronze | measured | `entity.explained` | A reader who sees a failing rule needs to know why it matters before deciding to act, and a reviewer can't tell whether a check is a proxy without its goal. Links carry the long story, so the portal doesn't become an encyclopedia. [Goals for rules (GQM)](https://github.com/seikika/seikika/blob/main/docs/design/meta-standards-review.md#3-the-literature-and-where-our-meta-standard-stands) | Give the rule a `rationale:` saying why it exists (the risk or the cost it guards against), and put the long story under `links:`. |
+| `tested` | bronze | measured | `entity.tested` | An untested rule can change outcome after an edit with nothing to catch it. The first rules here gave false positives on a numbered Sources heading and a quoted "SDLC" (lesson L4). | In a file listed under the portal's `tests:`, add a passing expectation that requires a concrete outcome (`score('<card>', '<entity>').rules['<rule>'] == 'fail'`) or compare the failing rule's evidence with a literal (`.evidence['<rule>'] == [...]`). |
+| `decided-on-fixtures` | bronze | measured | `entity.fixture.pass + entity.fixture.fail > 0` | A rule that is unknown on every fixture never runs its check in tests, so an error in its CEL first shows on real data, as `join` and `flatten` did twice (lesson L5). | Add fixture records the rule applies to, so it evaluates in tests. |
+| `both-outcomes-on-fixtures` | silver | measured | `entity.fixture.pass > 0 && entity.fixture.fail > 0` | A rule seen only passing may pass everything, and one seen only failing may fail everything; only both outcomes show it separates entities and that its evidence reads. | Give the fixtures one entity that passes and one that fails, so both paths (and the evidence) are exercised. |
+| `no-nested-loops` | silver | measured | `entity.check.loops <= 1 && (!has(entity.evidence) \|\| entity.evidence.loops <= 1)` | Rules are evaluated once per entity, so a loop inside a loop multiplies cost with the data; the 100k-entity budget already fails on 2-vCPU runners (lesson L8). | Avoid a comprehension inside a comprehension: compute the inner list in the connector or a computed field. |
+| `readable` | silver | measured | `entity.check.nodes <= 30` | A long check hides its logic from the reader deciding whether a failure is fair, and costs more per entity. Logic in a computed field or the connector can be named and tested on its own. [Thresholds and levels](https://github.com/seikika/seikika/blob/main/docs/design/thresholds.md#2-the-numbers) | Move logic into a computed field or the connector, and keep the rule a short comparison. |
+| `always-explains` | silver | measured | `entity.hasEvidence` | Without evidence, an agent needed one `explain` call per rule per entity to find what failed; evidence shown with the fix removed that step (lesson L2, D66). [D66 scorecards say why](https://github.com/seikika/seikika/blob/main/docs/decisions/D01M7VWS4ZG0000000000000000.md) | Add `evidence:` even for simple checks: it is what an agent reads first. |
+| `evidence-tracks-check` | gold | measured | `entity.evidenceTracksCheck` | A fixed sentence says that a rule failed, not what failed on this entity, so the reader must redo the check. Agents fixed what the evidence named (lessons L1 and L2). [Thresholds and levels](https://github.com/seikika/seikika/blob/main/docs/design/thresholds.md#2-the-numbers) | Write `evidence:` from what the check reads (the failing list itself, or the value compared), so it names what failed on this entity. |
+| `pins-both-outcomes` | gold | measured | `'pass' in entity.testedOutcomes && 'fail' in entity.testedOutcomes` | A rule whose tests pin only failing can start passing everything, and the tests still pass (lesson L4). Pinning both outcomes catches a change in either direction. | In the portal's tests (tests/*.test.yaml), add an expectation that the rule passes for one fixture entity (`score('<card>', '<entity>').rules['<rule>'] == 'pass'`) and one that it fails for another (`== 'fail'`, or its evidence compared), so a change that flips either outcome is caught (lesson L4). |
+| `fix-names-a-place` | gold | measured | `entity.fixNamesPlace` | A fix that says what but not where sends an agent searching, which is where it guesses wrong. Fixes that named the file and field were what let a fresh agent raise a scorecard on its own (lesson L1). | Say in `fix:` where to act: the file or directory (a path), the field the check reads, a `seikika` command, or "the listed …" items of an evidence that names them (scorecards-for-scorecards.md, lesson L1). |
+
+## Scorecards are well-formed
+
+Each scorecard's form: described, tested, no empty level, fixtures that climb the ladder to every level. Gold means well-formed, not good (D71, D01M831P5QWJQ4A2FT85N5MXJQF).
+
+**Why:** A scorecard is the ladder readers climb, so its levels must exist and be exercised: an empty level is granted for nothing, and a level no fixture reaches has never been seen to work. Bronze, tested with no empty level, is the floor for every new scorecard; silver adds a description, a reason, a fixture ladder and tested rules; gold has a fixture at every level.
+
+See [Scorecards for scorecards](https://github.com/seikika/seikika/blob/main/docs/design/scorecards-for-scorecards.md), [The ladders](https://github.com/seikika/seikika/blob/main/docs/design/thresholds.md#3-the-ladders), [Meta gold is not good](https://github.com/seikika/seikika/blob/main/docs/decisions/D01M831P5QWJQ4A2FT85N5MXJQF.md).
+
+Scorecard `meta-scorecard` over `Scorecard` entities, owned by group:maintainers. `seikika report` lists what fails now. *Measured* rules check facts a tool or connector read; *judged* rules pass on an agent's assessment (`seikika assess`).
+
+| Rule | Level | Basis | Passes when | Why | Fix |
+|---|---|---|---|---|---|
+| `tested` | bronze | measured | `entity.tested` | A scorecard no expectation names can change its levels or lose a rule with no test noticing; on the first run, `user-cli` had no test of any kind. | Pin a level or rule outcome for an in-scope fixture in a file listed under the portal's `tests:`. |
+| `every-level-has-rules` | bronze | measured | `entity.levels.all(l, l in entity.rulesPerLevel && entity.rulesPerLevel[l] > 0)` | A level with no rules is granted to every entity that reaches the one below it, so it tells the reader nothing about the entities at it. | Give every level at least one rule, or drop the level. |
+| `described` | silver | measured | `entity.described` | Agents read a scorecard's description before its rules. Without one, they infer the standard's purpose from its checks and may work towards the wrong goal. | Give the scorecard a `description:` saying what the standard covers; agents read it before any rule. |
+| `explains-why` | silver | measured | `entity.explained` | A description says what a standard covers, not why anyone should meet it. Without the risk and the reason for its levels, a reader can't weigh a failure before acting, and links keep that long story out of the portal so it doesn't become an encyclopedia. [Goals for rules (GQM)](https://github.com/seikika/seikika/blob/main/docs/design/meta-standards-review.md#3-the-literature-and-where-our-meta-standard-stands) | Give the scorecard a `rationale:` saying why the standard exists and why its levels are where they are, with `links:` to the decision or design behind it. |
+| `fixtures-show-the-ladder` | silver | measured | `entity.fixtureRealLevels.size() >= 2 \|\| (entity.fixtureRealLevels.size() == 1 && 'none' in entity.fixtureLevels)` | Fixtures at one outcome never show the scorecard telling a better entity from a worse one. A ladder of `none` and `skipped` used to pass, so one real level is now required (D01M831P5QWJQ4A2FT85N5MXJQF). | Give the scorecard fixtures at two outcomes, one of them a real level: one entity at none and one at bronze or above, or two at different levels. Skipped entities show no ladder. |
+| `every-rule-tested` | silver | measured | `entity.untestedRules.size() == 0` | One untested rule is enough for a scorecard's levels to drift. A rule without a test was the most common scorecard gap on the first run, in 11 scorecards. | Add an expectation for each untested rule. |
+| `fixtures-reach-every-level` | gold | measured | `entity.fixtureRealLevels.size() == entity.levels.size()` | A level no fixture reaches is untested: its rules may never pass together, and nothing shows that an entity can reach it (lesson L12). | Add fixture entities that reach each listed level, so every rung of the ladder is exercised in tests. Place the records in `fixtures/` next to the manifest. |
+
+## Kinds are well-formed
+
+Each kind of entity: in the fixtures, tested and described with every field, since every rule reads it (docs/design/scorecards-for-scorecards.md §5).
+
+**Why:** Every rule reads a kind, so a kind absent from fixtures and tests leaves its map rules and computed fields unexercised, and an undescribed one leaves agents guessing what an entity is. Being exercised in tests is the floor for a new kind; descriptions sit above it because they help readers without making any score wrong.
+
+See [Which parts need standards](https://github.com/seikika/seikika/blob/main/docs/design/scorecards-for-scorecards.md#4-holistic-review-which-parts-of-a-portal-need-standards), [Decision: every part is scored](https://github.com/seikika/seikika/blob/main/docs/decisions/D01M7WHQA9G0000000000000000.md).
+
+Scorecard `meta-kind` over `Kind` entities, owned by group:maintainers. `seikika report` lists what fails now. *Measured* rules check facts a tool or connector read; *judged* rules pass on an agent's assessment (`seikika assess`).
+
+| Rule | Level | Basis | Passes when | Why | Fix |
+|---|---|---|---|---|---|
+| `in-fixtures` | bronze | measured | `entity.fixtureEntities > 0` | A kind with no fixture entities never runs its map rules or computed fields in tests, so a mapping error first shows on live data. | Add fixture records that map to the kind, so its map rules and computed fields run in tests. |
+| `tested` | bronze | measured | `entity.tested` | Fixture entities no expectation reads can change without any test failing; one expectation pins the kind's mapping. Three kinds were in no test on the first run. | Add a test expectation about one of the kind's fixture entities (a field, a relation or a score). |
+| `described` | silver | measured | `entity.described` | Agents read a kind's description before its fields. Without one, they infer what an entity is from field names and can act on the wrong thing. | Give the kind a `description:` saying what one entity is; agents read it before any field. |
+| `fields-described` | gold | measured | `entity.undescribedFields.size() == 0` | An undescribed field leaves its meaning, unit and origin to guesswork, and every rule and agent that reads it inherits the guess; 16 kinds had undescribed fields on the first run. | Give each listed field a `description:`: what it means, its unit, and where it comes from. |
+
+## Fields are well-formed
+
+Each field: populated in the fixtures, described and given a shape, so CEL, validation and agents know what it holds (docs/design/scorecards-for-scorecards.md §5).
+
+**Why:** Fields are what rules, evidence and agents read: one never populated in fixtures has an untested mapping, an undescribed one is guessed at, and an opaque object can't be type-checked or validated. A value in some fixture is the floor for a new field; a description and a declared shape sit above it.
+
+See [The rest of the model](https://github.com/seikika/seikika/blob/main/docs/design/scorecards-for-scorecards.md#5-the-rest-of-the-model-kinds-fields-connectors), [Decision: every part is scored](https://github.com/seikika/seikika/blob/main/docs/decisions/D01M7WHQA9G0000000000000000.md).
+
+Scorecard `meta-field` over `Field` entities, owned by group:maintainers. `seikika report` lists what fails now. *Measured* rules check facts a tool or connector read; *judged* rules pass on an agent's assessment (`seikika assess`).
+
+| Rule | Level | Basis | Passes when | Why | Fix |
+|---|---|---|---|---|---|
+| `populated-in-fixtures` | bronze | measured | `entity.fixtureWithValue > 0` | A field no fixture sets has a mapping or computation that no test runs, so it can be empty or wrong on every entity without anyone noticing. | Give at least one fixture record a value for the field, so its mapping (or computation) is exercised. |
+| `described` | silver | measured | `entity.described` | A field's meaning, unit and source aren't visible from its name, and a rule written against a misread field measures the wrong thing. | Add a `description:` to the field: what it means, its unit, and where it comes from. |
+| `has-shape` | gold | measured | `!entity.opaque` | With no declared shape, validation and CEL type checks can't see inside the object, so a renamed or missing key surfaces only as a wrong outcome in the rules that read it. | Replace the object with typed fields (or a list of strings), so CEL, validation and agents know its shape. |
+| `computed-readable` | gold | measured | `entity.computedNodes <= 60 && entity.computedLoops <= 1` | A long or doubly nested computed field is hard to review and costs more on every entity. Computed fields get twice a check's budget because they are where logic belongs. [Thresholds and levels](https://github.com/seikika/seikika/blob/main/docs/design/thresholds.md#2-the-numbers) | Split the field's `computed:` expression into simpler fields and rules, or move the logic into the connector, so it reads at a glance. |
+
+## Portal connectors are well-formed
+
+Each connector a portal configures: every record mapped, fixtures for tests, freshness declared and refresh by id (docs/design/scorecards-for-scorecards.md §5).
+
+**Why:** Every fact enters the portal through a connector, so its gaps become the portal's: unmapped records are lost, untested mappings break on live data, and stale data reads as current. The starter shipped without freshness or refresh, which pilots copying it would have inherited; a mapping and fixtures are the floor, freshness and refresh sit above it.
+
+See [The rest of the model](https://github.com/seikika/seikika/blob/main/docs/design/scorecards-for-scorecards.md#5-the-rest-of-the-model-kinds-fields-connectors), [Decision: every part is scored](https://github.com/seikika/seikika/blob/main/docs/decisions/D01M7WHQA9G0000000000000000.md).
+
+Scorecard `meta-connector` over `PortalConnector` entities, owned by group:maintainers. `seikika report` lists what fails now. *Measured* rules check facts a tool or connector read; *judged* rules pass on an agent's assessment (`seikika assess`).
+
+| Rule | Level | Basis | Passes when | Why | Fix |
+|---|---|---|---|---|---|
+| `records-mapped` | bronze | measured | `entity.unmapped.size() == 0` | Records of a kind no map rule reads never become entities, so the portal silently lacks those facts while the connector appears to cover them. | Map each listed record kind to a kind (`map: - from: <connector>/<record>`), or stop declaring it. |
+| `has-fixtures` | bronze | measured | `entity.fixtureRecords > 0` | Without fixture records, the connector's mappings run only against the live system, so tests and CI never exercise them. | Add fixtures/<connector>.ndjson with representative records, so tests run without the live system. |
+| `freshness-declared` | silver | measured | `entity.withoutFreshness.size() == 0` | With no freshness bound, data from a connector that stopped syncing reads as current, and rules pass or fail on stale facts. | Declare `freshness:` for each listed record kind, so stale data shows as stale rather than current. |
+| `refreshable` | gold | measured | `entity.records.all(r, r in entity.refreshable)` | An agent that fixes something needs to refresh that one entity to see the rule pass; without refresh by id it waits for a full sync, or can't confirm the fix at all. | Support refresh by external id for each listed record kind, so an agent can see its fix land. |
+
+## Rules, reviewed by agents
+
+Agents' judgement of each rule against rule-quality, advisory: an open finding is none, a current review is silver, a clean, cited one with no doubts is gold (D79, D01M831P5QWJQ4A2FT85N5MXJQF).
+
+**Why:** Form checks can't tell whether a rule measures its intent or can be gamed: of 19 rules and scorecards that reached gold on the form checks and that agents reviewed, none passed. Open findings rank lowest so they head the report; the card is advisory because a review goes stale whenever its subject changes, and gating on it would block every edit.
+
+See [Judgement pushed by agents](https://github.com/seikika/seikika/blob/main/docs/design/scorecards-for-scorecards.md#6-judgement-pushed-by-coding-agents-d79), [Decision: judgement is pushed](https://github.com/seikika/seikika/blob/main/docs/decisions/D01M7WHQA9G0000000000000000.md), [Meta standards review](https://github.com/seikika/seikika/blob/main/docs/design/meta-standards-review.md).
+
+Scorecard `review-rule` over `Rule` entities, owned by group:maintainers. `seikika report` lists what fails now. *Measured* rules check facts a tool or connector read; *judged* rules pass on an agent's assessment (`seikika assess`).
+
+| Rule | Level | Basis | Passes when | Why | Fix |
+|---|---|---|---|---|---|
+| `no-open-findings` | bronze | judged | `entity.reviewFailing.size() == 0` | A failing review names a way the rule misleads or can be gamed. Two such findings sat unacted for three days, buried among unreviewed rules, so an open finding now drops the rule to none. | A current rule-quality assessment failed the listed criteria: act on its suggestions in the assessment file, then re-assess. If the finding is wrong, say why in a new assessment by another assessor. |
+| `assessed` | silver | judged | `entity.reviewState == 'fresh'` | Without a current review, nobody has judged whether the rule as it now stands measures its intent; a verdict on an earlier version may not apply to the check. | Run `seikika assess brief <rule id> --portal <manifest>`, have your agent write the assessment file it names, then `seikika assess check <manifest>`. |
+| `passes-review` | gold | judged | `entity.reviewState == 'fresh' && entity.reviewFailing.size() == 0 && entity.reviewUncited.size() == 0 && entity.reviewVerified` | A review that fails a criterion found a problem, and one whose reasons cite nothing that resolves can't be checked; either way the rule isn't known to be good. | Act on each finding in the assessment file. Add resolving citations for uncited reasons. Run seikika assess brief for the current rubric and obtain a passing independent assessment-quality review. |
+| `no-doubts` | gold | judged | `entity.reviewState == 'fresh' && entity.reviewUnsure.size() == 0` | An unsure verdict usually marks a threshold with no source or an intent nobody wrote down, which is where a rule drifts into a proxy (lesson L9). [Thresholds and levels](https://github.com/seikika/seikika/blob/main/docs/design/thresholds.md) | Resolve what the assessor was unsure of: usually a missing source for a threshold or an unstated intent. |
+
+## Scorecards, reviewed by agents
+
+An agent reviews whether each scorecard measures one concern and climbs a real ladder: no open finding is bronze, a current review is silver, and a clean, cited one with no doubts is gold. The card advises rather than gates (D79, D01M831P5QWJQ4A2FT85N5MXJQF).
+
+**Why:** Form checks can't tell whether a scorecard measures one concern, climbs a real ladder or leaves an obvious gap; an adversarial review failed every scorecard it sampled that had reached gold on the form checks. The ladder and advisory status match review-rule: open findings first, and never gating, because a review goes stale when the scorecard changes.
+
+See [Judgement pushed by agents](https://github.com/seikika/seikika/blob/main/docs/design/scorecards-for-scorecards.md#6-judgement-pushed-by-coding-agents-d79), [Decision: judgement is pushed](https://github.com/seikika/seikika/blob/main/docs/decisions/D01M7WHQA9G0000000000000000.md), [Meta standards review](https://github.com/seikika/seikika/blob/main/docs/design/meta-standards-review.md).
+
+Scorecard `review-scorecard` over `Scorecard` entities, owned by group:maintainers. `seikika report` lists what fails now. *Measured* rules check facts a tool or connector read; *judged* rules pass on an agent's assessment (`seikika assess`).
+
+| Rule | Level | Basis | Passes when | Why | Fix |
+|---|---|---|---|---|---|
+| `no-open-findings` | bronze | judged | `entity.reviewFailing.size() == 0` | A failing review names a gap or a broken ladder that every entity the scorecard scores inherits; dropping the scorecard to none keeps the finding at the top of the report until someone acts on it. | A current scorecard-quality assessment failed the listed criteria: act on its suggestions in the assessment file, then re-assess. If the finding is wrong, say why in a new assessment by another assessor. |
+| `assessed` | silver | judged | `entity.reviewState == 'fresh'` | A review is tied to the scorecard's content hash; once the scorecard changes, the old verdict may no longer describe its rules or levels. | Run `seikika assess brief <scorecard id> --portal <manifest>`, have your agent write the assessment file it names, then `seikika assess check <manifest>`. |
+| `passes-review` | gold | judged | `entity.reviewState == 'fresh' && entity.reviewFailing.size() == 0 && entity.reviewUncited.size() == 0 && entity.reviewVerified` | A review that fails a criterion found a problem, and one whose reasons cite nothing that resolves can't be checked; either way the scorecard isn't known to be good. | Act on each finding in the assessment file. Add resolving citations for uncited reasons. Run seikika assess brief for the current rubric and obtain a passing independent assessment-quality review. |
+| `no-doubts` | gold | judged | `entity.reviewState == 'fresh' && entity.reviewUnsure.size() == 0` | An unsure verdict usually marks a level whose purpose nobody wrote down, and a level nobody can justify is one readers can't trust. [The ladders](https://github.com/seikika/seikika/blob/main/docs/design/thresholds.md#3-the-ladders) | Resolve what the assessor was unsure of: usually a level whose purpose isn't written down. |
+
+## Rubrics are well-formed
+
+Each rubric agents judge with: described, used, guided with what counts as fail, and shown to discriminate on real assessments (D80).
+
+**Why:** A rubric decides what agents judge, so a vague one yields reviews that disagree or pass everything. Described and used once is the floor for a new rubric; guidance on what counts as fail lets assessors agree; gold needs three assessments to show that each criterion can fail.
+
+See [Assessments and rubrics](https://github.com/seikika/seikika/blob/main/docs/design/scorecards-for-scorecards.md#61-assessments-and-rubrics-are-standards-too-d80), [Decision: rubrics are scored](https://github.com/seikika/seikika/blob/main/docs/decisions/D01M7WJVW700000000000000000.md).
+
+Scorecard `meta-rubric` over `Rubric` entities, owned by group:maintainers. `seikika report` lists what fails now. *Measured* rules check facts a tool or connector read; *judged* rules pass on an agent's assessment (`seikika assess`).
+
+| Rule | Level | Basis | Passes when | Why | Fix |
+|---|---|---|---|---|---|
+| `described` | bronze | measured | `entity.described` | The assessor reads the description to learn what to judge and which sources to read; without it, two assessors judge different things. | Describe what the rubric judges and which sources the assessor should read. |
+| `in-use` | bronze | measured | `entity.assessments > 0` | A rubric no assessment has used is untried configuration: nobody knows whether its questions can be answered from the sources it names. | Assess one entity with it (`seikika assess brief <id> --rubric <name>`), or remove the rubric. |
+| `guided` | silver | measured | `entity.unguided.size() == 0` | Without guidance on what counts as fail, assessors draw the line in different places and their verdicts can't be compared. Blank guidance used to pass (D01M831P5QWJQ4A2FT85N5MXJQF). [Thresholds and levels](https://github.com/seikika/seikika/blob/main/docs/design/thresholds.md#2-the-numbers) | Give each listed criterion `guidance:` saying what counts as fail, so assessors agree. |
+| `discriminates` | gold | measured | `entity.assessments >= 3 && entity.oneSided.size() == 0` | Passing and failing examples show the decision boundary in use. An unsure outcome identifies a question to resolve about the evidence or guidance. | Assess representative examples of each listed criterion, including a case that should pass and one that should fail. Revise guidance when the evidence leaves assessors unsure. |
+
 ## CI security
 
 What an attacker could do through a workflow: pinned actions, least- privilege tokens, no risky triggers with write access, and zizmor and actionlint clean (D70, docs/design/github-actions-standards.md).
@@ -980,6 +980,18 @@ Scorecard `maintainer-advisories` over `Lockfile` entities, owned by group:maint
 
 Change a standard by changing these parameters in the portal's `seikika.yaml`.
 
+- `../packages/meta-scoring`
+  - `assessments`: `["portal/assessments/**/*.y*ml"]`
+  - `crateMapping`: `"record.entity.startsWith('crate:') ? [record.entity] : []"`
+  - `crateRelation`: `{"many":false,"to":"Crate","unresolved":"ignore"}`
+  - `describeCommand`: `["target/debug/seikika","describe","portal","portal","examples/repo-portal-starter","examples/reference-portal","--results","portal=portal/results.json"]`
+  - `manifest`: `"portal"`
+  - `reviewScope`: `"entity.portal == 'seikika'"`
+  - `sdlcStageMapping`: `"record.entity.startsWith('sdlc-stage:') ? [record.entity] : []"`
+  - `sdlcStageRelation`: `{"many":false,"to":"SdlcStage","unresolved":"ignore"}`
+  - `testingContractMapping`: `"record.rubric == 'testing-contract-quality' && record.entity.startsWith('testing-contract:') ? [record.entity] : []"`
+  - `testingContractRelation`: `{"many":false,"to":"TestingContract","unresolved":"ignore"}`
+  - `track`: `"standards"`
 - `../packages/github-actions`
   - `githubOrg`: `"seikika"`
   - `githubRepo`: `"seikika"`
@@ -1022,7 +1034,9 @@ Change a standard by changing these parameters in the portal's `seikika.yaml`.
 
 - **Skills to silver** (`skill-silver`): Every shipped agent skill reaches silver on maintainer-skill.
 - **CLI skills present** (`cli-skill-coverage`): Every CLI command that needs a skill has one (cli-skill bronze).
-- **Close the open review findings** (`close-review-findings`): Act on every current rule-quality and scorecard-quality finding: fix the standard, or answer the finding in a new, independent assessment (docs/design/meta-standards-review.md).
+- **Close the open review findings** (`close-review-findings`): Act on every open rule-quality and scorecard-quality finding: fix the standard, or answer the finding in a new, independent assessment (docs/design/meta-standards-review.md).
+- **Review the standards in use** (`review-standard-coverage`): Obtain current, cited reviews for the rules and scorecards maintained by Seikika.
+- **Verify assessment evidence** (`review-assessment-evidence`): Cite the evidence behind assessments and independently review their findings.
 - **Workflows with no unexplained zizmor finding** (`ci-security-gold`): Every workflow and the report action reach gold on maintainer-ci-security: each zizmor finding fixed, or ignored inline with its reason, so maintainer-ci-security no longer holds the repository level down. release.yml stays gold through its waivers (D98).
 - **OpenSSF Scorecard: every check at 10** (`maintainer-openssf-ten`): Every Scorecard check at its maximum. Progress is counted from the starting point saved in the baseline, in checks below 10 and in points short.
 - **Python we maintain passes ruff: to zero** (`maintainer-python-zero`): No ruff findings in any file. Progress is counted from the starting point saved in the baseline.

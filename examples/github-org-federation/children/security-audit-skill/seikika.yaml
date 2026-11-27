@@ -1,0 +1,100 @@
+apiVersion: seikika.com/v1alpha1
+portal:
+  name: security-audit-skill
+  title: Security Audit Skill
+  owner: group:maintainers
+  seikika: "0.2"
+include:
+  - {package: ../../../../packages/meta-scoring, with: {track: portal-quality}}
+
+tracks:
+  - name: release
+    title: Release readiness
+    owner: group:maintainers
+    description: Verify the repository's release contract before distributing packages.
+  - name: portal-quality
+    title: Portal quality
+    owner: group:maintainers
+    description: Verify the fixture and review evidence behind the release standard.
+
+connectors:
+  - name: release-check
+    package: builtin:runner
+    runtime: in-image
+    config:
+      name: release-check
+      jobs:
+        - name: skill-distribution
+          command: [python3, .seikika/check-skill-distribution.py]
+          parse: exit
+    records: [skill-distribution]
+    refresh: {skill-distribution: [external_ids]}
+    freshness: {skill-distribution: 5m}
+
+kinds:
+  - name: SkillDistribution
+    description: >-
+      The published skill inventory matches the files documented for
+      installation.
+    identityFrom: [connector:release-check]
+    fields:
+      command:
+        type: string
+        description: Command that reproduces the release check in the checkout.
+      exitCode:
+        type: integer
+        description: Process exit status for the release check.
+      evidence:
+        type: list
+        items: string
+        description: Bounded diagnostics from a failed release check.
+    sources: {default: [connector:release-check]}
+    map:
+    - from: release-check/skill-distribution
+      id: "'skill-distribution:' + record.name"
+      set: >-
+        {'command': record.command, 'exitCode': record.exitCode, 'evidence':
+        record.evidence}
+
+scorecards:
+  - name: skill-distribution
+    title: Installed skill files match the documented inventory
+    kind: SkillDistribution
+    description: >-
+      The published skill inventory matches the files documented for
+      installation.
+    rationale: >-
+      A release that fails this preflight can leave users installing stale or
+      unusable artifacts.
+    links:
+    - title: Upstream release contract
+      url: https://github.com/seikika/security-audit-skill/blob/main/README.md
+    owner: group:maintainers
+    track: release
+    levels: [ready]
+    ratchet: {newEntitiesAtLeast: ready}
+    rules:
+    - name: release-check-passes
+      level: ready
+      check: entity.exitCode == 0
+      evidence: >-
+        ['Exit ' + string(entity.exitCode) + ': ' + entity.command] +
+        entity.evidence
+      fix: >-
+        Align the Files table in README.md with the listed files under
+        skills/security-audit, and keep the SKILL.md name aligned with its
+        directory.
+      rationale: >-
+        The repository preflight uses exit status zero when all inputs agree
+        with the release contract.
+    facets: {summary: public, details: public}
+
+campaigns:
+  - name: release-preflight
+    title: Keep the release preflight passing
+    owner: group:maintainers
+    track: release
+    description: Resolve release distribution findings before packaging the next release.
+    includes: [{scorecard: skill-distribution, atLeast: ready}]
+
+tests: [tests/release.test.yaml]

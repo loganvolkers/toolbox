@@ -1,0 +1,33 @@
+apiVersion: seikika.com/assessment/v1
+entity: assessment:rule-quality/rule:plannotator/release-versions/release-check-passes
+rubric: assessment-quality
+subjectHash: a2aad892efae
+rubricHash: e30700fc6322cf9f05a301bb4638d6708e9f5eb5aea0281911229ce75bd37bf7
+assessor: {kind: agent, name: codex-astra-fork-b, model: gpt-6.2-astra}
+at: 2026-11-27
+verdicts:
+  - criterion: supported
+    verdict: pass
+    reason: >-
+      .seikika/seikika.yaml uses the exit status of
+      scripts/check-release-version.mjs. Its manifest comparison emits the
+      paths and versions reproduced in .seikika/tests/release.test.yaml.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      scripts/check-release-version.mjs checks release-coupled local inputs
+      and diagnoses disagreements. .seikika/seikika.yaml sets the single
+      appropriate zero-exit threshold.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      .seikika/tests/release.test.yaml checks the command, stale
+      apps/pi-extension/package.json at 99.0.0 and root package.json at
+      0.29.5. scripts/check-release-version.test.ts exercises the same
+      discrepancy independently.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      .seikika/assessments/rule-quality/rule/plannotator/release-versions/release-check-passes.yaml
+      records pass on every criterion and contains no corrective suggestion
+      directed at another entity.

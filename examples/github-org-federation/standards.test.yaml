@@ -1,25 +1,25 @@
 name: organization standards
 assert:
-  - name: the exact README threshold and a leading catch-all reach silver
+  - name: a readable README and a leading catch-all reach silver
     expect: score('repo-hygiene', 'repository:seikika/ready').level == 'silver'
   - name: downstream scores and rule definitions cannot raise a score
     expect: >-
       score('repo-hygiene', 'repository:seikika/claims').level == 'none' &&
       score('repo-hygiene', 'repository:seikika/claims').rules['has-readme']
       == 'fail' && score('repo-hygiene',
-      'repository:seikika/claims').rules['has-license'] == 'fail'
+      'repository:seikika/claims').rules['has-license-file'] == 'fail'
   - name: a catch-all below a specific rule stops at bronze
     expect: >-
       score('repo-hygiene', 'repository:seikika/catch-all-late').level ==
       'bronze' && score('repo-hygiene',
       'repository:seikika/catch-all-late').rules['codeowners-catch-all'] ==
       'fail'
-  - name: a malformed owner handle stops at bronze
+  - name: a malformed owner handle cannot supply an owned rule
     expect: >-
       score('repo-hygiene', 'repository:seikika/malformed-owner').level ==
-      'bronze' && score('repo-hygiene',
-      'repository:seikika/malformed-owner').rules['owners-are-teams'] ==
-      'fail'
+      'none' && score('repo-hygiene',
+      'repository:seikika/malformed-owner').rules['owner-handles-consistent']
+      == 'fail'
   - name: an unreadable repository remains in the inventory without a score
     expect: >-
       entity('repository:seikika/unavailable').scanError == 'Git tree: HTTP
@@ -46,3 +46,81 @@ assert:
       score('workflow-zizmor',
       'workflow:seikika/ready/.github/workflows/missing.yml').rules['zizmor-clean']
       == 'unknown'
+  - name: has-readme accepts the ready repository and rejects a counterexample
+    expect: >-
+      score('repo-hygiene', 'repository:seikika/ready').rules['has-readme'] ==
+      'pass' && score('repo-hygiene',
+      'repository:seikika/empty-readme').rules['has-readme'] == 'fail'
+  - name: has-codeowners accepts the ready repository and rejects a counterexample
+    expect: >-
+      score('repo-hygiene',
+      'repository:seikika/ready').rules['has-codeowners'] == 'pass' &&
+      score('repo-hygiene',
+      'repository:seikika/no-codeowners').rules['has-codeowners'] == 'fail'
+  - name: >-
+      codeowners-catch-all accepts the ready repository and rejects a
+      counterexample
+    expect: >-
+      score('repo-hygiene',
+      'repository:seikika/ready').rules['codeowners-catch-all'] == 'pass' &&
+      score('repo-hygiene',
+      'repository:seikika/catch-all-late').rules['codeowners-catch-all'] ==
+      'fail'
+  - name: >-
+      owner-handles-consistent accepts the ready repository and rejects a
+      counterexample
+    expect: >-
+      score('repo-hygiene',
+      'repository:seikika/ready').rules['owner-handles-consistent'] == 'pass'
+      && score('repo-hygiene',
+      'repository:seikika/malformed-owner').rules['owner-handles-consistent']
+      == 'fail'
+  - name: >-
+      has-license-file accepts the ready repository and rejects a
+      counterexample
+    expect: >-
+      score('repo-hygiene',
+      'repository:seikika/ready').rules['has-license-file'] == 'pass' &&
+      score('repo-hygiene',
+      'repository:seikika/claims').rules['has-license-file'] == 'fail'
+  - name: zizmor-no-high distinguishes the two audit outcomes
+    expect: >-
+      score('workflow-zizmor',
+      'workflow:seikika/ready/.github/workflows/medium.yml').rules['zizmor-no-high']
+      == 'pass' && score('workflow-zizmor',
+      'workflow:seikika/ready/.github/workflows/high.yml').rules['zizmor-no-high']
+      == 'fail'
+  - name: zizmor-no-medium distinguishes the two audit outcomes
+    expect: >-
+      score('workflow-zizmor',
+      'workflow:seikika/ready/.github/workflows/low.yml').rules['zizmor-no-medium']
+      == 'pass' && score('workflow-zizmor',
+      'workflow:seikika/ready/.github/workflows/medium.yml').rules['zizmor-no-medium']
+      == 'fail'
+  - name: zizmor-clean distinguishes the two audit outcomes
+    expect: >-
+      score('workflow-zizmor',
+      'workflow:seikika/ready/.github/workflows/clean.yml').rules['zizmor-clean']
+      == 'pass' && score('workflow-zizmor',
+      'workflow:seikika/ready/.github/workflows/low.yml').rules['zizmor-clean']
+      == 'fail'
+  - name: A recognized license path with no readable text cannot pass
+    expect: >-
+      score('repo-hygiene',
+      'repository:seikika/blank-license').rules['has-license-file'] == 'fail'
+      && score('repo-hygiene',
+      'repository:seikika/blank-license').evidence['has-license-file'] ==
+      ['LICENSE has no readable license text']
+  - name: A later ownerless rule can clear the default
+    expect: >-
+      score('repo-hygiene', 'repository:seikika/ownerless-override').level ==
+      'bronze' && score('repo-hygiene',
+      'repository:seikika/ownerless-override').evidence['codeowners-catch-all']
+      == ['.github/CODEOWNERS:2 needs an owner']
+  - name: A CODEOWNERS email routes ownership but cannot earn silver
+    expect: >-
+      score('repo-hygiene',
+      'repository:seikika/email-owner').rules['has-codeowners'] == 'pass' &&
+      score('repo-hygiene',
+      'repository:seikika/email-owner').rules['owner-handles-consistent'] ==
+      'fail'

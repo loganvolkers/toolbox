@@ -27,9 +27,9 @@ verdicts:
       ("for a single-maintainer repository only personal handles",
       seikika.yaml:130-131) both promise less than the check accepts. The
       rubric judges against "the rule's name and fix"
-      (portal/standards/meta.yaml:1157-1158). hard-to-game, fix-leads-to-pass
-      and threshold-justified are right. No failure the sources show was
-      missed.
+      (https://github.com/seikika/seikika/blob/05510a57fafd8707979370858b578b78b935cf0e/portal/standards/meta.yaml#L1157-L1158).
+      hard-to-game, fix-leads-to-pass and threshold-justified are right. No
+      failure the sources show was missed.
   - criterion: reproducible
     verdict: unsure
     reason: >-

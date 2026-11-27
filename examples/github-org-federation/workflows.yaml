@@ -6,15 +6,32 @@ kinds:
     description: Workflow files audited at their repositories' default-branch commits.
     identityFrom: [connector:github-org]
     fields:
-      title: {type: string}
-      path: {type: string}
-      sourceUrl: {type: string}
-      repository: {type: string}
-      commit: {type: string}
-      visibility: {type: string}
-      audited: {type: boolean}
-      findings: {type: list, items: object}
-      auditError: {type: string}
+      title: {type: string, description: Workflow display name.}
+      path:
+        type: string
+        description: Workflow path within its source repository.
+      sourceUrl:
+        type: string
+        description: GitHub blob link pinned to the audited commit.
+      repository:
+        type: string
+        description: Organization and repository identifying the workflow source.
+      commit:
+        type: string
+        description: Repository commit whose workflow bytes were audited.
+      visibility:
+        type: string
+        description: Visibility of the source repository.
+      audited:
+        type: boolean
+        description: Whether the offline audit completed.
+      findings:
+        type: list
+        items: object
+        description: Findings returned by zizmor, including severity and source location.
+      auditError:
+        type: string
+        description: Reason the audit could not produce a verdict.
     sources: {default: [connector:github-org]}
     map:
     - from: github-org/federated-workflow
@@ -54,7 +71,12 @@ scorecards:
     description: >-
       zizmor findings in each workflow from an offline audit of the pinned
       file.
-    rationale: A shared audit makes workflow risks comparable across repositories.
+    rationale: >-
+      A shared audit makes workflow risks comparable across repositories.
+      Bronze requires zero high-severity findings. Silver clears medium
+      findings too. Gold requires a clean audit, the campaign target.
+    links:
+    - {title: zizmor audit reference, url: https://docs.zizmor.sh/audits/}
     levels: [bronze, silver, gold]
     facets: {summary: public, details: public}
     rules:
@@ -64,7 +86,9 @@ scorecards:
       evidence: >-
         entity.findings.filter(f, f.severity == 'high').map(f, f.rule + ' at
         line ' + string(f.line) + ': ' + f.message)
-      fix: Fix the high-severity zizmor findings in this workflow.
+      fix: >-
+        Open the workflow at the reported source and fix each listed
+        high-severity audit at its line.
       rationale: Prioritize the workflow findings that zizmor rates most severe.
     - name: zizmor-no-medium
       level: silver
@@ -74,7 +98,9 @@ scorecards:
       evidence: >-
         entity.findings.filter(f, f.severity == 'medium').map(f, f.rule + ' at
         line ' + string(f.line) + ': ' + f.message)
-      fix: Fix the medium-severity zizmor findings in this workflow.
+      fix: >-
+        Open the workflow at the reported source and fix each listed
+        medium-severity audit at its line.
       rationale: Clear medium-severity findings once high-severity findings are resolved.
     - name: zizmor-clean
       level: gold
@@ -83,7 +109,9 @@ scorecards:
         entity.findings.map(f, f.rule + ' at line ' + string(f.line) + ': ' +
         f.message)
       measure: entity.findings.size()
-      fix: Resolve the remaining findings and rerun the offline audit.
+      fix: >-
+        Fix each listed audit at its workflow line and rerun the organization
+        snapshot.
       rationale: The campaign tracks progress towards a clean audit for every workflow.
       links:
       - {title: zizmor audit reference, url: https://docs.zizmor.sh/audits/}

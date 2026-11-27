@@ -6,9 +6,68 @@
 //!
 //! [assessment schema]: https://github.com/seikika/seikika/blob/main/crates/seikika-model/schema/assessment.schema.json
 
+use seikika_model::{Manifest, manifest::Rubric};
 use serde_json::{Value, json};
 use sha2::{Digest, Sha256};
-use std::sync::OnceLock;
+use std::{collections::BTreeSet, sync::OnceLock};
+
+/// Version of the rubric used to prepare an assessment. Documentation links can change without
+/// invalidating a verdict.
+pub fn rubric_hash(r: &Rubric) -> String {
+    let mut definition = r.clone();
+    definition.links.clear();
+    let body = serde_json::to_vec(&definition).expect("rubric serializes");
+    Sha256::digest(body)
+        .iter()
+        .map(|byte| format!("{byte:02x}"))
+        .collect()
+}
+
+/// Problems with an assessment document against the schema and the portal's rubrics.
+pub fn problems(m: &Manifest, doc: &Value) -> Vec<String> {
+    let mut out = schema_problems(doc);
+    out.extend(rubric_problems(m, doc));
+    out
+}
+
+/// Schema errors that prevent an assessment from being read as a record.
+pub fn schema_problems(doc: &Value) -> Vec<String> {
+    seikika_model::schema::errors(seikika_model::schema::assessment(), doc)
+        .into_iter()
+        .map(|(p, e)| format!("{}: {e}", if p.is_empty() { "/" } else { &p }))
+        .collect()
+}
+
+/// Missing or unrecognized criteria relative to the current portal rubric.
+pub fn rubric_problems(m: &Manifest, doc: &Value) -> Vec<String> {
+    let Some(r) = m
+        .rubrics
+        .iter()
+        .find(|r| Some(r.name.as_str()) == doc["rubric"].as_str())
+    else {
+        return vec![format!("unknown rubric {}", doc["rubric"])];
+    };
+    let mut out = Vec::new();
+    let mut named = BTreeSet::new();
+    for n in doc["verdicts"]
+        .as_array()
+        .into_iter()
+        .flatten()
+        .filter_map(|v| v["criterion"].as_str())
+    {
+        if !named.insert(n) {
+            out.push(format!("duplicate verdict for criterion {n}"));
+        } else if !r.criteria.iter().any(|c| c.name == n) {
+            out.push(format!("{n} is not a criterion of {}", r.name));
+        }
+    }
+    for c in &r.criteria {
+        if !named.contains(&c.name.as_str()) {
+            out.push(format!("no verdict for criterion {}", c.name));
+        }
+    }
+    out
+}
 
 /// Something a reader can check. Without a repository (`root` is `None`, e.g. `assess submit`
 /// before the files are at hand), the shape alone: a path with a directory or a file extension, a
@@ -19,12 +78,13 @@ fn cites(reason: &str, root: Option<&std::path::Path>) -> bool {
     static PATH: OnceLock<regex::Regex> = OnceLock::new();
     static NAME: OnceLock<regex::Regex> = OnceLock::new();
     static ID: OnceLock<regex::Regex> = OnceLock::new();
-    let path = PATH.get_or_init(|| {
-        regex::Regex::new(r"(?:\.{0,2}/)?[\w.-]+(?:/[\w.<>*-]+)+").expect("valid regex")
-    });
+    let path =
+        PATH.get_or_init(|| regex::Regex::new(r"/?[\w.-]+(?:/[\w.<>*-]+)+").expect("valid regex"));
     let name = NAME.get_or_init(|| {
-        regex::Regex::new(r"\b[\w-]+\.(?:md|mdx|rs|ya?ml|json|ndjson|toml|sh|py|ts|tsx|fga)\b")
-            .expect("valid regex")
+        regex::Regex::new(
+            r"\b[\w-]+\.(?:md|mdx|rs|ya?ml|json|ndjson|toml|sh|py|[cm]?js|ts|tsx|fga)\b",
+        )
+        .expect("valid regex")
     });
     let id = ID.get_or_init(|| {
         regex::Regex::new(r"\b(?:D01[0-9A-Z]{20,}|D\d{1,3}|Q\d{1,3})\b").expect("valid regex")
@@ -45,7 +105,22 @@ fn cites(reason: &str, root: Option<&std::path::Path>) -> bool {
             || id.is_match(reason);
     };
     !cited_paths(reason, root).is_empty()
+        || path
+            .find_iter(reason)
+            .any(|m| relative_citation(m.as_str()).is_some_and(|p| root.join(p).is_dir()))
         || id.find_iter(reason).any(|m| known_id(root, m.as_str()))
+}
+
+fn relative_citation(path: &str) -> Option<&std::path::Path> {
+    let path = std::path::Path::new(path.trim_end_matches(['.', ',', ')', ':']));
+    (!path.as_os_str().is_empty()
+        && path.components().all(|part| {
+            matches!(
+                part,
+                std::path::Component::Normal(_) | std::path::Component::CurDir
+            )
+        }))
+    .then_some(path)
 }
 
 /// The repository files a reason cites: paths that exist (trailing `.`, `,`, `)` or `:` and a
@@ -53,25 +128,31 @@ fn cites(reason: &str, root: Option<&std::path::Path>) -> bool {
 fn cited_paths(reason: &str, root: &std::path::Path) -> Vec<String> {
     static PATH: OnceLock<regex::Regex> = OnceLock::new();
     static NAME: OnceLock<regex::Regex> = OnceLock::new();
-    let path = PATH.get_or_init(|| {
-        regex::Regex::new(r"(?:\.{0,2}/)?[\w.-]+(?:/[\w.<>*-]+)+").expect("valid regex")
-    });
+    let path =
+        PATH.get_or_init(|| regex::Regex::new(r"/?[\w.-]+(?:/[\w.<>*-]+)+").expect("valid regex"));
     let name = NAME.get_or_init(|| {
-        regex::Regex::new(r"\b[\w-]+\.(?:md|mdx|rs|ya?ml|json|ndjson|toml|sh|py|ts|tsx|fga)\b")
-            .expect("valid regex")
+        regex::Regex::new(
+            r"\b[\w-]+\.(?:md|mdx|rs|ya?ml|json|ndjson|toml|sh|py|[cm]?js|ts|tsx|fga)\b",
+        )
+        .expect("valid regex")
     });
     let mut out = Vec::new();
-    for m in path.find_iter(reason) {
-        let p = m
-            .as_str()
-            .trim_start_matches("./")
-            .trim_end_matches(['.', ',', ')', ':']);
-        if !p.is_empty() && root.join(p).exists() {
-            out.push(p.trim_end_matches('/').to_owned());
+    let explicit: Vec<_> = path.find_iter(reason).collect();
+    for m in &explicit {
+        if let Some(path) = relative_citation(m.as_str())
+            && root.join(path).is_file()
+        {
+            out.push(path.to_string_lossy().trim_start_matches("./").to_owned());
         }
     }
     let names = file_names(root);
     for m in name.find_iter(reason) {
+        if explicit
+            .iter()
+            .any(|path| path.start() <= m.start() && m.end() <= path.end())
+        {
+            continue;
+        }
         if let Some([only]) = names.get(m.as_str()).map(Vec::as_slice) {
             out.push(only.clone());
         }
@@ -227,6 +308,19 @@ pub fn record_in(doc: &Value, path: Option<&str>, root: Option<&std::path::Path>
         "verdict": verdict, "failing": failing, "unsure": unsure,
         "unsuggested": unsuggested, "uncited": uncited, "hash": hash(doc),
     });
+    if let Some(name) = doc["assessor"]["name"].as_str() {
+        let name = name.trim();
+        let placeholder = matches!(
+            name.to_ascii_lowercase().as_str(),
+            "tbd" | "unknown" | "anonymous" | "n/a" | "placeholder"
+        );
+        data["assessor"]["name"] =
+            json!(if !placeholder && name.chars().any(char::is_alphanumeric) {
+                name
+            } else {
+                ""
+            });
+    }
     if let Some(p) = path {
         data["path"] = json!(p);
     }
@@ -256,7 +350,8 @@ pub fn link_reviews(records: &mut [(String, Value)]) {
         d["assessor"]["name"]
             .as_str()
             .unwrap_or_default()
-            .to_owned()
+            .trim()
+            .to_lowercase()
     };
     let strings = |v: &Value| -> Vec<String> {
         v.as_array()
@@ -287,6 +382,14 @@ pub fn link_reviews(records: &mut [(String, Value)]) {
     type Review = (String, String, String, String, bool);
     let reviews: Vec<Review> = records
         .iter()
+        .filter(|(_, d)| {
+            d["rubric"] == "assessment-quality"
+                && d["rubricCurrent"] == true
+                && d["uncited"].as_array().is_some_and(Vec::is_empty)
+                && d["verdicts"]
+                    .as_array()
+                    .is_some_and(|rows| !rows.is_empty())
+        })
         .map(|(_, d)| {
             (
                 d["entity"].as_str().unwrap_or_default().to_owned(),
@@ -302,7 +405,12 @@ pub fn link_reviews(records: &mut [(String, Value)]) {
         let verdict = reviews
             .iter()
             .find(|(e, h, by, _, grounded)| {
-                e == id && *h == hash && !by.is_empty() && *by != own && *grounded
+                e == id
+                    && *h == hash
+                    && !own.is_empty()
+                    && !by.is_empty()
+                    && *by != own
+                    && *grounded
             })
             .map(|r| r.3.clone())
             .unwrap_or_default();
@@ -398,7 +506,7 @@ mod tests {
         let review = |by: &str, h: &str, verdict: &str| {
             json!({"entity": "assessment:crate-design/crate:x", "rubric": "assessment-quality",
                 "subjectHash": h, "assessor": {"kind": "agent", "name": by},
-                "verdicts": [{"criterion": "c", "verdict": verdict, "reason": "r"}]})
+                "verdicts": [{"criterion": "c", "verdict": verdict, "reason": "See src/lib.rs."}]})
         };
         let mut target = target;
         target.1["cited"] = json!(["src/lib.rs"]);
@@ -406,11 +514,14 @@ mod tests {
             ("bob", hash.as_str(), json!(["src/lib.rs"]), "fail"),
             ("bob", hash.as_str(), json!(["README.md"]), ""),
             ("ann", hash.as_str(), json!(["src/lib.rs"]), ""),
+            (" ann ", hash.as_str(), json!(["src/lib.rs"]), ""),
+            ("  ", hash.as_str(), json!(["src/lib.rs"]), ""),
             ("bob", "old", json!(["src/lib.rs"]), ""),
         ];
         for (by, h, cited, want) in cases {
             let mut r = rec(&review(by, h, "fail"));
             r.1["cited"] = cited.clone();
+            r.1["rubricCurrent"] = json!(true);
             let mut rs = vec![target.clone(), r];
             link_reviews(&mut rs);
             assert_eq!(rs[0].1["independentReview"], want, "{by} {h} {cited}");

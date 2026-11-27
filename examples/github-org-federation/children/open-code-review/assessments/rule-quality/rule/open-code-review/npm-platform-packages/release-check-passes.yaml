@@ -1,0 +1,33 @@
+apiVersion: seikika.com/assessment/v1
+entity: rule:open-code-review/npm-platform-packages/release-check-passes
+rubric: rule-quality
+subjectHash: 63919d019485
+rubricHash: 696a7d3fef1c024786016ca0a353e402b5c1a7aaf7644da6825b20e218dc4a96
+assessor: {kind: agent, name: codex}
+at: 2026-11-27
+verdicts:
+  - criterion: measures-intent
+    verdict: pass
+    reason: >-
+      .seikika/check-platform-packages.mjs checks the launcher optional
+      dependencies against the installed platform manifest identities,
+      versions and platform selectors.
+  - criterion: hard-to-game
+    verdict: pass
+    reason: >-
+      .seikika/check-platform-packages.mjs uses .github/workflows/release.yml
+      as the authority for published platforms. The missing Linux platform
+      replay in .seikika/tests/release.test.yaml fails when its manifest and
+      optional dependency disappear together.
+  - criterion: fix-leads-to-pass
+    verdict: pass
+    reason: >-
+      The diagnostics name the package.json path and expected value. The fix
+      in .seikika/seikika.yaml points to the two sources that must agree.
+  - criterion: threshold-justified
+    verdict: pass
+    reason: >-
+      The root package.json version is the baseline for committed templates.
+      .github/workflows/release.yml stamps the release tag version into all
+      published packages and optional dependencies. The local preflight
+      requires the committed metadata to agree before that stamping.

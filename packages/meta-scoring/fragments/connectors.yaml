@@ -1,0 +1,39 @@
+connectors:
+  - name: meta-catalog
+    package: builtin:runner
+    runtime: in-image
+    config:
+      name: meta-catalog
+      root: ${param:root}
+      jobs:
+        - name: describe-portal
+          command: ${param:describeCommand}
+          parse: ndjson
+          kinds: [scorecard, rule, kind, field, connector, rubric]
+    records: [scorecard, rule, kind, field, connector, rubric]
+    refresh:
+      scorecard: [external_ids]
+      rule: [external_ids]
+      kind: [external_ids]
+      field: [external_ids]
+      connector: [external_ids]
+      rubric: [external_ids]
+    freshness:
+      scorecard: 5m
+      rule: 5m
+      kind: 5m
+      field: 5m
+      connector: 5m
+      rubric: 5m
+  - name: meta-assessments
+    package: builtin:workspace
+    runtime: in-image
+    config:
+      root: ${param:root}
+      crates: false
+      lastChange: false
+      assessments: ${param:assessments}
+      assessmentManifest: ${param:manifest}
+    records: [assessment]
+    refresh: {assessment: [external_ids]}
+    freshness: {assessment: 5m}

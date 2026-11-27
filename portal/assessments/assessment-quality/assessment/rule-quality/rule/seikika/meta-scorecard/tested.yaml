@@ -1,61 +1,34 @@
 apiVersion: seikika.com/assessment/v1
 entity: assessment:rule-quality/rule:seikika/meta-scorecard/tested
 rubric: assessment-quality
-subjectHash: f9e9a097994e
-assessor: {kind: agent, name: cursor-reviewer-38, model: claude-opus-5.5}
-at: 2026-11-25
+subjectHash: 35ee60991510
+rubricHash: e30700fc6322cf9f05a301bb4638d6708e9f5eb5aea0281911229ce75bd37bf7
+assessor: {kind: agent, name: codex-astra-self, model: gpt-6.2-astra}
+at: 2026-11-27
 verdicts:
   - criterion: supported
-    verdict: fail
+    verdict: pass
     reason: >-
-      The checker citations in
-      portal/assessments/rule-quality/rule/seikika/meta-scorecard/tested.yaml
-      hold. cards.insert runs for every score('card' match
-      (crates/seikika-cli/src/meta.rs:44 and :56-61), the rule is
-      entity.tested (portal/standards/meta.yaml:600-603), and the rationale at
-      :605-608 claims a named card cannot change levels unnoticed. The
-      membership example is portal/tests/standards.test.yaml:310-311, the pass
-      and fail pins are :285-289 and :298-305, and bronze is
-      docs/design/scorecards-for-scorecards.md:110 and :117-119 and
-      docs/design/thresholds.md:60. Two citations do not. fix-leads-to-pass
-      points at tests: in portal/seikika.yaml:441; that line is an osv-scanner
-      ignore sentence, and tests: is portal/seikika.yaml:470. measures-intent
-      says D01M831P5QWJQ4A2FT85N5MXJQF removed the bare-mention standard for
-      rules; that decision's third change is that a rule is tested only by an
-      expectation on its own scorecard, and the "bare mention doesn't count"
-      sentence is portal/standards/meta.yaml:451-452, not the decision.
-    suggestion: >-
-      Cite portal/seikika.yaml:470 for the test file list, and cite
-      portal/standards/meta.yaml:449-452 for the rule-level pin. Keep the
-      decision only for the own-scorecard change it actually states.
+      crates/seikika-derive/src/testing.rs discards skipped cards even after a
+      successful level comparison, and crates/seikika-cli/src/meta.rs credits
+      only the card named in the surviving comparison.
   - criterion: complete
     verdict: pass
     reason: >-
-      The verdicts are right once those two citations are set aside. Any
-      score('card' marks the card tested (crates/seikika-cli/src/meta.rs:61),
-      so a level comparison or a .rules membership notices neither a level
-      change nor a dropped rule, which fails measures-intent and hard-to-game.
-      Adding any such call in the portal tests passes, and bronze is the
-      documented floor. The summary's "53 live cards" is 54 meta-scorecard
-      entities in portal/results.json, all passing tested; that does not
-      change a verdict.
+      packages/meta-scoring/fragments/catalog.yaml directs the author to pin
+      an in-scope fixture level or rule outcome, matching the implementation.
+      It requires one such observation at bronze and rule-by-rule coverage at
+      silver.
   - criterion: reproducible
     verdict: pass
     reason: >-
-      crates/seikika-cli/src/meta.rs:43-61 and
-      portal/standards/meta.yaml:600-608 are enough for a second assessor to
-      fail the first two criteria and pass the last two. The unit test at
-      crates/seikika-cli/src/meta.rs:306-326 shows a .level comparison
-      contributes no rule pin while the card name is still captured.
+      The skipped fixture for maintainer-crate in
+      portal/tests/standards.test.yaml exercises the previously missed case.
+      Tracing it through crates/seikika-derive/src/testing.rs shows that it
+      cannot confer coverage on its own.
   - criterion: actionable
     verdict: pass
     reason: >-
-      Counting a card only when an expectation compares .level to a literal,
-      or pins one of its rules, would make score('c', 'e').level != '' fail
-      the insert at crates/seikika-cli/src/meta.rs:61. The fixture the
-      suggestion asks for would pin that, which is the change both fails need.
-summary: >-
-  The bare-mention fail is real, but two sources are mis-cited: the test
-  list is portal/seikika.yaml:470, not :441, and the decision did not
-  remove bare mentions for rules. The verdicts and the suggestions still
-  match the checker.
+      portal/assessments/rule-quality/rule/seikika/meta-scorecard/tested.yaml
+      contains four passes and no attached suggestions that could lead the
+      reader to change an unrelated entity.

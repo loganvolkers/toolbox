@@ -1,8 +1,22 @@
 apiVersion: seikika.com/v1alpha1
-include: [repositories.yaml, standards.yaml, workflows.yaml]
+include:
+  - repositories.yaml
+  - standards.yaml
+  - workflows.yaml
+  - meta.yaml
+  - package: ../../packages/meta-scoring
+    with:
+      track: portal-quality
+      describeCommand:
+        - target/debug/seikika
+        - describe
+        - portal
+        - examples/github-org-federation/public.yaml
+      manifest: examples/github-org-federation/public.yaml
+      assessments: [examples/github-org-federation/assessments/**/*.y*ml]
 
 portal:
-  name: seikika-public-organization
+  name: seikika-organization
   title: Seikika organization
   owner: group:maintainers
   seikika: "0.2"
@@ -22,3 +36,5 @@ connectors:
       federated-repo: [external_ids]
       federated-workflow: [external_ids]
     freshness: {federated-repo: 1h, federated-workflow: 1h}
+
+tests: [standards.test.yaml]

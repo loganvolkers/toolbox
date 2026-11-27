@@ -1,0 +1,28 @@
+apiVersion: seikika.com/assessment/v1
+entity: scorecard:magpie/packed-gui-assets
+rubric: scorecard-quality
+subjectHash: d3ed5d57aa6b
+rubricHash: 1d01a2d06d609948839eb0695b1bba667b2ebe2c4b50224dbd8ac05d5b3cb334
+assessor: {kind: agent, name: codex}
+at: 2026-11-27
+verdicts:
+  - criterion: one-concern
+    verdict: pass
+    reason: >-
+      .seikika/seikika.yaml focuses on one contract between the asset packer
+      and the embedded GUI layout.
+  - criterion: levels-are-a-ladder
+    verdict: pass
+    reason: >-
+      .seikika/tests/release.test.yaml establishes ready and a failing prefix.
+      Archive compatibility is a binary prerequisite for this fixture.
+  - criterion: no-obvious-gap
+    verdict: pass
+    reason: >-
+      .seikika/check-packed-assets.py verifies nested paths, exact contents
+      and the omission of hidden entries on a bounded fixture.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      Restoring the assets prefix in build/assetpack/main.go restored ready
+      after the local wrong-prefix replay produced the expected diagnostic.

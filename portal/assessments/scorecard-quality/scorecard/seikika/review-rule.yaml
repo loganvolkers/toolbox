@@ -1,67 +1,37 @@
 apiVersion: seikika.com/assessment/v1
 entity: scorecard:seikika/review-rule
 rubric: scorecard-quality
-subjectHash: e82519fae55a
-assessor: {kind: agent, name: cursor-assessor-04, model: claude-opus-5.5}
-at: 2026-11-25
+subjectHash: 4c32afc9218b
+rubricHash: 1d01a2d06d609948839eb0695b1bba667b2ebe2c4b50224dbd8ac05d5b3cb334
+assessor: {kind: agent, name: codex}
+at: 2026-11-27
 verdicts:
   - criterion: one-concern
     verdict: pass
     reason: >-
-      All four rules read the rule-quality assessment of a rule
-      (portal/standards/meta.yaml:927-985). The card is limited to this
-      portal's own rules (`appliesTo: entity.portal == 'seikika'`,
-      meta.yaml:926) and serves maintainers. It is advisory (meta.yaml:925)
-      for the reason D01M831P5QWJQ4A2FT85N5MXJQF gives: a review that goes
-      stale on every edit mustn't gate.
+      packages/meta-scoring/fragments/catalog.yaml measures the review status
+      of one rule. All rules draw from the relation to its rule-quality
+      assessment.
   - criterion: levels-are-a-ladder
     verdict: pass
     reason: >-
-      Bronze is no open finding, stale ones included (meta.yaml:928-941).
-      Silver is a current review (:942-954). Both gold rules need a current
-      review and add something: cited reasons with no failures, or no doubts
-      (:955-985). That is the ladder of docs/design/thresholds.md:55. Fixtures
-      reach none, silver and gold (portal/tests/standards.test.yaml:856-877).
-      Bronze has no fixture of its own: an unreviewed seikika rule in the
-      fixtures would pin it.
+      packages/meta-scoring/fragments/catalog.yaml surfaces unresolved
+      failures before bronze, requires a matching subject and current rubric
+      criteria at silver, and reserves gold for cited and independently
+      reviewed passes. packages/meta-scoring/tests/tests/reviews.yaml
+      exercises the parallel scorecard boundary including empty verdicts.
   - criterion: no-obvious-gap
-    verdict: fail
+    verdict: pass
     reason: >-
-      The other judged cards ask for a second assessor; this one never does.
-      review-crate's gold has `independently-reviewed`
-      (portal/standards/crates.yaml:433-450). review-assessment needs a
-      different reviewer at silver and grounding at gold
-      (portal/standards/assessments.yaml:259-282). Here a rule's own author
-      can write an all-pass assessment citing any existing file and reach
-      gold, though D01M831P5QWJQ4A2FT85N5MXJQF records that 0 of 19 rules
-      agents reviewed passed. link_reviews already computes
-      `independentReview` for every assessment
-      (crates/seikika-connect/src/assessment.rs:284-295).
-    suggestion: >-
-      Add a Rule field `reviewIndependent` computed as
-      `inbound.assessesRule.size() == 0 ? '' :
-      inbound.assessesRule[0].independentReview`, and a gold rule
-      `independently-reviewed` copied from crates.yaml:433-450, with fixtures
-      on each side. Update the review-* row in docs/design/thresholds.md:55.
+      packages/meta-scoring/fragments/catalog.yaml compares the subject and
+      rubric versions. crates/seikika-connector-workspace/src/main.rs retains
+      findings from an older rubric and verifies current criterion coverage.
+      crates/seikika-connect/src/assessment.rs qualifies the independent
+      review against the authored assessment.
   - criterion: actionable
-    verdict: fail
+    verdict: pass
     reason: >-
-      Bronze and silver are actionable: the silver fix gives the brief command
-      and the check command (portal/standards/meta.yaml:948-950). Gold isn't.
-      The passes-review fix covers failing criteria but not its own "cites
-      nothing that resolves" evidence (meta.yaml:960-966). The no-doubts fix
-      names no file and no re-assessment (meta.yaml:977-979), though resolving
-      a doubt always needs one. review-crate's no-doubts fix shows the
-      complete form (crates.yaml:424-428).
-    suggestion: >-
-      Add to passes-review's fix: "for a criterion listed as citing nothing,
-      add a path, unique file name, decision id or URL to that reason". Reword
-      no-doubts's fix: "add the missing source (a row in
-      docs/design/thresholds.md or a `rationale:` on the rule), then re-assess
-      with `seikika assess brief <rule id> --portal portal`."
-summary: >-
-  A coherent advisory ladder, but the weakest of the review cards. It is
-  the only one that never asks for a second assessor, so a self-written,
-  all-pass assessment of a rule reaches gold. Its two gold fixes leave out
-  steps their evidence needs: adding citations, and re-assessing after a
-  doubt is resolved.
+      packages/meta-scoring/fragments/catalog.yaml names the brief command,
+      points to the assessment file and tells maintainers to add resolving
+      citations, address findings and obtain a passing assessment-quality
+      review.

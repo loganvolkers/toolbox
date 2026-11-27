@@ -1,0 +1,40 @@
+apiVersion: seikika.com/assessment/v1
+entity: assessment:rule-quality/rule:seikika-organization/workflow-zizmor/zizmor-no-high
+rubric: assessment-quality
+subjectHash: b141ce063057
+rubricHash: e30700fc6322cf9f05a301bb4638d6708e9f5eb5aea0281911229ce75bd37bf7
+assessor:
+  kind: agent
+  name: codex-astra-parent-workflows
+  model: gpt-6.2-astra
+at: 2026-11-27
+verdicts:
+  - criterion: supported
+    verdict: pass
+    reason: >-
+      examples/github-org-federation/workflows.yaml checks high-severity
+      findings only after a completed audit and gives a rule, line and
+      message. crates/seikika-connector-workspace/src/org_workflows.rs
+      validates the zizmor run, optional invocation success, result structure
+      and severity before returning findings.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      crates/seikika-connector-workspace/src/org_workflows.rs audits an
+      isolated file without repository configuration or ignores, rejects
+      explicit invocation failure, and normalizes recognized severities.
+      examples/github-org-federation/workflows.yaml defines the threshold and
+      remediation within that offline audit scope.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      examples/github-org-federation/standards.test.yaml checks passing and
+      failing cases for zizmor-no-high. The tests in
+      crates/seikika-connector-workspace/src/org_workflows.rs distinguish an
+      accepted empty results array, an explicitly unsuccessful invocation and
+      a normalized Low result.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      examples/github-org-federation/assessments/rule-quality/rule/seikika-organization/workflow-zizmor/zizmor-no-high.yaml
+      records only passes and attaches no misdirected corrective suggestions.

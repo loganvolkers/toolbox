@@ -22,8 +22,9 @@ verdicts:
     reason: >-
       The hard-to-game and fix-leads-to-pass fails match the other facts.yaml
       rules: a hand-typed value, and a fix that omits the record step
-      (portal/standards/meta.yaml:1164-1173). threshold-justified is boolean
-      and registered. The sources show no missed failure on the Seikika side.
+      (https://github.com/seikika/seikika/blob/05510a57fafd8707979370858b578b78b935cf0e/portal/standards/meta.yaml#L1164-L1173).
+      threshold-justified is boolean and registered. The sources show no
+      missed failure on the Seikika side.
   - criterion: reproducible
     verdict: unsure
     reason: >-
@@ -35,7 +36,8 @@ verdicts:
       integrations (backstage-comparison.yaml:886-888), and a service that
       emits catalog-info YAML in any language arguably meets it. A second
       assessor could mark measures-intent unsure, on the rubric's "fail while
-      meeting it" (portal/standards/meta.yaml:1160-1161).
+      meeting it"
+      (https://github.com/seikika/seikika/blob/05510a57fafd8707979370858b578b78b935cf0e/portal/standards/meta.yaml#L1160-L1161).
     suggestion: >-
       Ground the dismissal in a source: Backstage's docs saying entity
       providers and processors are TypeScript backend modules, and that a URL

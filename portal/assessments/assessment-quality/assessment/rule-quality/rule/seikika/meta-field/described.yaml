@@ -12,9 +12,9 @@ verdicts:
       portal/assessments/rule-quality/rule/seikika/meta-field/described.yaml
       hold. `described` is filled() (crates/seikika-cli/src/model.rs:154,
       281-285), and `sources` and `computed` are emitted at :155. The fix is
-      portal/standards/meta.yaml:796-797 and the evidence :795. "Its
-      criteria." is :360 and "The kind's name." is :209.
-      portal/tests/standards.test.yaml:811-813 pins Crate.codeLines.
+      https://github.com/seikika/seikika/blob/05510a57fafd8707979370858b578b78b935cf0e/portal/standards/meta.yaml#L796-L797
+      and the evidence :795. "Its criteria." is :360 and "The kind's name." is
+      :209. portal/tests/standards.test.yaml:811-813 pins Crate.codeLines.
       portal/results.json has exactly 205 meta-field entities failing only
       `described`. The card rationale is meta.yaml:764-769, and
       docs/design/scorecards-for-scorecards.md:208 and :216-217 say what is
@@ -24,8 +24,8 @@ verdicts:
     reason: >-
       All four verdicts are right. A presence check measures presence. A
       placeholder passes, which is the rubric's "empty doc comment" case
-      (portal/standards/meta.yaml:1165-1166). The fix names the key, and
-      silver is placed by the card's rationale.
+      (https://github.com/seikika/seikika/blob/05510a57fafd8707979370858b578b78b935cf0e/portal/standards/meta.yaml#L1165-L1166).
+      The fix names the key, and silver is placed by the card's rationale.
   - criterion: reproducible
     verdict: pass
     reason: >-

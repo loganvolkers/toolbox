@@ -1,0 +1,36 @@
+apiVersion: seikika.com/assessment/v1
+entity: assessment:scorecard-quality/scorecard:seikika-organization/repo-hygiene
+rubric: assessment-quality
+subjectHash: 075b151faf36
+rubricHash: e30700fc6322cf9f05a301bb4638d6708e9f5eb5aea0281911229ce75bd37bf7
+assessor: {kind: agent, name: codex-astra-parent-hygiene, model: gpt-6.2-astra}
+at: 2026-11-27
+verdicts:
+  - criterion: supported
+    verdict: pass
+    reason: >-
+      examples/github-org-federation/standards.yaml establishes the two-stage
+      file and ownership convention and
+      examples/github-org-federation/standards.test.yaml demonstrates skipped,
+      none, bronze and silver.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      examples/github-org-federation/standards.yaml directs the README repair
+      to the observed file, and crates/seikika-connector-workspace/src/repo.rs
+      checks alternate license files and correctly separates owner tokens from
+      inline comments. The two levels cover the declared static conventions.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      The corrected parser in crates/seikika-connector-workspace/src/repo.rs
+      reproduced the tab-comment and handle-length boundaries alongside the
+      previously verified license fallback. The predicates in
+      examples/github-org-federation/standards.yaml consume those facts
+      directly.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      examples/github-org-federation/assessments/scorecard-quality/scorecard/seikika-organization/repo-hygiene.yaml
+      contains only original pass judgments and attaches no suggestions that
+      could misdirect a repair.

@@ -1,0 +1,19 @@
+tracks:
+  - name: portal-quality
+    title: Portal quality
+    owner: group:maintainers
+    description: Test and review the standards used by the organization portal.
+
+campaigns:
+  - name: review-organization-standards
+    title: Review the organization portal's standards
+    owner: group:maintainers
+    track: portal-quality
+    description: >-
+      Obtain current, cited reviews of the organization's rules and scorecards
+      and resolve their findings.
+    status: active
+    targetPercent: 100
+    includes:
+    - {scorecard: review-rule, atLeast: gold}
+    - {scorecard: review-scorecard, atLeast: gold}

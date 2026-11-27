@@ -47,6 +47,7 @@ connectors:
 |---|---|---|
 | `sarif` | **Slot** | SARIF 2.1.0, from any tool: ruff, semgrep, zizmor, gitleaks, an ESLint SARIF formatter. Only semgrep and zizmor are checked here (docs/research-log.md) |
 | `ndjson` | **Slot** | Connector `record` messages a tool prints itself (`seikika describe` does) |
+| `exit` | **Slot** | One record at `<name>:check` with `command`, `exitCode` and bounded failure `evidence`. Use for read-only checks that use zero to pass and nonzero to report a finding. A process that fails to start or ends by signal fails the connector run. |
 | `zizmor`, `actionlint`, `semgrep` | Fitting | Those tools' own JSON. Prefer `sarif` where the tool has it; actionlint has no SARIF output |
 | `cargo-test`, `clippy` | Fitting | `cargo test` and `cargo clippy` output, per crate |
 | `tally` | Fitting | An NDJSON file the command writes, counted by a key |

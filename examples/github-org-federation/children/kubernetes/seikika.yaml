@@ -1,0 +1,99 @@
+apiVersion: seikika.com/v1alpha1
+portal:
+  name: kubernetes
+  title: Kubernetes
+  owner: group:maintainers
+  seikika: "0.2"
+include:
+  - {package: ../../../../packages/meta-scoring, with: {track: portal-quality}}
+
+tracks:
+  - name: release
+    title: Release readiness
+    owner: group:maintainers
+    description: Verify the repository's release contract before distributing packages.
+  - name: portal-quality
+    title: Portal quality
+    owner: group:maintainers
+    description: Verify the fixture and review evidence behind the release standard.
+
+connectors:
+  - name: release-check
+    package: builtin:runner
+    runtime: in-image
+    config:
+      name: release-check
+      jobs:
+        - name: staging-workspace
+          command: [python3, .seikika/check-staging-workspace.py]
+          parse: exit
+    records: [staging-workspace]
+    refresh: {staging-workspace: [external_ids]}
+    freshness: {staging-workspace: 5m}
+
+kinds:
+  - name: StagingWorkspace
+    description: >-
+      The generated Go workspace includes every staged module under its own
+      module name.
+    identityFrom: [connector:release-check]
+    fields:
+      command:
+        type: string
+        description: Command that reproduces the release check in the checkout.
+      exitCode:
+        type: integer
+        description: Process exit status for the release check.
+      evidence:
+        type: list
+        items: string
+        description: Bounded diagnostics from a failed release check.
+    sources: {default: [connector:release-check]}
+    map:
+    - from: release-check/staging-workspace
+      id: "'staging-workspace:' + record.name"
+      set: >-
+        {'command': record.command, 'exitCode': record.exitCode, 'evidence':
+        record.evidence}
+
+scorecards:
+  - name: staging-workspace
+    title: Kubernetes packaging contract
+    kind: StagingWorkspace
+    description: >-
+      The generated Go workspace includes every staged module under its own
+      module name.
+    rationale: >-
+      A release that fails this preflight can leave users installing stale or
+      unusable artifacts.
+    links:
+    - title: Upstream release contract
+      url: https://github.com/seikika/kubernetes/blob/main/go.work
+    owner: group:maintainers
+    track: release
+    levels: [ready]
+    ratchet: {newEntitiesAtLeast: ready}
+    rules:
+    - name: release-check-passes
+      level: ready
+      check: entity.exitCode == 0
+      evidence: >-
+        ['Exit ' + string(entity.exitCode) + ': ' + entity.command] +
+        entity.evidence
+      fix: >-
+        Regenerate go.work using the Kubernetes dependency tooling and repair
+        any listed staging go.mod module path.
+      rationale: >-
+        The repository preflight uses exit status zero when all inputs agree
+        with the release contract.
+    facets: {summary: public, details: public}
+
+campaigns:
+  - name: release-preflight
+    title: Keep the release preflight passing
+    owner: group:maintainers
+    track: release
+    description: Resolve release distribution findings before packaging the next release.
+    includes: [{scorecard: staging-workspace, atLeast: ready}]
+
+tests: [tests/release.test.yaml]

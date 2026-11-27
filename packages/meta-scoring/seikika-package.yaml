@@ -1,0 +1,68 @@
+apiVersion: seikika.com/package/v0
+name: meta-scoring
+version: 0.1.0
+description: >-
+  Score a portal's catalog definitions, rule fixtures and assessment
+  evidence.
+parameters:
+  owner:
+    type: string
+    default: group:maintainers
+    description: Team responsible for the meta standard.
+  track:
+    type: string
+    default: null
+    description: Existing portal track for the scorecards, if desired.
+  root:
+    type: string
+    default: .
+    description: Repository path relative to the report working directory.
+  describeCommand:
+    type: array
+    default: [seikika, describe, portal, .seikika]
+    description: >-
+      Argument vector that describes the local portal and any explicitly
+      selected examples, from root.
+  manifest:
+    type: string
+    default: .seikika
+    description: >-
+      Portal manifest path relative to root, used to validate assessment
+      rubrics.
+  assessments:
+    type: array
+    default: [.seikika/assessments/**/*.y*ml]
+    description: Assessment paths relative to root.
+  reviewScope:
+    type: string
+    default: "true"
+    description: >-
+      CEL predicate selecting rule and scorecard entities the operator is
+      responsible for reviewing.
+  sdlcStageRelation:
+    type: object
+    default: null
+    description: Optional relation from an assessment to the operator's SDLC stage kind.
+  sdlcStageMapping:
+    type: string
+    default: null
+    description: CEL mapping for sdlcStageRelation, when configured.
+  crateRelation:
+    type: object
+    default: null
+    description: Optional relation from an assessment to the operator's Rust crate kind.
+  crateMapping:
+    type: string
+    default: null
+    description: CEL mapping for crateRelation, when configured.
+  testingContractRelation:
+    type: object
+    default: null
+    description: >-
+      Optional relation from an assessment to the operator's testing contract
+      kind.
+  testingContractMapping:
+    type: string
+    default: null
+    description: CEL mapping for testingContractRelation, when configured.
+fragments: [fragments/*.yaml]

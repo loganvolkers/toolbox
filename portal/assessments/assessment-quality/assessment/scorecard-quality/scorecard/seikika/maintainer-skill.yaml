@@ -28,10 +28,11 @@ verdicts:
     reason: >-
       The verdicts fit the evidence. levels-are-a-ladder fails on the rubric's
       own test, a gold rule cheaper than bronze
-      (portal/standards/meta.yaml:1200-1202): one-level-deep is free for a
-      skill with no extra files. no-obvious-gap fails on a deferral whose
-      stated condition no longer holds. One-concern holds, because the
-      killer-item placement is a documented principle, not a second audience.
+      (https://github.com/seikika/seikika/blob/05510a57fafd8707979370858b578b78b935cf0e/portal/standards/meta.yaml#L1200-L1202):
+      one-level-deep is free for a skill with no extra files. no-obvious-gap
+      fails on a deferral whose stated condition no longer holds. One-concern
+      holds, because the killer-item placement is a documented principle, not
+      a second audience.
   - criterion: reproducible
     verdict: pass
     reason: >-

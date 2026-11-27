@@ -1,0 +1,25 @@
+name: Astryx published dependency alignment
+assert:
+  - name: Aligned published dependencies reach ready
+    expect: >-
+      score('published-dependencies',
+      'published-dependencies:published-dependencies').level == 'ready' &&
+      score('published-dependencies',
+      'published-dependencies:published-dependencies').rules['release-check-passes']
+      == 'pass'
+  - name: A stale package dependency reports the expected release version
+    expect: >-
+      score('published-dependencies',
+      'published-dependencies:broken').rules['release-check-passes'] == 'fail'
+      && score('published-dependencies',
+      'published-dependencies:broken').evidence['release-check-passes'].size()
+      == 2 && score('published-dependencies',
+      'published-dependencies:broken').evidence['release-check-passes'][1].contains('packages/themes/butter/package.json')
+  - name: Reject duplicate published identities with both paths
+    expect: >-
+      score('published-dependencies',
+      'published-dependencies:duplicate').rules['release-check-passes'] ==
+      'fail' && score('published-dependencies',
+      'published-dependencies:duplicate').evidence['release-check-passes'][1].contains('packages/themes/butter/package.json')
+      && score('published-dependencies',
+      'published-dependencies:duplicate').evidence['release-check-passes'][1].contains('packages/themes/chocolate/package.json')

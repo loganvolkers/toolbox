@@ -1,0 +1,32 @@
+apiVersion: seikika.com/assessment/v1
+entity: assessment:rule-quality/rule:seikika-organization/repo-hygiene/has-readme
+rubric: assessment-quality
+subjectHash: 67b47a667a3f
+rubricHash: e30700fc6322cf9f05a301bb4638d6708e9f5eb5aea0281911229ce75bd37bf7
+assessor: {kind: agent, name: codex-astra-parent-hygiene, model: gpt-6.2-astra}
+at: 2026-11-27
+verdicts:
+  - criterion: supported
+    verdict: pass
+    reason: >-
+      examples/github-org-federation/standards.yaml checks selected root
+      README content and tells the maintainer to fill the exact path in the
+      evidence.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      crates/seikika-connector-workspace/src/repo.rs prioritizes recognized
+      names; the revised examples/github-org-federation/standards.yaml handles
+      a shadowed README.md by identifying the file actually selected.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      A local scan using crates/seikika-connector-workspace/src/repo.rs
+      reported README and zero words despite a populated README.md, exactly
+      the selected file the revised fix directs the maintainer to populate.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      examples/github-org-federation/assessments/rule-quality/rule/seikika-organization/repo-hygiene/has-readme.yaml
+      contains only original pass judgments and attaches no suggestions that
+      could misdirect a repair.

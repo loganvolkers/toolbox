@@ -177,8 +177,6 @@ connectors:
         - examples/**/README.md
         - experiments/**/README.md
         - docs/examples/*.md
-      # Coding agents' judgements of our standards and crates (`seikika assess`, D79)
-      assessments: [portal/assessments/**/*.y*ml]
       # Starlight content pages (docs/design/site-standards.md)
       pages: [site/src/content/docs/**/*.md, site/src/content/docs/**/*.mdx]
       # The SDLC layers and their stages, declared as data (D87)
@@ -229,7 +227,6 @@ connectors:
     - json-schema
     - example
     - site-page
-    - assessment
     - sdlc-layer
     - sdlc-stage
     - observability
@@ -276,7 +273,6 @@ connectors:
       json-schema: 5m
       example: 5m
       site-page: 5m
-      assessment: 5m
       sdlc-layer: 5m
       sdlc-stage: 5m
       observability: 5m
@@ -345,55 +341,42 @@ connectors:
           command: [node, scripts/sdk-docs.mjs]
           parse: ndjson
           kinds: [sdk-docs]
-        # Every part of a portal as entities (docs/design/scorecards-for-scorecards.md): this
-        # portal, the starter pilots copy, and the reference portal. Live outcomes come from the
-        # committed results and are information only, so meta scorecards never depend on their own output.
-        - name: portals
-          command:
-          - target/debug/seikika
-          - describe
-          - portal
-          - portal
-          - examples/repo-portal-starter
-          - examples/reference-portal
-          - --results
-          - portal=portal/results.json
-          parse: ndjson
-          kinds: [scorecard, rule, kind, field, connector, rubric]
-    records:
-    - command
-    - mcp-tool
-    - sdk-docs
-    - scorecard
-    - rule
-    - kind
-    - field
-    - connector
-    - rubric
+    records: [command, mcp-tool, sdk-docs]
     refresh:
       command: [external_ids]
       mcp-tool: [external_ids]
       sdk-docs: [external_ids]
-      scorecard: [external_ids]
-      rule: [external_ids]
-      kind: [external_ids]
-      field: [external_ids]
-      connector: [external_ids]
-      rubric: [external_ids]
-    freshness:
-      command: 5m
-      mcp-tool: 5m
-      sdk-docs: 5m
-      scorecard: 5m
-      rule: 5m
-      kind: 5m
-      field: 5m
-      connector: 5m
-      rubric: 5m
+    freshness: {command: 5m, mcp-tool: 5m, sdk-docs: 5m}
 
 include:
   # One file per topic: its kinds, scorecards and rubrics (portal/README.md).
   - standards/*.yaml
+  - package: ../packages/meta-scoring
+    with:
+      track: standards
+      describeCommand:
+        - target/debug/seikika
+        - describe
+        - portal
+        - portal
+        - examples/repo-portal-starter
+        - examples/reference-portal
+        - --results
+        - portal=portal/results.json
+      manifest: portal
+      assessments: [portal/assessments/**/*.y*ml]
+      reviewScope: entity.portal == 'seikika'
+      sdlcStageRelation: {to: SdlcStage, many: false, unresolved: ignore}
+      sdlcStageMapping: "record.entity.startsWith('sdlc-stage:') ? [record.entity] : []"
+      crateRelation: {to: Crate, many: false, unresolved: ignore}
+      crateMapping: "record.entity.startsWith('crate:') ? [record.entity] : []"
+      testingContractRelation:
+        to: TestingContract
+        many: false
+        unresolved: ignore
+      testingContractMapping: >-
+        record.rubric == 'testing-contract-quality' &&
+        record.entity.startsWith('testing-contract:') ? [record.entity] : []
   # Time-bound focus over those scorecards (docs/design/campaigns.md).
   - campaigns.yaml
   # Accepted failures. Each one cites a decision (docs/design/waivers.md).

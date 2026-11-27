@@ -1,0 +1,33 @@
+apiVersion: seikika.com/assessment/v1
+entity: assessment:scorecard-quality/scorecard:plannotator/release-versions
+rubric: assessment-quality
+subjectHash: 3e4625bea3a8
+rubricHash: e30700fc6322cf9f05a301bb4638d6708e9f5eb5aea0281911229ce75bd37bf7
+assessor: {kind: agent, name: codex-astra-fork-b, model: gpt-6.2-astra}
+at: 2026-11-27
+verdicts:
+  - criterion: supported
+    verdict: pass
+    reason: >-
+      .seikika/tests/release.test.yaml now asserts both file paths and both
+      conflicting values. scripts/check-release-version.test.ts independently
+      demonstrates the stale integration failure.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      .seikika/seikika.yaml limits the concern to local release-version
+      agreement. scripts/check-release-version.mjs implements this binary
+      invariant and identifies the values to repair.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      .seikika/fixtures/release-check.ndjson and
+      .seikika/tests/release.test.yaml reproduce the observed failure
+      signature and ready baseline, consistent with
+      scripts/check-release-version.test.ts.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      .seikika/assessments/scorecard-quality/scorecard/plannotator/release-versions.yaml
+      records pass on every criterion and contains no corrective suggestion
+      directed at another entity.

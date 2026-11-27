@@ -53,7 +53,7 @@ fn hand_written_expectations_pass() {
     let (m, snap) = reference();
     let d = Arc::new(FullRecompute.recompute(&m, &snap));
     let results = seikika_derive::testing::run(&portal(), &m.tests, d).unwrap();
-    assert_eq!(results.len(), 20);
+    assert_eq!(results.len(), 23);
     let failed: Vec<_> = results.iter().filter(|r| !r.passed).collect();
     assert!(failed.is_empty(), "{failed:#?}");
 }

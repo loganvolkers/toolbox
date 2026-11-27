@@ -1,0 +1,35 @@
+apiVersion: seikika.com/assessment/v1
+entity: assessment:scorecard-quality/scorecard:security-audit-skill/skill-distribution
+rubric: assessment-quality
+subjectHash: c8b48c1e1242
+rubricHash: e30700fc6322cf9f05a301bb4638d6708e9f5eb5aea0281911229ce75bd37bf7
+assessor: {kind: agent, name: codex-astra-fork-b, model: gpt-6.2-astra}
+at: 2026-11-27
+verdicts:
+  - criterion: supported
+    verdict: pass
+    reason: >-
+      .seikika/check-skill-distribution.py compares recursive file paths to
+      README.md inventory rows and rejects duplicate entries, a missing table
+      and conflicting entrypoint names. .seikika/tests/release.test.yaml
+      exercises missing and nested files.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      The metadata inventory in .seikika/seikika.yaml is one binary concern.
+      .seikika/check-skill-distribution.py now handles the observed missing
+      plain-cell path and conflicting-name cases and identifies the offending
+      file.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      Independent disposable copies reproduced
+      .seikika/check-skill-distribution.py rejecting a missing README.md
+      plain-cell file and conflicting entrypoint names, and accepting the
+      matching inventory after adding the named file.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      .seikika/assessments/scorecard-quality/scorecard/security-audit-skill/skill-distribution.yaml
+      records pass on every criterion and contains no corrective suggestion
+      directed at another entity.

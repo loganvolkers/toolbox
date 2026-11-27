@@ -98,6 +98,8 @@ assert:
       score('maintainer-crate',
       'crate:seikika-derive').evidence['short-functions'].size() == 3 &&
       score('maintainer-crate',
+      'crate:seikika-derive').rules['short-functions'] == 'fail' &&
+      score('maintainer-crate',
       'crate:seikika-connector-git-files').evidence['clippy-clean'] ==
       ['src/main.rs:12 clippy::needless_return unneeded `return` statement']
   - name: passing rules have no evidence
@@ -155,6 +157,11 @@ assert:
       workflow trigger'] && score('maintainer-ci-security',
       'workflow:.github/workflows/release.yml').rules['no-write-tokens-on-risky-triggers']
       == 'fail'
+  - name: An unwaived high finding fails the security rule
+    expect: >-
+      score('maintainer-ci-security',
+      'workflow:.github/workflows/demo/unsafe.yml').rules['no-high-findings']
+      == 'fail'
   - name: without actionlint's output its rule is unknown, not failing
     expect: >-
       score('maintainer-ci-security',
@@ -182,7 +189,9 @@ assert:
     expect: >-
       score('maintainer-ci-reliability',
       'workflow:.github/workflows/ci.yml').evidence['every-job-has-timeout'].size()
-      == 6 && score('maintainer-ci-speed',
+      == 6 && score('maintainer-ci-reliability',
+      'workflow:.github/workflows/ci.yml').rules['every-job-has-timeout'] ==
+      'fail' && score('maintainer-ci-speed',
       'workflow:.github/workflows/ci.yml').rules['cancels-superseded-runs'] ==
       'fail'
   - name: without run data the run rules are unknown and say which connector
@@ -987,6 +996,10 @@ assert:
       == ['hard-to-game'] && score('meta-assessment',
       'assessment:rule-quality/rule:seikika/meta-rule/tested').rules['assessor-named']
       == 'fail' && score('meta-assessment',
+      'assessment:rule-quality/rule:demo/blank-review').rules['assessor-named']
+      == 'fail' && score('meta-assessment',
+      'assessment:rule-quality/rule:demo/placeholder-review').rules['assessor-named']
+      == 'fail' && score('meta-assessment',
       'assessment:rule-quality/rule:seikika/maintainer-ci-security/no-medium-findings').rules['assessor-named']
       == 'pass' && score('meta-assessment',
       'assessment:rule-quality/rule:seikika/maintainer-ci-security/no-medium-findings').rules['suggests-fixes']
@@ -1010,18 +1023,18 @@ assert:
       && score('meta-rubric', 'rubric:seikika/crate-design').level == 'bronze'
       && score('meta-rubric', 'rubric:seikika/crate-design').rules['guided']
       == 'fail' && score('meta-rubric', 'rubric:demo/sharp').level == 'gold'
-  - name: a criterion every assessment passed keeps a rubric from gold
+  - name: a criterion without both decisive verdicts keeps a rubric from gold
     expect: >-
       score('meta-rubric', 'rubric:seikika/rule-quality').level == 'silver' &&
       score('meta-rubric',
       'rubric:seikika/rule-quality').evidence['discriminates'] ==
-      ['fix-leads-to-pass passed in every assessment'] && score('meta-rubric',
-      'rubric:seikika/rule-quality').rules['guided'] == 'pass' &&
-      score('meta-rubric', 'rubric:demo/sharp').rules['discriminates'] ==
+      ['fix-leads-to-pass needs a passing and a failing example'] &&
+      score('meta-rubric', 'rubric:seikika/rule-quality').rules['guided'] ==
       'pass' && score('meta-rubric',
-      'rubric:seikika/rule-quality').rules['described'] == 'pass' &&
-      score('meta-rubric', 'rubric:seikika/rule-quality').rules['in-use'] ==
-      'pass'
+      'rubric:demo/sharp').rules['discriminates'] == 'pass' &&
+      score('meta-rubric', 'rubric:seikika/rule-quality').rules['described']
+      == 'pass' && score('meta-rubric',
+      'rubric:seikika/rule-quality').rules['in-use'] == 'pass'
   - name: >-
       assessments are reviewed against assessment-quality, and the reviews are
       not
@@ -1033,7 +1046,9 @@ assert:
       == 'fail' && score('review-assessment',
       'assessment:rule-quality/rule:seikika/user-cli/has-help').evidence['passes-review']
       == ['complete', 'the review cites neither this assessment nor anything
-      it cites (fix the review)'] && score('review-assessment',
+      it cites (fix the review)', 'need a complete current review with a
+      rubric hash and a different named assessor'] &&
+      score('review-assessment',
       'assessment:assessment-quality/assessment:rule-quality/rule:seikika/user-cli/has-help').level
       == 'skipped'
   - name: a review of an older version of an assessment is stale
@@ -1725,3 +1740,23 @@ assert:
       'testing-contract:verified').rules['risks-addressed'] == 'pass' &&
       score('review-testing',
       'testing-contract:uncertain').rules['risks-addressed'] == 'fail'
+  - name: fixture scripts preserve their captured file metadata
+    expect: >-
+      entity('file:scripts/m4-acceptance.sh').extension == 'sh' &&
+      entity('file:scripts/m4-acceptance.sh').lines == 75
+  - name: Both required outcomes earn the fixture coverage rule
+    expect: >-
+      score('meta-rule',
+      'rule:seikika/maintainer-ci-security/no-medium-findings').rules['pins-both-outcomes']
+      == 'pass'
+  - name: A rule with no assessment and no recorded finding reaches review bronze
+    expect: >-
+      score('review-rule', 'rule:seikika/meta-rule/pins-both-outcomes').level
+      == 'bronze'
+  - name: A current but ungrounded independent assessment review stops at silver
+    expect: >-
+      score('review-assessment',
+      'assessment:crate-design/crate:seikika-expr').level == 'silver' &&
+      score('review-assessment',
+      'assessment:crate-design/crate:seikika-expr').rules['passes-review'] ==
+      'fail'

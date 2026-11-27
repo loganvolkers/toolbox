@@ -1,0 +1,32 @@
+apiVersion: seikika.com/assessment/v1
+entity: rule:seikika-organization/repo-hygiene/owner-handles-consistent
+rubric: rule-quality
+subjectHash: 3e1af21b1d0c
+rubricHash: 696a7d3fef1c024786016ca0a353e402b5c1a7aaf7644da6825b20e218dc4a96
+assessor: {kind: agent, name: codex}
+at: 2026-11-27
+verdicts:
+  - criterion: measures-intent
+    verdict: pass
+    reason: >-
+      crates/seikika-connector-workspace/src/repo.rs validates handle shape
+      and requires the owners to be all team or all personal handles for this
+      catalog convention. examples/github-org-federation/standards.test.yaml
+      shows that email can satisfy bronze while failing this silver rule.
+  - criterion: hard-to-game
+    verdict: pass
+    reason: >-
+      crates/seikika-connector-workspace/src/repo.rs rejects trailing and
+      doubled hyphens in logins, malformed tokens, emails and mixed routing
+      styles. This checks identifiers and style against the pinned file.
+  - criterion: fix-leads-to-pass
+    verdict: pass
+    reason: >-
+      examples/github-org-federation/standards.yaml shows the observed handles
+      and directs authors to use one handle style and replace malformed
+      identifiers and email addresses.
+  - criterion: threshold-justified
+    verdict: pass
+    reason: >-
+      docs/decisions/D01M7Y57FVX0XYNGMX0A0XJ4GK9.md explains why all-personal
+      handles are allowed alongside all-team ownership.

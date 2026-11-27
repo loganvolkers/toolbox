@@ -1,0 +1,36 @@
+apiVersion: seikika.com/assessment/v1
+entity: scorecard:seikika-organization/repo-hygiene
+rubric: scorecard-quality
+subjectHash: 65c900629703
+rubricHash: 1d01a2d06d609948839eb0695b1bba667b2ebe2c4b50224dbd8ac05d5b3cb334
+assessor: {kind: agent, name: codex}
+at: 2026-11-27
+verdicts:
+  - criterion: one-concern
+    verdict: pass
+    reason: >-
+      examples/github-org-federation/standards.yaml evaluates repository
+      entry-point files and basic ownership conventions for maintainers
+      triaging scanned repositories.
+  - criterion: levels-are-a-ladder
+    verdict: pass
+    reason: >-
+      examples/github-org-federation/standards.test.yaml exercises failure,
+      bronze and silver. Bronze requires readable README text and one
+      recognizable owner, and silver adds licensing, ownership style and the
+      default rule convention.
+  - criterion: no-obvious-gap
+    verdict: pass
+    reason: >-
+      crates/seikika-connector-workspace/src/repo.rs recognizes owner
+      identifier syntax and looks for readable text in a root license file.
+      examples/github-org-federation/standards.test.yaml covers unavailable
+      scans, a blank license, malformed ownership and a later override that
+      clears the default. These are static file checks.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      examples/github-org-federation/standards.yaml names the selected README
+      or license in the evidence and gives CODEOWNERS locations and examples.
+      examples/github-org-federation/standards.test.yaml pins the
+      line-numbered ownerless override evidence.

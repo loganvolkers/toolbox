@@ -26,8 +26,9 @@ verdicts:
     verdict: pass
     reason: >-
       The evidence lists the record kinds, and the fix
-      (portal/standards/meta.yaml:813-826) gives the exact `map: - from:
-      <connector>/<record>` shape and the alternative of not declaring it.
+      (https://github.com/seikika/seikika/blob/05510a57fafd8707979370858b578b78b935cf0e/portal/standards/meta.yaml#L813-L826)
+      gives the exact `map: - from: <connector>/<record>` shape and the
+      alternative of not declaring it.
   - criterion: threshold-justified
     verdict: pass
     reason: >-

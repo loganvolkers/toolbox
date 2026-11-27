@@ -1,0 +1,31 @@
+apiVersion: seikika.com/assessment/v1
+entity: scorecard:open-code-review/npm-platform-packages
+rubric: scorecard-quality
+subjectHash: f7f7906f254e
+rubricHash: 1d01a2d06d609948839eb0695b1bba667b2ebe2c4b50224dbd8ac05d5b3cb334
+assessor: {kind: agent, name: codex}
+at: 2026-11-27
+verdicts:
+  - criterion: one-concern
+    verdict: pass
+    reason: >-
+      .seikika/seikika.yaml defines one release card for consistency of npm
+      launcher and platform package metadata.
+  - criterion: levels-are-a-ladder
+    verdict: pass
+    reason: >-
+      .seikika/tests/release.test.yaml pins ready and a failed version match.
+      Any mismatch violates this binary packaging contract.
+  - criterion: no-obvious-gap
+    verdict: pass
+    reason: >-
+      .seikika/check-platform-packages.mjs checks release workflow membership,
+      name, operating system, architecture, version and optional dependency
+      membership. .seikika/tests/release.test.yaml covers version drift and
+      paired removal.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      .seikika/tests/release.test.yaml pins the exact failed platform
+      diagnostic. Aligning npm/linux-x64/package.json with package.json
+      restored the real checkout outcome.

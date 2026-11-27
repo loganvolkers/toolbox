@@ -1,0 +1,32 @@
+apiVersion: seikika.com/assessment/v1
+entity: rule:astryx/published-dependencies/release-check-passes
+rubric: rule-quality
+subjectHash: 51785b2aea53
+rubricHash: 696a7d3fef1c024786016ca0a353e402b5c1a7aaf7644da6825b20e218dc4a96
+assessor: {kind: agent, name: codex}
+at: 2026-11-27
+verdicts:
+  - criterion: measures-intent
+    verdict: pass
+    reason: >-
+      The rule in .seikika/seikika.yaml runs the upstream Astryx release
+      alignment library through .seikika/check-published-dependencies.mjs.
+  - criterion: hard-to-game
+    verdict: pass
+    reason: >-
+      The duplicate replay in .seikika/tests/release.test.yaml identifies both
+      theme manifests sharing a published name. The version drift replay also
+      proves the checker reads each package.
+  - criterion: fix-leads-to-pass
+    verdict: pass
+    reason: >-
+      For version drift the diagnostic includes the importing manifest, its
+      current dependency version and the expected release version. The fix in
+      .seikika/seikika.yaml also directs maintainers to resolve duplicate
+      names or restore the publishable manifests when the inventory is empty.
+  - criterion: threshold-justified
+    verdict: pass
+    reason: >-
+      scripts/npm/published-manifests.mjs defines alignment for the actual
+      published package set and its documented exceptions. The card requires
+      zero remaining mismatches.

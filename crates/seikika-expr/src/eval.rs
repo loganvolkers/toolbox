@@ -221,6 +221,11 @@ impl Expr {
             .map_err(|e| e.to_string().lines().next().unwrap_or_default().to_owned())
     }
 
+    /// Required literal score comparisons, for test coverage reporting.
+    pub fn score_assertions(&self) -> Vec<crate::analysis::ScoreAssertion> {
+        crate::analysis::score_assertions(self.program.expression())
+    }
+
     /// Evaluate with the given variables. Binding converts values into CEL's runtime form, so when
     /// several expressions share variables, bind once with [`with_vars`] and call [`Expr::eval_in`].
     pub fn eval(&self, vars: &[(&str, &ExprValue)]) -> Result<ExprValue, String> {

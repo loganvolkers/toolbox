@@ -1,0 +1,100 @@
+apiVersion: seikika.com/v1alpha1
+portal:
+  name: impeccable
+  title: Impeccable
+  owner: group:maintainers
+  seikika: "0.2"
+include:
+  - {package: ../../../../packages/meta-scoring, with: {track: portal-quality}}
+
+tracks:
+  - name: release
+    title: Release readiness
+    owner: group:maintainers
+    description: Verify the repository's release contract before distributing packages.
+  - name: portal-quality
+    title: Portal quality
+    owner: group:maintainers
+    description: Verify the fixture and review evidence behind the release standard.
+
+connectors:
+  - name: release-check
+    package: builtin:runner
+    runtime: in-image
+    config:
+      name: release-check
+      jobs:
+        - name: engine-distribution
+          command: [node, .seikika/check-engine-pins.mjs]
+          parse: exit
+    records: [engine-distribution]
+    refresh: {engine-distribution: [external_ids]}
+    freshness: {engine-distribution: 5m}
+
+kinds:
+  - name: EngineDistribution
+    description: >-
+      Whether the Impeccable launcher pins agree and declare a well-formed,
+      nonzero checksum for every supported platform.
+    identityFrom: [connector:release-check]
+    fields:
+      command:
+        type: string
+        description: Command that reproduces the release check in the checkout.
+      exitCode:
+        type: integer
+        description: Process exit status for the release check.
+      evidence:
+        type: list
+        items: string
+        description: Bounded diagnostics from a failed release check.
+    sources: {default: [connector:release-check]}
+    map:
+    - from: release-check/engine-distribution
+      id: "'engine-distribution:' + record.name"
+      set: >-
+        {'command': record.command, 'exitCode': record.exitCode, 'evidence':
+        record.evidence}
+
+scorecards:
+  - name: engine-distribution
+    title: Engine distribution pins
+    kind: EngineDistribution
+    description: >-
+      Whether the Impeccable launcher pins agree and declare a well-formed,
+      nonzero checksum for every supported platform.
+    rationale: >-
+      A release that fails this preflight can leave users installing stale or
+      unusable artifacts.
+    links:
+    - title: Upstream release contract
+      url: https://github.com/seikika/impeccable/blob/main/docs/ENGINE.md
+    owner: group:maintainers
+    track: release
+    levels: [ready]
+    ratchet: {newEntitiesAtLeast: ready}
+    rules:
+    - name: release-check-passes
+      level: ready
+      check: entity.exitCode == 0
+      evidence: >-
+        ['Exit ' + string(entity.exitCode) + ': ' + entity.command] +
+        entity.evidence
+      fix: >-
+        Align ENGINE_VERSION and skill/scripts/VERSION, then repair the listed
+        rows in skill/scripts/engine-checksums.txt using the real release
+        digests.
+      rationale: >-
+        The repository preflight uses exit status zero when all inputs agree
+        with the release contract.
+    facets: {summary: public, details: public}
+
+campaigns:
+  - name: release-preflight
+    title: Keep the release preflight passing
+    owner: group:maintainers
+    track: release
+    description: Resolve release distribution findings before packaging the next release.
+    includes: [{scorecard: engine-distribution, atLeast: ready}]
+
+tests: [tests/release.test.yaml]

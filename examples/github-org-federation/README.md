@@ -7,8 +7,8 @@ identifies where it came from.
 
 ## Create a local snapshot
 
-From the Seikika repository root with the pinned Rust toolchain, build the CLI and Workspace
-connector from this source. Run `gh auth status` to check your existing GitHub login. The connector
+From the Seikika repository root with the pinned Rust toolchain, build the CLI and the Workspace
+and Runner connectors. Run `gh auth status` to check your existing GitHub login. The connector
 uses `GH_TOKEN`, `GITHUB_TOKEN`, or the current GitHub CLI login, in that order. The credential's
 repository access determines the inventory. Install the pinned `zizmor` from the maintainer portal
 for the workflow audit and ensure it is on `PATH`.
@@ -16,7 +16,7 @@ for the workflow audit and ensure it is on `PATH`.
 ```bash
 pnpm install --frozen-lockfile
 pnpm build
-cargo build --locked -p seikika-cli -p seikika-connector-workspace
+cargo build --locked -p seikika-cli -p seikika-connector-workspace -p seikika-connector-runner
 target/debug/seikika tools install portal --via pipx
 target/debug/seikika validate examples/github-org-federation
 target/debug/seikika test examples/github-org-federation
@@ -51,6 +51,53 @@ SEIKIKA_BIN="$PWD/target/debug/seikika" \
 The Pages workflow rebuilds this snapshot from public inventory. The organization view lives at
 `/demo/organization/` and the framework repository's report lives at `/report/`.
 
+## Verify a child implementation
+
+The child examples use checks from the project’s release process. They use the
+[meta-scoring package](../../packages/meta-scoring/README.md) to check the release
+standard itself and show its review evidence.
+
+| Fork checkout | Check | Verified commit |
+|---|---|---|
+| [Plannotator](children/plannotator/seikika.yaml) | Run the project's release version check across npm and agent integration manifests. | `e145a52fc468a20d5a37a4443a4f1398673f479e` |
+| [Impeccable](children/impeccable/seikika.yaml) | Check matching engine and launcher pins and well-formed, nonzero checksum entries for five platforms. | `9b1ebc34c415ebc8b4c1bacb699539179087f271` |
+| [Kubernetes](children/kubernetes/seikika.yaml) | Compare generated Go workspace membership and declared module names with the staging manifests. | `2795fb9e20e05ea10c884e5d15aede6d4aa3b69d` |
+| [OpenCodeReview](children/open-code-review/seikika.yaml) | Check the launcher and platform package templates against the release workflow’s platform list. | `03c2708b1239b76b2d2ae9e29e05cc0369789f45` |
+| [Astryx](children/astryx/seikika.yaml) | Run Astryx’s published-package alignment logic and report the manifest containing each version mismatch. | `0348252d8a1baffaa3e9ef5959bd0c3ea0797490` |
+| [Magpie](children/magpie/seikika.yaml) | Run the native release asset packer and check the embedded GUI paths and bytes. | `e612932fbe305eb4fd3522824d5e51beeb473ab8` |
+| [Security Audit Skill](children/security-audit-skill/seikika.yaml) | Compare the documented installation inventory with the distributed files and entrypoint name. | `d4a347c707bd996703763fcb30141b37085e48fa` |
+
+Use a disposable checkout of the named fork and a source build of Seikika. From this repository's
+root, set `child` to a directory name from the table and set `checkout` to the absolute path of that
+checkout. The commands replace that checkout's demo portal manifest. Put a compatible Go toolchain
+on `PATH` for Kubernetes and Magpie. The Node and Python checks use their standard libraries.
+
+```bash
+export PATH="$PWD/target/debug:$PATH"
+source="examples/github-org-federation/children/$child"
+target="$checkout/.seikika"
+mkdir -p "$target"
+sed 's|package: ../../../../packages/meta-scoring|package: packages/meta-scoring|' \
+  "$source/seikika.yaml" > "$target/seikika.yaml"
+cp -R "$source/fixtures" "$source/tests" "$source/assessments" "$target/"
+for script in "$source"/check-*; do
+  if [ -f "$script" ]; then cp "$script" "$target/"; fi
+done
+seikika vendor "$PWD/packages/meta-scoring" --portal "$target"
+(
+  cd "$checkout"
+  seikika validate .seikika
+  seikika test .seikika
+  seikika assess check .seikika
+  seikika report .seikika -o web --out /tmp/"$child"-report
+)
+```
+
+The seven pinned checkouts reached `ready` in the local replay. Each release rule and scorecard
+earned gold on its fixtures and current independent review. The parent replay used those child
+reports alongside its own repository and workflow standards. The published organization snapshot
+follows each fork’s default branch and reads its report when the fork publishes it.
+
 ## Publish a child portal snapshot
 
 Build a shareable snapshot from the child repository and commit its report data at the published
@@ -73,18 +120,18 @@ path at its configured revision. A custom `Portal` kind can read `record.report`
 ## Verify the trust boundary
 
 The parent reads GitHub's inventory and uses the default branch's commit and tree IDs to read
-README, LICENSE, and CODEOWNERS facts. It checks the presence of a child manifest using Git tree
+README, license, and CODEOWNERS facts. It checks the presence of a child manifest using Git tree
 metadata. The parent uses its own policy to score repository facts and runs `zizmor` offline on
 bounded workflow files from the pinned tree, with repository configuration and ignores disabled.
 Symbolic links and submodules are excluded. Child report data appears under its source and cannot
 change the parent standard or its scores. Each scan reads bounded Git objects and skips oversized
-README and CODEOWNERS blobs. A GitHub error for one repository appears as **Unavailable** alongside
+README, license, and CODEOWNERS blobs. A GitHub error for one repository appears as **Unavailable** alongside
 healthy repositories. An inventory error fails the snapshot.
 
 | Demonstration | Expected organization result |
 |---|---|
 | [Oversized repository](https://github.com/seikika/example-unperformant-repo) | Seikika skips the oversized README and large unrelated asset. The repository is scanned and falls below bronze. |
 | [Malformed child](https://github.com/seikika/example-incompetent-repo) | The invalid manifest and report leave all repository scores available. The demo falls below bronze. |
-| [Untrusted child](https://github.com/seikika/example-malicious-repo) | The parent ignores the child's silver claims and rule replacement. Its short README and missing license fail. The report displays the literal HTML marker and apostrophe in the filename as text. |
+| [Untrusted child](https://github.com/seikika/example-malicious-repo) | The parent ignores the child's silver claims and rule replacement. Its auxiliary README and missing license fail. The report displays the literal HTML marker and apostrophe in the filename as text. |
 
 See the [federation design](../../docs/design/federation.md) and [Workspace connector reference](../../docs/reference/workspace-connector.md).
