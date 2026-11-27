@@ -154,6 +154,35 @@ fn config_from_env(listen: &str) -> Result<seikika_api::Config, String> {
         connector_confinement: seikika_api::confine::Confinement::from_env()?,
         ..Default::default()
     };
+    if let Ok(repositories) = env::var("SEIKIKA_PUBLIC_REPOSITORIES") {
+        if c.auth_mode != "cloudflare-access" {
+            return Err("SEIKIKA_PUBLIC_REPOSITORIES requires cloudflare-access mode".into());
+        }
+        for repository in repositories.split(',').map(str::trim) {
+            let valid = |segment: &str| {
+                !segment.is_empty()
+                    && !matches!(segment, "." | "..")
+                    && segment
+                        .bytes()
+                        .all(|c| c.is_ascii_alphanumeric() || matches!(c, b'-' | b'_' | b'.'))
+            };
+            let (_, name) = repository
+                .split_once('/')
+                .filter(|(owner, name)| valid(owner) && valid(name))
+                .ok_or(
+                    "SEIKIKA_PUBLIC_REPOSITORIES needs comma-separated GitHub owner/repo names",
+                )?;
+            if c.public_repositories
+                .insert(
+                    format!("repository:{}", name.to_ascii_lowercase()),
+                    repository.into(),
+                )
+                .is_some()
+            {
+                return Err("SEIKIKA_PUBLIC_REPOSITORIES needs distinct repository names".into());
+            }
+        }
+    }
     if let Ok(tokens) = std::env::var("SEIKIKA_CONNECTOR_TOKENS") {
         c.connector_tokens = tokens
             .split(',')

@@ -189,7 +189,12 @@ struct SnapQuery {
     min_snapshot: Option<String>,
 }
 
-async fn snapshot_info(State(s): S, Query(q): Query<SnapQuery>) -> Response {
+async fn snapshot_info(State(s): S, headers: HeaderMap, Query(q): Query<SnapQuery>) -> Response {
+    if !s.config.public_repositories.is_empty()
+        && let Err(response) = s.caller(&headers).await
+    {
+        return response;
+    }
     let p = match snapshot_for(&s, q.min_snapshot.as_deref()).await {
         Ok(p) => p,
         Err(r) => return r,
@@ -336,6 +341,22 @@ impl ListFilter<'_> {
 }
 
 async fn list_entities(State(s): S, headers: HeaderMap, Query(q): Query<ListQuery>) -> Response {
+    if crate::public_catalog::guest(&s, &headers) {
+        if q.filter.is_some() || q.fields.is_some() || q.min_snapshot.is_some() {
+            return problem(
+                StatusCode::BAD_REQUEST,
+                "public-catalog-query",
+                "use search, kind, or pagination for the public catalog",
+            );
+        }
+        return crate::public_catalog::list(
+            &s,
+            q.kind.as_deref(),
+            q.q.as_deref(),
+            q.cursor.as_deref(),
+            q.limit,
+        );
+    }
     let caller = match s.caller(&headers).await {
         Ok(c) => c,
         Err(r) => return r,
@@ -475,6 +496,9 @@ async fn entity_page(
     Path(id): Path<String>,
     Query(q): Query<PageQuery>,
 ) -> Response {
+    if crate::public_catalog::guest(&s, &headers) {
+        return crate::public_catalog::entity(&s, &id, true);
+    }
     if headers.get("x-seikika-user").is_none()
         && let Some(user) = q.as_user.as_deref().filter(|u| !u.is_empty())
         && let Ok(value) = HeaderValue::from_str(user)
@@ -510,8 +534,7 @@ async fn entity_page(
         .unwrap_or(&id);
     let owner = fields["ownership"]["owner"]
         .as_str()
-        .or_else(|| fields["owner"].as_str())
-        .unwrap_or("");
+        .or_else(|| fields["owner"].as_str());
     crate::ui::entity(title, owner)
 }
 
@@ -559,6 +582,10 @@ async fn put_native(
     headers: HeaderMap,
     Json(body): Json<NativeBody>,
 ) -> Response {
+    let caller = match s.caller(&headers).await {
+        Ok(c) => c,
+        Err(r) => return r,
+    };
     let Some(p) = s.snapshot() else {
         return problem(
             StatusCode::SERVICE_UNAVAILABLE,
@@ -594,10 +621,6 @@ async fn put_native(
             ),
         );
     }
-    let caller = match s.caller(&headers).await {
-        Ok(c) => c,
-        Err(r) => return r,
-    };
     let may = caller.admin || matches!(s.allowed(&caller, "can_edit", &id).await, Ok(true));
     if !may {
         return problem(

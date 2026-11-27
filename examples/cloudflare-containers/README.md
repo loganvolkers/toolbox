@@ -75,6 +75,12 @@ Verify the staging rollout before creating the production Worker. Use a separate
 
 For the hosted seven-fork portal, protect the production hostname with its own Access application. Set `SEIKIKA_PRODUCTION_CF_TEAM_DOMAIN`, `SEIKIKA_PRODUCTION_CF_AUDIENCE`, and `SEIKIKA_PRODUCTION_CF_ADMIN` in the production build settings. The build puts the issuer and audience in the production Wrangler variables and seeds that portal admin. Use a separate Access application and build variables for each Preview.
 
+### Publish a public catalog
+
+Set the production build variable `SEIKIKA_PRODUCTION_PUBLIC_REPOSITORIES` to a comma-separated list of public GitHub `owner/repo` names. For an isolated Preview, use the `SEIKIKA_PUBLIC_REPOSITORIES` runtime variable on that Preview. Guests can search and open these repository links. The public catalog uses the configured list, and its scorecards link goes to the public organization report.
+
+On the public hostname's destination in the existing Cloudflare Access application, add public path overrides for `/`, `/search`, `/c/*`, `/e/*`, `/assets/*`, `/v1/views/home`, `/v1/entities`, and `/v1/views/entity/*`. Keep the full-host sign-in policy so Operations, action and run APIs, writes, and the live report still require authentication. Use the same application audience for protected paths. Apply the overrides after deploying the guest routes, then verify that a signed-out visitor can open a repository and gets an Access login for Operations and direct action API requests. [Access destination overrides](https://developers.cloudflare.com/api/resources/zero_trust/subresources/access/subresources/applications/methods/update/)
+
 Use Node 24 and Corepack to build the locked UI workspace before compiling Rust. In Workers Builds, set `NODE_VERSION=24` in production and the Preview base settings. Deploy the [private production monitor](production-monitor/README.md) to track readiness, authorization failures, and connection utilization.
 
 ### Preview a trusted branch

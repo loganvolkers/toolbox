@@ -433,6 +433,9 @@ fn connector_freshness(s: &AppState, p: &Published, id: &str) -> Vec<Value> {
 
 /// `GET /v1/views/entity/{id}` — the entity page in one request.
 pub async fn view_entity(State(s): S, headers: HeaderMap, Path(id): Path<String>) -> Response {
+    if crate::public_catalog::guest(&s, &headers) {
+        return crate::public_catalog::entity(&s, &id, false);
+    }
     let caller = match s.caller(&headers).await {
         Ok(c) => c,
         Err(r) => return r,
@@ -511,6 +514,9 @@ fn viewer(c: &Caller) -> Value {
 
 /// `GET /v1/views/home` — my teams, what they own, failing rules, and kinds to browse.
 pub async fn view_home(State(s): S, headers: HeaderMap) -> Response {
+    if crate::public_catalog::guest(&s, &headers) {
+        return crate::public_catalog::home(&s);
+    }
     let caller = match s.caller(&headers).await {
         Ok(c) => c,
         Err(r) => return r,

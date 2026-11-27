@@ -11,6 +11,7 @@ const user = ref(devUser());
 const result = ref<ApiResult | null>(null);
 const ownership = ref(null);
 const newer = ref(false);
+const guest = ref(false);
 const revision = ref(0);
 const request = computed(() => route.value.api);
 
@@ -27,7 +28,7 @@ function follow(event: MouseEvent) {
   const link = (event.target as Element | null)?.closest("a");
   if (!link || link.target || link.download || link.origin !== location.origin) return;
   const target = new URL(link.href);
-  if (target.hash || target.pathname === "/report/" || target.pathname === "/report") return;
+  if (target.hash || ["/report/", "/report", "/ops"].includes(target.pathname)) return;
   event.preventDefault();
   navigate(target.pathname + target.search);
 }
@@ -43,16 +44,15 @@ watch([request, revision, user], async ([path], previous, onCleanup) => {
   newer.value = false;
   const options = { signal: requestController.signal };
   const current = route.value;
-  if (current.page === "entity") {
-    void api("/v1/entities/" + encodeURIComponent(current.id) + "/explain?field=ownership", options)
-      .then(value => {
-        if (!options.signal.aborted) ownership.value = value.status === 200 ? value.body?.authority : null;
-      })
-      .catch(() => {});
-  }
   try {
     const next = await api(path, options);
-    if (!options.signal.aborted) result.value = next;
+    if (options.signal.aborted) return;
+    result.value = next;
+    if (next.body?.viewer?.method) guest.value = next.body.viewer.method === "guest";
+    if (current.page === "entity" && next.status === 200 && !guest.value) {
+      const details = await api("/v1/entities/" + encodeURIComponent(current.id) + "/explain?field=ownership", options).catch(() => null);
+      if (!options.signal.aborted) ownership.value = details?.status === 200 ? details.body?.authority : null;
+    }
   } catch {
     if (!options.signal.aborted) result.value = { status: 0, body: { title: "Unable to connect", detail: "Retry the request." }, snapshot: null };
   }
@@ -106,9 +106,9 @@ onUnmounted(() => {
 <template>
   <PageFrame class="portal-ui" @click="follow">
     <template #navigation>
-      <PortalHeader :user="user" :newer="newer" :assessments="route.page === 'assessments'" @navigate="navigate" @reload="revision++" />
+      <PortalHeader :user="user" :guest="guest" :newer="newer" :assessments="route.page === 'assessments'" @navigate="navigate" @reload="revision++" />
     </template>
-    <PortalView :route="route" :result="result" :ownership="ownership" :refresh="refresh"
+    <PortalView :route="route" :result="result" :guest="guest" :ownership="ownership" :refresh="refresh"
       @navigate="navigate" @refresh="refreshEntity" @retry="revision++" />
   </PageFrame>
 </template>
