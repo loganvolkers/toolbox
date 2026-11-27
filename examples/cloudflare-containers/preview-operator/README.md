@@ -20,4 +20,15 @@ The operator uses the following Worker variables.
 
 Set `CLOUDFLARE_API_TOKEN`, `PLANETSCALE_SERVICE_TOKEN_ID`, `PLANETSCALE_SERVICE_TOKEN`, and `PREVIEW_ADMIN_EMAIL` as Worker secrets. Use an account-owned Cloudflare token with Workers Scripts Write, Workers Containers Write, Access Apps and Policies Write, and Hyperdrive PlanetScale Setup. Grant the PlanetScale service token the organization-level `create_databases` permission. It receives database permissions on the databases it creates. Set the admin email to an accepted Cloudflare account member. The GitHub workflow uses its built-in repository token to read the PR list and OIDC to authenticate to Cloudflare. [Cloudflare account tokens](https://developers.cloudflare.com/fundamentals/api/get-started/account-owned-tokens/) · [PlanetScale service tokens](https://planetscale.com/docs/api/service-tokens/#creating-databases-with-service-tokens) · [GitHub Actions OIDC](https://docs.github.com/en/actions/concepts/security/openid-connect)
 
-To retire a managed Preview, close the PR or remove its label. The next scheduled workflow reconciles it. To run reconciliation immediately, dispatch the Cloudflare Preview lifecycle workflow on `main`. The operator uses the exact managed Access application as its ownership marker. It deletes the matching Preview, its exact-name container and its PR database before removing the Access app. A manually configured Preview keeps its independent Access application and is outside this cleanup. [Preview container cleanup](https://developers.cloudflare.com/workers/previews/resources/#container-application-cleanup)
+To retire a managed Preview, close the PR or remove its label. The next scheduled workflow reconciles it. To run reconciliation immediately, dispatch the Cloudflare Preview lifecycle workflow on `main`. The operator uses the exact managed Access application as its ownership marker. It deletes the matching Preview, its exact-name container and its PR database before removing the Access app. [Preview container cleanup](https://developers.cloudflare.com/workers/previews/resources/#container-application-cleanup)
+
+## Verify the operator
+
+From `examples/cloudflare-containers`, check that Wrangler can bundle the operator.
+
+```sh
+npm ci --ignore-scripts
+npm exec -- wrangler deploy --dry-run --config preview-operator/wrangler.toml
+```
+
+Label two trusted PRs and run the lifecycle workflow on `main`. Verify that each Preview has an Access policy, a distinct database, and its own approval public key in the authenticated action response. Remove one label and confirm that the other Preview still works after reconciliation. [Federated actions design](../../../docs/design/federated-actions.md)

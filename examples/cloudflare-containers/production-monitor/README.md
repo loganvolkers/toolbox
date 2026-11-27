@@ -4,10 +4,21 @@ The private monitor uses a Cloudflare service binding to probe `/readyz`. It per
 
 Enable Workers Observability Issues on the portal and monitor. Create a Cloudflare Notifications **Real-Time Issue** policy for your operators and attach an occurrence-threshold automation to each Worker. A portal `authz-unavailable` response logs an error with no request body or database details. Readiness timeouts and high connection utilization appear as monitor issues. [Workers Issues](https://developers.cloudflare.com/workers/observability/issues/) · [Issue automation](https://developers.cloudflare.com/workers/observability/issues/automations/)
 
+## Verify the monitor
+
+From `examples/cloudflare-containers`, check that Wrangler can bundle the monitor.
+
+```sh
+npm ci --ignore-scripts
+npm exec -- wrangler deploy --dry-run --config production-monitor/wrangler.toml
+```
+
+After deployment, look for a readiness result and a connection count with its limit in Workers Logs. Check that issue automation targets both Workers. [Maintainer deployment checks](../../../docs/design/maintainer-sdlc.md)
+
 ## Roll back an image or Worker deployment
 
 1. Record the known-good tracked Git revision, Worker version, and Container image digest after each verified deployment.
-2. Revert the failing change on `main` and let Workers Builds deploy that revision with `wrangler deploy`. That updates both the Worker and Container image. A Worker-version rollback alone does not roll back a Container image.
+2. Revert the failing change on `main` and let Workers Builds deploy that revision with `wrangler deploy`. Container image changes require a rollout, and that command updates both the Worker and Container image.
 3. Keep the existing production database and signing bindings. Verify `/readyz`, Access sign-in, child discovery, and an existing action run. If the database schema is involved, check migration compatibility before deploying old code. [Worker rollbacks](https://developers.cloudflare.com/workers/configuration/versions-and-deployments/rollbacks/) · [Container deployment](https://developers.cloudflare.com/workers/ci-cd/builds/configuration/)
 
 ## Restore a database backup
