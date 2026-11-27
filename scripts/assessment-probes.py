@@ -19,16 +19,19 @@ def script(path, body):
     path.chmod(0o700)
 
 
-def onboarding(work):
+def onboarding(work, seikika=None):
     source = (ROOT / "site/src/content/docs/start/quickstart.md").read_text()
     blocks = re.findall(r"^```bash\n(.*?)^```", source, re.M | re.S)
     if len(blocks) != 4:
         raise ValueError("quickstart must provide four walkthrough steps")
-    built = ROOT / "target/debug/seikika"
-    seikika = built if built.is_file() else shutil.which("seikika")
     if seikika is None:
-        raise ValueError("build Seikika and its workspace connector before running the walkthrough")
-    env = os.environ | {"PATH": f"{Path(seikika).parent}:{os.environ['PATH']}"}
+        built = ROOT / "target/debug/seikika"
+        seikika = built if built.is_file() else shutil.which("seikika")
+        if seikika is None:
+            raise ValueError("build Seikika and its workspace connector before running the walkthrough")
+    elif seikika.name != "seikika" or not seikika.is_file() or not os.access(seikika, os.X_OK):
+        raise ValueError(f"expected an executable named seikika at {seikika}")
+    env = os.environ | {"PATH": f"{Path(seikika).absolute().parent}:{os.environ['PATH']}"}
     repo = work / "seikika-practice"
     for step, (block, expected) in enumerate(zip(blocks, (0, 0, 1, 0), strict=True), start=1):
         # Accept the wizard's default name, owner, connectors, and packages as the reader does.
@@ -100,9 +103,15 @@ def main():
     cases = {"onboarding": onboarding, "acceptance": acceptance, "sdk": sdk}
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("case", choices=cases)
+    parser.add_argument("--seikika", type=Path, help="Use this installed CLI for the onboarding walkthrough.")
     args = parser.parse_args()
+    if args.seikika is not None and args.case != "onboarding":
+        parser.error("--seikika requires the onboarding probe")
     with TemporaryDirectory(prefix="seikika-probe-") as directory:
-        cases[args.case](Path(directory))
+        if args.case == "onboarding":
+            onboarding(Path(directory), args.seikika)
+        else:
+            cases[args.case](Path(directory))
 
 
 if __name__ == "__main__":
