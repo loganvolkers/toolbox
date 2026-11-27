@@ -7,6 +7,12 @@ sidebar:
 
 Use an **assessment** when a standard needs judgment, such as whether a rule's tests cover the behavior it promises. The portal supplies a **rubric**, a set of review criteria. A person or agent reads the evidence and supplies a verdict for each criterion. Seikika stores the verdicts as data a scorecard can use.
 
+## Browse assessments
+
+Open **Assessments** in the served portal or report. **Recent runs** lists the latest published result for each subject and rubric, with the recorded date and time when available. Open a result to read the criterion verdicts, evidence, assessment quality scorecards and any recorded review.
+
+**Rubrics** lists the questions and guidance for assessing each kind. A rubric can include `links:` with a `title` and `url` for each supporting document.
+
 ## Get a brief
 
 For a worked example, use the [0.2 source CLI](/start/install/#build-from-source). From the Seikika source checkout, run this against its own portal. Use the required tools from [Build Seikika](/maintainers/#check-the-repository-standards).

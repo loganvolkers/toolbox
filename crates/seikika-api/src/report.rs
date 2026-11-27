@@ -282,6 +282,18 @@ pub fn unassessed(m: &seikika_model::Manifest, d: &Derived) -> Map<String, Value
         .collect()
 }
 
+fn rubric_defs(m: &Manifest) -> Map<String, Value> {
+    m.rubrics
+        .iter()
+        .map(|rubric| {
+            (
+                format!("rubric:{}/{}", m.portal.name, rubric.name),
+                json!(rubric),
+            )
+        })
+        .collect()
+}
+
 /// Build the shared report document for the viewer's audience or an offline publication.
 pub fn snapshot(
     m: &Manifest,
@@ -348,6 +360,8 @@ pub fn snapshot(
         "campaigns": campaign_defs(m, d, starts),
         "scorecards": scorecard_defs(m),
         "scores": own_scores(d),
+        "assessmentKinds": judged::assessment_kinds(m),
+        "rubrics": rubric_defs(m),
         "unassessed": unassessed(m, d),
         "comparisons": comparison_defs(m, d),
         "repoRollup": m.policies.get("repoRollup").cloned().unwrap_or(Value::Null),
@@ -793,6 +807,31 @@ pub(crate) async fn view(State(state): State<Arc<AppState>>, headers: HeaderMap)
 mod tests {
     use super::*;
     use seikika_derive::{Entity, Score};
+
+    #[test]
+    fn report_includes_rubrics_before_any_assessments_are_published() {
+        let manifest: Manifest = serde_json::from_value(json!({
+            "apiVersion": "seikika.com/v1alpha1",
+            "portal": {"name": "review", "owner": "group:operators", "seikika": "0.2"},
+            "kinds": [],
+            "rubrics": [{"name": "design-quality", "kind": "Service",
+                "criteria": [{"name": "documented", "question": "Can readers find the design?",
+                    "guidance": "Pass when the design cites its sources."}],
+                "links": [{"title": "Design guide", "url": "https://example.org/design"}]}],
+        }))
+        .unwrap();
+        let report = snapshot(&manifest, &Derived::default(), &Map::new(), None);
+        assert_eq!(report["catalog"], json!({}));
+        assert_eq!(report["assessmentKinds"], json!([]));
+        assert_eq!(
+            report["rubrics"]["rubric:review/design-quality"]["criteria"][0]["question"],
+            "Can readers find the design?"
+        );
+        assert_eq!(
+            report["rubrics"]["rubric:review/design-quality"]["links"][0]["url"],
+            "https://example.org/design"
+        );
+    }
 
     #[test]
     fn report_does_not_publish_hidden_children_or_score_evidence() {

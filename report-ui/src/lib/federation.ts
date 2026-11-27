@@ -60,6 +60,12 @@ function valid(data: unknown): data is ReportData {
     && optionalMap(data.entities, value => record(value) && record(value.fields) && optionalMap(value.provenance, item => typeof item === "string")
       && (value.relations == null || record(value.relations) && Array.isArray(value.relations.in) && Array.isArray(value.relations.out)
         && value.relations.in.every(item => edge(item, "from")) && value.relations.out.every(item => edge(item, "to"))))
+    && (data.assessmentKinds == null || strings(data.assessmentKinds))
+    && optionalMap(data.rubrics, value => record(value) && typeof value.name === "string"
+      && typeof value.kind === "string" && textFields(value, ["description", "subject"]) && links(value.links)
+      && Array.isArray(value.criteria) && value.criteria.every(criterion => record(criterion)
+        && typeof criterion.name === "string" && typeof criterion.question === "string"
+        && textFields(criterion, ["guidance"])))
     && optionalMap(data.unassessed, strings)
     && optionalMap(data.comparisons, value => record(value) && typeof value.subject === "string" && strings(value.peers)
       && validMap(value.verdict, item => typeof item === "string")
@@ -88,7 +94,7 @@ export function aggregateReport(parent: ReportData): ReportData {
   if (!parent.children?.length && !parent.organization) return parent;
   const out: ReportData = {
     ...parent, catalog: map(), scorecards: map(), scores: map(), campaigns: map(), tracks: map(),
-    entityOverview: map(), entities: map(), kinds: map(), unassessed: map(), comparisons: map(),
+    entityOverview: map(), entities: map(), kinds: map(), unassessed: map(), comparisons: map(), rubrics: map(),
     sources: map(), entitySources: map(), actions: [], kindGroups: [],
   };
   const sources = out.sources!;
@@ -99,7 +105,7 @@ export function aggregateReport(parent: ReportData): ReportData {
   const label = (key: string) => sourceLabel(out, key);
   const names = new Set([
     ...Object.values(parent.catalog).flat(), ...Object.keys(parent.scorecards), ...Object.keys(parent.tracks ?? {}),
-    ...Object.keys(parent.campaigns ?? {}),
+    ...Object.keys(parent.campaigns ?? {}), ...Object.keys(parent.rubrics ?? {}),
   ]);
   const forwarded = new Map<string, ReportAction>();
   for (const action of parent.actions ?? []) {
@@ -107,6 +113,7 @@ export function aggregateReport(parent: ReportData): ReportData {
   }
   const matched = new Set<ReportAction>();
   const grouped = new Set<string>();
+  const assessmentKinds = new Set<string>();
   function add(doc: ReportData, key: string, path: string[], depth: number) {
     const mapped = new Map<string, string>();
     function id(original: string) {
@@ -121,6 +128,7 @@ export function aggregateReport(parent: ReportData): ReportData {
     }
     const owner = <T>(value: T) => typeof value === "string" && doc.entityOverview?.[value] ? id(value) : value;
     for (const [kind, metadata] of entries(doc.kinds)) out.kinds![kind] ??= metadata;
+    for (const kind of doc.assessmentKinds ?? (doc.catalog.Assessment ? ["Assessment"] : [])) assessmentKinds.add(kind);
     for (const [kind, ids] of entries(doc.catalog)) {
       const values = out.catalog[kind] ??= [];
       for (const original of [...new Set(ids)]) {
@@ -160,6 +168,11 @@ export function aggregateReport(parent: ReportData): ReportData {
       ...card, title: withTitle(card, name, label(key)), owner: owner(card.owner),
       track: card.track ? id(card.track) : card.track,
     };
+    for (const [name, rubric] of entries(doc.rubrics)) {
+      const entity = id(name);
+      out.rubrics![entity] = rubric;
+      entitySources[entity] ??= { source: key, original: name };
+    }
     for (const [name, rows] of entries(doc.scores)) out.scores[id(name)] =
       Object.fromEntries(entries(rows).map(([target, row]) => [id(target), path.length ? reportScore(row) : row]));
     for (const [name, track] of entries(doc.tracks)) out.tracks![id(name)] = {
@@ -213,6 +226,7 @@ export function aggregateReport(parent: ReportData): ReportData {
     }
   }
   add(parent, parentKey, [], 0);
+  out.assessmentKinds = [...assessmentKinds];
   for (const action of parent.actions ?? []) {
     if (!action.portal || matched.has(action)) continue;
     const key = "child:" + JSON.stringify([action.portal.key]);

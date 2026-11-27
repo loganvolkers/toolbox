@@ -462,6 +462,9 @@ rubrics:
     description: >-
       Is this crate well designed for its place in Seikika? Read its crate
       docs, public API and tests, and docs/v1-spec.md §4.
+    links:
+    - title: Seikika workspace and crate boundaries
+      url: https://github.com/seikika/seikika/blob/main/docs/v1-spec.md#4-architecture-and-crates
     criteria:
     - name: one-responsibility
       question: >-

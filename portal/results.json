@@ -10326,6 +10326,9 @@
       "field:seikika/Assessment.subjectHash": {
         "level": "gold"
       },
+      "field:seikika/Assessment.suggestions": {
+        "level": "gold"
+      },
       "field:seikika/Assessment.summary": {
         "level": "gold"
       },

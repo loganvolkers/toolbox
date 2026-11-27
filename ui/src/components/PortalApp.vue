@@ -106,7 +106,7 @@ onUnmounted(() => {
 <template>
   <PageFrame class="portal-ui" @click="follow">
     <template #navigation>
-      <PortalHeader :user="user" :newer="newer" @navigate="navigate" @reload="revision++" />
+      <PortalHeader :user="user" :newer="newer" :assessments="route.page === 'assessments'" @navigate="navigate" @reload="revision++" />
     </template>
     <PortalView :route="route" :result="result" :ownership="ownership" :refresh="refresh"
       @navigate="navigate" @refresh="refreshEntity" @retry="revision++" />

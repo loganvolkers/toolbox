@@ -10,6 +10,15 @@ export interface Link {
   url: string;
 }
 
+export interface Rubric {
+  name: string;
+  kind: string;
+  description?: string | null;
+  subject?: string | null;
+  criteria: { name: string; question: string; guidance?: string | null }[];
+  links?: Link[];
+}
+
 export interface RuleDef {
   level: Level;
   fix?: string | null;
@@ -131,6 +140,8 @@ export interface ReportData {
   actions?: ReportAction[];
   children?: ReportChild[];
   entities?: Record<string, ReportEntity>;
+  assessmentKinds?: string[];
+  rubrics?: Record<string, Rubric>;
   sources?: Record<string, { title: string; local?: boolean; repository?: boolean; commit?: string; error?: string }>;
   entitySources?: Record<string, { source: string; original: string }>;
   snapshot?: string | number | null;

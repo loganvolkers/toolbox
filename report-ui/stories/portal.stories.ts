@@ -4,6 +4,7 @@ import PortalHeader from "../../ui/src/components/PortalHeader.vue";
 import PortalView from "../../ui/src/components/PortalView.vue";
 import type { ApiResult } from "../../ui/src/api";
 import { portalRoute } from "../../ui/src/routes";
+import assessments from "../fixtures/s4s-assessments.json";
 import "../../ui/src/app.css";
 
 export default { title: "Hosted portal" };
@@ -37,7 +38,7 @@ function story(path: string, body: ApiResult["body"], status = 200) {
         const route = portalRoute(new URL(path, "https://portal.example.com"));
         const message = ref("");
         return () => h(PageFrame, { class: "portal-ui" }, {
-          navigation: () => h(PortalHeader, { user: "alex" }),
+          navigation: () => h(PortalHeader, { user: "alex", assessments: route.page === "assessments" }),
           default: () => h(PortalView, {
             route,
             result: body ? { status, body, snapshot: "demo-1" } : null,
@@ -75,6 +76,9 @@ export const Operations = story("/ops", {
   connectors: [{ name: "git", runtime: "stdio", registered: true, last_read: { service: "2026-11-25" } }],
   pending_commands: [], unverified_ownership: [], orphans: [], diagnostics: [],
 });
+export const Assessments = story("/assessments", assessments);
+export const AssessmentRun = story("/assessments/run/" + encodeURIComponent("assessment:crate-design/crate:seikika-expr"), assessments);
+export const AssessmentRubric = story("/assessments/rubrics/" + encodeURIComponent("rubric:seikika/assessment-quality"), assessments);
 export const Loading = story("/e/service%3Acheckout", null);
 export const SignIn = story("/", { title: "Authentication required" }, 401);
 export const Missing = story("/missing", null);

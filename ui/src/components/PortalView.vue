@@ -9,6 +9,8 @@ import SectionCard from "@seikika/ui/components/SectionCard.vue";
 import { entityHref, entityOverview } from "@seikika/ui/entity";
 import type { ApiResult, Json } from "../api";
 import type { PortalRoute } from "../routes";
+import AssessmentView from "../../../report-ui/src/AssessmentView.vue";
+import { aggregateReport } from "../../../report-ui/src/lib/federation";
 
 const props = defineProps<{
   route: PortalRoute;
@@ -19,6 +21,7 @@ const props = defineProps<{
 const emit = defineEmits<{ navigate: [url: string]; refresh: []; retry: [] }>();
 const encode = encodeURIComponent;
 const body = computed(() => props.result?.body);
+const assessmentData = computed(() => props.route.page === "assessments" && body.value ? aggregateReport(body.value) : undefined);
 const draft = ref("");
 watch(() => props.route, route => { draft.value = route.page === "catalog" ? route.filter : ""; }, { immediate: true });
 
@@ -58,6 +61,9 @@ function filter() {
       <p v-if="result.status === 401">Sign in through your identity-aware proxy, or on a dev server add <code>?as=&lt;user&gt;</code> to the URL.</p>
       <button v-if="result.status === 0" @click="emit('retry')">Retry</button>
     </div>
+
+    <AssessmentView v-else-if="route.page === 'assessments' && assessmentData"
+      :data="assessmentData" :mode="route.mode" :id="route.id" :filter="route.filter" portal />
 
     <template v-else-if="route.page === 'home'">
       <PageHeader :title="body.portal?.title ?? 'Seikika'">

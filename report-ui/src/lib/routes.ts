@@ -11,6 +11,7 @@ export interface Query {
   entity?: string;
   group?: string;
   source?: string;
+  rubric?: string;
 }
 
 export interface Route {
@@ -30,7 +31,7 @@ export function parseHash(hash: string): Route {
   var qi = h.indexOf("?");
   if (qi >= 0) {
     var params = new URLSearchParams(h.slice(qi + 1));
-    ["q", "level", "outcome", "rule", "entity", "group", "source"].forEach(function (k) {
+    ["q", "level", "outcome", "rule", "entity", "group", "source", "rubric"].forEach(function (k) {
       if (params.has(k)) query[k as keyof Query] = params.get(k) || "";
     });
     h = h.slice(0, qi);
@@ -45,6 +46,9 @@ export function parseHash(hash: string): Route {
 export function parsePath(h: string): Route {
   if (!h || h === "overview") return { mode: "overview" };
   if (h === "actions") return { mode: "actions" };
+  if (h === "assessments" || h === "rubrics") return { mode: h };
+  if (h.startsWith("assessment/")) return { mode: "assessment", id: decodeURIComponent(h.slice(11)) };
+  if (h.startsWith("rubric/")) return { mode: "rubric", id: decodeURIComponent(h.slice(7)) };
   if (h === "catalog") return { mode: "catalog" };
   if (h.indexOf("catalog/") === 0) return { mode: "catalog", kind: decodeURIComponent(h.slice(8)) };
   if (h.indexOf("entity/") === 0) return { mode: "entity", id: decodeURIComponent(h.slice(7)) };
