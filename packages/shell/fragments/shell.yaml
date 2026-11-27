@@ -3,7 +3,9 @@ tools:
     version: 0.11.0
     install: {mise: aqua:koalaman/shellcheck, aqua: koalaman/shellcheck}
   shfmt: {version: 3.12.0, install: {mise: aqua:mvdan/sh, aqua: mvdan/sh}}
-  bats: {version: 1.12.0, install: {mise: github:bats-core/bats-core}}
+  bats:
+    version: 1.12.0
+    install: {mise: aqua:bats-core/bats-core, aqua: bats-core/bats-core}
 connectors:
   - name: ${param:name}
     package: builtin:runner
@@ -56,6 +58,8 @@ scorecards:
       makes script changes easier to review.
     links:
     - {title: Shell script standard, url: https://seikika.com/packages/shell/}
+    - title: Seikika shell policy
+      url: https://github.com/seikika/seikika/blob/main/docs/decisions/D01M8DJJTZ4JPBHYDS7VN9TV21J.md
     kind: ${param:kind}
     owner: ${param:owner}
     track: ${param:track}

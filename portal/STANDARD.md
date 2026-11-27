@@ -909,7 +909,7 @@ Shell sources pass ShellCheck at warning severity and use consistent shfmt forma
 
 **Why:** Static analysis catches shell hazards early and consistent formatting makes script changes easier to review.
 
-See [Shell script standard](https://seikika.com/packages/shell/).
+See [Shell script standard](https://seikika.com/packages/shell/), [Seikika shell policy](https://github.com/seikika/seikika/blob/main/docs/decisions/D01M8DJJTZ4JPBHYDS7VN9TV21J.md).
 
 Scorecard `maintainer-shell` over `ShellScript` entities, owned by group:maintainers. `seikika report` lists what fails now. *Measured* rules check facts a tool or connector read; *judged* rules pass on an agent's assessment (`seikika assess`).
 
