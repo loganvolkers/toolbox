@@ -13,7 +13,7 @@ Add ready-to-use checks for your repository or service. [Browse standards packag
 
 | If you want to | Start here |
 |---|---|
-| Score a repository and catch regressions in CI | [Quickstart](/start/quickstart/) |
+| Create a portal and score a repository | [Quickstart](/start/quickstart/) |
 | Start a local portal and look up a service | [Explore a portal](/start/portal/) |
 | Configure, deploy, or maintain a portal | [Build a portal](/operators/) |
 | Offer actions from several repositories | [Federate repository actions](/operators/federate-actions/) |

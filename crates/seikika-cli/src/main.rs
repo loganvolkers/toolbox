@@ -7,6 +7,7 @@ mod client;
 #[cfg(unix)]
 mod detach;
 mod find;
+mod init;
 mod install;
 mod judged;
 mod meta;
@@ -41,6 +42,15 @@ struct Cli {
 
 #[derive(Subcommand)]
 enum Command {
+    /// Create a portal with an interactive choice of connectors and standards packages.
+    Init {
+        /// Portal directory to create or initialize.
+        #[arg(default_value = ".seikika")]
+        path: PathBuf,
+        /// Use the default Workspace connector and skip the prompts.
+        #[arg(long, short)]
+        yes: bool,
+    },
     /// Validate a portal: manifest schema, cross-references, action input forms, CEL, files and
     /// fixtures. Exit code 0 when valid, 1 when there are errors, 2 when it can't be loaded.
     Validate {
@@ -727,6 +737,10 @@ fn main() -> ExitCode {
         return client::tool(&remote.target(), tool, args, &remote.output);
     }
     match command {
+        Command::Init { path, yes } => match init::run(&path, yes) {
+            Ok(()) => ExitCode::SUCCESS,
+            Err(e) => fail(e),
+        },
         Command::Validate { path, format } => validate(&path, format),
         Command::Test { path, format } => test(&path, format),
         Command::Plan {

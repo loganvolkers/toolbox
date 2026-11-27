@@ -8,7 +8,7 @@ ownership, scorecards, and self-service actions for developers and agents.
 
 | If you want to | Start here |
 | --- | --- |
-| Check one repository | [Follow the repository quickstart](https://seikika.com/start/quickstart/) to record a baseline and catch a broken link. A baseline saves the results you compare later. |
+| Create a portal or check one repository | Run `seikika init` to choose connectors and standards packages. [Follow the quickstart](https://seikika.com/start/quickstart/) to catch a broken link. |
 | Run a catalog locally | [Explore a portal](https://seikika.com/start/portal/) to look up a service, see who owns it, and inspect its score. |
 | Bring GitHub or other data into a portal | [Browse the connector directory](https://seikika.com/connectors/) for setup guides. |
 | Find the right CLI and connector | [Install Seikika](https://seikika.com/start/install/) for release and source build options. |

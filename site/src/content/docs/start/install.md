@@ -5,14 +5,15 @@ sidebar:
   order: 2
 ---
 
-Install the Seikika CLI to validate, test, and serve a portal with fixtures. Install the workspace connector as well to score a repository with the [starter manifest](/start/quickstart/).
+Install the Seikika CLI to create, validate, test, and serve a portal. Install the Workspace connector as well to score a repository in the [quickstart](/start/quickstart/).
 
 ## Run a portal
 
 Check [GitHub Releases](https://github.com/seikika/seikika/releases) for a release with
 `seikika-cli` binaries. These docs use the command names and manifest format introduced in
 v0.2.0. The 0.1 releases use Toolbox names and a different manifest header. Until v0.2.1 is
-available, [build from source](#build-from-source).
+available, [build from source](#build-from-source). Use the source build for the quickstart
+if your release predates `seikika init`.
 
 Install mise 2026.11.14 or later. Use a repository config to share the CLI and connector
 versions with your team. Use the global install when you want the CLI available across
@@ -89,12 +90,11 @@ Seikika also looks beside the CLI and in `SEIKIKA_CONNECTORS_DIR`.
 
 Install [Git](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git), [Rust through rustup](https://www.rust-lang.org/tools/install), and a native linker. On Linux, install a C compiler and build tools, such as `build-essential` on Debian or Ubuntu. On macOS, install the Xcode Command Line Tools. On Windows, use a Rust-supported C++ toolchain and run the shell examples in a Unix-compatible environment such as WSL.
 
-From a directory where you can create a checkout, run these commands in Bash. The revision matches the starter and CI example in the quickstart.
+From a directory where you can create a checkout, run these commands in Bash.
 
 ```bash
 git clone https://github.com/seikika/seikika.git seikika-source
 cd seikika-source
-git checkout --detach c14c9fbb60405f9fea12d86de3d0b32b717755d9
 cargo build --locked -p seikika-cli -p seikika-connector-workspace
 export PATH="$PWD/target/debug:$PATH"
 seikika --version
