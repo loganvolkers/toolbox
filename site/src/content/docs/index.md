@@ -28,6 +28,7 @@ A running portal serves a **catalog** of software, teams, and their relationship
 
 ## Explore further
 
+- [Browse Reference](/reference/) for APIs, CLI commands, SDKs, and schemas.
 - [Install Seikika](/start/install/) or check [what Seikika supports](/concepts/capabilities/).
 - [Browse this repository's report](/demo/report/) to see scores, evidence, and fixes.
 - [Compare Seikika with Backstage and other tools](/compare/) and see how [developer experience benchmarks](/concepts/dx-benchmarks/) are run.

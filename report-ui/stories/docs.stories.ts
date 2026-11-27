@@ -12,15 +12,14 @@ export const CliCommands = {
   render: () => ({
     setup: () => () => h(PageFrame, {}, { default: () => [
       h(PageHeader, { title: "CLI reference" }),
-      h(CliReference, { catalog: {
+      h(CliReference, {
         commands: [{
-          name: "get", slug: "get", about: "Read a catalog entity.", mcpTool: "get_entity", structuredOutput: true,
+          name: "get", slug: "get", about: "Read a catalog entity.", mcpTool: "get", structuredOutput: true,
           args: [{ name: "entity", long: null, positional: true, described: true }],
           usage: "seikika get <ENTITY>", helpText: "Usage: seikika get <ENTITY>",
         }, { name: "validate", slug: "validate", about: "Validate a portal.", mcpTool: null,
           args: [], structuredOutput: false }],
-        mcpTools: [{ name: "get_entity", description: "Read a catalog entity.", cliCommands: ["get"] }],
-      } }),
+      }),
     ] }),
   }),
 };

@@ -5286,6 +5286,9 @@
       "doc:docs/audits/readmes-2026-11-26.md": {
         "level": "silver"
       },
+      "doc:docs/audits/reference-docs-2026-11-26.md": {
+        "level": "silver"
+      },
       "doc:docs/audits/sdk-documentation-2026-11-26.md": {
         "level": "silver"
       },
@@ -5806,6 +5809,9 @@
         "level": "skipped"
       },
       "doc:docs/decisions/D01M8D9AK7Q9B18B10FC38WB2BQ.md": {
+        "level": "skipped"
+      },
+      "doc:docs/decisions/D01M8DDGT9KEVE4PSJ3WV7C44NE.md": {
         "level": "skipped"
       },
       "doc:docs/decisions/README.md": {
@@ -6753,6 +6759,18 @@
         "level": "gold"
       },
       "site-page:site/src/content/docs/packages/storybook.md": {
+        "level": "gold"
+      },
+      "site-page:site/src/content/docs/reference/contracts.md": {
+        "level": "gold"
+      },
+      "site-page:site/src/content/docs/reference/index.mdx": {
+        "level": "gold"
+      },
+      "site-page:site/src/content/docs/reference/mcp.mdx": {
+        "level": "gold"
+      },
+      "site-page:site/src/content/docs/reference/sdks.md": {
         "level": "gold"
       },
       "site-page:site/src/content/docs/start/cli.mdx": {

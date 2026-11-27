@@ -21,7 +21,7 @@ For a token-based portal, load `SEIKIKA_TOKEN` into the subprocess environment a
 
 ## Discover the tools and read a score
 
-Ask your client to list tools. It should show names such as `get`, `owner_of`, `scorecard_status`, and `explain`. The [CLI reference](/start/cli/) maps command names to MCP tools.
+Ask your client to list tools. It should show names such as `get`, `owner_of`, `scorecard_status`, and `explain`. Look up their input fields and CLI equivalents in the [MCP tool reference](/reference/mcp/).
 
 Call `scorecard_status` with the following arguments on the fixture portal:
 

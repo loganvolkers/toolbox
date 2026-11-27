@@ -18,6 +18,8 @@ Use the catalog to find software, check who owns it, and understand why it recei
 | Request a change the portal offers | [Test and run an action](/users/actions/) |
 | Read a change you made in a source repository | [Refresh an entity](/users/refresh/) |
 
+Use the [MCP tool reference](/reference/mcp/) to look up the input fields an agent can send.
+
 ## Read an owner or score
 
 For a token-based portal, set `SEIKIKA_URL` in your shell and load `SEIKIKA_TOKEN` from your secret store as your operator directs. Replace `repository:checkout-web` below with your entity's ID. In the local tutorial, use the loopback URL and add `--as bob` to each command.

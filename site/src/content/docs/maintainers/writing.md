@@ -41,6 +41,12 @@ Use **portal** for a configured catalog, **repo portal** for the local reporting
 
 Start with the outcome or answer. Use descriptive link text and add links where readers need a prerequisite or a next step. Keep one canonical procedure per task. Preserve existing routes and heading links when moving content. Use root-relative links such as `/start/quickstart/` within the site.
 
+## Publish reference pages
+
+Add a lookup for an interface to [Reference](/reference/) and link it from the guide that introduces the task. Organize the reference by the interface a reader calls. Use stable heading links for individual operations, commands, or tools. State the version or source revision and say where to find the contract for a running portal or installed package.
+
+Generate signatures, command flags, and schema fields from the code that implements the interface. Use the site's standard headings, tables, and code formatting for references it renders. Link to generated Rustdoc and the npm package READMEs for release-specific SDK contracts. Keep examples that teach a task in Guides and use short examples in a reference when they clarify an input, output, or failure.
+
 ## Make examples verifiable
 
 1. Name the version or source revision, tools, operating system or shell, working directory, and permissions when they affect the outcome.

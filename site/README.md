@@ -11,7 +11,7 @@ pnpm --filter seikika-site preview
 
 The report comes from `site/.generated/report.json` when present. Run `scripts/regen-site-report.sh` to generate it with the Pages workflow's pinned tools. A local docs build can use the checked-in Seikika-for-Seikika fixture. Set `SEIKIKA_REPORT_DATA` to an absolute path to use another snapshot.
 
-The CLI reference is built from `seikika describe` and `seikika <command> --help`. Set `SEIKIKA_BIN` to use a particular binary. After a CLI change, regenerate and check its documentation fingerprint.
+The Reference group in `astro.config.mjs` collects interface lookups. The CLI and MCP references are built from `seikika describe` and the commands' `--help` output. Set `SEIKIKA_BIN` to use a particular build of Seikika from this checkout. After a CLI or MCP tool change, regenerate and check the documentation fingerprint.
 
 ```sh
 pnpm --filter seikika-site generate:cli-docs
