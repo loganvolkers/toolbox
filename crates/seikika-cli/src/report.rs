@@ -2148,7 +2148,7 @@ mod tests {
     #[cfg(unix)]
     #[test]
     fn a_connector_that_exits_without_completing_fails_the_report() {
-        let error = resync("broken", "false", &json!({}), &["repo".into()]).unwrap_err();
+        let error = resync("broken", "cat", &json!({}), &["repo".into()]).unwrap_err();
         assert!(error.contains("connector broken: exited before a successful resync"));
     }
 

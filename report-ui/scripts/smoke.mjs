@@ -159,6 +159,7 @@ try {
     const names = snapshot.catalog.Repository.map(id => snapshot.entityOverview[id].name.toLowerCase());
     const table = page.getByRole("region", { name: "Organization scores" }).getByRole("table");
     assert.deepEqual(await table.getByRole("rowheader").locator(":scope > a").allTextContents(), names);
+    console.log(`The organization report renders ${names.length} public repositories.`);
     const example = table.getByRole("row").filter({ hasText: "seikika/example-malicious-repo" });
     const exampleScore = snapshot.scores["repo-hygiene"]["repository:seikika/example-malicious-repo"];
     const marker = exampleScore?.evidence?.["has-readme"]?.find(text => text.includes("<federation-marker>"));
