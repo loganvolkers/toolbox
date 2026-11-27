@@ -58,7 +58,7 @@ async function authorized(incoming, env) {
         claims.repository !== env.GITHUB_REPOSITORY || claims.repository_id !== env.GITHUB_REPOSITORY_ID ||
         claims.ref !== "refs/heads/main" ||
         claims.workflow_ref !== `${env.GITHUB_REPOSITORY}/${workflowPath}@refs/heads/main` ||
-        !["schedule", "pull_request_target", "workflow_dispatch"].includes(claims.event_name) ||
+        !["schedule", "workflow_dispatch"].includes(claims.event_name) ||
         !Number.isInteger(claims.iat) || claims.iat < now - 600 || claims.iat > now + 30 ||
         !Number.isInteger(claims.exp) || claims.exp <= now) return false;
     const { keys } = await request(githubIssuer, "/.well-known/jwks");

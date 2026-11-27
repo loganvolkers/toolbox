@@ -1,8 +1,5 @@
 name: Cloudflare Preview lifecycle
 on:
-  pull_request_target:
-    branches: [main]
-    types: [opened, reopened, synchronize, labeled, unlabeled, closed]
   schedule: [{cron: "*/5 * * * *"}]
   workflow_dispatch:
 permissions: {pull-requests: read, id-token: write}
@@ -11,8 +8,7 @@ jobs:
   reconcile:
     if: >-
       github.repository == 'seikika/seikika' && github.ref ==
-      'refs/heads/main' && (github.event_name != 'pull_request_target' ||
-      github.event.pull_request.head.repo.full_name == github.repository)
+      'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 5
     env:
