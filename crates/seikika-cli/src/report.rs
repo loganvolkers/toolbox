@@ -106,6 +106,7 @@ fn resync(
         .write_all(format!("{cmd}\n").as_bytes())
         .map_err(|e| format!("connector {name}: {e}"))?;
     let mut out = Vec::new();
+    let mut completed = false;
     for line in BufReader::new(child.stdout.take().ok_or("no stdout")?).lines() {
         let line = line.map_err(|e| format!("connector {name}: {e}"))?;
         let Ok(mut m) = serde_json::from_str::<Value>(&line) else {
@@ -120,17 +121,27 @@ fn resync(
             }
             Some("complete") if m["status"] != "succeeded" => {
                 let _ = child.kill();
+                let _ = child.wait();
                 return Err(format!(
                     "connector {name}: resync {}: {}",
                     m["status"], m["errors"]
                 ));
             }
-            Some("complete") => break,
+            Some("complete") => {
+                completed = true;
+                break;
+            }
             _ => {}
         }
     }
-    let _ = child.wait();
-    Ok(out)
+    let status = child.wait().map_err(|e| format!("connector {name}: {e}"))?;
+    if completed && status.success() {
+        Ok(out)
+    } else {
+        Err(format!(
+            "connector {name}: exited before a successful resync ({status})"
+        ))
+    }
 }
 
 /// Inputs from the connectors (in parallel) or the fixtures.
@@ -1411,6 +1422,10 @@ fn public_entity_overviews(m: &seikika_model::Manifest, d: &Derived) -> Map<Stri
         "links",
         "repositoryUrl",
         "sourceUrl",
+        "visibility",
+        "defaultBranch",
+        "portalPresent",
+        "scanError",
         "docsUrl",
         "runbookUrl",
         "grafanaUrl",
@@ -2129,6 +2144,13 @@ pub fn run(o: &Options) -> ExitCode {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[cfg(unix)]
+    #[test]
+    fn a_connector_that_exits_without_completing_fails_the_report() {
+        let error = resync("broken", "false", &json!({}), &["repo".into()]).unwrap_err();
+        assert!(error.contains("connector broken: exited before a successful resync"));
+    }
 
     fn s(v: &[Change]) -> Vec<String> {
         v.iter().map(ToString::to_string).collect()

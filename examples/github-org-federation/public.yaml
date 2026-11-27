@@ -1,0 +1,17 @@
+apiVersion: seikika.com/v1alpha1
+include: [repositories.yaml, standards.yaml]
+
+portal:
+  name: seikika-public-organization
+  title: Seikika organization
+  owner: group:maintainers
+  seikika: "0.2"
+
+connectors:
+  - name: github-org
+    package: builtin:workspace
+    runtime: in-image
+    config: {githubOrg: {organization: seikika, publicOnly: true}}
+    records: [federated-repo]
+    refresh: {federated-repo: [external_ids]}
+    freshness: {federated-repo: 1h}

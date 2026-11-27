@@ -152,6 +152,22 @@ try {
   await page.goto(docsOrigin + "report/");
   await page.getByRole("tab", { name: /Catalog/ }).click();
   await page.locator("#report-body").getByRole("heading", { name: "Catalog", exact: true }).waitFor();
+  await page.goto(docsOrigin + "demo/organization/");
+  await page.getByRole("heading", { name: "Seikika organization scorecards", exact: true }).waitFor();
+  if (process.env.SEIKIKA_ORG_REPORT_DATA) {
+    const snapshot = JSON.parse(await readFile(process.env.SEIKIKA_ORG_REPORT_DATA, "utf8"));
+    const names = snapshot.catalog.Repository.map(id => snapshot.entityOverview[id].name.toLowerCase());
+    const table = page.getByRole("region", { name: "Organization scores" }).getByRole("table");
+    assert.deepEqual(await table.getByRole("rowheader").locator(":scope > a").allTextContents(), names);
+    const example = table.getByRole("row").filter({ hasText: "seikika/example-malicious-repo" });
+    const exampleScore = snapshot.scores["repo-hygiene"]["repository:seikika/example-malicious-repo"];
+    const marker = exampleScore?.evidence?.["has-readme"]?.find(text => text.includes("<federation-marker>"));
+    if (marker) {
+      await example.locator("summary").click();
+      await example.getByText(marker, { exact: true }).waitFor();
+      assert.equal(await example.locator("federation-marker").count(), 0);
+    }
+  }
   await page.goto(docsOrigin + "storybook/?path=/story/hosted-portal--entity");
   await page.frameLocator("#storybook-preview-iframe").getByRole("heading", { name: "Checkout", exact: true }).waitFor();
   await page.goto(docsOrigin + "start/cli/");
@@ -162,6 +178,9 @@ try {
   await page.getByRole("link", { name: "@seikika/ui", exact: true }).waitFor();
 
   await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto(docsOrigin + "demo/organization/");
+  assert(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth),
+    "The organization scorecard table fits within the mobile page.");
   await page.goto(docsOrigin);
   await page.locator('button[popovertarget="starlight__sidebar"]').click();
   const mobileReference = page.locator("#starlight__sidebar").getByRole("link", { name: "Reference overview" });

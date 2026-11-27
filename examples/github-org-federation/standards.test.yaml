@@ -1,0 +1,27 @@
+name: organization standards
+assert:
+  - name: the exact README threshold and a leading catch-all reach silver
+    expect: score('repo-hygiene', 'repository:seikika/ready').level == 'silver'
+  - name: downstream scores and rule definitions cannot raise a score
+    expect: >-
+      score('repo-hygiene', 'repository:seikika/claims').level == 'none' &&
+      score('repo-hygiene', 'repository:seikika/claims').rules['has-readme']
+      == 'fail' && score('repo-hygiene',
+      'repository:seikika/claims').rules['has-license'] == 'fail'
+  - name: a catch-all below a specific rule stops at bronze
+    expect: >-
+      score('repo-hygiene', 'repository:seikika/catch-all-late').level ==
+      'bronze' && score('repo-hygiene',
+      'repository:seikika/catch-all-late').rules['codeowners-catch-all'] ==
+      'fail'
+  - name: a malformed owner handle stops at bronze
+    expect: >-
+      score('repo-hygiene', 'repository:seikika/malformed-owner').level ==
+      'bronze' && score('repo-hygiene',
+      'repository:seikika/malformed-owner').rules['owners-are-teams'] ==
+      'fail'
+  - name: an unreadable repository remains in the inventory without a score
+    expect: >-
+      entity('repository:seikika/unavailable').scanError == 'Git tree: HTTP
+      404' && score('repo-hygiene', 'repository:seikika/unavailable').level ==
+      'skipped'

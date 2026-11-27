@@ -1,9 +1,9 @@
 # Workspace Connector Reference
 
 **`builtin:workspace` reads a local checkout, without building it or using the network, and
-reports one record per matching file, directory or fact.** The one exception is `git`, which
-clones and fetches the repositories a parent portal lists as children. A portal turns records into entities
-with a kind's `map`. This page lists its configuration and its records' fields. For a standard
+reports one record per matching file, directory or fact.** The `git` mode clones the child
+repositories a parent portal declares. The `githubOrg` mode reads GitHub repository facts through
+the API without a checkout. A portal turns records into entities with a kind's `map`. This page lists its configuration and its records' fields. For a standard
 over files, start from a package that configures it for you:
 [`file-size`](../../packages/file-size/README.md) (lines per file) or
 [`pattern-count`](../../packages/pattern-count/README.md) (matches of a regex per file).
@@ -48,6 +48,7 @@ walked.
 | `expoApps`, `storybooks` | `[]` | Globs: `expo-app` and `storybook` records ([packages/pnpm-expo](../../packages/pnpm-expo/), [packages/storybook](../../packages/storybook/)) |
 | `portals` | `[]` | Globs, usually `*/.seikika/seikika.yaml`: one `portal` record per child portal found in a checkout |
 | `git` | `[]` | `[{key, url, branch}]`, written by `federation.children`: each repository is cloned into `<root>/<key>`, kept at its branch, and read as one `portal` record |
+| `githubOrg` | unset | `{organization, publicOnly?}` switches the connector to `federated-repo` records. `publicOnly` defaults to `false` |
 | `data` | `[]` | `[{kind, globs, paths?}]`: entries of YAML or JSON files as records of `kind`, each with a string `id` |
 
 ## Records
@@ -59,6 +60,7 @@ The external id is `<kind>:<path>` for per-file records.
 | `file` | `path`, `extension`, `lines`, `counts`, `matchLines`, `captures`, `lastChange` |
 | `doc` | `path`, `title`, `words`, `links`, `brokenLinks`, `codeSpans`, `hasStatus`, `hasSources`, `missingDecisions`, `counts`, `captures`, `lastChange` |
 | `repo` | README, LICENSE, CODEOWNERS and `.github` facts ([repo-portals.md](../design/repo-portals.md)) |
+| `federated-repo` | GitHub slug and visibility, default branch and commit, child manifest presence, README, LICENSE and CODEOWNERS facts, and any acquisition error. The external ID is `federated-repo:<owner>/<name>`. [Organization federation example](../../examples/github-org-federation/README.md) |
 | `portal` | `key`, `name`, `title`, `owner`, `path`, `dir`, `file`, `actions`, `runner`, `acceptApprovalsFrom`, `scorecards`, `packages`, `packageError`, `error`; `git` for a cloned child; `warning` when two share a name ([federated-actions.md](../design/federated-actions.md) §5.2) |
 | `workflow`, `action-ref` | Triggers, permissions, timeouts, `uses:` and how each is pinned ([github-actions-standards.md](../design/github-actions-standards.md)) |
 | `connector` | Package, protocol, test, and public guide facts used by the first-party connector scorecard ([connector standards](../design/connector-standards.md#3-the-catalog)) |

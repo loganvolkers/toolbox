@@ -8,7 +8,21 @@ use serde_json::{Value, json};
 use std::path::Path;
 
 /// GitHub's CODEOWNERS locations, in the order GitHub looks.
-const CODEOWNERS: &[&str] = &[".github/CODEOWNERS", "CODEOWNERS", "docs/CODEOWNERS"];
+pub(crate) const CODEOWNERS: &[&str] = &[".github/CODEOWNERS", "CODEOWNERS", "docs/CODEOWNERS"];
+
+pub(crate) fn readme_path(paths: &[String]) -> Option<&str> {
+    paths
+        .iter()
+        .find(|p| !p.contains('/') && p.to_ascii_lowercase().starts_with("readme"))
+        .map(String::as_str)
+}
+
+pub(crate) fn codeowners_path(paths: &[String]) -> Option<&'static str> {
+    CODEOWNERS
+        .iter()
+        .copied()
+        .find(|c| paths.iter().any(|p| p == c))
+}
 
 /// `owner/name` from the `origin` remote, or the directory name.
 fn name(root: &Path) -> String {
@@ -52,6 +66,29 @@ pub fn parse_codeowners(text: &str) -> Vec<Value> {
 
 /// The `repo` record for the checkout at `root`; `paths` are its files (relative, sorted).
 pub fn record(root: &Path, paths: &[String]) -> (String, Value) {
+    let name = name(root);
+    let mut facts = basics(&name, paths, |path| {
+        Ok::<_, std::convert::Infallible>(Some(
+            std::fs::read_to_string(root.join(path)).unwrap_or_default(),
+        ))
+    })
+    .unwrap();
+    let supply = supply_chain(root, paths, facts.get("codeowners"));
+    facts["dependabotGaps"] = json!(supply.dependabot_gaps);
+    facts["codeScanning"] = json!(supply.code_scanning);
+    facts["codeScanningPinned"] = json!(supply.code_scanning_pinned);
+    facts["securityPolicy"] = json!(supply.security_policy);
+    facts["workflowOwners"] = json!(supply.workflow_owners);
+    (name, facts)
+}
+
+/// The repository basics used by both checkout and GitHub scans. The GitHub reader can
+/// distinguish a rejected file (`None`) from an API failure (`Err`).
+pub(crate) fn basics<E>(
+    name: &str,
+    paths: &[String],
+    mut read: impl FnMut(&str) -> Result<Option<String>, E>,
+) -> Result<Value, E> {
     let top: Vec<&String> = paths
         .iter()
         .filter(|p| !p.contains('/') || p.starts_with(".github/"))
@@ -61,19 +98,18 @@ pub fn record(root: &Path, paths: &[String]) -> (String, Value) {
             .find(|p| pred(&p.to_lowercase()))
             .map(|p| p.to_string())
     };
-    let readme = first(&|p| p.starts_with("readme"));
+    let readme = readme_path(paths);
     let license = first(&|p| p.starts_with("license") || p.starts_with("copying"));
-    let codeowners = CODEOWNERS
-        .iter()
-        .find(|c| paths.iter().any(|p| p == *c))
-        .map(|c| {
-            let text = std::fs::read_to_string(root.join(c)).unwrap_or_default();
-            json!({"path": c, "rules": parse_codeowners(&text)})
-        });
-    let readme_words = readme
-        .as_ref()
-        .and_then(|r| std::fs::read_to_string(root.join(r)).ok())
-        .map_or(0, |t| t.split_whitespace().count());
+    let codeowners = match codeowners_path(paths) {
+        Some(path) => {
+            read(path)?.map(|text| json!({"path": path, "rules": parse_codeowners(&text)}))
+        }
+        None => None,
+    };
+    let readme_words = match readme {
+        Some(path) => read(path)?.map_or(0, |text| text.split_whitespace().count()),
+        None => 0,
+    };
     let mut owners: Vec<String> = codeowners
         .iter()
         .flat_map(|c| c["rules"].as_array().cloned().unwrap_or_default())
@@ -83,26 +119,16 @@ pub fn record(root: &Path, paths: &[String]) -> (String, Value) {
     owners.sort();
     owners.dedup();
     let owners_ok = owners_ok(&owners);
-    let name = name(root);
-    let supply = supply_chain(root, paths, codeowners.as_ref());
-    (
-        name.clone(),
-        json!({
-            "owners": owners,
-            "ownersOk": owners_ok,
-            "name": name,
-            "files": top,
-            "readme": readme,
-            "readmeWords": readme_words,
-            "license": license,
-            "codeowners": codeowners,
-            "dependabotGaps": supply.dependabot_gaps,
-            "codeScanning": supply.code_scanning,
-            "codeScanningPinned": supply.code_scanning_pinned,
-            "securityPolicy": supply.security_policy,
-            "workflowOwners": supply.workflow_owners,
-        }),
-    )
+    Ok(json!({
+        "owners": owners,
+        "ownersOk": owners_ok,
+        "name": name,
+        "files": top,
+        "readme": readme,
+        "readmeWords": readme_words,
+        "license": license,
+        "codeowners": codeowners,
+    }))
 }
 
 /// True when every owner is `@org/team`, or every owner is a personal `@user` (D01M7Y57FVX0XYNGMX0A0XJ4GK9).
