@@ -168,6 +168,9 @@ try {
     await page.getByRole("tab", { name: /Tracks/ }).click();
     await page.getByText("Workflow security · Child-defined · beta portal", { exact: true }).filter({ visible: true }).first().waitFor();
     await page.getByRole("tab", { name: /Actions/ }).click();
+    const actionPicker = page.getByRole("combobox", { name: /^Action/ });
+    assert((await actionPicker.locator("option").allTextContents()).some(text => text.includes("Child-defined · alpha portal")));
+    if (!isLive) await actionPicker.selectOption({ label: "review-workflow · Child-defined · alpha portal" });
     await page.getByLabel("Reviewer notes", { exact: false }).fill("Do not run this fixture.");
     await page.getByRole("combobox", { name: /Review team/ }).selectOption("security");
     await page.getByRole("button", { name: "Preview action" }).click();

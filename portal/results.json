@@ -5316,6 +5316,9 @@
       "doc:docs/audits/internal-capabilities-2026-11-26.md": {
         "level": "silver"
       },
+      "doc:docs/audits/organization-federation-2026-11-27.md": {
+        "level": "silver"
+      },
       "doc:docs/audits/package-directory.md": {
         "level": "silver"
       },
