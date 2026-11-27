@@ -105,6 +105,8 @@ pub struct AppState {
 pub struct Config {
     /// `dev` trusts `X-Seikika-User` / `X-Seikika-Connector`; production modes arrive in M3.
     pub auth_mode: String,
+    /// Explicitly published GitHub repositories, keyed by their public catalog id.
+    pub public_repositories: std::collections::BTreeMap<String, String>,
     /// connector name → bearer token
     pub connector_tokens: Vec<(String, String)>,
     pub debounce: Duration,
@@ -118,6 +120,7 @@ impl Default for Config {
     fn default() -> Self {
         Config {
             auth_mode: "dev".into(),
+            public_repositories: Default::default(),
             connector_tokens: Vec::new(),
             debounce: Duration::from_millis(500),
             max_lag: Duration::from_secs(5),

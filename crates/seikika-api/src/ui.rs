@@ -29,12 +29,12 @@ fn escape_html(value: &str) -> String {
         .replace('"', "&quot;")
 }
 
-pub(crate) fn entity(title: &str, owner: &str) -> Response {
+pub(crate) fn entity(title: &str, owner: Option<&str>) -> Response {
     let title = escape_html(title);
-    let owner = escape_html(owner);
-    let header = format!(
-        "<header id=\"seikika-initial-entity\"><h1>{title}</h1><p>Owner: {owner}</p></header>"
-    );
+    let owner = owner
+        .map(|owner| format!("<p>Owner: {}</p>", escape_html(owner)))
+        .unwrap_or_default();
+    let header = format!("<header id=\"seikika-initial-entity\"><h1>{title}</h1>{owner}</header>");
     let page = INDEX
         .replace(
             "<title>Seikika</title>",
@@ -74,7 +74,7 @@ mod tests {
 
     #[tokio::test]
     async fn entity_uses_the_astro_document_and_escapes_text() {
-        let response = entity("<Checkout>", "Payments & Billing");
+        let response = entity("<Checkout>", Some("Payments & Billing"));
         assert_eq!(
             response.headers()[header::CACHE_CONTROL],
             "private, no-store"

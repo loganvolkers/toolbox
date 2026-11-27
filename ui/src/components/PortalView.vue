@@ -15,6 +15,7 @@ import { aggregateReport } from "../../../report-ui/src/lib/federation";
 const props = defineProps<{
   route: PortalRoute;
   result: ApiResult | null;
+  guest?: boolean;
   ownership?: { status: string; explanation?: string; fix?: string } | null;
   refresh?: { running: boolean; failed: boolean; message: string };
 }>();
@@ -48,7 +49,7 @@ function filter() {
     <PageHeader v-if="route.page === 'search'" :title="route.query ? 'Search · ' + route.query : 'Search'" />
     <template v-if="route.page === 'catalog'">
       <PageHeader :title="route.id" />
-      <form class="filter" @submit.prevent="filter">
+      <form v-if="!guest" class="filter" @submit.prevent="filter">
         <label for="filter">CEL filter over <code>entity</code></label>
         <input id="filter" v-model="draft" placeholder="entity.ownership.status != 'verified'" />
         <button type="submit">Apply</button>
@@ -64,6 +65,13 @@ function filter() {
 
     <AssessmentView v-else-if="route.page === 'assessments' && assessmentData"
       :data="assessmentData" :mode="route.mode" :id="route.id" :filters="route.filters" portal />
+
+    <template v-else-if="route.page === 'home' && guest">
+      <PageHeader :title="body.portal?.title ?? 'Seikika'" />
+      <SectionCard title="Browse the public catalog">
+        <a href="/c/Repository">Repositories ({{ body.kinds.Repository }})</a>
+      </SectionCard>
+    </template>
 
     <template v-else-if="route.page === 'home'">
       <PageHeader :title="body.portal?.title ?? 'Seikika'">
@@ -102,18 +110,23 @@ function filter() {
     <template v-else-if="route.page === 'search' || route.page === 'catalog'">
       <p v-if="!body.items.length" class="muted">{{ route.page === 'search' ? 'Nothing matches.' : 'No entities match.' }}</p>
       <table v-else>
-        <thead><tr><th>Entity</th><th>Title</th><th>Owner</th></tr></thead>
+        <thead><tr><th>Entity</th><th>Title</th><th v-if="!guest">Owner</th></tr></thead>
         <tbody>
           <tr v-for="entity in body.items" :key="entity.id">
             <td><a :href="entityHref(entity.id)">{{ entity.id }}</a></td>
             <td><DataValue :value="entity.fields.title ?? entity.fields.displayName" /></td>
-            <td>
+            <td v-if="!guest">
               <DataValue :value="entity.fields.ownership?.owner ?? entity.fields.owner" :entity-href="entityHref" />
               <span v-if="entity.fields.ownership?.status" class="status" :class="'status-' + entity.fields.ownership.status">{{ entity.fields.ownership.status }}</span>
             </td>
           </tr>
         </tbody>
       </table>
+    </template>
+
+    <template v-else-if="route.page === 'entity' && guest">
+      <PageHeader :title="body.entity.fields.title" />
+      <a :href="body.entity.fields.repositoryUrl">View repository on GitHub</a>
     </template>
 
     <EntityPage v-else-if="route.page === 'entity' && overview" :entity="overview"

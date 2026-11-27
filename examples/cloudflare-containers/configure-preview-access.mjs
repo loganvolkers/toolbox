@@ -26,6 +26,11 @@ const {
   admin,
   viewer,
 } = configured(production) ? production : preview;
+const repositories = process.env.SEIKIKA_PRODUCTION_PUBLIC_REPOSITORIES;
+if (repositories !== undefined && (!configured(production) ||
+    !/^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+(?:,[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+)*$/.test(repositories))) {
+  throw new Error("Public repositories require production Access and comma-separated GitHub owner/repo names");
+}
 
 if (team || audience || admin || viewer) {
   const login = admin || viewer;
@@ -55,6 +60,7 @@ if (team || audience || admin || viewer) {
     'SEIKIKA_AUTH_MODE = "cloudflare-access"',
     `SEIKIKA_CF_TEAM_DOMAIN = "${team}"`,
     `SEIKIKA_AUDIENCE = "${audience}"`,
+    ...(repositories === undefined ? [] : [`SEIKIKA_PUBLIC_REPOSITORIES = "${repositories}"`]),
     "",
   ].join("\n")));
   writeFileSync(portalPath, portal.replace(staticTuples, [

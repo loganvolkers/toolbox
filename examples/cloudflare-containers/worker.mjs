@@ -10,11 +10,15 @@ function containerEnvironment(env) {
     throw new Error("Set DATABASE_URL and a 32-byte hex SEIKIKA_SIGNING_KEY");
   }
   const { SEIKIKA_PREVIEW_ACCESS_ISSUER, SEIKIKA_PREVIEW_ACCESS_AUDIENCE, SEIKIKA_PREVIEW_ACCESS_ADMIN } = env;
+  const publicCatalog = env.SEIKIKA_PUBLIC_REPOSITORIES
+    ? { SEIKIKA_PUBLIC_REPOSITORIES: env.SEIKIKA_PUBLIC_REPOSITORIES }
+    : {};
   if (SEIKIKA_PREVIEW_ACCESS_ISSUER || SEIKIKA_PREVIEW_ACCESS_AUDIENCE || SEIKIKA_PREVIEW_ACCESS_ADMIN) {
     if (!SEIKIKA_PREVIEW_ACCESS_ISSUER || !SEIKIKA_PREVIEW_ACCESS_AUDIENCE || !SEIKIKA_PREVIEW_ACCESS_ADMIN) {
       throw new Error("Set all three managed Preview Access bindings");
     }
     return {
+      ...publicCatalog,
       DATABASE_URL,
       SEIKIKA_SIGNING_KEY,
       SEIKIKA_AUTH_MODE: "cloudflare-access",
@@ -29,7 +33,7 @@ function containerEnvironment(env) {
     if (!SEIKIKA_CF_TEAM_DOMAIN || !SEIKIKA_AUDIENCE) {
       throw new Error("Set SEIKIKA_CF_TEAM_DOMAIN and SEIKIKA_AUDIENCE for Cloudflare Access");
     }
-    return { ...values, SEIKIKA_CF_TEAM_DOMAIN, SEIKIKA_AUDIENCE };
+    return { ...values, ...publicCatalog, SEIKIKA_CF_TEAM_DOMAIN, SEIKIKA_AUDIENCE };
   }
   if (SEIKIKA_AUTH_MODE !== "token") {
     throw new Error("SEIKIKA_AUTH_MODE must be token or cloudflare-access");

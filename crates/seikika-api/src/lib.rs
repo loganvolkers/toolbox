@@ -9,6 +9,7 @@ pub mod confine;
 pub mod connectors;
 pub mod http_trace;
 pub mod mcp;
+mod public_catalog;
 pub mod reads;
 pub mod report;
 pub mod routes;

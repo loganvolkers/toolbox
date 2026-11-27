@@ -15,19 +15,132 @@ async fn start() -> String {
 }
 
 async fn start_at(root: &Path) -> String {
+    start_with_config(root, seikika_api::Config::default()).await
+}
+
+async fn start_with_config(root: &Path, mut config: seikika_api::Config) -> String {
     let src = seikika_model::load::load(root).unwrap();
     let (m, errors) = seikika_model::validate_manifest(&src.document, "seikika.yaml");
     assert!(errors.is_empty());
     let store = Arc::new(SharedMem(Mutex::new(seikika_store::MemStore::new())));
-    let config = seikika_api::Config {
-        debounce: std::time::Duration::from_millis(20),
-        ..Default::default()
-    };
-    let state = seikika_api::app_state(m.unwrap(), &src.document, store, None, config);
+    config.debounce = std::time::Duration::from_millis(20);
+    let mode = seikika_authz::authn::Mode::parse(&config.auth_mode).unwrap();
+    let authn = seikika_authz::authn::Authenticator::new(
+        seikika_authz::authn::AuthConfig::from_env(mode),
+        None,
+    );
+    let state =
+        seikika_api::app_state_with(m.unwrap(), &src.document, store, None, config, authn, None);
     let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
     let url = format!("http://{}", listener.local_addr().unwrap());
     tokio::spawn(seikika_api::serve(state, listener));
     url
+}
+
+#[tokio::test]
+async fn public_catalog_is_an_explicit_read_only_projection() {
+    let client = reqwest::Client::new();
+    let private = start().await;
+    assert_eq!(
+        client
+            .get(format!("{private}/v1/views/home"))
+            .send()
+            .await
+            .unwrap()
+            .status(),
+        401
+    );
+
+    let url = start_with_config(
+        &portal(),
+        seikika_api::Config {
+            auth_mode: "cloudflare-access".into(),
+            public_repositories: [
+                ("repository:ledger".into(), "example/ledger".into()),
+                ("repository:wiki".into(), "example/wiki".into()),
+            ]
+            .into(),
+            ..Default::default()
+        },
+    )
+    .await;
+    let home = client
+        .get(format!("{url}/v1/views/home"))
+        .send()
+        .await
+        .unwrap();
+    assert_eq!(home.headers()["cache-control"], "private, no-store");
+    let home: Value = home.json().await.unwrap();
+    assert_eq!(home["viewer"]["method"], "guest");
+    assert_eq!(home["kinds"]["Repository"], 2);
+    assert!(home.get("snapshot").is_none());
+
+    let list: Value = client
+        .get(format!(
+            "{url}/v1/entities?kind=repository&q=EXAMPLE&limit=1"
+        ))
+        .send()
+        .await
+        .unwrap()
+        .error_for_status()
+        .unwrap()
+        .json()
+        .await
+        .unwrap();
+    assert_eq!(list["next_cursor"], "repository:ledger");
+    assert_eq!(list["items"].as_array().unwrap().len(), 1);
+    let detail: Value = client
+        .get(format!("{url}/v1/views/entity/repository:ledger"))
+        .send()
+        .await
+        .unwrap()
+        .error_for_status()
+        .unwrap()
+        .json()
+        .await
+        .unwrap();
+    assert_eq!(
+        detail["entity"],
+        serde_json::json!({"id": "repository:ledger", "kind": "Repository",
+        "fields": {"title": "example/ledger", "repositoryUrl": "https://github.com/example/ledger"}})
+    );
+    let hidden = client
+        .get(format!("{url}/v1/views/entity/repository:checkout-web"))
+        .send()
+        .await
+        .unwrap();
+    assert_eq!(hidden.status(), 404);
+    let invalid = client
+        .get(format!("{url}/v1/views/home"))
+        .header("cf-access-jwt-assertion", "invalid")
+        .send()
+        .await
+        .unwrap();
+    assert_eq!(invalid.status(), 401);
+
+    let protected = [
+        ("GET", "/v1/views/ops"),
+        ("GET", "/v1/views/report"),
+        ("GET", "/v1/snapshot"),
+        ("GET", "/v1/actions"),
+        ("POST", "/v1/actions/test/previews"),
+        ("POST", "/v1/actions/test/runs"),
+        ("GET", "/v1/runs"),
+        ("POST", "/v1/runs/test/approvals"),
+        ("POST", "/v1/entities/repository:ledger/refresh"),
+        ("PUT", "/v1/entities/repository:ledger/native/title"),
+        ("POST", "/mcp"),
+    ];
+    for (method, path) in protected {
+        let response = client
+            .request(method.parse().unwrap(), format!("{url}{path}"))
+            .header("x-seikika-user", "dave")
+            .json(&serde_json::json!({"id": 1, "value": "test"}))
+            .send()
+            .await
+            .unwrap();
+        assert_eq!(response.status(), 401, "{method} {path}");
+    }
 }
 
 #[tokio::test]
