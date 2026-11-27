@@ -20,6 +20,19 @@ body { margin: 0; }
   border-radius: 6px;
 }
 .portal-tools a[aria-current="page"] { font-weight: 650; }
+.portal-tools .portal-sign-in {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding-inline: 14px;
+  color: var(--accent);
+  background: var(--accent-bg);
+  border: 1px solid var(--accent);
+  border-radius: 6px;
+  font-weight: 650;
+  text-decoration: none;
+}
+.portal-tools .portal-sign-in:hover { text-decoration: underline; }
 .portal-table { width: 100%; border-collapse: collapse; }
 .portal-table :is(th, td) {
   padding: 6px 8px;
