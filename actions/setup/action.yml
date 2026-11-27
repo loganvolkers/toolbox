@@ -1,0 +1,27 @@
+name: Set up Seikika
+description: Put the Seikika CLI and its repo-portal connectors on PATH.
+author: Seikika
+
+inputs:
+  seikika-version:
+    description: Published Seikika version to download and verify.
+  seikika-dir:
+    description: Directory containing prebuilt binaries. Use this or seikika-version.
+
+outputs:
+  bin-dir:
+    description: Absolute directory containing the Seikika executable.
+    value: ${{ steps.setup.outputs.bin-dir }}
+
+runs:
+  using: composite
+  steps:
+    - name: Set up Seikika binaries
+      id: setup
+      shell: bash
+      env:
+        SEIKIKA_REPO: ${{ github.action_repository || 'seikika/seikika' }}
+        SEIKIKA_VERSION: ${{ inputs.seikika-version }}
+        SEIKIKA_BIN: ${{ inputs.seikika-dir }}
+        GH_TOKEN: ${{ env.GH_TOKEN || env.GITHUB_TOKEN || github.token }}
+      run: bash "$GITHUB_ACTION_PATH/run.sh"

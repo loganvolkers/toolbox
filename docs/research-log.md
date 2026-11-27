@@ -227,3 +227,9 @@ The repository quickstart recorded a baseline, exited 1 after moving its linked 
 - Compared Guide and Reference navigation, generated contract sources, release selection, and presentation using primary sources from Diátaxis, Google, Kubernetes, Stripe, GitHub, AWS, docs.rs, TypeDoc, MCP, and Starlight. [Reference documentation audit](audits/reference-docs-2026-11-26.md)
 - Built the CLI with Cargo and regenerated and verified the CLI and MCP fingerprint. The browser smoke test matched the built-in MCP tool links to `seikika describe` and verified an enum argument and its CLI deep link. The CLI tests and all 142 maintainer portal assertions passed.
 - `pnpm docs:build` built the Starlight site and Storybook. The Chromium smoke test verified both top-level sidebar groups, all six Reference destinations, the existing HTTP and CLI deep links, mobile keyboard navigation, and the Reference home and MCP table widths at 390 pixels. Seikika's `maintainer-site` scorecard reached gold on all four new pages.
+
+## Consumer GitHub Actions
+
+- Compared the published action metadata and recipes from Terraform, SonarQube, Trivy, golangci-lint, Docker, CodeQL, and GitHub Pages. Checked the Betterer CLI as a baseline enforcement alternative. [Comparison and gap analysis](audits/consumer-github-actions.md)
+- Downloaded and verified the published Seikika 0.2.1 Linux binaries through setup. Used them from a disposable checkout to validate and test the starter, build without a baseline, verify missing and failing ratchet verdicts, and build both HTML and web output. Compared the baseline byte for byte after scoring and building.
+- Seikika's ratchet found the CI workflow's last four missing job timeouts fixed and scored all three new actions gold for CI security. All 142 maintainer portal assertions passed.

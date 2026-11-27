@@ -88,6 +88,7 @@ runs:
         SEIKIKA_REPO: ${{ github.action_repository || 'seikika/seikika' }}
         SEIKIKA_VERSION: ${{ inputs.seikika-version }}
         SEIKIKA_BIN: ${{ runner.temp }}/seikika-bin
+        GH_TOKEN: ${{ env.GH_TOKEN || env.GITHUB_TOKEN || github.token }}
       run: bash "$GITHUB_ACTION_PATH/install.sh"
     - name: Cache key for the seikika build
       id: key
