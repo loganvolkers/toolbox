@@ -34,7 +34,7 @@ jobs:
         env: {GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"}
         run: |
           cargo build --locked
-          scripts/ci-tools.sh "$RUNNER_TEMP/tools" actionlint scorecard osv-scanner rustsec-osv shellcheck shfmt bats
+          scripts/ci-tools.sh "$RUNNER_TEMP/tools" openfga actionlint scorecard osv-scanner rustsec-osv shellcheck shfmt bats
           export PATH="$RUNNER_TEMP/tools:$PATH" OSV_SCANNER_LOCAL_DB_CACHE_DIRECTORY="$RUNNER_TEMP/tools"
           target/debug/seikika tools install portal --via pipx   # the pins in the portal's tools:
           target/debug/seikika doctor portal
@@ -71,6 +71,7 @@ jobs:
           pnpm --filter @seikika/astro-report smoke
           node report-ui/scripts/federation.mjs
         env:
+          SEIKIKA_OPENFGA_BIN: ${{ runner.temp }}/tools/openfga
           SEIKIKA_BIN: ${{ github.workspace }}/target/debug/seikika
           SEIKIKA_ORG_REPORT_DATA: ${{ github.workspace }}/site/.generated/organization/report.json
       - name: upload
