@@ -9,7 +9,7 @@ async function databaseHealth(env) {
   const query = new URLSearchParams([["metrics[]", connection], ["metrics[]", maximum]]);
   const response = await fetch(`${root}/${env.PLANETSCALE_ORG}/databases/${env.DATABASE}/branches/main/metrics/instant?${query}`, {
     headers: { Authorization: env.PLANETSCALE_SERVICE_TOKEN_ID + ":" + env.PLANETSCALE_SERVICE_TOKEN },
-    redirect: "error",
+    redirect: "manual",
     signal: AbortSignal.timeout(15000),
   });
   if (!response.ok) throw new Error("Seikika database metrics are unavailable");

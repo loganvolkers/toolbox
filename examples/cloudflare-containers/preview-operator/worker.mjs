@@ -12,7 +12,7 @@ async function request(origin, path, { auth, method = "GET", body, allowMissing 
   if (auth) headers.Authorization = auth;
   if (body) headers["Content-Type"] = type ?? "application/json";
   const response = await fetch(origin + path, {
-    method, headers, body: body ? JSON.stringify(body) : undefined, redirect: "error",
+    method, headers, body: body ? JSON.stringify(body) : undefined, redirect: "manual",
   });
   if (response.status === 404 && allowMissing) return null;
   if (!response.ok) {
