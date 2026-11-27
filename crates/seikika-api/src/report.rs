@@ -594,39 +594,13 @@ fn entity_details(
         .iter()
         .map(|(id, entity)| {
             let children_kind = m.federation.as_ref().and_then(|f| f.portals.as_ref());
-            // Only this detail view gets markers. Aggregates still use the restricted fields.
-            let fields: Map<String, Value> = collection.entities[id]
-                .fields
-                .iter()
-                .filter_map(|(field, value)| {
-                    if matches!(field.as_str(), "report" | "reportError") {
-                        return None;
-                    }
-                    if children_kind == Some(&entity.kind)
-                        && matches!(
-                            field.as_str(),
-                            "actions" | "runner" | "dir" | "git" | "path" | "error"
-                        )
-                    {
-                        return None;
-                    }
-                    let facet = kinds
-                        .get(&entity.kind)
-                        .and_then(|fields| fields.get(field))
-                        .and_then(|field| field.facet.as_deref());
-                    let Some(needs) = facet_needs(facet) else {
-                        return Some((field.clone(), value.clone()));
-                    };
-                    audience.map(|a| {
-                        let visible = if a.facet(id, facet) {
-                            value.clone()
-                        } else {
-                            redacted(collection, id, needs)
-                        };
-                        (field.clone(), visible)
-                    })
-                })
-                .collect();
+            let fields = entity_fields(
+                collection,
+                id,
+                kinds.get(&entity.kind).copied(),
+                children_kind == Some(&entity.kind),
+                audience,
+            );
             let provenance: Map<String, Value> = fields
                 .keys()
                 .filter_map(|k| Some((k.clone(), json!(entity.provenance.get(k)?))))
@@ -641,6 +615,45 @@ fn entity_details(
                     },
                 }),
             )
+        })
+        .collect()
+}
+
+// Only entity details get redaction markers. Aggregates use the restricted fields.
+fn entity_fields(
+    collection: &Derived,
+    id: &str,
+    definitions: Option<&BTreeMap<String, seikika_model::manifest::Field>>,
+    is_child_portal: bool,
+    audience: Option<&Audience<'_>>,
+) -> Map<String, Value> {
+    collection.entities[id]
+        .fields
+        .iter()
+        .filter_map(|(field, value)| {
+            if matches!(field.as_str(), "report" | "reportError")
+                || is_child_portal
+                    && matches!(
+                        field.as_str(),
+                        "actions" | "runner" | "dir" | "git" | "path" | "error"
+                    )
+            {
+                return None;
+            }
+            let facet = definitions
+                .and_then(|fields| fields.get(field))
+                .and_then(|field| field.facet.as_deref());
+            let Some(needs) = facet_needs(facet) else {
+                return Some((field.clone(), value.clone()));
+            };
+            audience.map(|a| {
+                let visible = if a.facet(id, facet) {
+                    value.clone()
+                } else {
+                    redacted(collection, id, needs)
+                };
+                (field.clone(), visible)
+            })
         })
         .collect()
 }
