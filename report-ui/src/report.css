@@ -371,6 +371,8 @@ details.ent>summary{grid-template-columns:76px minmax(0,1fr)}details.ent>summary
 .federated-catalog-row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: .5rem 1rem; padding: .65rem 0; border-block-end: 1px solid var(--line); overflow-wrap: anywhere; }
 .federated-catalog-row small { display: block; }
 .federated-catalog-row ul { margin: 0; padding-inline-start: 1.25rem; }
+.federated-catalog-row .federated-catalog-score { list-style: none; padding-inline-start: 0; }
+#kind-list > .crumb { display: inline-flex; align-items: center; min-height: 24px; }
 .federated-catalog-group { margin-block: .5rem; }
 .report-entity-details { overflow-wrap: anywhere; }
 .report-entity-details dt { font-weight: 600; }

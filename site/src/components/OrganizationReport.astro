@@ -127,6 +127,7 @@ const serialized = data && JSON.stringify(data).replace(/</g, "\\u003c");
 )}
 
 <style>
+  #organization-report-root :global(.seikika-report) { scroll-margin-top: calc(var(--sl-nav-height) + 8px); }
   .table-scroll { overflow-x: auto; }
   table { width: 100%; font-size: var(--sl-text-sm); }
   th, td { vertical-align: top; }

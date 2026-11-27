@@ -162,10 +162,15 @@ try {
     await page.evaluate(() => location.hash = "catalog/Workflow");
     await page.getByRole("combobox", { name: "Group entities" }).waitFor();
     const workflowSource = snapshot.entities[workflows[0]].fields.repository;
-    await page.getByRole("combobox", { name: "Source repository" }).selectOption({ label: "Source repository · " + workflowSource });
     const rows = page.locator(".federated-catalog-row");
-    assert.equal(await rows.count(), workflows.filter(id => snapshot.entities[id].fields.repository === workflowSource).length);
+    const more = page.getByRole("button", { name: /Show more/ });
+    while (await more.isVisible()) await more.click();
+    assert.equal(await rows.count(), workflows.length);
     await page.getByRole("combobox", { name: "Group entities" }).selectOption("repository");
+    assert.equal(await page.locator(".federated-catalog-group").count(),
+      new Set(workflows.map(id => snapshot.entities[id].fields.repository)).size);
+    await page.getByRole("combobox", { name: "Source repository" }).selectOption({ label: "Source repository · " + workflowSource });
+    assert.equal(await rows.count(), workflows.filter(id => snapshot.entities[id].fields.repository === workflowSource).length);
     assert.equal(await page.locator(".federated-catalog-group").count(), 1);
     await page.locator(".federated-catalog-group summary").click();
     await rows.first().getByRole("link").first().click();
@@ -194,7 +199,12 @@ try {
   await page.getByRole("link", { name: "@seikika/ui", exact: true }).waitFor();
 
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.goto(docsOrigin + "demo/organization/");
+  await page.goto(docsOrigin + "demo/organization/#catalog/Workflow?group=repository");
+  if (process.env.SEIKIKA_ORG_REPORT_DATA) {
+    await page.getByRole("combobox", { name: "Group entities" }).waitFor();
+    await page.waitForFunction(() => document.querySelector('[role="tablist"]').getBoundingClientRect().top >=
+      document.querySelector('header.header').getBoundingClientRect().bottom);
+  }
   assert(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth),
     "The organization scorecard table fits within the mobile page.");
   await page.goto(docsOrigin);

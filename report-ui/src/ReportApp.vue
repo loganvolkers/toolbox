@@ -136,13 +136,15 @@ async function ready() {
   scrollTabs();
 
   if (props.initialRoute === undefined && hash.value !== lastHash) {
-    const y = view.closest(".seikika-report")?.getBoundingClientRect().top ?? 0;
-    const top = Math.max(0, y + scrollY);
+    const frame = view.closest(".seikika-report");
+    const y = frame?.getBoundingClientRect().top ?? 0;
+    const inset = frame ? Number.parseFloat(getComputedStyle(frame).scrollMarginTop) || 0 : 0;
+    const top = Math.max(0, y + scrollY - inset);
     if (tabFocus) {
       selected?.focus({ preventScroll: true });
       scrollTo(0, top);
     } else if (heading && (lastHash !== undefined || props.embedded && hash.value)) {
-      const targetTop = target ? target.getBoundingClientRect().top + scrollY : top;
+      const targetTop = target ? target.getBoundingClientRect().top + scrollY - inset : top;
       scrollTo(0, targetTop - top < innerHeight * .6 ? top : targetTop - 8);
       if (lastHash !== undefined) {
         heading.tabIndex = -1;

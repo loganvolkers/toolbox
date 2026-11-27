@@ -470,9 +470,17 @@ function federatedList(D: ReportData, kind: string, query: import("../lib/routes
     ...sources.filter(Boolean).map(key => el("option", { value: key, textContent: sourceLabel(D, key) })));
   source.value = query.source ?? "";
   const list = el("div");
-  const pageSize = 120;
+  const kindCards = Object.keys(D.scorecards).filter(name => D.scorecards[name].kind === kind);
+  const standard = kindCards.length === 1 ? kindCards[0] : undefined;
+  const pageSize = 40;
   let limit = pageSize;
   const openGroups = new Set<string>();
+  const coverage = new Map<string, number>();
+  if (standard) for (const id of ids) {
+    const level = typeof D.entities?.[id]?.fields.auditError === "string" ? "skipped"
+      : D.scores[standard]?.[id]?.level ?? "skipped";
+    coverage.set(level, (coverage.get(level) ?? 0) + 1);
+  }
   const render = () => {
     const params = new URLSearchParams();
     if (search.value) params.set("q", search.value);
@@ -488,17 +496,16 @@ function federatedList(D: ReportData, kind: string, query: import("../lib/routes
         && (!q || [locator?.original ?? id, D.entityOverview?.[id]?.title, entitySource(D, id)]
           .some(value => typeof value === "string" && value.toLowerCase().includes(q)));
     });
-    const kindCards = Object.keys(D.scorecards).filter(name => D.scorecards[name].kind === kind);
     const row = (id: string) => {
       const raw = D.entitySources?.[id]?.original ?? id;
       const titleText = (D.entityOverview?.[id]?.title as string | undefined) ?? raw;
       const unavailable = kind === "Workflow" && typeof D.entities?.[id]?.fields.auditError === "string";
       return el("div", { className: "federated-catalog-row" },
         el("div", {}, link("entity/" + enc(id), "", titleText), el("small", { className: "sub", textContent: entitySource(D, id) })),
-        el("ul", {}, ...kindCards.flatMap(name => {
+        el("ul", { className: standard ? "federated-catalog-score" : "" }, ...kindCards.flatMap(name => {
           const score = D.scores[name]?.[id];
           return score ? [el("li", {},
-            link("scorecard/" + enc(name), "", title(D, name)), " ",
+            standard ? null : link("scorecard/" + enc(name), "", title(D, name)), " ",
             unavailable ? el("span", { className: "sub", textContent: "Audit unavailable" })
               : levelPill(score.level, false, unrunIn(D.scorecards[name], score)),
           )] : [];
@@ -513,27 +520,32 @@ function federatedList(D: ReportData, kind: string, query: import("../lib/routes
         } }));
       return;
     }
-    const shown = filtered.slice(0, limit);
+    let shownCount = Math.min(limit, filtered.length);
     if (group.value) {
       const groups = new Map<string, string[]>();
-      for (const id of shown) {
+      for (const id of filtered) {
         const key = D.entitySources?.[id]?.source ?? "";
         if (!groups.has(key)) groups.set(key, []);
         groups.get(key)!.push(id);
       }
+      shownCount = 0;
       list.replaceChildren(...Array.from(groups, ([key, members]) =>
-        el("details", { open: openGroups.has(key), className: "federated-catalog-group",
+        {
+          const visible = members.slice(0, limit);
+          shownCount += visible.length;
+          return el("details", { open: openGroups.has(key), className: "federated-catalog-group",
             ontoggle: (event: Event) => {
               if ((event.currentTarget as HTMLDetailsElement).open) openGroups.add(key);
               else openGroups.delete(key);
             } },
-          el("summary", { textContent: sourceLabel(D, key) + " · " + members.length }),
-          ...members.map(row))));
+            el("summary", { textContent: sourceLabel(D, key) + " · " + members.length }),
+            ...visible.map(row));
+        }));
     } else {
-      list.replaceChildren(...shown.map(row));
+      list.replaceChildren(...filtered.slice(0, limit).map(row));
     }
-    if (shown.length < filtered.length) list.append(el("button", {
-      type: "button", textContent: "Show more (" + shown.length + " of " + filtered.length + ")",
+    if (shownCount < filtered.length) list.append(el("button", {
+      type: "button", textContent: "Show more (" + shownCount + " of " + filtered.length + ")",
       onclick: () => { limit += pageSize; render(); },
     }));
   };
@@ -543,6 +555,12 @@ function federatedList(D: ReportData, kind: string, query: import("../lib/routes
     link("catalog", "crumb", "Catalog"),
     el("h2", { textContent: kindCount(D, kind, ids.length) }),
     el("p", { className: "sub", textContent: kindDescription(D, kind) }),
+    standard ? el("div", { className: "sub" },
+      link("scorecard/" + enc(standard), "", title(D, standard)),
+      el("p", { textContent: ["none", ...D.scorecards[standard].levels, "skipped"]
+        .filter(level => coverage.has(level)).map(level => fmt(coverage.get(level)) + " "
+        + (level === "none" ? "below " + (D.scorecards[standard].levels[0] ?? "the first level")
+          : level === "skipped" ? "not scored" : level)).join(" · ") })) : null,
     el("div", { className: "report-filters" },
       el("label", {}, "Filter entities", search),
       el("label", {}, "Source", source),

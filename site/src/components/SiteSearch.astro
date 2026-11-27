@@ -3,6 +3,14 @@ import Search from "@astrojs/starlight/components/Search.astro";
 ---
 <Search {...Astro.props} />
 <script is:inline>
-  // Starlight already announces the shortcut via aria-keyshortcuts on the button.
-  document.querySelector("button[data-open-modal] > kbd")?.setAttribute("aria-hidden", "true");
+  // Include the visible shortcut in the name so voice controls can find the button by its text.
+  const button = document.querySelector("button[data-open-modal]");
+  const label = button?.getAttribute("aria-label");
+  const shortcut = button?.querySelector("kbd");
+  const keys = shortcut?.querySelectorAll("kbd");
+  if (label && shortcut && keys?.length === 2) {
+    button.insertBefore(document.createTextNode(" "), shortcut);
+    shortcut.insertBefore(document.createTextNode(" "), keys[1]);
+    button.setAttribute("aria-label", `${label} ${keys[0].textContent} ${keys[1].textContent}`);
+  }
 </script>
