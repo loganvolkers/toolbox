@@ -27,7 +27,8 @@ verdicts:
       README.md:23 keeps it green, which is the very regression the decision
       says the ratchet should catch. The fix names the file and its contents,
       so fix-leads-to-pass holds. There is no threshold, so
-      threshold-justified passes (portal/standards/meta.yaml:1178-1180).
+      threshold-justified passes
+      (https://github.com/seikika/seikika/blob/05510a57fafd8707979370858b578b78b935cf0e/portal/standards/meta.yaml#L1178-L1180).
   - criterion: reproducible
     verdict: pass
     reason: >-

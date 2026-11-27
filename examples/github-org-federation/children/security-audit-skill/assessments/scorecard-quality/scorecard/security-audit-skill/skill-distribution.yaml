@@ -1,0 +1,30 @@
+apiVersion: seikika.com/assessment/v1
+entity: scorecard:security-audit-skill/skill-distribution
+rubric: scorecard-quality
+subjectHash: 205bbbb74f32
+rubricHash: 1d01a2d06d609948839eb0695b1bba667b2ebe2c4b50224dbd8ac05d5b3cb334
+assessor: {kind: agent, name: codex}
+at: 2026-11-27
+verdicts:
+  - criterion: one-concern
+    verdict: pass
+    reason: >-
+      .seikika/seikika.yaml covers the integrity of the documented skill
+      distribution for package maintainers.
+  - criterion: levels-are-a-ladder
+    verdict: pass
+    reason: >-
+      .seikika/tests/release.test.yaml reaches ready for aligned files and
+      fails the removal case. Missing installed files violate the same
+      contract.
+  - criterion: no-obvious-gap
+    verdict: pass
+    reason: >-
+      .seikika/check-skill-distribution.py compares the entire installed file
+      tree with the README.md Files table, checks the package name and rejects
+      duplicate or absent rows.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      .seikika/tests/release.test.yaml requires the missing entrypoint
+      diagnostic. Restoring the real file recovered the ready outcome.

@@ -1,0 +1,4 @@
+apiVersion: seikika.com/v1alpha1
+portal: {name: meta-package-test, owner: group:maintainers, seikika: "0.2"}
+include: [{package: ..}]
+tests: [tests/reviews.yaml]

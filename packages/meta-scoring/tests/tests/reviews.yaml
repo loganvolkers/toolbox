@@ -1,0 +1,23 @@
+name: Meta review freshness
+assert:
+  - name: A clean review of the current definition and rubric reaches gold
+    expect: >-
+      score('review-scorecard', 'scorecard:meta-package-test/fresh').level ==
+      'gold'
+  - name: A rubric edit makes a previously clean review stale
+    expect: >-
+      entity('scorecard:meta-package-test/stale-rubric').reviewState ==
+      'stale' && score('review-scorecard',
+      'scorecard:meta-package-test/stale-rubric').rules['assessed'] == 'fail'
+  - name: A stale finding stays visible until reviewed
+    expect: >-
+      score('review-scorecard',
+      'scorecard:meta-package-test/open-finding').rules['no-open-findings'] ==
+      'fail'
+  - name: An empty verdict list cannot earn gold
+    expect: >-
+      score('review-scorecard',
+      'scorecard:meta-package-test/incomplete').level == 'bronze' &&
+      score('review-scorecard',
+      'scorecard:meta-package-test/incomplete').rules['passes-review'] ==
+      'fail'

@@ -30,7 +30,7 @@ verdicts:
       than new human contributors, so hard-to-game fails. The fix cannot by
       itself move the value from 4 to 10. No cited doc states where 10 comes
       from, so unsure is the threshold the rubric asks for
-      (portal/standards/meta.yaml:1178-1180).
+      (https://github.com/seikika/seikika/blob/05510a57fafd8707979370858b578b78b935cf0e/portal/standards/meta.yaml#L1178-L1180).
   - criterion: reproducible
     verdict: pass
     reason: >-

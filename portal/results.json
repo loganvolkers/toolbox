@@ -45,6 +45,18 @@
       "short": 0,
       "start": null
     },
+    "review-assessment-evidence": {
+      "inScope": 374,
+      "recorded": "2026-11-27",
+      "short": 367,
+      "start": "2026-11-27"
+    },
+    "review-standard-coverage": {
+      "inScope": 326,
+      "recorded": "2026-11-27",
+      "short": 319,
+      "start": "2026-11-27"
+    },
     "skill-silver": {
       "inScope": 33,
       "recorded": "2026-11-21",
@@ -1305,12 +1317,6 @@
           "ba345f2b"
         ]
       },
-      "assessment:assessment-quality/assessment:rule-quality/rule:seikika/meta-rule/pins-both-outcomes": {
-        "cites-everything": [
-          "55caed82",
-          "ba345f2b"
-        ]
-      },
       "assessment:assessment-quality/assessment:rule-quality/rule:seikika/meta-scorecard/described": {
         "cites-everything": [
           "ba345f2b"
@@ -1336,11 +1342,6 @@
         "cites-everything": [
           "55caed82",
           "833e4fc9"
-        ]
-      },
-      "assessment:assessment-quality/assessment:rule-quality/rule:seikika/operator-cli/exercised": {
-        "cites-everything": [
-          "ba345f2b"
         ]
       },
       "assessment:assessment-quality/assessment:rule-quality/rule:seikika/review-crate/no-open-findings": {
@@ -1649,11 +1650,6 @@
           "833e4fc9"
         ]
       },
-      "assessment:assessment-quality/assessment:scorecard-quality/scorecard:seikika/review-scorecard": {
-        "cites-everything": [
-          "55caed82"
-        ]
-      },
       "assessment:assessment-quality/assessment:scorecard-quality/scorecard:seikika/review-sdlc-stage": {
         "cites-everything": [
           "833e4fc9"
@@ -1802,11 +1798,6 @@
         "refreshable": [
           "5fb91e8c",
           "60785ef2"
-        ]
-      },
-      "connector:seikika/workspace": {
-        "refreshable": [
-          "eb06bc2f"
         ]
       }
     },
@@ -3047,9 +3038,6 @@
         "fields-described": [
           "1f6a832c",
           "4364e615"
-        ],
-        "tested": [
-          "6610d79d"
         ]
       },
       "kind:acme/Group": {
@@ -3087,9 +3075,6 @@
         "fields-described": [
           "8a8753c7",
           "d0016656"
-        ],
-        "tested": [
-          "601090f6"
         ]
       },
       "kind:repo/Doc": {
@@ -3245,9 +3230,6 @@
           "badf029a",
           "e1e4263c",
           "fb61f9d9"
-        ],
-        "tested": [
-          "b2f9572f"
         ]
       },
       "kind:seikika/JsonSchema": {
@@ -3397,9 +3379,9 @@
     "meta-rubric": {
       "rubric:seikika/testing-contract-quality": {
         "discriminates": [
-          "4da7cf17",
-          "d5e1bb26",
-          "f03d58e5"
+          "91bfac6e",
+          "bec0e3dd",
+          "da2c1930"
         ]
       }
     },
@@ -3416,7 +3398,7 @@
           "7ca02b25"
         ],
         "tested": [
-          "63e27d3e"
+          "a5f98af1"
         ]
       },
       "rule:acme/github-app-hygiene/only-approved-apps": {
@@ -3434,7 +3416,7 @@
           "ddbcf122"
         ],
         "tested": [
-          "aecaea92"
+          "945ff8b5"
         ]
       },
       "rule:acme/ownership/branch-protected": {
@@ -3488,7 +3470,7 @@
           "23e1b2f2"
         ],
         "tested": [
-          "eb35efc0"
+          "e54e0ac5"
         ]
       },
       "rule:repo/docs/links-resolve": {
@@ -3505,7 +3487,7 @@
           "c9308fca"
         ],
         "tested": [
-          "4ad006f5"
+          "6b78696e"
         ]
       },
       "rule:repo/repo-hygiene/has-codeowners": {
@@ -3566,7 +3548,7 @@
           "56fc53f2"
         ],
         "tested": [
-          "63af3a8b"
+          "993aa5f6"
         ]
       },
       "rule:seikika/maintainer-ci-security/no-medium-findings": {
@@ -3593,7 +3575,7 @@
           "bc0483e5"
         ],
         "tested": [
-          "e5804019"
+          "dbc284e2"
         ]
       },
       "rule:seikika/maintainer-ci-speed/cancels-superseded-runs": {
@@ -3607,7 +3589,7 @@
           "e4fb444d"
         ],
         "tested": [
-          "d3734f4a"
+          "c0166501"
         ]
       },
       "rule:seikika/maintainer-crate/clippy-clean": {
@@ -3624,7 +3606,7 @@
           "665cb1b3"
         ],
         "tested": [
-          "55691dcb"
+          "43a6e8b8"
         ]
       },
       "rule:seikika/maintainer-crate/few-unwraps": {
@@ -3633,7 +3615,7 @@
           "53880167"
         ],
         "tested": [
-          "6b666039"
+          "79c09454"
         ]
       },
       "rule:seikika/maintainer-crate/fully-documented": {
@@ -3647,7 +3629,7 @@
           "d1d2c271"
         ],
         "tested": [
-          "e0ebb877"
+          "b031da2e"
         ]
       },
       "rule:seikika/maintainer-crate/public-api-documented": {
@@ -3659,7 +3641,7 @@
           "f42a268b"
         ],
         "tested": [
-          "70e10331"
+          "5f453138"
         ]
       },
       "rule:seikika/maintainer-crate/short-functions": {
@@ -3673,7 +3655,7 @@
           "fbf47650"
         ],
         "tested": [
-          "1424d434"
+          "e22bcd43"
         ]
       },
       "rule:seikika/maintainer-crate/tests-pass": {
@@ -3705,7 +3687,7 @@
           "d05ad505"
         ],
         "tested": [
-          "2dfcba91"
+          "95c6242a"
         ]
       },
       "rule:seikika/maintainer-python/no-findings": {
@@ -3778,11 +3760,6 @@
           "c663be49"
         ]
       },
-      "rule:seikika/meta-rule/pins-both-outcomes": {
-        "pins-both-outcomes": [
-          "b891462e"
-        ]
-      },
       "rule:seikika/meta-rule/readable": {
         "pins-both-outcomes": [
           "7de5aaf8"
@@ -3799,7 +3776,7 @@
           "cfd4fac3"
         ],
         "tested": [
-          "c271068c"
+          "24b38903"
         ]
       },
       "rule:seikika/operator-cli/documented": {
@@ -3808,7 +3785,7 @@
           "30443b54"
         ],
         "tested": [
-          "7fd1fe83"
+          "7ea70634"
         ]
       },
       "rule:seikika/operator-cli/exercised": {
@@ -3828,7 +3805,7 @@
           "e60a4350"
         ],
         "tested": [
-          "5ee3e9fb"
+          "29e0a360"
         ]
       },
       "rule:seikika/review-assessment/no-open-findings": {
@@ -3862,7 +3839,7 @@
           "47c2c41d"
         ],
         "tested": [
-          "b8c8c4d5"
+          "3f36112a"
         ]
       },
       "rule:seikika/user-cli/exercised": {
@@ -3871,7 +3848,7 @@
           "5f26d9d5"
         ],
         "tested": [
-          "8fdc9c4c"
+          "73699bf1"
         ]
       },
       "rule:seikika/user-cli/has-help": {
@@ -3883,7 +3860,7 @@
           "c4f311c5"
         ],
         "tested": [
-          "044d7972"
+          "10851f71"
         ]
       },
       "rule:seikika/user-cli/structured-output": {
@@ -3900,7 +3877,7 @@
           "9de8b299"
         ],
         "tested": [
-          "8093d0c0"
+          "e060a59d"
         ]
       },
       "rule:seikika/user-mcp/described": {
@@ -3912,7 +3889,7 @@
           "f7a4a642"
         ],
         "tested": [
-          "fa58d2fb"
+          "f62b44c6"
         ]
       },
       "rule:seikika/user-mcp/documented": {
@@ -4065,8 +4042,7 @@
       },
       "scorecard:seikika/meta-rule": {
         "fixtures-reach-every-level": [
-          "91f7a9f7",
-          "d2da8e5e"
+          "91f7a9f7"
         ]
       },
       "scorecard:seikika/meta-scorecard": {
@@ -4085,19 +4061,9 @@
           "d2da8e5e"
         ]
       },
-      "scorecard:seikika/review-assessment": {
-        "fixtures-reach-every-level": [
-          "d2da8e5e"
-        ]
-      },
       "scorecard:seikika/review-crate": {
         "fixtures-reach-every-level": [
           "d2da8e5e"
-        ]
-      },
-      "scorecard:seikika/review-rule": {
-        "fixtures-reach-every-level": [
-          "91f7a9f7"
         ]
       },
       "scorecard:seikika/review-sdlc-stage": {
@@ -6844,6 +6810,9 @@
       "site-page:site/src/content/docs/packages/index.mdx": {
         "level": "gold"
       },
+      "site-page:site/src/content/docs/packages/meta-scoring.md": {
+        "level": "gold"
+      },
       "site-page:site/src/content/docs/packages/openssf-scorecard.md": {
         "level": "gold"
       },
@@ -8028,10 +7997,7 @@
         "level": "silver"
       },
       "assessment:assessment-quality/assessment:rule-quality/rule:seikika/meta-rule/pins-both-outcomes": {
-        "failing": {
-          "cites-everything": 2
-        },
-        "level": "silver"
+        "level": "gold"
       },
       "assessment:assessment-quality/assessment:rule-quality/rule:seikika/meta-rule/readable": {
         "level": "gold"
@@ -8082,10 +8048,7 @@
         "level": "gold"
       },
       "assessment:assessment-quality/assessment:rule-quality/rule:seikika/operator-cli/exercised": {
-        "failing": {
-          "cites-everything": 1
-        },
-        "level": "silver"
+        "level": "gold"
       },
       "assessment:assessment-quality/assessment:rule-quality/rule:seikika/operator-cli/has-help": {
         "level": "gold"
@@ -8638,10 +8601,7 @@
         "level": "gold"
       },
       "assessment:assessment-quality/assessment:scorecard-quality/scorecard:seikika/review-scorecard": {
-        "failing": {
-          "cites-everything": 1
-        },
-        "level": "silver"
+        "level": "gold"
       },
       "assessment:assessment-quality/assessment:scorecard-quality/scorecard:seikika/review-sdlc-stage": {
         "failing": {
@@ -10000,6 +9960,12 @@
       "connector:seikika/maintainer-shell": {
         "level": "gold"
       },
+      "connector:seikika/meta-assessments": {
+        "level": "gold"
+      },
+      "connector:seikika/meta-catalog": {
+        "level": "gold"
+      },
       "connector:seikika/runner": {
         "level": "gold"
       },
@@ -10007,10 +9973,7 @@
         "level": "gold"
       },
       "connector:seikika/workspace": {
-        "failing": {
-          "refreshable": 1
-        },
-        "level": "silver"
+        "level": "gold"
       }
     },
     "meta-field": {
@@ -10354,7 +10317,19 @@
       "field:seikika/Assessment.reviewUnsure": {
         "level": "gold"
       },
+      "field:seikika/Assessment.reviewVerified": {
+        "level": "gold"
+      },
       "field:seikika/Assessment.rubric": {
+        "level": "gold"
+      },
+      "field:seikika/Assessment.rubricCurrent": {
+        "level": "gold"
+      },
+      "field:seikika/Assessment.rubricHash": {
+        "level": "gold"
+      },
+      "field:seikika/Assessment.rubricValid": {
         "level": "gold"
       },
       "field:seikika/Assessment.selfReviewed": {
@@ -11707,6 +11682,9 @@
       "field:seikika/Rubric.name": {
         "level": "gold"
       },
+      "field:seikika/Rubric.oneSided": {
+        "level": "gold"
+      },
       "field:seikika/Rubric.portal": {
         "level": "gold"
       },
@@ -11808,6 +11786,9 @@
       "field:seikika/Rule.reviewFailing": {
         "level": "gold"
       },
+      "field:seikika/Rule.reviewRubricHash": {
+        "level": "gold"
+      },
       "field:seikika/Rule.reviewState": {
         "level": "gold"
       },
@@ -11815,6 +11796,9 @@
         "level": "gold"
       },
       "field:seikika/Rule.reviewUnsure": {
+        "level": "gold"
+      },
+      "field:seikika/Rule.reviewVerified": {
         "level": "gold"
       },
       "field:seikika/Rule.scorecard": {
@@ -11900,6 +11884,9 @@
       "field:seikika/Scorecard.reviewFailing": {
         "level": "gold"
       },
+      "field:seikika/Scorecard.reviewRubricHash": {
+        "level": "gold"
+      },
       "field:seikika/Scorecard.reviewState": {
         "level": "gold"
       },
@@ -11907,6 +11894,9 @@
         "level": "gold"
       },
       "field:seikika/Scorecard.reviewUnsure": {
+        "level": "gold"
+      },
+      "field:seikika/Scorecard.reviewVerified": {
         "level": "gold"
       },
       "field:seikika/Scorecard.rules": {
@@ -12375,10 +12365,9 @@
       "kind:acme/GitHubAppInstallation": {
         "failing": {
           "described": 1,
-          "fields-described": 2,
-          "tested": 1
+          "fields-described": 2
         },
-        "level": "none"
+        "level": "bronze"
       },
       "kind:acme/Group": {
         "failing": {
@@ -12397,10 +12386,9 @@
       "kind:acme/User": {
         "failing": {
           "described": 1,
-          "fields-described": 2,
-          "tested": 1
+          "fields-described": 2
         },
-        "level": "none"
+        "level": "bronze"
       },
       "kind:repo/Doc": {
         "failing": {
@@ -12475,10 +12463,9 @@
       },
       "kind:seikika/File": {
         "failing": {
-          "fields-described": 4,
-          "tested": 1
+          "fields-described": 4
         },
-        "level": "none"
+        "level": "silver"
       },
       "kind:seikika/JsonSchema": {
         "failing": {
@@ -13339,10 +13326,7 @@
         "level": "silver"
       },
       "rule:seikika/meta-rule/pins-both-outcomes": {
-        "failing": {
-          "pins-both-outcomes": 1
-        },
-        "level": "silver"
+        "level": "gold"
       },
       "rule:seikika/meta-rule/readable": {
         "failing": {
@@ -13907,7 +13891,7 @@
       },
       "scorecard:seikika/meta-rule": {
         "failing": {
-          "fixtures-reach-every-level": 2
+          "fixtures-reach-every-level": 1
         },
         "level": "silver"
       },
@@ -13925,10 +13909,7 @@
         "level": "bronze"
       },
       "scorecard:seikika/review-assessment": {
-        "failing": {
-          "fixtures-reach-every-level": 1
-        },
-        "level": "silver"
+        "level": "gold"
       },
       "scorecard:seikika/review-crate": {
         "failing": {
@@ -13937,10 +13918,7 @@
         "level": "silver"
       },
       "scorecard:seikika/review-rule": {
-        "failing": {
-          "fixtures-reach-every-level": 1
-        },
-        "level": "silver"
+        "level": "gold"
       },
       "scorecard:seikika/review-scorecard": {
         "level": "gold"

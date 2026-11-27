@@ -110,6 +110,7 @@ struct Workspace {
     betterer: Vec<Regex>,
     /// Assessment files (`assessment` records).
     assessments: Vec<Regex>,
+    assessment_manifest: Option<PathBuf>,
     /// GitHub Actions workflow and action metadata files (`workflow` and `action-ref` records).
     workflows: Vec<Regex>,
     /// Agent skill files (`skill` records), usually `**/SKILL.md`.
@@ -372,6 +373,7 @@ impl Workspace {
             files: globs(&cfg, "files")?,
             betterer: globs(&cfg, "betterer")?,
             assessments: globs(&cfg, "assessments")?,
+            assessment_manifest: cfg["assessmentManifest"].as_str().map(PathBuf::from),
             workflows: globs(&cfg, "workflows")?,
             skills: globs(&cfg, "skills")?,
             connectors: globs(&cfg, "connectors")?,
@@ -653,7 +655,7 @@ impl Workspace {
         self.emit_workflows(&paths, &kinds, out);
         self.emit_betterer(&paths, &kinds, out);
         self.emit_data(&paths, &kinds, out);
-        self.emit_assessments(&paths, &kinds, out);
+        self.emit_assessments(&paths, &kinds, out)?;
         self.emit_skills(&paths, &kinds, out);
         self.emit_connectors(&paths, &kinds, out);
         self.emit_dependencies(&kinds, out);
@@ -698,36 +700,114 @@ impl Workspace {
     }
 
     /// `assessment` records; files that aren't assessments are logged and skipped.
-    fn emit_assessments(&self, paths: &[String], kinds: &[&str], out: &mut Out) {
+    fn emit_assessments(
+        &self,
+        paths: &[String],
+        kinds: &[&str],
+        out: &mut Out,
+    ) -> Result<(), String> {
         if !kinds.contains(&"assessment") || self.assessments.is_empty() {
-            return;
+            return Ok(());
         }
-        let mut records = Vec::new();
-        for rel in paths.iter().filter(|p| Self::matches(&self.assessments, p)) {
-            match self.assessment(rel) {
-                Ok(r) => records.push(r),
-                Err(e) => out.log("warn", &format!("{rel}: {e}")),
-            }
-        }
-        seikika_connect::assessment::link_reviews(&mut records);
-        for (id, data) in records {
+        for (id, data) in self.assessment_records(paths, out)? {
             out.record("assessment", &id, data);
         }
         out.snapshot_complete("assessment");
+        Ok(())
+    }
+
+    fn assessment_records(
+        &self,
+        paths: &[String],
+        out: &mut Out,
+    ) -> Result<Vec<(String, Value)>, String> {
+        let manifest = self
+            .assessment_manifest
+            .as_ref()
+            .map(|path| {
+                let src =
+                    seikika_model::load::load(&self.root.join(path)).map_err(|e| e.to_string())?;
+                let (manifest, diagnostics) = seikika_model::validate_source(&src);
+                match manifest {
+                    Some(manifest) if diagnostics.is_empty() => Ok(manifest),
+                    _ => Err(format!(
+                        "invalid assessment manifest {}: {diagnostics:?}",
+                        path.display()
+                    )),
+                }
+            })
+            .transpose()?;
+        let mut records = std::collections::BTreeMap::<String, Value>::new();
+        for rel in paths.iter().filter(|p| Self::matches(&self.assessments, p)) {
+            match self.assessment(rel, manifest.as_ref(), out) {
+                Ok((id, data)) => {
+                    if let Some(previous) = records.get_mut(&id) {
+                        out.log("warn", &format!("{rel}: duplicate {id}"));
+                        previous["rubricCurrent"] = json!(false);
+                        previous["rubricValid"] = json!(false);
+                        let findings = previous["failing"]
+                            .as_array_mut()
+                            .expect("assessment findings");
+                        for finding in data["failing"].as_array().into_iter().flatten() {
+                            if !findings.contains(finding) {
+                                findings.push(finding.clone());
+                            }
+                        }
+                        if !findings.is_empty() {
+                            previous["verdict"] = json!("fail");
+                        }
+                    } else {
+                        records.insert(id, data);
+                    }
+                }
+                Err(e) => out.log("warn", &format!("{rel}: {e}")),
+            }
+        }
+        let mut records: Vec<_> = records.into_iter().collect();
+        seikika_connect::assessment::link_reviews(&mut records);
+        Ok(records)
     }
 
     /// One assessment file as `(external id, record)`.
-    fn assessment(&self, rel: &str) -> Result<(String, Value), String> {
+    fn assessment(
+        &self,
+        rel: &str,
+        manifest: Option<&seikika_model::Manifest>,
+        out: &mut Out,
+    ) -> Result<(String, Value), String> {
+        use seikika_connect::assessment::{
+            external_id, record_in, rubric_hash, rubric_problems, schema_problems,
+        };
+
         let text = std::fs::read_to_string(self.root.join(rel)).map_err(|e| e.to_string())?;
         let doc: Value = serde_norway::from_str(&text).map_err(|e| e.to_string())?;
-        if !doc["entity"].is_string() || !doc["rubric"].is_string() {
+        let mut metadata = None;
+        if let Some(manifest) = manifest {
+            let errors = schema_problems(&doc);
+            if !errors.is_empty() {
+                return Err(errors.join("; "));
+            }
+            let mismatches = rubric_problems(manifest, &doc);
+            let valid = mismatches.is_empty();
+            if !valid {
+                out.log("warn", &format!("{rel}: {}", mismatches.join("; ")));
+            }
+            let current = valid
+                && manifest
+                    .rubrics
+                    .iter()
+                    .find(|r| doc["rubric"] == r.name.as_str())
+                    .is_some_and(|r| doc["rubricHash"] == rubric_hash(r));
+            metadata = Some((valid, current));
+        } else if !doc["entity"].is_string() || !doc["rubric"].is_string() {
             return Err("not an assessment (needs entity and rubric)".into());
         }
-        let id = seikika_connect::assessment::external_id(&doc);
-        Ok((
-            id,
-            seikika_connect::assessment::record_in(&doc, Some(rel), Some(&self.root)),
-        ))
+        let mut record = record_in(&doc, Some(rel), Some(&self.root));
+        if let Some((valid, current)) = metadata {
+            record["rubricValid"] = json!(valid);
+            record["rubricCurrent"] = json!(current);
+        }
+        Ok((external_id(&doc), record))
     }
 
     fn emit_betterer(&self, paths: &[String], kinds: &[&str], out: &mut Out) {
@@ -1053,13 +1133,28 @@ impl Workspace {
 
     fn refresh(&self, cmd: &Value, out: &mut Out) -> Result<(), String> {
         let mut crates = BTreeSet::new();
+        let mut assessments = BTreeSet::new();
         for id in cmd["external_ids"]
             .as_array()
             .into_iter()
             .flatten()
             .filter_map(Value::as_str)
         {
-            self.refresh_id(id, &mut crates, out);
+            if id.starts_with("assessment:") {
+                assessments.insert(id);
+            } else {
+                self.refresh_id(id, &mut crates, out);
+            }
+        }
+        if !assessments.is_empty() {
+            for (id, data) in self.assessment_records(&self.walk(), out)? {
+                if assessments.remove(id.as_str()) {
+                    out.record("assessment", &id, data);
+                }
+            }
+            for id in assessments {
+                out.not_found("assessment", id);
+            }
         }
         if !crates.is_empty() {
             self.emit_crates(Some(&crates), out)?;
@@ -1396,7 +1491,7 @@ impl Source for Workspace {
         kinds.extend(&declared);
         let refresh: Map<String, Value> = kinds
             .iter()
-            .filter(|k| !matches!(**k, "betterer" | "assessment"))
+            .filter(|k| **k != "betterer")
             .map(|k| (k.to_string(), json!(["external_ids"])))
             .collect();
         json!({"refresh": refresh, "resync": kinds, "max_concurrency": 1})

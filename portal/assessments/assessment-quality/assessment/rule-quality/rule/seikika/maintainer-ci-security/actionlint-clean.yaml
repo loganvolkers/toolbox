@@ -25,11 +25,12 @@ verdicts:
     verdict: pass
     reason: >-
       hard-to-game fails rightly. The rubric names a suppression
-      (portal/standards/meta.yaml:1165-1166), and actionlint's `paths:` ignore
-      regexes are read from .github/actionlint.yaml with no portal record of
-      them. This repository has no .github/actionlint.yaml, as the reason
-      says. No other route is missed: actionlint has no inline-ignore comment,
-      and shellcheck is off, so no `# shellcheck disable` applies.
+      (https://github.com/seikika/seikika/blob/05510a57fafd8707979370858b578b78b935cf0e/portal/standards/meta.yaml#L1165-L1166),
+      and actionlint's `paths:` ignore regexes are read from
+      .github/actionlint.yaml with no portal record of them. This repository
+      has no .github/actionlint.yaml, as the reason says. No other route is
+      missed: actionlint has no inline-ignore comment, and shellcheck is off,
+      so no `# shellcheck disable` applies.
   - criterion: reproducible
     verdict: pass
     reason: >-

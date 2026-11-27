@@ -1,0 +1,33 @@
+apiVersion: seikika.com/assessment/v1
+entity: assessment:rule-quality/rule:astryx/published-dependencies/release-check-passes
+rubric: assessment-quality
+subjectHash: 214a6218cc36
+rubricHash: e30700fc6322cf9f05a301bb4638d6708e9f5eb5aea0281911229ce75bd37bf7
+assessor: {kind: agent, name: codex-astra-fork-a, model: gpt-6.2-astra}
+at: 2026-11-27
+verdicts:
+  - criterion: supported
+    verdict: pass
+    reason: >-
+      The adapter uses scripts/npm/published-manifests.mjs, emits both
+      conflicting manifest paths, and reports current and expected versions
+      for the peer drift described by the author.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      The .seikika/seikika.yaml fix now covers dependency drift, duplicate
+      identities and an empty inventory; scripts/npm/published-manifests.mjs
+      defines the discovery roots and release exceptions.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      Moving packages/ out of its discovery root caused
+      .seikika/check-published-dependencies.mjs to report an empty inventory.
+      Restoring those manifests as directed in .seikika/seikika.yaml returned
+      exit zero.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      All original verdicts are pass. The assessment attaches no suggestions
+      that would direct a maintainer to change a different entity. See
+      .seikika/assessments/rule-quality/rule/astryx/published-dependencies/release-check-passes.yaml.

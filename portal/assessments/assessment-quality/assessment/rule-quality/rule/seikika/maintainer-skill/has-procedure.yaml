@@ -25,10 +25,10 @@ verdicts:
     reason: >-
       Both fails are grounded in step_line, and threshold-justified unsure is
       the rubric's own instruction when no source states the number
-      (portal/standards/meta.yaml:1179-1180). No live skill has numbered lines
-      inside a fence today. The reason doesn't claim one, so the
-      measures-intent fail rests on the latent route plus the observed
-      clustering.
+      (https://github.com/seikika/seikika/blob/05510a57fafd8707979370858b578b78b935cf0e/portal/standards/meta.yaml#L1179-L1180).
+      No live skill has numbered lines inside a fence today. The reason
+      doesn't claim one, so the measures-intent fail rests on the latent route
+      plus the observed clustering.
   - criterion: reproducible
     verdict: pass
     reason: >-

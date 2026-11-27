@@ -13,14 +13,16 @@ verdicts:
       lifecycle with confirm tokens and verification, and approval grants
       (crates/seikika-exec/src/lib.rs:1-5). The forge/CI split keeps that one
       job: a forge driver only opens a review and names a token's user, and CI
-      is explicitly not a forge capability (src/forge/mod.rs:1-5); a CI driver
-      only starts, tracks and reads back a run (src/ci/mod.rs:1-14). That is
-      the built M5 layer in docs/design/action-runs.md:9-16 and the split in
-      docs/design/forges.md:15-22 (D01M87T16JRH53YV6VVWM8PH169). The spec cell
-      is behind the crate: docs/v1-spec.md:95 still says only the Executor
-      trait plus stdio, HTTP, GitHub Actions and webhook, and the diagram
-      still draws runs and exec as two roles (v1-spec.md:78-79). The crate
-      docs, not that cell, are what the code does, and they describe one job.
+      is explicitly not a forge capability
+      (crates/seikika-exec/src/forge/mod.rs:1-5); a CI driver only starts,
+      tracks and reads back a run (crates/seikika-exec/src/ci/mod.rs:1-14).
+      That is the built M5 layer in docs/design/action-runs.md:9-16 and the
+      split in docs/design/forges.md:15-22 (D01M87T16JRH53YV6VVWM8PH169). The
+      spec cell is behind the crate: docs/v1-spec.md:95 still says only the
+      Executor trait plus stdio, HTTP, GitHub Actions and webhook, and the
+      diagram still draws runs and exec as two roles (v1-spec.md:78-79). The
+      crate docs, not that cell, are what the code does, and they describe one
+      job.
   - criterion: small-contract
     verdict: fail
     reason: >-
@@ -30,18 +32,21 @@ verdicts:
       crates/seikika-api/src/actions.rs:880), and the CLI also assigns
       `"awaiting_approval"` before replaying a grant
       (crates/seikika-cli/src/run.rs:756). `Run::set` is what records the
-      event (src/run.rs:261-268), so those transitions leave no event, and
-      `state` is a free string checked only against `TERMINAL`
-      (src/run.rs:247-258). The CLI also downcasts the `Executor` trait object
-      to the concrete `Change` and `Command` types and reads their public
-      `remote` and `base` fields
+      event (crates/seikika-exec/src/run.rs:261-268), so those transitions
+      leave no event, and `state` is a free string checked only against
+      `TERMINAL` (crates/seikika-exec/src/run.rs:247-258). The CLI also
+      downcasts the `Executor` trait object to the concrete `Change` and
+      `Command` types and reads their public `remote` and `base` fields
       (crates/seikika-cli/src/action_tests.rs:179-191; the types are
-      src/executor/change.rs:18-31 and src/executor/command.rs:11-15, through
-      `Executor::downcast` at src/executor/mod.rs:161-165). Nine public items
-      have no doc comment, including `Run::set`, `Event`, `Approval`,
-      `TERMINAL` and `Grant` (facts: undocumented). The public
-      `ForgeDriver::auth` also takes `reqwest::RequestBuilder`
-      (src/forge/mod.rs:33); no other crate calls it today.
+      crates/seikika-exec/src/executor/change.rs:18-31 and
+      crates/seikika-exec/src/executor/command.rs:11-15, through
+      `Executor::downcast` at
+      crates/seikika-exec/src/executor/mod.rs:161-165). Nine public items have
+      no doc comment, including `Run::set`, `Event`, `Approval`, `TERMINAL`
+      and `Grant` (facts: undocumented). The public `ForgeDriver::auth` also
+      takes `reqwest::RequestBuilder`
+      (crates/seikika-exec/src/forge/mod.rs:33); no other crate calls it
+      today.
     suggestion: >-
       Make `Run.state` private and route the approved and awaiting-approval
       transitions through `Run::set`, so every change is an event. Stop
@@ -55,35 +60,45 @@ verdicts:
     reason: >-
       The crate wraps none of the charter defaults (cel-rust, OpenFGA, DBOS,
       Postgres, React; charter goal 3). Postconditions go through
-      seikika-expr's `Expr` and `with_vars` (src/check.rs:8,
-      src/check.rs:106-118), not cel's types. reqwest is the HTTP client for
-      the forge and CI drivers (crates/seikika-exec/Cargo.toml:12);
-      seikika-api and seikika-cli depend on reqwest themselves for their own
-      servers, not because this crate's signatures force them to. Swapping
-      reqwest would change `ForgeDriver::auth` only, which no other crate
-      calls.
+      seikika-expr's `Expr` and `with_vars`
+      (crates/seikika-exec/src/check.rs:8,
+      crates/seikika-exec/src/check.rs:106-118), not cel's types. reqwest is
+      the HTTP client for the forge and CI drivers
+      (crates/seikika-exec/Cargo.toml:12); seikika-api and seikika-cli depend
+      on reqwest themselves for their own servers, not because this crate's
+      signatures force them to. Swapping reqwest would change
+      `ForgeDriver::auth` only, which no other crate calls.
   - criterion: tests-match-risk
     verdict: fail
     reason: >-
       The riskiest paths, and where they stand: confirm tokens bind the
-      preview, the actor and the entity, and expire (src/run.rs:701-746); an
-      approval cannot be the requester, and a refusal is recorded
-      (src/run.rs:749-793); a grant opens only with its key, and a forged body
-      does not (src/grant.rs:125-143); the executor protocol and the three CI
-      drivers (GitHub Actions, GitLab CI, the HTTP bridge) are tested against
-      a fake server (src/executor/protocol.rs:495, src/ci/github.rs:257,
-      src/ci/gitlab.rs:260, src/ci/service.rs:193); a landing change is tested
-      against a real git base (src/executor/change.rs:688). Two paths of the
-      same rank have no test in this crate. `verify` is the crate's own
-      invariant, "done means observed" (src/run.rs:10-11, src/run.rs:378-442):
-      nothing in the crate drives a held postcondition, `held_before` ending
-      `unverified`, a non-boolean, or the deadline. The forge half of the
-      split is the same shape of HTTP the CI half tests, and it has none:
-      `Github::open_review` and `Gitlab::open_review` / `whoami`
-      (src/forge/github.rs:26-45, src/forge/mod.rs:62-74) have no
-      `#[cfg(test)]` in `src/forge/`. `prepare` (src/prepare.rs:71) and the
-      precondition loop in `check` (src/check.rs:159-166) are also untested;
-      only `validate_inputs` is (src/check.rs:248).
+      preview, the actor and the entity, and expire
+      (crates/seikika-exec/src/run.rs:701-746); an approval cannot be the
+      requester, and a refusal is recorded
+      (crates/seikika-exec/src/run.rs:749-793); a grant opens only with its
+      key, and a forged body does not
+      (crates/seikika-exec/src/grant.rs:125-143); the executor protocol and
+      the three CI drivers (GitHub Actions, GitLab CI, the HTTP bridge) are
+      tested against a fake server
+      (crates/seikika-exec/src/executor/protocol.rs:495,
+      crates/seikika-exec/src/ci/github.rs:257,
+      crates/seikika-exec/src/ci/gitlab.rs:260,
+      crates/seikika-exec/src/ci/service.rs:193); a landing change is tested
+      against a real git base
+      (crates/seikika-exec/src/executor/change.rs:688). Two paths of the same
+      rank have no test in this crate. `verify` is the crate's own invariant,
+      "done means observed" (crates/seikika-exec/src/run.rs:10-11,
+      crates/seikika-exec/src/run.rs:378-442): nothing in the crate drives a
+      held postcondition, `held_before` ending `unverified`, a non-boolean, or
+      the deadline. The forge half of the split is the same shape of HTTP the
+      CI half tests, and it has none: `Github::open_review` and
+      `Gitlab::open_review` / `whoami`
+      (crates/seikika-exec/src/forge/github.rs:26-45,
+      crates/seikika-exec/src/forge/mod.rs:62-74) have no `#[cfg(test)]` in
+      `crates/seikika-exec/src/forge/`. `prepare`
+      (crates/seikika-exec/src/prepare.rs:71) and the precondition loop in
+      `check` (crates/seikika-exec/src/check.rs:159-166) are also untested;
+      only `validate_inputs` is (crates/seikika-exec/src/check.rs:248).
     suggestion: >-
       Add a `verify` test with a fake `Observer` for a postcondition that
       holds, one that already held, a non-boolean, and a deadline of zero. Add

@@ -42,6 +42,7 @@ walked.
 | `workflows` | `[]` | Globs: `workflow` records for GitHub Actions workflows, and `action-ref` records for the actions they use |
 | `betterer` | `[]` | Globs: one `betterer` record per test in each Betterer results file |
 | `skills`, `connectors`, `agentDocs`, `plugins`, `packages`, `schemas`, `examples`, `pages`, `assessments` | `[]` | Globs for Seikika's own standards (`skill`, `connector`, `agent-doc`, `plugin`, `package-json`, `json-schema`, `example`, `site-page`, `assessment` records) |
+| `assessmentManifest` | absent | Portal path relative to `root`. Validates assessment files and checks whether each one covers the current rubric and records its hash. |
 | `standardPackages` | `[]` | Globs for Seikika package manifests, usually `packages/*/seikika-package.yaml` |
 | `dependencies` | `false` | One `dependency` record per direct external Cargo dependency |
 | `jsWorkspace` | `false` | One `js-workspace` record: pnpm or npm workspace, lockfile, `packageManager` pin |

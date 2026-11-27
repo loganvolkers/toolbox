@@ -1,0 +1,33 @@
+apiVersion: seikika.com/assessment/v1
+entity: rule:seikika-organization/workflow-zizmor/zizmor-no-high
+rubric: rule-quality
+subjectHash: a0fb90be43b0
+rubricHash: 696a7d3fef1c024786016ca0a353e402b5c1a7aaf7644da6825b20e218dc4a96
+assessor: {kind: agent, name: codex}
+at: 2026-11-27
+verdicts:
+  - criterion: measures-intent
+    verdict: pass
+    reason: >-
+      examples/github-org-federation/workflows.yaml evaluates zero
+      high-severity findings from the pinned workflow's offline zizmor output
+      when that audit completed.
+  - criterion: hard-to-game
+    verdict: pass
+    reason: >-
+      crates/seikika-connector-workspace/src/org_workflows.rs uses an isolated
+      file, disables repository config and ignores, and checks zizmor SARIF
+      completion and result shape. Unexpected severity or incomplete output
+      does not produce an audited workflow.
+  - criterion: fix-leads-to-pass
+    verdict: pass
+    reason: >-
+      examples/github-org-federation/workflows.yaml reports the analyzer
+      finding id, message and line.
+      examples/github-org-federation/standards.test.yaml pins outcomes with
+      and without findings in the rule's scope.
+  - criterion: threshold-justified
+    verdict: pass
+    reason: >-
+      examples/github-org-federation/workflows.yaml prioritizes high findings
+      before medium findings and applies the same cutoff across repositories.

@@ -1,0 +1,35 @@
+apiVersion: seikika.com/assessment/v1
+entity: assessment:rule-quality/rule:seikika-organization/repo-hygiene/codeowners-catch-all
+rubric: assessment-quality
+subjectHash: c12cf4829bff
+rubricHash: e30700fc6322cf9f05a301bb4638d6708e9f5eb5aea0281911229ce75bd37bf7
+assessor: {kind: agent, name: codex-astra-parent-hygiene, model: gpt-6.2-astra}
+at: 2026-11-27
+verdicts:
+  - criterion: supported
+    verdict: pass
+    reason: >-
+      examples/github-org-federation/standards.yaml checks a leading wildcard
+      and a positive recognized-owner count on every parsed rule;
+      examples/github-org-federation/standards.test.yaml covers a later
+      ownerless override.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      examples/github-org-federation/standards.yaml requires a leading
+      wildcard and checks every rule for a recognizable owner. The revised
+      tokenization in crates/seikika-connector-workspace/src/repo.rs leaves
+      tab-comment-only overrides ownerless.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      The current parser in crates/seikika-connector-workspace/src/repo.rs
+      returned zero owners for an override with only a handle in a
+      tab-separated comment, so the all-rules predicate in
+      examples/github-org-federation/standards.yaml rejects it.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      examples/github-org-federation/assessments/rule-quality/rule/seikika-organization/repo-hygiene/codeowners-catch-all.yaml
+      contains only original pass judgments and attaches no suggestions that
+      could misdirect a repair.

@@ -1,0 +1,36 @@
+apiVersion: seikika.com/assessment/v1
+entity: assessment:rule-quality/rule:seikika-organization/repo-hygiene/has-codeowners
+rubric: assessment-quality
+subjectHash: 1a5b22c7583c
+rubricHash: e30700fc6322cf9f05a301bb4638d6708e9f5eb5aea0281911229ce75bd37bf7
+assessor: {kind: agent, name: codex-astra-parent-hygiene, model: gpt-6.2-astra}
+at: 2026-11-27
+verdicts:
+  - criterion: supported
+    verdict: pass
+    reason: >-
+      crates/seikika-connector-workspace/src/repo.rs counts syntactically
+      recognized tokens; examples/github-org-federation/standards.yaml
+      requires a positive count and
+      examples/github-org-federation/standards.test.yaml covers email and a
+      malformed handle.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      crates/seikika-connector-workspace/src/repo.rs now stops before comments
+      at any whitespace boundary and validates handle shape before counting
+      recognizable owners. This supports the bronze static ownership criterion
+      in examples/github-org-federation/standards.yaml.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      Compiling the current parsing functions from
+      crates/seikika-connector-workspace/src/repo.rs independently reproduced
+      zero valid owners for /private/ followed by a tab and # @team; a real
+      handle before the tab still counted.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      examples/github-org-federation/assessments/rule-quality/rule/seikika-organization/repo-hygiene/has-codeowners.yaml
+      contains only original pass judgments and attaches no suggestions that
+      could misdirect a repair.

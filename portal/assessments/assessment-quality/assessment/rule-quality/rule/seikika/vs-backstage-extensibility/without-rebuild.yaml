@@ -27,7 +27,7 @@ verdicts:
       which facts.yaml:68-69 already says. hard-to-game and fix-leads-to-pass
       fail for the same facts.yaml reasons as the sibling rules. A fix that
       names only a design doc is "vague"
-      (portal/standards/meta.yaml:1172-1173).
+      (https://github.com/seikika/seikika/blob/05510a57fafd8707979370858b578b78b935cf0e/portal/standards/meta.yaml#L1172-L1173).
   - criterion: reproducible
     verdict: pass
     reason: >-

@@ -1,0 +1,35 @@
+apiVersion: seikika.com/assessment/v1
+entity: assessment:rule-quality/rule:seikika-organization/repo-hygiene/owner-handles-consistent
+rubric: assessment-quality
+subjectHash: d5154371b814
+rubricHash: e30700fc6322cf9f05a301bb4638d6708e9f5eb5aea0281911229ce75bd37bf7
+assessor: {kind: agent, name: codex-astra-parent-hygiene, model: gpt-6.2-astra}
+at: 2026-11-27
+verdicts:
+  - criterion: supported
+    verdict: pass
+    reason: >-
+      crates/seikika-connector-workspace/src/repo.rs rejects trailing or
+      doubled hyphens and mixed styles;
+      examples/github-org-federation/standards.yaml allows either uniform
+      style as documented.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      crates/seikika-connector-workspace/src/repo.rs removes comments before
+      evaluating handles and enforces the login-length boundary in addition to
+      token shape and consistent style. These checks support the bounded
+      convention in examples/github-org-federation/standards.yaml.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      An independent Rust replay of the functions from
+      crates/seikika-connector-workspace/src/repo.rs preserved the sole team
+      handle before a tab comment and accepted 39 login characters while
+      rejecting 40.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      examples/github-org-federation/assessments/rule-quality/rule/seikika-organization/repo-hygiene/owner-handles-consistent.yaml
+      contains only original pass judgments and attaches no suggestions that
+      could misdirect a repair.

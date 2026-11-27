@@ -1,26 +1,78 @@
 kinds:
   - name: Repository
     title: GitHub repository
+    description: >-
+      Repositories in the organization, with hygiene facts and a child
+      publication when available.
     identityFrom: [connector:github-org]
     fields:
-      name: {type: string}
-      repositoryUrl: {type: string}
-      sourceUrl: {type: string}
-      defaultBranch: {type: string}
-      visibility: {type: string}
-      scanned: {type: boolean}
-      scanError: {type: string}
-      commit: {type: string}
-      workflowError: {type: string}
-      report: {type: object, facet: operator}
-      reportError: {type: string, facet: operator}
-      portalPresent: {type: boolean}
-      readme: {type: string}
-      readmeWords: {type: integer}
-      license: {type: string}
-      codeowners: {type: object}
-      owners: {type: list, items: string}
-      ownersOk: {type: boolean}
+      name:
+        type: string
+        description: Repository name without the organization.
+      repositoryUrl: {type: string, description: GitHub repository page.}
+      sourceUrl:
+        type: string
+        description: GitHub tree at the scanned revision.
+      defaultBranch:
+        type: string
+        description: Default branch reported by GitHub.
+      visibility:
+        type: string
+        description: Repository visibility reported by GitHub.
+      scanned:
+        type: boolean
+        description: Whether the pinned tree was successfully read.
+      scanError:
+        type: string
+        description: Reason the pinned tree could not be read, when unavailable.
+      commit:
+        type: string
+        description: Pinned default-branch commit used for evidence.
+      workflowError:
+        type: string
+        description: Reason workflow collection could not finish.
+      report:
+        type: object
+        facet: operator
+        description: Published child snapshot at the same commit, scoped to operators.
+      reportError:
+        type: string
+        facet: operator
+        description: Reason the child publication could not be read, scoped to operators.
+      portalPresent:
+        type: boolean
+        description: Whether the pinned tree contains a Seikika manifest.
+      readme:
+        type: string
+        description: Path of the README in the pinned tree.
+      readmeWords:
+        type: integer
+        description: Word count of the bounded README content.
+      readmeEntrypoint:
+        type: boolean
+        description: Whether the path is a recognized root README name.
+      licenseHasContent:
+        type: boolean
+        description: >-
+          Whether the scanner read nonblank text in a recognized root license
+          file.
+      license:
+        type: string
+        description: Path of the license or copying file in the pinned tree.
+      codeowners:
+        type: object
+        description: >-
+          Parsed CODEOWNERS path and ordered rules with raw owners and
+          recognizable owner counts.
+      owners:
+        type: list
+        items: string
+        description: Distinct owner handles in the parsed CODEOWNERS rules.
+      ownersOk:
+        type: boolean
+        description: >-
+          Whether all owner identifiers are team handles or all are personal
+          handles.
     sources: {default: [connector:github-org]}
     map:
     - from: github-org/federated-repo
@@ -34,6 +86,7 @@ kinds:
         null, 'report': has(record.report) ? record.report : null,
         'reportError': has(record.reportError) ? record.reportError : null,
         'portalPresent': record.portalPresent, 'readme': record.readme,
-        'readmeWords': record.readmeWords, 'license': record.license,
-        'codeowners': record.codeowners, 'owners': record.owners, 'ownersOk':
-        record.ownersOk}
+        'readmeWords': record.readmeWords, 'readmeEntrypoint':
+        record.readmeEntrypoint, 'license': record.license, 'licenseHasContent':
+        record.licenseHasContent, 'codeowners': record.codeowners, 'owners':
+        record.owners, 'ownersOk': record.ownersOk}

@@ -1,0 +1,35 @@
+apiVersion: seikika.com/assessment/v1
+entity: rule:seikika-organization/repo-hygiene/has-license-file
+rubric: rule-quality
+subjectHash: 79bd5c78ec63
+rubricHash: 696a7d3fef1c024786016ca0a353e402b5c1a7aaf7644da6825b20e218dc4a96
+assessor: {kind: agent, name: codex}
+at: 2026-11-27
+verdicts:
+  - criterion: measures-intent
+    verdict: pass
+    reason: >-
+      examples/github-org-federation/standards.yaml checks that the scanner
+      observed text in a recognized file.
+      examples/github-org-federation/standards.test.yaml shows a recognized
+      blank file still fails.
+  - criterion: hard-to-game
+    verdict: pass
+    reason: >-
+      crates/seikika-connector-workspace/src/repo.rs checks recognized root
+      LICENSE and COPYING paths for nonblank text, keeping a companion blank
+      COPYING file from masking a populated LICENSE. The tests in
+      crates/seikika-connector-workspace/src/repo.rs pin this behavior.
+  - criterion: fix-leads-to-pass
+    verdict: pass
+    reason: >-
+      examples/github-org-federation/standards.yaml identifies a missing root
+      license or reports that recognized text could not be read. Adding a
+      recognized root file with the repository's reuse terms reaches the check
+      when read successfully.
+  - criterion: threshold-justified
+    verdict: pass
+    reason: >-
+      examples/github-org-federation/standards.yaml places the file at silver
+      above entry-point documentation and team routing. The licensing
+      reference states the reuse problem the card addresses.

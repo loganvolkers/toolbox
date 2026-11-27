@@ -1,0 +1,33 @@
+apiVersion: seikika.com/assessment/v1
+entity: assessment:rule-quality/rule:open-code-review/npm-platform-packages/release-check-passes
+rubric: assessment-quality
+subjectHash: 50ff35310f85
+rubricHash: e30700fc6322cf9f05a301bb4638d6708e9f5eb5aea0281911229ce75bd37bf7
+assessor: {kind: agent, name: codex-astra-fork-b, model: gpt-6.2-astra}
+at: 2026-11-27
+verdicts:
+  - criterion: supported
+    verdict: pass
+    reason: >-
+      The threshold reason now distinguishes the committed package.json
+      baseline used by .seikika/check-platform-packages.mjs from the
+      publication-time tag rewrite in .github/workflows/release.yml:307-326.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      The release target list in .github/workflows/release.yml, template
+      equality, binary threshold and corrective diagnostics in
+      .seikika/check-platform-packages.mjs support all four original verdicts.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      .seikika/tests/release.test.yaml exercises both a drifted version and
+      paired removal of npm/linux-x64 and its launcher declaration. These are
+      deterministic failures of .seikika/check-platform-packages.mjs; a clean
+      checkout passes.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      .seikika/assessments/rule-quality/rule/open-code-review/npm-platform-packages/release-check-passes.yaml
+      records pass on every criterion and contains no corrective suggestion
+      directed at another entity.

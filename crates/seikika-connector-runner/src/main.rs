@@ -71,6 +71,7 @@ struct Runner {
 /// Captured output of one command.
 struct Run {
     ok: bool,
+    exit_code: Option<i32>,
     stdout: String,
     stderr: String,
     millis: u64,
@@ -250,8 +251,12 @@ impl Runner {
                     | "actionlint"
                     | "semgrep"
                     | "scorecard"
+                    | "exit"
             ) {
                 return Err(format!("job {name}: unknown parser {parse}"));
+            }
+            if parse == "exit" && j["per"] == "crate" {
+                return Err(format!("job {name}: exit parser requires a single command"));
             }
             let kinds = j["kinds"]
                 .as_array()
@@ -305,12 +310,14 @@ impl Runner {
         match out {
             Ok(o) => Run {
                 ok: o.status.success(),
+                exit_code: o.status.code(),
                 stdout: String::from_utf8_lossy(&o.stdout).into_owned(),
                 stderr: String::from_utf8_lossy(&o.stderr).into_owned(),
                 millis,
             },
             Err(e) => Run {
                 ok: false,
+                exit_code: None,
                 stdout: String::new(),
                 stderr: format!("cannot run {}: {e}", argv[0]),
                 millis,
@@ -507,6 +514,42 @@ impl Runner {
         Ok(())
     }
 
+    /// Run a repository check whose ordinary exit code is its verdict.
+    async fn run_exit(&self, job: &Job, out: &mut Sink<'_>) -> Result<(), String> {
+        let run = self.run(&job.command).await;
+        let Some(code) = run.exit_code else {
+            if job.optional && run.stderr.starts_with("cannot run ") {
+                out.log(
+                    "warning",
+                    &format!("job {}: {}; skipped (optional)", job.name, run.stderr),
+                );
+                return Ok(());
+            }
+            return Err(format!(
+                "job {} did not exit normally: {}",
+                job.name,
+                tail(&run.stderr, 500)
+            ));
+        };
+        let evidence: Vec<String> = if code == 0 {
+            Vec::new()
+        } else {
+            [run.stderr.as_str(), run.stdout.as_str()]
+                .into_iter()
+                .map(|output| tail(output, 2000).trim().to_owned())
+                .filter(|output| !output.is_empty())
+                .collect()
+        };
+        out.record(
+            &job.name,
+            &format!("{}:check", job.name),
+            json!({
+                "name": job.name, "command": shell_words(&job.command), "exitCode": code, "evidence": evidence
+            }),
+        );
+        Ok(())
+    }
+
     async fn run_ndjson(&self, job: &Job, out: &mut Sink<'_>) -> Result<(), String> {
         let run = self.run(&job.command).await;
         if !run.ok {
@@ -529,6 +572,16 @@ impl Runner {
         Ok(())
     }
 
+    async fn run_job(&self, job: &Job, out: &mut Sink<'_>) -> Result<(), String> {
+        match job.parse.as_str() {
+            "tally" => self.run_tally(job, out).await,
+            "exit" => self.run_exit(job, out).await,
+            "scorecard" => self.run_scorecard(job, out).await,
+            "sarif" | "zizmor" | "actionlint" | "semgrep" => self.run_lint(job, out).await,
+            _ => self.run_ndjson(job, out).await,
+        }
+    }
+
     /// Run every job (resync), or only the jobs and crates named by `ids` (refresh).
     async fn execute(
         &self,
@@ -549,18 +602,7 @@ impl Runner {
             if job.per_crate {
                 self.execute_per_crate(job, &crates, ids, out).await;
             } else if self.selected(job, ids) {
-                if job.parse == "tally" {
-                    self.run_tally(job, out).await?;
-                } else if job.parse == "scorecard" {
-                    self.run_scorecard(job, out).await?;
-                } else if matches!(
-                    job.parse.as_str(),
-                    "sarif" | "zizmor" | "actionlint" | "semgrep"
-                ) {
-                    self.run_lint(job, out).await?;
-                } else {
-                    self.run_ndjson(job, out).await?;
-                }
+                self.run_job(job, out).await?;
             } else {
                 continue;
             }
@@ -803,6 +845,7 @@ mod tests {
     fn run(ok: bool, stdout: &str) -> Run {
         Run {
             ok,
+            exit_code: Some(if ok { 0 } else { 1 }),
             stdout: stdout.into(),
             stderr: String::new(),
             millis: 5,

@@ -1,0 +1,36 @@
+apiVersion: seikika.com/assessment/v1
+entity: rule:seikika-organization/repo-hygiene/codeowners-catch-all
+rubric: rule-quality
+subjectHash: e57599921fcd
+rubricHash: 696a7d3fef1c024786016ca0a353e402b5c1a7aaf7644da6825b20e218dc4a96
+assessor: {kind: agent, name: codex}
+at: 2026-11-27
+verdicts:
+  - criterion: measures-intent
+    verdict: pass
+    reason: >-
+      examples/github-org-federation/standards.yaml enforces the leading *
+      convention and rejects any parsed rule without a recognizable owner.
+      examples/github-org-federation/standards.test.yaml covers both a late
+      catch-all and a later ownerless override.
+  - criterion: hard-to-game
+    verdict: pass
+    reason: >-
+      crates/seikika-connector-workspace/src/repo.rs separates recognizable
+      identifiers from raw tokens.
+      examples/github-org-federation/standards.test.yaml verifies that a later
+      ownerless rule cannot qualify for silver even with a valid leading
+      wildcard.
+  - criterion: fix-leads-to-pass
+    verdict: pass
+    reason: >-
+      examples/github-org-federation/standards.yaml names the first-rule
+      requirement and reports each ownerless rule with the CODEOWNERS path and
+      line. The maintainer can assign owners or remove rules that clear the
+      default.
+  - criterion: threshold-justified
+    verdict: pass
+    reason: >-
+      examples/github-org-federation/standards.yaml uses silver for an
+      ownership convention that builds on the bronze requirement for any owned
+      rule.

@@ -1,0 +1,3 @@
+{"type":"record","kind":"staging-workspace","externalId":"staging-workspace:staging-workspace","data":{"name":"staging-workspace","command":"python3 .seikika/check-staging-workspace.py","exitCode":0,"evidence":[]}}
+{"type":"record","kind":"staging-workspace","externalId":"staging-workspace:broken","data":{"name":"broken","command":"python3 .seikika/check-staging-workspace.py","exitCode":1,"evidence":["go.work is missing ./staging/src/k8s.io/api"]}}
+{"type":"record","kind":"staging-workspace","externalId":"staging-workspace:standalone","data":{"name":"standalone","command":"python3 .seikika/check-staging-workspace.py","exitCode":1,"evidence":["go.work lists an unexpected member missing"]}}

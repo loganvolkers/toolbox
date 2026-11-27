@@ -1,0 +1,23 @@
+name: Kubernetes packaging contract
+assert:
+  - name: The pinned package contract reaches ready
+    expect: >-
+      score('staging-workspace', 'staging-workspace:staging-workspace').level
+      == 'ready' && score('staging-workspace',
+      'staging-workspace:staging-workspace').rules['release-check-passes'] ==
+      'pass'
+  - name: A broken package contract reports the specific mismatch
+    expect: >-
+      score('staging-workspace',
+      'staging-workspace:broken').rules['release-check-passes'] == 'fail' &&
+      score('staging-workspace',
+      'staging-workspace:broken').evidence['release-check-passes'] == ['Exit
+      1: python3 .seikika/check-staging-workspace.py', 'go.work is missing
+      ./staging/src/k8s.io/api']
+  - name: Reject an extra standalone use directive
+    expect: >-
+      score('staging-workspace',
+      'staging-workspace:standalone').rules['release-check-passes'] == 'fail'
+      && score('staging-workspace',
+      'staging-workspace:standalone').evidence['release-check-passes'][1].contains('go.work
+      lists an unexpected member missing')

@@ -1,0 +1,33 @@
+apiVersion: seikika.com/assessment/v1
+entity: assessment:scorecard-quality/scorecard:open-code-review/npm-platform-packages
+rubric: assessment-quality
+subjectHash: 9997c83075ac
+rubricHash: e30700fc6322cf9f05a301bb4638d6708e9f5eb5aea0281911229ce75bd37bf7
+assessor: {kind: agent, name: codex-astra-fork-b, model: gpt-6.2-astra}
+at: 2026-11-27
+verdicts:
+  - criterion: supported
+    verdict: pass
+    reason: >-
+      .seikika/check-platform-packages.mjs checks
+      .github/workflows/release.yml targets alongside platform identity,
+      version, selectors and optional dependency membership, as described.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      .seikika/seikika.yaml defines one binary launcher-metadata concern.
+      .seikika/tests/release.test.yaml verifies specific path diagnostics for
+      version drift and paired target omission.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      .seikika/check-platform-packages.mjs reports the workflow requirement
+      for the omitted npm/linux-x64/package.json;
+      .seikika/fixtures/release-check.ndjson records that result and the
+      separate expected-version diagnostic.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      .seikika/assessments/scorecard-quality/scorecard/open-code-review/npm-platform-packages.yaml
+      records pass on every criterion and contains no corrective suggestion
+      directed at another entity.

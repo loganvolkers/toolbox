@@ -13,19 +13,24 @@ verdicts:
       (crates/seikika-model/src/lib.rs:1-6, docs/v1-spec.md:88). The crate now
       also owns work those sentences do not mention. After the forge/CI split,
       `forge` resolves a git URL to a host, its API and its token
-      (src/forge.rs:1-4, src/forge.rs:151-203) and `ci` decides which CI host
-      a project runs on, including `ci: none` (src/ci.rs:1-5,
-      src/ci.rs:152-174; D01M87T16JRH53YV6VVWM8PH169). Beside that,
-      `artifacts` names release assets and the install cache
-      (src/artifacts.rs:1-5, D90), `package` parses git package specs and
-      their cache (src/package.rs:1-7, D89), `federation` expands children and
-      picks the state directory (src/federation.rs:1-14,
-      src/federation.rs:19-27), and `executors` is the type table validation
-      and seikika-exec both read (src/executors.rs:1-3). Two identical
-      `cache_dir` functions disagree in the details (src/artifacts.rs:83-89,
-      src/package.rs:71-80). Most of this interprets a manifest declaration,
-      but the crate docs are stale relative to the code, and the disk-layout
-      helpers are a second job.
+      (crates/seikika-model/src/forge.rs:1-4,
+      crates/seikika-model/src/forge.rs:151-203) and `ci` decides which CI
+      host a project runs on, including `ci: none`
+      (crates/seikika-model/src/ci.rs:1-5,
+      crates/seikika-model/src/ci.rs:152-174; D01M87T16JRH53YV6VVWM8PH169).
+      Beside that, `artifacts` names release assets and the install cache
+      (crates/seikika-model/src/artifacts.rs:1-5, D90), `package` parses git
+      package specs and their cache (crates/seikika-model/src/package.rs:1-7,
+      D89), `federation` expands children and picks the state directory
+      (crates/seikika-model/src/federation.rs:1-14,
+      crates/seikika-model/src/federation.rs:19-27), and `executors` is the
+      type table validation and seikika-exec both read
+      (crates/seikika-model/src/executors.rs:1-3). Two identical `cache_dir`
+      functions disagree in the details
+      (crates/seikika-model/src/artifacts.rs:83-89,
+      crates/seikika-model/src/package.rs:71-80). Most of this interprets a
+      manifest declaration, but the crate docs are stale relative to the code,
+      and the disk-layout helpers are a second job.
     suggestion: >-
       Extend the crate doc and the docs/v1-spec.md:88 row so they say the
       crate owns the manifest and what a declaration names: forges, CI hosts,
@@ -41,53 +46,62 @@ verdicts:
       `ci` from ten files, and seikika-cli calls `load`. They do not reach
       into private modules. The contract is still not a documented one.
       Twenty-two public items have no doc comment, including `Manifest`,
-      `Kind`, `Scorecard`, `Rule` and `Action` (src/manifest.rs:10 and the
-      facts list `undocumented`; the module comment at src/manifest.rs:1-2
-      does not document those structs). A third-party type also crosses.
-      `schema::manifest`, `connector_messages`, `executor_messages` and
-      `assessment` return `&'static jsonschema::Validator` (src/schema.rs:4,
-      src/schema.rs:28-49). seikika-exec calls `is_valid` and `iter_errors` on
-      that value (crates/seikika-exec/src/executor/webhook.rs:97,
+      `Kind`, `Scorecard`, `Rule` and `Action`
+      (crates/seikika-model/src/manifest.rs:10 and the facts list
+      `undocumented`; the module comment at
+      crates/seikika-model/src/manifest.rs:1-2 does not document those
+      structs). A third-party type also crosses. `schema::manifest`,
+      `connector_messages`, `executor_messages` and `assessment` return
+      `&'static jsonschema::Validator` (crates/seikika-model/src/schema.rs:4,
+      crates/seikika-model/src/schema.rs:28-49). seikika-exec calls `is_valid`
+      and `iter_errors` on that value
+      (crates/seikika-exec/src/executor/webhook.rs:97,
       crates/seikika-exec/src/executor/protocol.rs:487-491) without jsonschema
       in its own Cargo.toml, so the method set is jsonschema's.
     suggestion: >-
-      Document `Manifest` and the other public structs in src/manifest.rs,
-      even if only with the sentence the module already says. Stop returning
-      `Validator`: have callers use `schema::errors` and
-      `schema::input_errors`, and add `schema::valid` if a bool is all they
-      need, so no signature names a jsonschema type.
+      Document `Manifest` and the other public structs in
+      crates/seikika-model/src/manifest.rs, even if only with the sentence the
+      module already says. Stop returning `Validator`: have callers use
+      `schema::errors` and `schema::input_errors`, and add `schema::valid` if
+      a bool is all they need, so no signature names a jsonschema type.
   - criterion: replaceable-defaults
     verdict: pass
     reason: >-
       The crate wraps none of the charter defaults (cel-rust, OpenFGA, DBOS,
       Postgres, React). CEL checks go through seikika-expr (`Checker::cel`
-      calls into that crate; src/validate.rs:952). The JSON Schema compiler is
-      jsonschema 0.61 (crates/seikika-model/Cargo.toml:11, workspace pin
-      Cargo.toml:23), and no other crate lists it. That leak of `Validator` is
-      the small-contract failure above, not one of the defaults charter goal 3
-      names. serde and serde_json are the manifest's encoding, used the same
-      way by every crate, not a swappable engine.
+      calls into that crate; crates/seikika-model/src/validate.rs:952). The
+      JSON Schema compiler is jsonschema 0.61
+      (crates/seikika-model/Cargo.toml:11, workspace pin Cargo.toml:23), and
+      no other crate lists it. That leak of `Validator` is the small-contract
+      failure above, not one of the defaults charter goal 3 names. serde and
+      serde_json are the manifest's encoding, used the same way by every
+      crate, not a swappable engine.
   - criterion: tests-match-risk
     verdict: pass
     reason: >-
       The riskiest paths are the ones that accept a manifest. Each has a
       direct test. Forge URL resolution, including SSH hosts, path prefixes
-      and the hybrid-org example, is tested in src/forge.rs:240-387. CI host
-      routing, `ci: none`, project templates and the same hybrid example are
-      tested in src/ci.rs:198-302. The cross-reference checker, including the
-      new forge and CI diagnostics, is driven by `validate_portal` against
-      tests/cases.json: the two-identity-forges case, an undeclared
-      `forges[].ci`, a duplicate CI host, an http host without a url, a bad
-      project placeholder, and a gitlab-pipeline pointed at a github-actions
-      host (tests/cases.json:37-44), plus CEL syntax and the wrong variable at
-      a site (tests/cases.json:20-22). Include merge and an error that names
-      the included file are tests/reference.rs:100 and tests/reference.rs:123.
-      Package substitution and the content hash are src/package.rs:284-378.
-      What is not tested is the wording in `schema::errors`: the "this value"
-      shortening and the action `anyOf` hint (src/schema.rs:52-70). The
-      schemas themselves are only checked to compile and to reject `42`
-      (src/schema.rs:92-98). That is a message, not the accept/reject decision
-      the cases already lock.
+      and the hybrid-org example, is tested in
+      crates/seikika-model/src/forge.rs:240-387. CI host routing, `ci: none`,
+      project templates and the same hybrid example are tested in
+      crates/seikika-model/src/ci.rs:198-302. The cross-reference checker,
+      including the new forge and CI diagnostics, is driven by
+      `validate_portal` against crates/seikika-model/tests/cases.json: the
+      two-identity-forges case, an undeclared `forges[].ci`, a duplicate CI
+      host, an http host without a url, a bad project placeholder, and a
+      gitlab-pipeline pointed at a github-actions host
+      (crates/seikika-model/tests/cases.json:37-44), plus CEL syntax and the
+      wrong variable at a site (crates/seikika-model/tests/cases.json:20-22).
+      Include merge and an error that names the included file are
+      crates/seikika-model/tests/reference.rs:100 and
+      crates/seikika-model/tests/reference.rs:123. Package substitution and
+      the content hash are crates/seikika-model/src/package.rs:284-378. What
+      is not tested is the wording in `schema::errors`: the "this value"
+      shortening and the action `anyOf` hint
+      (crates/seikika-model/src/schema.rs:52-70). The schemas themselves are
+      only checked to compile and to reject `42`
+      (crates/seikika-model/src/schema.rs:92-98). That is a message, not the
+      accept/reject decision the cases already lock.
 summary: >-
   seikika-model is the manifest, and after the forge/CI split it also
   resolves forges, CI hosts, packages, release assets and federation

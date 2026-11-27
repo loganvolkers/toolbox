@@ -1,0 +1,32 @@
+apiVersion: seikika.com/assessment/v1
+entity: scorecard:plannotator/release-versions
+rubric: scorecard-quality
+subjectHash: 210f51699730
+rubricHash: 1d01a2d06d609948839eb0695b1bba667b2ebe2c4b50224dbd8ac05d5b3cb334
+assessor: {kind: agent, name: codex}
+at: 2026-11-27
+verdicts:
+  - criterion: one-concern
+    verdict: pass
+    reason: >-
+      .seikika/seikika.yaml covers a single release preflight for plannotator
+      maintainers.
+  - criterion: levels-are-a-ladder
+    verdict: pass
+    reason: >-
+      .seikika/tests/release.test.yaml proves the sole ready level and its
+      failure boundary. A binary prerequisite has no intermediate release
+      status.
+  - criterion: no-obvious-gap
+    verdict: pass
+    reason: >-
+      scripts/check-release-version.mjs checks the local release contract
+      identified by .seikika/seikika.yaml. The card describes the local
+      verification scope.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      .seikika/tests/release.test.yaml confirms the command and its report of
+      apps/pi-extension/package.json at 99.0.0 alongside package.json at
+      0.29.5. scripts/check-release-version.test.ts independently checks the
+      same stale integration case at the source.

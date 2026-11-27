@@ -1,0 +1,32 @@
+apiVersion: seikika.com/assessment/v1
+entity: assessment:rule-quality/rule:impeccable/engine-distribution/release-check-passes
+rubric: assessment-quality
+subjectHash: 842f4772126c
+rubricHash: e30700fc6322cf9f05a301bb4638d6708e9f5eb5aea0281911229ce75bd37bf7
+assessor: {kind: agent, name: codex-astra-fork-a, model: gpt-6.2-astra}
+at: 2026-11-27
+verdicts:
+  - criterion: supported
+    verdict: pass
+    reason: >-
+      The .seikika/seikika.yaml contract now specifies matching pins and
+      well-formed nonzero platform digests. The adapter reads the real inputs
+      and enforces this scope.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      All four verdicts fit .seikika/check-engine-pins.mjs: pin agreement,
+      five unique expected rows, digest syntax and rejection of an all-zero
+      placeholder are mechanically checked.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      The pinned inputs passed .seikika/check-engine-pins.mjs. Replacing all
+      five entries in skill/scripts/engine-checksums.txt with zero digests
+      produced five named failures.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      All original verdicts are pass. The assessment attaches no suggestions
+      that would direct a maintainer to change a different entity. See
+      .seikika/assessments/rule-quality/rule/impeccable/engine-distribution/release-check-passes.yaml.

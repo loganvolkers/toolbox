@@ -1,0 +1,24 @@
+name: Engine distribution pins
+assert:
+  - name: A consistent release reaches ready
+    expect: >-
+      score('engine-distribution',
+      'engine-distribution:engine-distribution').level == 'ready' &&
+      score('engine-distribution',
+      'engine-distribution:engine-distribution').rules['release-check-passes']
+      == 'pass'
+  - name: A failed preflight reports the actionable diagnostic
+    expect: >-
+      score('engine-distribution',
+      'engine-distribution:broken').rules['release-check-passes'] == 'fail' &&
+      score('engine-distribution',
+      'engine-distribution:broken').evidence['release-check-passes'] == ['Exit
+      1: node .seikika/check-engine-pins.mjs', 'skill/scripts/VERSION
+      disagrees with ENGINE_VERSION']
+  - name: Reject the zero checksum placeholder
+    expect: >-
+      score('engine-distribution',
+      'engine-distribution:zero-hash').rules['release-check-passes'] == 'fail'
+      && score('engine-distribution',
+      'engine-distribution:zero-hash').evidence['release-check-passes'][1].contains('one
+      nonzero SHA-256 entry for impeccable-darwin-arm64')

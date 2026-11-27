@@ -1,0 +1,19 @@
+name: Release versions aligned
+assert:
+  - name: A consistent release reaches ready
+    expect: >-
+      score('release-versions', 'release-versions:release-versions').level ==
+      'ready' && score('release-versions',
+      'release-versions:release-versions').rules['release-check-passes'] ==
+      'pass'
+  - name: A stale integration reports the version and the expected release version
+    expect: >-
+      score('release-versions',
+      'release-versions:broken').rules['release-check-passes'] == 'fail' &&
+      score('release-versions',
+      'release-versions:broken').evidence['release-check-passes'][0] == 'Exit
+      1: node scripts/check-release-version.mjs' && score('release-versions',
+      'release-versions:broken').evidence['release-check-passes'][1].contains('apps/pi-extension/package.json:
+      99.0.0') && score('release-versions',
+      'release-versions:broken').evidence['release-check-passes'][1].contains('  package.json:
+      0.29.5')

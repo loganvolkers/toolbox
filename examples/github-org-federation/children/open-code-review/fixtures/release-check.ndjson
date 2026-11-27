@@ -1,0 +1,3 @@
+{"type":"record","kind":"npm-platform-packages","externalId":"npm-platform-packages:npm-platform-packages","data":{"name":"npm-platform-packages","command":"node .seikika/check-platform-packages.mjs","exitCode":0,"evidence":[]}}
+{"type":"record","kind":"npm-platform-packages","externalId":"npm-platform-packages:broken","data":{"name":"broken","command":"node .seikika/check-platform-packages.mjs","exitCode":1,"evidence":["npm/linux-x64/package.json has version 0.0.1 instead of 0.0.0"]}}
+{"type":"record","kind":"npm-platform-packages","externalId":"npm-platform-packages:omitted-platform","data":{"name":"omitted-platform","command":"node .seikika/check-platform-packages.mjs","exitCode":1,"evidence":[".github/workflows/release.yml requires npm/linux-x64/package.json"]}}

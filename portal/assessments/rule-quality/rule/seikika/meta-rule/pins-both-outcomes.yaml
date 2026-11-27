@@ -2,54 +2,33 @@ apiVersion: seikika.com/assessment/v1
 entity: rule:seikika/meta-rule/pins-both-outcomes
 rubric: rule-quality
 subjectHash: 483bdf35c191
-assessor: {kind: agent, name: cursor-assessor-02, model: claude-opus-5.5}
-at: 2026-11-25
+rubricHash: 696a7d3fef1c024786016ca0a353e402b5c1a7aaf7644da6825b20e218dc4a96
+assessor: {kind: agent, name: codex}
+at: 2026-11-27
 verdicts:
   - criterion: measures-intent
-    verdict: fail
+    verdict: pass
     reason: >-
-      testedOutcomes comes from a regex over expectation text that sees only
-      `rules['<r>'] == '<outcome>'` or `evidence['<r>']`
-      (crates/seikika-cli/src/meta.rs:31-35, 54-62). A level pin is a real pin
-      it can't read. `score('meta-rule',
-      'rule:seikika/maintainer-ci-security/no-medium-findings').level ==
-      'gold'` (portal/tests/standards.test.yaml:230-232) breaks if any
-      meta-rule rule stops passing on that entity. Yet always-explains,
-      explains-fix, decided-on-fixtures and the rest, all pinned failing
-      elsewhere, fail this rule (silver in portal/results.json). It fails
-      while the intent is met.
-    suggestion: >-
-      Treat `score('<card>', e).level == '<level>'` as pinning `pass` for
-      every rule of that card at or below the level. If that is too implicit,
-      say in the fix that level pins don't count.
+      packages/meta-scoring/fragments/catalog.yaml checks that both pass and
+      fail occur among the pinned outcomes.
+      crates/seikika-derive/src/testing.rs only includes passing fixture
+      assertions.
   - criterion: hard-to-game
-    verdict: fail
+    verdict: pass
     reason: >-
-      `score('c', 'e').rules['r'] == 'pass' || score('c', 'e').rules['r'] ==
-      'fail'` is always true for a decided rule and pins nothing, but the
-      regex records both outcomes (meta.rs:84-93). The unit test only covers
-      self-comparison and `!=` (meta.rs:306-327).
-    suggestion: >-
-      Parse each expectation's CEL and count a comparison only when it sits
-      under top-level `&&` conjuncts, not inside `||`, `!` or a ternary. Add
-      that case to the unit test.
+      crates/seikika-expr/src/analysis.rs recognizes required literal
+      comparisons in the CEL tree. crates/seikika-derive/src/testing.rs
+      confirms that a literal diagnostic assertion pins failure only if the
+      fixture rule actually failed.
   - criterion: fix-leads-to-pass
     verdict: pass
     reason: >-
-      The fix gives the file glob (tests/*.test.yaml) and both literal
-      templates (portal/standards/meta.yaml:548-553). The evidence names the
-      missing outcome (`no expectation pins meta-rule/tested == 'pass'`,
-      standards.test.yaml:233-234). Writing those templates matches the regex.
+      packages/meta-scoring/fragments/catalog.yaml gives the passing and
+      failing score expressions. portal/tests/standards.test.yaml includes
+      direct rule comparisons that keep this requirement satisfied.
   - criterion: threshold-justified
     verdict: pass
     reason: >-
-      docs/design/thresholds.md:42 places it at gold on lesson L4: tests that
-      pin only failing let a rule start passing everything. It also says
-      comparing evidence pins fail and a bare mention pins nothing. Gold adds
-      what bronze `tested` (one pin) doesn't imply (thresholds.md:24-25).
-summary: >-
-  The right goal at the right level with a usable fix. Text matching gets
-  it wrong both ways: a level pin that does catch flips isn't counted,
-  which makes most meta-rule rules miss gold, and a tautological `||`
-  counts as both pins. It is the most-failed meta rule live (71 of 272,
-  portal/results.json). Its own tests pin only fail.
+      docs/design/scorecards-for-scorecards.md describes the one-sided fixture
+      gaps. Gold adds a required assertion for each outcome after silver
+      establishes that both outcomes occur.

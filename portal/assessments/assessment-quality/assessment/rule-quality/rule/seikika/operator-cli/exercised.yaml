@@ -23,7 +23,7 @@ verdicts:
       - The test calls are `seikika(&["assess", "check", …])` (assess.rs:177),
         the helper is assess.rs:68, and the binary call is ratchet.rs:54-55.
       - portal/results.json fails `plan` and `push` on exercised. The trace
-        job is seikika.yaml:282-291, and F9 and its fix are
+        job is portal/seikika.yaml:282-291, and F9 and its fix are
         docs/design/seikika-for-seikika.md:213 and :189.
   - criterion: complete
     verdict: pass
@@ -34,27 +34,29 @@ verdicts:
       test under crates/seikika-cli/tests matches `seikika <cmd>` outside a
       comment. threshold-justified passes as a rule with no number. The
       evidence text "scripts/ and crates/*/tests" (cli.yaml:133-135) also
-      omits the reference-portal `tools/*.py` glob (seikika.yaml:106). That is
-      the same mismatch the reason already names for workflows.
+      omits the reference-portal `tools/*.py` glob (portal/seikika.yaml:106).
+      That is the same mismatch the reason already names for workflows.
   - criterion: reproducible
     verdict: pass
     reason: >-
       Anyone can reproduce each verdict by running the capture regex over the
-      `files` globs (seikika.yaml:103-107): every claimed match and miss comes
-      out the same. A second assessor might note that every existing CLI test
-      opens with a `//!` header naming its commands, so following convention
-      happens to pass. But the fix doesn't ask for that header, so
-      fix-leads-to-pass still fails on the rubric's "needs data the fix
-      doesn't mention" (portal/standards/meta.yaml:1172-1173).
+      `files` globs (portal/seikika.yaml:103-107): every claimed match and
+      miss comes out the same. A second assessor might note that every
+      existing CLI test opens with a `//!` header naming its commands, so
+      following convention happens to pass. But the fix doesn't ask for that
+      header, so fix-leads-to-pass still fails on the rubric's "needs data the
+      fix doesn't mention"
+      (https://github.com/seikika/seikika/blob/05510a57fafd8707979370858b578b78b935cf0e/portal/standards/meta.yaml#L1172-L1173).
   - criterion: actionable
     verdict: pass
     reason: >-
       Excluding comment lines would remove the five prose-only passes and the
       cheap `# seikika plan` route, which settles measures-intent and
       hard-to-game. Capturing the argument arrays, or tracing invocations as
-      SEIKIKA_MCP_TRACE does (seikika.yaml:282-291), would make the fix's test
-      route register, which settles fix-leads-to-pass. The interim suggestion,
-      saying the literal must appear outside a comment, does the same in text.
+      SEIKIKA_MCP_TRACE does (portal/seikika.yaml:282-291), would make the
+      fix's test route register, which settles fix-leads-to-pass. The interim
+      suggestion, saying the literal must appear outside a comment, does the
+      same in text.
 summary: >-
   An accurate, well-evidenced assessment. I reran its capture claims
   against the regex, and the five commands that pass only on a test file's

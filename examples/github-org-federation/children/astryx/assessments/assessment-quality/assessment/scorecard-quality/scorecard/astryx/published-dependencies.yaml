@@ -1,0 +1,33 @@
+apiVersion: seikika.com/assessment/v1
+entity: assessment:scorecard-quality/scorecard:astryx/published-dependencies
+rubric: assessment-quality
+subjectHash: ed6d11a9d90a
+rubricHash: e30700fc6322cf9f05a301bb4638d6708e9f5eb5aea0281911229ce75bd37bf7
+assessor: {kind: agent, name: codex-astra-fork-a, model: gpt-6.2-astra}
+at: 2026-11-27
+verdicts:
+  - criterion: supported
+    verdict: pass
+    reason: >-
+      The .seikika/tests/release.test.yaml duplicate fixture and the guidance
+      in .seikika/seikika.yaml now identify the collision and its repair.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      The single ready level in .seikika/seikika.yaml has guidance for each
+      observed failure, including lost inventory. The
+      .seikika/tests/release.test.yaml fixtures establish the drift and
+      collision boundaries.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      Following the .seikika/seikika.yaml empty-inventory instruction to
+      restore packages/ returned the adapter to ready. The previous collision
+      replay identified both manifests as recorded in
+      .seikika/tests/release.test.yaml.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      All original verdicts are pass. The assessment attaches no suggestions
+      that would direct a maintainer to change a different entity. See
+      .seikika/assessments/scorecard-quality/scorecard/astryx/published-dependencies.yaml.

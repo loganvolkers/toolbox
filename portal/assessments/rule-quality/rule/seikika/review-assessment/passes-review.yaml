@@ -10,10 +10,11 @@ verdicts:
     reason: >-
       The check needs a current review with no failing criterion, no uncited
       reason, and grounding in the assessment it reviews
-      (portal/standards/assessments.yaml:268-282, with reviewUncited and
-      reviewGrounded at :88-104). Self-review is held back by silver
-      `assessed` (assessments.yaml:253-264) and doubts by `no-doubts`, so the
-      card's gold matches the ladder in docs/design/thresholds.md:55.
+      (https://github.com/seikika/seikika/blob/05510a57fafd8707979370858b578b78b935cf0e/portal/standards/assessments.yaml#L268-L282,
+      with reviewUncited and reviewGrounded at :88-104). Self-review is held
+      back by silver `assessed` (assessments.yaml:253-264) and doubts by
+      `no-doubts`, so the card's gold matches the ladder in
+      docs/design/thresholds.md:55.
   - criterion: hard-to-game
     verdict: fail
     reason: >-
@@ -39,7 +40,7 @@ verdicts:
       failed (revise the assessment) from items marked "fix the review" (the
       review's reasons must cite what they rest on, including this
       assessment's file or its sources), matching the evidence's labels
-      (portal/standards/assessments.yaml:277-288).
+      (https://github.com/seikika/seikika/blob/05510a57fafd8707979370858b578b78b935cf0e/portal/standards/assessments.yaml#L277-L288).
   - criterion: threshold-justified
     verdict: pass
     reason: >-

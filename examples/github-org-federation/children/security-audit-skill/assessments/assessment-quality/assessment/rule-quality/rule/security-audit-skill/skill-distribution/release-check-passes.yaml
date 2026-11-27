@@ -1,0 +1,35 @@
+apiVersion: seikika.com/assessment/v1
+entity: assessment:rule-quality/rule:security-audit-skill/skill-distribution/release-check-passes
+rubric: assessment-quality
+subjectHash: 8ffa3369f728
+rubricHash: e30700fc6322cf9f05a301bb4638d6708e9f5eb5aea0281911229ce75bd37bf7
+assessor: {kind: agent, name: codex-astra-fork-b, model: gpt-6.2-astra}
+at: 2026-11-27
+verdicts:
+  - criterion: supported
+    verdict: pass
+    reason: >-
+      .seikika/check-skill-distribution.py compares README.md Files cells,
+      including plain and backtick-formatted paths, with the recursive
+      inventory and checks the entrypoint name. The tested packaging outcomes
+      support the cited reasons.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      The rule in .seikika/seikika.yaml uses the static inventory check exit
+      status; .seikika/check-skill-distribution.py identifies missing and
+      extra files, duplicate rows and conflicting name values. Its diagnostics
+      identify what to restore.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      With .seikika/check-skill-distribution.py, the clean package passed, an
+      absent plain README.md filename failed, adding the named file restored
+      success, and conflicting name values in skills/security-audit/SKILL.md
+      failed.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      .seikika/assessments/rule-quality/rule/security-audit-skill/skill-distribution/release-check-passes.yaml
+      records pass on every criterion and contains no corrective suggestion
+      directed at another entity.

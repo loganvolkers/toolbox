@@ -1,0 +1,30 @@
+apiVersion: seikika.com/assessment/v1
+entity: scorecard:impeccable/engine-distribution
+rubric: scorecard-quality
+subjectHash: 4d776359551b
+rubricHash: 1d01a2d06d609948839eb0695b1bba667b2ebe2c4b50224dbd8ac05d5b3cb334
+assessor: {kind: agent, name: codex}
+at: 2026-11-27
+verdicts:
+  - criterion: one-concern
+    verdict: pass
+    reason: >-
+      .seikika/seikika.yaml covers a single release preflight for impeccable
+      maintainers.
+  - criterion: levels-are-a-ladder
+    verdict: pass
+    reason: >-
+      .seikika/tests/release.test.yaml proves the sole ready level and its
+      failure boundary. A binary prerequisite has no intermediate release
+      status.
+  - criterion: no-obvious-gap
+    verdict: pass
+    reason: >-
+      .seikika/seikika.yaml scopes the card to matching version pins and
+      well-formed nonzero checksum entries. .seikika/check-engine-pins.mjs
+      checks all five platform entries against that offline contract.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      .seikika/tests/release.test.yaml verifies the reproduced command and the
+      actionable mismatch for a differing launcher pin.

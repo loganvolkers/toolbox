@@ -1,0 +1,24 @@
+name: OpenCodeReview packaging contract
+assert:
+  - name: The pinned package contract reaches ready
+    expect: >-
+      score('npm-platform-packages',
+      'npm-platform-packages:npm-platform-packages').level == 'ready' &&
+      score('npm-platform-packages',
+      'npm-platform-packages:npm-platform-packages').rules['release-check-passes']
+      == 'pass'
+  - name: A broken package contract reports the specific mismatch
+    expect: >-
+      score('npm-platform-packages',
+      'npm-platform-packages:broken').rules['release-check-passes'] == 'fail'
+      && score('npm-platform-packages',
+      'npm-platform-packages:broken').evidence['release-check-passes'] ==
+      ['Exit 1: node .seikika/check-platform-packages.mjs',
+      'npm/linux-x64/package.json has version 0.0.1 instead of 0.0.0']
+  - name: Reject removal of both a release manifest and its optional dependency
+    expect: >-
+      score('npm-platform-packages',
+      'npm-platform-packages:omitted-platform').rules['release-check-passes']
+      == 'fail' && score('npm-platform-packages',
+      'npm-platform-packages:omitted-platform').evidence['release-check-passes'][1].contains('.github/workflows/release.yml
+      requires npm/linux-x64/package.json')

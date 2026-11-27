@@ -1,0 +1,35 @@
+apiVersion: seikika.com/assessment/v1
+entity: assessment:rule-quality/rule:magpie/packed-gui-assets/release-check-passes
+rubric: assessment-quality
+subjectHash: be73018a1db6
+rubricHash: e30700fc6322cf9f05a301bb4638d6708e9f5eb5aea0281911229ce75bd37bf7
+assessor: {kind: agent, name: codex-astra-fork-a, model: gpt-6.2-astra}
+at: 2026-11-27
+verdicts:
+  - criterion: supported
+    verdict: pass
+    reason: >-
+      The comparison in .seikika/check-packed-assets.py invokes
+      build/assetpack/main.go, checks exact sorted names and bytes, and
+      includes excluded hidden paths. The reader in
+      internal/gui/assets_packed.go opens the resulting paths. The authored
+      verdict is in
+      .seikika/assessments/rule-quality/rule/magpie/packed-gui-assets/release-check-passes.yaml.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      The four rule criteria are covered by the bounded binary contract,
+      actual packer invocation, explicit path/byte checks and the repair
+      location in .seikika/seikika.yaml.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      Running .seikika/check-packed-assets.py with the pinned
+      build/assetpack/main.go passed; changing its ZIP name prefix makes the
+      produced names differ from the asserted assets/ paths.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      All original verdicts are pass. The assessment attaches no suggestions
+      that would direct a maintainer to change a different entity. See
+      .seikika/assessments/rule-quality/rule/magpie/packed-gui-assets/release-check-passes.yaml.

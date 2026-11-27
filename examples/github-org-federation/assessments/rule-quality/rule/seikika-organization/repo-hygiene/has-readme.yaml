@@ -1,0 +1,35 @@
+apiVersion: seikika.com/assessment/v1
+entity: rule:seikika-organization/repo-hygiene/has-readme
+rubric: rule-quality
+subjectHash: db321d948a94
+rubricHash: 696a7d3fef1c024786016ca0a353e402b5c1a7aaf7644da6825b20e218dc4a96
+assessor: {kind: agent, name: codex}
+at: 2026-11-27
+verdicts:
+  - criterion: measures-intent
+    verdict: pass
+    reason: >-
+      examples/github-org-federation/standards.yaml measures observed content
+      in a recognized root README.
+      examples/github-org-federation/standards.test.yaml distinguishes a real
+      entry point from a misleading filename or empty file.
+  - criterion: hard-to-game
+    verdict: pass
+    reason: >-
+      crates/seikika-connector-workspace/src/repo.rs reads the selected entry
+      point and counts its whitespace-delimited words.
+      crates/seikika-connector-workspace/src/github_org.rs reads the pinned
+      file with a size bound. The bronze check establishes nonempty text.
+  - criterion: fix-leads-to-pass
+    verdict: pass
+    reason: >-
+      examples/github-org-federation/standards.yaml names the selected README
+      in the evidence when it is empty and directs the maintainer to populate
+      that file. If no recognized file exists, a root README.md is
+      discoverable.
+  - criterion: threshold-justified
+    verdict: pass
+    reason: >-
+      examples/github-org-federation/standards.yaml puts readable content at
+      bronze as the basic entry point. Zero words distinguishes empty from
+      nonempty without imposing a length target.

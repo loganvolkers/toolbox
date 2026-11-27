@@ -83,6 +83,10 @@ jobs:
           target/debug/seikika test portal
           target/debug/seikika validate examples/repo-portal-starter
           target/debug/seikika test examples/repo-portal-starter
+          for t in examples/github-org-federation examples/github-org-federation/children/*; do
+            target/debug/seikika validate "$t"
+            target/debug/seikika test "$t"
+          done
           # Packages test themselves, in their own portal with their own parameters (D89)
           for t in packages/*/tests; do
             target/debug/seikika validate "$t"
