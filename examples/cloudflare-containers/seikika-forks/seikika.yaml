@@ -1,0 +1,63 @@
+apiVersion: seikika.com/v1alpha1
+portal:
+  name: seikika-federation
+  title: Seikika Open Source Projects
+  owner: group:platform
+  seikika: "0.1"
+
+authz:
+  model: model.fga
+  tuples:
+    - static:
+      - user: user:operator
+        relation: admin
+        object: portal:seikika-federation
+      - user: user:reader
+        relation: viewer
+        object: portal:seikika-federation
+      - user: portal:seikika-federation
+        relation: parent
+        object: portal:open-code-review
+      - user: portal:seikika-federation
+        relation: parent
+        object: portal:security-audit-skill
+      - user: portal:seikika-federation
+        relation: parent
+        object: portal:astryx
+      - user: portal:seikika-federation
+        relation: parent
+        object: portal:magpie
+      - user: portal:seikika-federation
+        relation: parent
+        object: portal:impeccable
+      - user: portal:seikika-federation
+        relation: parent
+        object: portal:plannotator
+      - user: portal:seikika-federation
+        relation: parent
+        object: portal:kubernetes
+
+federation:
+  signingKey: SEIKIKA_SIGNING_KEY
+  children:
+    - git: https://github.com/seikika/open-code-review.git
+      branch: seikika/portal
+      key: open-code-review
+    - git: https://github.com/seikika/security-audit-skill.git
+      branch: seikika/portal
+      key: security-audit-skill
+    - git: https://github.com/seikika/astryx.git
+      branch: seikika/portal
+      key: astryx
+    - git: https://github.com/seikika/magpie.git
+      branch: seikika/portal
+      key: magpie
+    - git: https://github.com/seikika/impeccable.git
+      branch: seikika/portal
+      key: impeccable
+    - git: https://github.com/seikika/plannotator.git
+      branch: seikika/portal
+      key: plannotator
+    - git: https://github.com/seikika/kubernetes.git
+      branch: seikika/portal
+      key: kubernetes

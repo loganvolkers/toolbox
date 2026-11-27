@@ -4659,6 +4659,16 @@
           "still-running"
         ]
       },
+      "workflow:.github/workflows/cloudflare-deploy.yml": {
+        "level": "bronze",
+        "unknown": [
+          "fail-rate-under-10",
+          "fail-rate-under-20",
+          "fail-rate-under-5",
+          "main-not-stuck-red",
+          "still-running"
+        ]
+      },
       "workflow:.github/workflows/codeql.yml": {
         "level": "bronze",
         "unknown": [
@@ -4790,6 +4800,9 @@
       "workflow:.github/workflows/ci.yml": {
         "level": "gold"
       },
+      "workflow:.github/workflows/cloudflare-deploy.yml": {
+        "level": "gold"
+      },
       "workflow:.github/workflows/codeql.yml": {
         "level": "gold"
       },
@@ -4837,6 +4850,12 @@
     },
     "maintainer-ci-speed": {
       "workflow:.github/workflows/ci.yml": {
+        "level": "bronze",
+        "unknown": [
+          "fast-feedback"
+        ]
+      },
+      "workflow:.github/workflows/cloudflare-deploy.yml": {
         "level": "bronze",
         "unknown": [
           "fast-feedback"
@@ -6512,6 +6531,9 @@
       }
     },
     "maintainer-package": {
+      "package-json:examples/cloudflare-containers/package.json": {
+        "level": "gold"
+      },
       "package-json:experiments/typescript-builder/package.json": {
         "failing": {
           "described": 1,

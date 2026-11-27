@@ -26,31 +26,49 @@ seikika doctor portal
 
 ## Build the image
 
-The example uses the same entrypoint and co-process as the Seikika server image. Stage Linux `amd64` binaries for Seikika, the connectors your portal uses, and OpenFGA. The image uses Debian Trixie, so build on a system with a compatible glibc. Choose a source revision with SQLx TLS support and run these commands from that checkout. Set `example` to your copy of this directory if you moved it. [Seikika server image](../../image/Dockerfile)
+The example uses the same entrypoint and co-process as the Seikika server image. Stage Linux `amd64` binaries for Seikika, its connectors, and OpenFGA. The image uses Debian Trixie, so build on a system with a compatible glibc. Choose a source revision with SQLx TLS support and run these commands from that Seikika checkout. [Seikika server image](../../image/Dockerfile)
 
 ```sh
 example=examples/cloudflare-containers
 cargo build --locked --release --workspace
-for binary in seikika seikika-connector-workspace seikika-connector-github \
-    seikika-connector-git-files seikika-connector-gitlab seikika-connector-runner \
-    seikika-connector-scim; do
-  install -D -m 0755 "target/release/$binary" "$example/bin/$binary"
-done
-scripts/ci-tools.sh "$example/bin" openfga
+deployment=$(mktemp -d)
+bash "$example/stage.sh" "$example/portal" "$deployment"
+cd "$deployment"
+npm ci --ignore-scripts
+npm exec -- wrangler deploy --dry-run
 ```
 
-When a release includes SQLx TLS support, you can stage its checksum-verified Linux `amd64` binaries in `bin/` in place of building Seikika from source. [Stage release archives](../../scripts/stage-image-archives.sh)
+Run the deployment commands from `$deployment`. The staging helper selects the Dockerfile, Worker, Wrangler configuration, and compiled Linux binaries from the Seikika checkout. Its first argument can point to a portal in another repository. Its optional third argument selects an alternate release binaries directory.
+
+When a release includes SQLx TLS support, you can stage its checksum-verified Linux `amd64` binaries in place of building Seikika from source. [Stage release archives](../../scripts/stage-image-archives.sh)
+
+## Deploy from GitHub Actions
+
+The [Cloudflare portal workflow](../../.github/workflows/cloudflare-deploy.yml) builds the parent portal under `seikika-forks/`. To deploy a different manifest, stage that portal in the workflow checkout and update the first argument to `stage.sh`. The child projects can run their repository checks with `contents: read`. The parent reads their manifests and actions from public Git branches.
+
+1. Create separate Cloudflare Workers for staging and production. Give each a dedicated database or database branch and its own `DATABASE_URL` and `SEIKIKA_SIGNING_KEY` runtime secrets. Complete the provisioning of Containers access and any custom domains with an account administrator.
+2. Create an account-owned API token for each environment. Use Workers Editor on the existing Worker and Containers Write on its account. If the workflow changes a route or custom domain, grant Workers Routes Write on the affected zone.
+3. In the parent repository, configure GitHub environments named `staging` and `production`. Select `main` as each environment's deployment branch. Require pull request checks on `main`. Put the following settings in each environment.
+
+| Setting | Where to put it | Value |
+| --- | --- | --- |
+| `CLOUDFLARE_API_TOKEN` | Environment secret | The Cloudflare deployment token for that Worker |
+| `CLOUDFLARE_ACCOUNT_ID` | Environment variable | ID of the account containing the Worker |
+| `CLOUDFLARE_WORKER_NAME` | Environment variable | Name of that environment's existing Worker |
+| `SEIKIKA_URL` | Environment variable | HTTPS portal origin whose `/readyz` endpoint the runner can reach |
+
+From the **Cloudflare portal** workflow, run **staging** from `main`. The workflow stages the release binaries, deploys the Worker and Container, and waits for a successful readiness response. Confirm the expected child actions using the verification steps below. Repeat for **production**. To deploy production automatically on subsequent changes to the portal or its build inputs on `main`, set the repository-level Actions variable `CLOUDFLARE_AUTO_DEPLOY` to `true`. [GitHub deployment environments](https://docs.github.com/en/actions/how-tos/deploy/configure-and-manage-deployments/manage-environments) · [Cloudflare Worker permissions](https://developers.cloudflare.com/workers/authorization/workers/) · [Container deployment](https://developers.cloudflare.com/containers/guides/deploy/)
 
 ## Expose the portal
 
-Use a Cloudflare account with Containers enabled, Node.js, and Docker. Change the Worker `name` to the deployment name in your account. Verify Wrangler can build the image and bundle the Worker with `npm exec --package wrangler@4.168.0 -- wrangler deploy --dry-run`. Provision a dedicated database and a role that can manage schema objects for Seikika and OpenFGA. Both use the same database and role in this example. Store the direct connection URL as the `DATABASE_URL` Worker secret and generate the signing seed once. Keep a copy of the seed in your secret manager for redeploys and disaster recovery.
+Use a Cloudflare account with Containers enabled, Node.js, and Docker. Change the Worker `name` to the deployment name in your account. Verify Wrangler can build the image and bundle the Worker with `npm exec -- wrangler deploy --dry-run`. Provision a dedicated database and a role that can manage schema objects for Seikika and OpenFGA. Both use the same database and role in this example. Store the direct connection URL as the `DATABASE_URL` Worker secret and generate the signing seed once. Keep a copy of the seed in your secret manager for redeploys and disaster recovery.
 
-Run the following commands from this example directory. The first command prompts for the database connection URL. Generate the seed with `openssl rand -hex 32` and load it from your secret manager into `SEIKIKA_SIGNING_KEY`. Use an authenticated Wrangler session or set the scoped `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` in the deployment environment.
+Run the following commands from the staged deployment directory. The first command prompts for the database connection URL. Generate the seed with `openssl rand -hex 32` and load it from your secret manager into `SEIKIKA_SIGNING_KEY`. Use an authenticated Wrangler session or set the scoped `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` in the deployment environment.
 
 ```sh
-npm exec --package wrangler@4.168.0 -- wrangler secret put DATABASE_URL
-printf '%s\n' "$SEIKIKA_SIGNING_KEY" | npm exec --package wrangler@4.168.0 -- wrangler secret put SEIKIKA_SIGNING_KEY
-npm exec --package wrangler@4.168.0 -- wrangler deploy
+npm exec -- wrangler secret put DATABASE_URL
+printf '%s\n' "$SEIKIKA_SIGNING_KEY" | npm exec -- wrangler secret put SEIKIKA_SIGNING_KEY
+npm exec -- wrangler deploy
 ```
 
 The defaults serve the Worker on `workers.dev` and use Seikika personal access tokens for API clients. For an interactive portal, provision a custom domain and a Cloudflare Access application for it. Set `workers_dev = false` and leave `preview_urls = false`. Add the domain as a Wrangler custom-domain route, set `SEIKIKA_AUTH_MODE` to `cloudflare-access`, and add `SEIKIKA_CF_TEAM_DOMAIN` (the HTTPS issuer URL without a trailing slash) and `SEIKIKA_AUDIENCE` (the Access application audience) under `[vars]`. Seikika validates the signed Access assertion. [Configure Seikika access](../../site/src/content/docs/operators/access.md) · [Cloudflare Worker custom domains](https://developers.cloudflare.com/workers/configuration/routing/custom-domains/)
