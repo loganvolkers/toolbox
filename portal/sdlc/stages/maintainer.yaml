@@ -19,7 +19,7 @@ records:
     exitCriterion: >-
       cargo build and the UI build succeed from a clean checkout with pinned
       toolchains.
-    commands: [cargo build, npm --prefix ui run build]
+    commands: [pnpm install --frozen-lockfile, pnpm build, cargo build]
     checks: [.github/workflows/ci.yml, rust-toolchain.toml]
     docs: [docs/design/maintainer-sdlc.md]
     status: built

@@ -257,3 +257,8 @@ The repository quickstart recorded a baseline, exited 1 after moving its linked 
 - A temporary consumer portal using Seikika 0.2.1 accepted a clean script. After
   injecting SC2155 and an indentation defect, its strict ratchet exited 1 and
   named both failed rules. [Shell standard](../packages/shell/README.md)
+
+## Embedded UI build inputs
+
+- Exported the tracked source files to a fresh directory, generated both embedded bundles with the frozen pnpm lockfile, and built the CLI with Node and pnpm absent from Cargo's `PATH`. The federation browser test passed on that binary for the served and offline reports.
+- Compared the packaged assets byte for byte with the local build output. The API crate contains the hosted UI and its asset manifest, and the CLI crate contains the offline report template and script. [Embedded asset build decision](decisions/D01M8EXN6P8HX02R74DA9X6MS0C.md)

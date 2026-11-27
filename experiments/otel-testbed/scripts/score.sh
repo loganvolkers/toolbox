@@ -43,6 +43,8 @@ bad() { echo "  FAIL: $1"; FAIL=$((FAIL + 1)); }
 need_seikika() {
   if [ ! -x "$SEIKIKA" ]; then
     echo "building seikika-cli…"
+    pnpm install --frozen-lockfile
+    pnpm build
     cargo build --locked -p seikika-cli
     SEIKIKA="$ROOT/target/debug/seikika"
   fi

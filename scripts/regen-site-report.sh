@@ -17,6 +17,8 @@ TOOLS="${SEIKIKA_CI_TOOLS:-${TMPDIR:-/tmp}/seikika-ci-tools}"
 scripts/ci-tools.sh "$TOOLS" actionlint scorecard osv-scanner rustsec-osv shellcheck shfmt bats
 export PATH="$TOOLS:$PATH" OSV_SCANNER_LOCAL_DB_CACHE_DIRECTORY="$TOOLS"
 
+pnpm install --frozen-lockfile
+pnpm build
 cargo build --locked
 # zizmor and ruff from the portal's own pins (tools:), with uv, pipx or pip: whichever is here.
 export PATH="${HOME}/.local/bin:$PATH"
