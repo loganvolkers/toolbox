@@ -239,3 +239,12 @@ The repository quickstart recorded a baseline, exited 1 after moving its linked 
 - Added a license to a fixture checkout after recording its baseline. Strict mode returned a stale verdict and exit 1. Regression-only mode returned the same verdict and exit 0. It then rejected a CODEOWNERS regression. The baseline stayed byte-identical.
 - Setup rejected a valid archive whose supplied checksum differed. The test failed against a scratch copy with the checksum check removed.
 - The scheduled, manual, and stable-release workflows exercise the published installer on Linux x64 and ARM64. The pinned release has the CLI and both connector archives with checksums for each target.
+
+## Shell script standard
+
+- Used the pinned ShellCheck, shfmt, and Bats binaries to exercise the adapter
+  and run five isolated Bats regression cases. The package portal passed three
+  fixture assertions and the maintainer portal passed 145.
+- A temporary consumer portal using Seikika 0.2.1 accepted a clean script. After
+  injecting SC2155 and an indentation defect, its strict ratchet exited 1 and
+  named both failed rules. [Shell standard](../packages/shell/README.md)

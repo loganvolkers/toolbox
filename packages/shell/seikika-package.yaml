@@ -1,0 +1,26 @@
+apiVersion: seikika.com/package/v0
+name: shell
+version: 0.1.0
+description: >-
+  Check maintained shell scripts with ShellCheck and shfmt, and run
+  behavior tests with Bats.
+parameters:
+  name:
+    type: string
+    default: shell
+    description: Name of the connector and scorecard.
+  kind:
+    type: string
+    default: ShellScript
+    description: Unique entity kind when including this package multiple times.
+  track: {type: string, default: null, description: Optional portal track.}
+  owner:
+    type: string
+    default: group:maintainers
+    description: Owner of the scorecard.
+  command:
+    type: array
+    description: >-
+      The check-shell.py command followed by Git pathspecs for production
+      shell sources.
+fragments: [fragments/shell.yaml]

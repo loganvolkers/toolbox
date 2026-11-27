@@ -19,5 +19,5 @@ if ! bin=$(cd "$SEIKIKA_BIN" && pwd -P) || [[ ! -x "$bin/seikika" ]]; then
   exit 2
 fi
 "$bin/seikika" --version
-printf '%s\n' "$bin" >> "${GITHUB_PATH:?}"
-printf 'bin-dir=%s\n' "$bin" >> "${GITHUB_OUTPUT:?}"
+printf '%s\n' "$bin" >>"${GITHUB_PATH:?}"
+printf 'bin-dir=%s\n' "$bin" >>"${GITHUB_OUTPUT:?}"

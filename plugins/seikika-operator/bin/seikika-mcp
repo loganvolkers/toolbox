@@ -11,7 +11,10 @@ set -eu
 DATA_DIR=""
 while [ $# -gt 0 ]; do
   case "$1" in
-    --data) DATA_DIR="$2"; shift 2 ;;
+    --data)
+      DATA_DIR="$2"
+      shift 2
+      ;;
     *) shift ;;
   esac
 done

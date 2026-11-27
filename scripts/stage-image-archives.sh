@@ -25,7 +25,10 @@ for pair in amd64:x86_64 arm64:aarch64; do
     (
       cd "$archives"
       digest=$(awk 'NR == 1 {print $1}' "$archive.sha256")
-      [[ $digest =~ ^[[:xdigit:]]{64}$ ]] || { echo "Invalid checksum in $archive.sha256" >&2; exit 1; }
+      [[ $digest =~ ^[[:xdigit:]]{64}$ ]] || {
+        echo "Invalid checksum in $archive.sha256" >&2
+        exit 1
+      }
       printf '%s  %s\n' "$digest" "$archive" | sha256sum -c -
       tar -xJf "$archive"
     )

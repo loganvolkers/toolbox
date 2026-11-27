@@ -12,13 +12,14 @@ summary=${GITHUB_STEP_SUMMARY:-/dev/null}
 outputs=${GITHUB_OUTPUT:-/dev/null}
 
 report_error() {
-  printf 'result=error\nexit-code=2\n' >> "$outputs"
+  printf 'result=error\nexit-code=2\n' >>"$outputs"
 }
 
 if [[ -n "${SEIKIKA_BIN:-}" ]]; then
   if ! bin=$(cd "$SEIKIKA_BIN" && pwd -P) || [[ ! -x "$bin/seikika" ]]; then
     echo '::error title=Seikika report::The binary directory must contain an executable named seikika.'
-    report_error; exit 0
+    report_error
+    exit 0
   fi
   executable="$bin/seikika"
   export SEIKIKA_CONNECTORS_DIR="$bin"
@@ -26,9 +27,13 @@ elif executable=$(type -P seikika); then
   executable=$(realpath "$executable")
 else
   echo '::error title=Seikika report::Run actions/setup or put seikika on PATH first.'
-  report_error; exit 0
+  report_error
+  exit 0
 fi
-out=$(mktemp -d "${RUNNER_TEMP:-/tmp}/seikika-report.XXXXXX") || { report_error; exit 0; }
+out=$(mktemp -d "${RUNNER_TEMP:-/tmp}/seikika-report.XXXXXX") || {
+  report_error
+  exit 0
+}
 
 [[ -z "$baseline" ]] && baseline="$portal/results.json"
 verdict="$out/verdict.json"
@@ -40,15 +45,19 @@ case "$mode" in
   check) args+=(--baseline "$baseline") ;;
   update) args+=(--baseline "$baseline" --update) ;;
   report) ;;
-  *) echo "::error title=Seikika report::unknown mode '$mode' (ci, check, update or report)"
-     report_error; exit 0 ;;
+  *)
+    echo "::error title=Seikika report::unknown mode '$mode' (ci, check, update or report)"
+    report_error
+    exit 0
+    ;;
 esac
 
 if ! prepare_portal 'Seikika report' "$executable" "${INPUT_WORKING_DIRECTORY:-.}" "$portal"; then
-  report_error; exit 0
+  report_error
+  exit 0
 fi
 
-"$executable" "${args[@]}" 2> "$out/ratchet.txt"
+"$executable" "${args[@]}" 2>"$out/ratchet.txt"
 code=$?
 cat "$out/ratchet.txt" >&2
 
@@ -70,7 +79,7 @@ fi
   [[ -f "$out/report.html" ]] && echo "html=$out/report.html"
   [[ -f "$verdict" ]] && echo "verdict=$verdict"
   echo "baseline=$(realpath -m "$baseline")"
-} >> "$outputs"
+} >>"$outputs"
 
 {
   echo "## Seikika report: $result"
@@ -81,7 +90,8 @@ fi
         echo "Scored the portal without a baseline."
       else
         echo "Nothing got worse than \`$baseline\`."
-      fi ;;
+      fi
+      ;;
     regressed) echo "Something got worse than \`$baseline\`. Fix it, or (if the change is intended) update the baseline in this PR: \`seikika report $portal --baseline $baseline --update\`." ;;
     unknown) echo "Some rules couldn't be evaluated (a tool or its data is missing), so the ratchet can't compare them; install the tools the portal declares (\`seikika doctor $portal\`)." ;;
     stale) echo "Nothing got worse, but \`$baseline\` doesn't record the improvements yet: update it in this PR (\`seikika report $portal --baseline $baseline --update\`, or run this action with \`mode: update\` and commit the uploaded file)." ;;
@@ -89,10 +99,18 @@ fi
     error) echo "\`seikika report\` failed (exit $code); its output is below." ;;
   esac
   if [[ -s "$out/ratchet.txt" ]]; then
-    echo; echo '```'; cat "$out/ratchet.txt"; echo '```'
+    echo
+    echo '```'
+    cat "$out/ratchet.txt"
+    echo '```'
   fi
   if [[ -f "$out/report.md" ]]; then
-    echo; echo "<details><summary>Full report</summary>"; echo; cat "$out/report.md"; echo; echo "</details>"
+    echo
+    echo "<details><summary>Full report</summary>"
+    echo
+    cat "$out/report.md"
+    echo
+    echo "</details>"
   fi
-} >> "$summary"
+} >>"$summary"
 exit 0

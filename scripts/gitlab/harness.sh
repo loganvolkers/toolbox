@@ -45,7 +45,10 @@ up() {
     [ "$code" = 200 ] && break
     sleep 5
   done
-  [ "$code" = 200 ] || { echo "GitLab did not answer at $URL" >&2; exit 1; }
+  [ "$code" = 200 ] || {
+    echo "GitLab did not answer at $URL" >&2
+    exit 1
+  }
   if ! ready; then
     $DOCKER exec "$NAME" gitlab-rails runner "
       u = User.find_by_username('root')
@@ -56,7 +59,10 @@ up() {
       ApplicationSetting.current.update!(signup_enabled: false, allow_local_requests_from_web_hooks_and_services: true)
     " >&2
   fi
-  ready || { echo "the root token does not work" >&2; exit 1; }
+  ready || {
+    echo "the root token does not work" >&2
+    exit 1
+  }
   if ! $DOCKER inspect "$NAME-runner" >/dev/null 2>&1; then
     created=$(curl -sf -X POST -H "PRIVATE-TOKEN: $ROOT_TOKEN" "$URL/api/v4/user/runners" \
       --data runner_type=instance_type --data run_untagged=true --data description=seikika-harness)
@@ -68,13 +74,19 @@ up() {
       --env PATH=/seikika/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin >&2
     $DOCKER exec "$NAME-runner" sed -i 's/^concurrent = .*/concurrent = 4/' /etc/gitlab-runner/config.toml
   fi
-  printf 'GITLAB_URL=%s\nGITLAB_ROOT_TOKEN=%s\nGITLAB_CONTAINER=%s\n' "$URL" "$ROOT_TOKEN" "$NAME" > "$ENVFILE"
+  printf 'GITLAB_URL=%s\nGITLAB_ROOT_TOKEN=%s\nGITLAB_CONTAINER=%s\n' "$URL" "$ROOT_TOKEN" "$NAME" >"$ENVFILE"
   cat "$ENVFILE"
 }
 
 case "${1:-}" in
   up) up ;;
   env) ready && cat "$ENVFILE" ;;
-  down) $DOCKER rm -f -v "$NAME-runner" "$NAME" >/dev/null 2>&1 || true; rm -rf "$STATE" ;;
-  *) echo "usage: $0 up|env|down" >&2; exit 2 ;;
+  down)
+    $DOCKER rm -f -v "$NAME-runner" "$NAME" >/dev/null 2>&1 || true
+    rm -rf "$STATE"
+    ;;
+  *)
+    echo "usage: $0 up|env|down" >&2
+    exit 2
+    ;;
 esac

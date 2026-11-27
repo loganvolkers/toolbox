@@ -2,11 +2,15 @@
 # Install CI's third-party tools from their releases, SHA-256-pinned, instead of compiling them
 # with `go install` on every run (D90: reuse released artifacts). Linux x86_64 only, like CI.
 # Usage: scripts/ci-tools.sh <bin-dir> <tool>...
-#   (tools: openfga actionlint fga scorecard staticcheck osv-scanner rustsec-osv)
+#   (tools: openfga actionlint fga scorecard staticcheck osv-scanner rustsec-osv shellcheck shfmt bats)
 # For the site report preview (pages.yml pins), prefer scripts/regen-site-report.sh, which
 # installs actionlint from here plus zizmor==1.32.0, then runs doctor + report.
 set -euo pipefail
-dir=$1; shift; mkdir -p "$dir"; tmp=$(mktemp -d)
+dir=$1
+shift
+mkdir -p "$dir"
+tmp=$(mktemp -d)
+trap 'rm -rf "$tmp"' EXIT
 fetch() { # name url sha256 member [strip]
   curl -fsSL --retry 3 -o "$tmp/$1.tgz" "$2"
   echo "$3  $tmp/$1.tgz" | sha256sum -c - >/dev/null
@@ -29,7 +33,25 @@ for tool in "$@"; do
       curl -fsSL --retry 3 -o "$tmp/osv-scanner" https://github.com/google/osv-scanner/releases/download/v2.7.1/osv-scanner_linux_amd64
       echo "fb7dab19a8bd9bbe5c3189f09d4b7ee1820c9553a23bac202648a56efd2f6ee8  $tmp/osv-scanner" | sha256sum -c - >/dev/null
       install -m 755 "$tmp/osv-scanner" "$dir/osv-scanner"
-      echo "installed osv-scanner 2.7.1" ;;
+      echo "installed osv-scanner 2.7.1"
+      ;;
+    shellcheck)
+      curl -fsSL --retry 3 -o "$tmp/shellcheck.tar.xz" https://github.com/koalaman/shellcheck/releases/download/v0.11.0/shellcheck-v0.11.0.linux.x86_64.tar.xz
+      echo "8c3be12b05d5c177a04c29e3c78ce89ac86f1595681cab149b65b97c4e227198  $tmp/shellcheck.tar.xz" | sha256sum -c -
+      tar -xJf "$tmp/shellcheck.tar.xz" -C "$dir" --strip-components=1 shellcheck-v0.11.0/shellcheck
+      ;;
+    shfmt)
+      curl -fsSL --retry 3 -o "$tmp/shfmt" https://github.com/mvdan/sh/releases/download/v3.12.0/shfmt_v3.12.0_linux_amd64
+      echo "d9fbb2a9c33d13f47e7618cf362a914d029d02a6df124064fff04fd688a745ea  $tmp/shfmt" | sha256sum -c -
+      install -m 755 "$tmp/shfmt" "$dir/shfmt"
+      ;;
+    bats)
+      curl -fsSL --retry 3 -o "$tmp/bats.tar.gz" https://codeload.github.com/bats-core/bats-core/tar.gz/refs/tags/v1.12.0
+      echo "e36b020436228262731e3319ed013d84fcd7c4bd97a1b34dee33d170e9ae6bab  $tmp/bats.tar.gz" | sha256sum -c -
+      tar -xzf "$tmp/bats.tar.gz" -C "$tmp"
+      "$tmp/bats-core-1.12.0/install.sh" "$(cd "$dir" && pwd)/bats-core"
+      ln -sfn bats-core/bin/bats "$dir/bats"
+      ;;
     rustsec-osv)
       # RustSec's OSV export at one commit, as osv-scanner's offline crates.io database: point
       # OSV_SCANNER_LOCAL_DB_CACHE_DIRECTORY at <bin-dir>. The commit is the pin; findings change
@@ -46,7 +68,11 @@ with zipfile.ZipFile(out, "w", zipfile.ZIP_DEFLATED) as z:
     for f in sorted(src.glob("*.json")):
         z.write(f, f.name)
 EOF
-      echo "installed the RustSec OSV database at $rev" ;;
-    *) echo "unknown tool $tool" >&2; exit 2 ;;
+      echo "installed the RustSec OSV database at $rev"
+      ;;
+    *)
+      echo "unknown tool $tool" >&2
+      exit 2
+      ;;
   esac
 done
