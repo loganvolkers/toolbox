@@ -5,6 +5,7 @@ use crate::{InputSnapshot, NativeValue, Record, Store, StoreError};
 use serde_json::Value;
 use sqlx::postgres::{PgPool, PgPoolOptions};
 use sqlx::{Postgres, Row, Transaction};
+use std::num::NonZeroU32;
 
 /// Migrations, applied in order at start-up under an advisory lock. Each is idempotent
 /// (expand-only, `IF NOT EXISTS`), so re-running is safe.
@@ -26,8 +27,16 @@ fn err(e: impl std::fmt::Display) -> StoreError {
 impl PgStore {
     /// Connect and apply migrations.
     pub async fn connect(url: &str) -> Result<Self, StoreError> {
+        Self::connect_with_max_connections(url, NonZeroU32::new(10).unwrap()).await
+    }
+
+    /// Connect and apply migrations with a limit that includes the publisher's advisory-lock session.
+    pub async fn connect_with_max_connections(
+        url: &str,
+        max_connections: NonZeroU32,
+    ) -> Result<Self, StoreError> {
         let pool = PgPoolOptions::new()
-            .max_connections(10)
+            .max_connections(max_connections.get())
             .connect(url)
             .await
             .map_err(err)?;

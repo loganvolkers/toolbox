@@ -1,6 +1,6 @@
 //! `seikika serve` and `seikika push`.
 
-use std::path::Path;
+use std::{env, num::NonZeroU32, path::Path};
 
 /// Resolve the listen address. An explicit `--listen` or `SEIKIKA_LISTEN` wins. Otherwise
 /// `PORT` binds every interface, which is what Cloud Run and `docker run -e PORT` inject.
@@ -76,6 +76,26 @@ impl PatLookup for PgPats {
     async fn subject_for(&self, hash: &str) -> Option<String> {
         self.0.token_subject(hash).await
     }
+}
+
+async fn connect_pg_store(url: &str) -> Result<seikika_store::PgStore, String> {
+    const MAX_CONNECTIONS: &str = "SEIKIKA_POSTGRES_MAX_CONNECTIONS";
+    let cap = match env::var(MAX_CONNECTIONS) {
+        Ok(value) => value.parse::<NonZeroU32>().ok(),
+        Err(env::VarError::NotPresent) => {
+            return seikika_store::PgStore::connect(url)
+                .await
+                .map_err(|e| e.to_string());
+        }
+        Err(env::VarError::NotUnicode(_)) => None,
+    };
+    // The publisher pins one session while ordinary reads and writes acquire another.
+    let cap = cap
+        .filter(|n| n.get() >= 2)
+        .ok_or_else(|| format!("{MAX_CONNECTIONS} must be an integer of at least 2"))?;
+    seikika_store::PgStore::connect_with_max_connections(url, cap)
+        .await
+        .map_err(|e| e.to_string())
 }
 
 /// Start OpenFGA for the portal's model: on Postgres with the tuple view, else in memory.
@@ -203,7 +223,7 @@ pub fn serve(path: &Path, listen: &str, database_url: Option<String>, fixtures: 
             );
         }
         let (store, pg): (Arc<dyn Store>, _) = match database_url {
-            Some(url) => match seikika_store::PgStore::connect(&url).await {
+            Some(url) => match connect_pg_store(&url).await {
                 Ok(pg) => (Arc::new(pg.clone()), Some(pg)),
                 Err(e) => {
                     eprintln!("error: Postgres: {e}");
