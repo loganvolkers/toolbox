@@ -6,9 +6,11 @@
 
 use seikika_api::assess;
 use serde_json::{Value, json};
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
 use std::process::ExitCode;
+
+type AssessmentKey = (String, String);
 
 fn fail(m: impl std::fmt::Display) -> ExitCode {
     eprintln!("error: {m}");
@@ -67,14 +69,44 @@ fn read_file(path: &Path) -> Result<Value, String> {
     serde_norway::from_str::<Value>(&text).map_err(|e| e.to_string())
 }
 
+fn checked_file(
+    m: &seikika_model::Manifest,
+    d: &seikika_derive::Derived,
+    doc: Result<Value, String>,
+) -> Result<(AssessmentKey, Value), Vec<String>> {
+    let doc = doc.map_err(|e| vec![e])?;
+    let problems = assess::problems(m, &doc);
+    if !problems.is_empty() {
+        return Err(problems);
+    }
+    let name = doc["rubric"].as_str().unwrap_or_default();
+    let id = doc["entity"].as_str().unwrap_or_default();
+    let subject = d
+        .entities
+        .get(id)
+        .ok_or_else(|| vec![format!("no entity {id}")])?;
+    let rubric = assess::rubric(m, &subject.kind, Some(name)).map_err(|e| vec![e])?;
+    if !assess::applies(rubric, &subject.fields) {
+        return Err(vec![format!("rubric {name} does not apply to {id}")]);
+    }
+    Ok(((name.to_owned(), id.to_owned()), doc))
+}
+
 /// One entity's state against one rubric.
-fn status(d: &seikika_derive::Derived, subject: &str, a: Option<&Value>, id: &str) -> Value {
+fn status(
+    d: &seikika_derive::Derived,
+    subject: &str,
+    rubric_hash: &str,
+    a: Option<&Value>,
+    id: &str,
+) -> Value {
     let now = d.entities[id].fields.get(subject).cloned();
     match a {
         None => json!({"entity": id, "state": "missing"}),
         Some(a) => {
             let r = seikika_connect::assessment::record(a, None);
-            let fresh = now.as_ref() == Some(&a["subjectHash"]);
+            let rubric_matches = a["rubricHash"].as_str().is_none_or(|h| h == rubric_hash);
+            let fresh = now.as_ref() == Some(&a["subjectHash"]) && rubric_matches;
             json!({"entity": id, "state": if fresh { "fresh" } else { "stale" },
                    "verdict": r["verdict"], "failing": r["failing"], "unsure": r["unsure"], "at": a["at"]})
         }
@@ -95,27 +127,29 @@ pub fn check(
         Err(e) => return fail(e),
     };
     let mut invalid = BTreeMap::new();
-    let mut by_key: BTreeMap<(String, String), Value> = BTreeMap::new();
+    let mut by_key = BTreeMap::new();
     for (rel, doc) in read_dir(&root.join("assessments")) {
-        let mut problems = match &doc {
-            Ok(v) => assess::problems(&m, v),
-            Err(e) => vec![e.clone()],
-        };
-        if let Ok(v) = doc {
-            let entity = v["entity"].as_str().unwrap_or_default().to_owned();
-            if problems.is_empty() && !d.entities.contains_key(&entity) {
-                problems.push(format!("no entity {entity}"));
+        match checked_file(&m, &d, doc) {
+            Ok((key, doc)) => match by_key.entry(key) {
+                std::collections::btree_map::Entry::Vacant(entry) => {
+                    entry.insert(doc);
+                }
+                std::collections::btree_map::Entry::Occupied(entry) => {
+                    let (rubric, subject) = entry.key();
+                    invalid.insert(
+                        format!("assessments/{rel}"),
+                        vec![format!("duplicate assessment for {rubric} on {subject}")],
+                    );
+                }
+            },
+            Err(problems) => {
+                invalid.insert(format!("assessments/{rel}"), problems);
             }
-            if problems.is_empty() {
-                by_key.insert((v["rubric"].as_str().unwrap_or("").into(), entity), v);
-            }
-        }
-        if !problems.is_empty() {
-            invalid.insert(format!("assessments/{rel}"), problems);
         }
     }
     let mut rubrics = serde_json::Map::new();
     for r in &m.rubrics {
+        let hash = assess::rubric_hash(r);
         let rows: Vec<Value> = d
             .entities
             .iter()
@@ -124,6 +158,7 @@ pub fn check(
                 status(
                     &d,
                     r.subject(),
+                    &hash,
                     by_key.get(&(r.name.clone(), id.clone())),
                     id,
                 )
@@ -219,6 +254,7 @@ pub fn submit(o: &Submit) -> ExitCode {
         Err(e) => return fail(e),
     };
     let mut lines = Vec::new();
+    let mut submitted = BTreeSet::new();
     for f in &o.files {
         let doc = match read_file(f) {
             Ok(d) => d,
@@ -228,8 +264,22 @@ pub fn submit(o: &Submit) -> ExitCode {
         if !problems.is_empty() {
             return fail(format!("{}: {}", f.display(), problems.join("; ")));
         }
+        if let Some(hash) = doc["rubricHash"].as_str()
+            && m.rubrics.iter().any(|r| {
+                Some(r.name.as_str()) == doc["rubric"].as_str() && assess::rubric_hash(r) != hash
+            })
+        {
+            return fail(format!("{}: rubric changed since the brief", f.display()));
+        }
+        let external_id = seikika_connect::assessment::external_id(&doc);
+        if !submitted.insert(external_id.clone()) {
+            return fail(format!(
+                "{}: duplicate assessment {external_id}",
+                f.display()
+            ));
+        }
         let rec = json!({"type": "record", "kind": "assessment",
-            "externalId": seikika_connect::assessment::external_id(&doc),
+            "externalId": external_id,
             "data": seikika_connect::assessment::record(&doc, None)});
         lines.push(rec.to_string());
     }

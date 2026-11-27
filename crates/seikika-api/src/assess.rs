@@ -6,6 +6,8 @@
 use seikika_model::Manifest;
 use seikika_model::manifest::Rubric;
 use serde_json::{Map, Value, json};
+use sha2::{Digest, Sha256};
+use std::collections::BTreeSet;
 use std::fmt::Write as _;
 
 /// Where an assessment of `entity` against `rubric` lives, relative to the portal directory.
@@ -44,6 +46,15 @@ pub fn applies(r: &Rubric, fields: &Map<String, Value>) -> bool {
     fields.get("rubric").and_then(Value::as_str) != Some(r.name.as_str())
 }
 
+/// Version of the complete rubric used to prepare an assessment.
+pub fn rubric_hash(r: &Rubric) -> String {
+    let body = serde_json::to_vec(r).expect("rubric serializes");
+    Sha256::digest(body)
+        .iter()
+        .map(|byte| format!("{byte:02x}"))
+        .collect()
+}
+
 /// The brief for `entity` (a `GET /v1/entities/{id}` body: `{id, kind, fields}`).
 pub fn brief(m: &Manifest, entity: &Value, rubric_name: Option<&str>) -> Result<Value, String> {
     let id = entity["id"].as_str().unwrap_or_default();
@@ -73,8 +84,9 @@ pub fn brief(m: &Manifest, entity: &Value, rubric_name: Option<&str>) -> Result<
             )
         })
         .collect();
+    let rubric_hash = rubric_hash(r);
     let template = format!(
-        "apiVersion: seikika.com/assessment/v1\nentity: {id}\nrubric: {}\nsubjectHash: \"{hash}\"\n\
+        "apiVersion: seikika.com/assessment/v1\nentity: {id}\nrubric: {}\nsubjectHash: \"{hash}\"\nrubricHash: \"{rubric_hash}\"\n\
          assessor: {{kind: agent, name: \"\", model: \"\"}}\nat: \"\"\nverdicts:\n{verdicts}summary: \"\"\n",
         r.name
     );
@@ -83,6 +95,7 @@ pub fn brief(m: &Manifest, entity: &Value, rubric_name: Option<&str>) -> Result<
         "rubric": {"name": r.name, "description": r.description, "subject": r.subject(),
                    "criteria": r.criteria.iter().map(|c| json!({"name": c.name, "question": c.question, "guidance": c.guidance})).collect::<Vec<_>>()},
         "subjectHash": hash,
+        "rubricHash": rubric_hash,
         "file": file_for(&r.name, id),
         "template": template,
         "facts": entity["fields"],
@@ -148,20 +161,22 @@ pub fn problems(m: &Manifest, doc: &Value) -> Vec<String> {
         out.push(format!("unknown rubric {}", doc["rubric"]));
         return out;
     };
-    let named: Vec<&str> = doc["verdicts"]
+    let mut named = BTreeSet::new();
+    for n in doc["verdicts"]
         .as_array()
         .into_iter()
         .flatten()
         .filter_map(|v| v["criterion"].as_str())
-        .collect();
+    {
+        if !named.insert(n) {
+            out.push(format!("duplicate verdict for criterion {n}"));
+        } else if !r.criteria.iter().any(|c| c.name == n) {
+            out.push(format!("{n} is not a criterion of {}", r.name));
+        }
+    }
     for c in &r.criteria {
         if !named.contains(&c.name.as_str()) {
             out.push(format!("no verdict for criterion {}", c.name));
-        }
-    }
-    for n in named {
-        if !r.criteria.iter().any(|c| c.name == n) {
-            out.push(format!("{n} is not a criterion of {}", r.name));
         }
     }
     out

@@ -171,6 +171,8 @@ fn describe_brief_check_and_submit() {
     ])))
     .unwrap();
     assert_eq!(brief["subjectHash"], "0123456789ab");
+    let rubric_hash = brief["rubricHash"].as_str().unwrap();
+    assert_eq!(rubric_hash.len(), 64);
     assert_eq!(brief["file"], "assessments/thing-review/thing/a.yaml");
 
     // Before the file exists the entity is missing; a valid file makes it fresh; a bad one fails.
@@ -203,6 +205,36 @@ fn describe_brief_check_and_submit() {
     assert_eq!(o.status.code(), Some(1));
     assert!(String::from_utf8_lossy(&o.stdout).contains("no verdict for criterion useful"));
     std::fs::remove_file(&bad).unwrap();
+
+    let repeated = ASSESSMENT.to_owned()
+        + "  - {criterion: useful, verdict: fail, reason: This would contradict the original verdict.}\n";
+    std::fs::write(&file, repeated).unwrap();
+    let duplicate = seikika(&["assess", "check", p, "--fixtures"]);
+    assert_eq!(duplicate.status.code(), Some(1));
+    assert!(
+        String::from_utf8_lossy(&duplicate.stdout)
+            .contains("duplicate verdict for criterion useful")
+    );
+
+    let bound = format!("{ASSESSMENT}rubricHash: \"{rubric_hash}\"\n");
+    std::fs::write(&file, &bound).unwrap();
+    stdout(&seikika(&[
+        "assess",
+        "check",
+        p,
+        "--fixtures",
+        "--require-fresh",
+    ]));
+    let path = dir.join("seikika.yaml");
+    std::fs::write(
+        &path,
+        MANIFEST.replace("Is it useful?", "Does it satisfy the new requirement?"),
+    )
+    .unwrap();
+    let changed = seikika(&["assess", "check", p, "--fixtures", "--require-fresh"]);
+    assert_eq!(changed.status.code(), Some(1));
+    assert!(String::from_utf8_lossy(&changed.stdout).contains("- stale `thing:a` pass"));
+    std::fs::write(&path, MANIFEST).unwrap();
 
     // Push it to a running server: the scorecard reads it like any other record.
     let url = format!("http://127.0.0.1:{}", free_port());

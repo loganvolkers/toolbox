@@ -229,15 +229,16 @@ exercised by fixtures. **First run, over 20 kinds, 190 fields and 9 connectors:*
    kind, the subject field and unique criterion names.
 2. **`seikika assess brief <entity> --portal <dir>`**, or the read-only **`assessment_brief`** MCP
    tool, gives the agent the rubric, the entity's facts (authorization applies, as for `get`), the
-   subject hash, the file path and a YAML template.
+   subject hash, rubric hash, file path and a YAML template.
 3. The agent reads the sources, judges each criterion `pass`, `fail` or `unsure` with a reason and a
    suggestion, and writes the file. The
    [`assess-entity`](../../plugins/seikika-operator/skills/assess-entity/SKILL.md) skill is the
    procedure.
 4. **`seikika assess check <dir>`** validates every file against
    [`crates/seikika-model/schema/assessment.schema.json`](../../crates/seikika-model/schema/assessment.schema.json) and the rubric (every
-   criterion answered, none invented, the entity exists), and lists entities as fresh, stale or
-   missing. CI runs it.
+   criterion answered exactly once, none invented, the entity and rubric match), and lists
+   entities as fresh, stale or missing. A rubric edit makes files with a recorded rubric hash
+   stale. CI runs this check.
 5. **Storage**, either:
    - **as a file**: the workspace connector reads `assessments` globs into `assessment` records
      (repository portals);
@@ -271,6 +272,10 @@ gating.
 Routine `seikika assess check` reports fresh, stale and missing subjects. It fails on invalid
 files, including missing verdicts for criteria. Land rubric additions with verdicts for the
 affected assessments. Use `--require-fresh` for release preflight and high-risk review gates.
+
+The [PR assessment pilot](pr-assessments.md) scopes deterministic checks and advisory judgment
+to a candidate diff. It keeps evidence, runs and budgets outside the entity-assessment baseline
+under D01M8D9AK7Q9B18B10FC38WB2BQ.
 
 **First assessments (by this session's agent, using the brief):**
 

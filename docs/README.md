@@ -7,6 +7,7 @@ or the [open questions](questions.md). For build and review instructions, see [A
 - [docs/research.md](research.md) — landscape (Backstage, Port, Cortex, DX, OpsLevel, Datadog, OSS alternatives) and validation
 - [Connector directory research](audits/connector-directory.md) compares how five products help operators discover, configure, and verify connectors.
 - [Standards package directory research](audits/package-directory.md) compares package discovery, installation, and verification across five ecosystems.
+- The [agentic assessment review](audits/agentic-assessments-2026-11-26.md) replays historical PR defects and proposes scoped review and budget controls.
 - [docs/v1-spec.md](v1-spec.md) — the v1 implementation contract (milestones, contracts, API, MCP, CLI, data model, properties)
 - [examples/reference-portal/](../examples/reference-portal/README.md) — reference implementation anchor: manifest, schemas, fixtures, oracle and authz tests
 - [docs/plan.md](plan.md) — architecture and delivery roadmap
@@ -25,6 +26,7 @@ or the [open questions](questions.md). For build and review instructions, see [A
   - [design/extensibility.md](design/extensibility.md): code-first extensibility and the right language for each job
   - [design/repo-value.md](design/repo-value.md): **the current focus**, proving repo-level value: hypotheses, pilots, stop conditions
   - [design/repo-portals.md](design/repo-portals.md): Seikika without a server — `seikika report`, evidence, ratchets, one-file HTML; adopt it with the [report action](../actions/report/README.md) and the [starter](../examples/repo-portal-starter/README.md)
+  - [Pull request assessments](design/pr-assessments.md) describes the maintainer SDLC pilot for scoped checks and bounded delegation.
   - [design/ratchets.md](design/ratchets.md): what we learned from Betterer and other baselines (ESLint, PHPStan, basedpyright, OpenSSF Scorecard)
   - [design/scorecards-for-scorecards.md](design/scorecards-for-scorecards.md): what makes a standard good, and the meta scorecards that score ours (and themselves)
   - [design/package-author-sdlc.md](design/package-author-sdlc.md): the fourth SDLC layer, binary distribution (Seikika, connectors, upstream tools) and decoupling connectors from core
