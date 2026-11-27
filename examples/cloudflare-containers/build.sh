@@ -27,6 +27,8 @@ export CARGO_TARGET_DIR="${CARGO_TARGET_DIR:-"$repo_dir/target"}"
 cargo build --locked --release --workspace
 bash "$example_dir/stage.sh" "$portal_dir" "$staging"
 
+node "$example_dir/configure-preview-access.mjs" "$staging"
+
 worker_name=${WRANGLER_CI_OVERRIDE_NAME:-}
 if [[ -n "$worker_name" ]]; then
   if [[ ! "$worker_name" =~ ^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?$ ]]; then

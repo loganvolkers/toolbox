@@ -84,6 +84,8 @@ npm exec -- wrangler preview secret put SEIKIKA_SIGNING_KEY --worker-name seikik
 
 4. Open the Preview URL posted on the PR. Check `/readyz` and authenticated child discovery before expanding preview use. Delete the Preview when finished and check for a leftover Container application. [Preview secrets](https://developers.cloudflare.com/workers/previews/configuration/#secrets) · [Preview cleanup](https://developers.cloudflare.com/workers/previews/resources/#container-application-cleanup)
 
+For browser sign-in on the seven-fork portal, create an Access application for the branch Preview hostname with a policy that allows your testers. In that Preview's Workers Builds settings, set `SEIKIKA_PREVIEW_CF_TEAM_DOMAIN` to your Access issuer URL, `SEIKIKA_PREVIEW_CF_AUDIENCE` to the Access application's audience, and `SEIKIKA_PREVIEW_CF_VIEWER` to the login before `@` in the tester's verified email address. Keep the viewer login in a secret build variable if it is private. The build stages the Access settings and a read-only grant for that viewer. [Cloudflare Access for Workers](https://developers.cloudflare.com/workers/configuration/cloudflare-access/)
+
 ## Expose the portal
 
 Use a Cloudflare account with Containers enabled, Node.js, and Docker. Change the Worker `name` to the deployment name in your account. Verify Wrangler can build the image and bundle the Worker with `npm exec -- wrangler deploy --dry-run`. Provision a dedicated database and a role that can manage schema objects for Seikika and OpenFGA. Both use the same database and role in this example. Store the direct connection URL as the `DATABASE_URL` Worker secret and generate the signing seed once. Keep a copy of the seed in your secret manager for redeploys and disaster recovery.
