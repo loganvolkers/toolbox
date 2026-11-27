@@ -69,6 +69,10 @@ try {
   await page.getByRole("textbox", { name: "Search" }).fill("payments");
   await page.getByRole("textbox", { name: "Search" }).press("Enter");
   await page.getByRole("heading", { name: /Search.*payments/ }).waitFor();
+  await page.getByRole("link", { name: "Assessments", exact: true }).click();
+  await page.getByRole("heading", { name: "No assessment runs yet" }).waitFor();
+  await page.getByRole("link", { name: "Rubrics 0" }).click();
+  await page.getByText("This snapshot has no rubric definitions.").waitFor();
 
   const offlineUrl = new URL("/offline-artifact", docsOrigin).href;
   const offlineRequests = [];
@@ -85,6 +89,8 @@ try {
   await page.waitForFunction(() =>
     document.activeElement?.id === "tab-overview" &&
     document.activeElement.getAttribute("aria-selected") === "true");
+  await page.getByRole("tab", { name: "Assessments" }).click();
+  await page.getByRole("heading", { name: "No assessment runs yet" }).waitFor();
   page.off("request", recordRequest);
   assert.deepEqual(offlineRequests, [], "The offline artifact must make no requests for code, styles, or data.");
 

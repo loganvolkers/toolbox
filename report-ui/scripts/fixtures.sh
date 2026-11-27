@@ -3,6 +3,7 @@
 # seikika binary built from this checkout. Stories render these; nothing in them is hand-made.
 #
 #   s4s.json                 Seikika for Seikika (portal/), as pages CI renders it
+#   s4s-assessments.json     a subset of that report for the assessment reader tasks
 #   openfga.json             examples/openfga-portal over OpenFGA v1.23.0
 #   openfga-unmeasured.json  the same with the comparison records left out (--skip portal)
 #   starter.json             examples/repo-portal-starter over this repository
@@ -46,3 +47,4 @@ for name in s4s openfga openfga-unmeasured starter starter-empty; do
     "$tmp/$name/report.json" "$out/$name.json"
   echo "$out/$name.json"
 done
+node report-ui/scripts/assessment-fixture.mjs "$tmp/s4s/report.json" > "$out/s4s-assessments.json"

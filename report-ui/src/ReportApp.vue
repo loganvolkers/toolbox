@@ -16,6 +16,7 @@ import { fmt, plural } from "./lib/words";
 import ReportContent from "./ReportContent.vue";
 import ReportView from "./ReportView.vue";
 import ReportActions from "./ReportActions.vue";
+import AssessmentView from "./AssessmentView.vue";
 import { aggregateReport, sourceLabel } from "./lib/federation";
 import type { ActionRequest } from "./action-request";
 
@@ -44,7 +45,12 @@ const route = computed(() => {
   if (value.mode === "tracks" && value.name) value.name = trackByPath(data.value, value.name);
   return value;
 });
+const assessmentMode = computed(() => {
+  const mode = route.value.mode;
+  if (mode === "assessments" || mode === "assessment" || mode === "rubric" || mode === "rubrics") return mode;
+});
 const active = computed(() => {
+  if (assessmentMode.value) return "assessments";
   const current = route.value;
   if (current.mode === "missing") return null;
   if (current.bare && !data.value.scorecards[current.name ?? ""]) return null;
@@ -64,6 +70,7 @@ const tabs = computed(() => {
     { id: "catalog", label: "Catalog", count: summary.value.entityCount },
     ...(campaigns || active.value === "campaigns" ? [{ id: "campaigns", label: "Campaigns", count: campaigns }] : []),
     { id: "scorecards", label: "Scorecards", count: levelCards.value },
+    { id: "assessments", label: "Assessments" },
     ...(data.value.actions?.length || active.value === "actions" ? [{ id: "actions", label: "Actions", count: data.value.actions?.length ?? 0 }] : []),
     ...(comparisons.value ? [{ id: "compare", label: "Compare", count: comparisons.value }] : []),
   ];
@@ -185,6 +192,9 @@ function escapeTip(event: KeyboardEvent) {
 }
 
 watch(() => route.value.mode, mode => { if (mode === "actions") void ready(); });
+watch(() => [assessmentMode.value, route.value.id, route.value.query?.rubric], ([mode]) => {
+  if (mode) void ready();
+}, { flush: "post" });
 
 onMounted(() => {
   if (props.initialRoute !== undefined) history.replaceState(null, "", "#" + props.initialRoute);
@@ -192,6 +202,7 @@ onMounted(() => {
   window.addEventListener("click", rememberScroll, true);
   window.addEventListener("scroll", onScroll, { passive: true, capture: true });
   window.addEventListener("keydown", escapeTip);
+  if (assessmentMode.value) void ready();
 });
 onUnmounted(() => {
   clearTimeout(scrollTimer);
@@ -234,6 +245,9 @@ onUnmounted(() => {
     </div>
     <div id="report-body" ref="content" tabindex="-1" :role="active ? 'tabpanel' : undefined" :aria-labelledby="active ? 'tab-' + active : undefined">
       <ReportActions v-if="route.mode === 'actions'" :data="data" :entity="route.query?.entity" :request="requestAction" />
+      <div v-else-if="assessmentMode" class="view">
+        <AssessmentView :data="data" :mode="assessmentMode" :id="route.id" :filters="route.query" />
+      </div>
       <ReportView v-else :data="data" :summary="summary" :route="route" @ready="ready" />
     </div>
     <div ref="tooltip" class="ftip" :hidden="!tip" aria-hidden="true" :style="tipPosition" @mouseenter="keepTip">{{ tip }}</div>

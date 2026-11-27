@@ -115,6 +115,13 @@
             "$ref": "#/$defs/fieldName",
             "description": "The entity field that versions what is assessed (default `hash`). An assessment whose `subjectHash` differs from the entity's value is stale."
           },
+          "links": {
+            "type": "array",
+            "description": "Documentation and examples that explain how to apply the rubric.",
+            "items": {
+              "$ref": "#/$defs/link"
+            }
+          },
           "criteria": {
             "type": "array",
             "minItems": 1,
