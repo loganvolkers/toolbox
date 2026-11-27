@@ -65,7 +65,9 @@ python3 scripts/test-apply-changesets.py
    built on a `release` event. For a tag released before this job existed, run
    `gh workflow run image.yml -f tag=vX.Y.Z`.
 6. The `custom-mise` job [checks the operator install](#install-what-a-consumer-needs) after
-   the stable release is announced.
+   the stable release is announced. Its consumer-action smoke test downloads the tagged
+   CLI and connectors on Linux x64 and ARM64, then runs the ratchet and builds a static
+   repo portal. The scheduled and manual runs use the starter's pinned version.
 
 Before tagging, run the **image rehearsal** workflow against the release commit. It builds
 both Linux release archives with cargo-dist, verifies checksums, and builds the amd64 and
