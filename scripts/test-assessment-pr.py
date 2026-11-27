@@ -77,6 +77,25 @@ class AssessmentTests(unittest.TestCase):
         self.assertIn({"status": "D", "paths": ["old.md"]}, changed["changes"])
         self.assertEqual(pilot.build_plan(self.repo, self.base, self.head)[0], self.plan)
 
+    def test_bootstrap_changes_select_the_onboarding_probe(self):
+        policy = SCRIPT.parents[1] / pilot.POLICY
+        (self.repo / pilot.POLICY).write_bytes(policy.read_bytes())
+        base = self.save()
+        for path in (
+            "crates/seikika-cli/src/main.rs",
+            "crates/seikika-cli/src/init.rs",
+            "crates/seikika-cli/src/init-catalog.yaml",
+            "crates/seikika-connector-workspace/src/site.rs",
+        ):
+            with self.subTest(path=path):
+                self.git("switch", "--quiet", "--detach", base)
+                changed = self.repo / path
+                changed.parent.mkdir(parents=True, exist_ok=True)
+                changed.write_text("fixture\n")
+                plan, _ = pilot.build_plan(self.repo, base, self.save())
+                self.assertEqual(plan["checks"], ["onboarding"])
+                self.assertEqual(plan["unmappedPaths"], [])
+
     def test_check_transport_and_evidence_validation(self):
         output = self.root / "check"
         evidence = pilot.run_checks(self.repo, self.plan, self.definitions, [], output)
