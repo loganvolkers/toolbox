@@ -512,11 +512,34 @@ fn viewer(c: &Caller) -> Value {
     json!({"user": c.user, "admin": c.admin, "method": c.method})
 }
 
+/// Selects the public catalog projection before loading the signed-in home view.
+#[derive(Deserialize)]
+pub struct HomeQuery {
+    #[serde(default)]
+    public_catalog: bool,
+}
+
 /// `GET /v1/views/home` — my teams, what they own, failing rules, and kinds to browse.
-pub async fn view_home(State(s): S, headers: HeaderMap) -> Response {
-    if crate::public_catalog::guest(&s, &headers) {
+pub async fn view_home(
+    State(s): S,
+    headers: HeaderMap,
+    Query(query): Query<HomeQuery>,
+) -> Response {
+    let guest = crate::public_catalog::guest(&s, &headers);
+    if query.public_catalog {
+        return if guest {
+            crate::public_catalog::report(&s)
+        } else {
+            StatusCode::NO_CONTENT.into_response()
+        };
+    }
+    if guest {
         return crate::public_catalog::home(&s);
     }
+    view_authenticated_home(s, headers).await
+}
+
+async fn view_authenticated_home(s: Arc<AppState>, headers: HeaderMap) -> Response {
     let caller = match s.caller(&headers).await {
         Ok(c) => c,
         Err(r) => return r,

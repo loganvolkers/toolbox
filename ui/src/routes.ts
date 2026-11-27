@@ -1,47 +1,24 @@
-import type { AssessmentFilters } from "../../report-ui/src/lib/assessments";
-
-export type PortalRoute =
-  | { page: "home" | "ops"; api: string }
-  | { page: "search"; api: string; query: string }
-  | { page: "catalog"; api: string; id: string; filter: string }
-  | { page: "entity" | "scorecard" | "campaign"; api: string; id: string }
-  | { page: "assessments"; api: string; mode: "assessments" | "assessment" | "rubrics" | "rubric"; id?: string; filters?: AssessmentFilters }
-  | { page: "missing"; api: null };
-
-const encode = encodeURIComponent;
-
-export function portalRoute(url: URL): PortalRoute {
-  let segments: string[];
-  try {
-    segments = url.pathname.split("/").filter(Boolean).map(decodeURIComponent);
-  } catch {
-    return { page: "missing", api: null };
-  }
+// Keep links published by earlier portal builds working with the shared report routes.
+export function restorePortalRoute(url: URL) {
+  const segments = url.pathname.split("/").filter(Boolean);
+  if (!segments.length || segments.length === 1 && segments[0] === "report") return;
   const [section, id, detail] = segments;
-  if (!section) return { page: "home", api: "/v1/views/home" };
-  if (section === "ops" && !id) return { page: "ops", api: "/v1/views/ops" };
-  if (section === "assessments" && segments.length <= 3) {
-    const api = "/v1/views/report";
-    if (!id) return { page: "assessments", mode: "assessments", api, filters: {
-      q: url.searchParams.get("q") ?? undefined,
-      rubric: url.searchParams.get("rubric") ?? undefined,
-      verdict: url.searchParams.get("verdict") ?? undefined,
-    } };
-    if (id === "rubrics") return { page: "assessments", mode: detail ? "rubric" : "rubrics", api, id: detail };
-    if (id === "run" && detail) return { page: "assessments", mode: "assessment", api, id: detail };
+  let path = "missing";
+  if (segments.length === 1) {
+    if (section === "ops") path = "operations";
+    if (section === "search" || section === "assessments") path = section;
+  } else if (segments.length === 2) {
+    const routes = { c: "catalog", e: "entity", s: "scorecard", cgn: "campaign" } as const;
+    if (Object.hasOwn(routes, section)) path = routes[section as keyof typeof routes] + "/" + id;
+    if (section === "assessments" && id === "rubrics") path = "rubrics";
+  } else if (segments.length === 3 && section === "assessments") {
+    if (id === "rubrics") path = "rubric/" + detail;
+    if (id === "run") path = "assessment/" + detail;
   }
-  if (section === "search" && !id) {
-    const query = url.searchParams.get("q") ?? "";
-    return { page: "search", query, api: "/v1/entities?q=" + encode(query) + "&limit=50" };
-  }
-  if (!id || segments.length !== 2) return { page: "missing", api: null };
-  if (section === "c") {
-    const filter = url.searchParams.get("filter") ?? "";
-    const api = "/v1/entities?kind=" + encode(id) + "&limit=200" + (filter ? "&filter=" + encode(filter) : "");
-    return { page: "catalog", id, filter, api };
-  }
-  if (section === "e") return { page: "entity", id, api: "/v1/views/entity/" + encode(id) };
-  if (section === "s") return { page: "scorecard", id, api: "/v1/views/scorecard/" + encode(id) };
-  if (section === "cgn") return { page: "campaign", id, api: "/v1/views/campaign/" + encode(id) };
-  return { page: "missing", api: null };
+  const params = new URLSearchParams(url.search);
+  params.delete("as");
+  for (const key of params.keys()) url.searchParams.delete(key);
+  url.pathname = "/";
+  url.hash = path + (params.size ? "?" + params : "");
+  history.replaceState(history.state, "", url);
 }

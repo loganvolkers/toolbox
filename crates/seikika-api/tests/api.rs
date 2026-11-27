@@ -75,6 +75,31 @@ async fn public_catalog_is_an_explicit_read_only_projection() {
     assert_eq!(home["kinds"]["Repository"], 2);
     assert!(home.get("snapshot").is_none());
 
+    let catalog = client
+        .get(format!("{url}/v1/views/home?public_catalog=true"))
+        .send()
+        .await
+        .unwrap()
+        .error_for_status()
+        .unwrap();
+    assert_eq!(catalog.headers()["cache-control"], "private, no-store");
+    let catalog: Value = catalog.json().await.unwrap();
+    assert_eq!(catalog["publicCatalog"], true);
+    assert_eq!(
+        catalog["catalog"]["Repository"],
+        serde_json::json!(["repository:ledger", "repository:wiki"])
+    );
+    assert_eq!(
+        catalog["entityOverview"]["repository:ledger"],
+        serde_json::json!({
+            "title": "example/ledger", "repositoryUrl": "https://github.com/example/ledger"
+        })
+    );
+    assert_eq!(catalog["scores"], serde_json::json!({}));
+    for field in ["snapshot", "entities", "actions", "viewer"] {
+        assert!(catalog.get(field).is_none(), "{field} is private");
+    }
+
     let list: Value = client
         .get(format!(
             "{url}/v1/entities?kind=repository&q=EXAMPLE&limit=1"
@@ -111,16 +136,26 @@ async fn public_catalog_is_an_explicit_read_only_projection() {
         .unwrap();
     assert_eq!(hidden.status(), 404);
     let invalid = client
-        .get(format!("{url}/v1/views/home"))
+        .get(format!(
+            "{url}/v1/views/report?partial=true&public_catalog=true"
+        ))
         .header("cf-access-jwt-assertion", "invalid")
         .send()
         .await
         .unwrap();
     assert_eq!(invalid.status(), 401);
+    let invalid_catalog = client
+        .get(format!("{url}/v1/views/home?public_catalog=true"))
+        .header("cf-access-jwt-assertion", "invalid")
+        .send()
+        .await
+        .unwrap();
+    assert_eq!(invalid_catalog.status(), 204);
 
     let protected = [
         ("GET", "/v1/views/ops"),
         ("GET", "/v1/views/report"),
+        ("GET", "/v1/views/report?partial=true"),
         ("GET", "/v1/snapshot"),
         ("GET", "/v1/actions"),
         ("POST", "/v1/actions/test/previews"),

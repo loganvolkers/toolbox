@@ -97,15 +97,26 @@ const contracts = {
     await page.getByRole("searchbox", { name: "Search runs" }).fill("unrelated");
     await page.getByText("No runs match your filters.").waitFor();
   },
+  "hosted-portal--public-catalog": async (page) => {
+    assert.equal(await page.getByRole("tab").count(), 1);
+    await page.getByRole("link", { name: "Public scorecards" }).waitFor();
+    assert.equal(await page.getByRole("link", { name: "Operations" }).getAttribute("href"), "/ops");
+    await page.locator('a[href="#catalog/Repository"]').first().click();
+    assert.equal(await page.getByRole("textbox", { name: /CEL filter/ }).count(), 0);
+    await page.locator('a[href="#entity/repository%3Aledger"]').first().click();
+    await page.getByRole("heading", { name: "example/ledger", exact: true }).waitFor();
+    assert.equal(await page.getByRole("link", { name: "Source" }).getAttribute("href"), "https://github.com/example/ledger");
+    assert.equal(await page.getByRole("button", { name: "Refresh" }).count(), 0);
+  },
   "hosted-portal--assessments": async (page) => {
-    assert.equal(await page.getByRole("link", { name: "Assessments", exact: true }).getAttribute("href"), "/assessments");
+    await page.getByRole("tab", { name: "Assessments", exact: true }).waitFor();
     const run = page.locator(".assessment-runs li").first().getByRole("link");
-    assert.match(await run.getAttribute("href"), /^\/assessments\/run\//);
+    assert.match(await run.getAttribute("href"), /^#assessment\//);
   },
   "hosted-portal--assessment-run": async (page) => {
     await page.getByRole("heading", { name: "Criterion results" }).waitFor();
-    assert.match(await page.getByRole("link", { name: "Crate design rubric" }).getAttribute("href"), /^\/assessments\/rubrics\//);
-    assert.equal(await page.getByRole("link", { name: "Assessments are well-formed" }).getAttribute("href"), "/report/#scorecard/meta-assessment");
+    assert.match(await page.getByRole("link", { name: "Crate design rubric" }).getAttribute("href"), /^#rubric\//);
+    assert.equal(await page.getByRole("link", { name: "Assessments are well-formed" }).getAttribute("href"), "#scorecard/meta-assessment");
   },
 };
 const VIEWS = [

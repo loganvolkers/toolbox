@@ -5,13 +5,14 @@
 ## Current architecture
 
 The box's first-party UI uses Astro and Vue under one PNPM workspace. The hosted portal builds into
-the Rust release. The static report is the `@seikika/astro-report` integration. Both use
-`@seikika/ui` for the theme, page frame, entity overview, and scorecard presentation. Customize
-through slots and props. Publish the component and page stories with the Astro docs.
+the Rust release. The hosted portal and the `@seikika/astro-report` integration mount the same Vue
+app, with the `@seikika/ui` theme and components. The shared app renders catalogs, scorecards,
+rules, campaigns, tracks, comparisons, assessments, and actions. Publish the component and page
+stories with the Astro docs.
 
-Operators compose the shared components in their own Astro builds. The hosted UI gets
-facet-shaped data and uses the existing Rust APIs for refresh and actions. The static report uses
-a snapshot approved for its audience. Loading independent UI modules into the hosted portal is
+The hosted portal loads the viewer's authorized snapshot and uses slots and callbacks to attach
+search, operations, CEL filters and entity refresh. The static integration loads a published
+snapshot. Operators can compose the shared components in their own Astro builds. Loading independent UI modules into the hosted portal is
 part of the proposed extension design below.
 
 The sections below record the earlier self-service design. Framework recommendations there were

@@ -30,7 +30,7 @@ function worstEvidence(D: ReportData, cols: string[], id: string) {
 }
 
 export const catalogViews = {
-  catalog(D: ReportData, S: Summary, kind, query) {
+  catalog(D: ReportData, S: Summary, kind: string | undefined, query: import("../lib/routes").Query, catalogIds?: ReadonlySet<string>) {
     query = query || {};
     var catalog = D.catalog || {};
     var groups = kindGroupsOf(D);
@@ -40,8 +40,8 @@ export const catalogViews = {
       }),
     );
     if (!kinds.length) return el("section", {}, el("div", { className: "empty", textContent: "Catalog is empty in this report." }));
-    var selected = kind && catalog[kind] ? kind : null;
-    if (selected && D.sources) return federatedList(D, selected, query);
+    const selected = kind && catalog[kind] ? kind : null;
+    if (selected && D.sources) return federatedList(D, selected, query, catalogIds);
     var scored = scoredKinds(D);
     var compared = {};
     Object.keys(D.comparisons || {}).forEach(function (n) {
@@ -100,8 +100,8 @@ export const catalogViews = {
       "section",
       {},
       el("div", { className: "head" }, el("h2", { textContent: "Catalog" }), el("span", { className: "sub", textContent: fmt(S.entityCount) + " entities in " + kinds.length + " kinds and " + plural(groups.length, "group") })),
-      el("p", { className: "lede", textContent: D.sources ? "Browse entities from the local portal and federated repositories by kind." : "Everything the portal derived from this repository, grouped by what it is about. The bar under a kind shows each entity's lowest level across the scorecards that rate it; pick a kind to list its entities." }),
-      el(
+      el("p", { className: "lede", textContent: D.publicCatalog ? "Browse the repositories published by this portal." : D.sources ? "Browse entities from the local portal and federated repositories by kind." : "Everything the portal derived from this repository, grouped by what it is about. The bar under a kind shows each entity's lowest level across the scorecards that rate it; pick a kind to list its entities." }),
+      D.publicCatalog ? null : el(
         "div",
         { className: "legend", style: "margin:0 0 12px" },
         ...["none", "bronze", "silver", "gold", "unscored"].map(function (l) {
@@ -119,19 +119,19 @@ export const catalogViews = {
     var drawList = function () {
       var q = search.value.toLowerCase();
       var ids = (catalog[selected] || []).filter(function (id) {
-        return !q || id.toLowerCase().indexOf(q) >= 0;
+        return (!catalogIds || catalogIds.has(id)) && (!q || id.toLowerCase().includes(q));
       });
       if (!ids.length) {
         list.replaceChildren(
-          el("div", { className: "empty", textContent: "No entities match “" + search.value + "”." }),
-          el("button", {
+          el("div", { className: "empty", textContent: search.value ? "No entities match “" + search.value + "”." : "No entities match the filter." }),
+          search.value ? el("button", {
             className: "link",
             textContent: "Clear filter",
             onclick: function () {
               search.value = "";
               search.dispatchEvent(new Event("input"));
             },
-          }),
+          }) : "",
         );
         return;
       }
@@ -357,7 +357,10 @@ export const catalogViews = {
       }
     };
     search.oninput = function () {
-      var want = "#catalog/" + enc(selected) + (search.value ? "?" + new URLSearchParams({ q: search.value }) : "");
+      const params = new URLSearchParams();
+      if (search.value) params.set("q", search.value);
+      if (query.filter) params.set("filter", query.filter);
+      var want = "#catalog/" + enc(selected) + (params.size ? "?" + params : "");
       if (location.hash !== want && history.replaceState) history.replaceState(history.state, "", want);
       drawList();
     };
@@ -457,7 +460,7 @@ export const catalogViews = {
   },
 } satisfies ThisType<ReportViews>;
 
-function federatedList(D: ReportData, kind: string, query: import("../lib/routes").Query) {
+function federatedList(D: ReportData, kind: string, query: import("../lib/routes").Query, catalogIds?: ReadonlySet<string>) {
   const ids = D.catalog[kind] ?? [];
   const search = el("input", { type: "search", ariaLabel: "Filter entities by name", value: query.q ?? "" });
   const group = el("select", { ariaLabel: "Group entities" },
@@ -486,13 +489,15 @@ function federatedList(D: ReportData, kind: string, query: import("../lib/routes
     if (search.value) params.set("q", search.value);
     if (group.value) params.set("group", group.value);
     if (source.value) params.set("source", source.value);
+    if (query.filter) params.set("filter", query.filter);
     if (params.size || location.hash) {
       history.replaceState(history.state, "", "#catalog/" + enc(kind) + (params.size ? "?" + params : ""));
     }
     const q = search.value.trim().toLowerCase();
     const filtered = ids.filter(id => {
       const locator = D.entitySources?.[id];
-      return (!source.value || locator?.source === source.value)
+      return (!catalogIds || catalogIds.has(id))
+        && (!source.value || locator?.source === source.value)
         && (!q || [locator?.original ?? id, D.entityOverview?.[id]?.title, entitySource(D, id)]
           .some(value => typeof value === "string" && value.toLowerCase().includes(q)));
     });
@@ -513,11 +518,11 @@ function federatedList(D: ReportData, kind: string, query: import("../lib/routes
     };
     if (!filtered.length) {
       list.replaceChildren(el("p", { className: "empty", textContent: "No entities match." }),
-        el("button", { type: "button", textContent: "Clear filters", onclick: () => {
+        search.value || source.value ? el("button", { type: "button", textContent: "Clear name and source filters", onclick: () => {
           search.value = "";
           source.value = "";
           render();
-        } }));
+        } }) : "");
       return;
     }
     let shownCount = Math.min(limit, filtered.length);

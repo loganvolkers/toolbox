@@ -14,7 +14,10 @@ const { chromium } = require("playwright");
   await page.goto(`${url}/e/repository%3Apayments-api?as=alice`);
   await page.getByRole("heading", { name: "Payments API" }).waitFor();
   const before = await page.locator(".asof code").first().textContent();
-  const ruleBefore = await page.locator("li", { hasText: "branch-protected" }).first().getAttribute("class");
+  const failedRule = page.locator(".sc-block .rule.fail").filter({
+    has: page.locator(".rid", { hasText: "branch-protected" }),
+  });
+  const failedBefore = await failedRule.count() > 0;
   await fetch(`${gh}/_mock/repos/payments-api`, { method: "POST", body: JSON.stringify({ default_branch_protected: false }) });
   const started = Date.now();
   await page.getByRole("button", { name: "Refresh" }).click();
@@ -26,9 +29,9 @@ const { chromium } = require("playwright");
   }
   await page.waitForFunction((b) => document.querySelector(".asof code")?.textContent !== b, before, { timeout: 10000 });
   const after = await page.locator(".asof code").first().textContent();
-  const ruleAfter = await page.locator("li", { hasText: "branch-protected" }).first().getAttribute("class");
+  await failedRule.first().waitFor();
   await page.screenshot({ path: process.env.SCREENSHOT || "/tmp/a11.png", fullPage: true });
-  console.log(`  snapshot ${before} → ${after} in ${Date.now() - started} ms; branch-protected ${ruleBefore} → ${ruleAfter}`);
+  console.log(`  snapshot ${before} → ${after} in ${Date.now() - started} ms; branch-protected ${failedBefore ? "failed" : "passed"} → failed`);
   await browser.close();
-  if (before === after || ruleAfter !== "rule-fail") process.exit(1);
+  if (before === after || failedBefore) process.exit(1);
 })().catch((e) => { console.error(e); process.exit(1); });

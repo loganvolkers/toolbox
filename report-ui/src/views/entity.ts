@@ -278,7 +278,7 @@ export const entityViews = {
           "div",
           { className: "head" },
           el("div", {}, el("h3", { className: "sct" }, link("scorecard/" + enc(name), "", title(D, name))), " ", score.level === "skipped" ? badge(score.level) : unrunIn(sc, score).length ? el("span", { className: "lvl none", title: unrunWords(sc, unrunIn(sc, score)) }, "not established") : levelPill(score.level, unassessedIn(D, name, id), unrunIn(sc, score))),
-          el("span", { className: "sub" }, name + " · ", here.measured ? el("span", {}, basisIcon("measured"), " " + here.measured + " measured") : null, here.measured && here.judged ? " · " : "", here.judged ? el("span", { className: "judged-n" }, basisIcon("judged"), " " + here.judged + " agent-judged") : null),
+          el("span", { className: "sub" }, name, here.measured || here.judged ? " · " : "", here.measured ? el("span", {}, basisIcon("measured"), " " + here.measured + " measured") : null, here.measured && here.judged ? " · " : "", here.judged ? el("span", { className: "judged-n" }, basisIcon("judged"), " " + here.judged + " agent-judged") : null),
         ),
         !score.rules && score.level !== "skipped" ? el("p", { className: "sub", textContent: "Rule details require access." }) : score.level === "skipped" ? el("div", { className: "sub", textContent: "Not in this scorecard's scope." }) : self.nextStep(sc, score),
         self.rulesFor(sc, score, name, unassessedIn(D, name, id), id),
@@ -430,14 +430,14 @@ export const entityViews = {
                   ? null
                   : el("strong", { style: "color:" + (whollyUnset ? "var(--muted)" : ink(shown)) + (whollyUnset || KNOWN.indexOf(ownLevel(D, kind, shown)) < 0 ? ";text-transform:none" : "") }, whollyUnset ? "Not run in this build" : ownLevel(D, kind, shown), !whollyUnset && atTop ? el("span", { className: "topmark", textContent: " ✓ top" + (KNOWN.indexOf(shown) < 0 ? " level" : "") }) : null),
                 ...openCards.flatMap(cardLine),
-                el("span", { className: "sub", textContent: [total.pass + " of " + plural(total.all, "check passes", "checks pass") + " on evidence", total.fail ? plural(total.fail, "failure") : "", total.unrun ? plural(total.unrun, "check was not run", "checks were not run") : "", total.unassessed ? plural(total.unassessed, "check is not assessed yet", "checks are not assessed yet") + ", not counted as " + (total.unassessed === 1 ? "a pass" : "passes") : ""].filter(Boolean).join(" · ") }),
+                total.all ? el("span", { className: "sub", textContent: [total.pass + " of " + plural(total.all, "check passes", "checks pass") + " on evidence", total.fail ? plural(total.fail, "failure") : "", total.unrun ? plural(total.unrun, "check was not run", "checks were not run") : "", total.unassessed ? plural(total.unassessed, "check is not assessed yet", "checks are not assessed yet") + ", not counted as " + (total.unassessed === 1 ? "a pass" : "passes") : ""].filter(Boolean).join(" · ") }) : null,
               ),
             )
           : null,
       ),
       total.all ? basisKey(bases, "check") : null,
       judgedList,
-      cards.length ? el("div", {}, ...blocks) : el("div", { className: "empty", textContent: "Not scored by any scorecard in this snapshot." }),
+      cards.length ? el("div", {}, ...blocks) : el("div", { className: "empty", textContent: "No scorecard results to display." }),
     );
   },
 } satisfies ThisType<ReportViews>;

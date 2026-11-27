@@ -31,11 +31,28 @@ pub(crate) fn home(state: &AppState) -> Response {
     }))
 }
 
+fn repository_fields(name: &str) -> Value {
+    json!({"title": name, "repositoryUrl": format!("https://github.com/{name}")})
+}
+
 fn repository(id: &str, name: &str) -> Value {
-    json!({"id": id, "kind": "Repository", "fields": {
-        "title": name,
-        "repositoryUrl": format!("https://github.com/{name}"),
-    }})
+    json!({"id": id, "kind": "Repository", "fields": repository_fields(name)})
+}
+
+pub(crate) fn report(state: &AppState) -> Response {
+    let repositories = &state.config.public_repositories;
+    let overviews: serde_json::Map<String, Value> = repositories
+        .iter()
+        .map(|(id, name)| (id.clone(), repository_fields(name)))
+        .collect();
+    response(json!({
+        "portal": state.manifest.portal.title.as_deref().unwrap_or("Seikika"),
+        "publicCatalog": true,
+        "catalog": {"Repository": repositories.keys().collect::<Vec<_>>()},
+        "entityOverview": overviews,
+        "scorecards": {},
+        "scores": {},
+    }))
 }
 
 pub(crate) fn list(

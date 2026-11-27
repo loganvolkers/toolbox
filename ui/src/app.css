@@ -1,37 +1,39 @@
 body { margin: 0; }
 #seikika-initial-entity { padding: 20px; }
-@scope (.portal-ui) {
-a { color: var(--accent); text-decoration: underline; } a:hover { text-decoration-thickness: 2px; }
-nav.top { display: flex; gap: 16px; align-items: center; padding: 10px 24px; border-bottom: 1px solid var(--line); flex-wrap: wrap; }
-nav.top form { flex: 1; min-width: min(100%, 160px); }
-nav.top a { display: inline-flex; align-items: center; min-block-size: 28px; }
-nav.top a[aria-current="page"] { font-weight: 700; text-decoration-thickness: 2px; }
-input { font: inherit; padding: 6px 10px; border: 1px solid var(--line); border-radius: 6px; background: var(--bg); color: var(--fg); width: 100%; box-sizing: border-box; }
-button { font: inherit; padding: 6px 14px; border: 1px solid var(--line); border-radius: 6px; background: var(--card); color: var(--fg); cursor: pointer; }
-button:disabled { opacity: .6; cursor: progress; }
-main { max-width: 1100px; margin: 0 auto; padding: 16px 24px 48px; }
-h1 { margin: 8px 0 4px; overflow-wrap: anywhere; } h2 { font-size: 1.05rem; margin: 20px 0 8px; } h3 { font-size: 1rem; margin: 8px 0; }
-table { width: 100%; border-collapse: collapse; } th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--line); vertical-align: top; overflow-wrap: anywhere; }
-.muted, .source { color: var(--muted); } .source { font-size: .8rem; margin-left: 6px; }
-.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); gap: 24px; }
-.card { background: var(--card); border: 1px solid var(--line); border-radius: 8px; padding: 8px 14px; margin-bottom: 12px; }
-.chip { margin-right: 10px; white-space: nowrap; }
-.status { font-size: .8rem; margin-left: 6px; } .status-verified { color: var(--ok); } .status-unverified, .status-none { color: var(--bad); } .status-inferred { color: var(--warn); }
-.callout { border-left: 4px solid var(--line); background: var(--card); padding: 8px 12px; border-radius: 4px; margin: 12px 0; }
-.callout.status-verified { border-color: var(--ok); } .callout.status-unverified, .callout.status-none { border-color: var(--bad); } .callout.status-inferred { border-color: var(--warn); }
-.redacted { color: var(--lock); font-size: .9rem; }
-.rules { list-style: none; padding: 0; } .rules li { margin: 4px 0; } .outcome { display: inline-block; min-width: 64px; font-weight: 600; }
-.rule-pass .outcome { color: var(--ok); } .rule-fail .outcome { color: var(--bad); } .rule-unknown .outcome { color: var(--warn); }
-.fix { color: var(--muted); font-size: .9rem; margin-left: 68px; }
-dl.fields div { display: grid; grid-template-columns: 180px 1fr; gap: 8px; padding: 3px 0; border-bottom: 1px solid var(--line); } dt { color: var(--muted); } dd { min-width: 0; margin: 0; overflow-wrap: anywhere; }
-.refresh { display: flex; gap: 10px; align-items: center; } .refresh .done { color: var(--ok); } .refresh .error { color: var(--bad); }
-.filter { display: grid; grid-template-columns: 1fr auto; gap: 6px 10px; margin: 12px 0; } .filter label { grid-column: 1 / -1; color: var(--muted); }
-.problem { border: 1px solid var(--bad); border-radius: 6px; padding: 10px 14px; }
-.skeleton { height: 120px; border-radius: 8px; background: linear-gradient(90deg, var(--card), var(--line), var(--card)); background-size: 200% 100%; animation: shimmer 1.2s infinite; }
-@keyframes shimmer { to { background-position: -200% 0; } }
-.ok { color: var(--ok); } .newer { border-color: var(--accent); }
-@media (max-width: 600px) { main { padding: 12px 16px; } dl.fields div { grid-template-columns: 1fr; } }
 
-@media (prefers-reduced-motion: reduce) { .skeleton { animation: none; } }
+@scope (.seikika-report) {
+.portal-tools {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+  margin-block: 12px;
 }
-.portal-ui { min-height: 100vh; }
+.portal-tools form { flex: 1 1 14rem; max-width: 24rem; }
+.portal-tools input {
+  width: 100%;
+  padding: 6px 10px;
+  font: inherit;
+  color: var(--fg);
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+}
+.portal-tools a[aria-current="page"] { font-weight: 650; }
+.portal-table { width: 100%; border-collapse: collapse; }
+.portal-table :is(th, td) {
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--line);
+  text-align: left;
+  vertical-align: top;
+  overflow-wrap: anywhere;
+}
+.portal-entity-tools { margin-block: 12px 18px; }
+.portal-entity-tools summary { cursor: pointer; }
+.portal-problem {
+  border: 1px solid var(--fail);
+  border-radius: 6px;
+  padding: 10px 14px;
+}
+.portal-failure { color: var(--fail); }
+}

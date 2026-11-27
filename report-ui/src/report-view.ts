@@ -18,12 +18,12 @@ type Methods = typeof overviewViews & typeof scorecardsViews & typeof tracksView
   typeof campaignsViews & typeof catalogViews & typeof entityViews & typeof ruleViews & typeof compareViews;
 export interface ReportViews extends Methods {}
 
-export function buildView(data: ReportData, summary: Summary, route: Route): HTMLElement {
+export function buildView(data: ReportData, summary: Summary, route: Route, catalogIds?: ReadonlySet<string>): HTMLElement {
   const missing = missingTarget(data, route);
   if (missing) return notFound(missing);
   switch (route.mode) {
     case "overview": return views.overview(data, summary);
-    case "catalog": return views.catalog(data, summary, route.kind, route.query ?? {});
+    case "catalog": return views.catalog(data, summary, route.kind, route.query ?? {}, catalogIds);
     case "entity": return views.entity(data, summary, route.id);
     case "campaigns":
     case "campaign": return views.campaigns(data, summary, route.name);

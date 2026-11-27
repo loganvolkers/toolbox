@@ -1,114 +1,113 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref, watch } from "vue";
-import PageFrame from "@seikika/ui/components/PageFrame.vue";
-import { api, devUser, type ApiResult } from "../api";
-import { portalRoute } from "../routes";
-import PortalHeader from "./PortalHeader.vue";
-import PortalView from "./PortalView.vue";
+import { computed, onMounted, onUnmounted, provide, ref, watch } from "vue";
+import ReportApp from "../../../report-ui/src/ReportApp.vue";
+import type { CatalogFilter, ReportData } from "../../../report-ui/src/types";
+import type { PortalApi } from "../api";
+import { portalApi, usePortalApi, usePortalRequest } from "../requests";
+import { restorePortalRoute } from "../routes";
+import PortalStatus from "./PortalStatus.vue";
+import PortalLiveView from "./PortalLiveView.vue";
+import PortalEntityTools from "./PortalEntityTools.vue";
+import PortalTeams from "./PortalTeams.vue";
 
-const route = ref(portalRoute(new URL(location.href)));
-const user = ref(devUser());
-const result = ref<ApiResult | null>(null);
-const ownership = ref(null);
-const newer = ref(false);
-const guest = ref(false);
-const revision = ref(0);
-const request = computed(() => route.value.api);
-
-function syncLocation() {
-  user.value = devUser();
-  route.value = portalRoute(new URL(location.href));
-}
-function navigate(url: string) {
-  if (location.pathname + location.search !== url) history.pushState(null, "", url);
-  syncLocation();
-}
-function follow(event: MouseEvent) {
-  if (event.defaultPrevented || event.button || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
-  const link = (event.target as Element | null)?.closest("a");
-  if (!link || link.target || link.download || link.origin !== location.origin) return;
-  const target = new URL(link.href);
-  if (target.hash || ["/report/", "/report", "/ops"].includes(target.pathname)) return;
-  event.preventDefault();
-  navigate(target.pathname + target.search);
-}
-
-watch([request, revision, user], async ([path], previous, onCleanup) => {
-  const requestController = new AbortController();
-  onCleanup(() => requestController.abort());
-  if (path !== previous?.[0] || user.value !== previous?.[2]) {
-    result.value = null;
-    ownership.value = null;
+const props = defineProps<{ initialRoute?: string }>();
+const publicEntry = !/^\/(report|ops)(\/|$)/.test(location.pathname);
+if (props.initialRoute === undefined) restorePortalRoute(new URL(location.href));
+const api = usePortalApi();
+provide(portalApi, api);
+const empty: ReportData = { portal: "Seikika", catalog: {}, scorecards: {}, scores: {} };
+const extraViews = ["search", "operations"];
+const readReport: PortalApi = async (path, init) => {
+  if (publicEntry) {
+    const catalog = await api("/v1/views/home?public_catalog=true", init).catch(() => null);
+    if (catalog?.status === 200 && catalog.body?.publicCatalog) return catalog;
   }
-  if (!path) return;
-  newer.value = false;
-  const options = { signal: requestController.signal };
-  const current = route.value;
-  try {
-    const next = await api(path, options);
-    if (options.signal.aborted) return;
-    result.value = next;
-    if (next.body?.viewer?.method) guest.value = next.body.viewer.method === "guest";
-    if (current.page === "entity" && next.status === 200 && !guest.value) {
-      const details = await api("/v1/entities/" + encodeURIComponent(current.id) + "/explain?field=ownership", options).catch(() => null);
-      if (!options.signal.aborted) ownership.value = details?.status === 200 ? details.body?.authority : null;
-    }
-  } catch {
-    if (!options.signal.aborted) result.value = { status: 0, body: { title: "Unable to connect", detail: "Retry the request." }, snapshot: null };
-  }
-}, { immediate: true });
-
-const refresh = ref({ running: false, failed: false, message: "" });
-let refreshId = 0;
-async function refreshEntity() {
-  const current = route.value;
-  if (current.page !== "entity" || refresh.value.running) return;
-  const operation = ++refreshId;
-  refresh.value = { running: true, failed: false, message: "Asking the connectors to re-read this entity…" };
-  try {
-    const request = await api("/v1/entities/" + encodeURIComponent(current.id) + "/refresh", { method: "POST" });
-    if (request.status !== 202) throw new Error(request.body?.detail ?? "HTTP " + request.status);
-    let snapshot: string | null = null;
-    for (const id of request.body.commands as string[]) {
-      const command = await api("/v1/commands/" + encodeURIComponent(id) + "?wait=30");
-      if (command.body?.status !== "succeeded") throw new Error("Refresh " + (command.body?.status ?? "failed"));
-      snapshot = command.body.snapshot ?? snapshot;
-    }
-    if (refreshId === operation) {
-      refresh.value = { running: false, failed: false, message: snapshot ? "Refreshed at snapshot " + snapshot : "Refreshed" };
-      revision.value++;
-    }
-  } catch (error) {
-    if (refreshId === operation) refresh.value = { running: false, failed: true, message: (error as Error).message };
-  }
-}
-watch([request, user], () => {
-  refreshId++;
-  refresh.value = { running: false, failed: false, message: "" };
+  return api(path, init);
+};
+const { result, reload } = usePortalRequest(() => "/v1/views/report?partial=true", {
+  retryUnavailable: true, request: readReport,
 });
+const report = computed<ReportData | undefined>(() => result.value?.status === 200 ? result.value.body : undefined);
+const guest = computed(() => report.value?.publicCatalog === true);
+const federation = computed(() => report.value?.federationStatus);
+watch(report, (current, _, onCleanup) => {
+  if (current?.federationStatus?.pending) {
+    const timer = setTimeout(reload, 2_000);
+    onCleanup(() => clearTimeout(timer));
+  }
+});
+const query = ref("");
+const newer = ref(false);
+const updating = ref(false);
+watch(result, () => { newer.value = updating.value = false; });
+function update() {
+  updating.value = true;
+  reload();
+}
+function search() {
+  if (query.value.trim()) location.hash = "search?" + new URLSearchParams({ q: query.value.trim() });
+}
+
+const filterCatalog: CatalogFilter = async (kind, expression, snapshot, signal) => {
+  const params = new URLSearchParams({ kind, filter: expression, fields: "id", limit: "1000" });
+  if (snapshot != null) params.set("min_snapshot", String(snapshot));
+  const ids = new Set<string>();
+  do {
+    const response = await api("/v1/entities?" + params, { signal });
+    if (response.status !== 200) throw new Error(response.body?.detail ?? "Unable to filter the catalog.");
+    if (response.snapshot !== String(snapshot)) throw new Error("Update to the newer snapshot to apply this filter.");
+    for (const item of response.body.items) ids.add(item.id);
+    if (!response.body.next_cursor) return ids;
+    params.set("cursor", response.body.next_cursor);
+  } while (!signal.aborted);
+  return ids;
+};
 
 let poll: ReturnType<typeof setInterval>;
 onMounted(() => {
-  addEventListener("popstate", syncLocation);
   poll = setInterval(async () => {
-    const displayed = result.value;
+    const displayed = report.value;
     if (!displayed?.snapshot) return;
     const next = await api("/v1/snapshot").catch(() => null);
-    if (displayed === result.value && next?.snapshot) newer.value = next.snapshot !== displayed.snapshot;
+    if (displayed === report.value && next?.snapshot) newer.value = next.snapshot !== String(displayed.snapshot);
   }, 10_000);
 });
-onUnmounted(() => {
-  removeEventListener("popstate", syncLocation);
-  clearInterval(poll);
-});
+onUnmounted(() => clearInterval(poll));
 </script>
 
 <template>
-  <PageFrame class="portal-ui" @click="follow">
-    <template #navigation>
-      <PortalHeader :user="user" :guest="guest" :newer="newer" :assessments="route.page === 'assessments'" @navigate="navigate" @reload="revision++" />
+  <ReportApp :data="report ?? empty" :initial-route="initialRoute" :pending="!report" :extra-views="extraViews"
+    :request-action="guest ? undefined : api" :filter-catalog="guest ? undefined : filterCatalog">
+    <template #tools="{ route }">
+      <nav class="portal-tools" aria-label="Live portal">
+        <form role="search" @submit.prevent="search">
+          <input v-model="query" type="search" aria-label="Search" placeholder="Search entities" />
+        </form>
+        <a v-if="guest" href="https://seikika.com/demo/organization/">Public scorecards</a>
+        <a :href="guest ? '/ops' : '#operations'" :aria-current="route.mode === 'operations' ? 'page' : undefined">Operations</a>
+        <button v-if="newer || updating" type="button" :disabled="updating" @click="update">
+          {{ updating ? "Updating data…" : "Newer data — update" }}
+        </button>
+        <span v-if="report?.viewer" class="sub">Signed in as {{ report.viewer }}</span>
+      </nav>
+      <p v-if="federation?.pending" class="sub" role="status">{{ federation.detail }}. Local results are available.</p>
+      <div v-else-if="federation" class="portal-problem" role="alert">
+        <p>{{ federation.detail }}</p>
+        <button type="button" :disabled="updating" @click="update">Reload portal data</button>
+      </div>
     </template>
-    <PortalView :route="route" :result="result" :guest="guest" :ownership="ownership" :refresh="refresh"
-      @navigate="navigate" @refresh="refreshEntity" @retry="revision++" />
-  </PageFrame>
+    <template #pending>
+      <PortalStatus :result="result" loading="Loading portal snapshot…" @retry="reload" />
+    </template>
+    <template #extra-view="{ route }">
+      <PortalLiveView :mode="route.mode" :query="route.query?.q ?? ''" />
+    </template>
+    <template #entity-tools="{ id, source, snapshot }">
+      <PortalEntityTools v-if="!guest && !source?.startsWith('child:')" :key="id" :id="id"
+        :snapshot="snapshot" @refreshed="reload" />
+    </template>
+    <template #overview="{ data, summary }">
+      <PortalTeams v-if="!guest" :visible-entities="summary.kindOf" :snapshot="data.snapshot" />
+    </template>
+  </ReportApp>
 </template>
