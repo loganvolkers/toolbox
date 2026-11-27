@@ -9,6 +9,20 @@ function containerEnvironment(env) {
   if (!DATABASE_URL || !/^[0-9a-f]{64}$/i.test(SEIKIKA_SIGNING_KEY ?? "")) {
     throw new Error("Set DATABASE_URL and a 32-byte hex SEIKIKA_SIGNING_KEY");
   }
+  const { SEIKIKA_PREVIEW_ACCESS_ISSUER, SEIKIKA_PREVIEW_ACCESS_AUDIENCE, SEIKIKA_PREVIEW_ACCESS_ADMIN } = env;
+  if (SEIKIKA_PREVIEW_ACCESS_ISSUER || SEIKIKA_PREVIEW_ACCESS_AUDIENCE || SEIKIKA_PREVIEW_ACCESS_ADMIN) {
+    if (!SEIKIKA_PREVIEW_ACCESS_ISSUER || !SEIKIKA_PREVIEW_ACCESS_AUDIENCE || !SEIKIKA_PREVIEW_ACCESS_ADMIN) {
+      throw new Error("Set all three managed Preview Access bindings");
+    }
+    return {
+      DATABASE_URL,
+      SEIKIKA_SIGNING_KEY,
+      SEIKIKA_AUTH_MODE: "cloudflare-access",
+      SEIKIKA_CF_TEAM_DOMAIN: SEIKIKA_PREVIEW_ACCESS_ISSUER,
+      SEIKIKA_AUDIENCE: SEIKIKA_PREVIEW_ACCESS_AUDIENCE,
+      SEIKIKA_SEED_ADMIN: SEIKIKA_PREVIEW_ACCESS_ADMIN,
+    };
+  }
   const values = { DATABASE_URL, SEIKIKA_SIGNING_KEY, SEIKIKA_AUTH_MODE };
   if (SEIKIKA_AUTH_MODE === "cloudflare-access") {
     const { SEIKIKA_CF_TEAM_DOMAIN, SEIKIKA_AUDIENCE } = env;
@@ -78,7 +92,14 @@ export class SeikikaContainer extends DurableObject {
     url.port = "";
     const forwarded = new Request(url, request);
     forwarded.headers.delete("Host");
-    return container.getTcpPort(PORT).fetch(forwarded);
+    const response = await container.getTcpPort(PORT).fetch(forwarded);
+    if (response.status === 502 && response.headers.get("content-type")?.includes("json")) {
+      const problem = await response.clone().json().catch(() => null);
+      if (problem?.code === "authz-unavailable") {
+        console.error("Seikika authorization unavailable");
+      }
+    }
+    return response;
   }
 }
 

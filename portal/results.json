@@ -4665,6 +4665,16 @@
           "still-running"
         ]
       },
+      "workflow:.github/workflows/cloudflare-previews.yml": {
+        "level": "bronze",
+        "unknown": [
+          "fail-rate-under-10",
+          "fail-rate-under-20",
+          "fail-rate-under-5",
+          "main-not-stuck-red",
+          "still-running"
+        ]
+      },
       "workflow:.github/workflows/codeql.yml": {
         "level": "bronze",
         "unknown": [
@@ -4805,6 +4815,9 @@
       "workflow:.github/workflows/ci.yml": {
         "level": "gold"
       },
+      "workflow:.github/workflows/cloudflare-previews.yml": {
+        "level": "gold"
+      },
       "workflow:.github/workflows/codeql.yml": {
         "level": "gold"
       },
@@ -4861,6 +4874,12 @@
     },
     "maintainer-ci-speed": {
       "workflow:.github/workflows/ci.yml": {
+        "level": "bronze",
+        "unknown": [
+          "fast-feedback"
+        ]
+      },
+      "workflow:.github/workflows/cloudflare-previews.yml": {
         "level": "bronze",
         "unknown": [
           "fast-feedback"
@@ -6399,6 +6418,12 @@
         "level": "bronze"
       },
       "example:examples/cloudflare-containers/README.md": {
+        "level": "gold"
+      },
+      "example:examples/cloudflare-containers/preview-operator/README.md": {
+        "level": "gold"
+      },
+      "example:examples/cloudflare-containers/production-monitor/README.md": {
         "level": "gold"
       },
       "example:examples/connector-scaffold/README.md": {

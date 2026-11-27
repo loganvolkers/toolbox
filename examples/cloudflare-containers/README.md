@@ -32,6 +32,8 @@ The example uses the same entrypoint and co-process as the Seikika server image.
 
 ```sh
 example=examples/cloudflare-containers
+corepack pnpm install --frozen-lockfile
+corepack pnpm build
 cargo build --locked --release --workspace
 deployment=$(mktemp -d)
 bash "$example/stage.sh" "$example/portal" "$deployment"
@@ -73,6 +75,8 @@ Verify the staging rollout before creating the production Worker. Use a separate
 
 For the hosted seven-fork portal, protect the production hostname with its own Access application. Set `SEIKIKA_PRODUCTION_CF_TEAM_DOMAIN`, `SEIKIKA_PRODUCTION_CF_AUDIENCE`, and `SEIKIKA_PRODUCTION_CF_ADMIN` in the production build settings. The build puts the issuer and audience in the production Wrangler variables and seeds that portal admin. Use a separate Access application and build variables for each Preview.
 
+Use Node 24 and Corepack to build the locked UI workspace before compiling Rust. In Workers Builds, set `NODE_VERSION=24` in production and the Preview base settings. Deploy the [private production monitor](production-monitor/README.md) to track readiness, authorization failures, and connection utilization.
+
 ### Preview a trusted branch
 
 Start with preview builds disabled while you verify the tracked-branch deployment. The Wrangler configuration declares a Container and Durable Object binding for each Preview. Use `wrangler preview` so each Preview gets its own image, Container application, and namespace. [Container Preview isolation](https://developers.cloudflare.com/workers/previews/resources/#containers)
@@ -89,6 +93,8 @@ npm exec -- wrangler preview secret put SEIKIKA_SIGNING_KEY --worker-name seikik
 4. Open the Preview URL posted on the PR. Check `/readyz` and authenticated child discovery before expanding preview use. Delete the Preview when finished and check for a leftover Container application. [Preview secrets](https://developers.cloudflare.com/workers/previews/configuration/#secrets) · [Preview cleanup](https://developers.cloudflare.com/workers/previews/resources/#container-application-cleanup)
 
 For browser sign-in on the seven-fork portal, create an Access application for the branch Preview hostname with a policy that allows your testers. In that Preview's Workers Builds settings, set `SEIKIKA_PREVIEW_CF_TEAM_DOMAIN` to your Access issuer URL and `SEIKIKA_PREVIEW_CF_AUDIENCE` to the Access application's audience. Set either `SEIKIKA_PREVIEW_CF_ADMIN` for a seed portal admin or `SEIKIKA_PREVIEW_CF_VIEWER` for read-only access. Use the login before `@` in the account's verified email address and store it as a secret build variable if it is private. The build stages the Access settings and the selected role. [Cloudflare Access for Workers](https://developers.cloudflare.com/workers/configuration/cloudflare-access/)
+
+For managed same-repository PRs, deploy the [Preview operator](preview-operator/README.md) to provision and retire isolated runtime resources.
 
 ## Expose the portal
 

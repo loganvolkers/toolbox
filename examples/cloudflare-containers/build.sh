@@ -24,6 +24,10 @@ if ! command -v cargo >/dev/null 2>&1; then
 fi
 
 export CARGO_TARGET_DIR="${CARGO_TARGET_DIR:-"$repo_dir/target"}"
+export ASTRO_TELEMETRY_DISABLED=1
+export COREPACK_ENABLE_DOWNLOAD_PROMPT=0
+corepack pnpm install --frozen-lockfile
+corepack pnpm build
 cargo build --locked --release --workspace
 bash "$example_dir/stage.sh" "$portal_dir" "$staging"
 

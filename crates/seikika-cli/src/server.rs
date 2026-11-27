@@ -192,6 +192,38 @@ fn harden_process() {
     }
 }
 
+fn seed_cloudflare_admin(document: &mut serde_json::Value) -> Result<(), String> {
+    let login = match env::var("SEIKIKA_SEED_ADMIN") {
+        Ok(login) => login,
+        Err(env::VarError::NotPresent) => return Ok(()),
+        Err(env::VarError::NotUnicode(_)) => return Err("invalid SEIKIKA_SEED_ADMIN".into()),
+    };
+    if env::var("SEIKIKA_AUTH_MODE").as_deref() != Ok("cloudflare-access")
+        || login.is_empty()
+        || login.len() > 128
+        || !login
+            .bytes()
+            .all(|b| b.is_ascii_alphanumeric() || b"._+-".contains(&b))
+    {
+        return Err("SEIKIKA_SEED_ADMIN requires a valid login in cloudflare-access mode".into());
+    }
+    let portal = document
+        .pointer("/portal/name")
+        .and_then(serde_json::Value::as_str)
+        .ok_or("a named portal is required to seed an admin")?;
+    let tuple = serde_json::json!({
+        "user": format!("user:{login}"),
+        "relation": "admin",
+        "object": format!("portal:{portal}"),
+    });
+    document
+        .pointer_mut("/authz/tuples")
+        .and_then(serde_json::Value::as_array_mut)
+        .ok_or("an authorization tuple list is required to seed an admin")?
+        .push(serde_json::json!({"static": [tuple]}));
+    Ok(())
+}
+
 pub fn serve(path: &Path, listen: &str, database_url: Option<String>, fixtures: bool) -> ExitCode {
     harden_process();
     let report = match seikika_model::validate_portal(path) {
@@ -207,7 +239,11 @@ pub fn serve(path: &Path, listen: &str, database_url: Option<String>, fixtures: 
         }
         return ExitCode::from(1);
     }
-    let src = seikika_model::load::load(path).expect("validated above");
+    let mut src = seikika_model::load::load(path).expect("validated above");
+    if let Err(error) = seed_cloudflare_admin(&mut src.document) {
+        eprintln!("error: authorization: {error}");
+        return ExitCode::from(2);
+    }
     let manifest = crate::portal::manifest_from(&src).expect("validated above");
     let rt = tokio::runtime::Runtime::new().expect("tokio runtime");
     let database_url_for_fga = database_url.clone();
