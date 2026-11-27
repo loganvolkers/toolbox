@@ -11,6 +11,7 @@
     "entity": {"type": "string", "minLength": 1, "description": "The entity id, e.g. rule:portal/user-mcp/contract-tested."},
     "rubric": {"type": "string", "pattern": "^[a-z][a-z0-9-]*$"},
     "subjectHash": {"type": "string", "pattern": "^[0-9a-f]{12}$", "description": "The entity's subject field (the rubric's `subject`, default `hash`) when it was assessed, as `seikika assess brief` prints it."},
+    "rubricHash": {"type": "string", "pattern": "^[0-9a-f]{64}$", "description": "The rubric version from the assessment brief. Earlier assessment files can omit it."},
     "assessor": {
       "type": "object",
       "additionalProperties": false,

@@ -5281,6 +5281,9 @@
       "doc:docs/adversarial-critique.md": {
         "level": "skipped"
       },
+      "doc:docs/audits/agentic-assessments-2026-11-26.md": {
+        "level": "silver"
+      },
       "doc:docs/audits/astro-vue-portal-2026-11-25.md": {
         "level": "silver"
       },
@@ -5821,6 +5824,9 @@
       "doc:docs/decisions/D01M8CRS50G5086P5DCFQN636BA.md": {
         "level": "skipped"
       },
+      "doc:docs/decisions/D01M8D9AK7Q9B18B10FC38WB2BQ.md": {
+        "level": "skipped"
+      },
       "doc:docs/decisions/README.md": {
         "level": "skipped"
       },
@@ -5945,6 +5951,9 @@
         "level": "silver"
       },
       "doc:docs/design/plugin-standards.md": {
+        "level": "silver"
+      },
+      "doc:docs/design/pr-assessments.md": {
         "level": "silver"
       },
       "doc:docs/design/ratchets.md": {
@@ -6098,6 +6107,9 @@
         "level": "silver"
       },
       "doc:experiments/actions-gitlab/README.md": {
+        "level": "silver"
+      },
+      "doc:experiments/assessment-replay/README.md": {
         "level": "silver"
       },
       "doc:experiments/backstage-compare/README.md": {
@@ -6424,6 +6436,9 @@
         "level": "bronze"
       },
       "example:experiments/actions-gitlab/results/r1/README.md": {
+        "level": "gold"
+      },
+      "example:experiments/assessment-replay/README.md": {
         "level": "gold"
       },
       "example:experiments/backstage-compare/README.md": {
