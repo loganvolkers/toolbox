@@ -198,15 +198,17 @@ try {
   await page.getByRole("link", { name: "@seikika/astro-report", exact: true }).waitFor();
   await page.getByRole("link", { name: "@seikika/ui", exact: true }).waitFor();
 
-  await page.setViewportSize({ width: 390, height: 844 });
-  await page.goto(docsOrigin + "demo/organization/#catalog/Workflow?group=repository");
-  if (process.env.SEIKIKA_ORG_REPORT_DATA) {
-    await page.getByRole("combobox", { name: "Group entities" }).waitFor();
-    await page.waitForFunction(() => document.querySelector('[role="tablist"]').getBoundingClientRect().top >=
-      document.querySelector('header.header').getBoundingClientRect().bottom);
+  for (const width of [320, 390]) {
+    await page.setViewportSize({ width, height: 844 });
+    await page.goto(docsOrigin + "demo/organization/#catalog/Workflow?group=repository");
+    if (process.env.SEIKIKA_ORG_REPORT_DATA) {
+      await page.getByRole("combobox", { name: "Group entities" }).waitFor();
+      await page.waitForFunction(() => document.querySelector('[role="tablist"]').getBoundingClientRect().top >=
+        document.querySelector('header.header').getBoundingClientRect().bottom);
+    }
+    assert(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth),
+      `The grouped organization report fits a ${width}px viewport.`);
   }
-  assert(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth),
-    "The organization scorecard table fits within the mobile page.");
   await page.goto(docsOrigin);
   await page.locator('button[popovertarget="starlight__sidebar"]').click();
   const mobileReference = page.locator("#starlight__sidebar").getByRole("link", { name: "Reference overview" });

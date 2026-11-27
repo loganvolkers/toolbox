@@ -3,9 +3,9 @@ const ASSETS: &[(&str, &str, &str)] = &[
     ("/assets/client.DNu2xlnf.js", "text/javascript; charset=utf-8", include_str!("assets/client.DNu2xlnf.js")),
     ("/assets/entity.DuXpWN3Q.js", "text/javascript; charset=utf-8", include_str!("assets/entity.DuXpWN3Q.js")),
     ("/assets/index.-HoNqlFG.css", "text/css; charset=utf-8", include_str!("assets/index.-HoNqlFG.css")),
-    ("/assets/index.BeC4spcT.css", "text/css; charset=utf-8", include_str!("assets/index.BeC4spcT.css")),
-    ("/assets/index.astro_astro_type_script_index_0_lang.D6UlGWwT.js", "text/javascript; charset=utf-8", include_str!("assets/index.astro_astro_type_script_index_0_lang.D6UlGWwT.js")),
+    ("/assets/index.astro_astro_type_script_index_0_lang.Bslmc1eS.js", "text/javascript; charset=utf-8", include_str!("assets/index.astro_astro_type_script_index_0_lang.Bslmc1eS.js")),
     ("/assets/index.astro_astro_type_script_index_0_lang.RfXk7u6h.js", "text/javascript; charset=utf-8", include_str!("assets/index.astro_astro_type_script_index_0_lang.RfXk7u6h.js")),
+    ("/assets/index.tL3ottKk.css", "text/css; charset=utf-8", include_str!("assets/index.tL3ottKk.css")),
     ("/assets/runtime-dom.esm-bundler.34l53htj.js", "text/javascript; charset=utf-8", include_str!("assets/runtime-dom.esm-bundler.34l53htj.js")),
     ("/assets/theme.CsbH0Met.css", "text/css; charset=utf-8", include_str!("assets/theme.CsbH0Met.css")),
 ];

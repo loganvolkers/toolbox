@@ -363,6 +363,8 @@ details.ent>summary{grid-template-columns:76px minmax(0,1fr)}details.ent>summary
 .report-sources code { margin-inline-start: .5rem; }
 .report-filters { display: flex; flex-wrap: wrap; align-items: end; gap: .75rem; margin-block: 1rem; }
 .report-filters label, .report-field { display: grid; gap: .35rem; }
+.report-filters label { min-inline-size: 0; max-inline-size: 100%; }
+.report-filters :is(input, select) { min-inline-size: 0; inline-size: 100%; }
 .report-field { margin-block-end: .85rem; max-width: 42rem; }
 .report-field :is(input, select, textarea) { width: 100%; min-width: 0; }
 .report-field input[type="checkbox"] { width: 1.25rem; height: 1.25rem; }
