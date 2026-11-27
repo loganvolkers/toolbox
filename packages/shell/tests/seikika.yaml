@@ -1,0 +1,10 @@
+apiVersion: seikika.com/v1alpha1
+portal:
+  name: shell-package
+  title: Shell standard package tests
+  owner: group:maintainers
+  seikika: "0.1"
+include:
+  - package: ..
+    with: {command: [python3, packages/shell/check-shell.py, "*.sh"]}
+tests: [standards.test.yaml]

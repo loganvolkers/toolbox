@@ -23,14 +23,18 @@ else
   dest="${HOME}/.cargo/bin"
 fi
 case "$(uname -s)-$(uname -m)" in
-  Linux-x86_64)   target=x86_64-unknown-linux-gnu ;;
-  Linux-aarch64)  target=aarch64-unknown-linux-gnu ;;
-  Darwin-arm64)   target=aarch64-apple-darwin ;;
-  Darwin-x86_64)  target=x86_64-apple-darwin ;;
-  MINGW*|MSYS*|CYGWIN*) target=x86_64-pc-windows-msvc ;;
-  *) echo "seikika: no release build for $(uname -s)-$(uname -m)" >&2; exit 2 ;;
+  Linux-x86_64) target=x86_64-unknown-linux-gnu ;;
+  Linux-aarch64) target=aarch64-unknown-linux-gnu ;;
+  Darwin-arm64) target=aarch64-apple-darwin ;;
+  Darwin-x86_64) target=x86_64-apple-darwin ;;
+  MINGW* | MSYS* | CYGWIN*) target=x86_64-pc-windows-msvc ;;
+  *)
+    echo "seikika: no release build for $(uname -s)-$(uname -m)" >&2
+    exit 2
+    ;;
 esac
-ext=tar.xz; [ "$target" = x86_64-pc-windows-msvc ] && ext=zip
+ext=tar.xz
+[ "$target" = x86_64-pc-windows-msvc ] && ext=zip
 mkdir -p "$dest"
 work=$(mktemp -d)
 trap 'rm -rf "$work"' EXIT
@@ -59,7 +63,10 @@ for app in seikika-cli seikika-connector-workspace seikika-connector-runner; do
   else
     got=$(shasum -a 256 "$work/$file" | cut -c1-64)
   fi
-  [ "$want" = "$got" ] || { echo "seikika: checksum mismatch for $file" >&2; exit 2; }
+  [ "$want" = "$got" ] || {
+    echo "seikika: checksum mismatch for $file" >&2
+    exit 2
+  }
   if [ "$ext" = zip ]; then unzip -q -o "$work/$file" -d "$work"; else tar -xJf "$work/$file" -C "$work"; fi
   find "$work/$app-$target" -maxdepth 1 -type f \( -name 'seikika*' \) -exec cp {} "$dest/" \;
 done

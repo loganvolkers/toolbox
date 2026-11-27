@@ -5853,6 +5853,9 @@
       "doc:docs/decisions/D01M8DGVXNG05GF6W3996FEFT6C.md": {
         "level": "skipped"
       },
+      "doc:docs/decisions/D01M8DJJTZ4JPBHYDS7VN9TV21J.md": {
+        "level": "skipped"
+      },
       "doc:docs/decisions/README.md": {
         "level": "skipped"
       },
@@ -6634,6 +6637,7 @@
       }
     },
     "maintainer-sdk-docs": {},
+    "maintainer-shell": {},
     "maintainer-site": {
       "site-page:site/src/content/docs/agents/reads.md": {
         "level": "gold"
@@ -6795,6 +6799,9 @@
         "level": "gold"
       },
       "site-page:site/src/content/docs/packages/semgrep.md": {
+        "level": "gold"
+      },
+      "site-page:site/src/content/docs/packages/shell.md": {
         "level": "gold"
       },
       "site-page:site/src/content/docs/packages/sre.md": {
@@ -9912,6 +9919,9 @@
       "connector:seikika/maintainer-python": {
         "level": "gold"
       },
+      "connector:seikika/maintainer-shell": {
+        "level": "gold"
+      },
       "connector:seikika/runner": {
         "level": "gold"
       },
@@ -11945,6 +11955,21 @@
       "field:seikika/SdlcStage.unresolvedCommands": {
         "level": "gold"
       },
+      "field:seikika/ShellScript.findings": {
+        "level": "gold"
+      },
+      "field:seikika/ShellScript.formatCommand": {
+        "level": "gold"
+      },
+      "field:seikika/ShellScript.formatted": {
+        "level": "gold"
+      },
+      "field:seikika/ShellScript.lintCommand": {
+        "level": "gold"
+      },
+      "field:seikika/ShellScript.path": {
+        "level": "gold"
+      },
       "field:seikika/SitePage.descriptionChars": {
         "level": "gold"
       },
@@ -12414,6 +12439,9 @@
         "level": "gold"
       },
       "kind:seikika/SdlcStage": {
+        "level": "gold"
+      },
+      "kind:seikika/ShellScript": {
         "level": "gold"
       },
       "kind:seikika/SitePage": {
@@ -12987,6 +13015,12 @@
         "level": "gold"
       },
       "rule:seikika/maintainer-sdk-docs/reference-complete": {
+        "level": "gold"
+      },
+      "rule:seikika/maintainer-shell/shellcheck-clean": {
+        "level": "gold"
+      },
+      "rule:seikika/maintainer-shell/shfmt-clean": {
         "level": "gold"
       },
       "rule:seikika/maintainer-site/described": {
@@ -13686,6 +13720,9 @@
         "level": "silver"
       },
       "scorecard:seikika/maintainer-sdk-docs": {
+        "level": "gold"
+      },
+      "scorecard:seikika/maintainer-shell": {
         "level": "gold"
       },
       "scorecard:seikika/maintainer-site": {

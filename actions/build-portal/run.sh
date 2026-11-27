@@ -4,8 +4,11 @@ source "$(dirname "${BASH_SOURCE[0]}")/../lib/portal.sh"
 
 format=${INPUT_FORMAT:-html}
 case "$format" in
-  html|web) ;;
-  *) echo '::error title=Build Seikika portal::format must be html or web.'; exit 2 ;;
+  html | web) ;;
+  *)
+    echo '::error title=Build Seikika portal::format must be html or web.'
+    exit 2
+    ;;
 esac
 if ! executable=$(type -P seikika); then
   echo '::error title=Build Seikika portal::Run actions/setup or put seikika on PATH first.'
@@ -25,4 +28,4 @@ if [[ -n "${INPUT_SKIP:-}" ]]; then args+=(--skip "$INPUT_SKIP"); fi
 {
   printf 'directory=%s\nindex=%s/index.html\n' "$out" "$out"
   if [[ "$format" == web ]]; then printf 'report-json=%s/report.json\n' "$out"; fi
-} >> "${GITHUB_OUTPUT:?}"
+} >>"${GITHUB_OUTPUT:?}"

@@ -245,3 +245,12 @@ The repository quickstart recorded a baseline, exited 1 after moving its linked 
 - Ran the organization portal on Linux with the source CLI and Workspace connector, using the existing GitHub login and with `DATABASE_URL` and `GITHUB_APP_ID` unset. Matched all 13 repository identities and default-branch commits against GitHub inventory and `git ls-remote`. Compared the rule outcomes for all seven forks with their Seikika 0.2.1 ratchet baselines. The public variant contained 11 repositories.
 - The three demonstration repositories stayed in the scorecard when the reader encountered an oversized README and an unused 32 MiB blob, malformed YAML and JSON, and forged silver results and a replacement rule. The parent scored each below bronze. Workspace connector tests covered pagination, empty repositories, truncated trees, symbolic links, and public inventory filtering. The organization portal passed all five standards assertions.
 - Built the docs and Storybook with `pnpm docs:build` and passed the Chromium smoke test on the organization and repository report routes. Served the authenticated static report on loopback and opened its scorecard with all 13 entries and no external requests. The public site rendered the literal HTML marker as text, displayed healthy siblings beside a simulated unavailable repository, and refused to build from a snapshot containing private repositories. [Reproduction commands](../examples/github-org-federation/README.md)
+
+## Shell script standard
+
+- Used the pinned ShellCheck, shfmt, and Bats binaries to exercise the adapter
+  and run five isolated Bats regression cases. The package portal passed three
+  fixture assertions and the maintainer portal passed 145.
+- A temporary consumer portal using Seikika 0.2.1 accepted a clean script. After
+  injecting SC2155 and an indentation defect, its strict ratchet exited 1 and
+  named both failed rules. [Shell standard](../packages/shell/README.md)

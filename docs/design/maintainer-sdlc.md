@@ -171,6 +171,11 @@ See the [mise adoption decision](../decisions/D01M8BJDPAP97XH4AQSQCN1C0X2.md).
 - **No time estimates** (D25). Measurements of the software are welcome.
 - **Commits are small and scoped**, so parallel agents rarely conflict.
 
+The self portal ratchets ShellCheck warnings and errors and shfmt formatting for
+maintained shell scripts. CI also runs the Bats suite. See the
+[shell standard](../../packages/shell/README.md) and the
+[decision](../decisions/D01M8DJJTZ4JPBHYDS7VN9TV21J.md).
+
 ## 7. Implemented vs. planned
 
 | Capability | State |

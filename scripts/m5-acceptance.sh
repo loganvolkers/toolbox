@@ -5,13 +5,24 @@
 # Usage: scripts/m5-acceptance.sh
 set -euo pipefail
 cd "$(dirname "$0")/.."
-BIN=$(cd "${SEIKIKA_BIN_DIR:-target/debug}" && pwd); EX=$PWD/examples/federated-actions; WORK=$(mktemp -d)
-API=127.0.0.1:${API_PORT:-18095}; URL=http://$API
+BIN=$(cd "${SEIKIKA_BIN_DIR:-target/debug}" && pwd)
+EX=$PWD/examples/federated-actions
+WORK=$(mktemp -d)
+API=127.0.0.1:${API_PORT:-18095}
+URL=http://$API
 export SEIKIKA_STATE_DIR=$WORK/state SEIKIKA_CONNECTORS_DIR=$BIN
 G=(-c user.name=acceptance -c user.email=acceptance@example.com)
-PIDS=(); cleanup() { kill "${PIDS[@]}" 2>/dev/null || true; [ -n "${DETACHED:-}" ] && "$BIN/seikika" serve "$DETACHED" --stop >/dev/null 2>&1; [ -n "${KEEP:-}" ] && echo "kept $WORK" || rm -rf "$WORK"; }
+PIDS=()
+cleanup() {
+  kill "${PIDS[@]}" 2>/dev/null || true
+  [ -n "${DETACHED:-}" ] && "$BIN/seikika" serve "$DETACHED" --stop >/dev/null 2>&1
+  [ -n "${KEEP:-}" ] && echo "kept $WORK" || rm -rf "$WORK"
+}
 trap cleanup EXIT
-fail() { echo "FAIL: $*" >&2; exit 1; }
+fail() {
+  echo "FAIL: $*" >&2
+  exit 1
+}
 field() { python3 -c "import json,sys; d=json.load(sys.stdin); print(eval('d'+sys.argv[1]))" "$1"; }
 run() { (cd "$1" && shift && "$BIN/seikika" run "$@" -o json); }
 merge() { # merge a proposed branch into main, as a reviewer would
@@ -25,9 +36,10 @@ echo "0. a local org: four repositories with repo portals, and an org portal"
 mkdir -p "$WORK/org"
 for r in alpha beta gamma delta; do
   git init -q --bare -b main "$WORK/origin-$r.git"
-  git init -q -b main "$WORK/$r"; cp -r "$EX/repo/.seikika" "$WORK/$r/"
+  git init -q -b main "$WORK/$r"
+  cp -r "$EX/repo/.seikika" "$WORK/$r/"
   sed -i "s/example-repo/$r/g" "$WORK/$r/.seikika/seikika.yaml"
-  echo "# $r" > "$WORK/$r/README.md"
+  echo "# $r" >"$WORK/$r/README.md"
   git -C "$WORK/$r" remote add origin "$WORK/origin-$r.git"
   git -C "$WORK/$r" add -A && git -C "$WORK/$r" "${G[@]}" commit -qm init && git -C "$WORK/$r" push -q -u origin main
   git clone -q "$WORK/origin-$r.git" "$WORK/review/$r"
@@ -54,17 +66,29 @@ echo "   write-readme succeeded, verified: $(echo "$OUT" | field "['verification
 
 echo "2. a stale preview and invalid inputs are refused"
 TOKEN=$(run "$WORK/alpha" write-readme -i text='A second README for alpha.' | field "['confirm_token']")
-echo "# changed meanwhile, by someone else" > "$WORK/alpha/README.md"
-set +e; OUT=$(run "$WORK/alpha" write-readme -i text='A second README for alpha.' --confirm "$TOKEN" 2>&1); CODE=$?; set -e
+echo "# changed meanwhile, by someone else" >"$WORK/alpha/README.md"
+set +e
+OUT=$(run "$WORK/alpha" write-readme -i text='A second README for alpha.' --confirm "$TOKEN" 2>&1)
+CODE=$?
+set -e
 [ $CODE = 1 ] && echo "$OUT" | grep -q preview_stale || fail "stale token accepted ($CODE): $OUT"
-set +e; run "$WORK/alpha" write-readme -i text=short >/dev/null 2>&1; CODE=$?; set -e
+set +e
+run "$WORK/alpha" write-readme -i text=short >/dev/null 2>&1
+CODE=$?
+set -e
 [ $CODE = 2 ] || fail "invalid inputs should exit 2, got $CODE"
 echo "   preview_stale (exit 1), invalid inputs (exit 2)"
 
 echo "3. a repo portal holds no approvals"
-set +e; OUT=$(run "$WORK/alpha" set-owners -i team=@acme/alpha --yes); CODE=$?; set -e
+set +e
+OUT=$(run "$WORK/alpha" set-owners -i team=@acme/alpha --yes)
+CODE=$?
+set -e
 [ $CODE = 3 ] && [ "$(echo "$OUT" | field "['state']")" = awaiting_approval ] || fail "set-owners: $CODE $OUT"
-set +e; OUT=$(run "$WORK/alpha" add-security-policy -i contact=security@acme.dev --yes); CODE=$?; set -e
+set +e
+OUT=$(run "$WORK/alpha" add-security-policy -i contact=security@acme.dev --yes)
+CODE=$?
+set -e
 [ $CODE = 3 ] || fail "a change that lands without review needs an approval a checkout can't hold ($CODE): $OUT"
 git --git-dir "$WORK/origin-alpha.git" cat-file -e main:SECURITY.md 2>/dev/null && fail "an unapproved push landed"
 echo "   set-owners and add-security-policy (land: push) are awaiting_approval (exit 3); nothing was pushed"
@@ -72,14 +96,16 @@ echo "   set-owners and add-security-policy (land: push) are awaiting_approval (
 echo "4. a change is a pull request; review is its approval; done when merged and observed"
 OUT=$(run "$WORK/alpha" add-license -i spdx=MIT --yes)
 [ "$(echo "$OUT" | field "['state']")" = proposed ] || fail "add-license: $OUT"
-RID=$(echo "$OUT" | field "['id']"); BRANCH=$(echo "$OUT" | field "['outputs']['branch']")
-git -C "$WORK/alpha" log -1 --format=%B "origin/$BRANCH" 2>/dev/null | grep -q "Seikika-Run: $RID" \
-  || git --git-dir "$WORK/origin-alpha.git" log -1 --format=%B "$BRANCH" | grep -q "Seikika-Run: $RID" || fail "no Seikika-Run trailer"
+RID=$(echo "$OUT" | field "['id']")
+BRANCH=$(echo "$OUT" | field "['outputs']['branch']")
+git -C "$WORK/alpha" log -1 --format=%B "origin/$BRANCH" 2>/dev/null | grep -q "Seikika-Run: $RID" ||
+  git --git-dir "$WORK/origin-alpha.git" log -1 --format=%B "$BRANCH" | grep -q "Seikika-Run: $RID" || fail "no Seikika-Run trailer"
 [ "$(run "$WORK/alpha" --verify "$RID" | field "['state']")" = proposed ] || fail "unmerged change should stay proposed"
 merge alpha "$BRANCH"
 [ "$(run "$WORK/alpha" --verify "$RID" | field "['state']")" = succeeded ] || fail "merged change not observed"
-OUT=$(run "$WORK/beta" add-license -i spdx=MIT --yes); RID=$(echo "$OUT" | field "['id']")
-echo "MIT License" > "$WORK/review/beta/LICENSE"
+OUT=$(run "$WORK/beta" add-license -i spdx=MIT --yes)
+RID=$(echo "$OUT" | field "['id']")
+echo "MIT License" >"$WORK/review/beta/LICENSE"
 git -C "$WORK/review/beta" add LICENSE && git -C "$WORK/review/beta" "${G[@]}" commit -qm "a licence, by hand" && git -C "$WORK/review/beta" push -q origin main
 [ "$(run "$WORK/beta" --verify "$RID" | field "['state']")" = proposed ] || fail "an unmerged change succeeded because the base already had a licence"
 echo "   $BRANCH proposed, merged, succeeded; on beta, a licence pushed by hand does not complete the unmerged run"
@@ -101,19 +127,26 @@ for r in alpha beta gamma; do
   merge "$r" "$(echo "$OUT" | field "['child']['outputs']['branch']")"
 done
 for r in alpha beta gamma; do
-  OUT=$(run "$WORK/org" --verify "${FLEET[$r]}") || true; [ "$(echo "$OUT" | field "['state']")" = succeeded ] || fail "fleet run on $r not observed: $OUT"
+  OUT=$(run "$WORK/org" --verify "${FLEET[$r]}") || true
+  [ "$(echo "$OUT" | field "['state']")" = succeeded ] || fail "fleet run on $r not observed: $OUT"
 done
 echo "   add-contributing: 3 pull requests merged, 3 runs succeeded"
 
 echo "7. the org portal served: REST runs, signed approvals by the parent, MCP"
-export SEIKIKA_APPROVAL_KEY=$(python3 -c 'import secrets; print(secrets.token_hex(32))')
-(cd "$WORK/org" && exec "$BIN/seikika" serve --listen "$API" . >"$WORK/server.log" 2>&1) & PIDS+=($!)
+SEIKIKA_APPROVAL_KEY=$(python3 -c 'import secrets; print(secrets.token_hex(32))')
+export SEIKIKA_APPROVAL_KEY
+(cd "$WORK/org" && exec "$BIN/seikika" serve --listen "$API" . >"$WORK/server.log" 2>&1) &
+PIDS+=($!)
 for _ in $(seq 100); do
-  curl -fs -H 'x-seikika-user: ann' "$URL/v1/actions" 2>/dev/null | grep -q add-contributing && break; sleep 0.2
+  curl -fs -H 'x-seikika-user: ann' "$URL/v1/actions" 2>/dev/null | grep -q add-contributing && break
+  sleep 0.2
 done
 kill -0 "${PIDS[-1]}" 2>/dev/null || fail "the server did not start: $(cat "$WORK/server.log")"
-rest() { local who=$1 method=$2 path=$3; shift 3
-  curl -s -X "$method" -H "x-seikika-user: $who" -H 'content-type: application/json' "$URL$path" "$@"; }
+rest() {
+  local who=$1 method=$2 path=$3
+  shift 3
+  curl -s -X "$method" -H "x-seikika-user: $who" -H 'content-type: application/json' "$URL$path" "$@"
+}
 OUT=$(rest ann POST /v1/actions/write-readme/previews -d '{"entity":"portal:delta","inputs":{"text":"Delta has no runner here."}}')
 [ "$(echo "$OUT" | field "['code']")" = no-runner ] || fail "delta should be refused: $OUT"
 BODY='{"entity":"portal:gamma","inputs":{"team":"@acme/gamma"}}'
@@ -131,11 +164,16 @@ OUT=$(rest ann POST /v1/actions/set-owners/runs -d "{\"entity\":\"portal:gamma\"
 [ "$(echo "$OUT" | field "['code']")" = token-used ] || fail "a confirm token started a second run: $OUT"
 [ "$(rest ann POST "/v1/runs/$RID/approvals" -d '{}' | field "['code']")" = not-an-approver ] || fail "self-approval accepted"
 [ "$(rest carol POST "/v1/runs/$RID/approvals" -d '{}' | field "['code']")" = not-an-approver ] || fail "an approval by someone not listed was accepted"
-set +e; OUT=$(cd "$WORK/gamma" && "$BIN/seikika" run set-owners -i team=@acme/gamma --yes --parent-run org/run_forged --grant 00.00 -o json); CODE=$?; set -e
+set +e
+OUT=$(cd "$WORK/gamma" && "$BIN/seikika" run set-owners -i team=@acme/gamma --yes --parent-run org/run_forged --grant 00.00 -o json)
+CODE=$?
+set -e
 [ $CODE = 3 ] && echo "$OUT" | grep -q "approvals were refused" || fail "a forged grant was accepted ($CODE): $OUT"
 rest bob POST "/v1/runs/$RID/approvals" -d '{"note":"gamma is ours"}' >/dev/null
 for _ in $(seq 60); do
-  STATE=$(rest ann GET "/v1/runs/$RID" | field "['state']"); case $STATE in succeeded|failed|unverified) break;; esac; sleep 0.5
+  STATE=$(rest ann GET "/v1/runs/$RID" | field "['state']")
+  case $STATE in succeeded | failed | unverified) break ;; esac
+  sleep 0.5
 done
 [ "$STATE" = succeeded ] || fail "approved set-owners ended $STATE: $(rest ann GET "/v1/runs/$RID")"
 echo "   set-owners on gamma: blocked until gamma pinned the org's key; a reused confirm token, ann (the requester), carol (not listed) and a forged grant refused; approved by bob in the org portal, signed, succeeded in gamma"
@@ -147,7 +185,9 @@ ARGS='{"action":"write-readme","id":"portal:gamma","inputs":{"text":"Gamma, writ
 TOKEN=$(mcp preview_action "$ARGS" | field "['result']['structuredContent']['confirm_token']")
 RID=$(mcp run_action "${ARGS%\}},\"confirm_token\":\"$TOKEN\"}" | field "['result']['structuredContent']['id']")
 for _ in $(seq 60); do
-  TEXT=$(mcp get_run "{\"run\":\"$RID\"}" | field "['result']['content'][0]['text']"); echo "$TEXT" | grep -q '\*\*succeeded\*\*' && break; sleep 0.5
+  TEXT=$(mcp get_run "{\"run\":\"$RID\"}" | field "['result']['content'][0]['text']")
+  echo "$TEXT" | grep -q '\*\*succeeded\*\*' && break
+  sleep 0.5
 done
 echo "$TEXT" | grep -q '\*\*succeeded\*\*' || fail "MCP run: $TEXT"
 [ "$(rest ann GET "/v1/runs/$RID" | field "['via']")" = mcp ] || fail "the MCP run should record via mcp"
@@ -186,7 +226,10 @@ sys.exit(1 if bad else 0)
 PY
 echo "8. the served client: seikika run --url; a person approves; the push lands on main; runs outlive a restart"
 remote_run=("$BIN/seikika" run --url "$URL" -o json)
-set +e; OUT=$("${remote_run[@]}" add-security-policy --entity portal:gamma -i contact=security@acme.dev --as ann --yes --wait); CODE=$?; set -e
+set +e
+OUT=$("${remote_run[@]}" add-security-policy --entity portal:gamma -i contact=security@acme.dev --as ann --yes --wait)
+CODE=$?
+set -e
 [ $CODE = 3 ] && [ "$(echo "$OUT" | field "['state']")" = awaiting_approval ] || fail "add-security-policy via --url ($CODE): $OUT"
 RID=$(echo "$OUT" | field "['id']")
 git --git-dir "$WORK/origin-gamma.git" cat-file -e main:SECURITY.md 2>/dev/null && fail "pushed before approval"
@@ -194,16 +237,22 @@ OUT=$("${remote_run[@]}" --approve "$RID" --as bob --note "ship it" --wait) || f
 [ "$(echo "$OUT" | field "['state']")" = succeeded ] || fail "approved add-security-policy: $OUT"
 [ "$(echo "$OUT" | field "['verification']['child']['by']")" = base ] || fail "the child should observe the push on main: $OUT"
 git --git-dir "$WORK/origin-gamma.git" show main:SECURITY.md | grep -q security@acme.dev || fail "SECURITY.md is not on gamma's main"
-kill "${PIDS[-1]}"; wait "${PIDS[-1]}" 2>/dev/null || true
-(cd "$WORK/org" && exec "$BIN/seikika" serve --listen "$API" . >"$WORK/server2.log" 2>&1) & PIDS+=($!)
-for _ in $(seq 100); do curl -fs "$URL/healthz" >/dev/null 2>&1 && break; sleep 0.2; done
+kill "${PIDS[-1]}"
+wait "${PIDS[-1]}" 2>/dev/null || true
+(cd "$WORK/org" && exec "$BIN/seikika" serve --listen "$API" . >"$WORK/server2.log" 2>&1) &
+PIDS+=($!)
+for _ in $(seq 100); do
+  curl -fs "$URL/healthz" >/dev/null 2>&1 && break
+  sleep 0.2
+done
 OUT=$("${remote_run[@]}" --runs --as ann)
-echo "$OUT" | python3 -c "import json,sys; sys.exit(not any(r['id'] == sys.argv[1] and r['state'] == 'succeeded' for r in json.load(sys.stdin)['runs']))" "$RID" \
-  || fail "the run did not outlive the restart: $OUT"
+echo "$OUT" | python3 -c "import json,sys; sys.exit(not any(r['id'] == sys.argv[1] and r['state'] == 'succeeded' for r in json.load(sys.stdin)['runs']))" "$RID" ||
+  fail "the run did not outlive the restart: $OUT"
 echo "   add-security-policy on gamma: awaiting bob (exit 3), approved with --approve, pushed to main, observed there; listed again after a restart"
 
 echo "9. an org portal that lists its children by git URL: Seikika keeps the clones and the key"
-export SEIKIKA_STATE_DIR=$WORK/state-git; unset SEIKIKA_APPROVAL_KEY
+export SEIKIKA_STATE_DIR=$WORK/state-git
+unset SEIKIKA_APPROVAL_KEY
 git init -q --bare -b main "$WORK/hosts/mini.git" && git clone -q "$WORK/hosts/mini.git" "$WORK/review/mini" 2>/dev/null
 cp -r "$EX/minimal-repo/.seikika" "$WORK/review/mini/"
 git -C "$WORK/review/mini" add -A && git -C "$WORK/review/mini" "${G[@]}" commit -qm init && git -C "$WORK/review/mini" push -q -u origin main
@@ -220,10 +269,12 @@ N=$(run "$WORK/gitorg" | field "['actions'].__len__()")
 [ "$N" = 16 ] || fail "the git org should offer 16 actions (3 children x 5, and mini's one), got $N"
 OUT=$(run "$WORK/gitorg" add-license --entity portal:beta -i spdx=Apache-2.0 --yes)
 [ "$(echo "$OUT" | field "['state']")" = proposed ] || fail "add-license on a cloned beta: $OUT"
-git --git-dir "$WORK/origin-beta.git" rev-parse -q --verify "$(echo "$OUT" | field "['child']['outputs']['branch']")" >/dev/null \
-  || fail "the cloned child's branch is not on beta's origin: $OUT"
-API2=127.0.0.1:$((${API_PORT:-18095} + 1)); detached_run=("$BIN/seikika" run --url "http://$API2" -o json)
-OUT=$("$BIN/seikika" serve "$WORK/gitorg" --listen "$API2" --detach) || fail "serve --detach: $OUT"; DETACHED=$WORK/gitorg
+git --git-dir "$WORK/origin-beta.git" rev-parse -q --verify "$(echo "$OUT" | field "['child']['outputs']['branch']")" >/dev/null ||
+  fail "the cloned child's branch is not on beta's origin: $OUT"
+API2=127.0.0.1:$((${API_PORT:-18095} + 1))
+detached_run=("$BIN/seikika" run --url "http://$API2" -o json)
+OUT=$("$BIN/seikika" serve "$WORK/gitorg" --listen "$API2" --detach) || fail "serve --detach: $OUT"
+DETACHED=$WORK/gitorg
 KEY=$(echo "$OUT" | sed -n 's/^approval key: \(ed25519:[0-9a-f]*\).*/\1/p')
 N=$("${detached_run[@]}" --as ann | field "['actions'].__len__()")
 [ "$N" -gt 0 ] || fail "once --detach returns, the children's actions should be listed without waiting ($N)"
@@ -232,7 +283,10 @@ N=$("${detached_run[@]}" --as ann | field "['actions'].__len__()")
 git -C "$WORK/review/alpha" pull -q origin main
 sed -i "s/ed25519:0\{64\}/$KEY/" "$WORK/review/alpha/.seikika/seikika.yaml"
 git -C "$WORK/review/alpha" "${G[@]}" commit -qam "accept the org portal's approvals" && git -C "$WORK/review/alpha" push -q origin main
-set +e; OUT=$("${detached_run[@]}" add-security-policy --entity portal:alpha -i contact=security@acme.dev --as ann --yes --wait); CODE=$?; set -e
+set +e
+OUT=$("${detached_run[@]}" add-security-policy --entity portal:alpha -i contact=security@acme.dev --as ann --yes --wait)
+CODE=$?
+set -e
 [ $CODE = 3 ] || fail "add-security-policy on a cloned alpha should await approval ($CODE): $OUT"
 RID=$(echo "$OUT" | field "['id']")
 OUT=$("${detached_run[@]}" --approve "$RID" --as bob --note "alpha is ours" --wait) || fail "approve: $OUT"
@@ -240,18 +294,27 @@ OUT=$("${detached_run[@]}" --approve "$RID" --as bob --note "alpha is ours" --wa
 git --git-dir "$WORK/origin-alpha.git" show main:SECURITY.md | grep -q security@acme.dev || fail "SECURITY.md is not on alpha's main"
 echo "$OUT" | grep -q "alpha is ours" || fail "the approval note was not kept: $OUT"
 COC=(add-code-of-conduct --entity portal:mini -i contact=conduct@acme.dev)
-set +e; OUT=$("${detached_run[@]}" "${COC[@]}" --as ann --yes 2>&1); CODE=$?; set -e
-[ $CODE = 2 ] && echo "$OUT" | grep -q "acceptApprovalsFrom" && echo "$OUT" | grep -q "$KEY" \
-  || fail "before the pin, a request should be refused with the line to pin ($CODE): $OUT"
+set +e
+OUT=$("${detached_run[@]}" "${COC[@]}" --as ann --yes 2>&1)
+CODE=$?
+set -e
+[ $CODE = 2 ] && echo "$OUT" | grep -q "acceptApprovalsFrom" && echo "$OUT" | grep -q "$KEY" ||
+  fail "before the pin, a request should be refused with the line to pin ($CODE): $OUT"
 git -C "$WORK/review/mini" pull -q origin main
 sed -i "s/ed25519:0\{64\}/$KEY/" "$WORK/review/mini/.seikika/actions/add-code-of-conduct.yaml"
 git -C "$WORK/review/mini" "${G[@]}" commit -qam "accept the org portal's approvals" && git -C "$WORK/review/mini" push -q origin main
 "$BIN/seikika" run --url "http://$API2" "${COC[@]}" --as ann | grep -q "CODE_OF_CONDUCT.md" || fail "the preview should show the file"
-set +e; OUT=$("${detached_run[@]}" "${COC[@]}" --as ann --yes); CODE=$?; set -e
+set +e
+OUT=$("${detached_run[@]}" "${COC[@]}" --as ann --yes)
+CODE=$?
+set -e
 [ $CODE = 3 ] || fail "add-code-of-conduct should await approval ($CODE): $OUT"
 RID=$(echo "$OUT" | field "['id']")
 for who in ann carol; do
-  set +e; "${detached_run[@]}" --approve "$RID" --as $who >/dev/null 2>&1; CODE=$?; set -e
+  set +e
+  "${detached_run[@]}" --approve "$RID" --as $who >/dev/null 2>&1
+  CODE=$?
+  set -e
   [ $CODE = 2 ] || fail "$who should not be able to approve ($CODE)"
 done
 OUT=$("${detached_run[@]}" --approve "$RID" --as bob --wait) || fail "approve: $OUT"
@@ -265,24 +328,36 @@ OUT=$("${detached_run[@]}" --verify "$RID" --as ann) || fail "verify: $OUT"
 echo "$OUT" | grep -q "user:bob" || fail "the record should name the approver: $OUT"
 "${detached_run[@]}" --runs --as ann | grep -q "$RID" || fail "the run is not listed"
 printf '#!/bin/sh\necho "main is protected"\nexit 1\n' >"$WORK/hosts/mini.git/hooks/pre-receive" && chmod +x "$WORK/hosts/mini.git/hooks/pre-receive"
-set +e; OUT=$("${detached_run[@]}" add-code-of-conduct --entity portal:mini -i contact=other@acme.dev --as ann --yes); set -e
+set +e
+OUT=$("${detached_run[@]}" add-code-of-conduct --entity portal:mini -i contact=other@acme.dev --as ann --yes)
+set -e
 RID=$(echo "$OUT" | field "['id']")
-set +e; OUT=$("${detached_run[@]}" --approve "$RID" --as bob --wait 2>&1); CODE=$?; set -e
+set +e
+OUT=$("${detached_run[@]}" --approve "$RID" --as bob --wait 2>&1)
+CODE=$?
+set -e
 [ $CODE = 1 ] && echo "$OUT" | grep -q "main is protected" || fail "a rejected push should fail the run with the origin's message ($CODE): $OUT"
 echo "   minimal-repo: seikika test ran its 5 action cases in a scratch copy, leaving its origin as it was"
 echo "   minimal-repo: previewed, awaited bob (ann and carol refused), pushed CODE_OF_CONDUCT.md with trailers, recorded; a rejected push failed with the origin's message"
 echo "   no connector, kind or key declared: 16 actions from 4 git children; a pull request branch on beta's origin; alpha pinned the generated key on its origin, the clone followed, and bob's approval pushed SECURITY.md to alpha's main"
 
 echo "10. no server: the org portal holds approvals in its checkout, signed with the same key"
-"$BIN/seikika" serve "$WORK/gitorg" --stop >/dev/null; DETACHED=
+"$BIN/seikika" serve "$WORK/gitorg" --stop >/dev/null
+DETACHED=
 rm "$WORK/hosts/mini.git/hooks/pre-receive"
 [ "$(run "$WORK/gitorg" --as ann | field "['approval_key']")" = "$KEY" ] || fail "the checkout should sign with the key the server kept"
 COC=(add-code-of-conduct --entity portal:mini -i contact=local@acme.dev)
-set +e; OUT=$(run "$WORK/gitorg" "${COC[@]}" --as ann --yes); CODE=$?; set -e
+set +e
+OUT=$(run "$WORK/gitorg" "${COC[@]}" --as ann --yes)
+CODE=$?
+set -e
 RID=$(echo "$OUT" | field "['id']")
 [ $CODE = 3 ] && echo "$OUT" | grep -q -- "--approve $RID" || fail "a request should await approval and say how to give it ($CODE): $OUT"
 for who in ann carol; do
-  set +e; run "$WORK/gitorg" --approve "$RID" --as $who >/dev/null 2>&1; CODE=$?; set -e
+  set +e
+  run "$WORK/gitorg" --approve "$RID" --as $who >/dev/null 2>&1
+  CODE=$?
+  set -e
   [ $CODE = 2 ] || fail "$who should not be able to approve in the checkout ($CODE)"
 done
 git --git-dir "$WORK/hosts/mini.git" show main:CODE_OF_CONDUCT.md | grep -q local@acme.dev && fail "pushed before approval"
@@ -292,11 +367,19 @@ REFUSED=$(echo "$OUT" | python3 -c "import json,sys; print(' '.join(e['by'] for 
 [ "$REFUSED" = "user:ann user:carol" ] || fail "the refused approvals are not in the record: $REFUSED"
 git --git-dir "$WORK/hosts/mini.git" show main:CODE_OF_CONDUCT.md | grep -q local@acme.dev || fail "CODE_OF_CONDUCT.md is not on mini's main"
 git --git-dir "$WORK/hosts/mini.git" log -1 --format=%B main | grep -q "Approved-By: user:bob" || fail "no Approved-By trailer"
-set +e; run "$WORK/gitorg" --approve "$RID" --as bob >/dev/null 2>&1; CODE=$?; set -e
+set +e
+run "$WORK/gitorg" --approve "$RID" --as bob >/dev/null 2>&1
+CODE=$?
+set -e
 [ $CODE = 2 ] || fail "a finished run should not be approved again ($CODE)"
-set +e; OUT=$(run "$WORK/gitorg" add-code-of-conduct --entity portal:mini -i contact=never@acme.dev --as ann --yes); set -e
+set +e
+OUT=$(run "$WORK/gitorg" add-code-of-conduct --entity portal:mini -i contact=never@acme.dev --as ann --yes)
+set -e
 RID=$(echo "$OUT" | field "['id']")
-set +e; OUT=$(run "$WORK/gitorg" --reject "$RID" --as bob); CODE=$?; set -e
+set +e
+OUT=$(run "$WORK/gitorg" --reject "$RID" --as bob)
+CODE=$?
+set -e
 [ $CODE = 1 ] && [ "$(echo "$OUT" | field "['state']")" = rejected ] || fail "reject in the checkout ($CODE): $OUT"
 git --git-dir "$WORK/hosts/mini.git" show main:CODE_OF_CONDUCT.md | grep -q never@acme.dev && fail "a rejected run landed"
 echo "   add-code-of-conduct on mini with no server: awaited bob (ann and carol refused, both recorded), signed with the kept key, pushed and verified; not approved twice; a rejected run did not land"
@@ -324,11 +407,17 @@ git -C "$WORK/review/mini" pull -q origin main
 sed -i "s/approval: .*/approval: \"['group:security']\"/" "$WORK/review/mini/.seikika/actions/add-code-of-conduct.yaml"
 git -C "$WORK/review/mini" "${G[@]}" commit -qam "group:security approves" && git -C "$WORK/review/mini" push -q origin main
 COC=(add-code-of-conduct --entity portal:mini -i contact=security@acme.dev)
-set +e; OUT=$(run "$WORK/gitorg" "${COC[@]}" --as dave --yes); CODE=$?; set -e
+set +e
+OUT=$(run "$WORK/gitorg" "${COC[@]}" --as dave --yes)
+CODE=$?
+set -e
 RID=$(echo "$OUT" | field "['id']")
 [ $CODE = 3 ] || fail "a group-approved request should await approval ($CODE): $OUT"
 for who in dave carol; do
-  set +e; run "$WORK/gitorg" --approve "$RID" --as $who >/dev/null 2>&1; CODE=$?; set -e
+  set +e
+  run "$WORK/gitorg" --approve "$RID" --as $who >/dev/null 2>&1
+  CODE=$?
+  set -e
   [ $CODE = 2 ] || fail "$who should not be able to approve for group:security ($CODE)"
 done
 OUT=$(run "$WORK/gitorg" --approve "$RID" --as erin --wait) || fail "erin, in group:security through group:leads: $OUT"

@@ -7,12 +7,12 @@ work=$(mktemp -d)
 trap 'rm -rf "$work"' EXIT
 mkdir -p "$work/bin" "$work/seikika-cli-x86_64-unknown-linux-gnu"
 candidate="$work/seikika-cli-x86_64-unknown-linux-gnu/seikika"
-printf '#!/usr/bin/env bash\necho "seikika should not run"\n' > "$candidate"
+printf '#!/usr/bin/env bash\necho "seikika should not run"\n' >"$candidate"
 chmod +x "$candidate"
 archive=seikika-cli-x86_64-unknown-linux-gnu.tar.xz
 tar -cJf "$work/$archive" -C "$work" seikika-cli-x86_64-unknown-linux-gnu
 
-cat > "$work/bin/gh" <<'EOF'
+cat >"$work/bin/gh" <<'EOF'
 #!/usr/bin/env bash
 set -euo pipefail
 [[ $1 == release && $2 == download ]]
@@ -28,8 +28,8 @@ status=0
 PATH="$work/bin:$PATH" FIXTURE_ARCHIVE="$work/$archive" \
   RUNNER_TEMP="$work" RUNNER_OS=Linux RUNNER_ARCH=X64 \
   GITHUB_PATH="$work/path" GITHUB_OUTPUT="$work/output" \
-  SEIKIKA_REPO=seikika/seikika SEIKIKA_VERSION=0.2.1 SEIKIKA_BIN= \
-  bash "$root/actions/setup/run.sh" > "$work/log" 2>&1 || status=$?
+  SEIKIKA_REPO=seikika/seikika SEIKIKA_VERSION=0.2.1 SEIKIKA_BIN='' \
+  bash "$root/actions/setup/run.sh" >"$work/log" 2>&1 || status=$?
 cat "$work/log"
 test "$status" = 2
 grep -qF "checksum mismatch for $archive" "$work/log"
