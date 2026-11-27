@@ -28,6 +28,7 @@ A running portal serves a **catalog** of software, teams, and their relationship
 
 ## Explore further
 
+- [Try the hosted demo](https://demo.seikika.com/) with an approved account, or [browse the public organization scorecards](/demo/organization/).
 - [Browse Reference](/reference/) for APIs, CLI commands, SDKs, and schemas.
 - [Install Seikika](/start/install/) or check [what Seikika supports](/concepts/capabilities/).
 - [Browse this repository's report](/demo/report/) to see scores, evidence, and fixes.
