@@ -13,6 +13,7 @@ const { result, reload } = usePortalRequest(() => search.value
   ? "/v1/entities?" + new URLSearchParams({ q: props.query, limit: "50" })
   : "/v1/views/ops");
 const body = computed(() => result.value?.body);
+const guest = computed(() => body.value?.viewer?.method === "guest");
 const entityLink = (id: string) => "#entity/" + encodeURIComponent(id);
 const entries = (record: Record<string, Json> | undefined) => Object.entries(record ?? {});
 </script>
@@ -29,12 +30,12 @@ const entries = (record: Record<string, Json> | undefined) => Object.entries(rec
     <SectionCard v-else-if="search" title="Results" heading="h3">
       <p v-if="!body.items.length" class="sub">No entities match.</p>
       <table v-else class="portal-table">
-        <thead><tr><th>Entity</th><th>Title</th><th>Owner</th></tr></thead>
+        <thead><tr><th>Entity</th><th>Title</th><th v-if="!guest">Owner</th></tr></thead>
         <tbody>
           <tr v-for="entity in body.items" :key="entity.id">
             <td><a :href="entityLink(entity.id)">{{ entity.id }}</a></td>
             <td><DataValue :value="entity.fields.title ?? entity.fields.displayName" /></td>
-            <td>
+            <td v-if="!guest">
               <DataValue :value="entity.fields.ownership?.owner ?? entity.fields.owner" :entity-href="entityLink" />
               <span v-if="entity.fields.ownership?.status" class="sub"> ({{ entity.fields.ownership.status }})</span>
             </td>

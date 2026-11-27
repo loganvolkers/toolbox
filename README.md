@@ -8,7 +8,7 @@ ownership, scorecards, and self-service actions for developers and agents.
 
 | If you want to | Start here |
 | --- | --- |
-| Explore a hosted portal | [Try the hosted demo](https://demo.seikika.com/) with an approved account, or [browse the public organization scorecards](https://seikika.com/demo/organization/). |
+| Explore a hosted portal | [Browse the hosted demo](https://demo.seikika.com/) or [view the public organization scorecards](https://seikika.com/demo/organization/). Operations requires sign-in. |
 | Create a portal or check one repository | Run `seikika init` to choose connectors and standards packages. [Follow the quickstart](https://seikika.com/start/quickstart/) to catch a broken link. |
 | Run a catalog locally | [Explore a portal](https://seikika.com/start/portal/) to look up a service, see who owns it, and inspect its score. |
 | Bring GitHub or other data into a portal | [Browse the connector directory](https://seikika.com/connectors/) for setup guides. |

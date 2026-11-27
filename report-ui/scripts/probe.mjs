@@ -97,6 +97,17 @@ const contracts = {
     await page.getByRole("searchbox", { name: "Search runs" }).fill("unrelated");
     await page.getByText("No runs match your filters.").waitFor();
   },
+  "hosted-portal--public-catalog": async (page) => {
+    assert.equal(await page.getByRole("tab").count(), 1);
+    await page.getByRole("link", { name: "Public scorecards" }).waitFor();
+    assert.equal(await page.getByRole("link", { name: "Operations" }).getAttribute("href"), "/ops");
+    await page.locator('a[href="#catalog/Repository"]').first().click();
+    assert.equal(await page.getByRole("textbox", { name: /CEL filter/ }).count(), 0);
+    await page.locator('a[href="#entity/repository%3Aledger"]').first().click();
+    await page.getByRole("heading", { name: "example/ledger", exact: true }).waitFor();
+    assert.equal(await page.getByRole("link", { name: "Source" }).getAttribute("href"), "https://github.com/example/ledger");
+    assert.equal(await page.getByRole("button", { name: "Refresh" }).count(), 0);
+  },
   "hosted-portal--assessments": async (page) => {
     await page.getByRole("tab", { name: "Assessments", exact: true }).waitFor();
     const run = page.locator(".assessment-runs li").first().getByRole("link");

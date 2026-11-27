@@ -2,6 +2,7 @@
 import { computed, onMounted, onUnmounted, provide, ref, watch } from "vue";
 import ReportApp from "../../../report-ui/src/ReportApp.vue";
 import type { CatalogFilter, ReportData } from "../../../report-ui/src/types";
+import type { PortalApi } from "../api";
 import { portalApi, usePortalApi, usePortalRequest } from "../requests";
 import { restorePortalRoute } from "../routes";
 import PortalStatus from "./PortalStatus.vue";
@@ -10,13 +11,24 @@ import PortalEntityTools from "./PortalEntityTools.vue";
 import PortalTeams from "./PortalTeams.vue";
 
 const props = defineProps<{ initialRoute?: string }>();
+const publicEntry = !/^\/(report|ops)(\/|$)/.test(location.pathname);
 if (props.initialRoute === undefined) restorePortalRoute(new URL(location.href));
 const api = usePortalApi();
 provide(portalApi, api);
 const empty: ReportData = { portal: "Seikika", catalog: {}, scorecards: {}, scores: {} };
 const extraViews = ["search", "operations"];
-const { result, reload } = usePortalRequest(() => "/v1/views/report?partial=true", { retryUnavailable: true });
+const readReport: PortalApi = async (path, init) => {
+  if (publicEntry) {
+    const catalog = await api("/v1/views/home?public_catalog=true", init).catch(() => null);
+    if (catalog?.status === 200 && catalog.body?.publicCatalog) return catalog;
+  }
+  return api(path, init);
+};
+const { result, reload } = usePortalRequest(() => "/v1/views/report?partial=true", {
+  retryUnavailable: true, request: readReport,
+});
 const report = computed<ReportData | undefined>(() => result.value?.status === 200 ? result.value.body : undefined);
+const guest = computed(() => report.value?.publicCatalog === true);
 const federation = computed(() => report.value?.federationStatus);
 watch(report, (current, _, onCleanup) => {
   if (current?.federationStatus?.pending) {
@@ -65,13 +77,14 @@ onUnmounted(() => clearInterval(poll));
 
 <template>
   <ReportApp :data="report ?? empty" :initial-route="initialRoute" :pending="!report" :extra-views="extraViews"
-    :request-action="api" :filter-catalog="filterCatalog">
+    :request-action="guest ? undefined : api" :filter-catalog="guest ? undefined : filterCatalog">
     <template #tools="{ route }">
       <nav class="portal-tools" aria-label="Live portal">
         <form role="search" @submit.prevent="search">
           <input v-model="query" type="search" aria-label="Search" placeholder="Search entities" />
         </form>
-        <a href="#operations" :aria-current="route.mode === 'operations' ? 'page' : undefined">Operations</a>
+        <a v-if="guest" href="https://seikika.com/demo/organization/">Public scorecards</a>
+        <a :href="guest ? '/ops' : '#operations'" :aria-current="route.mode === 'operations' ? 'page' : undefined">Operations</a>
         <button v-if="newer || updating" type="button" :disabled="updating" @click="update">
           {{ updating ? "Updating data…" : "Newer data — update" }}
         </button>
@@ -90,11 +103,11 @@ onUnmounted(() => clearInterval(poll));
       <PortalLiveView :mode="route.mode" :query="route.query?.q ?? ''" />
     </template>
     <template #entity-tools="{ id, source, snapshot }">
-      <PortalEntityTools v-if="!source?.startsWith('child:')" :key="id" :id="id"
+      <PortalEntityTools v-if="!guest && !source?.startsWith('child:')" :key="id" :id="id"
         :snapshot="snapshot" @refreshed="reload" />
     </template>
     <template #overview="{ data, summary }">
-      <PortalTeams :visible-entities="summary.kindOf" :snapshot="data.snapshot" />
+      <PortalTeams v-if="!guest" :visible-entities="summary.kindOf" :snapshot="data.snapshot" />
     </template>
   </ReportApp>
 </template>

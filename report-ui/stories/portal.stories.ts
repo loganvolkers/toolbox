@@ -40,7 +40,10 @@ function story(route: string, data: unknown = report, status = 200) {
     const url = new URL(path, "https://portal.example.com");
     if (url.pathname === "/v1/views/report") return json(data, status);
     if (url.pathname === "/v1/entities") return json({ items: url.searchParams.get("q") === "missing" ? [] : [entity] });
-    if (url.pathname === "/v1/views/home") return json({ owned: [{ id, levels: { readiness: "silver" }, failing: [] }] });
+    if (url.pathname === "/v1/views/home") {
+      if (url.searchParams.has("public_catalog")) return (data as ReportData | null)?.publicCatalog ? json(data) : json(null, 204);
+      return json({ owned: [{ id, levels: { readiness: "silver" }, failing: [] }] });
+    }
     if (url.pathname === "/v1/views/ops") return json({
       snapshot, input_version: 3, recompute_ms: 12,
       connectors: [{ name: "git", runtime: "stdio", registered: true, last_read: { service: "2026-11-25" } }],
@@ -87,3 +90,14 @@ export const AssessmentRubric = story("rubric/" + encodeURIComponent("rubric:sei
 export const Loading = story(entityRoute, null, 503);
 export const SignIn = story("overview", { title: "Authentication required" }, 401);
 export const Missing = story("entity/service%3Amissing");
+
+export const PublicCatalog = story("overview", {
+  portal: "Public demo",
+  publicCatalog: true,
+  catalog: { Repository: ["repository:ledger"] },
+  entityOverview: { "repository:ledger": {
+    title: "example/ledger", repositoryUrl: "https://github.com/example/ledger",
+  } },
+  scorecards: {},
+  scores: {},
+});

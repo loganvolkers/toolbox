@@ -118,7 +118,8 @@ const tracks = computed(() => [...new Set([
     <template #meta>
       <code v-if="displayId !== entity.title">{{ displayId }}</code>
       <div v-if="entitySource(data, entity.id)" class="sub">{{ entitySource(data, entity.id) }}</div>
-      <div class="sub">{{ kindTitle(data, entity.kind) }} · {{ plural(scoredBy.length, "scorecard") }}
+      <div class="sub">{{ kindTitle(data, entity.kind) }}
+        <template v-if="!data.publicCatalog"> · {{ plural(scoredBy.length, "scorecard") }}</template>
         <span v-if="data.snapshot != null" class="asof"> · as of snapshot <code>{{ data.snapshot }}</code></span>
       </div>
     </template>
@@ -135,7 +136,7 @@ const tracks = computed(() => [...new Set([
         </li>
       </ul>
     </SectionCard>
-    <ReportContent :build="() => body ?? null" />
+    <ReportContent v-if="!data.publicCatalog" :build="() => body ?? null" />
     <div v-if="detail" class="report-entity-details">
       <SectionCard v-if="Object.keys(detail.fields).length" title="Fields">
         <dl>

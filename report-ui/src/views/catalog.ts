@@ -100,8 +100,8 @@ export const catalogViews = {
       "section",
       {},
       el("div", { className: "head" }, el("h2", { textContent: "Catalog" }), el("span", { className: "sub", textContent: fmt(S.entityCount) + " entities in " + kinds.length + " kinds and " + plural(groups.length, "group") })),
-      el("p", { className: "lede", textContent: D.sources ? "Browse entities from the local portal and federated repositories by kind." : "Everything the portal derived from this repository, grouped by what it is about. The bar under a kind shows each entity's lowest level across the scorecards that rate it; pick a kind to list its entities." }),
-      el(
+      el("p", { className: "lede", textContent: D.publicCatalog ? "Browse the repositories published by this portal." : D.sources ? "Browse entities from the local portal and federated repositories by kind." : "Everything the portal derived from this repository, grouped by what it is about. The bar under a kind shows each entity's lowest level across the scorecards that rate it; pick a kind to list its entities." }),
+      D.publicCatalog ? null : el(
         "div",
         { className: "legend", style: "margin:0 0 12px" },
         ...["none", "bronze", "silver", "gold", "unscored"].map(function (l) {

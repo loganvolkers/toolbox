@@ -137,6 +137,7 @@ export interface ReportData {
   portal: string;
   organization?: string;
   viewer?: string;
+  publicCatalog?: boolean;
   federationStatus?: { code: string; detail: string; pending: boolean };
   actions?: ReportAction[];
   children?: ReportChild[];

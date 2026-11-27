@@ -9,9 +9,9 @@ export function usePortalApi() {
 
 export function usePortalRequest(
   path: () => string,
-  options: { retryUnavailable?: boolean } = {},
+  options: { retryUnavailable?: boolean; request?: PortalApi } = {},
 ) {
-  const request = usePortalApi();
+  const request = options.request ?? usePortalApi();
   const revision = ref(0);
   const result = shallowRef<ApiResult | null>(null);
   watch([path, revision], ([url], old, onCleanup) => {

@@ -50,6 +50,9 @@ watch(data, data => {
 const summary = computed(() => summarize(data.value));
 const route = computed(() => {
   const value = parseHash(hash.value, props.extraViews);
+  if (data.value.publicCatalog && !["catalog", "entity"].includes(value.mode) && !props.extraViews?.includes(value.mode)) {
+    return { mode: "catalog" };
+  }
   if (value.mode === "tracks" && value.name) value.name = trackByPath(data.value, value.name);
   return value;
 });
@@ -71,13 +74,15 @@ const active = computed(() => {
 });
 const comparisons = computed(() => Object.keys(data.value.comparisons ?? {}).length);
 const levelCards = computed(() => summary.value.rows.filter(row => !row.compare).length);
-const tabs = computed(() => {
+const tabs = computed<{ id: string; label: string; count?: number }[]>(() => {
+  const catalog = { id: "catalog", label: "Catalog", count: summary.value.entityCount };
+  if (data.value.publicCatalog) return [catalog];
   const tracks = tracksSorted(data.value, summary.value).length;
   const campaigns = campaignNamesSorted(data.value).length;
   return [
     { id: "overview", label: "Overview" },
     ...(tracks ? [{ id: "tracks", label: "Tracks", count: tracks }] : []),
-    { id: "catalog", label: "Catalog", count: summary.value.entityCount },
+    catalog,
     ...(campaigns || active.value === "campaigns" ? [{ id: "campaigns", label: "Campaigns", count: campaigns }] : []),
     { id: "scorecards", label: "Scorecards", count: levelCards.value },
     { id: "assessments", label: "Assessments" },
@@ -87,7 +92,7 @@ const tabs = computed(() => {
 });
 const columns = computed(() => tabs.value.length <= 3 ? tabs.value.length : tabs.value.length === 4 ? 2 : 3);
 const portal = computed(() => data.value.portal || "Seikika report");
-const showSummary = computed(() => !data.value.sources || active.value === "overview");
+const showSummary = computed(() => !data.value.publicCatalog && (!data.value.sources || active.value === "overview"));
 
 function rememberScroll() {
   clearTimeout(scrollTimer);
@@ -253,7 +258,7 @@ onUnmounted(() => {
     <div v-if="!pending" ref="navigation" class="modes" role="tablist" aria-label="Report views" :style="{ '--tabcols': columns }" @keydown="arrow" @scroll="scrollTabs">
       <button v-for="tab in tabs" :id="'tab-' + tab.id" :key="tab.id" type="button" role="tab"
         :aria-selected="active === tab.id" aria-controls="report-body"
-        :tabindex="active === tab.id || (!active && tab.id === 'overview') ? 0 : -1" @click="selectTab($event, tab.id)">
+        :tabindex="active === tab.id || (!active && tab.id === tabs[0]?.id) ? 0 : -1" @click="selectTab($event, tab.id)">
         {{ tab.label }}<span v-if="tab.count != null" class="count">{{ fmt(tab.count) }}</span>
       </button>
     </div>
