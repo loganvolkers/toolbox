@@ -50,13 +50,13 @@ kindGroups:
       The Rust crates, their dependencies, and the other code we maintain:
       scripts, integration tests and schemas.
     kinds:
-      - Crate
-      - Dependency
-      - PackageJson
-      - PythonScript
-      - ShellScript
-      - File
-      - JsonSchema
+    - Crate
+    - Dependency
+    - PackageJson
+    - PythonScript
+    - ShellScript
+    - File
+    - JsonSchema
   - name: surfaces
     title: Agent and user surfaces
     description: >-
