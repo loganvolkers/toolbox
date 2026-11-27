@@ -38,6 +38,7 @@ jobs:
     runs-on: ubuntu-24.04-arm
     timeout-minutes: 60
     permissions: {contents: read, security-events: write}
+    strategy: {fail-fast: false, matrix: {workspace: [build-cost, other]}}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with: {persist-credentials: false}
@@ -50,15 +51,18 @@ jobs:
             ~/.cargo/registry/cache
             ~/.cargo/git/db
             ${{ runner.temp }}/codeql-rust-target
-          key: codeql-rust-experiments-v1-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('rust-toolchain.toml', 'experiments/**/Cargo.lock', 'experiments/**/Cargo.toml') }}
+          key: codeql-rust-experiments-${{ matrix.workspace }}-v1-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('rust-toolchain.toml', 'experiments/**/Cargo.lock', 'experiments/**/Cargo.toml') }}
           restore-keys: |
+            codeql-rust-experiments-v1-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('rust-toolchain.toml', 'experiments/**/Cargo.lock', 'experiments/**/Cargo.toml') }}
             codeql-rust-v1-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('rust-toolchain.toml', '**/Cargo.lock', '**/Cargo.toml') }}
       - uses: github/codeql-action/init@1bd86f2fdb4b86187fa4059f16f31a3202acc9ea # v4.39.4
         with:
           languages: rust
           build-mode: none
-          config: |
-            paths: [experiments]
+          config: >-
+            ${{ matrix.workspace == 'build-cost'
+            && '{"paths":["experiments/build-cost"]}'
+            || '{"paths":["experiments"],"paths-ignore":["experiments/build-cost"]}' }}
       - uses: github/codeql-action/analyze@1bd86f2fdb4b86187fa4059f16f31a3202acc9ea # v4.39.4
         env:
           CODEQL_EXTRACTOR_RUST_OPTION_CARGO_TARGET_DIR: ${{ runner.temp }}/codeql-rust-target
