@@ -37,6 +37,7 @@ const contracts = {
     await page.getByRole("button", { name: "Show more runs" }).click();
     assert.ok(await page.locator(".assessment-runs li").count() > 12);
     await page.getByRole("searchbox", { name: "Search runs" }).fill("seikika-expr");
+    await page.locator(".assessment-runs li").filter({ hasText: "Historical review" }).getByText("Stale · same assessor").waitFor();
     const run = page.locator(".assessment-runs").getByRole("link", { name: "seikika-expr", exact: true });
     await run.click();
     await page.getByRole("heading", { name: "Criterion results" }).waitFor();
@@ -53,7 +54,11 @@ const contracts = {
     await page.keyboard.press("Enter");
     assert.equal(await page.locator(".assessment-criteria details").first().getAttribute("open"), "");
     await page.getByRole("link", { name: "Assessments are well-formed" }).waitFor();
-    await page.getByRole("link", { name: "Read the review" }).click();
+    await page.getByRole("link", { name: "Read the recorded review" }).click();
+    await page.getByRole("heading", { name: /Historical review of .*seikika-expr/ }).waitFor();
+    await page.getByText("Recorded review verdict", { exact: true }).waitFor();
+    await page.getByText("Stale · same assessor", { exact: true }).waitFor();
+    assert.equal(await page.locator(".assessment-result .assessment-verdict").getAttribute("data-verdict"), "recorded");
     await page.getByRole("link", { name: "Assessment quality rubric", exact: true }).click();
     await page.getByRole("heading", { name: "Rubric criteria" }).waitFor();
     assert.match(await page.getByRole("link", { name: "How assessments are reviewed" }).getAttribute("href"), /^https:/);

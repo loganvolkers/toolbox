@@ -81,6 +81,13 @@ export interface AssessmentRun {
   reviewVerdict?: Verdict;
   reviewId?: string;
   sameAssessor: boolean;
+  isReview: boolean;
+  reviewProvenance?: { stale: boolean; sameAssessor: boolean };
+}
+export function reviewQualification(run: AssessmentRun) {
+  const provenance = run.reviewProvenance;
+  if (provenance?.stale) return provenance.sameAssessor ? "Stale · same assessor" : "Stale review";
+  if (provenance?.sameAssessor) return "Same assessor";
 }
 export interface AssessmentRubric {
   id: string;
@@ -112,7 +119,7 @@ export function runDate(at: string) {
 
 export function assessmentIndex(data: ReportData) {
   const kinds = data.assessmentKinds ?? (data.catalog.Assessment ? ["Assessment"] : []);
-  const ids = [...new Set(data.assessmentIds ?? kinds.flatMap(kind => data.catalog[kind] ?? []))];
+  const runIds = new Set(data.assessmentIds ?? kinds.flatMap(kind => data.catalog[kind] ?? []));
   const visible = new Set(Object.values(data.catalog).flat());
   const original = (id: string) => data.entitySources?.[id]?.original ?? id;
   const source = (id: string) => data.entitySources?.[id]?.source ?? "local";
@@ -135,7 +142,7 @@ export function assessmentIndex(data: ReportData) {
     const assessed = /^assessment:([^/]+)\/(.+)$/.exec(id);
     return title ?? (assessed ? rubricTitle(assessed[1]) + " assessment of " + idTitle(assessed[2]) : idTitle(id));
   }
-  const runs: AssessmentRun[] = ids.map(id => {
+  const runs: AssessmentRun[] = [...runIds].map(id => {
     const fields = data.entities?.[id]?.fields ?? {};
     // Older snapshots have catalog IDs and scores but no projected assessment fields.
     const legacy = !data.entities?.[id] && /^assessment:([^/]+)\/(.+)$/.exec(original(id));
@@ -162,6 +169,7 @@ export function assessmentIndex(data: ReportData) {
       scores: scoresFor(id), reviewState: text(fields.reviewState),
       reviewVerdict: review === "unknown" ? undefined : review,
       sameAssessor: fields.selfReviewed === true,
+      isReview: Boolean(subjectId && runIds.has(subjectId) || subject?.startsWith("assessment:")),
     };
   }).sort((a, b) => dateOrder(b.at) - dateOrder(a.at) || a.id.localeCompare(b.id));
   const reviewsBySubject = new Map<string, AssessmentRun[]>();
@@ -180,7 +188,11 @@ export function assessmentIndex(data: ReportData) {
   }
   for (const run of runs) {
     // Seikika's assessment-quality rubric records the independent review of an assessment.
-    run.reviewId = reviewsBySubject.get(run.id)?.find(review => review.rubricName === "assessment-quality")?.id;
+    const review = reviewsBySubject.get(run.id)?.find(item => item.rubricName === "assessment-quality");
+    if (review) {
+      run.reviewId = review.id;
+      review.reviewProvenance = { stale: run.reviewState === "stale", sameAssessor: run.sameAssessor };
+    }
   }
   const rubrics: AssessmentRubric[] = Object.entries(data.rubrics ?? {}).map(([id, definition]) => ({
     id, definition, source: sourceTitle(id), runs: runsByRubric.get(id) ?? [], scores: scoresFor(id),

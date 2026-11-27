@@ -92,6 +92,8 @@
 .assessment-view .assessment-verdict[data-verdict="pass"] { color: var(--pass); }
 .assessment-view .assessment-verdict[data-verdict="fail"] { color: var(--fail); }
 .assessment-view .assessment-verdict:is([data-verdict="unsure"], [data-verdict="unknown"]) { color: var(--unknown); }
+.assessment-view .assessment-review-qualification { color: var(--unknown); font-weight: 650; }
+.assessment-view .assessment-result .assessment-review-qualification { margin-block-end: 4px; }
 .assessment-view .assessment-result {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1.2fr);
@@ -131,6 +133,9 @@
 @media (max-width: 700px) {
   .assessment-view .assessment-detail-grid { grid-template-columns: minmax(0, 1fr); }
   .assessment-view .assessment-result { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .assessment-view .assessment-result-review { grid-template-columns: minmax(0, 1fr); }
+  .assessment-view .assessment-result-review > div:first-child { border-radius: 12px 12px 0 0; }
+  .assessment-view .assessment-result-review > div + div { border-inline-start: 0; border-block-start: 1px solid var(--line); }
   .assessment-view .assessment-result .assessment-review-summary {
     grid-column: 1 / -1;
     border-inline-start: 0;
