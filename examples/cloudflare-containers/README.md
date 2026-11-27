@@ -56,14 +56,14 @@ In the Worker's **Settings → Build**, connect the GitHub repository and use th
 | Root directory | `examples/cloudflare-containers` |
 | Production branch | A trusted staging branch with this example, such as `codex/cloudflare-containers` while reviewing PR #142 |
 | Build command | `bash build.sh` |
-| Deploy command | `cd .build && npm exec -- wrangler deploy` |
-| Preview command | `cd .build && npm exec -- wrangler preview` |
+| Deploy command | `cd .build && npm exec -- wrangler deploy --config ./wrangler.toml` |
+| Preview command | `cd .build && npm exec -- wrangler preview --config ./wrangler.toml` |
 | Build variable | `SKIP_DEPENDENCY_INSTALL=1` |
 | API token | Cloudflare-managed build token |
 
 The build script uses the name of the connected Worker in the staged Wrangler configuration. The build script compiles with the repository's pinned Rust toolchain, stages the portal under `.build`, and installs the locked Wrangler dependencies. It uses `seikika-forks/` by default. Set the build command to `bash build.sh /path/to/portal` or pass a path relative to this example directory to stage another checked-out manifest. [Build settings](https://developers.cloudflare.com/workers/ci-cd/builds/configuration/) · [Worker name override](https://developers.cloudflare.com/workers/ci-cd/builds/troubleshoot/#workers-name-requirement)
 
-If Cloudflare reports that application detection ran from a workspace root, check the **Root directory** setting and retry the build.
+If Cloudflare reports that application detection ran from a workspace root, check the **Root directory** setting and retry the build. If Wrangler reports a missing `previews` block, check that the Preview command enters `.build` and passes `--config ./wrangler.toml`. That flag selects the staged config even when Wrangler can find a generated config.
 
 If a build gets a Cloudflare permission error publishing the Container, inspect the build token's permissions. A custom user API token selected in the Worker's Builds settings needs Workers Editor for the existing Worker, and Containers Write for its account. Add Workers Routes Write for any zone whose routes the deploy changes. Keep the token in Cloudflare's build settings and the runtime secrets in the Worker. [Build token configuration](https://developers.cloudflare.com/workers/ci-cd/builds/configuration/#api-token) · [Worker permissions](https://developers.cloudflare.com/workers/authorization/workers/)
 
