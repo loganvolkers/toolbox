@@ -11,6 +11,7 @@ export interface Query extends AssessmentFilters {
   entity?: string;
   group?: string;
   source?: string;
+  filter?: string;
 }
 
 export interface Route {
@@ -24,19 +25,19 @@ export interface Route {
   query?: Query;
 }
 
-export function parseHash(hash: string): Route {
+export function parseHash(hash: string, extraViews: readonly string[] = []): Route {
   var h = hash.replace(/^#/, "");
   var query: Query = {};
   var qi = h.indexOf("?");
   if (qi >= 0) {
     var params = new URLSearchParams(h.slice(qi + 1));
-    ["q", "level", "outcome", "rule", "entity", "group", "source", "rubric", "verdict"].forEach(function (k) {
+    ["q", "level", "outcome", "rule", "entity", "group", "source", "rubric", "verdict", "filter"].forEach(function (k) {
       if (params.has(k)) query[k as keyof Query] = params.get(k) || "";
     });
     h = h.slice(0, qi);
   }
   try {
-    return { ...parsePath(h), query };
+    return { ...(extraViews.includes(h) ? { mode: h } : parsePath(h)), query };
   } catch {
     return { mode: "missing" };
   }

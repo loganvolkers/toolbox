@@ -4,7 +4,7 @@ import PageFrame from "@seikika/ui/components/PageFrame.vue";
 import PageHeader from "@seikika/ui/components/PageHeader.vue";
 import "@seikika/ui/theme.css";
 import "./report.css";
-import type { ReportData } from "./types";
+import type { CatalogFilter, ReportData } from "./types";
 import { boxLogo } from "./lib/bars";
 import { aliasLevels } from "./lib/levels";
 import { parseHash, trackByPath } from "./lib/routes";
@@ -20,7 +20,15 @@ import AssessmentView from "./AssessmentView.vue";
 import { aggregateReport, sourceLabel } from "./lib/federation";
 import type { ActionRequest } from "./action-request";
 
-const props = defineProps<{ data: ReportData; initialRoute?: string; embedded?: boolean; requestAction?: ActionRequest }>();
+const props = defineProps<{
+  data: ReportData;
+  initialRoute?: string;
+  embedded?: boolean;
+  requestAction?: ActionRequest;
+  extraViews?: readonly string[];
+  pending?: boolean;
+  filterCatalog?: CatalogFilter;
+}>();
 const hash = ref(props.initialRoute === undefined ? location.hash : "#" + props.initialRoute);
 const content = ref<HTMLElement>();
 const navigation = ref<HTMLElement>();
@@ -41,7 +49,7 @@ watch(data, data => {
 }, { immediate: true, flush: "sync" });
 const summary = computed(() => summarize(data.value));
 const route = computed(() => {
-  const value = parseHash(hash.value);
+  const value = parseHash(hash.value, props.extraViews);
   if (value.mode === "tracks" && value.name) value.name = trackByPath(data.value, value.name);
   return value;
 });
@@ -49,7 +57,9 @@ const assessmentMode = computed(() => {
   const mode = route.value.mode;
   if (mode === "assessments" || mode === "assessment" || mode === "rubric" || mode === "rubrics") return mode;
 });
+const extra = computed(() => props.extraViews?.includes(route.value.mode));
 const active = computed(() => {
+  if (extra.value || props.pending) return null;
   if (assessmentMode.value) return "assessments";
   const current = route.value;
   if (current.mode === "missing") return null;
@@ -191,7 +201,10 @@ function escapeTip(event: KeyboardEvent) {
   if (event.key === "Escape") hideTip();
 }
 
-watch(() => route.value.mode, mode => { if (mode === "actions") void ready(); });
+watch(() => props.data, () => { if (props.initialRoute === undefined) syncHash(); }, { flush: "sync" });
+watch(() => route.value, route => {
+  if (route.mode === "actions" || extra.value) void ready();
+});
 watch(() => [assessmentMode.value, route.value.id, route.value.query?.rubric], ([mode]) => {
   if (mode) void ready();
 }, { flush: "post" });
@@ -202,7 +215,7 @@ onMounted(() => {
   window.addEventListener("click", rememberScroll, true);
   window.addEventListener("scroll", onScroll, { passive: true, capture: true });
   window.addEventListener("keydown", escapeTip);
-  if (assessmentMode.value) void ready();
+  if (assessmentMode.value || extra.value) void ready();
 });
 onUnmounted(() => {
   clearTimeout(scrollTimer);
@@ -220,7 +233,7 @@ onUnmounted(() => {
     <PageHeader :title="portal" :heading="embedded ? 'h2' : 'h1'">
       <template #title><span class="top"><ReportContent as="span" :build="boxLogo" />{{ portal }}</span></template>
       <template #meta>
-        <div v-if="showSummary" class="meta">
+        <div v-if="showSummary && !pending" class="meta">
           {{ plural(summary.entityCount, "entity", "entities") }} tracked ({{ fmt(Object.keys(summary.worst).length) }} scored) ·
           {{ plural(levelCards, "scorecard") }}
           <template v-if="comparisons"> · {{ plural(comparisons, "comparison factor") }}</template>
@@ -228,7 +241,8 @@ onUnmounted(() => {
         </div>
       </template>
     </PageHeader>
-    <details v-if="data.sources && showSummary" class="report-sources">
+    <slot name="tools" :route="route" />
+    <details v-if="data.sources && showSummary && !pending" class="report-sources">
       <summary>{{ Object.keys(data.sources).length }} portal sources</summary>
       <ul><li v-for="(source, key) in data.sources" :key="key">
         {{ sourceLabel(data, String(key)) }}
@@ -236,7 +250,7 @@ onUnmounted(() => {
         <span v-if="source.error" class="sub"> · {{ source.error }}</span>
       </li></ul>
     </details>
-    <div ref="navigation" class="modes" role="tablist" aria-label="Report views" :style="{ '--tabcols': columns }" @keydown="arrow" @scroll="scrollTabs">
+    <div v-if="!pending" ref="navigation" class="modes" role="tablist" aria-label="Report views" :style="{ '--tabcols': columns }" @keydown="arrow" @scroll="scrollTabs">
       <button v-for="tab in tabs" :id="'tab-' + tab.id" :key="tab.id" type="button" role="tab"
         :aria-selected="active === tab.id" aria-controls="report-body"
         :tabindex="active === tab.id || (!active && tab.id === 'overview') ? 0 : -1" @click="selectTab($event, tab.id)">
@@ -244,11 +258,20 @@ onUnmounted(() => {
       </button>
     </div>
     <div id="report-body" ref="content" tabindex="-1" :role="active ? 'tabpanel' : undefined" :aria-labelledby="active ? 'tab-' + active : undefined">
-      <ReportActions v-if="route.mode === 'actions'" :data="data" :entity="route.query?.entity" :request="requestAction" />
+      <slot v-if="extra" name="extra-view" :route="route" />
+      <div v-else-if="pending" class="view"><slot name="pending" /></div>
+      <ReportActions v-else-if="route.mode === 'actions'" :data="data" :entity="route.query?.entity" :request="requestAction" />
       <div v-else-if="assessmentMode" class="view">
         <AssessmentView :data="data" :mode="assessmentMode" :id="route.id" :filters="route.query" />
       </div>
-      <ReportView v-else :data="data" :summary="summary" :route="route" @ready="ready" />
+      <template v-else>
+        <ReportView :data="data" :summary="summary" :route="route" :filter-catalog="filterCatalog" @ready="ready">
+          <template v-if="$slots['entity-tools']" #entity-tools="context">
+            <slot name="entity-tools" v-bind="context" />
+          </template>
+        </ReportView>
+        <slot v-if="route.mode === 'overview'" name="overview" :data="data" :summary="summary" />
+      </template>
     </div>
     <div ref="tooltip" class="ftip" :hidden="!tip" aria-hidden="true" :style="tipPosition" @mouseenter="keepTip">{{ tip }}</div>
   </component>

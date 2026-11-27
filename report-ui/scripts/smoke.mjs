@@ -51,6 +51,9 @@ try {
     if (!ready) await new Promise(resolve => setTimeout(resolve, 100));
   }
   assert(ready, "The fixture portal started");
+  const portalHome = portalOrigin + "/?as=alice";
+  const hostedShell = await fetch(portalHome).then(response => response.text());
+  assert.equal(await fetch(portalOrigin + "/report/").then(response => response.text()), hostedShell);
   const entityUrl = portalOrigin + "/e/" + encodeURIComponent(id) + "?as=alice";
   const response = await fetch(entityUrl);
   assert.equal(response.status, 200);
@@ -66,13 +69,37 @@ try {
   await page.locator("#root").getByRole("heading", { name: "Payments API" }).waitFor();
   await page.locator("#root .asof code").waitFor();
   await page.getByRole("link", { name: "group:payments", exact: true }).first().waitFor();
-  await page.getByRole("textbox", { name: "Search" }).fill("payments");
-  await page.getByRole("textbox", { name: "Search" }).press("Enter");
+  await page.getByRole("searchbox", { name: "Search", exact: true }).fill("payments");
+  await page.getByRole("searchbox", { name: "Search", exact: true }).press("Enter");
   await page.getByRole("heading", { name: /Search.*payments/ }).waitFor();
-  await page.getByRole("link", { name: "Assessments", exact: true }).click();
+  await page.getByRole("link", { name: id, exact: true }).waitFor();
+  await page.getByRole("tab", { name: "Assessments", exact: true }).click();
   await page.getByRole("heading", { name: "No assessment runs yet" }).waitFor();
   await page.getByRole("link", { name: "Rubrics 0" }).click();
   await page.getByText("This snapshot has no rubric definitions.").waitFor();
+  await page.goto(portalOrigin + "/c/Repository?as=alice&filter=" + encodeURIComponent('entity.id == "' + id + '"'));
+  await page.getByRole("heading", { name: /Repositor/ }).last().waitFor();
+  await page.getByRole("link", { name: /Payments API|payments-api/ }).last().waitFor();
+  assert.match(new URL(page.url()).hash, /^#catalog\/Repository\?filter=/);
+  await page.getByRole("button", { name: "Clear CEL filter" }).click();
+  await page.waitForURL(url => url.hash === "#catalog/Repository");
+  await page.getByRole("tab", { name: /Scorecards/ }).click();
+  await page.getByRole("heading", { name: "Scorecards", exact: true }).waitFor();
+  await page.keyboard.press("Home");
+  await page.waitForFunction(() => document.activeElement?.id === "tab-overview");
+  await page.goto(portalOrigin + "/?as=erin#entity/user%3Aalice");
+  await page.getByRole("heading", { name: "Alice Ng" }).waitFor();
+  await page.locator(".redacted").filter({ hasText: "Visible to" }).first().waitFor();
+  assert.equal(await page.getByText("alice@acme.example", { exact: true }).count(), 0);
+  await page.goto(portalOrigin + "/report/?as=dave#entity/user%3Aalice");
+  await page.getByText("alice@acme.example", { exact: true }).waitFor();
+  await page.getByRole("link", { name: "Operations" }).click();
+  await page.getByRole("heading", { name: "Connectors", exact: true }).waitFor();
+  const livePages = await browser.newPage();
+  await livePages.goto(portalOrigin + "/?as=dave#scorecards");
+  await livePages.getByRole("heading", { name: "Scorecards", exact: true }).waitFor();
+  const liveTabs = await livePages.getByRole("tab").evaluateAll(tabs => tabs.map(tab => tab.id));
+  await livePages.close();
 
   const offlineUrl = new URL("/offline-artifact", docsOrigin).href;
   const offlineRequests = [];
@@ -83,6 +110,7 @@ try {
   await page.goto(offlineUrl + "#entity/" + encodeURIComponent(id));
   await page.getByRole("heading", { name: "Payments API" }).waitFor();
   await page.locator("dl").getByRole("link", { name: "group:payments", exact: true }).waitFor();
+  assert.deepEqual(await page.getByRole("tab").evaluateAll(tabs => tabs.map(tab => tab.id)), liveTabs);
   await page.getByRole("tab", { name: /Scorecards/ }).click();
   await page.getByRole("heading", { name: "Scorecards", exact: true }).waitFor();
   await page.keyboard.press("Home");

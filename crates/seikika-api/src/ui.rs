@@ -3,7 +3,6 @@
 use axum::http::{StatusCode, Uri, header};
 use axum::response::{IntoResponse, Response};
 
-const REPORT: &str = include_str!("../ui-dist/report/index.html");
 const INDEX: &str = include_str!("../ui-dist/index.html");
 include!("../ui-dist/assets.rs");
 
@@ -52,9 +51,6 @@ pub(crate) fn entity(title: &str, owner: &str) -> Response {
 /// Serve the embedded assets and the portal shell for client-side routes.
 pub async fn asset(uri: Uri) -> Response {
     let path = uri.path();
-    if matches!(path, "/report" | "/report/") {
-        return response("text/html; charset=utf-8", REPORT);
-    }
     if let Some((_, ctype, body)) = ASSETS.iter().find(|(asset, _, _)| *asset == path) {
         return response(ctype, *body);
     }

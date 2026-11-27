@@ -14,7 +14,6 @@ const props = defineProps<{
   mode: "assessments" | "assessment" | "rubrics" | "rubric";
   id?: string;
   filters?: AssessmentFilters;
-  portal?: boolean;
 }>();
 
 const index = computed(() => assessmentIndex(props.data));
@@ -33,26 +32,15 @@ const reviewState = computed(() => {
   return run.value?.reviewState === "missing" ? "No review recorded" : "Review status unavailable";
 });
 const rubric = computed(() => rubrics.value.find(item => item.id === (props.mode === "assessment" ? run.value?.rubricId : props.id)));
-const heading = computed(() => props.portal ? "h1" : "h2");
-const sectionHeading = computed(() => props.portal ? "h2" : "h3");
-
 const encode = encodeURIComponent;
 function view(mode: "assessments" | "assessment" | "rubrics" | "rubric", id?: string) {
-  if (props.portal) {
-    const root = mode.startsWith("rubric") ? "/assessments/rubrics" : "/assessments";
-    return id ? root + (mode === "assessment" ? "/run/" : "/") + encode(id) : root;
-  }
   return "#" + mode + (id ? "/" + encode(id) : "");
 }
-function href(path: string) {
-  return props.portal ? "/report/#" + path : "#" + path;
-}
-const cardHref = (id: string) => href("scorecard/" + encode(id));
-const ruleHref = (card: string, rule: string) => href("rule/" + encode(card) + "/" + encode(rule));
+const cardHref = (id: string) => "#scorecard/" + encode(id);
+const ruleHref = (card: string, rule: string) => "#rule/" + encode(card) + "/" + encode(rule);
 const subjectHref = (id: string) => runs.value.some(item => item.id === id)
   ? view("assessment", id)
-  : props.portal && !props.data.entitySources?.[id]?.source.startsWith("child:")
-    ? "/e/" + encode(id) : href("entity/" + encode(id));
+  : "#entity/" + encode(id);
 const filteredHref = (id: string) => view("assessments") + "?rubric=" + encode(id);
 
 const selected = ref("");
@@ -70,13 +58,12 @@ watch([selected, selectedVerdict, query], () => {
   limit.value = pageSize;
   if (props.mode !== "assessments") return;
   const current = new URL(location.href);
-  if (props.portal && current.pathname.replace(/\/$/, "") !== "/assessments") return;
-  const params = props.portal ? current.searchParams : new URLSearchParams();
+  const params = new URLSearchParams();
   for (const [key, value] of [["rubric", selected.value], ["verdict", selectedVerdict.value], ["q", query.value]]) {
     if (value) params.set(key, value);
     else params.delete(key);
   }
-  if (!props.portal) current.hash = "assessments" + (params.size ? "?" + params : "");
+  current.hash = "assessments" + (params.size ? "?" + params : "");
   history.replaceState(history.state, "", current);
 });
 const filtered = computed(() => {
@@ -117,7 +104,7 @@ const runRubric = computed(() => run.value?.rubricName ? rubricTitle(run.value.r
     </nav>
 
     <template v-if="mode === 'assessments' || mode === 'rubrics'">
-      <PageHeader title="Assessments" :heading="heading" />
+      <PageHeader title="Assessments" heading="h2" />
       <nav class="assessment-nav" aria-label="Assessment views">
         <a :href="view('assessments')" :aria-current="mode === 'assessments' ? 'page' : undefined">Recent runs <span>{{ runs.length }}</span></a>
         <a :href="view('rubrics')" :aria-current="mode === 'rubrics' ? 'page' : undefined">Rubrics <span>{{ rubrics.length }}</span></a>
@@ -125,7 +112,7 @@ const runRubric = computed(() => run.value?.rubricName ? rubricTitle(run.value.r
     </template>
 
     <template v-if="mode === 'assessments'">
-      <SectionCard v-if="!runs.length" title="No assessment runs yet" :heading="sectionHeading">
+      <SectionCard v-if="!runs.length" title="No assessment runs yet" heading="h3">
         <p v-if="rubrics.length">Browse the rubrics to see what this portal is ready to assess.</p>
         <p v-else>This portal has no published assessment results or rubrics in this snapshot.</p>
         <a v-if="rubrics.length" :href="view('rubrics')">Browse rubrics</a>
@@ -170,7 +157,7 @@ const runRubric = computed(() => run.value?.rubricName ? rubricTitle(run.value.r
     </template>
 
     <template v-else-if="mode === 'rubrics'">
-      <SectionCard title="Rubrics" :heading="sectionHeading">
+      <SectionCard title="Rubrics" heading="h3">
         <p v-if="!rubrics.length">This snapshot has no rubric definitions.</p>
         <ul v-else class="assessment-list assessment-rubrics">
           <li v-for="item in rubrics" :key="item.id">
@@ -188,7 +175,7 @@ const runRubric = computed(() => run.value?.rubricName ? rubricTitle(run.value.r
     </template>
 
     <template v-else-if="mode === 'rubric' && rubric">
-      <PageHeader :title="rubricTitle(rubric.definition.name)" :description="rubric.definition.description ?? undefined" :heading="heading">
+      <PageHeader :title="rubricTitle(rubric.definition.name)" :description="rubric.definition.description ?? undefined" heading="h2">
         <template #meta>
           <p class="assessment-muted">Subject · {{ kindTitle(data, rubric.definition.kind) }}<template v-if="rubric.source"> · {{ rubric.source }}</template></p>
           <ul v-if="links.length" class="assessment-list assessment-doc-links assessment-meta" aria-label="Rubric documentation">
@@ -197,7 +184,7 @@ const runRubric = computed(() => run.value?.rubricName ? rubricTitle(run.value.r
         </template>
       </PageHeader>
       <div class="assessment-detail-grid">
-        <SectionCard title="Rubric criteria" :heading="sectionHeading">
+        <SectionCard title="Rubric criteria" heading="h3">
           <ol class="assessment-criteria">
             <li v-for="criterion in rubric.definition.criteria" :key="criterion.name">
               <strong>{{ criterion.question }}</strong>
@@ -206,10 +193,10 @@ const runRubric = computed(() => run.value?.rubricName ? rubricTitle(run.value.r
           </ol>
         </SectionCard>
         <aside>
-          <SectionCard title="Rubric quality" :heading="sectionHeading">
+          <SectionCard title="Rubric quality" heading="h3">
             <AssessmentScores :scores="rubric.scores" :card-href="cardHref" :rule-href="ruleHref" />
           </SectionCard>
-          <SectionCard title="Runs for this rubric" :heading="sectionHeading">
+          <SectionCard title="Runs for this rubric" heading="h3">
             <a v-if="rubric.runs.length" :href="filteredHref(rubric.id)">View {{ rubric.runs.length }} {{ rubric.runs.length === 1 ? 'run' : 'runs' }}</a>
             <p v-else class="assessment-muted">No published runs yet.</p>
           </SectionCard>
@@ -218,7 +205,7 @@ const runRubric = computed(() => run.value?.rubricName ? rubricTitle(run.value.r
     </template>
 
     <template v-else-if="mode === 'assessment' && run">
-      <PageHeader :title="runTitle" :heading="heading">
+      <PageHeader :title="runTitle" heading="h2">
         <template #meta>
           <div class="assessment-meta">
             <a v-if="run.rubricId" :href="view('rubric', run.rubricId)">{{ runRubric }} rubric</a>
@@ -269,7 +256,7 @@ const runRubric = computed(() => run.value?.rubricName ? rubricTitle(run.value.r
         <p>{{ run.summary }}</p>
       </details>
       <div class="assessment-detail-grid">
-        <SectionCard :key="run.id" title="Criterion results" :heading="sectionHeading">
+        <SectionCard :key="run.id" title="Criterion results" heading="h3">
           <p v-if="!results.length" class="assessment-muted">Criterion results are unavailable in this snapshot.</p>
           <ul v-else class="assessment-list assessment-criteria">
             <li v-for="(result, i) in results" :key="i">
@@ -286,10 +273,10 @@ const runRubric = computed(() => run.value?.rubricName ? rubricTitle(run.value.r
           </ul>
         </SectionCard>
         <aside>
-          <SectionCard title="Assessment quality scorecards" :heading="sectionHeading">
+          <SectionCard title="Assessment quality scorecards" heading="h3">
             <AssessmentScores :key="run.id" :scores="run.scores" :card-href="cardHref" :rule-href="ruleHref" />
           </SectionCard>
-          <SectionCard v-if="paths.length || evidenceLinks.length" title="Sources" :heading="sectionHeading">
+          <SectionCard v-if="paths.length || evidenceLinks.length" title="Sources" heading="h3">
             <ul class="assessment-list assessment-doc-links">
               <li v-for="link in evidenceLinks" :key="link.url"><a :href="link.url">{{ link.title }}</a></li>
               <li v-for="path in paths" :key="path"><code>{{ path }}</code></li>
@@ -299,6 +286,6 @@ const runRubric = computed(() => run.value?.rubricName ? rubricTitle(run.value.r
       </div>
     </template>
 
-    <PageHeader v-else title="Assessment page not found" description="This link has no match in the current snapshot." :heading="heading" />
+    <PageHeader v-else title="Assessment page not found" description="This link has no match in the current snapshot." heading="h2" />
   </section>
 </template>

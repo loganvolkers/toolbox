@@ -7,6 +7,7 @@ use axum::http::{HeaderMap, StatusCode};
 use axum::response::Response;
 use seikika_authz::authn::AuthError;
 use seikika_authz::fga_dsl;
+use seikika_derive::Derived;
 use serde_json::{Value, json};
 
 /// An authenticated caller, mapped to a catalog user.
@@ -200,9 +201,8 @@ impl AppState {
 }
 
 /// The marker that replaces a hidden facet: which relation is needed and who holds it.
-pub fn redacted(p: &Published, id: &str, requires: &str) -> Value {
-    let owner = p
-        .derived
+pub(crate) fn redacted(d: &Derived, id: &str, requires: &str) -> Value {
+    let owner = d
         .entities
         .get(id)
         .and_then(|e| e.fields.get("ownership"))
@@ -216,7 +216,7 @@ pub fn redacted(p: &Published, id: &str, requires: &str) -> Value {
 }
 
 /// Facet level for a facet name: `public`, `operator`, or owner-only (any other name, e.g. `contact`).
-fn facet_needs(facet: Option<&str>) -> Option<&'static str> {
+pub(crate) fn facet_needs(facet: Option<&str>) -> Option<&'static str> {
     match facet {
         None | Some("public") => None,
         Some("operator") => Some("admin"),
@@ -279,7 +279,7 @@ impl AppState {
                 if ok {
                     value.clone()
                 } else {
-                    redacted(p, id, needs.unwrap())
+                    redacted(&p.derived, id, needs.unwrap())
                 },
             );
         }
@@ -316,7 +316,7 @@ impl AppState {
                 json!(score.level)
             } else {
                 redacted(
-                    p,
+                    &p.derived,
                     id,
                     if facet("summary") == "operator" {
                         "admin"
@@ -347,7 +347,7 @@ impl AppState {
                     Value::Object(detailed)
                 } else {
                     redacted(
-                        p,
+                        &p.derived,
                         id,
                         if details == "operator" {
                             "admin"

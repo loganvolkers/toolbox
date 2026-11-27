@@ -1,16 +1,17 @@
 //! The shared read model for the live portal report and a generated snapshot.
 
-use crate::access::{Caller, Visibility};
+use crate::access::{Caller, Visibility, facet_needs, redacted};
 use crate::routes::problem;
 use crate::state::AppState;
 use axum::{
     Json,
-    extract::State,
+    extract::{Query, State},
     http::{HeaderMap, StatusCode, header},
     response::{IntoResponse, Response},
 };
 use seikika_derive::{Derived, judged};
 use seikika_model::Manifest;
+use serde::Deserialize;
 use serde_json::{Map, Value, json};
 use std::collections::{BTreeMap, BTreeSet};
 use std::sync::Arc;
@@ -351,7 +352,7 @@ pub fn snapshot(
         "snapshot": d.snapshot,
         "catalog": catalog,
         "entityOverview": public_entity_overviews(m, d),
-        "entities": entity_details(m, d, audience),
+        "entities": entity_details(m, d, collection, audience),
         "actions": actions(m, collection, d, audience),
         "children": children(m, collection, audience),
         "kinds": kinds,
@@ -565,6 +566,7 @@ fn restrict_campaign(
 fn entity_details(
     m: &Manifest,
     d: &Derived,
+    collection: &Derived,
     audience: Option<&Audience<'_>>,
 ) -> Map<String, Value> {
     let mut outgoing: BTreeMap<&str, Vec<Value>> = BTreeMap::new();
@@ -592,12 +594,13 @@ fn entity_details(
         .iter()
         .map(|(id, entity)| {
             let children_kind = m.federation.as_ref().and_then(|f| f.portals.as_ref());
-            let fields: Map<String, Value> = entity
+            // Only this detail view gets markers. Aggregates still use the restricted fields.
+            let fields: Map<String, Value> = collection.entities[id]
                 .fields
                 .iter()
-                .filter(|(field, _)| {
+                .filter_map(|(field, value)| {
                     if matches!(field.as_str(), "report" | "reportError") {
-                        return false;
+                        return None;
                     }
                     if children_kind == Some(&entity.kind)
                         && matches!(
@@ -605,17 +608,24 @@ fn entity_details(
                             "actions" | "runner" | "dir" | "git" | "path" | "error"
                         )
                     {
-                        return false;
+                        return None;
                     }
                     let facet = kinds
                         .get(&entity.kind)
-                        .and_then(|fields| fields.get(*field))
+                        .and_then(|fields| fields.get(field))
                         .and_then(|field| field.facet.as_deref());
-                    audience.map_or(matches!(facet, None | Some("public")), |a| {
-                        a.facet(id, facet)
+                    let Some(needs) = facet_needs(facet) else {
+                        return Some((field.clone(), value.clone()));
+                    };
+                    audience.map(|a| {
+                        let visible = if a.facet(id, facet) {
+                            value.clone()
+                        } else {
+                            redacted(collection, id, needs)
+                        };
+                        (field.clone(), visible)
                     })
                 })
-                .map(|(k, v)| (k.clone(), v.clone()))
                 .collect();
             let provenance: Map<String, Value> = fields
                 .keys()
@@ -718,7 +728,10 @@ fn actions(
         .collect()
 }
 
-fn federation_status(state: &AppState, input_version: u64) -> Option<Response> {
+fn federation_problem(
+    state: &AppState,
+    input_version: u64,
+) -> Option<(StatusCode, &'static str, &'static str)> {
     if crate::connectors::disabled() {
         return None;
     }
@@ -742,7 +755,7 @@ fn federation_status(state: &AppState, input_version: u64) -> Option<Response> {
                 .last_read(&connector.name, "federated-repo")
                 .is_none()
         {
-            return Some(problem(
+            return Some((
                 StatusCode::BAD_GATEWAY,
                 "organization-read-failed",
                 "Unable to read the GitHub organization. Check the connector status and GitHub credential.",
@@ -753,17 +766,25 @@ fn federation_status(state: &AppState, input_version: u64) -> Option<Response> {
             .iter()
             .any(|kind| pending(&connector.name, kind));
     }
-    waiting.then(|| {
-        problem(
-            StatusCode::SERVICE_UNAVAILABLE,
-            "reading-children",
-            "Waiting for the first read of the federation sources",
-        )
-    })
+    waiting.then_some((
+        StatusCode::SERVICE_UNAVAILABLE,
+        "reading-children",
+        "Waiting for the first read of the federation sources",
+    ))
+}
+
+#[derive(Default, Deserialize)]
+pub(crate) struct ReportQuery {
+    #[serde(default)]
+    partial: bool,
 }
 
 /// The signed-in report, with read permissions applied before publishing any JSON.
-pub(crate) async fn view(State(state): State<Arc<AppState>>, headers: HeaderMap) -> Response {
+pub(crate) async fn view(
+    State(state): State<Arc<AppState>>,
+    Query(query): Query<ReportQuery>,
+    headers: HeaderMap,
+) -> Response {
     let caller = match state.caller(&headers).await {
         Ok(caller) => caller,
         Err(response) => return response,
@@ -775,8 +796,11 @@ pub(crate) async fn view(State(state): State<Arc<AppState>>, headers: HeaderMap)
             "no snapshot yet",
         );
     };
-    if let Some(status) = federation_status(&state, published.input_version) {
-        return status;
+    let federation = federation_problem(&state, published.input_version);
+    if !query.partial
+        && let Some((status, code, detail)) = federation
+    {
+        return problem(status, code, detail);
     }
     let ids: Vec<_> = published
         .derived
@@ -800,6 +824,11 @@ pub(crate) async fn view(State(state): State<Arc<AppState>>, headers: HeaderMap)
     );
     report["snapshot"] = json!(published.snapshot_id);
     report["viewer"] = json!(caller.user);
+    if let Some((status, code, detail)) = federation {
+        report["federationStatus"] = json!({
+            "code": code, "detail": detail, "pending": status == StatusCode::SERVICE_UNAVAILABLE
+        });
+    }
     ([(header::CACHE_CONTROL, "private, no-store")], Json(report)).into_response()
 }
 
@@ -839,7 +868,9 @@ mod tests {
             "apiVersion": "seikika.com/v1alpha1",
             "portal": {"name": "parent", "owner": "group:operators", "seikika": "0.2"},
             "federation": {"portals": "Portal"},
-            "kinds": [],
+            "kinds": [{"name": "Portal", "identityFrom": [], "sources": {"default": []}, "fields": {
+                "contact": {"type": "string", "facet": "owner"}
+            }}],
             "scorecards": [{"name": "hygiene", "kind": "Portal", "owner": "group:operators",
                 "levels": ["bronze"], "rules": []}],
         }))
@@ -851,8 +882,11 @@ mod tests {
                 id.clone(),
                 Entity {
                     kind: "Portal".into(),
-                    fields: Map::from_iter([("report".into(), json!({"sensitive": name}))]),
-                    provenance: BTreeMap::new(),
+                    fields: Map::from_iter([
+                        ("report".into(), json!({"sensitive": name})),
+                        ("contact".into(), json!("owner contact")),
+                    ]),
+                    provenance: BTreeMap::from([("contact".into(), "private source".into())]),
                     inbound: BTreeMap::new(),
                     records: Vec::new(),
                 },
@@ -891,6 +925,70 @@ mod tests {
             report["scores"]["hygiene"],
             json!({"portal:public": {"level": "none"}})
         );
-        assert_eq!(report["entities"]["portal:public"]["fields"], json!({}));
+        let entity = &report["entities"]["portal:public"];
+        assert_eq!(
+            entity["fields"],
+            json!({"contact": {"redacted": true, "requires": "can_view_details", "visible_to": "portal admins"}})
+        );
+        assert_eq!(entity["provenance"], json!({}));
+        let offline = snapshot(&manifest, &derived, &Map::new(), None);
+        assert_eq!(offline["entities"]["portal:public"]["fields"], json!({}));
+    }
+
+    #[tokio::test]
+    async fn partial_portal_report_keeps_local_data_while_waiting_for_federation() {
+        let document = json!({
+            "apiVersion": "seikika.com/v1alpha1",
+            "portal": {"name": "parent", "owner": "group:operators", "seikika": "0.2"},
+            "federation": {"children": [{"git": "../child", "key": "child"}]},
+            "kinds": []
+        });
+        let manifest = serde_json::from_value(document.clone()).unwrap();
+        let store = Arc::new(seikika_store::SharedMem(Default::default()));
+        let state = crate::app_state(manifest, &document, store, None, Default::default());
+        let derived = Derived {
+            entities: BTreeMap::from([(
+                "service:local".into(),
+                Entity {
+                    kind: "Service".into(),
+                    fields: Map::new(),
+                    provenance: BTreeMap::new(),
+                    inbound: BTreeMap::new(),
+                    records: Vec::new(),
+                },
+            )]),
+            ..Default::default()
+        };
+        state.current.send_replace(Some(Arc::new(crate::Published {
+            snapshot_id: "1.fixture".into(),
+            derived: Arc::new(derived),
+            input_version: 1,
+            recompute: Default::default(),
+            published_at: std::time::SystemTime::now(),
+            decisions: None,
+            by_field: Default::default(),
+        })));
+        let mut headers = HeaderMap::new();
+        headers.insert("x-seikika-user", "reader".parse().unwrap());
+
+        let complete = view(
+            State(state.clone()),
+            Query(ReportQuery::default()),
+            headers.clone(),
+        )
+        .await;
+        assert_eq!(complete.status(), StatusCode::SERVICE_UNAVAILABLE);
+        let partial = view(State(state), Query(ReportQuery { partial: true }), headers).await;
+        assert_eq!(partial.status(), StatusCode::OK);
+        assert_eq!(
+            partial.headers()[header::CACHE_CONTROL],
+            "private, no-store"
+        );
+        let body = axum::body::to_bytes(partial.into_body(), 16_384)
+            .await
+            .unwrap();
+        let report: Value = serde_json::from_slice(&body).unwrap();
+        assert_eq!(report["catalog"]["Service"], json!(["service:local"]));
+        assert_eq!(report["federationStatus"]["pending"], true);
     }
 }

@@ -137,6 +137,7 @@ export interface ReportData {
   portal: string;
   organization?: string;
   viewer?: string;
+  federationStatus?: { code: string; detail: string; pending: boolean };
   actions?: ReportAction[];
   children?: ReportChild[];
   entities?: Record<string, ReportEntity>;
@@ -203,3 +204,8 @@ export interface ReportEntity {
     out: { relation: string; to: string }[];
   };
 }
+
+/** Resolves the entities matching a server-side catalog filter at the displayed snapshot. */
+export type CatalogFilter = (
+  kind: string, expression: string, snapshot: ReportData["snapshot"], signal: AbortSignal,
+) => Promise<ReadonlySet<string>>;

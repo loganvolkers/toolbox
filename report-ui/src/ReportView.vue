@@ -1,12 +1,12 @@
 <script setup lang="ts">
-import { computed, shallowRef, watchPostEffect } from "vue";
+import { computed, ref, shallowRef, watch, watchPostEffect } from "vue";
 import DataValue from "@seikika/ui/components/DataValue.vue";
 import SectionCard from "@seikika/ui/components/SectionCard.vue";
 import { entitySource } from "./lib/federation";
 import EntityPage from "@seikika/ui/components/EntityPage.vue";
 import ScorecardPage from "@seikika/ui/components/ScorecardPage.vue";
 import { entityOverview } from "@seikika/ui/entity";
-import type { ReportData } from "./types";
+import type { CatalogFilter, ReportData } from "./types";
 import { kindTitle } from "./lib/kinds";
 import { plural } from "./lib/words";
 import { shortId, title } from "./lib/rings";
@@ -15,19 +15,53 @@ import type { Summary } from "./lib/summary";
 import { buildView } from "./report-view";
 import ReportContent from "./ReportContent.vue";
 
-const props = defineProps<{ data: ReportData; summary: Summary; route: Route }>();
+const props = defineProps<{ data: ReportData; summary: Summary; route: Route; filterCatalog?: CatalogFilter }>();
 const emit = defineEmits<{ ready: [] }>();
 
 const entity = computed(() => {
   const id = props.route.id;
   if (props.route.mode !== "entity" || !id || !props.summary.kindOf[id]) return null;
-  const overview = entityOverview(id, props.summary.kindOf[id], props.data.entityOverview?.[id]);
+  const overview = entityOverview(id, props.summary.kindOf[id], {
+    ...props.data.entities?.[id]?.fields, ...props.data.entityOverview?.[id],
+  });
   return overview.title === id ? { ...overview, title: shortId(id) } : overview;
 });
 const cardName = computed(() => {
   const name = props.route.name;
   return props.route.mode === "scorecard" && name && props.data.scorecards[name] ? name : null;
 });
+
+const catalogKind = computed(() => props.route.mode === "catalog" && props.route.kind && props.filterCatalog
+  && Object.hasOwn(props.data.catalog, props.route.kind) ? props.route.kind : undefined);
+const expression = computed(() => catalogKind.value ? props.route.query?.filter ?? "" : "");
+const draft = ref("");
+const catalogIds = shallowRef<ReadonlySet<string>>();
+const filtering = ref(false);
+const filterError = ref("");
+watch([catalogKind, expression], ([, filter]) => { draft.value = filter; }, { immediate: true });
+watch([catalogKind, expression, () => props.data.snapshot], async ([kind, filter, snapshot], _, onCleanup) => {
+  const controller = new AbortController();
+  onCleanup(() => controller.abort());
+  catalogIds.value = undefined;
+  filterError.value = "";
+  filtering.value = Boolean(kind && filter);
+  if (!kind || !filter || !props.filterCatalog) return;
+  try {
+    const ids = await props.filterCatalog(kind, filter, snapshot, controller.signal);
+    if (!controller.signal.aborted) catalogIds.value = ids;
+  } catch (error) {
+    if (!controller.signal.aborted) filterError.value = (error as Error).message;
+  } finally {
+    if (!controller.signal.aborted) filtering.value = false;
+  }
+}, { immediate: true });
+function submitFilter(filter: string) {
+  const [path, query] = location.hash.split("?", 2);
+  const params = new URLSearchParams(query);
+  if (filter.trim()) params.set("filter", filter.trim());
+  else params.delete("filter");
+  location.hash = path + (params.size ? "?" + params : "");
+}
 
 const body = shallowRef<Node | Node[]>();
 const headerActions = shallowRef<Node>();
@@ -37,7 +71,8 @@ const beforeScorecard = shallowRef<Node[]>();
 const detailClass = shallowRef("");
 
 watchPostEffect(() => {
-  const content = buildView(props.data, props.summary, props.route);
+  if (filtering.value || filterError.value) return;
+  const content = buildView(props.data, props.summary, props.route, catalogIds.value);
   sidebar.value = undefined;
   if (entity.value) {
     const heading = content.querySelector(":scope > .ehead");
@@ -83,9 +118,12 @@ const tracks = computed(() => [...new Set([
     <template #meta>
       <code v-if="displayId !== entity.title">{{ displayId }}</code>
       <div v-if="entitySource(data, entity.id)" class="sub">{{ entitySource(data, entity.id) }}</div>
-      <div class="sub">{{ kindTitle(data, entity.kind) }} · {{ plural(scoredBy.length, "scorecard") }}</div>
+      <div class="sub">{{ kindTitle(data, entity.kind) }} · {{ plural(scoredBy.length, "scorecard") }}
+        <span v-if="data.snapshot != null" class="asof"> · as of snapshot <code>{{ data.snapshot }}</code></span>
+      </div>
     </template>
     <template #header-actions><ReportContent v-if="headerActions" :build="() => headerActions ?? null" /></template>
+    <slot name="entity-tools" :id="entity.id" :source="data.entitySources?.[entity.id]?.source" :snapshot="data.snapshot" />
     <SectionCard v-if="campaigns.length || tracks.length" title="Campaigns and tracks">
       <ul>
         <li v-for="[name, campaign] in campaigns" :key="'campaign:' + name">
@@ -131,6 +169,19 @@ const tracks = computed(() => [...new Set([
         <ReportContent :build="() => body ?? null" />
       </ScorecardPage>
     </section>
+  </div>
+  <div v-else-if="catalogKind" class="view">
+    <form class="report-filters report-catalog-filter" @submit.prevent="submitFilter(draft)">
+      <label>
+        <span>CEL filter over <code>entity</code></span>
+        <input v-model="draft" placeholder="entity.ownership.status != 'verified'" />
+      </label>
+      <button type="submit">Apply</button>
+      <button v-if="expression" type="button" @click="submitFilter('')">Clear CEL filter</button>
+    </form>
+    <p v-if="filtering" role="status">Applying filter…</p>
+    <p v-else-if="filterError" role="alert">{{ filterError }}</p>
+    <ReportContent v-else :build="() => body ?? null" />
   </div>
   <ReportContent v-else class="view" :build="() => body ?? null" />
 </template>
