@@ -225,6 +225,7 @@ The repository quickstart recorded a baseline, exited 1 after moving its linked 
 - Reproduced the missing Preview configuration error with Wrangler 4.168.0 and a fixture deploy-config redirect. The Preview command passed the configuration check, bundled the Worker, and reached a local API fixture when given the staged TOML path explicitly.
 - Reproduced a cold Preview homepage request that waited 26 seconds before returning HTTP 503. A Worker routing fixture verified that concurrent requests share startup, the homepage can load once the HTTP server answers, and `/readyz` still reports pending federation. The Kubernetes fork's HTTPS partial clone checked out its configured portal branch with full commit history. The workspace connector's branch-following test passed.
 - Validated staged Access configuration against the seven-fork portal. The fixture preserved production token authentication, enabled signed Access assertions for the Preview, and granted the configured login read access. The staging step rejected a partial Access configuration.
+- Verified that the Preview staging step seeds the selected admin or viewer relation in the seven-fork portal and rejects a configuration with both roles set.
 
 ## Reference documentation (2026-11-26)
 

@@ -4,14 +4,18 @@ import { join } from "node:path";
 const {
   SEIKIKA_PREVIEW_CF_TEAM_DOMAIN: team,
   SEIKIKA_PREVIEW_CF_AUDIENCE: audience,
+  SEIKIKA_PREVIEW_CF_ADMIN: admin,
   SEIKIKA_PREVIEW_CF_VIEWER: viewer,
 } = process.env;
 
-if (team || audience || viewer) {
+if (team || audience || admin || viewer) {
+  const login = admin || viewer;
+  const role = admin ? "admin" : "viewer";
   if (!/^https:\/\/[a-z0-9-]+\.cloudflareaccess\.com$/.test(team ?? "") ||
       !/^[a-f0-9]{64}$/.test(audience ?? "") ||
-      !/^[A-Za-z0-9._+-]{1,128}$/.test(viewer ?? "")) {
-    throw new Error("Set the Preview Access team domain, audience, and viewer login together");
+      !/^[A-Za-z0-9._+-]{1,128}$/.test(login ?? "") ||
+      Boolean(admin) === Boolean(viewer)) {
+    throw new Error("Set the Preview Access team domain, audience, and exactly one admin or viewer login");
   }
 
   const stage = process.argv[2];
@@ -35,8 +39,8 @@ if (team || audience || viewer) {
   ].join("\n")));
   writeFileSync(portalPath, portal.replace(staticTuples, [
     "    - static:",
-    `      - user: 'user:${viewer}'`,
-    "        relation: viewer",
+    `      - user: 'user:${login}'`,
+    `        relation: ${role}`,
     "        object: portal:seikika-federation",
   ].join("\n")));
 }
