@@ -5,6 +5,11 @@ anything gets worse than the committed baseline: a ratchet, in the manner of Bet
 ([docs/design/ratchets.md](../../docs/design/ratchets.md)). It needs no server, no database and no
 secrets ([docs/design/repo-portals.md](../../docs/design/repo-portals.md)).
 
+For separate steps, use [setup](../setup/README.md) to install the CLI,
+[ratchet](../ratchet/README.md) to enforce the baseline, or
+[build-portal](../build-portal/README.md) to produce a static snapshot. The
+[operator CI guide](../../site/src/content/docs/operators/ci.md) shows how to compose them.
+
 ## Adopt it in a repository
 
 1. Copy [`examples/repo-portal-starter/seikika.yaml`](../../examples/repo-portal-starter/seikika.yaml)

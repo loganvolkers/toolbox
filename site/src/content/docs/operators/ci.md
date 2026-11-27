@@ -22,7 +22,11 @@ Review the staged baseline and commit it with the manifest. It records the start
 
 ## Add the GitHub Actions workflow
 
-Save this file as `.github/workflows/seikika.yml`. The action builds the CLI and connectors from the same source revision as the starter. It caches that build between runs.
+Save this file as `.github/workflows/seikika.yml`. Replace both `ACTION_SHA` placeholders with
+the same full commit SHA that includes the actions. You can use the commit for a
+[Seikika release](https://github.com/seikika/seikika/releases) once it includes them.
+Choose a published CLI version that supports your manifest and use that version when updating
+the baseline locally.
 
 ```yaml
 name: Seikika standards
@@ -39,12 +43,28 @@ jobs:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
         with:
           persist-credentials: false
-      - uses: seikika/seikika/actions/report@c14c9fbb60405f9fea12d86de3d0b32b717755d9
+      - uses: seikika/seikika/actions/setup@ACTION_SHA
         with:
-          mode: ci
+          seikika-version: "0.2.1"
+      - uses: seikika/seikika/actions/ratchet@ACTION_SHA
 ```
 
-Change `main` if your default branch has another name. Use the job summary to find the scorecard and new evidence when the job fails. The action also uploads a report. For release binaries and other inputs, see the [action reference](https://github.com/seikika/seikika/tree/main/actions/report).
+Change `main` if your default branch has another name. Use the job summary to find the scorecard
+and evidence when the job fails. Make the `standards` job a required check if you want it to
+block merges.
+
+Choose the steps that fit your workflow.
+
+| Goal | Steps |
+|---|---|
+| Validate a manifest or test its rules | Keep setup and run `seikika validate .seikika` or `seikika test .seikika`. Install locked packages first if the manifest uses them. |
+| Enforce an existing baseline | Keep the ratchet step. Use its default `ci` mode to require an up-to-date baseline, or `mode: check` to block regressions while allowing unrecorded improvements. |
+| Browse the current state without a baseline | Use [build-portal](/operators/publish/#host-the-report-on-github-pages) in the workflow that produces the static site. |
+| Maintain an existing one-step workflow | Use [report](/reference/contracts/#github-actions) for its baseline modes, Markdown and HTML uploads, and cached source build. |
+
+Use a job with `contents: read` on pull requests. The manifest and its connectors run with the
+job's permissions. Keep deployment credentials in a separate job that runs from a trusted ref.
+[GitHub Actions inputs and outputs](/reference/contracts/#github-actions)
 
 ## Run the gate on another CI system
 

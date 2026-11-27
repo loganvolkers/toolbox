@@ -13,6 +13,7 @@ concurrency:
 jobs:
   rust:
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with: {persist-credentials: false, fetch-depth: 0}
@@ -258,15 +259,16 @@ jobs:
           seikika-gitlab-runner
   report-action:
     # The report action as a pilot repo runs it: builds seikika from the action's own source (cached),
-    # then scores a repository set up from the starter portal (D69).
+    # then exercises the bundled and composable actions with a starter portal.
     runs-on: ubuntu-latest
+    timeout-minutes: 35
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with: {persist-credentials: false}
       - name: A pilot repository, set up from the starter
         run: |
           mkdir -p "$RUNNER_TEMP/pilot/.seikika" "$RUNNER_TEMP/pilot/.github"
-          cp examples/repo-portal-starter/seikika.yaml "$RUNNER_TEMP/pilot/.seikika/"
+          cp -r examples/repo-portal-starter/{seikika.yaml,tests,fixtures} "$RUNNER_TEMP/pilot/.seikika/"
           cp README.md "$RUNNER_TEMP/pilot/"
           echo '* @acme/pilot' > "$RUNNER_TEMP/pilot/.github/CODEOWNERS"
           git -C "$RUNNER_TEMP/pilot" init -q
@@ -290,6 +292,48 @@ jobs:
           test -s "$RUNNER_TEMP/pilot/.seikika/results.json"
           test -s "$HTML"
           grep -q "repository:acme/pilot" "$REPORT"
+      - name: Set up the same CLI for independent steps
+        id: setup
+        uses: ./actions/setup # zizmor: ignore[self-repository] actionlint 1.7.12 rejects $/
+        with:
+          seikika-dir: ${{ runner.temp }}/seikika-bin
+      - name: Use the CLI without scoring or publishing
+        working-directory: ${{ runner.temp }}/pilot
+        run: |
+          seikika validate .seikika
+          seikika test .seikika
+          cd .seikika
+          test -s results.json
+          sha256sum results.json > "$RUNNER_TEMP/pilot-baseline.sha256"
+          mv results.json "$RUNNER_TEMP/pilot-results.json"
+      - name: Build a portal before the operator adopts a baseline
+        id: site
+        uses: ./actions/build-portal # zizmor: ignore[self-repository] actionlint 1.7.12 rejects $/
+        with:
+          working-directory: ${{ runner.temp }}/pilot
+      - name: Require an explicit baseline when the operator enables the gate
+        id: missing
+        continue-on-error: true
+        uses: ./actions/ratchet # zizmor: ignore[self-repository] actionlint 1.7.12 rejects $/
+        with:
+          working-directory: ${{ runner.temp }}/pilot
+      - name: Confirm the portal was built and the missing baseline was rejected
+        working-directory: ${{ runner.temp }}/pilot/.seikika
+        env:
+          OUTCOME: ${{ steps.missing.outcome }}
+          VERDICT: ${{ steps.missing.outputs.verdict }}
+          INDEX: ${{ steps.site.outputs.index }}
+        run: |
+          test ! -e results.json
+          test -s "$INDEX"
+          test "$OUTCOME" = failure
+          jq -e '.result == "missing-baseline" and .exitCode == 1' "$VERDICT"
+          mv "$RUNNER_TEMP/pilot-results.json" results.json
+      - name: The independent ratchet passes against a clean baseline
+        id: clean
+        uses: ./actions/ratchet # zizmor: ignore[self-repository] actionlint 1.7.12 rejects $/
+        with:
+          working-directory: ${{ runner.temp }}/pilot
       - name: A pull request makes something worse (an individual in CODEOWNERS)
         run: echo '/docs/ @alice' >> "$RUNNER_TEMP/pilot/.github/CODEOWNERS"
       - name: Then the ratchet fails the job (mode ci)
@@ -302,11 +346,46 @@ jobs:
       - name: Check it failed, and that the verdict names the regression (D96)
         env:
           OUTCOME: ${{ steps.regressed.outcome }}
+          VERDICT: ${{ steps.regressed.outputs.verdict }}
         run: |
           test "$OUTCOME" = failure
-          verdict="$RUNNER_TEMP/seikika-report/verdict.json"
-          jq -e '.result == "regressed" and .exitCode == 1' "$verdict"
-          jq -e '.regressions[] | select(.entity == "repository:acme/pilot" and .message == "owners-are-teams now fails")' "$verdict"
+          jq -e '.result == "regressed" and .exitCode == 1' "$VERDICT"
+          jq -e '.regressions[] | select(.entity == "repository:acme/pilot" and .message == "owners-are-teams now fails")' "$VERDICT"
+      - name: The independent ratchet blocks the same regression
+        id: gate
+        continue-on-error: true
+        uses: ./actions/ratchet # zizmor: ignore[self-repository] actionlint 1.7.12 rejects $/
+        with:
+          working-directory: ${{ runner.temp }}/pilot
+      - name: Build a portal for an Astro host despite the score regression
+        id: web
+        uses: ./actions/build-portal # zizmor: ignore[self-repository] actionlint 1.7.12 rejects $/
+        with:
+          working-directory: ${{ runner.temp }}/pilot
+          format: web
+      - name: Check independent results and unchanged baseline
+        working-directory: ${{ runner.temp }}/pilot/.seikika
+        env:
+          BIN: ${{ steps.setup.outputs.bin-dir }}
+          CLEAN_VERDICT: ${{ steps.clean.outputs.verdict }}
+          GATE_OUTCOME: ${{ steps.gate.outcome }}
+          GATE_VERDICT: ${{ steps.gate.outputs.verdict }}
+          SITE_DIR: ${{ steps.site.outputs.directory }}
+          INDEX: ${{ steps.site.outputs.index }}
+          WEB_DIR: ${{ steps.web.outputs.directory }}
+          WEB_JSON: ${{ steps.web.outputs.report-json }}
+        run: |
+          test "$(command -v seikika)" = "$BIN/seikika"
+          jq -e '.result == "pass"' "$CLEAN_VERDICT"
+          test "$GATE_OUTCOME" = failure
+          jq -e '.result == "regressed" and .exitCode == 1' "$GATE_VERDICT"
+          test "$SITE_DIR" != "$WEB_DIR"
+          test "$SITE_DIR/index.html" = "$INDEX"
+          test ! -e "$SITE_DIR/report.json"
+          grep -q 'repository:acme/pilot' "$INDEX"
+          test -s "$WEB_DIR/seikika-report.js"
+          jq -e '.catalog | tostring | contains("repository:acme/pilot")' "$WEB_JSON"
+          sha256sum --check "$RUNNER_TEMP/pilot-baseline.sha256"
   scale-gate:
     # Instruction counts of one full recompute (serial path and rayon workers) against the committed
     # baseline, under Callgrind: repeatable, unlike wall-clock time on a shared runner. The 10 s
@@ -328,6 +407,7 @@ jobs:
         run: python3 scripts/scale-gate.py --ci
   reference-portal:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     defaults: {run: {working-directory: examples/reference-portal}}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -384,6 +464,7 @@ jobs:
           path: ${{ runner.temp }}/assessment-ui
   typescript-builder:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     defaults: {run: {working-directory: experiments/typescript-builder}}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1

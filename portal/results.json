@@ -133,14 +133,6 @@
       }
     },
     "maintainer-ci-reliability": {
-      "workflow:.github/workflows/ci.yml": {
-        "every-job-has-timeout": [
-          "1d3fbde7",
-          "8a357dfb",
-          "c17fdb80",
-          "f94b95c8"
-        ]
-      },
       "workflow:.github/workflows/release.yml": {
         "every-job-has-timeout": [
           "005a095b",
@@ -4655,10 +4647,7 @@
     },
     "maintainer-ci-reliability": {
       "workflow:.github/workflows/ci.yml": {
-        "failing": {
-          "every-job-has-timeout": 4
-        },
-        "level": "none",
+        "level": "bronze",
         "unknown": [
           "fail-rate-under-10",
           "fail-rate-under-20",
@@ -4790,7 +4779,16 @@
           "still-running"
         ]
       },
+      "workflow:actions/build-portal/action.yml": {
+        "level": "skipped"
+      },
+      "workflow:actions/ratchet/action.yml": {
+        "level": "skipped"
+      },
       "workflow:actions/report/action.yml": {
+        "level": "skipped"
+      },
+      "workflow:actions/setup/action.yml": {
         "level": "skipped"
       }
     },
@@ -4839,7 +4837,16 @@
       "workflow:.github/workflows/version-packages.yml": {
         "level": "gold"
       },
+      "workflow:actions/build-portal/action.yml": {
+        "level": "gold"
+      },
+      "workflow:actions/ratchet/action.yml": {
+        "level": "gold"
+      },
       "workflow:actions/report/action.yml": {
+        "level": "gold"
+      },
+      "workflow:actions/setup/action.yml": {
         "level": "gold"
       }
     },
@@ -4931,7 +4938,16 @@
           "fast-feedback"
         ]
       },
+      "workflow:actions/build-portal/action.yml": {
+        "level": "skipped"
+      },
+      "workflow:actions/ratchet/action.yml": {
+        "level": "skipped"
+      },
       "workflow:actions/report/action.yml": {
+        "level": "skipped"
+      },
+      "workflow:actions/setup/action.yml": {
         "level": "skipped"
       }
     },
@@ -5258,7 +5274,16 @@
       "doc:SECURITY.md": {
         "level": "silver"
       },
+      "doc:actions/build-portal/README.md": {
+        "level": "silver"
+      },
+      "doc:actions/ratchet/README.md": {
+        "level": "silver"
+      },
       "doc:actions/report/README.md": {
+        "level": "silver"
+      },
+      "doc:actions/setup/README.md": {
         "level": "silver"
       },
       "doc:docs/README.md": {
@@ -5277,6 +5302,9 @@
         "level": "silver"
       },
       "doc:docs/audits/connector-directory.md": {
+        "level": "silver"
+      },
+      "doc:docs/audits/consumer-github-actions.md": {
         "level": "silver"
       },
       "doc:docs/audits/design-loop-efficiency-2026-11-24.md": {
@@ -5820,6 +5848,9 @@
         "level": "skipped"
       },
       "doc:docs/decisions/D01M8DDGT9KEVE4PSJ3WV7C44NE.md": {
+        "level": "skipped"
+      },
+      "doc:docs/decisions/D01M8DGVXNG05GF6W3996FEFT6C.md": {
         "level": "skipped"
       },
       "doc:docs/decisions/README.md": {

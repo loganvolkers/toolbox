@@ -1,0 +1,55 @@
+name: Seikika ratchet
+description: Enforce a committed Seikika scorecard baseline.
+author: Seikika
+
+inputs:
+  working-directory:
+    description: Checkout to score. Portal and baseline paths are relative to it.
+    default: .
+  portal: {description: Directory containing seikika.yaml., default: .seikika}
+  baseline:
+    description: Results file. Defaults to results.json in the portal directory.
+  mode:
+    description: >-
+      Use ci to require a current baseline, or check to block regressions
+      only.
+    default: ci
+  skip: {description: 'Connector names to skip, separated by commas.'}
+
+outputs:
+  result:
+    description: Ratchet result from the CLI verdict.
+    value: ${{ steps.score.outputs.result }}
+  exit-code:
+    description: CLI exit code (0 pass, 1 ratchet failure, 2 error).
+    value: ${{ steps.score.outputs.exit-code }}
+  verdict:
+    description: Absolute path to the verdict JSON.
+    value: ${{ steps.score.outputs.verdict }}
+  report:
+    description: Absolute path to the Markdown report.
+    value: ${{ steps.score.outputs.report }}
+
+runs:
+  using: composite
+  steps:
+    - name: Check the baseline
+      id: score
+      shell: bash
+      env:
+        INPUT_WORKING_DIRECTORY: ${{ inputs.working-directory }}
+        INPUT_PORTAL: ${{ inputs.portal }}
+        INPUT_BASELINE: ${{ inputs.baseline }}
+        INPUT_MODE: ${{ inputs.mode }}
+        INPUT_SKIP: ${{ inputs.skip }}
+        INPUT_HTML: "false"
+      run: |
+        case "$INPUT_MODE" in
+          ci|check) ;;
+          *) echo '::error title=Seikika ratchet::mode must be ci or check.'; exit 2 ;;
+        esac
+        SEIKIKA_BIN= bash "$GITHUB_ACTION_PATH/../report/run.sh"
+    - name: Enforce the verdict
+      if: steps.score.outputs.exit-code != '0'
+      shell: bash
+      run: exit 1

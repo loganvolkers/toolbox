@@ -3,21 +3,35 @@
 # and the step outputs, and never fails itself: the action's last step fails on the exit code, so
 # the report is uploaded first. Runnable locally with the same environment variables.
 set -uo pipefail
+source "$(dirname "${BASH_SOURCE[0]}")/../lib/portal.sh"
 
-bin=${SEIKIKA_BIN:?SEIKIKA_BIN: directory with the seikika binaries}
-bin=$(cd "$bin" && pwd)                       # absolute, before changing directory
-cd "${INPUT_WORKING_DIRECTORY:-.}" || { echo "::error title=Seikika report::no directory ${INPUT_WORKING_DIRECTORY}"; exit 0; }
 portal=${INPUT_PORTAL:-.seikika}
 baseline=${INPUT_BASELINE:-}
 mode=${INPUT_MODE:-ci}
-out=${RUNNER_TEMP:-/tmp}/seikika-report
 summary=${GITHUB_STEP_SUMMARY:-/dev/null}
 outputs=${GITHUB_OUTPUT:-/dev/null}
-mkdir -p "$out"
+
+report_error() {
+  printf 'result=error\nexit-code=2\n' >> "$outputs"
+}
+
+if [[ -n "${SEIKIKA_BIN:-}" ]]; then
+  if ! bin=$(cd "$SEIKIKA_BIN" && pwd -P) || [[ ! -x "$bin/seikika" ]]; then
+    echo '::error title=Seikika report::The binary directory must contain an executable named seikika.'
+    report_error; exit 0
+  fi
+  executable="$bin/seikika"
+  export SEIKIKA_CONNECTORS_DIR="$bin"
+elif executable=$(type -P seikika); then
+  executable=$(realpath "$executable")
+else
+  echo '::error title=Seikika report::Run actions/setup or put seikika on PATH first.'
+  report_error; exit 0
+fi
+out=$(mktemp -d "${RUNNER_TEMP:-/tmp}/seikika-report.XXXXXX") || { report_error; exit 0; }
 
 [[ -z "$baseline" ]] && baseline="$portal/results.json"
 verdict="$out/verdict.json"
-rm -f "$verdict"
 args=(report "$portal" -o md --out "$out/report.md" --verdict "$verdict")
 [[ -n "${INPUT_SKIP:-}" ]] && args+=(--skip "$INPUT_SKIP")
 [[ "${INPUT_HTML:-true}" == "true" ]] && args+=(--html "$out/report.html")
@@ -27,27 +41,14 @@ case "$mode" in
   update) args+=(--baseline "$baseline" --update) ;;
   report) ;;
   *) echo "::error title=Seikika report::unknown mode '$mode' (ci, check, update or report)"
-     echo "result=error" >> "$outputs"; echo "exit-code=2" >> "$outputs"; exit 0 ;;
+     report_error; exit 0 ;;
 esac
 
-if [[ ! -f "$portal/seikika.yaml" ]]; then
-  echo "::error title=Seikika report::no $portal/seikika.yaml; copy examples/repo-portal-starter/seikika.yaml from the seikika repository"
-  echo "result=error" >> "$outputs"; echo "exit-code=2" >> "$outputs"; exit 0
+if ! prepare_portal 'Seikika report' "$executable" "${INPUT_WORKING_DIRECTORY:-.}" "$portal"; then
+  report_error; exit 0
 fi
 
-# Connectors are found next to the seikika binary (SEIKIKA_CONNECTORS_DIR for good measure).
-# When seikika.lock pins git packages (or executable connectors), populate the cache first.
-# Otherwise a clean runner hashes an empty package dir (SHA-256 e3b0c442…) and fails the pin.
-if [[ -f "$portal/seikika.lock" ]]; then
-  if ! SEIKIKA_CONNECTORS_DIR="$bin" "$bin/seikika" install "$portal" --frozen >"$out/install.txt" 2>&1; then
-    cat "$out/install.txt" >&2
-    echo "::error title=Seikika report::seikika install --frozen failed; fix the lock or package refs, then re-run"
-    echo "result=error" >> "$outputs"; echo "exit-code=2" >> "$outputs"; exit 0
-  fi
-  cat "$out/install.txt" >&2
-fi
-
-SEIKIKA_CONNECTORS_DIR="$bin" "$bin/seikika" "${args[@]}" 2> "$out/ratchet.txt"
+"$executable" "${args[@]}" 2> "$out/ratchet.txt"
 code=$?
 cat "$out/ratchet.txt" >&2
 
@@ -75,7 +76,12 @@ fi
   echo "## Seikika report: $result"
   echo
   case "$result" in
-    pass) echo "Nothing got worse than \`$baseline\`." ;;
+    pass)
+      if [[ "$mode" == report ]]; then
+        echo "Scored the portal without a baseline."
+      else
+        echo "Nothing got worse than \`$baseline\`."
+      fi ;;
     regressed) echo "Something got worse than \`$baseline\`. Fix it, or (if the change is intended) update the baseline in this PR: \`seikika report $portal --baseline $baseline --update\`." ;;
     unknown) echo "Some rules couldn't be evaluated (a tool or its data is missing), so the ratchet can't compare them; install the tools the portal declares (\`seikika doctor $portal\`)." ;;
     stale) echo "Nothing got worse, but \`$baseline\` doesn't record the improvements yet: update it in this PR (\`seikika report $portal --baseline $baseline --update\`, or run this action with \`mode: update\` and commit the uploaded file)." ;;

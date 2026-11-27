@@ -1,0 +1,39 @@
+name: Build Seikika portal
+description: >-
+  Build a static snapshot of a repository portal for a host or site
+  generator.
+author: Seikika
+
+inputs:
+  working-directory:
+    description: Checkout to score. The portal path is relative to it.
+    default: .
+  portal: {description: Directory containing seikika.yaml., default: .seikika}
+  format:
+    description: Use html for one offline page, or web to also emit JSON and JavaScript.
+    default: html
+  skip: {description: 'Connector names to skip, separated by commas.'}
+
+outputs:
+  directory:
+    description: Absolute path to the generated site directory.
+    value: ${{ steps.build.outputs.directory }}
+  index:
+    description: Absolute path to index.html.
+    value: ${{ steps.build.outputs.index }}
+  report-json:
+    description: Absolute path to the JSON snapshot for format web.
+    value: ${{ steps.build.outputs.report-json }}
+
+runs:
+  using: composite
+  steps:
+    - name: Build static portal files
+      id: build
+      shell: bash
+      env:
+        INPUT_WORKING_DIRECTORY: ${{ inputs.working-directory }}
+        INPUT_PORTAL: ${{ inputs.portal }}
+        INPUT_FORMAT: ${{ inputs.format }}
+        INPUT_SKIP: ${{ inputs.skip }}
+      run: bash "$GITHUB_ACTION_PATH/run.sh"

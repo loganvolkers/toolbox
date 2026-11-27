@@ -24,4 +24,15 @@ Use the [portal manifest reference](/operators/manifest/) for an overview of fie
 | `builtin:runner` | Job configuration, result parsers, and record shapes. | [Runner connector reference](https://github.com/seikika/seikika/blob/main/docs/reference/runner-connector.md) |
 | Other first-party connectors | Configuration keys and record kinds for each connector. | [Connector directory](/connectors/) |
 | Standards packages | Parameters and scorecards for each package. | [Standards package directory](/packages/) |
-| `seikika/seikika/actions/report` | Workflow inputs, outputs, and the verdict artifact. | [Report Action reference](https://github.com/seikika/seikika/blob/main/actions/report/README.md#inputs) |
+
+## GitHub Actions
+
+| Action | Use it to | Inputs and outputs |
+|---|---|---|
+| `seikika/seikika/actions/setup` | Install a released CLI and repo-portal connectors, or register existing binaries. | [Setup reference](https://github.com/seikika/seikika/tree/main/actions/setup) |
+| `seikika/seikika/actions/ratchet` | Enforce a committed scorecard baseline and emit a verdict. | [Ratchet reference](https://github.com/seikika/seikika/tree/main/actions/ratchet) |
+| `seikika/seikika/actions/build-portal` | Generate the static repo portal for an artifact, GitHub Pages, or Astro. | [Build portal reference](https://github.com/seikika/seikika/tree/main/actions/build-portal) |
+| `seikika/seikika/actions/report` | Score, manage a baseline, and upload a report in one step. | [Report reference](https://github.com/seikika/seikika/blob/main/actions/report/README.md#inputs) |
+
+For workflow examples, see [Run scorecards in CI](/operators/ci/) and
+[Generate and host a static report](/operators/publish/).

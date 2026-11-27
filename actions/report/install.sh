@@ -18,7 +18,9 @@ case "${RUNNER_OS:-$(uname -s)}-${RUNNER_ARCH:-$(uname -m)}" in
 esac
 ext=tar.xz; [ "$target" = x86_64-pc-windows-msvc ] && ext=zip
 base="https://github.com/${SEIKIKA_REPO}/releases/download/${tag}"
-work=$(mktemp -d); mkdir -p "$SEIKIKA_BIN"
+work=$(mktemp -d)
+trap 'rm -rf "$work"' EXIT
+mkdir -p "$SEIKIKA_BIN"
 download() {
   local file="$1"
   if command -v gh >/dev/null 2>&1; then
