@@ -89,6 +89,7 @@ onUnmounted(() => clearInterval(poll));
           {{ updating ? "Updating data…" : "Newer data — update" }}
         </button>
         <span v-if="report?.viewer" class="sub">Signed in as {{ report.viewer }}</span>
+        <a v-else-if="report || result?.status === 401 || result?.status === 0" class="portal-sign-in" href="/report">Sign in</a>
       </nav>
       <p v-if="federation?.pending" class="sub" role="status">{{ federation.detail }}. Local results are available.</p>
       <div v-else-if="federation" class="portal-problem" role="alert">
