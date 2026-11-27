@@ -124,7 +124,9 @@ fn portal_kind(connector: &str, id: &str, set: &str) -> Value {
             "name": {"type": "string"}, "key": {"type": "string"}, "title": {"type": "string"},
             "owner": {"type": "string"}, "path": {"type": "string"}, "dir": {"type": "string"},
             "actions": {"type": "list", "items": "object"}, "runner": {"type": "object"},
-            "git": {"type": "object"}, "error": {"type": "string"}, "warning": {"type": "string"}
+            "git": {"type": "object"}, "error": {"type": "string"}, "warning": {"type": "string"},
+            "report": {"type": "object", "facet": "operator"},
+            "reportError": {"type": "string", "facet": "operator"}
         },
         "sources": {"default": [format!("connector:{connector}")]},
         "map": [{"from": format!("{connector}/{}", if connector == "self" { "repo" } else { "portal" }),
@@ -174,7 +176,9 @@ fn expand_children(root: &Path, doc: &mut Value) {
                    'owner': record.owner, 'path': record.path, 'dir': record.dir, \
                    'actions': record.actions, 'runner': record.runner, \
                    'git': has(record.git) ? record.git : null, 'error': record.error, \
-                   'warning': has(record.warning) ? record.warning : null}";
+                   'warning': has(record.warning) ? record.warning : null, \
+                   'report': has(record.report) ? record.report : null, \
+                   'reportError': has(record.reportError) ? record.reportError : null}";
         push(
             doc,
             "kinds",

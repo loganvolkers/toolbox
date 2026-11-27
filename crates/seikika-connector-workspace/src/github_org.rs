@@ -1,5 +1,5 @@
 //! Read organization-owned scorecard inputs from GitHub's immutable Git objects.
-//! Downstream manifests and reports are never loaded. No repository is checked out.
+//! Published child snapshots remain separate from parent policy. No repository is checked out.
 
 use crate::repo;
 use reqwest::{Client, RequestBuilder, Response, StatusCode};
@@ -8,6 +8,7 @@ use serde_json::{Value, json};
 use std::collections::BTreeMap;
 use std::time::Duration;
 
+pub(crate) const WORKFLOW_KIND: &str = "federated-workflow";
 pub(crate) const KIND: &str = "federated-repo";
 const API: &str = "https://api.github.com";
 const JSON_LIMIT: usize = 10 * 1024 * 1024;
@@ -20,6 +21,11 @@ pub(crate) struct Config {
     organization: String,
     #[serde(default)]
     public_only: bool,
+    #[serde(default)]
+    pub(crate) workflows: bool,
+    #[serde(default)]
+    reports: bool,
+    token: Option<String>,
 }
 
 #[derive(Deserialize)]
@@ -61,6 +67,14 @@ struct Entry {
     kind: String,
     sha: String,
     size: Option<usize>,
+}
+
+#[derive(Default)]
+struct RepositoryTree {
+    files: BTreeMap<String, Entry>,
+    configured: bool,
+    workflows: Option<Entry>,
+    report: Option<Entry>,
 }
 
 impl Entry {
@@ -112,7 +126,15 @@ impl Config {
                 .build()
                 .map_err(|_| "could not build GitHub client")?,
             base: API.to_owned(),
-            token: existing_token().await,
+            token: match self
+                .token
+                .as_deref()
+                .map(str::trim)
+                .filter(|value| !value.is_empty())
+            {
+                Some(token) => Some(token.to_owned()),
+                None => existing_token().await,
+            },
         };
         if !self.public_only && api.token.is_none() {
             return Err("GitHub federation needs gh auth login, GH_TOKEN or GITHUB_TOKEN to inventory visible repositories".into());
@@ -170,8 +192,9 @@ impl Api {
         let mut jobs = tokio::task::JoinSet::new();
         for repository in repositories {
             let api = self.clone();
+            let (workflows, reports) = (config.workflows, config.reports);
             jobs.spawn(async move {
-                let result = api.read(&repository).await;
+                let result = api.read(&repository, workflows, reports).await;
                 repository.record(result)
             });
             if jobs.len() == 6 {
@@ -244,8 +267,11 @@ impl Api {
         unreachable!()
     }
 
-    async fn read(&self, repository: &Repository) -> Result<(Option<String>, bool, Value), String> {
-        let prefix = format!("/repos/{}", repository.full_name);
+    async fn default_commit(
+        &self,
+        repository: &Repository,
+        prefix: &str,
+    ) -> Result<Option<Commit>, String> {
         let response = send(
             self.get(&format!("{prefix}/commits"), "application/vnd.github+json")
                 .query(&[
@@ -260,50 +286,67 @@ impl Api {
             let problem: Value =
                 serde_json::from_slice(&body).map_err(|_| "invalid GitHub error")?;
             if problem["message"] == "Git Repository is empty." {
-                return Ok((
-                    None,
-                    false,
-                    repo::basics(&repository.full_name, &[], |_| Ok::<_, String>(None))?,
-                ));
+                return Ok(None);
             }
             return Err("default branch: HTTP 409".into());
         }
         let commits: Vec<Commit> = read_json(response, "default branch").await?;
-        let commit = commits.first().ok_or("default branch has no commit")?;
+        let commit = commits
+            .into_iter()
+            .next()
+            .ok_or("default branch has no commit")?;
         object_id(&commit.sha)?;
-        let mut files = BTreeMap::new();
-        let mut directories = BTreeMap::new();
-        for entry in self.tree(&prefix, &commit.commit.tree.sha).await? {
+        Ok(Some(commit))
+    }
+
+    async fn repository_tree(&self, prefix: &str, tree: &str) -> Result<RepositoryTree, String> {
+        let mut result = RepositoryTree::default();
+        for entry in self.tree(prefix, tree).await? {
             if entry.regular() {
-                files.insert(entry.path.clone(), entry);
+                result.files.insert(entry.path.clone(), entry);
             } else if entry.directory()
                 && matches!(
                     entry.path.as_str(),
                     ".github" | "docs" | ".seikika" | "portal"
                 )
             {
-                directories.insert(entry.path.clone(), entry);
-            }
-        }
-        // Read the two alternate CODEOWNERS locations and only track the presence of a child
-        // config. Child configs, claims, symlinks and submodules never become score inputs.
-        let mut configured = false;
-        for (dir, entry) in directories {
-            for file in self
-                .tree(&prefix, &entry.sha)
-                .await?
-                .into_iter()
-                .filter(Entry::regular)
-            {
-                match (dir.as_str(), file.path.as_str()) {
-                    (".seikika" | "portal", "seikika.yaml") => configured = true,
-                    (".github" | "docs", "CODEOWNERS") => {
-                        files.insert(format!("{dir}/CODEOWNERS"), file);
+                for file in self.tree(prefix, &entry.sha).await? {
+                    match (entry.path.as_str(), file.path.as_str()) {
+                        (".github", "workflows") if file.directory() => {
+                            result.workflows = Some(file)
+                        }
+                        (".seikika", "report.json") if file.regular() => result.report = Some(file),
+                        (".seikika" | "portal", "seikika.yaml") if file.regular() => {
+                            result.configured = true
+                        }
+                        (".github" | "docs", "CODEOWNERS") if file.regular() => {
+                            result
+                                .files
+                                .insert(format!("{}/CODEOWNERS", entry.path), file);
+                        }
+                        _ => {}
                     }
-                    _ => {}
                 }
             }
         }
+        Ok(result)
+    }
+
+    async fn read(
+        &self,
+        repository: &Repository,
+        workflows: bool,
+        reports: bool,
+    ) -> Result<(Option<String>, bool, Value), String> {
+        let prefix = format!("/repos/{}", repository.full_name);
+        let Some(commit) = self.default_commit(repository, &prefix).await? else {
+            let facts = repo::basics(&repository.full_name, &[], |_| Ok::<_, String>(None))?;
+            return Ok((None, false, facts));
+        };
+        let tree = self
+            .repository_tree(&prefix, &commit.commit.tree.sha)
+            .await?;
+        let files = tree.files;
         let paths: Vec<_> = files.keys().cloned().collect();
         let mut texts = BTreeMap::new();
         for (path, limit) in [
@@ -316,10 +359,73 @@ impl Api {
                 texts.insert(path, text);
             }
         }
-        let facts = repo::basics(&repository.full_name, &paths, |path| {
+        let mut facts = repo::basics(&repository.full_name, &paths, |path| {
             Ok::<_, String>(texts.remove(path))
         })?;
-        Ok((Some(commit.sha.clone()), configured, facts))
+        if workflows && let Some(workflow_tree) = tree.workflows {
+            match self
+                .read_workflows(repository, &prefix, &commit.sha, &workflow_tree.sha)
+                .await
+            {
+                Ok(rows) => facts["workflows"] = json!(rows),
+                Err(error) => facts["workflowError"] = json!(error),
+            }
+        }
+        if reports && let Some(report) = tree.report {
+            let result = match self
+                .text(&prefix, &report, crate::portal_report::LIMIT as usize)
+                .await
+            {
+                Ok(Some(text)) => crate::portal_report::decode(text.as_bytes()),
+                _ => Err("Unable to read the published child report"),
+            };
+            crate::portal_report::attach(&mut facts, result);
+        }
+        Ok((Some(commit.sha), tree.configured, facts))
+    }
+
+    async fn read_workflows(
+        &self,
+        repo: &Repository,
+        prefix: &str,
+        commit: &str,
+        tree: &str,
+    ) -> Result<Vec<Value>, String> {
+        let mut rows = Vec::new();
+        for file in self.tree(prefix, tree).await? {
+            if !file.regular() || !(file.path.ends_with(".yml") || file.path.ends_with(".yaml")) {
+                continue;
+            }
+            let path = format!(".github/workflows/{}", file.path);
+            let mut source = reqwest::Url::parse("https://github.com/").expect("static GitHub URL");
+            source
+                .path_segments_mut()
+                .expect("GitHub base URL")
+                .pop_if_empty()
+                .extend(repo.full_name.split('/'))
+                .push("blob")
+                .push(commit)
+                .extend(path.split('/'));
+            let audited = match self.text(prefix, &file, 512 * 1024).await {
+                Ok(Some(text)) => crate::org_workflows::audit(&text)
+                    .await
+                    .map_err(str::to_owned),
+                Ok(None) => Err("Workflow is not bounded UTF-8".into()),
+                Err(error) => Err(error),
+            };
+            let (findings, error) = match audited {
+                Ok(findings) => (Some(findings), None),
+                Err(error) => (None, Some(error)),
+            };
+            rows.push(json!({
+                "id": format!("workflow:{}/{}", repo.full_name.to_ascii_lowercase(), path),
+                "title": file.path, "path": path, "repository": repo.full_name,
+                "sourceUrl": source.as_str(),
+                "commit": commit, "visibility": repo.visibility,
+                "audited": findings.is_some(), "findings": findings.unwrap_or_default(), "auditError": error,
+            }));
+        }
+        Ok(rows)
     }
 
     async fn tree(&self, prefix: &str, sha: &str) -> Result<Vec<Entry>, String> {
@@ -643,6 +749,9 @@ mod tests {
             .scan(&Config {
                 organization: "acme".into(),
                 public_only: false,
+                workflows: false,
+                reports: false,
+                token: None,
             })
             .await
             .unwrap();
@@ -694,6 +803,9 @@ mod tests {
             .scan(&Config {
                 organization: "acme".into(),
                 public_only: true,
+                workflows: false,
+                reports: false,
+                token: None,
             })
             .await
             .unwrap();
@@ -716,6 +828,9 @@ mod tests {
             .scan(&Config {
                 organization: "acme".into(),
                 public_only: false,
+                workflows: false,
+                reports: false,
+                token: None,
             })
             .await;
         assert_eq!(

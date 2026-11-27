@@ -1,5 +1,5 @@
 apiVersion: seikika.com/v1alpha1
-include: [repositories.yaml, standards.yaml]
+include: [repositories.yaml, standards.yaml, workflows.yaml]
 
 portal:
   name: seikika-organization
@@ -11,9 +11,11 @@ connectors:
   - name: github-org
     package: builtin:workspace
     runtime: in-image
-    config: {githubOrg: {organization: seikika}}
-    records: [federated-repo]
-    refresh: {federated-repo: [external_ids]}
-    freshness: {federated-repo: 1h}
+    config: {githubOrg: {organization: seikika, workflows: true, reports: true}}
+    records: [federated-repo, federated-workflow]
+    refresh:
+      federated-repo: [external_ids]
+      federated-workflow: [external_ids]
+    freshness: {federated-repo: 1h, federated-workflow: 1h}
 
 tests: [standards.test.yaml]

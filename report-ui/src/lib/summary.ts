@@ -54,16 +54,11 @@ export function scorecardRows(D: ReportData) {
 export function campaignNamesSorted(D: ReportData) {
   var campaigns = D.campaigns || {};
   var rank = { off: 0, empty: 1, on: 2 };
-  return Object.keys(campaigns)
-    .filter(function (n) {
-      var st = campaigns[n].status;
-      return st === "active" || st === "scheduled" || st === "ended";
-    })
-    .sort(function (a, b) {
-      var ca = campaigns[a];
-      var cb = campaigns[b];
-      return rank[campaignStanding(D, ca)] - rank[campaignStanding(D, cb)] || (ca.percent || 0) - (cb.percent || 0) || a.localeCompare(b);
-    });
+  return Object.keys(campaigns).sort(function (a, b) {
+    var ca = campaigns[a];
+    var cb = campaigns[b];
+    return Number(ca.status === "draft") - Number(cb.status === "draft") || rank[campaignStanding(D, ca)] - rank[campaignStanding(D, cb)] || (ca.percent || 0) - (cb.percent || 0) || a.localeCompare(b);
+  });
 }
 
 export function scoredKinds(D: ReportData) {

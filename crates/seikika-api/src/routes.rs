@@ -50,6 +50,7 @@ pub fn router(state: Arc<AppState>) -> Router {
             get(crate::reads::options),
         )
         .route("/v1/views/home", get(crate::reads::view_home))
+        .route("/v1/views/report", get(crate::report::view))
         .route("/v1/views/entity/{id}", get(crate::reads::view_entity))
         .route(
             "/v1/views/scorecard/{name}",

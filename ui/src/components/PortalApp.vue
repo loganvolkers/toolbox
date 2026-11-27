@@ -27,7 +27,7 @@ function follow(event: MouseEvent) {
   const link = (event.target as Element | null)?.closest("a");
   if (!link || link.target || link.download || link.origin !== location.origin) return;
   const target = new URL(link.href);
-  if (target.hash) return;
+  if (target.hash || target.pathname === "/report/" || target.pathname === "/report") return;
   event.preventDefault();
   navigate(target.pathname + target.search);
 }

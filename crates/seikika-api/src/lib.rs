@@ -10,6 +10,7 @@ pub mod connectors;
 pub mod http_trace;
 pub mod mcp;
 pub mod reads;
+pub mod report;
 pub mod routes;
 pub mod state;
 pub mod ui;

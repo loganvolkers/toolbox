@@ -49,9 +49,9 @@ jobs:
           target/debug/seikika report portal --skip "$skip" --baseline portal/results.json -o web --out site/.generated
       - name: Public organization federation snapshot
         env: {GH_TOKEN: "${{ github.token }}"}
-        run: >-
-          target/debug/seikika report examples/github-org-federation/public.yaml
-          -o web --out site/.generated/organization
+        run: |
+          export PATH="$RUNNER_TEMP/tools:$PATH"
+          target/debug/seikika report examples/github-org-federation/public.yaml -o web --out site/.generated/organization
       - run: pnpm check:packages
       # CLI reference is built from clap (`seikika describe` + --help) in Astro;
       # fail if the committed fingerprint is stale.
@@ -71,7 +71,9 @@ jobs:
           pnpm --filter @seikika/astro-report exec playwright install --with-deps
           chromium
       - name: Smoke test the published UI paths
-        run: pnpm --filter @seikika/astro-report smoke
+        run: |
+          pnpm --filter @seikika/astro-report smoke
+          node report-ui/scripts/federation.mjs
         env:
           SEIKIKA_BIN: ${{ github.workspace }}/target/debug/seikika
           SEIKIKA_ORG_REPORT_DATA: ${{ github.workspace }}/site/.generated/organization/report.json

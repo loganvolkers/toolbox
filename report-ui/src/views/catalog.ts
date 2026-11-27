@@ -1,6 +1,7 @@
 import type { ReportViews } from "../report-view";
 import type { Summary } from "../lib/summary";
 import type { ReportData } from "../types";
+import { entitySource, sourceLabel } from "../lib/federation";
 import { barEl, kindParts, legendEl, levelPill, unrunIn } from "../lib/bars";
 import { basisBadge, basisCounts } from "../lib/basis";
 import { judgedMark } from "../lib/compare";
@@ -40,6 +41,7 @@ export const catalogViews = {
     );
     if (!kinds.length) return el("section", {}, el("div", { className: "empty", textContent: "Catalog is empty in this report." }));
     var selected = kind && catalog[kind] ? kind : null;
+    if (selected && D.sources) return federatedList(D, selected, query);
     var scored = scoredKinds(D);
     var compared = {};
     Object.keys(D.comparisons || {}).forEach(function (n) {
@@ -98,7 +100,7 @@ export const catalogViews = {
       "section",
       {},
       el("div", { className: "head" }, el("h2", { textContent: "Catalog" }), el("span", { className: "sub", textContent: fmt(S.entityCount) + " entities in " + kinds.length + " kinds and " + plural(groups.length, "group") })),
-      el("p", { className: "lede", textContent: "Everything the portal derived from this repository, grouped by what it is about. The bar under a kind shows each entity's lowest level across the scorecards that rate it; pick a kind to list its entities." }),
+      el("p", { className: "lede", textContent: D.sources ? "Browse entities from the local portal and federated repositories by kind." : "Everything the portal derived from this repository, grouped by what it is about. The bar under a kind shows each entity's lowest level across the scorecards that rate it; pick a kind to list its entities." }),
       el(
         "div",
         { className: "legend", style: "margin:0 0 12px" },
@@ -454,3 +456,116 @@ export const catalogViews = {
     );
   },
 } satisfies ThisType<ReportViews>;
+
+function federatedList(D: ReportData, kind: string, query: import("../lib/routes").Query) {
+  const ids = D.catalog[kind] ?? [];
+  const search = el("input", { type: "search", ariaLabel: "Filter entities by name", value: query.q ?? "" });
+  const group = el("select", { ariaLabel: "Group entities" },
+    el("option", { value: "", textContent: "Full list" }),
+    el("option", { value: "repository", textContent: "By repository" }));
+  group.value = query.group === "repository" ? query.group : "";
+  const sources = [...new Set(ids.map(id => D.entitySources?.[id]?.source ?? ""))];
+  const source = el("select", { ariaLabel: "Source repository" },
+    el("option", { value: "", textContent: "All repositories" }),
+    ...sources.filter(Boolean).map(key => el("option", { value: key, textContent: sourceLabel(D, key) })));
+  source.value = query.source ?? "";
+  const list = el("div");
+  const kindCards = Object.keys(D.scorecards).filter(name => D.scorecards[name].kind === kind);
+  const standard = kindCards.length === 1 ? kindCards[0] : undefined;
+  const pageSize = 40;
+  let limit = pageSize;
+  const openGroups = new Set<string>();
+  const coverage = new Map<string, number>();
+  if (standard) for (const id of ids) {
+    const level = typeof D.entities?.[id]?.fields.auditError === "string" ? "skipped"
+      : D.scores[standard]?.[id]?.level ?? "skipped";
+    coverage.set(level, (coverage.get(level) ?? 0) + 1);
+  }
+  const render = () => {
+    const params = new URLSearchParams();
+    if (search.value) params.set("q", search.value);
+    if (group.value) params.set("group", group.value);
+    if (source.value) params.set("source", source.value);
+    if (params.size || location.hash) {
+      history.replaceState(history.state, "", "#catalog/" + enc(kind) + (params.size ? "?" + params : ""));
+    }
+    const q = search.value.trim().toLowerCase();
+    const filtered = ids.filter(id => {
+      const locator = D.entitySources?.[id];
+      return (!source.value || locator?.source === source.value)
+        && (!q || [locator?.original ?? id, D.entityOverview?.[id]?.title, entitySource(D, id)]
+          .some(value => typeof value === "string" && value.toLowerCase().includes(q)));
+    });
+    const row = (id: string) => {
+      const raw = D.entitySources?.[id]?.original ?? id;
+      const titleText = (D.entityOverview?.[id]?.title as string | undefined) ?? raw;
+      const unavailable = kind === "Workflow" && typeof D.entities?.[id]?.fields.auditError === "string";
+      return el("div", { className: "federated-catalog-row" },
+        el("div", {}, link("entity/" + enc(id), "", titleText), el("small", { className: "sub", textContent: entitySource(D, id) })),
+        el("ul", { className: standard ? "federated-catalog-score" : "" }, ...kindCards.flatMap(name => {
+          const score = D.scores[name]?.[id];
+          return score ? [el("li", {},
+            standard ? null : link("scorecard/" + enc(name), "", title(D, name)), " ",
+            unavailable ? el("span", { className: "sub", textContent: "Audit unavailable" })
+              : levelPill(score.level, false, unrunIn(D.scorecards[name], score)),
+          )] : [];
+        })));
+    };
+    if (!filtered.length) {
+      list.replaceChildren(el("p", { className: "empty", textContent: "No entities match." }),
+        el("button", { type: "button", textContent: "Clear filters", onclick: () => {
+          search.value = "";
+          source.value = "";
+          render();
+        } }));
+      return;
+    }
+    let shownCount = Math.min(limit, filtered.length);
+    if (group.value) {
+      const groups = new Map<string, string[]>();
+      for (const id of filtered) {
+        const key = D.entitySources?.[id]?.source ?? "";
+        if (!groups.has(key)) groups.set(key, []);
+        groups.get(key)!.push(id);
+      }
+      shownCount = 0;
+      list.replaceChildren(...Array.from(groups, ([key, members]) =>
+        {
+          const visible = members.slice(0, limit);
+          shownCount += visible.length;
+          return el("details", { open: openGroups.has(key), className: "federated-catalog-group",
+            ontoggle: (event: Event) => {
+              if ((event.currentTarget as HTMLDetailsElement).open) openGroups.add(key);
+              else openGroups.delete(key);
+            } },
+            el("summary", { textContent: sourceLabel(D, key) + " · " + members.length }),
+            ...visible.map(row));
+        }));
+    } else {
+      list.replaceChildren(...filtered.slice(0, limit).map(row));
+    }
+    if (shownCount < filtered.length) list.append(el("button", {
+      type: "button", textContent: "Show more (" + shownCount + " of " + filtered.length + ")",
+      onclick: () => { limit += pageSize; render(); },
+    }));
+  };
+  search.oninput = group.onchange = source.onchange = () => { limit = pageSize; render(); };
+  render();
+  const section = el("section", { id: "kind-list" },
+    link("catalog", "crumb", "Catalog"),
+    el("h2", { textContent: kindCount(D, kind, ids.length) }),
+    el("p", { className: "sub", textContent: kindDescription(D, kind) }),
+    standard ? el("div", { className: "sub" },
+      link("scorecard/" + enc(standard), "", title(D, standard)),
+      el("p", { textContent: ["none", ...D.scorecards[standard].levels, "skipped"]
+        .filter(level => coverage.has(level)).map(level => fmt(coverage.get(level)) + " "
+        + (level === "none" ? "below " + (D.scorecards[standard].levels[0] ?? "the first level")
+          : level === "skipped" ? "not scored" : level)).join(" · ") })) : null,
+    el("div", { className: "report-filters" },
+      el("label", {}, "Filter entities", search),
+      el("label", {}, "Source", source),
+      el("label", {}, "View", group)),
+    list);
+  section.dataset.focus = "";
+  return section;
+}
