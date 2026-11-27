@@ -1,0 +1,26 @@
+apiVersion: seikika.com/assessment/v1
+entity: testing-contract:action-lifecycle
+rubric: testing-contract-quality
+subjectHash: d9dada2a061c
+rubricHash: 8fc4906aea03cad1a6948469884ba31acc9d4a0259296c9a643f6d7b612e198e
+assessor: {kind: agent, name: Codex, model: GPT-6}
+at: 2026-11-27
+verdicts:
+  - criterion: risk-coverage
+    verdict: pass
+    reason: >-
+      scripts/m5-acceptance.sh exercises a successful approved write, two
+      unauthorized approvers, an explicit rejection, and a push refused by a
+      local origin hook.
+  - criterion: meaningful-oracles
+    verdict: pass
+    reason: >-
+      scripts/m5-acceptance.sh checks the landed file and verification
+      response for success. A refused push must also leave the origin's main
+      ref at its original commit.
+  - criterion: reliable-execution
+    verdict: pass
+    reason: >-
+      .github/workflows/ci.yml runs scripts/m5-acceptance.sh in its acceptance
+      job. The script creates disposable Git origins and local servers, checks
+      command outcomes, and cleans up on exit.

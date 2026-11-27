@@ -1,0 +1,27 @@
+apiVersion: seikika.com/assessment/v1
+entity: testing-contract:scorecard-ratchet
+rubric: testing-contract-quality
+subjectHash: 084a076dce7a
+rubricHash: 8fc4906aea03cad1a6948469884ba31acc9d4a0259296c9a643f6d7b612e198e
+assessor: {kind: agent, name: Codex, model: GPT-6}
+at: 2026-11-27
+verdicts:
+  - criterion: risk-coverage
+    verdict: pass
+    reason: >-
+      crates/seikika-cli/tests/ratchet.rs covers new failures, growing
+      evidence, existing debt, and unknown evidence. It also asserts that
+      advisory failures remain visible without blocking the gate and that
+      explicit skips preserve unknown evidence.
+  - criterion: meaningful-oracles
+    verdict: pass
+    reason: >-
+      crates/seikika-cli/tests/ratchet.rs checks exit codes, stable verdict
+      reasons, the exact new evidence, and whether the baseline write was
+      refused.
+  - criterion: reliable-execution
+    verdict: pass
+    reason: >-
+      .github/workflows/ci.yml runs cargo test --locked. The cases in
+      crates/seikika-cli/tests/ratchet.rs use isolated fixture portals and the
+      built binary.

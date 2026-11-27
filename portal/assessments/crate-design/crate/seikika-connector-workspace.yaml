@@ -1,80 +1,43 @@
 apiVersion: seikika.com/assessment/v1
 entity: crate:seikika-connector-workspace
 rubric: crate-design
-subjectHash: dff10def3351
-assessor: {kind: agent, name: cursor-assessor-20, model: claude-opus-5.5}
-at: 2026-11-25
+subjectHash: e423e7326b06
+rubricHash: 43a87759a8d84ce60684ab59e5e34ed4f95ac1a8bdf84ace55a1fda1aa6b4bae
+assessor: {kind: agent, name: Codex, model: GPT-6}
+at: 2026-11-27
 verdicts:
   - criterion: one-responsibility
     verdict: fail
     reason: >-
-      The crate's job, "read a checkout statically and report records", is one
-      job. Its docs no longer describe it accurately: - main.rs:1-3 says it
-      reports "three record kinds", then lists about twenty (main.rs:4-51).
-      The list omits the `data` kind, which
-      docs/reference/workspace-connector.md:50 documents and main.rs:140
-      implements. - The Cargo description still says "a local Rust workspace
-      (crates and code metrics), its markdown docs and other files"
-      (crates/seikika-connector-workspace/Cargo.toml:3). The crate has also
-      taken on a second job that is not static reading: as the `federation`
-      connector (builtin:workspace, crates/seikika-model/src/federation.rs:5,
-      163), it clones child repositories. It runs `git clone`, `fetch`, `reset
-      --hard` and `clean -qfdx`, and deletes a clone whose origin changed
-      (src/clones.rs:53-73). Its spec row covers only "`workspace` and
-      `runner` serve Seikika for Seikika" (docs/v1-spec.md:100).
+      crates/seikika-connector-workspace/src/main.rs still introduces three
+      record kinds even though it exposes many more.
+      crates/seikika-connector-workspace/src/clones.rs also owns federation
+      clone maintenance, beyond the read-only job described in the opening
+      lines.
     suggestion: >-
-      Fix main.rs:1-3 and the Cargo description to match the record kinds the
-      crate reports, `data` included. Then either say in the crate doc and the
-      v1-spec row that it also keeps federation clones, or move clones.rs into
-      a small `federation` connector binary, so that this one stays read-only.
+      Update the crate documentation and Cargo description to cover declared
+      records and federation clone maintenance.
   - criterion: small-contract
     verdict: pass
     reason: >-
-      The crate is a binary with no Rust dependents (facts: targets [bin],
-      dependents []). Its contract is its configuration and its record kinds
-      over the connector protocol. Every kind, and every config key including
-      `data`, is documented in docs/reference/ workspace-connector.md, and
-      portals depend only on that. It consumes seikika-model and
-      seikika-connect through their public APIs (`load`, `validate_source`,
-      src/portals.rs:102-104; Cargo.toml:19-20). Its modules are private
-      (main.rs:68-87), so no internal can leak.
+      crates/seikika-connector-workspace/Cargo.toml builds a binary.
+      docs/reference/workspace-connector.md describes its configuration,
+      including opt-in evidence hashing for declared records.
   - criterion: replaceable-defaults
     verdict: pass
     reason: >-
-      The crate wraps none of the charter's defaults. Its parsers (syn, regex,
-      walkdir, serde_norway; Cargo.toml:11-21) are internal, and what crosses
-      the boundary is NDJSON records. The rule that a tool must still work
-      outside the box (docs/design/seikika-and-tools.md) is about the facts it
-      reports, not a wrapped engine. Swapping syn for another Rust parser
-      would change only src/rust.rs.
+      crates/seikika-connector-workspace/src/main.rs emits records through the
+      connector protocol. The parser choices in
+      crates/seikika-connector-workspace/Cargo.toml stay behind the binary
+      boundary.
   - criterion: tests-match-risk
     verdict: fail
     reason: >-
-      Several extractors are tested directly: - workflow pinning and masked
-      failures (src/workflows.rs:394-516); - credential and hidden-character
-      detection (src/hygiene.rs:159-217); - clone sync, including stray files
-      and a missing branch (src/clones.rs:111-149). CI runs the protocol
-      conformance kit against the binary (.github/workflows/ci.yml:100-103).
-      But the riskiest extractor is barely tested. src/rust.rs computes the
-      facts that maintainer-crate thresholds and every crate-design brief
-      reports: complexity, function length, public items and undocumented
-      items, unwraps and code lines (rust.rs:1-3, 470-488). Its one test
-      covers only testsWithoutAsserts and disabledTests (rust.rs:495-534). The
-      other nine `#[test]` matches in rust.rs are text inside that test's
-      fixture string. A miscounted complexity or a missed doc comment would
-      change scores with no test failing. clones.rs's branch that deletes a
-      clone whose origin URL changed (clones.rs:55-59) is also untested.
+      crates/seikika-connector-workspace/src/data.rs checks that linked
+      evidence changes only opt-in hashes.
+      crates/seikika-connector-workspace/src/rust.rs still lacks exact
+      regression assertions for the complexity and documentation metrics that
+      drive downstream scores.
     suggestion: >-
-      Add a rust.rs fixture test that asserts the exact `functions` (lines and
-      complexity of a function with if, match and ?), `pubItems`,
-      `undocumented` (a documented and an undocumented pub fn, struct and
-      method) and `unwraps` for a small crate. Extend
-      a_clone_follows_its_branch so that changing the source URL replaces the
-      clone.
-summary: >-
-  A useful, widely configured reader with a well-documented record
-  contract, but its own docs undersell it ("three record kinds"). It has
-  also taken on a non-static job, cloning and resetting federation
-  children. Workflow pinning, secret detection and protocol conformance
-  are tested. The Rust metrics extractor that feeds maintainer-crate and
-  these crate briefs has no test of the numbers it reports.
+      Add a small Rust fixture with known complexity, undocumented items and
+      unwraps, and assert the emitted metrics.

@@ -6,6 +6,7 @@
 //! Every record also carries `file` (where it was declared), `hash` (the first 12 hex digits of the
 //! SHA-256 of the entry as written: what an assessment of it is versioned by) and `missingPaths`
 //! (values of the configured `paths` fields that name no file or directory under the root).
+//! Fields configured in `hashPaths` also version the entry by the contents of those files.
 //! Optionally, `unresolvedCommands` (values of the `commands` fields whose program is neither a
 //! known tool nor a file under the root) and `notInCi` (values of the `ci` fields that no GitHub
 //! Actions workflow or action file executes) and `notNaming` (documents in the `naming` fields that
@@ -22,6 +23,8 @@ pub struct Source {
     pub kind: String,
     pub globs: Vec<Regex>,
     pub paths: Vec<String>,
+    /// Fields holding repo-relative files whose contents version the record.
+    pub hash_paths: Vec<String>,
     /// Fields holding shell commands, resolved to a known program or a file under the root.
     pub commands: Vec<String>,
     /// Fields holding paths that a CI workflow must run (or be).
@@ -55,6 +58,7 @@ pub fn sources(cfg: &Value) -> Result<Vec<Source>, String> {
             kind: kind.to_owned(),
             globs,
             paths: list("paths"),
+            hash_paths: list("hashPaths"),
             commands: list("commands"),
             ci: list("ci"),
             naming: list("naming"),
@@ -63,9 +67,30 @@ pub fn sources(cfg: &Value) -> Result<Vec<Source>, String> {
     Ok(out)
 }
 
-fn hash(v: &Value) -> String {
-    let text = serde_json::to_string(v).unwrap_or_default();
-    Sha256::digest(text.as_bytes())
+fn hash(root: &Path, entry: &Value, fields: &[String]) -> String {
+    let mut hash = Sha256::new();
+    hash.update(serde_json::to_vec(entry).unwrap_or_default());
+    if !fields.is_empty() {
+        let root = root.canonicalize().ok();
+        for path in values(entry, fields) {
+            let file = path.split('#').next().unwrap_or(path);
+            let contents = root.as_ref().and_then(|root| {
+                let resolved = root.join(file).canonicalize().ok()?;
+                if !resolved.starts_with(root) || !resolved.is_file() {
+                    return None;
+                }
+                std::fs::read(resolved).ok()
+            });
+            match contents {
+                Some(bytes) => {
+                    hash.update([1]);
+                    hash.update(Sha256::digest(bytes));
+                }
+                None => hash.update([0]),
+            }
+        }
+    }
+    hash.finalize()
         .iter()
         .take(6)
         .map(|b| format!("{b:02x}"))
@@ -248,7 +273,7 @@ pub fn records(root: &Path, rel: &str, src: &Source) -> Result<Vec<(String, Valu
         };
         let mut data = e.clone();
         data["file"] = json!(rel);
-        data["hash"] = json!(hash(&e));
+        data["hash"] = json!(hash(root, &e, &src.hash_paths));
         data["missingPaths"] = json!(missing(root, &e, &src.paths));
         if !src.commands.is_empty() {
             data["unresolvedCommands"] = json!(unresolved(root, &e, &src.commands));
@@ -290,6 +315,7 @@ mod tests {
             kind: "stage".into(),
             globs: vec![],
             paths: vec!["docs".into(), "check".into()],
+            hash_paths: vec![],
             commands: vec!["commands".into()],
             ci: vec![],
             naming: vec![],
@@ -299,6 +325,19 @@ mod tests {
         assert_eq!(r[0].1["missingPaths"], json!(["docs/gone.md", "ci.yml"]));
         assert_eq!(r[0].1["file"], "stages.yaml");
         assert_eq!(r[0].1["hash"].as_str().unwrap().len(), 12);
+        let hashed_src = Source {
+            hash_paths: vec!["docs".into()],
+            ..src
+        };
+        let before = records(&dir, "stages.yaml", &hashed_src).unwrap();
+        std::fs::write(dir.join("docs/a.md"), "# Changed").unwrap();
+        let after = records(&dir, "stages.yaml", &hashed_src).unwrap();
+        assert_ne!(before[0].1["hash"], after[0].1["hash"]);
+        let src = Source {
+            hash_paths: vec![],
+            ..hashed_src
+        };
+        assert_eq!(r, records(&dir, "stages.yaml", &src).unwrap());
         std::fs::create_dir_all(dir.join("scripts")).unwrap();
         std::fs::write(dir.join("scripts/ok.sh"), "").unwrap();
         std::fs::write(

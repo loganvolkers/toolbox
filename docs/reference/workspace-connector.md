@@ -49,7 +49,14 @@ walked.
 | `portals` | `[]` | Globs, usually `*/.seikika/seikika.yaml`: one `portal` record per child portal found in a checkout |
 | `git` | `[]` | `[{key, url, branch}]`, written by `federation.children`: each repository is cloned into `<root>/<key>`, kept at its branch, and read as one `portal` record |
 | `githubOrg` | unset | `{organization, publicOnly?, workflows?, reports?}` switches to `federated-repo` records. Enable `workflows` for offline `zizmor` audits and `reports` to read published child snapshots. Optional flags default to `false` |
-| `data` | `[]` | `[{kind, globs, paths?}]`: entries of YAML or JSON files as records of `kind`, each with a string `id` |
+| `data` | `[]` | `[{kind, globs, paths?, hashPaths?}]`: entries of YAML or JSON files as records of `kind`, each with a string `id` |
+
+For a `data` source, `paths` lists fields whose repository-relative values
+are checked for existence. `hashPaths` lists fields holding files to include
+in the record's content hash. These fields accept a path or a list of paths.
+A missing or unreadable file contributes a distinct marker. Targets outside
+the checkout and directories are treated as unreadable. Without `hashPaths`,
+the hash covers the declaration as before.
 
 ## Records
 

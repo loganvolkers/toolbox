@@ -1,76 +1,34 @@
 apiVersion: seikika.com/assessment/v1
 entity: crate:seikika-derive
 rubric: crate-design
-subjectHash: c700d2b8b2f8
-assessor: {kind: agent, name: cursor-assessor-20, model: claude-opus-5.5}
-at: 2026-11-25
+subjectHash: 93590ebc59a2
+rubricHash: 43a87759a8d84ce60684ab59e5e34ed4f95ac1a8bdf84ace55a1fda1aa6b4bae
+assessor: {kind: agent, name: Codex, model: GPT-6}
+at: 2026-11-27
 verdicts:
   - criterion: one-responsibility
     verdict: pass
     reason: >-
-      The crate docs state one job: a full recompute of every derived value
-      from an InputSnapshot, behind the DerivedState contract, matching the
-      reference model byte for byte (crates/seikika-derive/src/lib.rs:1-4).
-      That is its spec row, "The §6 pipeline behind `DerivedState`; plan
-      diffs" (docs/v1-spec.md:90). The other modules read the same `Derived`:
-      plan diffs (src/plan.rs), the CEL expectation runner behind `seikika
-      test` (src/testing.rs:1-4), and the Python-identical JSON writer the P2
-      check needs (src/pyjson.rs:1-2). The Cargo description names all three.
-      Minor strays: `utc_ymd_today` (lib.rs:1139) is a date helper used only
-      by seikika-cli's report (report.rs:664), and the spec row does not
-      mention the test runner.
+      crates/seikika-derive/src/lib.rs exposes full recompute over an input
+      snapshot. crates/seikika-derive/src/plan.rs and
+      crates/seikika-derive/src/testing.rs operate on that derived state, as
+      described in docs/v1-spec.md.
   - criterion: small-contract
     verdict: pass
     reason: >-
-      Callers use re-exported, documented items. They call
-      `FullRecompute.recompute` through the trait (crates/seikika-api/src/
-      state.rs:177; seikika-cli portal.rs:26, main.rs:898, report.rs:1546).
-      They read `Derived`, `Score`, `Entity` and `CampaignProgress`, and use
-      `plan::diff`, `testing::run`, `pyjson::pretty`, `reads_cards` and
-      `codeowners_for` (seikika-api reads.rs:248; seikika-cli causes.rs:447).
-      No third-party type other than serde_json's crosses, and rayon stays
-      inside the crate. Rough edges: the five plan types FieldChange,
-      ScoreChange, OptionChange, PlanDiff and PlanDiff::is_empty are
-      undocumented (src/plan.rs:11-56). `Pipeline` itself is private, but its
-      `run` is a single 472-line function with complexity 58 (lib.rs:254).
+      crates/seikika-derive/src/lib.rs exposes the DerivedState boundary.
+      crates/seikika-cli/src/report.rs uses derived state, and plan comparison
+      uses the public diff API in crates/seikika-derive/src/plan.rs.
   - criterion: replaceable-defaults
     verdict: pass
     reason: >-
-      This crate is the charter's "derived-state engine" default, and it sits
-      behind a Seikika-owned trait whose signature uses only Seikika types:
-      Manifest, InputSnapshot and Derived (lib.rs:20-23, D37). Only this crate
-      depends on rayon (crates/seikika-derive/Cargo.toml:11). Swapping in an
-      incremental engine is cheap but not free. Five call sites name the
-      concrete `FullRecompute` rather than an injected `dyn DerivedState`
-      (state.rs:177, portal.rs:26, main.rs:898, report.rs: 1546, 2399), so a
-      swap would edit those lines but no contract.
+      crates/seikika-derive/src/lib.rs keeps the concrete pipeline behind the
+      DerivedState trait. Its arguments and result use Seikika types, while
+      its rayon use stays internal.
   - criterion: tests-match-risk
     verdict: pass
     reason: >-
-      The riskiest path, every stage of the pipeline producing exactly the
-      reference model's output, has a direct byte-for-byte test over all five
-      files (tests/reference.rs:25-37). Determinism under arrival order (P1)
-      is tested by reversing every batch (reference.rs:49-70). Plan diffs are
-      tested for field, score, option and tuple changes (reference.rs:72-117).
-      The expectation runner passes its 20 reference cases
-      (reference.rs:39-47), and pyjson is checked against Python's output
-      (src/pyjson.rs:127). Paths the reference portal lacks are covered from
-      other crates and portals: - comparative scorecards' ahead/parity/behind
-      roll-up (crates/seikika-cli/tests/compare.rs:92-111); - campaigns, in
-      five package test portals (packages/*/tests/standards.test.yaml) and, as
-      of the include-scoping fix, a direct test that a campaign over two kinds
-      scopes each entity by its own card (lib.rs:1398); - the
-      error-to-`unknown` mapping, in Seikika for Seikika's tests
-      (portal/tests/standards.test.yaml:145-148). CI runs all of them
-      (.github/workflows/ci.yml:24, 56-70). The remaining gap is that no test
-      makes the pipeline emit a diagnostic: map.error, computed.error,
-      relation.dropped and tuples.error (lib.rs:348-734) are only asserted
-      absent (reference.rs:29).
-summary: >-
-  A well-designed core crate. It has one job behind the DerivedState
-  contract, callers use only documented types, and its correctness is
-  pinned byte for byte against the reference model, with order
-  independence and plan diffs tested directly. What would make it better:
-  split the 472-line Pipeline::run, document the plan types, add a
-  negative fixture that makes each diagnostic code fire, and inject
-  DerivedState rather than naming FullRecompute at five sites.
+      crates/seikika-derive/tests/reference.rs pins all five outputs and their
+      bytes, checks reordered arrivals and a no-op plan, and asserts concrete
+      changes for an edited manifest. Error diagnostics outside the reference
+      behavior remain a coverage gap.

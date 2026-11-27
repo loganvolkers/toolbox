@@ -371,6 +371,16 @@ scorecards:
         "{md}"
     );
     assert!(md.contains("\n## quality  (silver: 1)\n"), "{md}");
+
+    // The same failing assessment remains visible when the scorecard is advisory.
+    let advisory = manifest.replace(
+        "  - name: review\n    kind: Thing",
+        "  - name: review\n    ratchet: {advisory: true}\n    kind: Thing",
+    );
+    std::fs::write(dir.join("seikika.yaml"), advisory).unwrap();
+    let (code, md, err) = run(&["-o", "md"]);
+    assert_eq!(code, 0, "{md}{err}");
+    assert!(md.contains("passes-review ✦: cites-nothing"), "{md}");
     let _ = std::fs::remove_dir_all(&dir);
 }
 
@@ -470,6 +480,16 @@ fn fail_on_unknown_catches_a_missing_tool() {
     assert_eq!((code, v["unknownRules"].as_u64()), (0, Some(1)), "{v}");
     let (code, v) = report(&dir, &["--fail-on-unknown"]);
     assert_eq!((code, v["result"].as_str()), (1, Some("unknown")), "{v}");
+
+    // When the same absence is caused by an explicit skip, strict mode
+    // preserves the unknown evidence and permits the report.
+    let manifest = MANIFEST.replace(
+        "{name: tested, level: bronze, check:",
+        "{name: tested, level: bronze, dataFrom: things, check:",
+    );
+    std::fs::write(dir.join("seikika.yaml"), manifest).unwrap();
+    let (code, v) = report(&dir, &["--fail-on-unknown", "--skip", "things"]);
+    assert_eq!((code, v["unknownRules"].as_u64()), (0, Some(1)), "{v}");
     let _ = std::fs::remove_dir_all(&dir);
 }
 

@@ -1,0 +1,26 @@
+apiVersion: seikika.com/assessment/v1
+entity: testing-contract:reference-derivation
+rubric: testing-contract-quality
+subjectHash: acce99659927
+rubricHash: 8fc4906aea03cad1a6948469884ba31acc9d4a0259296c9a643f6d7b612e198e
+assessor: {kind: agent, name: Codex, model: GPT-6}
+at: 2026-11-27
+verdicts:
+  - criterion: risk-coverage
+    verdict: pass
+    reason: >-
+      crates/seikika-derive/tests/reference.rs checks reference bytes,
+      reordered input and concrete plan edits. It now asserts that equivalent
+      recomputes yield an empty plan.
+  - criterion: meaningful-oracles
+    verdict: pass
+    reason: >-
+      crates/seikika-derive/tests/reference.rs pins the complete five-file
+      output set and compares bytes against
+      examples/reference-portal/tools/reference.py's fixtures.
+  - criterion: reliable-execution
+    verdict: pass
+    reason: >-
+      .github/workflows/ci.yml runs the Rust integration suite and
+      independently regenerates and checks the reference model with pinned
+      Python dependencies.

@@ -94,7 +94,13 @@ kindGroups:
     description: >-
       Whether Seikika delivers: the SDLC layers and stages, DX Benchmarks, the
       products compared, and runtime observability.
-    kinds: [SdlcLayer, SdlcStage, Benchmark, Product, Observability]
+    kinds:
+    - SdlcLayer
+    - SdlcStage
+    - Benchmark
+    - Product
+    - Observability
+    - TestingContract
 
 connectors:
   - name: workspace
@@ -199,6 +205,11 @@ connectors:
           - alerts
           - monitorAssessment
           - otlpTestbed
+        - kind: testing-contract
+          globs: [portal/testing/*.yaml]
+          paths: [specification, implementation, tests, fixtures, ci]
+          hashPaths: [specification, implementation, tests, fixtures, ci]
+          ci: [tests]
         # Products compared by experiments/backstage-compare (docs/design/backstage-comparison.md)
         - {kind: product, globs: [portal/comparisons/*.yaml]}
     records:
@@ -224,6 +235,7 @@ connectors:
     - observability
     - benchmark
     - product
+    - testing-contract
     refresh:
       crate: [external_ids]
       doc: [external_ids]
@@ -246,6 +258,7 @@ connectors:
       observability: [external_ids]
       benchmark: [external_ids]
       product: [external_ids]
+      testing-contract: [external_ids]
     freshness:
       crate: 5m
       doc: 5m
@@ -269,6 +282,7 @@ connectors:
       observability: 5m
       benchmark: 5m
       product: 5m
+      testing-contract: 5m
   - name: runner
     package: builtin:runner # executes things; slow, so it's refreshed per entity
     runtime: in-image

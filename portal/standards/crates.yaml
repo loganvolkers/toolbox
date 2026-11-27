@@ -212,24 +212,27 @@ scorecards:
       level: bronze
       dataFrom: runner
       check: >-
-        entity.tests.status == 'pass' && entity.tests.ignored == 0 &&
+        entity.tests.status == 'pass' && entity.tests.passed > 0 &&
+        entity.tests.failed == 0 && entity.tests.ignored == 0 &&
         entity.disabledTests.size() == 0
       evidence: >-
         (has(entity.tests) ? [entity.tests.status + ': ' +
-        string(entity.tests.failed) + ' failed, ' + string(entity.tests.ignored)
-        + ' ignored'] + (has(entity.tests.output) ? [entity.tests.output] : [])
-        : ['no test run yet (refresh the crate)']) + entity.disabledTests.map(t,
-        t + ' is compiled out')
+        string(entity.tests.passed) + ' passed, ' + string(entity.tests.failed)
+        + ' failed, ' + string(entity.tests.ignored) + ' ignored'] +
+        (has(entity.tests.output) ? [entity.tests.output] : []) : ['no test run
+        yet (refresh the crate)']) + entity.disabledTests.map(t, t + ' is
+        compiled out')
       fix: >-
-        Run `cargo test -p <crate>` and fix the failures in the evidence. Remove
+        Run `cargo test -p <crate>` and fix the failures in the evidence. If no
+        tests passed, verify Cargo discovers the intended targets. Remove
         `#[ignore]` from ignored tests, and the always-false `#[cfg(...)]` from
         listed tests, and make them pass: a test that doesn't run checks
         nothing. Tests that need OpenFGA run with SEIKIKA_REQUIRE_OPENFGA set,
         so install it (SEIKIKA_OPENFGA_BIN) rather than letting them skip.
       rationale: >-
-        A failing, ignored or compiled-out test checks nothing, and an ignored
-        one hides its failure from everyone; an authorization test that quietly
-        skips without OpenFGA would let authorization changes through untested.
+        An empty run checks nothing even if Cargo exits successfully. Ignored or
+        compiled-out tests leave gaps; an authorization test that quietly skips
+        without OpenFGA would let authorization changes through untested.
     - name: clippy-clean
       level: bronze
       dataFrom: runner

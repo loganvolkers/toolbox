@@ -115,6 +115,10 @@ kinds:
       assessesSdlcStage: {to: SdlcStage, many: false, unresolved: ignore}
       assessesRule: {to: Rule, many: false, unresolved: ignore}
       assessesScorecard: {to: Scorecard, many: false, unresolved: ignore}
+      assessesTestingContract:
+        to: TestingContract
+        many: false
+        unresolved: ignore
       assessesCrate: {to: Crate, many: false, unresolved: ignore}
     sources: {default: [connector:workspace]}
     map:
@@ -135,6 +139,9 @@ kinds:
         assessesSdlcStage: "record.entity.startsWith('sdlc-stage:') ? [record.entity] : []"
         assessesRule: "record.entity.startsWith('rule:') ? [record.entity] : []"
         assessesScorecard: "record.entity.startsWith('scorecard:') ? [record.entity] : []"
+        assessesTestingContract: >-
+          record.rubric == 'testing-contract-quality' &&
+          record.entity.startsWith('testing-contract:') ? [record.entity] : []
         assessesCrate: "record.entity.startsWith('crate:') ? [record.entity] : []"
 
 scorecards:
