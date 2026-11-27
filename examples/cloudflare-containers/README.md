@@ -71,6 +71,8 @@ If a build gets a Cloudflare permission error publishing the Container, inspect 
 
 Verify the staging rollout before creating the production Worker. Use a separate database or branch and a separate signing key for production. Connect its full deploy to `main` once the example has landed there.
 
+For the hosted seven-fork portal, protect the production hostname with its own Access application. Set `SEIKIKA_PRODUCTION_CF_TEAM_DOMAIN`, `SEIKIKA_PRODUCTION_CF_AUDIENCE`, and `SEIKIKA_PRODUCTION_CF_ADMIN` in the production build settings. The build puts the issuer and audience in the production Wrangler variables and seeds that portal admin. Use a separate Access application and build variables for each Preview.
+
 ### Preview a trusted branch
 
 Start with preview builds disabled while you verify the tracked-branch deployment. The Wrangler configuration declares a Container and Durable Object binding for each Preview. Use `wrangler preview` so each Preview gets its own image, Container application, and namespace. [Container Preview isolation](https://developers.cloudflare.com/workers/previews/resources/#containers)
