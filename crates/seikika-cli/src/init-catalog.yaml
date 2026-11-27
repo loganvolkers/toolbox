@@ -1,0 +1,205 @@
+# Pin the package source used by the public package guides. The setup command reads this catalog offline.
+packageRevision: 5818e032cac3cefec1fe9f6a2a4559bd410174cf
+connectors:
+  - name: workspace
+    description: Read Markdown and other files in a local checkout.
+    config: {root: ., crates: false, docs: ["*.md", docs/**/*.md]}
+    records: [doc]
+    kinds:
+    - name: Doc
+      identityFrom: [connector:workspace]
+      fields:
+        path: {type: string}
+        title: {type: string}
+        brokenLinks: {type: list, items: string}
+      sources: {default: [connector:workspace]}
+      map:
+      - from: workspace/doc
+        id: "'doc:' + record.path"
+        set: >-
+          {'path': record.path, 'title': record.title, 'brokenLinks':
+          record.brokenLinks}
+    scorecards:
+    - name: docs
+      title: Docs with working links
+      kind: Doc
+      description: Check that relative links in Markdown resolve.
+      rationale: Working links let readers follow the documentation to related files.
+      levels: [bronze]
+      rules:
+      - name: links-resolve
+        level: bronze
+        check: entity.brokenLinks.size() == 0
+        evidence: entity.brokenLinks
+        fix: Fix or remove the relative links in the evidence.
+        rationale: Moving or renaming a file can leave links pointing to its old path.
+      facets: {summary: public, details: public}
+  - name: github
+    description: Import repositories from a GitHub organization. Uses GITHUB_TOKEN.
+    config: {org: null, token: "${env:GITHUB_TOKEN}"}
+    inputs: [{key: /org, label: GitHub organization}]
+    records: [repository]
+    kinds:
+    - name: Repository
+      identityFrom: [connector:github]
+      fields: {title: {type: string}, archived: {type: boolean}}
+      sources: {default: [connector:github]}
+      map:
+      - from: github/repository
+        id: "'repository:' + record.name"
+        set: "{'title': record.name, 'archived': record.archived}"
+  - name: gitlab
+    description: Import projects and groups from GitLab. Uses GITLAB_TOKEN.
+    config: {group: null, token: "${env:GITLAB_TOKEN}"}
+    inputs:
+    - {key: /group, label: GitLab group path (for example acme/platform)}
+    records: [group, project]
+    kinds:
+    - name: GitLabGroup
+      identityFrom: [connector:gitlab]
+      fields: {title: {type: string}}
+      sources: {default: [connector:gitlab]}
+      map:
+      - from: gitlab/group
+        id: "'gitlabgroup:' + record.slug"
+        set: "{'title': record.name}"
+    - name: GitLabProject
+      identityFrom: [connector:gitlab]
+      fields: {title: {type: string}, url: {type: string}}
+      sources: {default: [connector:gitlab]}
+      map:
+      - from: gitlab/project
+        id: "'gitlabproject:' + record.path"
+        set: "{'title': record.name, 'url': record.web_url}"
+  - name: git-files
+    description: Read Backstage catalog descriptors from local repository directories.
+    config: {org: null, root: null, paths: [catalog-info.yaml]}
+    inputs:
+    - {key: /org, label: Organization label for catalog records}
+    - key: /root
+      label: Directory containing the repository checkouts
+      default: ./catalog
+    records: [catalog-info]
+    kinds:
+    - name: CatalogFile
+      identityFrom: [connector:git-files]
+      fields:
+        title: {type: string}
+        path: {type: string}
+        content: {type: object}
+      sources: {default: [connector:git-files]}
+      map:
+      - from: git-files/catalog-info
+        id: "'catalogfile:' + record.repo + '/' + record.path"
+        set: "{'title': record.repo, 'path': record.path, 'content': record.content}"
+  - name: runner
+    description: Run a local tool that emits check records as NDJSON.
+    config:
+      root: .
+      jobs: [{name: checks, command: null, parse: ndjson, kinds: [check]}]
+    inputs:
+    - key: /jobs/0/command
+      label: >-
+        Command that emits check records with name and passed fields (JSON
+        array)
+      type: string-list
+    records: [check]
+    kinds:
+    - name: Check
+      identityFrom: [connector:runner]
+      fields: {title: {type: string}, passed: {type: boolean}}
+      sources: {default: [connector:runner]}
+      map:
+      - from: runner/check
+        id: "'check:' + record.name"
+        set: "{'title': record.name, 'passed': record.passed}"
+  - name: scim
+    description: >-
+      Receive users and groups from an identity provider through a remote SCIM
+      service.
+    runtime: remote
+    records: [user, group]
+    kinds:
+    - name: User
+      identityFrom: [connector:scim]
+      fields: {title: {type: string}}
+      sources: {default: [connector:scim]}
+      map:
+      - from: scim/user
+        id: "'user:' + record.login"
+        set: "{'title': record.name}"
+    - name: Group
+      identityFrom: [connector:scim]
+      fields: {title: {type: string}}
+      sources: {default: [connector:scim]}
+      map:
+      - from: scim/group
+        id: "'group:' + record.slug"
+        set: "{'title': record.displayName}"
+packages:
+  - name: file-size
+    description: Limit the line count of matching files.
+    uses: [workspace]
+    inputs:
+    - {key: files, label: File globs (JSON array), type: string-list}
+    - key: limit
+      label: Maximum lines per file
+      type: positive-integer
+      default: "400"
+  - name: github-actions
+    description: >-
+      Check workflow security and reliability with zizmor, actionlint, and run
+      history.
+    uses: [github, runner]
+    workspace:
+      config: {workflows: [.github/workflows/*.y*ml, actions/*/action.y*ml]}
+      records: [workflow, action-ref]
+    inputs:
+    - {key: githubOrg, label: GitHub organization for run history}
+    - {key: githubRepo, label: GitHub repository name for run history}
+    - {key: branch, label: Branch for run history, default: main}
+  - name: openssf-scorecard
+    description: Track OpenSSF Scorecard supply-chain checks on tracked files.
+    uses: [runner]
+  - name: pattern-count
+    description: Count matches of a regular expression in matching files.
+    uses: [workspace]
+    inputs:
+    - {key: files, label: File globs (JSON array), type: string-list}
+    - {key: pattern, label: Pattern (Rust regular expression), type: regex}
+  - name: pnpm-expo
+    description: Check pnpm workspace and Expo configuration.
+    workspace:
+      config: {jsWorkspace: true, expoApps: [apps/*/app.json]}
+      records: [js-workspace, expo-app]
+  - name: sarif
+    description: Turn a tool's SARIF findings into a scorecard.
+    uses: [runner]
+    inputs:
+    - {key: name, label: Scorecard name, type: name}
+    - {key: kind, label: Catalog kind, type: kind-name}
+    - {key: tool, label: Tool executable name}
+    - {key: version, label: Tool version}
+    - key: command
+      label: Command that prints SARIF (JSON array)
+      type: string-list
+  - name: semgrep
+    description: Track Semgrep findings and inline suppressions.
+    uses: [runner]
+    inputs:
+    - {key: config, label: Semgrep rule file or directory}
+    - {key: target, label: File or directory to scan, default: .}
+  - name: sre
+    description: Score reliability and incident readiness from recorded evidence.
+    uses: [runner]
+    inputs:
+    - {key: service, label: Service identifier, type: name}
+    - {key: owner, label: Service owner, type: owner}
+    - key: command
+      label: Command that emits readiness records (JSON array)
+      type: string-list
+  - name: storybook
+    description: Check Storybook stories, accessibility tooling, and CI wiring.
+    workspace:
+      config: {storybooks: ["**/.storybook/main.*"]}
+      records: [storybook]

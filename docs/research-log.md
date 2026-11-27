@@ -34,6 +34,13 @@ How the design research was done, so parallel agents can reproduce, extend or ch
 
 ## Hands-on verifications
 
+`seikika init` was run in a fresh directory with the quickstart defaults. Workspace scored the
+Markdown link, the ratchet caught the renamed target, and restoring it matched the baseline. The
+new portal reached `/readyz` when served locally. A portal with all six connectors and all nine
+standards packages passed `install`, `install --frozen`, and `validate` with a local package cache.
+The GitHub Actions, pnpm and Expo, and Storybook packages also installed from their pinned commit
+through a local Git mirror. The operator skill passed `skills-ref validate`.
+
 | What | Result |
 |---|---|
 | **Container release fallback** (2026-11-27) | An empty Docker config received `unauthorized` from GHCR for `0.2.1`. The staging script from `v0.2.1` fetched and checksum-verified all 12 Linux archives from GitHub Releases. Docker Buildx assembled the amd64 image with the cloud proxy CA mounted during the OpenFGA download. Running the image printed `seikika 0.2.1` and `OpenFGA v1.22.1`. The release's [image job](https://github.com/seikika/seikika/actions/runs/45905645699/job/140207048738) built amd64 and arm64 with the tagged Dockerfile. |

@@ -448,6 +448,24 @@
       "usage": "seikika graph [OPTIONS] <ID>"
     },
     {
+      "name": "init",
+      "about": "Create a portal with an interactive choice of connectors and standards packages",
+      "mcpTool": null,
+      "args": [
+        {
+          "name": "path",
+          "long": null,
+          "positional": true
+        },
+        {
+          "name": "yes",
+          "long": "yes",
+          "positional": false
+        }
+      ],
+      "usage": "seikika init [OPTIONS] [PATH]"
+    },
+    {
       "name": "install",
       "about": "Download the portal's released executable connectors (`github:owner/repo[/app]@version`) for this platform, verify them against seikika.lock (pinning them the first time), and unpack them into the cache",
       "mcpTool": null,

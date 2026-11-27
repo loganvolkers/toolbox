@@ -22,46 +22,23 @@ def script(path, body):
 def onboarding(work):
     source = (ROOT / "site/src/content/docs/start/quickstart.md").read_text()
     blocks = re.findall(r"^```bash\n(.*?)^```", source, re.M | re.S)
-    starter = re.search(
-        r"^starter=(https://raw\.githubusercontent\.com/seikika/seikika/([a-f0-9]{40})/examples/repo-portal-starter)$",
-        source, re.M,
-    )
-    if not starter or len(blocks) != 4:
-        raise ValueError("quickstart must provide the pinned starter and four walkthrough steps")
-    snapshot = work / "starter"
-    for name in ("seikika.yaml", "tests/standards.test.yaml", "fixtures/workspace.ndjson"):
-        target = snapshot / name
-        target.parent.mkdir(parents=True, exist_ok=True)
-        target.write_bytes(subprocess.check_output([
-            "git", "show", f"{starter[2]}:examples/repo-portal-starter/{name}",
-        ], cwd=ROOT))
-    local_bin = work / "bin"
-    local_bin.mkdir()
-    script(local_bin / "curl", """
-[[ $# == 4 && $1 == -fsSL && $2 == "$STARTER_URL/"* && $3 == -o ]]
-case "${2#"$STARTER_URL/"}" in
-    seikika.yaml|tests/standards.test.yaml|fixtures/workspace.ndjson)
-        cp "$STARTER_DIR/${2#"$STARTER_URL/"}" "$4" ;;
-    *) exit 2 ;;
-esac
-""")
+    if len(blocks) != 4:
+        raise ValueError("quickstart must provide four walkthrough steps")
     built = ROOT / "target/debug/seikika"
     seikika = built if built.is_file() else shutil.which("seikika")
     if seikika is None:
         raise ValueError("build Seikika and its workspace connector before running the walkthrough")
-    env = os.environ | {
-        "PATH": f"{local_bin}:{Path(seikika).parent}:{os.environ['PATH']}",
-        "STARTER_URL": starter[1], "STARTER_DIR": str(snapshot),
-    }
-    subprocess.run(["bash", "-ec", blocks[0]], cwd=work, env=env, check=True, timeout=30)
+    env = os.environ | {"PATH": f"{Path(seikika).parent}:{os.environ['PATH']}"}
     repo = work / "seikika-practice"
-    for block, expected in zip(blocks[1:], (0, 1, 0), strict=True):
-        run = subprocess.run(["bash", "-ec", block], cwd=repo, env=env, capture_output=True,
-                             text=True, timeout=30)
+    for step, (block, expected) in enumerate(zip(blocks, (0, 0, 1, 0), strict=True), start=1):
+        # Accept the wizard's default name, owner, connectors, and packages as the reader does.
+        run = subprocess.run(["bash", "-ec", block], cwd=work if step == 1 else repo,
+                             input="\n" * 4 if step == 1 else None, env=env,
+                             capture_output=True, text=True, timeout=30)
         print(run.stdout, end="")
         print(run.stderr, end="")
         if run.returncode != expected:
-            raise ValueError(f"quickstart returned {run.returncode}, expected {expected}")
+            raise ValueError(f"quickstart step {step} returned {run.returncode}, expected {expected}")
         if expected == 1 and not all(word in run.stdout + run.stderr for word in ("links-resolve", "portal.md")):
             raise ValueError("quickstart failed without naming the broken link")
 

@@ -11,6 +11,7 @@ A portal gives developers and agents a place to find software, check ownership, 
 
 | Goal | Guide |
 |---|---|
+| Create a portal and choose its connectors and packages | [Quickstart](/start/quickstart/) |
 | Score one checkout and catch regressions in CI | [Gate pull requests](/operators/ci/) |
 | Learn how a running catalog works | [Explore a portal](/start/portal/) |
 | Define catalog data and rules | [Portal manifest reference](/operators/manifest/) |

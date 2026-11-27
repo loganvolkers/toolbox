@@ -717,6 +717,14 @@
           "6997dad5"
         ]
       },
+      "skill:plugins/seikika-operator/skills/init": {
+        "has-evals": [
+          "6997dad5"
+        ],
+        "states-boundaries": [
+          "a03f0f37"
+        ]
+      },
       "skill:plugins/seikika-operator/skills/install": {
         "has-evals": [
           "6997dad5"
@@ -6225,6 +6233,9 @@
       "doc:plugins/seikika-operator/skills/graph/SKILL.md": {
         "level": "silver"
       },
+      "doc:plugins/seikika-operator/skills/init/SKILL.md": {
+        "level": "silver"
+      },
       "doc:plugins/seikika-operator/skills/install/SKILL.md": {
         "level": "silver"
       },
@@ -6923,6 +6934,13 @@
       "skill:plugins/seikika-operator/skills/graph": {
         "failing": {
           "has-evals": 1
+        },
+        "level": "silver"
+      },
+      "skill:plugins/seikika-operator/skills/init": {
+        "failing": {
+          "has-evals": 1,
+          "states-boundaries": 1
         },
         "level": "silver"
       },
@@ -13818,6 +13836,9 @@
       "command:graph": {
         "level": "skipped"
       },
+      "command:init": {
+        "level": "silver"
+      },
       "command:install": {
         "level": "silver"
       },
@@ -14134,6 +14155,9 @@
           "exercised": 1
         },
         "level": "bronze"
+      },
+      "command:init": {
+        "level": "skipped"
       },
       "command:install": {
         "level": "skipped"
