@@ -25,3 +25,24 @@ assert:
       entity('repository:seikika/unavailable').scanError == 'Git tree: HTTP
       404' && score('repo-hygiene', 'repository:seikika/unavailable').level ==
       'skipped'
+  - name: a clean workflow reaches gold
+    expect: >-
+      score('workflow-zizmor',
+      'workflow:seikika/ready/.github/workflows/clean.yml').level == 'gold'
+  - name: only low-severity findings reach silver
+    expect: >-
+      score('workflow-zizmor',
+      'workflow:seikika/ready/.github/workflows/low.yml').level == 'silver'
+  - name: a medium-severity finding stops at bronze
+    expect: >-
+      score('workflow-zizmor',
+      'workflow:seikika/ready/.github/workflows/medium.yml').level == 'bronze'
+  - name: a high-severity finding blocks bronze
+    expect: >-
+      score('workflow-zizmor',
+      'workflow:seikika/ready/.github/workflows/high.yml').level == 'none'
+  - name: an unavailable audit cannot pass as a clean workflow
+    expect: >-
+      score('workflow-zizmor',
+      'workflow:seikika/ready/.github/workflows/missing.yml').rules['zizmor-clean']
+      == 'unknown'

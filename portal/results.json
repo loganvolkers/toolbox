@@ -5233,6 +5233,9 @@
         },
         "level": "bronze"
       },
+      "dependency:cargo:tempfile": {
+        "level": "gold"
+      },
       "dependency:cargo:thiserror": {
         "level": "gold"
       },

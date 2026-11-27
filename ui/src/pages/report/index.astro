@@ -1,0 +1,48 @@
+---
+import "@seikika/ui/theme.css";
+---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Seikika report</title>
+  </head>
+  <body>
+    <div id="report-shell">
+      <a href="/">Portal home</a>
+      <div id="seikika-report-root"><p role="status">Loading portal report…</p></div>
+      <noscript><p>Enable JavaScript to browse the report.</p></noscript>
+    </div>
+  </body>
+</html>
+<script>
+  import { createApp } from "vue";
+  import ReportApp from "../../../../report-ui/src/ReportApp.vue";
+  import { api } from "../../api";
+
+  const root = document.getElementById("seikika-report-root");
+  if (root) {
+    async function load() {
+      if (!root) return;
+      try {
+        const result = await api("/v1/views/report");
+        if (result.status === 200) {
+          createApp(ReportApp, { data: result.body, requestAction: api }).mount(root);
+          return;
+        }
+        if (result.status !== 503) throw new Error(result.body?.detail || "Unable to read the portal report.");
+        setTimeout(load, 1000);
+      } catch (error) {
+        const alert = document.createElement("p");
+        alert.setAttribute("role", "alert");
+        alert.textContent = error instanceof Error ? error.message : "Unable to read the portal report.";
+        const retry = document.createElement("button");
+        retry.textContent = "Retry";
+        retry.addEventListener("click", load, { once: true });
+        root.replaceChildren(alert, retry);
+      }
+    }
+    void load();
+  }
+</script>

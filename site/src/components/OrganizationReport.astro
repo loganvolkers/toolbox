@@ -56,9 +56,30 @@ const rows = ids.map((id: string) => {
     passed: rules.filter(({ outcome }) => outcome === "pass").length,
   };
 });
+const publicRepositories = new Set(rows.map(row => row.name));
+for (const child of data?.children ?? []) {
+  if (!publicRepositories.has(child.key)) {
+    throw new Error("Organization child snapshots require public GitHub repository data");
+  }
+}
+for (const id of data?.catalog?.Workflow ?? []) {
+  const workflow = data.entities?.[id]?.fields;
+  if (!workflow || workflow.visibility !== "public"
+      || !publicRepositories.has(String(workflow.repository).toLowerCase())) {
+    throw new Error("Organization workflows require public GitHub repository data");
+  }
+}
+const serialized = data && JSON.stringify(data).replace(/</g, "\\u003c");
 ---
-{data ? (
+{data && (
   <>
+    <div id="organization-report-root"></div>
+    <script is:inline id="organization-report-data" type="application/json" set:html={serialized}></script>
+  </>
+)}
+{data ? (
+  <details>
+    <summary>Repository hygiene inventory</summary>
     <p><strong>{rows.length} public repositories</strong> · {rows.filter((row) => !("error" in row)).length} scored</p>
     <div class="table-scroll" role="region" aria-label="Organization scores" tabindex="0">
       <table>
@@ -100,7 +121,7 @@ const rows = ids.map((id: string) => {
         </tbody>
       </table>
     </div>
-  </>
+  </details>
 ) : (
   <p>Generate the public organization snapshot to preview scores in a local docs build.</p>
 )}
@@ -116,3 +137,11 @@ const rows = ids.map((id: string) => {
   details ul { padding-inline-start: 1rem; margin-top: 0.45rem; min-width: 15rem; }
   .evidence { overflow-wrap: anywhere; color: var(--sl-color-gray-3); }
 </style>
+
+<script>
+  import { createApp } from "vue";
+  import ReportApp from "../../../report-ui/src/ReportApp.vue";
+  const mount = document.getElementById("organization-report-root");
+  const payload = document.getElementById("organization-report-data");
+  if (mount && payload) createApp(ReportApp, { data: JSON.parse(payload.textContent || "null"), embedded: true }).mount(mount);
+</script>

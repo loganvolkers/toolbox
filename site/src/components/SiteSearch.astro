@@ -1,0 +1,8 @@
+---
+import Search from "@astrojs/starlight/components/Search.astro";
+---
+<Search {...Astro.props} />
+<script is:inline>
+  // Starlight already announces the shortcut via aria-keyshortcuts on the button.
+  document.querySelector("button[data-open-modal] > kbd")?.setAttribute("aria-hidden", "true");
+</script>

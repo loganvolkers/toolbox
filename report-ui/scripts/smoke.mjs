@@ -78,7 +78,7 @@ try {
   page.on("request", recordRequest);
   await page.goto(offlineUrl + "#entity/" + encodeURIComponent(id));
   await page.getByRole("heading", { name: "Payments API" }).waitFor();
-  await page.getByRole("link", { name: "group:payments", exact: true }).waitFor();
+  await page.locator("dl").getByRole("link", { name: "group:payments", exact: true }).waitFor();
   await page.getByRole("tab", { name: /Scorecards/ }).click();
   await page.getByRole("heading", { name: "Scorecards", exact: true }).waitFor();
   await page.keyboard.press("Home");
@@ -157,6 +157,21 @@ try {
   if (process.env.SEIKIKA_ORG_REPORT_DATA) {
     const snapshot = JSON.parse(await readFile(process.env.SEIKIKA_ORG_REPORT_DATA, "utf8"));
     const names = snapshot.catalog.Repository.map(id => snapshot.entityOverview[id].name.toLowerCase());
+    const workflows = snapshot.catalog.Workflow;
+    assert(workflows.length > 0, "The organization workflow inventory is populated.");
+    await page.evaluate(() => location.hash = "catalog/Workflow");
+    await page.getByRole("combobox", { name: "Group entities" }).waitFor();
+    const workflowSource = snapshot.entities[workflows[0]].fields.repository;
+    await page.getByRole("combobox", { name: "Source repository" }).selectOption({ label: "Source repository · " + workflowSource });
+    const rows = page.locator(".federated-catalog-row");
+    assert.equal(await rows.count(), workflows.filter(id => snapshot.entities[id].fields.repository === workflowSource).length);
+    await page.getByRole("combobox", { name: "Group entities" }).selectOption("repository");
+    assert.equal(await page.locator(".federated-catalog-group").count(), 1);
+    await page.locator(".federated-catalog-group summary").click();
+    await rows.first().getByRole("link").first().click();
+    await page.getByRole("link", { name: /Resolve zizmor findings · Federation standard/ }).waitFor();
+    await page.locator('a[href^="#track/"]').filter({ hasText: /Workflow security · Federation standard/ }).waitFor();
+    await page.getByText("Repository hygiene inventory", { exact: true }).click();
     const table = page.getByRole("region", { name: "Organization scores" }).getByRole("table");
     assert.deepEqual(await table.getByRole("rowheader").locator(":scope > a").allTextContents(), names);
     console.log(`The organization report renders ${names.length} public repositories.`);

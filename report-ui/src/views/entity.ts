@@ -280,7 +280,7 @@ export const entityViews = {
           el("div", {}, el("h3", { className: "sct" }, link("scorecard/" + enc(name), "", title(D, name))), " ", score.level === "skipped" ? badge(score.level) : unrunIn(sc, score).length ? el("span", { className: "lvl none", title: unrunWords(sc, unrunIn(sc, score)) }, "not established") : levelPill(score.level, unassessedIn(D, name, id), unrunIn(sc, score))),
           el("span", { className: "sub" }, name + " · ", here.measured ? el("span", {}, basisIcon("measured"), " " + here.measured + " measured") : null, here.measured && here.judged ? " · " : "", here.judged ? el("span", { className: "judged-n" }, basisIcon("judged"), " " + here.judged + " agent-judged") : null),
         ),
-        score.level === "skipped" ? el("div", { className: "sub", textContent: "Not in this scorecard's scope." }) : self.nextStep(sc, score),
+        !score.rules && score.level !== "skipped" ? el("p", { className: "sub", textContent: "Rule details require access." }) : score.level === "skipped" ? el("div", { className: "sub", textContent: "Not in this scorecard's scope." }) : self.nextStep(sc, score),
         self.rulesFor(sc, score, name, unassessedIn(D, name, id), id),
       );
       if (judgedHere.length && score.level !== "skipped") judgedAt.push({ name: name, rules: judgedHere, block: block });

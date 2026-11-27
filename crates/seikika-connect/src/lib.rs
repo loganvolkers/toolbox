@@ -14,6 +14,7 @@ pub mod assessment;
 pub mod conformance;
 pub mod files;
 pub mod hub;
+pub mod sarif;
 pub mod sdk;
 
 pub use hub::{Command, Hub, Request, Status};

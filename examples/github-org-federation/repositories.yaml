@@ -1,6 +1,6 @@
 kinds:
   - name: Repository
-    title: GitHub repositories
+    title: GitHub repository
     identityFrom: [connector:github-org]
     fields:
       name: {type: string}
@@ -10,6 +10,10 @@ kinds:
       visibility: {type: string}
       scanned: {type: boolean}
       scanError: {type: string}
+      commit: {type: string}
+      workflowError: {type: string}
+      report: {type: object, facet: operator}
+      reportError: {type: string, facet: operator}
       portalPresent: {type: boolean}
       readme: {type: string}
       readmeWords: {type: integer}
@@ -25,7 +29,11 @@ kinds:
         {'name': record.name, 'repositoryUrl': record.repositoryUrl,
         'sourceUrl': record.sourceUrl, 'defaultBranch': record.defaultBranch,
         'visibility': record.visibility, 'scanned': record.scanned, 'scanError':
-        record.scanError, 'portalPresent': record.portalPresent, 'readme':
-        record.readme, 'readmeWords': record.readmeWords, 'license':
-        record.license, 'codeowners': record.codeowners, 'owners':
-        record.owners, 'ownersOk': record.ownersOk}
+        record.scanError, 'commit': has(record.commit) ? record.commit : null,
+        'workflowError': has(record.workflowError) ? record.workflowError :
+        null, 'report': has(record.report) ? record.report : null,
+        'reportError': has(record.reportError) ? record.reportError : null,
+        'portalPresent': record.portalPresent, 'readme': record.readme,
+        'readmeWords': record.readmeWords, 'license': record.license,
+        'codeowners': record.codeowners, 'owners': record.owners, 'ownersOk':
+        record.ownersOk}

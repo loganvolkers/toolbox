@@ -6,6 +6,7 @@ import { basisBadge, basisOf } from "../lib/basis";
 import { campaignState, goalBar, goalWords, includeProgress, kpiBar } from "../lib/campaigns";
 import { gapText } from "../lib/compare";
 import { el, enc, link } from "../lib/dom";
+import { entitySource } from "../lib/federation";
 import { kindCount } from "../lib/kinds";
 import { shortId, title } from "../lib/rings";
 import { trackPath } from "../lib/routes";
@@ -170,6 +171,9 @@ export const campaignsViews = {
         gaps.sort(function (a, b) {
           return (size[b[0]] || 0) - (size[a[0]] || 0) || a[0].localeCompare(b[0]);
         });
+      const gapRows = D.sources && gaps.length > 12 ? el("details", { className: "federated-campaign-findings" },
+        el("summary", { textContent: "Show " + gaps.length + " entities below goal" })) : gapList;
+      if (gapRows !== gapList) gapList.append(gapRows);
       gaps.forEach(function (pair) {
         var bases = {};
         (pair[1].gaps || []).forEach(function (g) {
@@ -181,11 +185,12 @@ export const campaignsViews = {
               bases[basisOf((gsc.rules || {})[r] || {})] = true;
             });
         });
-        gapList.append(
+        gapRows.append(
           el(
             "div",
             { className: "gap" },
-            el("div", {}, link("entity/" + enc(pair[0]), "", shortId(pair[0])), el("div", { className: "sub", style: "font-size:12px", textContent: pair[0] })),
+            el("div", {}, link("entity/" + enc(pair[0]), "", String(D.entityOverview?.[pair[0]]?.title ?? shortId(pair[0]))),
+              el("div", { className: "sub", style: "font-size:12px", textContent: entitySource(D, pair[0]) || pair[0] })),
             el(
               "div",
               { className: "why" },
@@ -218,8 +223,8 @@ export const campaignsViews = {
     );
     return el(
       "div",
-      { className: "split" },
-      el(
+      { className: D.sources ? "federated-campaign" : "split" },
+      D.sources ? null : el(
         "section",
         {},
         el("div", { className: "head" }, el("h2", { textContent: "Campaigns" })),
@@ -235,7 +240,7 @@ export const campaignsViews = {
       el(
         "section",
         {},
-        el("label", { className: "picker" }, el("span", { className: "sub", textContent: "Campaign" }), picker),
+        !D.sources ? el("label", { className: "picker" }, el("span", { className: "sub", textContent: "Campaign" }), picker) : null,
         el(
           "div",
           { className: "ehead" },
@@ -252,6 +257,7 @@ export const campaignsViews = {
               " entities meet the goal · target " + target + "%" + (c.end ? " by " + c.end : "") + (days != null && days >= 0 ? " (" + plural(days, "day") + " left)" : "") + ". The bar turns green once it reaches the target.",
             ),
         state === "empty" ? null : sinceLine(c),
+        D.sources && names.length > 1 ? el("label", { className: "picker" }, el("span", { className: "sub", textContent: "Campaign" }), picker) : null,
         // The header already draws the percentage; a second bar earns its place only to carry milestones.
         state === "empty" || !marks.childElementCount ? null : bar,
         state === "empty" || !marks.childElementCount ? null : marks,

@@ -14,6 +14,7 @@ function search() {
     <form role="search" @submit.prevent="search">
       <input v-model="query" aria-label="Search" placeholder="Search entities" />
     </form>
+    <a href="/report/">Report</a>
     <a href="/ops">Operations</a>
     <button v-if="newer" @click="$emit('reload')">Newer data — update</button>
     <span v-if="user" class="muted">dev: {{ user }}</span>

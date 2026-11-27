@@ -20,6 +20,8 @@ kinds:
       actions: {type: list, items: object}
       runner: {type: object}
       error: {type: string}
+      report: {type: object, facet: operator}
+      reportError: {type: string, facet: operator}
     sources: {default: [connector:workspace]}
     map:
     - from: workspace/portal
@@ -28,7 +30,9 @@ kinds:
       set: >-
         {'name': record.name, 'key': record.key, 'path': record.path, 'dir':
         record.dir, 'owner': record.owner, 'actions': record.actions, 'runner':
-        record.runner, 'error': record.error}
+        record.runner, 'error': record.error, 'report': has(record.report) ?
+        record.report : null, 'reportError': has(record.reportError) ?
+        record.reportError : null}
 # Children's actions are offered on their Portal entities. A served org portal runs the children
 # listed under runners.local in its own process, and signs the approvals it records with the key in
 # $SEIKIKA_APPROVAL_KEY (64 hex characters) so children that pin it accept them.
