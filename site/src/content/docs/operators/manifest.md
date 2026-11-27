@@ -43,4 +43,4 @@ kinds:
 
 Consult the [manifest JSON Schema](https://github.com/seikika/seikika/blob/main/crates/seikika-model/schema/manifest.schema.json) for required fields, allowed values, and nested properties. Run `seikika validate` for schema checks, cross-references, and Common Expression Language (CEL) expressions. Use `seikika describe portal PATH_TO_PORTAL` to inspect the loaded kinds, fields, and rules as records.
 
-Each guide in the [connector directory](/connectors/) lists its record kinds and setup steps. For a complete manifest with connectors and entity mappings, see the [reference portal](https://github.com/seikika/seikika/blob/main/examples/reference-portal/seikika.yaml).
+Each guide in the [connector directory](/connectors/) lists its record kinds and setup steps. Find protocol and assessment schemas in [Contracts and schemas](/reference/contracts/). For a complete manifest with connectors and entity mappings, see the [reference portal](https://github.com/seikika/seikika/blob/main/examples/reference-portal/seikika.yaml).

@@ -2,11 +2,11 @@
 import { computed, ref } from "vue";
 import type { CliCatalog } from "../lib/cli-catalog";
 
-const props = withDefaults(defineProps<{ catalog: CliCatalog; base?: string }>(), { base: "" });
+const props = defineProps<{ commands: CliCatalog["commands"] }>();
 const query = ref("");
 const filtered = computed(() => {
   const search = query.value.trim().toLowerCase();
-  return props.catalog.commands.filter(command =>
+  return props.commands.filter(command =>
     [command.name, command.about, command.mcpTool].join(" ").toLowerCase().includes(search));
 });
 </script>
@@ -18,7 +18,7 @@ const filtered = computed(() => {
       <input v-model="query" type="search" placeholder="Filter commands…" autocomplete="off" />
     </label>
     <p class="cli-ref__count" aria-live="polite">
-      <template v-if="query.trim()">{{ filtered.length }} of </template>{{ catalog.commands.length }} commands
+      <template v-if="query.trim()">{{ filtered.length }} of </template>{{ commands.length }} commands
     </p>
     <ul class="cli-ref__list" role="list">
       <li v-for="command in filtered" :key="command.slug" class="cli-ref__item">
@@ -30,30 +30,13 @@ const filtered = computed(() => {
       </li>
     </ul>
     <h2 id="mcp-tools">MCP tools</h2>
-    <p>Built-in MCP tools share the same authorization path as the CLI.
-      <a :href="base + '/agents/reads/'">Read the catalog from an agent</a>.
-    </p>
-    <div class="cli-ref__table-wrap">
-      <table>
-        <thead><tr><th>MCP tool</th><th>CLI</th><th>Description</th></tr></thead>
-        <tbody>
-          <tr v-for="tool in catalog.mcpTools" :key="tool.name">
-            <td><code>{{ tool.name }}</code></td>
-            <td>
-              <code v-for="name in tool.cliCommands" :key="name" class="cli-ref__cli">{{ name }}</code>
-              <template v-if="!tool.cliCommands.length">—</template>
-            </td>
-            <td>{{ tool.description ?? '—' }}</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
+    <p>Look up built-in tools, their inputs, and their CLI equivalents in the <a href="/reference/mcp/">MCP tool reference</a>.</p>
     <h2 id="command-details">Command details</h2>
-    <article v-for="command in catalog.commands" :id="command.slug" :key="command.slug" class="cli-ref__detail">
+    <article v-for="command in commands" :id="command.slug" :key="command.slug" class="cli-ref__detail">
       <h3><code>seikika {{ command.name }}</code></h3>
       <p v-if="command.about">{{ command.about }}</p>
       <p v-if="command.usage" class="cli-ref__usage"><span class="cli-ref__label">Usage</span> <code>{{ command.usage }}</code></p>
-      <p v-if="command.mcpTool"><span class="cli-ref__label">MCP</span> <code>{{ command.mcpTool }}</code></p>
+      <p v-if="command.mcpTool"><span class="cli-ref__label">MCP</span> <a :href="'/reference/mcp/#' + command.mcpTool"><code>{{ command.mcpTool }}</code></a></p>
       <div v-if="command.args.length" class="cli-ref__table-wrap">
         <table>
           <thead><tr><th>Argument</th><th>Kind</th></tr></thead>
@@ -124,9 +107,6 @@ const filtered = computed(() => {
   }
   .cli-ref__table-wrap {
     overflow-x: auto;
-  }
-  .cli-ref__cli + .cli-ref__cli::before {
-    content: ', ';
   }
   .cli-ref__detail {
     padding: 1.25rem 0;

@@ -1156,93 +1156,413 @@
   "mcpTools": [
     {
       "name": "action_options",
-      "cliCommands": []
+      "description": "Allowed values for an action input on an entity.",
+      "cliCommands": [],
+      "inputSchema": {
+        "properties": {
+          "action": {
+            "description": "Action name, as list_actions reports it",
+            "type": "string"
+          },
+          "id": {
+            "description": "Entity id, e.g. repository:payments-api",
+            "type": "string"
+          },
+          "input": {
+            "description": "Name of one of the action's input properties",
+            "type": "string"
+          }
+        },
+        "required": [
+          "action",
+          "input",
+          "id"
+        ],
+        "type": "object"
+      }
     },
     {
       "name": "assessment_brief",
-      "cliCommands": []
+      "description": "What to judge an entity on, as a coding agent: the portal's rubric for its kind (criteria with questions and guidance), the entity's facts, its subject hash and a template to fill in. Write the result as an assessment file (or `seikika assess submit`); scorecards read assessments as data.",
+      "cliCommands": [],
+      "inputSchema": {
+        "properties": {
+          "id": {
+            "description": "Entity id, e.g. repository:payments-api",
+            "type": "string"
+          },
+          "rubric": {
+            "description": "Rubric name (default: the only rubric for the entity's kind)",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id"
+        ],
+        "type": "object"
+      }
     },
     {
       "name": "campaign_report",
+      "description": "Progress of a time-bound campaign over existing scorecards: percent meeting the goal, milestones, and entities that still have gaps. Without `campaign`, lists every campaign.",
       "cliCommands": [
         "campaign"
-      ]
+      ],
+      "inputSchema": {
+        "properties": {
+          "campaign": {
+            "description": "Campaign name (omit to list every campaign with its progress)",
+            "type": "string"
+          }
+        },
+        "required": [],
+        "type": "object"
+      }
     },
     {
       "name": "explain",
+      "description": "Why a field has its value (sources, precedence, evidence) or why a rule passes or fails.",
       "cliCommands": [
         "explain"
-      ]
+      ],
+      "inputSchema": {
+        "properties": {
+          "field": {
+            "description": "Field to explain, e.g. ownership (used when `rule` is not set)",
+            "type": "string"
+          },
+          "id": {
+            "description": "Entity id, e.g. repository:payments-api",
+            "type": "string"
+          },
+          "rule": {
+            "description": "<scorecard>/<rule>",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id"
+        ],
+        "type": "object"
+      }
     },
     {
       "name": "get",
+      "description": "One entity with its fields and where each came from.",
       "cliCommands": [
         "get"
-      ]
+      ],
+      "inputSchema": {
+        "properties": {
+          "fields": {
+            "description": "Comma-separated",
+            "type": "string"
+          },
+          "id": {
+            "description": "Entity id, e.g. repository:payments-api",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id"
+        ],
+        "type": "object"
+      }
     },
     {
       "name": "get_run",
-      "cliCommands": []
+      "description": "A run's state, effects, approvals and verification. Looks again at a run waiting on a merge, workflow or child portal.",
+      "cliCommands": [],
+      "inputSchema": {
+        "properties": {
+          "run": {
+            "description": "Run id, as run_action or list_runs reports it",
+            "type": "string"
+          }
+        },
+        "required": [
+          "run"
+        ],
+        "type": "object"
+      }
     },
     {
       "name": "graph",
+      "description": "Neighbours of an entity (relations, references, owner).",
       "cliCommands": [
         "graph"
-      ]
+      ],
+      "inputSchema": {
+        "properties": {
+          "depth": {
+            "description": "How many hops to follow, 1 to 3 (default 1)",
+            "type": "integer"
+          },
+          "direction": {
+            "description": "Follow outgoing edges, incoming edges or both (default both)",
+            "enum": [
+              "in",
+              "out",
+              "both"
+            ]
+          },
+          "id": {
+            "description": "Entity id, e.g. repository:payments-api",
+            "type": "string"
+          },
+          "relation": {
+            "description": "Only edges with this relation name (default: all relations)",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id"
+        ],
+        "type": "object"
+      }
     },
     {
       "name": "list_actions",
+      "description": "Self-service actions available on an entity, and whether you may run them.",
       "cliCommands": [
         "actions"
-      ]
+      ],
+      "inputSchema": {
+        "properties": {
+          "id": {
+            "description": "Entity id, e.g. repository:payments-api",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id"
+        ],
+        "type": "object"
+      }
     },
     {
       "name": "list_runs",
-      "cliCommands": []
+      "description": "Runs you may see, newest last; filter by entity or state (e.g. awaiting_approval to find runs to review).",
+      "cliCommands": [],
+      "inputSchema": {
+        "properties": {
+          "id": {
+            "description": "Only runs on this entity",
+            "type": "string"
+          },
+          "state": {
+            "description": "Only runs in this state: awaiting_approval, proposed, dispatched, succeeded, unverified, failed, rejected or cancelled",
+            "type": "string"
+          }
+        },
+        "required": [],
+        "type": "object"
+      }
     },
     {
       "name": "owner_of",
+      "description": "Who owns an entity, whether the claim is verified (CODEOWNERS), and how to fix it.",
       "cliCommands": [
         "owner"
-      ]
+      ],
+      "inputSchema": {
+        "properties": {
+          "id": {
+            "description": "Entity id, e.g. repository:payments-api",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id"
+        ],
+        "type": "object"
+      }
     },
     {
       "name": "preview_action",
-      "cliCommands": []
+      "description": "Preview an action: validation, effects, blockers, the approval path and a confirm_token for run_action. Changes nothing; the action's own preview step runs.",
+      "cliCommands": [],
+      "inputSchema": {
+        "properties": {
+          "action": {
+            "description": "Action name, as list_actions reports it",
+            "type": "string"
+          },
+          "id": {
+            "description": "Entity id, e.g. repository:payments-api",
+            "type": "string"
+          },
+          "inputs": {
+            "description": "Proposed input values, keyed by input property name",
+            "type": "object"
+          }
+        },
+        "required": [
+          "action",
+          "id"
+        ],
+        "type": "object"
+      }
     },
     {
       "name": "query",
+      "description": "Entities of a kind matching a CEL filter over `entity`, e.g. entity.ownership.status != 'verified'.",
       "cliCommands": [
         "query"
-      ]
+      ],
+      "inputSchema": {
+        "properties": {
+          "fields": {
+            "description": "Comma-separated fields to return (default: every visible field)",
+            "type": "string"
+          },
+          "filter": {
+            "description": "CEL expression over `entity` (its visible fields and `id`); keeps entities where it is true",
+            "type": "string"
+          },
+          "kind": {
+            "description": "Entity kind to list, e.g. Repository",
+            "type": "string"
+          }
+        },
+        "required": [
+          "kind"
+        ],
+        "type": "object"
+      }
     },
     {
       "name": "refresh_entity",
+      "description": "Ask the connectors behind an entity to re-read it; returns once the fresh data is visible.",
       "cliCommands": [
         "refresh"
-      ]
+      ],
+      "inputSchema": {
+        "properties": {
+          "id": {
+            "description": "Entity id, e.g. repository:payments-api",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id"
+        ],
+        "type": "object"
+      }
     },
     {
       "name": "run_action",
-      "cliCommands": []
+      "description": "Run a previewed action with the same inputs and the preview's confirm_token (valid 10 minutes, once). Returns the run: it may wait for approval, a pull request merge or a workflow; follow it with get_run.",
+      "cliCommands": [],
+      "inputSchema": {
+        "properties": {
+          "action": {
+            "description": "Action name, as list_actions reports it",
+            "type": "string"
+          },
+          "confirm_token": {
+            "description": "confirm_token from preview_action",
+            "type": "string"
+          },
+          "id": {
+            "description": "Entity id, e.g. repository:payments-api",
+            "type": "string"
+          },
+          "inputs": {
+            "description": "The input values you previewed",
+            "type": "object"
+          }
+        },
+        "required": [
+          "action",
+          "id",
+          "confirm_token"
+        ],
+        "type": "object"
+      }
     },
     {
       "name": "scorecard_report",
+      "description": "Results of one scorecard across every entity you may see: level counts and, per entity, the failing rules with their evidence. Filter to one rule's failures to get a work list. Without `scorecard`, lists the scorecards.",
       "cliCommands": [
         "scorecard"
-      ]
+      ],
+      "inputSchema": {
+        "properties": {
+          "level": {
+            "description": "Only entities at this level, e.g. none, bronze, skipped",
+            "type": "string"
+          },
+          "outcome": {
+            "description": "Outcome to match for `rule` (default fail)",
+            "enum": [
+              "fail",
+              "pass",
+              "unknown"
+            ]
+          },
+          "rule": {
+            "description": "Only entities where this rule has `outcome`",
+            "type": "string"
+          },
+          "scorecard": {
+            "description": "Scorecard name (omit to list every scorecard with its level counts)",
+            "type": "string"
+          }
+        },
+        "required": [],
+        "type": "object"
+      }
     },
     {
       "name": "scorecard_status",
+      "description": "Scorecard levels and, if you may see them, rule outcomes and fixes.",
       "cliCommands": [
         "score"
-      ]
+      ],
+      "inputSchema": {
+        "properties": {
+          "id": {
+            "description": "Entity id, e.g. repository:payments-api",
+            "type": "string"
+          },
+          "scorecard": {
+            "description": "Only this scorecard (default: every scorecard)",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id"
+        ],
+        "type": "object"
+      }
     },
     {
       "name": "search",
+      "description": "Find entities by name or title.",
       "cliCommands": [
         "search"
-      ]
+      ],
+      "inputSchema": {
+        "properties": {
+          "kind": {
+            "description": "Only entities of this kind, e.g. Repository",
+            "type": "string"
+          },
+          "limit": {
+            "description": "Maximum number of results (default 20)",
+            "type": "integer"
+          },
+          "query": {
+            "description": "Text to find in entity ids and titles (case-insensitive substring)",
+            "type": "string"
+          }
+        },
+        "required": [
+          "query"
+        ],
+        "type": "object"
+      }
     }
   ]
 }

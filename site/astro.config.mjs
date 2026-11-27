@@ -19,15 +19,37 @@ export default defineConfig({
         { icon: 'github', label: 'GitHub', href: 'https://github.com/seikika/seikika' },
       ],
       sidebar: [
-        { label: 'Start', items: [{ autogenerate: { directory: 'start' } }] },
+        {
+          label: 'Guides',
+          items: [
+            { label: 'Start', collapsed: true, items: [
+              'start/quickstart', 'start/install', 'start/run', 'start/portal',
+              'start/versions', 'start/troubleshooting',
+            ] },
+            { label: 'Operators', collapsed: true, items: [
+              'operators', 'operators/portal', 'operators/ci', 'operators/deploy', 'operators/access',
+              'operators/secrets', 'operators/actions', 'operators/federate-actions',
+              'operators/publish', 'operators/standards', 'operators/assessments',
+            ] },
+            { label: 'Package authors', collapsed: true, items: [
+              'authors', 'authors/connectors', 'authors/secrets',
+            ] },
+            { label: 'Users', collapsed: true, items: ['users', 'users/actions', 'users/refresh'] },
+            { label: 'Agents', collapsed: true, items: [{ autogenerate: { directory: 'agents' } }] },
+            { label: 'Maintainers', collapsed: true, items: [{ autogenerate: { directory: 'maintainers' } }] },
+          ],
+        },
+        {
+          label: 'Reference',
+          items: [
+            { slug: 'reference', label: 'Reference overview' },
+            'users/api', 'reference/mcp', 'start/cli', 'reference/sdks',
+            'authors/npm', 'operators/manifest', 'reference/contracts',
+          ],
+        },
         { label: 'Connectors', items: [{ autogenerate: { directory: 'connectors' } }] },
         { label: 'Packages', items: [{ autogenerate: { directory: 'packages' } }] },
-        { label: 'Operators', items: [{ autogenerate: { directory: 'operators' } }] },
-        { label: 'Package authors', items: [{ autogenerate: { directory: 'authors' } }] },
-        { label: 'Users', items: [{ autogenerate: { directory: 'users' } }] },
-        { label: 'Maintainers', items: [{ autogenerate: { directory: 'maintainers' } }] },
         { label: 'Concepts', items: [{ autogenerate: { directory: 'concepts' } }] },
-        { label: 'Agents', items: [{ autogenerate: { directory: 'agents' } }] },
         { label: 'Compare', items: [{ autogenerate: { directory: 'compare' } }] },
         { label: 'Demo', items: [{ autogenerate: { directory: 'demo' } }] },
       ],

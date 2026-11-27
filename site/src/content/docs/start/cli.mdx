@@ -13,6 +13,6 @@ export const catalog = loadCliCatalog();
 
 Look up a command, its flags, and the Model Context Protocol (MCP) tool it calls. The reference comes from the CLI's own help and command catalog.
 
-See [Install Seikika](/start/install/) to get the CLI, or the [HTTP API reference](/users/api/) to use catalog reads from an HTTP client.
+Run `seikika --version` and use `seikika COMMAND --help` for the options your installation supports. See [Install Seikika](/start/install/) to get the CLI or the [HTTP API reference](/users/api/) to call a portal from an HTTP client.
 
-<CliReference catalog={catalog} client:load />
+<CliReference commands={catalog.commands} client:load />

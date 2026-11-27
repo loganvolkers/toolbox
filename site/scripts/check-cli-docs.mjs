@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Drift check: re-load CLI catalog and ensure build-time fingerprint is stable.
+ * Drift check for the CLI commands and MCP tool input schemas used by the site.
  * Pages CI runs it as `pnpm check:cli-docs`.
  *
  * This script invokes seikika describe directly (mirrors cli-describe.ts logic)
@@ -71,9 +71,14 @@ function describe(seikika) {
         usage,
       });
     } else if (rec.kind === 'mcp-tool') {
+      if (!rec.data.inputSchema) {
+        throw new Error('The reference needs the tool input schemas from seikika describe. Rebuild seikika from this checkout.');
+      }
       mcpTools.push({
         name: rec.data.name,
+        description: rec.data.description ?? null,
         cliCommands: rec.data.cliCommands || [],
+        inputSchema: rec.data.inputSchema,
       });
     }
   }
