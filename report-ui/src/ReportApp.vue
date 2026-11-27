@@ -7,7 +7,7 @@ import "./report.css";
 import type { CatalogFilter, ReportData } from "./types";
 import { boxLogo } from "./lib/bars";
 import { aliasLevels } from "./lib/levels";
-import { parseHash, reportRoute } from "./lib/routes";
+import { canonicalDetailHash, parseHash, reportRoute } from "./lib/routes";
 import { registerIds } from "./lib/rings";
 import { ruleTitles } from "./lib/rules";
 import { campaignNamesSorted, summarize } from "./lib/summary";
@@ -114,7 +114,10 @@ function onScroll() {
 function syncHash() {
   clearTimeout(scrollTimer);
   hideTip();
-  hash.value = location.hash;
+  const current = location.hash;
+  const canonical = canonicalDetailHash(data.value, current);
+  if (canonical !== current) history.replaceState(history.state, "", canonical);
+  hash.value = canonical;
 }
 function go(path: string) {
   if (props.initialRoute === undefined) location.hash = path;
@@ -223,6 +226,7 @@ watch(() => [assessmentMode.value, route.value.id, route.value.query?.rubric], (
 
 onMounted(() => {
   if (props.initialRoute !== undefined) history.replaceState(null, "", "#" + props.initialRoute);
+  syncHash();
   window.addEventListener("hashchange", syncHash);
   window.addEventListener("click", rememberScroll, true);
   window.addEventListener("scroll", onScroll, { passive: true, capture: true });
