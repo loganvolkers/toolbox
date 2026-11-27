@@ -233,3 +233,12 @@ The repository quickstart recorded a baseline, exited 1 after moving its linked 
 - Compared the published action metadata and recipes from Terraform, SonarQube, Trivy, golangci-lint, Docker, CodeQL, and GitHub Pages. Checked the Betterer CLI as a baseline enforcement alternative. [Comparison and gap analysis](audits/consumer-github-actions.md)
 - Downloaded and verified the published Seikika 0.2.1 Linux binaries through setup. Used them from a disposable checkout to validate and test the starter, build without a baseline, verify missing and failing ratchet verdicts, and build both HTML and web output. Compared the baseline byte for byte after scoring and building.
 - Seikika's ratchet found the CI workflow's last four missing job timeouts fixed and scored all three new actions gold for CI security. All 142 maintainer portal assertions passed.
+
+## Shell script standard
+
+- Used the pinned ShellCheck, shfmt, and Bats binaries to exercise the adapter
+  and run five isolated Bats regression cases. The package portal passed three
+  fixture assertions and the maintainer portal passed 145.
+- A temporary consumer portal using Seikika 0.2.1 accepted a clean script. After
+  injecting SC2155 and an indentation defect, its strict ratchet exited 1 and
+  named both failed rules. [Shell standard](../packages/shell/README.md)

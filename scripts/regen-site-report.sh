@@ -14,7 +14,7 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 
 TOOLS="${SEIKIKA_CI_TOOLS:-${TMPDIR:-/tmp}/seikika-ci-tools}"
-scripts/ci-tools.sh "$TOOLS" actionlint scorecard osv-scanner rustsec-osv
+scripts/ci-tools.sh "$TOOLS" actionlint scorecard osv-scanner rustsec-osv shellcheck shfmt bats
 export PATH="$TOOLS:$PATH" OSV_SCANNER_LOCAL_DB_CACHE_DIRECTORY="$TOOLS"
 
 cargo build --locked

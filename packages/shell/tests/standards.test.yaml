@@ -1,0 +1,20 @@
+name: shell
+assert:
+  - name: clean shell sources pass both rules
+    expect: score('shell', 'shell:scripts/clean.sh').level == 'clean'
+  - name: ShellCheck findings fail with a count and a location
+    expect: >-
+      score('shell', 'shell:scripts/lint.sh').rules['shellcheck-clean'] ==
+      'fail' && score('shell', 'shell:scripts/lint.sh').rules['shfmt-clean']
+      == 'pass' && score('shell',
+      'shell:scripts/lint.sh').measures['shellcheck-clean'] == 1.0 &&
+      score('shell', 'shell:scripts/lint.sh').evidence['shellcheck-clean'] ==
+      ['line 3: SC2155 Declare and assign separately to avoid masking return
+      values.']
+  - name: shfmt can fail independently and shows the fix command
+    expect: >-
+      score('shell', 'shell:scripts/format.sh').rules['shellcheck-clean'] ==
+      'pass' && score('shell', 'shell:scripts/format.sh').rules['shfmt-clean']
+      == 'fail' && score('shell',
+      'shell:scripts/format.sh').evidence['shfmt-clean'] == ['shfmt -i 2 -ci
+      -w -- scripts/format.sh']

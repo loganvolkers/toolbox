@@ -50,10 +50,14 @@ jobs:
           their releases, SHA-256-pinned (no compile, D90), and the pinned RustSec
           database
         run: |
-          scripts/ci-tools.sh "$RUNNER_TEMP/tools" openfga actionlint scorecard osv-scanner rustsec-osv
+          scripts/ci-tools.sh "$RUNNER_TEMP/tools" openfga actionlint scorecard osv-scanner rustsec-osv shellcheck shfmt bats
           echo "SEIKIKA_OPENFGA_BIN=$RUNNER_TEMP/tools/openfga" >> "$GITHUB_ENV"
           echo "OSV_SCANNER_LOCAL_DB_CACHE_DIRECTORY=$RUNNER_TEMP/tools" >> "$GITHUB_ENV"
           echo "$RUNNER_TEMP/tools" >> "$GITHUB_PATH"
+      - name: Shell regression tests
+        run: |
+          shfmt -i 2 -ci -d tests/shell/*.bats
+          bats tests/shell
       - name: >-
           Tests that need OpenFGA (authz, .fga.yaml through the Authorizer) or
           Landlock

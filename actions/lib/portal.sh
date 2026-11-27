@@ -1,3 +1,4 @@
+# shellcheck shell=bash
 # Shared checkout preparation for repo-portal actions. Call from the consumer checkout.
 prepare_portal() {
   local title=$1 executable=$2 directory=$3 portal=$4

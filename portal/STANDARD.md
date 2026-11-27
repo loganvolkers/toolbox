@@ -903,6 +903,21 @@ Scorecard `maintainer-openssf` over `OpenSSFCheck` entities, owned by group:main
 |---|---|---|---|---|---|
 | `ten` | ten | measured | `int(entity.score) == 10` | Each point below 10 is a supply-chain weakness OpenSSF documents with its risk and remediation; holding every check at its current score keeps a regression from slipping in unnoticed. | Follow the check's documentation (in the evidence). The check, its scoring and its remediation are OpenSSF's. |
 
+## Shell script quality
+
+Shell sources pass ShellCheck at warning severity and use consistent shfmt formatting.
+
+**Why:** Static analysis catches shell hazards early and consistent formatting makes script changes easier to review.
+
+See [Shell script standard](https://seikika.com/packages/shell/).
+
+Scorecard `maintainer-shell` over `ShellScript` entities, owned by group:maintainers. `seikika report` lists what fails now. *Measured* rules check facts a tool or connector read; *judged* rules pass on an agent's assessment (`seikika assess`).
+
+| Rule | Level | Basis | Passes when | Why | Fix |
+|---|---|---|---|---|---|
+| `shellcheck-clean` | clean | measured | `size(entity.findings) == 0` | ShellCheck warnings identify scripting hazards such as unquoted expansions and masked errors. | Run the record's lintCommand and fix each ShellCheck finding. |
+| `shfmt-clean` | clean | measured | `entity.formatted` | A single format keeps whitespace changes out of behavior reviews. | Run the record's formatCommand to apply the standard formatting. |
+
 ## Python we maintain passes ruff
 
 Every file ruff checks is clean. The measure is its findings, so a new finding is a regression and a fixed one an improvement; a new file must arrive clean.
@@ -945,6 +960,10 @@ Change a standard by changing these parameters in the portal's `seikika.yaml`.
   - `kind`: `"OpenSSFCheck"`
   - `name`: `"maintainer-openssf"`
   - `track`: `"delivery"`
+- `../packages/shell`
+  - `command`: `["python3","packages/shell/check-shell.py","scripts/*.sh","actions/*.sh","tests/shell/*.bats","plugins/seikika-operator/bin/seikika-mcp"]`
+  - `name`: `"maintainer-shell"`
+  - `track`: `"maintainer"`
 - `../packages/sarif`
   - `command`: `["ruff","check","--no-cache","--output-format","sarif","--exit-zero","--ignore-noqa","{files}"]`
   - `files`: `["scripts/*.py","examples/reference-portal/tools/*.py","examples/acme-live/deploy/*.py"]`

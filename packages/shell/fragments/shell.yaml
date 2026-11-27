@@ -1,0 +1,82 @@
+tools:
+  shellcheck:
+    version: 0.11.0
+    install: {mise: aqua:koalaman/shellcheck, aqua: koalaman/shellcheck}
+  shfmt: {version: 3.12.0, install: {mise: aqua:mvdan/sh, aqua: mvdan/sh}}
+  bats: {version: 1.12.0, install: {mise: github:bats-core/bats-core}}
+connectors:
+  - name: ${param:name}
+    package: builtin:runner
+    runtime: in-image
+    config:
+      root: .
+      jobs:
+        - name: ${param:name}
+          command: ${param:command}
+          parse: ndjson
+          kinds: [file]
+    records: [file]
+    refresh: {file: [external_ids]}
+    freshness: {file: 5m}
+kinds:
+  - name: ${param:kind}
+    description: A shell source file checked by ShellCheck and shfmt.
+    identityFrom: ["connector:${param:name}"]
+    fields:
+      path: {type: string, description: Path relative to the checkout root.}
+      findings:
+        type: list
+        items: string
+        description: ShellCheck warning and error diagnostics with line numbers.
+      formatted:
+        type: boolean
+        description: Whether shfmt output matches the source bytes.
+      lintCommand:
+        type: string
+        description: Standalone command that reproduces findings.
+      formatCommand:
+        type: string
+        description: Standalone command that applies the standard format.
+    sources: {default: ["connector:${param:name}"]}
+    map:
+    - from: ${param:name}/file
+      id: "'${param:name}:' + record.path"
+      set: >-
+        {'path': record.path, 'findings': record.findings, 'formatted':
+        record.formatted, 'lintCommand': record.lintCommand, 'formatCommand':
+        record.formatCommand}
+scorecards:
+  - name: ${param:name}
+    title: Shell script quality
+    description: >-
+      Shell sources pass ShellCheck at warning severity and use consistent
+      shfmt formatting.
+    rationale: >-
+      Static analysis catches shell hazards early and consistent formatting
+      makes script changes easier to review.
+    links:
+    - {title: Shell script standard, url: https://seikika.com/packages/shell/}
+    kind: ${param:kind}
+    owner: ${param:owner}
+    track: ${param:track}
+    levels: [clean]
+    ratchet: {newEntitiesAtLeast: clean}
+    rules:
+    - name: shellcheck-clean
+      level: clean
+      check: size(entity.findings) == 0
+      measure: size(entity.findings)
+      dataFrom: ${param:name}
+      evidence: entity.findings
+      fix: Run the record's lintCommand and fix each ShellCheck finding.
+      rationale: >-
+        ShellCheck warnings identify scripting hazards such as unquoted
+        expansions and masked errors.
+    - name: shfmt-clean
+      level: clean
+      check: entity.formatted
+      dataFrom: ${param:name}
+      evidence: "[entity.formatCommand]"
+      fix: Run the record's formatCommand to apply the standard formatting.
+      rationale: A single format keeps whitespace changes out of behavior reviews.
+    facets: {summary: public, details: public}
