@@ -53,7 +53,7 @@ pin zizmor "$ZIZMOR" "$AB_HOME/venv/zizmor-$ZIZMOR" && ln -sf "$AB_HOME/venv/ziz
 [ -x "$AB_HOME/bin/actionlint" ] || "$REPO/scripts/ci-tools.sh" "$AB_HOME/bin" actionlint
 
 # Seikika for arm B, from this checkout (release build: --against and report rerun connectors).
-(cd "$REPO" && cargo build -q --release --locked)
+(cd "$REPO" && pnpm install --frozen-lockfile && pnpm build && cargo build -q --release --locked)
 for b in seikika seikika-connector-github seikika-connector-git-files; do
   [ -x "$REPO/target/release/$b" ] && ln -sf "$REPO/target/release/$b" "$AB_HOME/box-bin/$b"
 done

@@ -141,12 +141,17 @@ fn initial_resync(s: &Arc<AppState>, connector: &str) {
         .filter(|k| s.hub.can_resync(connector, k) && s.hub.last_read(connector, k).is_none())
         .cloned()
         .collect();
-    for kind in kinds {
+    let grouped = if is_github_org(c) {
+        vec![kinds]
+    } else {
+        kinds.into_iter().map(|kind| vec![kind]).collect()
+    };
+    for kinds in grouped.into_iter().filter(|kinds| !kinds.is_empty()) {
         s.hub.enqueue(Request {
             connector: connector.into(),
             command: "resync",
             kind: None,
-            kinds: vec![kind],
+            kinds,
             external_ids: vec![],
             reason: "initial sync".into(),
             priority: "background",
@@ -245,7 +250,7 @@ pub fn binary_for(package: &str) -> String {
     file
 }
 
-fn disabled() -> bool {
+pub(crate) fn disabled() -> bool {
     std::env::var("SEIKIKA_CONNECTORS").is_ok_and(|v| v == "off")
 }
 
@@ -256,6 +261,14 @@ pub fn reads_children(s: &AppState) -> bool {
             .federation
             .as_ref()
             .is_some_and(|f| !f.children.is_empty())
+}
+
+pub(crate) fn is_github_org(connector: &seikika_model::manifest::Connector) -> bool {
+    connector.package == "builtin:workspace"
+        && connector
+            .config
+            .as_ref()
+            .is_some_and(|config| config["githubOrg"].is_object())
 }
 
 /// Start a supervisor for every in-image connector (unless `SEIKIKA_CONNECTORS=off`).
@@ -280,7 +293,19 @@ pub fn spawn_in_image(s: &Arc<AppState>) {
     for c in in_image {
         let (state, name) = (s.clone(), c.name.clone());
         let program = binary_for(&c.package);
-        let config = resolve_config(&c.name, c.config.as_ref().unwrap_or(&Value::Null));
+        let mut config = resolve_config(&c.name, c.config.as_ref().unwrap_or(&Value::Null));
+        // Forward only the existing GitHub credential, and only to the trusted organization reader.
+        if is_github_org(c)
+            && let Some(org) = config["githubOrg"].as_object_mut()
+            && org.get("token").is_none_or(Value::is_null)
+            && let Some(token) = ["GH_TOKEN", "GITHUB_TOKEN"].iter().find_map(|name| {
+                std::env::var(name)
+                    .ok()
+                    .filter(|value| !value.trim().is_empty())
+            })
+        {
+            org.insert("token".into(), token.into());
+        }
         tokio::spawn(async move { supervise(state, name, program, config).await });
     }
 }

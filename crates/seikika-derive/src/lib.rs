@@ -3,6 +3,7 @@
 //! it (D37). The executable reference is `examples/reference-portal/tools/reference.py`; the
 //! outputs of [`Derived::reference_files`] must match its files byte for byte (P2).
 
+pub mod judged;
 pub mod plan;
 pub mod pyjson;
 pub mod testing;

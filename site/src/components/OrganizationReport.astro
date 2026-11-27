@@ -1,0 +1,148 @@
+---
+import { readFileSync } from "node:fs";
+
+const path = process.env.SEIKIKA_ORG_REPORT_DATA;
+const data = path ? JSON.parse(readFileSync(path, "utf8")) : null;
+const card = data?.scorecards?.["repo-hygiene"];
+const scores = data?.scores?.["repo-hygiene"] ?? {};
+const ids = data?.catalog?.Repository ?? [];
+
+if (data && (!card || !ids.length || new Set(ids).size !== ids.length ||
+    Object.keys(scores).some((id) => !ids.includes(id)))) {
+  throw new Error("Organization report needs the public repository inventory and its scores");
+}
+
+const rows = ids.map((id: string) => {
+  const entry = data.entityOverview?.[id];
+  const score = scores[id];
+  const repository = id.match(/^repository:(seikika\/[a-z0-9_.-]+)$/)?.[1];
+  const url = `https://github.com/${repository}`;
+  const revision = entry?.sourceUrl?.match(/\/tree\/([0-9a-f]{40})$/)?.[1];
+  if (!repository || entry?.visibility !== "public" ||
+      entry.repositoryUrl?.toLowerCase() !== url ||
+      (entry.sourceUrl && entry.sourceUrl.toLowerCase() !== `${url}/tree/${revision}`) ||
+      typeof entry.defaultBranch !== "string") {
+    throw new Error("Organization report requires complete public GitHub repository data");
+  }
+  const summary = { name: repository, url, revision, branch: entry.defaultBranch };
+  if (entry.scanError && score?.level === "skipped") {
+    return { ...summary, level: "Unavailable", error: String(entry.scanError) };
+  }
+  if (!score || entry.scanError || typeof entry.portalPresent !== "boolean") {
+    throw new Error("Organization report requires a score or an acquisition error for each repository");
+  }
+
+  const rules = Object.entries(card.rules).map(([key, rule]) => {
+    const outcome = score.rules?.[key];
+    if (outcome !== "pass" && outcome !== "fail") {
+      throw new Error("Organization report requires a result for every rule");
+    }
+    return {
+      key,
+      rule: rule as { title?: string; fix: string },
+      outcome,
+      evidence: Array.isArray(score.evidence?.[key]) ? score.evidence[key] : [],
+    };
+  });
+  if (!["none", ...card.levels].includes(score.level)) {
+    throw new Error("Organization report contains an invalid score level");
+  }
+
+  return {
+    ...summary,
+    portalPresent: entry.portalPresent,
+    level: score.level === "none" ? "Below bronze" : score.level,
+    rules,
+    passed: rules.filter(({ outcome }) => outcome === "pass").length,
+  };
+});
+const publicRepositories = new Set(rows.map(row => row.name));
+for (const child of data?.children ?? []) {
+  if (!publicRepositories.has(child.key)) {
+    throw new Error("Organization child snapshots require public GitHub repository data");
+  }
+}
+for (const id of data?.catalog?.Workflow ?? []) {
+  const workflow = data.entities?.[id]?.fields;
+  if (!workflow || workflow.visibility !== "public"
+      || !publicRepositories.has(String(workflow.repository).toLowerCase())) {
+    throw new Error("Organization workflows require public GitHub repository data");
+  }
+}
+const serialized = data && JSON.stringify(data).replace(/</g, "\\u003c");
+---
+{data && (
+  <>
+    <div id="organization-report-root"></div>
+    <script is:inline id="organization-report-data" type="application/json" set:html={serialized}></script>
+  </>
+)}
+{data ? (
+  <details>
+    <summary>Repository hygiene inventory</summary>
+    <p><strong>{rows.length} public repositories</strong> · {rows.filter((row) => !("error" in row)).length} scored</p>
+    <div class="table-scroll" role="region" aria-label="Organization scores" tabindex="0">
+      <table>
+        <thead>
+          <tr><th scope="col">Repository</th><th scope="col">Level</th><th scope="col">Rules</th><th scope="col">Repo portal</th></tr>
+        </thead>
+        <tbody>
+          {rows.map((row) => (
+            <tr>
+              <th scope="row">
+                <a href={row.url}>{row.name}</a>
+                <small>
+                  {row.revision ? (
+                    <a href={`${row.url}/tree/${row.revision}`}>{row.branch} · {row.revision.slice(0, 7)}</a>
+                  ) : "error" in row ? row.branch : "Empty repository"}
+                </small>
+              </th>
+              <td class="score-level">{row.level}</td>
+              <td>
+                {"error" in row ? row.error : <details>
+                  <summary>{row.passed} of {row.rules.length} passed</summary>
+                  <ul>
+                    {row.rules.map(({ key, rule, outcome, evidence }) => (
+                      <li>
+                        <strong>{outcome === "pass" ? "Pass" : "Fail"}</strong> · {rule.title ?? key}
+                        {outcome === "fail" && (
+                          <div>
+                            {rule.fix} {evidence.map((item: unknown) => <div class="evidence">{String(item)}</div>)}
+                          </div>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                </details>}
+              </td>
+              <td>{"error" in row ? "Unavailable" : row.portalPresent ? "Present" : "Missing"}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  </details>
+) : (
+  <p>Generate the public organization snapshot to preview scores in a local docs build.</p>
+)}
+
+<style>
+  #organization-report-root :global(.seikika-report) { scroll-margin-top: calc(var(--sl-nav-height) + 8px); }
+  .table-scroll { overflow-x: auto; }
+  table { width: 100%; font-size: var(--sl-text-sm); }
+  th, td { vertical-align: top; }
+  th[scope="row"] { text-align: left; }
+  small { display: block; color: var(--sl-color-gray-3); font-weight: normal; }
+  .score-level { text-transform: capitalize; }
+  summary { cursor: pointer; white-space: nowrap; }
+  details ul { padding-inline-start: 1rem; margin-top: 0.45rem; min-width: 15rem; }
+  .evidence { overflow-wrap: anywhere; color: var(--sl-color-gray-3); }
+</style>
+
+<script>
+  import { createApp } from "vue";
+  import ReportApp from "../../../report-ui/src/ReportApp.vue";
+  const mount = document.getElementById("organization-report-root");
+  const payload = document.getElementById("organization-report-data");
+  if (mount && payload) createApp(ReportApp, { data: JSON.parse(payload.textContent || "null"), embedded: true }).mount(mount);
+</script>

@@ -399,6 +399,9 @@ pub struct Rubric {
     /// `subjectHash` differs from it is stale.
     pub subject: Option<String>,
     pub criteria: Vec<Criterion>,
+    /// Documentation and examples that explain how to apply the rubric.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub links: Vec<Link>,
 }
 
 impl Rubric {

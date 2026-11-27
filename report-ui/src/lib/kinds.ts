@@ -2,6 +2,8 @@ import type { ReportData } from "../types";
 import { title } from "./rings";
 import { catalogKindsSorted } from "./summary";
 import { fmt, plural } from "./words";
+import { kindTitle } from "./kind-title";
+export { kindTitle } from "./kind-title";
 
 // Kinds in their declared groups, then any kind no group names.
 export function kindGroupsOf(D: ReportData) {
@@ -32,21 +34,6 @@ export function kindGroupsOf(D: ReportData) {
 
 export function kindDescription(D: ReportData, k) {
   return (((D.kinds || {})[k] || {}).description || "").trim();
-}
-
-export var ACRONYMS = { Api: "API", Cli: "CLI", Json: "JSON", Mcp: "MCP", Sdlc: "SDLC", Ui: "UI", Url: "URL" };
-// A kind's id (SdlcLayer) in the reader's words (SDLC layer), unless the kind names a title.
-export function kindTitle(D: ReportData, k) {
-  var t = ((D.kinds || {})[k] || {}).title;
-  if (t) return t;
-  var words = String(k || "").match(/OpenSSF|[A-Z]{2,}(?![a-z])|[A-Z][a-z0-9]*|[a-z0-9]+/g) || [k];
-  return words
-    .map(function (w, i) {
-      if (ACRONYMS[w]) return ACRONYMS[w];
-      if (w === "OpenSSF" || /^[A-Z]{2,}$/.test(w)) return w;
-      return i ? w.toLowerCase() : w;
-    })
-    .join(" ");
 }
 
 // "15 action dependencies", "26 SDLC stages": a count of a kind, in running text.

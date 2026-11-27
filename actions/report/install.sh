@@ -9,16 +9,22 @@ set -euo pipefail
 SEIKIKA_VERSION="${SEIKIKA_VERSION#v}"
 tag="v${SEIKIKA_VERSION}"
 case "${RUNNER_OS:-$(uname -s)}-${RUNNER_ARCH:-$(uname -m)}" in
-  Linux-X64|Linux-x86_64)    target=x86_64-unknown-linux-gnu ;;
-  Linux-ARM64|Linux-aarch64) target=aarch64-unknown-linux-gnu ;;
-  macOS-ARM64|Darwin-arm64)  target=aarch64-apple-darwin ;;
-  macOS-X64|Darwin-x86_64)   target=x86_64-apple-darwin ;;
-  Windows-X64)               target=x86_64-pc-windows-msvc ;;
-  *) echo "seikika: no release build for ${RUNNER_OS:-?}-${RUNNER_ARCH:-?}" >&2; exit 2 ;;
+  Linux-X64 | Linux-x86_64) target=x86_64-unknown-linux-gnu ;;
+  Linux-ARM64 | Linux-aarch64) target=aarch64-unknown-linux-gnu ;;
+  macOS-ARM64 | Darwin-arm64) target=aarch64-apple-darwin ;;
+  macOS-X64 | Darwin-x86_64) target=x86_64-apple-darwin ;;
+  Windows-X64) target=x86_64-pc-windows-msvc ;;
+  *)
+    echo "seikika: no release build for ${RUNNER_OS:-?}-${RUNNER_ARCH:-?}" >&2
+    exit 2
+    ;;
 esac
-ext=tar.xz; [ "$target" = x86_64-pc-windows-msvc ] && ext=zip
+ext=tar.xz
+[ "$target" = x86_64-pc-windows-msvc ] && ext=zip
 base="https://github.com/${SEIKIKA_REPO}/releases/download/${tag}"
-work=$(mktemp -d); mkdir -p "$SEIKIKA_BIN"
+work=$(mktemp -d)
+trap 'rm -rf "$work"' EXIT
+mkdir -p "$SEIKIKA_BIN"
 download() {
   local file="$1"
   if command -v gh >/dev/null 2>&1; then
@@ -38,7 +44,10 @@ for app in seikika-cli seikika-connector-workspace seikika-connector-runner; do
   download "$file"
   want=$(cut -d' ' -f1 "$work/$file.sha256")
   got=$(sha256sum "$work/$file" | cut -d' ' -f1)
-  [ "$want" = "$got" ] || { echo "seikika: checksum mismatch for $file" >&2; exit 2; }
+  [ "$want" = "$got" ] || {
+    echo "seikika: checksum mismatch for $file" >&2
+    exit 2
+  }
   if [ "$ext" = zip ]; then unzip -q -o "$work/$file" -d "$work"; else tar -xJf "$work/$file" -C "$work"; fi
   find "$work/$app-$target" -maxdepth 1 -type f \( -name 'seikika*' \) -exec cp {} "$SEIKIKA_BIN/" \;
 done

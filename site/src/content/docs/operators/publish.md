@@ -22,10 +22,17 @@ For your own repo portal, run from your repository root. Use its manifest direct
 
 ## Host the report on GitHub Pages
 
-Use a repository with a `.seikika/seikika.yaml` configured for [repository scoring](/operators/ci/). The workflow below uses the same pinned Seikika report action as the CI guide. It builds the HTML for each push to `main`. Change the branch name if your default is different. Review which facts the manifest collects before enabling publication.
+Use a repository with a `.seikika/seikika.yaml` configured for [repository scoring](/operators/ci/).
+The workflow builds the HTML for each push to `main` without a baseline. Change the branch name if
+your default is different. Review which facts the manifest collects before enabling publication.
 
 1. In the repository, open **Settings**, then **Pages**. Set the publishing source to **GitHub Actions**. A repository admin or maintainer can set the source. [GitHub Pages publishing sources](https://docs.github.com/en/pages/getting-started-with-github-pages/configuring-a-publishing-source-for-your-github-pages-site)
-2. Save the workflow as `.github/workflows/seikika-pages.yml`. This example assumes your portal uses the starter's workspace connector. If it uses other pinned tools, install those in the build job before scoring.
+2. Save the workflow as `.github/workflows/seikika-pages.yml`. Replace both `ACTION_SHA`
+   placeholders with the same full commit SHA that includes the actions.
+   You can use the commit for a [Seikika release](https://github.com/seikika/seikika/releases)
+   once it includes them.
+   If your portal needs more than the starter's workspace connector, install those connectors and
+   tools in the build job before scoring.
 
 ```yaml
 name: Publish standards report
@@ -44,21 +51,15 @@ jobs:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
         with:
           persist-credentials: false
-      - name: Generate the report
-        id: score
-        uses: seikika/seikika/actions/report@c14c9fbb60405f9fea12d86de3d0b32b717755d9
+      - uses: seikika/seikika/actions/setup@ACTION_SHA
         with:
-          mode: report
-          html: "true"
-      - name: Stage the published page
-        env:
-          REPORT_HTML: ${{ steps.score.outputs.html }}
-        run: |
-          mkdir -p "$RUNNER_TEMP/seikika-pages"
-          cp "$REPORT_HTML" "$RUNNER_TEMP/seikika-pages/index.html"
+          seikika-version: "0.2.1"
+      - name: Build the portal
+        id: portal
+        uses: seikika/seikika/actions/build-portal@ACTION_SHA
       - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
         with:
-          path: ${{ runner.temp }}/seikika-pages
+          path: ${{ steps.portal.outputs.directory }}
   deploy:
     needs: build
     runs-on: ubuntu-latest
@@ -74,7 +75,9 @@ jobs:
         uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1
 ```
 
-3. After the deploy job succeeds, open the URL in the `github-pages` environment. Check that **Catalog** and **Scorecards** load and that the report describes the intended checkout. The workflow's `report` mode generates a snapshot without comparing or updating a baseline. Keep [the CI gate](/operators/ci/) for enforcing standards.
+3. After the deploy job succeeds, open the URL in the `github-pages` environment. Check that
+   **Catalog** and **Scorecards** load and that the report describes the intended checkout.
+   Enable [the ratchet](/operators/ci/) in CI if you also want to enforce standards on changes.
 
 For another static host, upload the approved `index.html` to its publish directory. The host can serve it from a subdirectory because the file includes its assets.
 
@@ -92,7 +95,11 @@ From your repository root, set `astro_project` to the absolute path to your Astr
 seikika report .seikika -o web --out "$astro_project/generated"
 ```
 
-The output directory contains `report.json`, `seikika-report.js`, and a standalone `index.html`. Use only the JSON file as the integration's input. Keep it outside Astro's `public/` directory so the build publishes your chosen pages. The compiled report still exposes its embedded snapshot to its readers.
+The output directory contains `report.json`, `seikika-report.js`, and a standalone `index.html`.
+In GitHub Actions, `actions/build-portal` with `format: web` provides the same files. Use its
+`report-json` output as the integration's input. Keep the input outside Astro's `public/`
+directory so the build publishes your chosen pages. The compiled report exposes its embedded
+snapshot to its readers.
 
 In `astro.config.mjs`, add the integration. If the file already exists, keep the integrations you use and add this one to the list.
 

@@ -32,6 +32,8 @@ the checkout's tools, or activate mise to use those tools for the whole shell.
 Run these commands in Bash from the Seikika checkout.
 
 ```bash
+mise exec -- pnpm install --frozen-lockfile
+mise exec -- pnpm build
 mise exec -- cargo build --locked
 mise exec -- target/debug/seikika validate examples/reference-portal
 mise exec -- target/debug/seikika test examples/reference-portal

@@ -7,6 +7,7 @@ import os
 from pathlib import Path
 import shutil
 import subprocess
+import sys
 import tempfile
 import tomllib
 
@@ -15,6 +16,7 @@ ROOT = Path(__file__).resolve().parents[1]
 STARTER = ROOT / "examples/repo-portal-starter"
 REPOSITORY = "seikika/seikika"
 APPS = {"seikika": "seikika-cli", "seikika-connector-workspace": "seikika-connector-workspace"}
+FIRST_BOOTSTRAP_RELEASE = (0, 3)
 TARGETS = {
     "linux-arm64": "aarch64-unknown-linux-gnu",
     "linux-x64": "x86_64-unknown-linux-gnu",
@@ -110,8 +112,8 @@ def check_release(config_text, pinned_version, tag):
         run("git", "init", "--quiet")
         run("mise", "trust")
         run("mise", "install")
-        for tool in APPS:
-            executable = Path(run("mise", "which", tool, capture_output=True).stdout.strip())
+        executables = {tool: Path(run("mise", "which", tool, capture_output=True).stdout.strip()) for tool in APPS}
+        for tool, executable in executables.items():
             if not executable.is_relative_to(work):
                 raise SystemExit(f"mise resolved {tool} outside the clean install: {executable}")
         actual_version = run("mise", "exec", "--", "seikika", "--version", capture_output=True).stdout.strip()
@@ -120,6 +122,9 @@ def check_release(config_text, pinned_version, tag):
         run("mise", "exec", "--", "seikika", "doctor", ".seikika")
         run("mise", "exec", "--", "seikika", "report", ".seikika", "--baseline", ".seikika/results.json", "--update")
         run("mise", "exec", "--", "seikika", "report", ".seikika", "--baseline", ".seikika/results.json", "--ci")
+        if tuple(map(int, version.split(".", 2)[:2])) >= FIRST_BOOTSTRAP_RELEASE:
+            run("mise", "exec", "--", sys.executable, ROOT / "scripts/assessment-probes.py",
+                "onboarding", "--seikika", executables["seikika"])
 
         run("mise", "lock", "--platform", ",".join(TARGETS))
         locked_tools = tomllib.loads((project / "mise.lock").read_text())["tools"]

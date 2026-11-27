@@ -8,6 +8,7 @@ import { readFileSync, writeFileSync, existsSync, statSync } from "node:fs";
 import { createRequire } from "node:module";
 import { extname, join, resolve } from "node:path";
 import { chromium } from "playwright";
+import assert from "node:assert/strict";
 
 const require = createRequire(import.meta.url);
 const axeSource = readFileSync(require.resolve("axe-core/axe.min.js"), "utf8");
@@ -31,6 +32,80 @@ const contracts = {
     const tracks = await page.locator(".track").filter({ hasText: "SpiceDB" }).allInnerTexts();
     return tracks.length === 1 && /not measured yet/i.test(tracks[0]) && !/never behind/i.test(tracks[0])
       ? [] : ["an unmeasured comparison track must report that it has no measurements"];
+  },
+  "pages-assessments--recent-runs": async (page) => {
+    await page.getByRole("button", { name: "Show more runs" }).click();
+    assert.ok(await page.locator(".assessment-runs li").count() > 12);
+    await page.getByRole("searchbox", { name: "Search runs" }).fill("seikika-expr");
+    await page.locator(".assessment-runs li").filter({ hasText: "Historical review" }).getByText("Stale · same assessor").waitFor();
+    const run = page.locator(".assessment-runs").getByRole("link", { name: "seikika-expr", exact: true });
+    await run.click();
+    await page.getByRole("heading", { name: "Criterion results" }).waitFor();
+    await page.goBack();
+    await page.getByRole("searchbox", { name: "Search runs" }).waitFor();
+    assert.equal(await page.getByRole("searchbox", { name: "Search runs" }).inputValue(), "seikika-expr");
+    await run.click();
+    await page.getByRole("heading", { name: "Criterion results" }).waitFor();
+    await page.getByRole("heading", { name: "Assessment quality scorecards" }).waitFor();
+    await page.getByText("4 of 4 criteria passed", { exact: true }).waitFor();
+    await page.getByText("No current independent review", { exact: true }).waitFor();
+    await page.getByText("Recorded verdict", { exact: false }).waitFor();
+    await page.locator(".assessment-criteria summary").first().focus();
+    await page.keyboard.press("Enter");
+    assert.equal(await page.locator(".assessment-criteria details").first().getAttribute("open"), "");
+    await page.getByRole("link", { name: "Assessments are well-formed" }).waitFor();
+    await page.getByRole("link", { name: "Read the recorded review" }).click();
+    await page.getByRole("heading", { name: /Historical review of .*seikika-expr/ }).waitFor();
+    await page.getByText("Recorded review verdict", { exact: true }).waitFor();
+    await page.getByText("Stale · same assessor", { exact: true }).waitFor();
+    assert.equal(await page.locator(".assessment-result .assessment-verdict").getAttribute("data-verdict"), "recorded");
+    await page.getByRole("link", { name: "Assessment quality rubric", exact: true }).click();
+    await page.getByRole("heading", { name: "Rubric criteria" }).waitFor();
+    assert.match(await page.getByRole("link", { name: "How assessments are reviewed" }).getAttribute("href"), /^https:/);
+    await page.getByRole("link", { name: /^View \d+ run/ }).click();
+    await page.getByRole("region", { name: "Recent runs" }).waitFor();
+    assert.equal(await page.getByRole("combobox", { name: "Rubric" }).inputValue(), "rubric:seikika/assessment-quality");
+    await page.getByRole("searchbox", { name: "Search runs" }).fill("this-does-not-match");
+    await page.getByRole("button", { name: "Clear filters" }).click();
+    assert.equal(await page.getByRole("combobox", { name: "Rubric" }).inputValue(), "");
+  },
+  "pages-assessments--timed-run": async (page) => {
+    const first = page.locator(".assessment-runs li").first();
+    assert.match(await first.innerText(), /seikika-expr/i);
+    assert.equal(await first.locator("time").innerText(), "Nov 27, 2026, 20:42 UTC");
+    assert.equal(await first.locator("time").getAttribute("datetime"), "2026-11-27T21:42:00+01:00");
+    const dateOnly = page.locator('.assessment-runs time[datetime="2026-11-27"]').first();
+    assert.equal(await dateOnly.innerText(), "Nov 27, 2026");
+    await first.getByRole("link").click();
+    await page.getByRole("heading", { name: "Criterion results" }).waitFor();
+    assert.equal(await page.locator('.assessment-result time[datetime="2026-11-27T21:42:00+01:00"]').innerText(), "Nov 27, 2026, 20:42 UTC");
+  },
+  "pages-assessments--no-assessments": async (page) => {
+    await page.getByRole("heading", { name: "No assessment runs yet" }).waitFor();
+    await page.getByRole("link", { name: "Rubrics 0" }).click();
+    await page.getByText("This snapshot has no rubric definitions.").waitFor();
+  },
+  "pages-assessments--federated-runs": async (page) => {
+    await page.getByRole("searchbox", { name: "Search runs" }).fill("seikika-expr");
+    const run = page.locator(".assessment-runs").getByRole("link", { name: "seikika-expr", exact: true });
+    assert.match(await run.getAttribute("href"), /^#assessment\/%40seikika/);
+    await run.click();
+    await page.getByRole("link", { name: "Crate design rubric" }).click();
+    await page.getByRole("link", { name: "Seikika workspace and crate boundaries" }).waitFor();
+    await page.getByRole("heading", { name: "Rubric quality" }).waitFor();
+    await page.getByRole("link", { name: "Assessments", exact: true }).click();
+    await page.getByRole("searchbox", { name: "Search runs" }).fill("unrelated");
+    await page.getByText("No runs match your filters.").waitFor();
+  },
+  "hosted-portal--assessments": async (page) => {
+    assert.equal(await page.getByRole("link", { name: "Assessments", exact: true }).getAttribute("href"), "/assessments");
+    const run = page.locator(".assessment-runs li").first().getByRole("link");
+    assert.match(await run.getAttribute("href"), /^\/assessments\/run\//);
+  },
+  "hosted-portal--assessment-run": async (page) => {
+    await page.getByRole("heading", { name: "Criterion results" }).waitFor();
+    assert.match(await page.getByRole("link", { name: "Crate design rubric" }).getAttribute("href"), /^\/assessments\/rubrics\//);
+    assert.equal(await page.getByRole("link", { name: "Assessments are well-formed" }).getAttribute("href"), "/report/#scorecard/meta-assessment");
   },
 };
 const VIEWS = [

@@ -51,3 +51,66 @@ jobs:
         env:
           RELEASE_TAG: ${{ inputs.plan != '' && github.ref_name || '' }}
         run: python3 scripts/check-mise.py release "$RELEASE_TAG"
+
+  consumer-actions:
+    # Exercise the release installer separately from the deterministic PR pilot.
+    if: ${{ inputs.plan != '' || github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' }}
+    name: Consumer actions smoke (${{ matrix.runner }})
+    strategy:
+      fail-fast: false
+      matrix: {runner: [ubuntu-latest, ubuntu-24.04-arm]}
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with: {persist-credentials: false}
+      - name: Prepare a fresh starter portal and select the published version
+        id: pilot
+        env:
+          RELEASE_TAG: ${{ inputs.plan != '' && github.ref_name || '' }}
+        run: |
+          version="${RELEASE_TAG#v}"
+          if [[ -z "$version" ]]; then
+            version=$(python3 -c 'import tomllib; print(tomllib.load(open("examples/repo-portal-starter/mise.example.toml", "rb"))["tools"]["seikika"]["version"])')
+          fi
+          pilot="$RUNNER_TEMP/published action pilot"
+          mkdir -p "$pilot/.seikika"
+          cp -r examples/repo-portal-starter/{seikika.yaml,tests,fixtures} "$pilot/.seikika/"
+          cp README.md "$pilot/"
+          git init --quiet "$pilot"
+          git -C "$pilot" remote add origin https://github.com/acme/consumer-smoke.git
+          printf 'version=%s\ndirectory=%s\n' "$version" "$pilot" >> "$GITHUB_OUTPUT"
+      - name: Download and verify released binaries
+        id: setup
+        uses: ./actions/setup # zizmor: ignore[self-repository] actionlint 1.7.12 rejects $/
+        with:
+          seikika-version: ${{ steps.pilot.outputs.version }}
+      - name: Check the installed binaries and create the initial baseline
+        working-directory: ${{ steps.pilot.outputs.directory }}
+        env:
+          BIN_DIR: ${{ steps.setup.outputs.bin-dir }}
+          VERSION: ${{ steps.pilot.outputs.version }}
+        run: |
+          test "$(seikika --version)" = "seikika $VERSION"
+          for binary in seikika seikika-connector-workspace seikika-connector-runner; do
+            test "$(command -v "$binary")" = "$BIN_DIR/$binary"
+          done
+          seikika validate .seikika
+          seikika report .seikika --baseline .seikika/results.json --update
+      - name: Check the baseline with the installed CLI
+        id: ratchet
+        uses: ./actions/ratchet # zizmor: ignore[self-repository] actionlint 1.7.12 rejects $/
+        with:
+          working-directory: ${{ steps.pilot.outputs.directory }}
+      - name: Build the portal with the installed CLI
+        id: portal
+        uses: ./actions/build-portal # zizmor: ignore[self-repository] actionlint 1.7.12 rejects $/
+        with:
+          working-directory: ${{ steps.pilot.outputs.directory }}
+      - name: Check the public action outputs
+        env:
+          VERDICT: ${{ steps.ratchet.outputs.verdict }}
+          INDEX: ${{ steps.portal.outputs.index }}
+        run: |
+          jq -e '.result == "pass" and .exitCode == 0' "$VERDICT"
+          grep -qF 'repository:acme/consumer-smoke' "$INDEX"

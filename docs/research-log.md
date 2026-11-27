@@ -34,6 +34,13 @@ How the design research was done, so parallel agents can reproduce, extend or ch
 
 ## Hands-on verifications
 
+`seikika init` was run in a fresh directory with the quickstart defaults. Workspace scored the
+Markdown link, the ratchet caught the renamed target, and restoring it matched the baseline. The
+new portal reached `/readyz` when served locally. A portal with all six connectors and all nine
+standards packages passed `install`, `install --frozen`, and `validate` with a local package cache.
+The GitHub Actions, pnpm and Expo, and Storybook packages also installed from their pinned commit
+through a local Git mirror. The operator skill passed `skills-ref validate`.
+
 | What | Result |
 |---|---|
 | **Container release fallback** (2026-11-27) | An empty Docker config received `unauthorized` from GHCR for `0.2.1`. The staging script from `v0.2.1` fetched and checksum-verified all 12 Linux archives from GitHub Releases. Docker Buildx assembled the amd64 image with the cloud proxy CA mounted during the OpenFGA download. Running the image printed `seikika 0.2.1` and `OpenFGA v1.22.1`. The release's [image job](https://github.com/seikika/seikika/actions/runs/45905645699/job/140207048738) built amd64 and arm64 with the tagged Dockerfile. |
@@ -232,3 +239,56 @@ The repository quickstart recorded a baseline, exited 1 after moving its linked 
 - Compared Guide and Reference navigation, generated contract sources, release selection, and presentation using primary sources from Diátaxis, Google, Kubernetes, Stripe, GitHub, AWS, docs.rs, TypeDoc, MCP, and Starlight. [Reference documentation audit](audits/reference-docs-2026-11-26.md)
 - Built the CLI with Cargo and regenerated and verified the CLI and MCP fingerprint. The browser smoke test matched the built-in MCP tool links to `seikika describe` and verified an enum argument and its CLI deep link. The CLI tests and all 142 maintainer portal assertions passed.
 - `pnpm docs:build` built the Starlight site and Storybook. The Chromium smoke test verified both top-level sidebar groups, all six Reference destinations, the existing HTTP and CLI deep links, mobile keyboard navigation, and the Reference home and MCP table widths at 390 pixels. Seikika's `maintainer-site` scorecard reached gold on all four new pages.
+
+## Consumer GitHub Actions
+
+- Compared the published action metadata and recipes from Terraform, SonarQube, Trivy, golangci-lint, Docker, CodeQL, and GitHub Pages. Checked the Betterer CLI as a baseline enforcement alternative. [Comparison and gap analysis](audits/consumer-github-actions.md)
+- Downloaded and verified the published Seikika 0.2.1 Linux binaries through setup. Used them from a disposable checkout to validate and test the starter, build without a baseline, verify missing and failing ratchet verdicts, and build both HTML and web output. Compared the baseline byte for byte after scoring and building.
+- Seikika's ratchet found the CI workflow's last four missing job timeouts fixed and scored all three new actions gold for CI security. All 142 maintainer portal assertions passed.
+
+## Consumer action regression checks
+
+- Added a license to a fixture checkout after recording its baseline. Strict mode returned a stale verdict and exit 1. Regression-only mode returned the same verdict and exit 0. It then rejected a CODEOWNERS regression. The baseline stayed byte-identical.
+- Setup rejected a valid archive whose supplied checksum differed. The test failed against a scratch copy with the checksum check removed.
+- The scheduled, manual, and stable-release workflows exercise the published installer on Linux x64 and ARM64. The pinned release has the CLI and both connector archives with checksums for each target.
+
+## GitHub organization score federation
+
+- Ran the organization portal on Linux with the source CLI and Workspace connector, using the existing GitHub login and with `DATABASE_URL` and `GITHUB_APP_ID` unset. Matched all 13 repository identities and default-branch commits against GitHub inventory and `git ls-remote`. Compared the rule outcomes for all seven forks with their Seikika 0.2.1 ratchet baselines. The public variant contained 11 repositories.
+- The three demonstration repositories stayed in the scorecard when the reader encountered an oversized README and an unused 32 MiB blob, malformed YAML and JSON, and forged silver results and a replacement rule. The parent scored each below bronze. Workspace connector tests covered pagination, empty repositories, truncated trees, symbolic links, and public inventory filtering. The organization portal passed all five standards assertions.
+- Built the docs and Storybook with `pnpm docs:build` and passed the Chromium smoke test on the organization and repository report routes. Served the authenticated static report on loopback and opened its scorecard with all 13 entries and no external requests. The public site rendered the literal HTML marker as text, displayed healthy siblings beside a simulated unavailable repository, and refused to build from a snapshot containing private repositories. [Reproduction commands](../examples/github-org-federation/README.md)
+- Compared the federated workflow paths with GitHub's Contents API at each of the 13 commits. All 96 paths matched and had a zizmor score. Thirty reached gold and the audit returned 788 findings. The organization portal's ten assertions cover hygiene, workflow severity, and unavailable audits. All seven forks passed their repository ratchet before publishing their child snapshots.
+- The federation browser test builds two child portals with identical definition and entity IDs, plus one child with a malformed snapshot. It verifies source isolation, scoped read access, action form choices, and a static preview with no write requests. [Reproduction commands](../examples/github-org-federation/README.md)
+- Compared the live loopback API with the offline report built from the same GitHub organization. The catalog, entity fields, scorecards and results, tracks, campaigns, child snapshots, and action list matched for 13 repositories, 96 workflows, and seven child publications. Both reads used the existing GitHub credential without a GitHub App or Postgres. The separate public docs report included 11 repositories and 92 workflows.
+
+## Shell script standard
+
+- Used the pinned ShellCheck, shfmt, and Bats binaries to exercise the adapter
+  and run five isolated Bats regression cases. The package portal passed three
+  fixture assertions and the maintainer portal passed 145.
+- A temporary consumer portal using Seikika 0.2.1 accepted a clean script. After
+  injecting SC2155 and an indentation defect, its strict ratchet exited 1 and
+  named both failed rules. [Shell standard](../packages/shell/README.md)
+
+## Embedded UI build inputs
+
+- Exported the tracked source files to a fresh directory, generated both embedded bundles with the frozen pnpm lockfile, and built the CLI with Node and pnpm absent from Cargo's `PATH`. The federation browser test passed on that binary for the served and offline reports.
+- Compared the packaged assets byte for byte with the local build output. The API crate contains the hosted UI and its asset manifest, and the CLI crate contains the offline report template and script. [Embedded asset build decision](decisions/D01M8EXN6P8HX02R74DA9X6MS0C.md)
+
+## Functional correctness scorecards
+
+- Applied the [testing guide](./design/correctness-testing.md) to the
+  derivation and plan contract, scorecard ratchet, and action lifecycle.
+  The live portal found all three sets of test evidence and assigned
+  silver for CI discovery. Initial agent assessments scored bronze on
+  all three because of gaps in the assertions.
+- Added checks for the complete reference artifact set and an empty plan
+  after reordered input, for advisory failures and explicitly skipped
+  evidence in the ratchet, and for an unchanged Git ref after a rejected
+  federated push. The Rust workspace passed with OpenFGA required and
+  M5 acceptance passed with info-level logging. The self-portal passed
+  151 fixture assertions. The Python model reproduced its fixtures and
+  the OpenFGA model passed 16 checks and three list-object assertions.
+- Reassessed the changed contracts and reran the live report. All three
+  advisory scores moved from bronze to silver. Both new scorecards and all
+  four of their rules reached gold on the portal's meta-standards.

@@ -1,0 +1,167 @@
+# Functional correctness in the maintainer SDLC.
+kinds:
+  - name: TestingContract
+    description: A user-visible behavior and the executable evidence that protects it.
+    identityFrom: [connector:workspace]
+    fields:
+      title: {type: string, description: Display name for the behavior.}
+      contract:
+        type: string
+        description: Observable behavior the tests should protect.
+      specification:
+        type: string
+        description: Repository path to the specification.
+      implementation:
+        type: list
+        items: string
+        description: Implementation paths reviewed against the contract.
+      tests:
+        type: list
+        items: string
+        description: Executable test evidence paths.
+      fixtures:
+        type: list
+        items: string
+        description: Fixtures the test oracle reads.
+      ci: {type: string, description: Workflow path an assessor can inspect.}
+      missingPaths:
+        type: list
+        items: string
+        description: Declared paths missing from the checkout.
+      notInCi:
+        type: list
+        items: string
+        description: Tests with no matching invocation in the CI discovery scan.
+      hash:
+        type: string
+        description: Version of the declaration and its linked files.
+      reviewState:
+        type: string
+        description: Whether the current evidence was reviewed.
+        computed: >-
+          inbound.assessesTestingContract.size() == 0 ? 'missing' :
+          (inbound.assessesTestingContract[0].subjectHash == entity.hash ? 'fresh'
+          : 'stale')
+      reviewGaps:
+        type: list
+        items: string
+        description: Failed, uncertain or ungrounded criteria from the stored review.
+        computed: >-
+          inbound.assessesTestingContract.size() == 0 ? [] :
+          inbound.assessesTestingContract[0].failing +
+          inbound.assessesTestingContract[0].unsure +
+          inbound.assessesTestingContract[0].uncited
+    sources: {default: [connector:workspace]}
+    map:
+    - from: workspace/testing-contract
+      id: "'testing-contract:' + record.id"
+      set: >-
+        {'title': record.title, 'contract': record.contract,
+         'specification': record.specification, 'implementation': record.implementation,
+         'tests': record.tests, 'fixtures': has(record.fixtures) ? record.fixtures : [],
+         'ci': record.ci, 'missingPaths': record.missingPaths,
+         'notInCi': record.notInCi, 'hash': record.hash}
+
+scorecards:
+  - name: maintainer-testing
+    title: Correctness testing evidence
+    kind: TestingContract
+    description: Links from important behaviors to their specifications, tests and CI.
+    rationale: >-
+      Crate-wide test totals cannot locate protection for a product behavior
+      spanning several components. A small catalog makes that evidence
+      findable and highlights tests disconnected from CI.
+    links:
+    - title: Correctness testing guide
+      url: https://github.com/seikika/seikika/blob/main/docs/design/correctness-testing.md
+    owner: group:maintainers
+    track: maintainer
+    levels: [bronze, silver]
+    ratchet: {newEntitiesAtLeast: bronze}
+    rules:
+    - name: evidence-resolves
+      level: bronze
+      check: >-
+        entity.contract != '' && entity.specification != '' &&
+        entity.implementation != [] && entity.tests != [] && entity.ci != '' &&
+        entity.missingPaths == []
+      evidence: >-
+        entity.missingPaths + (entity.contract == '' ? ['missing behavior'] :
+        []) + (entity.specification == '' ? ['missing specification'] : []) +
+        (entity.implementation.size() == 0 ? ['missing implementation'] : []) +
+        (entity.tests.size() == 0 ? ['no test paths'] : []) + (entity.ci == '' ?
+        ['missing CI workflow'] : [])
+      fix: >-
+        Declare the behavior and link to its spec, implementation, test files
+        and workflow.
+      rationale: A test plan with missing or empty references cannot be reproduced.
+    - name: ci-discovers-tests
+      level: silver
+      check: entity.notInCi.size() == 0
+      evidence: entity.notInCi
+      fix: Wire the listed test paths into CI using the suite's normal entry point.
+      rationale: Tests that CI never discovers cannot catch regressions before merge.
+    facets: {summary: public, details: public}
+
+  - name: review-testing
+    title: Correctness testing review
+    kind: TestingContract
+    description: Agent review of risk coverage, test oracles and execution.
+    rationale: >-
+      A file link or CI invocation gives only structural evidence. An agent
+      reads test bodies and their execution paths to judge what failures the
+      tests would actually detect.
+    links:
+    - title: Correctness testing guide
+      url: https://github.com/seikika/seikika/blob/main/docs/design/correctness-testing.md
+    owner: group:maintainers
+    track: maintainer
+    levels: [bronze, silver]
+    ratchet: {advisory: true}
+    rules:
+    - name: current-review
+      level: bronze
+      check: entity.reviewState == 'fresh'
+      evidence: "['testing-contract-quality assessment: ' + entity.reviewState]"
+      fix: Brief and reassess the contract with seikika assess.
+      rationale: >-
+        Changing the contract or linked sources can invalidate earlier test
+        judgments.
+    - name: risks-addressed
+      level: silver
+      check: entity.reviewGaps.size() == 0
+      evidence: entity.reviewGaps
+      fix: Read the assessment, close or clarify the cited gaps, and reassess.
+      rationale: >-
+        Missing evidence and weak assertions deserve investigation before
+        claiming coverage.
+    facets: {summary: public, details: public}
+
+rubrics:
+  - name: testing-contract-quality
+    kind: TestingContract
+    description: Read the declared contract, implementation, tests and workflow.
+    criteria:
+    - name: risk-coverage
+      question: >-
+        Do the tests protect the main case and the highest-risk edge or failure
+        outcomes?
+      guidance: >-
+        Fail when a plausible high-impact regression has no direct test. Cite
+        the case that protects each high-consequence outcome or name the gap.
+    - name: meaningful-oracles
+      question: >-
+        Do the assertions distinguish correct outcomes from plausible wrong
+        ones?
+      guidance: >-
+        Fail when the test can pass despite a wrong result or unintended side
+        effect. Cite the output, state or independent reference it checks.
+    - name: reliable-execution
+      question: >-
+        Will CI exercise these cases with controlled dependencies and visible
+        failures?
+      guidance: >-
+        Fail when CI skips the case, suppresses failure, or depends on
+        unprovisioned services. Cite the workflow step and how it runs the case.
+        Mark unsure when the workflow hides execution behind unavailable
+        tooling.

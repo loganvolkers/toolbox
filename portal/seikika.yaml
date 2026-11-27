@@ -49,7 +49,14 @@ kindGroups:
     description: >-
       The Rust crates, their dependencies, and the other code we maintain:
       scripts, integration tests and schemas.
-    kinds: [Crate, Dependency, PackageJson, PythonScript, File, JsonSchema]
+    kinds:
+    - Crate
+    - Dependency
+    - PackageJson
+    - PythonScript
+    - ShellScript
+    - File
+    - JsonSchema
   - name: surfaces
     title: Agent and user surfaces
     description: >-
@@ -87,7 +94,13 @@ kindGroups:
     description: >-
       Whether Seikika delivers: the SDLC layers and stages, DX Benchmarks, the
       products compared, and runtime observability.
-    kinds: [SdlcLayer, SdlcStage, Benchmark, Product, Observability]
+    kinds:
+    - SdlcLayer
+    - SdlcStage
+    - Benchmark
+    - Product
+    - Observability
+    - TestingContract
 
 connectors:
   - name: workspace
@@ -192,6 +205,11 @@ connectors:
           - alerts
           - monitorAssessment
           - otlpTestbed
+        - kind: testing-contract
+          globs: [portal/testing/*.yaml]
+          paths: [specification, implementation, tests, fixtures, ci]
+          hashPaths: [specification, implementation, tests, fixtures, ci]
+          ci: [tests]
         # Products compared by experiments/backstage-compare (docs/design/backstage-comparison.md)
         - {kind: product, globs: [portal/comparisons/*.yaml]}
     records:
@@ -217,6 +235,7 @@ connectors:
     - observability
     - benchmark
     - product
+    - testing-contract
     refresh:
       crate: [external_ids]
       doc: [external_ids]
@@ -239,6 +258,7 @@ connectors:
       observability: [external_ids]
       benchmark: [external_ids]
       product: [external_ids]
+      testing-contract: [external_ids]
     freshness:
       crate: 5m
       doc: 5m
@@ -262,6 +282,7 @@ connectors:
       observability: 5m
       benchmark: 5m
       product: 5m
+      testing-contract: 5m
   - name: runner
     package: builtin:runner # executes things; slow, so it's refreshed per entity
     runtime: in-image
@@ -402,6 +423,17 @@ include:
         - json
         - --show-details
         - --checks=Binary-Artifacts,Dangerous-Workflow,Dependency-Update-Tool,Fuzzing,License,Packaging,Pinned-Dependencies,SAST,Security-Policy,Token-Permissions
+  - package: ../packages/shell
+    with:
+      name: maintainer-shell
+      track: maintainer
+      command:
+        - python3
+        - packages/shell/check-shell.py
+        - scripts/*.sh
+        - actions/*.sh
+        - tests/shell/*.bats
+        - plugins/seikika-operator/bin/seikika-mcp
   # The Python we maintain, checked by ruff (an existing tool) through the SARIF slot. ruff reads
   # its own ruff.toml; the box passes it nothing else (docs/design/seikika-and-tools.md).
   # experiments/ are archived harnesses, not maintained code.

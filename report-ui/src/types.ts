@@ -10,6 +10,15 @@ export interface Link {
   url: string;
 }
 
+export interface Rubric {
+  name: string;
+  kind: string;
+  description?: string | null;
+  subject?: string | null;
+  criteria: { name: string; question: string; guidance?: string | null }[];
+  links?: Link[];
+}
+
 export interface RuleDef {
   level: Level;
   fix?: string | null;
@@ -126,6 +135,17 @@ export interface KindGroup {
 
 export interface ReportData {
   portal: string;
+  organization?: string;
+  viewer?: string;
+  actions?: ReportAction[];
+  children?: ReportChild[];
+  entities?: Record<string, ReportEntity>;
+  assessmentKinds?: string[];
+  /** Assessment entities after combining reports, where the same kind can have different mappings. */
+  assessmentIds?: string[];
+  rubrics?: Record<string, Rubric>;
+  sources?: Record<string, { title: string; local?: boolean; repository?: boolean; commit?: string; error?: string }>;
+  entitySources?: Record<string, { source: string; original: string }>;
   snapshot?: string | number | null;
   catalog: Record<string, string[]>;
   entityOverview?: Record<string, Record<string, unknown>>;
@@ -138,4 +158,48 @@ export interface ReportData {
   unassessed?: Record<string, string[]>;
   comparisons?: Record<string, Comparison>;
   repoRollup?: string[] | null;
+}
+
+export interface ActionInput {
+  title?: string;
+  description?: string;
+  type?: string;
+  enum?: (string | number | boolean)[];
+  default?: unknown;
+  items?: ActionInput;
+}
+
+export interface ReportAction {
+  name: string;
+  description?: string;
+  kind: string;
+  entities: string[];
+  inputs?: { properties?: Record<string, ActionInput>; required?: string[] } | null;
+  choices?: Record<string, Record<string, string[]>>;
+  executor: string;
+  scope?: string;
+  approval?: string | null;
+  permission?: string;
+  verified?: boolean;
+  portal?: { key: string; name?: string };
+  source?: string;
+  target?: string;
+  previewOnly?: boolean;
+}
+
+export interface ReportChild {
+  key: string;
+  title: string;
+  commit?: string;
+  error?: string;
+  report?: ReportData;
+}
+
+export interface ReportEntity {
+  fields: Record<string, unknown>;
+  provenance?: Record<string, string>;
+  relations?: {
+    in: { relation: string; from: string }[];
+    out: { relation: string; to: string }[];
+  };
 }

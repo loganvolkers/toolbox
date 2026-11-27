@@ -15,6 +15,7 @@ export default defineConfig({
     starlight({
       title: 'Seikika',
       description: 'An agent-first internal developer portal, configured in code.',
+      components: { Search: './src/components/SiteSearch.astro' },
       social: [
         { icon: 'github', label: 'GitHub', href: 'https://github.com/seikika/seikika' },
       ],

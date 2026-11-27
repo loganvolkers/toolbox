@@ -11,7 +11,19 @@
     {
       "id": "onboarding",
       "subject": "Published onboarding and first repository result",
-      "paths": ["site/src/content/docs/start/*", "examples/repo-portal-starter/*", "docs/RELEASING.md", "scripts/install-release.sh", "scripts/check-mise.py", "mise.toml"],
+      "paths": [
+        "site/src/content/docs/start/*",
+        "crates/seikika-cli/src/main.rs",
+        "crates/seikika-cli/src/init.rs",
+        "crates/seikika-cli/src/init-catalog.yaml",
+        "crates/seikika-connector-workspace/*",
+        "examples/repo-portal-starter/*",
+        "docs/RELEASING.md",
+        "scripts/assessment-probes.py",
+        "scripts/install-release.sh",
+        "scripts/check-mise.py",
+        "mise.toml"
+      ],
       "owner": "group:maintainers",
       "risk": "high",
       "checks": ["onboarding"],

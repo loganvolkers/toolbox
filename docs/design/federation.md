@@ -7,8 +7,11 @@
 > actions, read through the workspace connector's `portal` records) and *runs down* (a run is
 > dispatched to the child that owns the effect, through a runner the parent allows, with
 > approvals the parent signs). Children are keyed by where they are found. "No runtime coupling"
-> becomes "no portal queries another; a run is the one call that goes down". Results up and the
-> rest of this document remain design.
+> becomes "no portal queries another; a run is the one call that goes down".
+> The GitHub organization portal runs common scorecards from default-branch Git objects
+> and reads child report publications from that same tree. Live and static reports show the
+> combined catalog, scores, campaigns, tracks, and action forms with source labels. See the
+> [organization federation example](../../examples/github-org-federation/README.md).
 
 The remaining design covers standards distribution, catalog and score roll-up, and graduation of
 standards. It builds on
@@ -100,6 +103,14 @@ and pinning packages from a registry: an OCI artifact, a git ref, or npm, alongs
 `workspace`-type facts that OpenSSF Scorecard proves can run fleet-wide. Use B only for children
 that run their own `serve`.
 
+**GitHub organization snapshot.** Seikika discovers the complete inventory visible to the operator
+and evaluates the parent scorecard through `seikika report`. The reader pins each default-branch
+commit and reads a small set of Git objects. The inventory owns repository identity and visibility.
+The parent evaluates its own rules from those facts and audits workflow files with `zizmor`.
+It reads a child's published `.seikika/report.json` separately and shows its claims under the
+child's source. The docs job builds a public-only snapshot on the same Pages pipeline as the
+repository report.
+
 **Trust.**
 - Results a child reports about itself are claims. A parent scorecard can require them to be
   *verified*: computed by the parent (C), or signed by CI (OIDC-attested report artifacts).
@@ -108,8 +119,9 @@ that run their own `serve`.
 **Identity.**
 - Entity ids are global (`repository:acme/payments-api`), so a child's report merges onto the
   parent's entity.
-- Precedence follows the source-of-truth rules: the parent's own connector facts outrank
-  child-reported claims for parent-owned fields.
+- In the report, child entities and definition names are qualified by their source. A child and the
+  parent can both show their own score for the same repository. The parent standard only uses the
+  facts it acquired itself.
 
 ## 5. Multi-layer hierarchies
 

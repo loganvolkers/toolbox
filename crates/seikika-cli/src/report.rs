@@ -9,6 +9,9 @@
 //! improvements; `--ci` also fails when the file is out of date, so the committed file always
 //! matches the code.
 
+use seikika_api::report::{campaign_defs, is_peer, number, paydown, snapshot, title_of};
+#[cfg(test)]
+use seikika_api::report::{public_entity_overviews, unassessed};
 use seikika_derive::{Derived, DerivedState, FullRecompute};
 use serde_json::{Map, Value, json};
 use std::collections::{BTreeMap, BTreeSet};
@@ -106,6 +109,7 @@ fn resync(
         .write_all(format!("{cmd}\n").as_bytes())
         .map_err(|e| format!("connector {name}: {e}"))?;
     let mut out = Vec::new();
+    let mut completed = false;
     for line in BufReader::new(child.stdout.take().ok_or("no stdout")?).lines() {
         let line = line.map_err(|e| format!("connector {name}: {e}"))?;
         let Ok(mut m) = serde_json::from_str::<Value>(&line) else {
@@ -120,17 +124,27 @@ fn resync(
             }
             Some("complete") if m["status"] != "succeeded" => {
                 let _ = child.kill();
+                let _ = child.wait();
                 return Err(format!(
                     "connector {name}: resync {}: {}",
                     m["status"], m["errors"]
                 ));
             }
-            Some("complete") => break,
+            Some("complete") => {
+                completed = true;
+                break;
+            }
             _ => {}
         }
     }
-    let _ = child.wait();
-    Ok(out)
+    let status = child.wait().map_err(|e| format!("connector {name}: {e}"))?;
+    if completed && status.success() {
+        Ok(out)
+    } else {
+        Err(format!(
+            "connector {name}: exited before a successful resync ({status})"
+        ))
+    }
 }
 
 /// Inputs from the connectors (in parallel) or the fixtures.
@@ -238,29 +252,6 @@ fn results(d: &Derived, advisory: &BTreeSet<String>) -> Value {
     Value::Object(cards)
 }
 
-/// A peer in a comparative scorecard: another product's facts, shown beside the subject's but
-/// never this portal's debt, so never in the baseline, the ratchet or the health views.
-fn is_peer(d: &Derived, card: &str, id: &str) -> bool {
-    d.comparisons
-        .get(card)
-        .is_some_and(|c| c.peers.iter().any(|p| p == id))
-}
-
-/// Scores without the peers of comparative scorecards (see `is_peer`).
-fn own_scores(d: &Derived) -> Map<String, Value> {
-    d.scores
-        .iter()
-        .map(|(card, rows)| {
-            let rows: Map<String, Value> = rows
-                .iter()
-                .filter(|(id, _)| !is_peer(d, card, id))
-                .map(|(id, s)| (id.clone(), json!(s)))
-                .collect();
-            (card.clone(), Value::Object(rows))
-        })
-        .collect()
-}
-
 /// Per scorecard, entity and failing rule counted by its evidence: each item's key
 /// (crate::causes::evidence_key), sorted. The baseline keeps them beside `results`, so a list
 /// that grew can say which items are new. Not compared: a key-only difference is never a
@@ -305,15 +296,6 @@ fn mark_known(regressions: &mut [Change], before: &Value) {
                     .collect(),
             );
         }
-    }
-}
-
-/// A JSON number, integral when it can be (line counts stay `1070`, not `1070.0`).
-fn number(x: f64) -> Value {
-    if x.fract() == 0.0 && x.abs() < 9.0e15 {
-        json!(x as i64)
-    } else {
-        json!(x)
     }
 }
 
@@ -680,35 +662,6 @@ fn campaign_starts(
     out
 }
 
-/// `from` → `now`, and how far that is towards zero. Negative is backwards.
-fn progress_towards_zero(from: f64, now: f64) -> Value {
-    let percent = if from > 0.0 {
-        ((from - now) / from * 1000.0).round() / 10.0
-    } else if now > 0.0 {
-        0.0
-    } else {
-        100.0
-    };
-    json!({"from": number(from), "now": number(now), "percentDone": percent})
-}
-
-/// How far a campaign has come since its recorded start: in entities short of the goal, and in
-/// its rules' measure when they have one (occurrences, lines over a limit).
-fn paydown(start: &Value, p: &seikika_derive::CampaignProgress) -> Value {
-    let mut out = json!({
-        "start": start["start"],
-        "recorded": start["recorded"],
-        "entitiesShort": progress_towards_zero(
-            start["short"].as_f64().unwrap_or(0.0),
-            (p.in_scope - p.meeting) as f64
-        ),
-    });
-    if let (Some(a), Some(b)) = (start["measure"].as_f64(), p.measure) {
-        out["measure"] = progress_towards_zero(a, b);
-    }
-    out
-}
-
 /// One line per campaign with a recorded start, for the ratchet's summary.
 fn paydown_lines(starts: &Map<String, Value>, d: &Derived) -> Vec<String> {
     let part = |label: &str, x: &Value| {
@@ -848,68 +801,6 @@ fn entity_md(s: &mut String, id: &str, r: &seikika_derive::Score, name: &dyn Fn(
             let _ = writeln!(s, "  - {rule}: … {} more", items.len() - 5);
         }
     }
-}
-
-/// Comparisons as the web report reads them: the compared entities' titles, scores and facts,
-/// the fields each rule reads, and every field's description, so a reader sees what was
-/// measured, and how, without the docs.
-fn comparison_defs(m: &seikika_model::Manifest, d: &Derived) -> Map<String, Value> {
-    d.comparisons
-        .iter()
-        .map(|(name, c)| {
-            let mut v = json!(c);
-            let ids = || std::iter::once(&c.subject).chain(&c.peers);
-            v["titles"] = ids()
-                .map(|id| (id.clone(), json!(title_of(d, id))))
-                .collect::<Map<String, Value>>()
-                .into();
-            v["facts"] = ids()
-                .filter_map(|id| Some((id.clone(), json!(d.entities.get(id)?.fields))))
-                .collect::<Map<String, Value>>()
-                .into();
-            let sc = m.scorecards.iter().find(|s| &s.name == name);
-            let kind = sc.and_then(|sc| m.kinds.iter().find(|k| k.name == sc.kind));
-            if let (Some(sc), Some(kind)) = (sc, kind) {
-                let reads: Map<String, Value> = sc
-                    .rules
-                    .iter()
-                    .map(|r| {
-                        let mut fields: Vec<String> = std::iter::once(r.check.as_str())
-                            .chain(r.value.as_deref())
-                            .filter_map(|cel| seikika_expr::analysis::analyse(cel).ok())
-                            .flat_map(|a| a.fields)
-                            .filter(|f| kind.fields.contains_key(f))
-                            .collect();
-                        fields.sort();
-                        fields.dedup();
-                        (r.name.clone(), json!(fields))
-                    })
-                    .collect();
-                v["reads"] = reads.into();
-                v["fields"] = kind
-                    .fields
-                    .iter()
-                    .map(|(f, fd)| (f.clone(), json!(fd.description.as_deref().map(str::trim))))
-                    .collect::<Map<String, Value>>()
-                    .into();
-            }
-            let scores = d.scores.get(name);
-            v["scores"] = ids()
-                .filter_map(|id| Some((id.clone(), json!(scores?.get(id)?))))
-                .collect::<Map<String, Value>>()
-                .into();
-            (name.clone(), v)
-        })
-        .collect()
-}
-
-/// An entity's display name: its `title` field, else its id.
-fn title_of<'a>(d: &'a Derived, id: &'a str) -> &'a str {
-    d.entities
-        .get(id)
-        .and_then(|e| e.fields.get("title"))
-        .and_then(Value::as_str)
-        .unwrap_or(id)
 }
 
 /// A comparative scorecard as one table: a row per rule, a column per entity (outcome and
@@ -1197,269 +1088,19 @@ fn standard(o: &Options, m: &seikika_model::Manifest) -> String {
     s
 }
 
-fn scorecard_defs(m: &seikika_model::Manifest) -> Map<String, Value> {
-    let judged = crate::judged::judged_rules(m);
-    m.scorecards
-        .iter()
-        .map(|sc| {
-            let rules: Map<String, Value> = sc
-                .rules
-                .iter()
-                .map(|r| {
-                    let basis = if judged.contains(&(sc.name.clone(), r.name.clone())) {
-                        "judged"
-                    } else {
-                        "measured"
-                    };
-                    let mut def = json!({
-                        "level": r.level,
-                        "fix": r.fix,
-                        "check": r.check,
-                        "basis": basis
-                    });
-                    if let Some(t) = &r.title {
-                        def["title"] = json!(t.trim());
-                    }
-                    if let Some(why) = &r.rationale {
-                        def["rationale"] = json!(why.trim());
-                    }
-                    if !r.links.is_empty() {
-                        def["links"] = json!(r.links);
-                    }
-                    if r.value.is_some() {
-                        def["value"] = json!(r.value);
-                        def["better"] = json!(r.better);
-                        def["unit"] = json!(r.unit);
-                    }
-                    (r.name.clone(), def)
-                })
-                .collect();
-            let mut def = json!({
-                "title": sc.title,
-                "description": sc.description.as_deref().map(str::trim),
-                "rationale": sc.rationale.as_deref().map(str::trim),
-                "links": sc.links,
-                "kind": sc.kind,
-                "levels": sc.levels,
-                "owner": sc.owner,
-                "track": sc.track,
-                "rules": rules
-            });
-            if let Some(c) = &sc.compare {
-                def["compare"] = json!(c);
-            }
-            if let Some(a) = &sc.applies_to {
-                def["appliesTo"] = json!(a.trim());
-            }
-            (sc.name.clone(), def)
-        })
-        .collect()
-}
-
-fn campaign_defs(
-    m: &seikika_model::Manifest,
-    d: &Derived,
-    starts: &Map<String, Value>,
-) -> Map<String, Value> {
-    m.campaigns
-        .iter()
-        .map(|c| {
-            let progress = d.campaigns.get(&c.name);
-            let since = starts
-                .get(&c.name)
-                .zip(progress)
-                .map(|(s, p)| paydown(s, p));
-            let includes: Vec<Value> = c
-                .includes
-                .iter()
-                .map(|i| {
-                    json!({
-                        "scorecard": i.scorecard,
-                        "atLeast": i.at_least,
-                        "rules": i.rules
-                    })
-                })
-                .collect();
-            (
-                c.name.clone(),
-                json!({
-                    "title": c.title,
-                    "track": c.track,
-                    "owner": c.owner,
-                    "description": c.description,
-                    "start": c.start,
-                    "end": c.end,
-                    "targetPercent": c.target_percent(),
-                    "draft": c.draft,
-                    "includes": includes,
-                    "status": progress.map(|p| &p.status),
-                    "inScope": progress.map(|p| p.in_scope),
-                    "meeting": progress.map(|p| p.meeting),
-                    "percent": progress.map(|p| p.percent),
-                    "onTarget": progress.map(|p| p.on_target),
-                    "measure": progress.and_then(|p| p.measure).map(number),
-                    "sinceStart": since,
-                    "milestones": progress.map(|p| &p.milestones),
-                    "entities": progress.map(|p| &p.entities),
-                }),
-            )
-        })
-        .collect()
-}
-
-/// Per scorecard with judged rules, the scored entities no assessment points at. Their judged
-/// rules were decided with no judgement to read, so a pass there means "nothing found yet".
-fn unassessed(m: &seikika_model::Manifest, d: &Derived) -> Map<String, Value> {
-    let kinds = crate::judged::assessment_kinds(m);
-    let cards: BTreeSet<String> = crate::judged::judged_rules(m)
-        .into_iter()
-        .map(|(sc, _)| sc)
-        .collect();
-    let assessed = |id: &str| {
-        d.entities.get(id).is_some_and(|e| {
-            e.inbound.values().flatten().any(|src| {
-                d.entities
-                    .get(src)
-                    .is_some_and(|s| kinds.contains(s.kind.as_str()))
-            })
-        })
-    };
-    cards
-        .iter()
-        .filter_map(|card| {
-            let ids: Vec<&String> = d
-                .scores
-                .get(card)?
-                .keys()
-                .filter(|id| !is_peer(d, card, id) && !assessed(id))
-                .collect();
-            (!ids.is_empty()).then(|| (card.clone(), json!(ids)))
-        })
-        .collect()
-}
-
-/// Snapshot rendered by the Astro report.
-fn report_json(m: &seikika_model::Manifest, d: &Derived, starts: &Map<String, Value>) -> String {
-    let tracks: Map<String, Value> = m
-        .tracks
-        .iter()
-        .map(|t| {
-            (
-                t.name.clone(),
-                json!({
-                    "title": t.title,
-                    "owner": t.owner,
-                    "description": t.description.as_deref().map(str::trim),
-                    "links": t.links
-                }),
-            )
-        })
-        .collect();
-    let mut catalog: BTreeMap<String, Vec<String>> = BTreeMap::new();
-    for (id, e) in &d.entities {
-        catalog.entry(e.kind.clone()).or_default().push(id.clone());
-    }
-    let kind_groups: Vec<Value> = m
-        .kind_groups
-        .iter()
-        .map(|g| {
-            json!({
-                "name": g.name,
-                "title": g.title,
-                "description": g.description.as_deref().map(str::trim),
-                "kinds": g.kinds
-            })
-        })
-        .collect();
-    let kinds: Map<String, Value> = m
-        .kinds
-        .iter()
-        .map(|k| {
-            (
-                k.name.clone(),
-                json!({"title": k.title, "description": k.description.as_deref().map(str::trim)}),
-            )
-        })
-        .collect();
-    json!({
-        "portal": m.portal.title.as_deref().unwrap_or(&m.portal.name),
-        "snapshot": d.snapshot,
-        "catalog": catalog,
-        "entityOverview": public_entity_overviews(m, d),
-        "kinds": kinds,
-        "kindGroups": kind_groups,
-        "tracks": tracks,
-        "campaigns": campaign_defs(m, d, starts),
-        "scorecards": scorecard_defs(m),
-        "scores": own_scores(d),
-        "unassessed": unassessed(m, d),
-        "comparisons": comparison_defs(m, d),
-        "repoRollup": m.policies.get("repoRollup").cloned().unwrap_or(Value::Null),
-    })
-    .to_string()
-}
-
-/// Catalog presentation fields that are visible to the portal's general audience.
-fn public_entity_overviews(m: &seikika_model::Manifest, d: &Derived) -> Map<String, Value> {
-    const FIELDS: &[&str] = &[
-        "title",
-        "displayName",
-        "name",
-        "description",
-        "owner",
-        "ownership",
-        "links",
-        "repositoryUrl",
-        "sourceUrl",
-        "docsUrl",
-        "runbookUrl",
-        "grafanaUrl",
-        "dashboardUrl",
-        "onCallUrl",
-        "registryUrl",
-    ];
-    let kinds: BTreeMap<_, _> = m
-        .kinds
-        .iter()
-        .map(|kind| (&kind.name, &kind.fields))
-        .collect();
-    d.entities
-        .iter()
-        .filter_map(|(id, entity)| {
-            let defs = kinds.get(&entity.kind)?;
-            let mut overview = Map::new();
-            for name in FIELDS {
-                let Some(field) = defs.get(*name) else {
-                    continue;
-                };
-                if !matches!(field.facet.as_deref(), None | Some("public")) {
-                    continue;
-                }
-                let Some(value) = entity.fields.get(*name) else {
-                    continue;
-                };
-                let presentation = if *name == "ownership" {
-                    json!({ "owner": value["owner"].as_str(), "status": value["status"].as_str() })
-                } else {
-                    value.clone()
-                };
-                overview.insert((*name).to_owned(), presentation);
-            }
-            (!overview.is_empty()).then(|| (id.clone(), Value::Object(overview)))
-        })
-        .collect()
-}
-
 /// A self-contained page built from the same Astro integration used by GitHub Pages.
 fn html_page(data_json: &str) -> String {
     let embedded = data_json.replace('<', "\\u003c");
-    include_str!("report.html")
-        .replace("/*CLIENT*/", include_str!("seikika-report.js"))
+    include_str!("../report-dist/report.html")
+        .replace(
+            "/*CLIENT*/",
+            include_str!("../report-dist/seikika-report.js"),
+        )
         .replace("/*DATA*/", &embedded)
 }
 
 fn html(m: &seikika_model::Manifest, d: &Derived, starts: &Map<String, Value>) -> String {
-    html_page(&report_json(m, d, starts))
+    html_page(&snapshot(m, d, starts, None).to_string())
 }
 
 /// One-file `index.html`, its client bundle, and `report.json` for an Astro host.
@@ -1469,7 +1110,10 @@ fn write_web_parts(dir: &std::path::Path, data_json: &str) -> Result<(), String>
         let path = dir.join(name);
         std::fs::write(&path, body).map_err(|e| format!("{}: {e}", path.display()))
     };
-    write("seikika-report.js", include_str!("seikika-report.js"))?;
+    write(
+        "seikika-report.js",
+        include_str!("../report-dist/seikika-report.js"),
+    )?;
     write("report.json", data_json)?;
     write("index.html", &html_page(data_json))?;
     Ok(())
@@ -1481,7 +1125,7 @@ fn write_web(
     d: &Derived,
     starts: &Map<String, Value>,
 ) -> Result<(), String> {
-    write_web_parts(dir, &report_json(m, d, starts))
+    write_web_parts(dir, &snapshot(m, d, starts, None).to_string())
 }
 
 /// `seikika connector records`: one resync of a portal's connector, its records printed as NDJSON.
@@ -2130,6 +1774,13 @@ pub fn run(o: &Options) -> ExitCode {
 mod tests {
     use super::*;
 
+    #[cfg(unix)]
+    #[test]
+    fn a_connector_that_exits_without_completing_fails_the_report() {
+        let error = resync("broken", "cat", &json!({}), &["repo".into()]).unwrap_err();
+        assert!(error.contains("connector broken: exited before a successful resync"));
+    }
+
     fn s(v: &[Change]) -> Vec<String> {
         v.iter().map(ToString::to_string).collect()
     }
@@ -2420,7 +2071,7 @@ kinds:
         write_web_parts(&dir, data).unwrap();
         assert_eq!(
             std::fs::read_to_string(dir.join("seikika-report.js")).unwrap(),
-            include_str!("seikika-report.js")
+            include_str!("../report-dist/seikika-report.js")
         );
         assert_eq!(
             std::fs::read_to_string(dir.join("report.json")).unwrap(),

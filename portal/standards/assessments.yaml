@@ -31,6 +31,10 @@ kinds:
         type: list
         items: string
         description: "One line per criterion: verdict, name and reason."
+      suggestions:
+        type: list
+        items: string
+        description: Follow-up changes proposed by the assessor, keyed by criterion.
       summary: {type: string, description: "The assessor's summary."}
       path: {type: string, description: The file it was read from.}
       unsuggested:
@@ -115,6 +119,10 @@ kinds:
       assessesSdlcStage: {to: SdlcStage, many: false, unresolved: ignore}
       assessesRule: {to: Rule, many: false, unresolved: ignore}
       assessesScorecard: {to: Scorecard, many: false, unresolved: ignore}
+      assessesTestingContract:
+        to: TestingContract
+        many: false
+        unresolved: ignore
       assessesCrate: {to: Crate, many: false, unresolved: ignore}
     sources: {default: [connector:workspace]}
     map:
@@ -125,6 +133,7 @@ kinds:
          'assessorName': has(record.assessor.name) ? record.assessor.name : null, 'assessorKind': record.assessor.kind,
          'at': string(record.at), 'verdict': record.verdict, 'failing': record.failing, 'unsure': record.unsure,
          'reasons': record.verdicts.map(v, v.verdict + ' ' + v.criterion + ': ' + v.reason),
+         'suggestions': record.verdicts.filter(v, has(v.suggestion)).map(v, v.criterion + ': ' + v.suggestion),
          'summary': record.summary, 'path': record.path, 'unsuggested': record.unsuggested,
          'uncited': record.uncited, 'hash': record.hash,
          'cited': has(record.cited) ? record.cited : [],
@@ -135,6 +144,9 @@ kinds:
         assessesSdlcStage: "record.entity.startsWith('sdlc-stage:') ? [record.entity] : []"
         assessesRule: "record.entity.startsWith('rule:') ? [record.entity] : []"
         assessesScorecard: "record.entity.startsWith('scorecard:') ? [record.entity] : []"
+        assessesTestingContract: >-
+          record.rubric == 'testing-contract-quality' &&
+          record.entity.startsWith('testing-contract:') ? [record.entity] : []
         assessesCrate: "record.entity.startsWith('crate:') ? [record.entity] : []"
 
 scorecards:
@@ -317,6 +329,9 @@ rubrics:
       Is this assessment trustworthy? Read the assessment, then the sources
       its reasons cite, and the entity it judges (seikika get <entity>).
       Review someone else's assessment, not your own.
+    links:
+    - title: How assessments are reviewed
+      url: https://github.com/seikika/seikika/blob/main/docs/design/scorecards-for-scorecards.md#61-assessments-and-rubrics-are-standards-too-d80
     criteria:
     - name: supported
       question: Is every verdict supported by the sources its reason cites?

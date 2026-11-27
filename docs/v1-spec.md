@@ -399,6 +399,7 @@ may take their endpoint and token from a host (`ci:`) (built).
 
 | Command | Purpose |
 |---|---|
+| `seikika init [PATH] [--yes]` | Choose first-party connectors and standards packages and write `seikika.yaml` in a new portal directory (default `.seikika`). `--yes` uses Workspace and a Markdown link scorecard. |
 | `seikika validate` | §5 validation |
 | `seikika test` | `tests/*.test.yaml`, `.fga.yaml` through `Authorizer`, executor cassettes |
 | `seikika plan [--local | --remote URL] [--format md|json]` | §6.4 |

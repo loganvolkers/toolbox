@@ -15,8 +15,12 @@ import { tracksSorted } from "./lib/tracks";
 import { fmt, plural } from "./lib/words";
 import ReportContent from "./ReportContent.vue";
 import ReportView from "./ReportView.vue";
+import ReportActions from "./ReportActions.vue";
+import AssessmentView from "./AssessmentView.vue";
+import { aggregateReport, sourceLabel } from "./lib/federation";
+import type { ActionRequest } from "./action-request";
 
-const props = defineProps<{ data: ReportData; initialRoute?: string }>();
+const props = defineProps<{ data: ReportData; initialRoute?: string; embedded?: boolean; requestAction?: ActionRequest }>();
 const hash = ref(props.initialRoute === undefined ? location.hash : "#" + props.initialRoute);
 const content = ref<HTMLElement>();
 const navigation = ref<HTMLElement>();
@@ -29,42 +33,51 @@ let scrollTimer: ReturnType<typeof setTimeout> | undefined;
 let tabFocus = false;
 let lastHash: string | undefined;
 
-watch(() => props.data, data => {
+const data = computed(() => aggregateReport(props.data));
+watch(data, data => {
   aliasLevels(data);
   ruleTitles(data);
   registerIds(Object.values(data.catalog ?? {}).flat());
 }, { immediate: true, flush: "sync" });
-const summary = computed(() => summarize(props.data));
+const summary = computed(() => summarize(data.value));
 const route = computed(() => {
   const value = parseHash(hash.value);
-  if (value.mode === "tracks" && value.name) value.name = trackByPath(props.data, value.name);
+  if (value.mode === "tracks" && value.name) value.name = trackByPath(data.value, value.name);
   return value;
 });
+const assessmentMode = computed(() => {
+  const mode = route.value.mode;
+  if (mode === "assessments" || mode === "assessment" || mode === "rubric" || mode === "rubrics") return mode;
+});
 const active = computed(() => {
+  if (assessmentMode.value) return "assessments";
   const current = route.value;
   if (current.mode === "missing") return null;
-  if (current.bare && !props.data.scorecards[current.name ?? ""]) return null;
+  if (current.bare && !data.value.scorecards[current.name ?? ""]) return null;
   if (current.mode === "entity") return "catalog";
   if (current.mode === "campaign") return "campaigns";
   if (current.mode === "rule" || current.mode === "scorecard") return "scorecards";
   return current.mode;
 });
-const comparisons = computed(() => Object.keys(props.data.comparisons ?? {}).length);
+const comparisons = computed(() => Object.keys(data.value.comparisons ?? {}).length);
 const levelCards = computed(() => summary.value.rows.filter(row => !row.compare).length);
 const tabs = computed(() => {
-  const tracks = tracksSorted(props.data, summary.value).length;
-  const campaigns = campaignNamesSorted(props.data).length;
+  const tracks = tracksSorted(data.value, summary.value).length;
+  const campaigns = campaignNamesSorted(data.value).length;
   return [
     { id: "overview", label: "Overview" },
     ...(tracks ? [{ id: "tracks", label: "Tracks", count: tracks }] : []),
     { id: "catalog", label: "Catalog", count: summary.value.entityCount },
     ...(campaigns || active.value === "campaigns" ? [{ id: "campaigns", label: "Campaigns", count: campaigns }] : []),
     { id: "scorecards", label: "Scorecards", count: levelCards.value },
+    { id: "assessments", label: "Assessments" },
+    ...(data.value.actions?.length || active.value === "actions" ? [{ id: "actions", label: "Actions", count: data.value.actions?.length ?? 0 }] : []),
     ...(comparisons.value ? [{ id: "compare", label: "Compare", count: comparisons.value }] : []),
   ];
 });
 const columns = computed(() => tabs.value.length <= 3 ? tabs.value.length : tabs.value.length === 4 ? 2 : 3);
-const portal = computed(() => props.data.portal || "Seikika report");
+const portal = computed(() => data.value.portal || "Seikika report");
+const showSummary = computed(() => !data.value.sources || active.value === "overview");
 
 function rememberScroll() {
   clearTimeout(scrollTimer);
@@ -130,16 +143,20 @@ async function ready() {
   scrollTabs();
 
   if (props.initialRoute === undefined && hash.value !== lastHash) {
-    const y = view.closest(".seikika-report")?.getBoundingClientRect().top ?? 0;
-    const top = Math.max(0, y + scrollY);
+    const frame = view.closest(".seikika-report");
+    const y = frame?.getBoundingClientRect().top ?? 0;
+    const inset = frame ? Number.parseFloat(getComputedStyle(frame).scrollMarginTop) || 0 : 0;
+    const top = Math.max(0, y + scrollY - inset);
     if (tabFocus) {
       selected?.focus({ preventScroll: true });
       scrollTo(0, top);
-    } else if (lastHash !== undefined && heading) {
-      const targetTop = target ? target.getBoundingClientRect().top + scrollY : top;
+    } else if (heading && (lastHash !== undefined || props.embedded && hash.value)) {
+      const targetTop = target ? target.getBoundingClientRect().top + scrollY - inset : top;
       scrollTo(0, targetTop - top < innerHeight * .6 ? top : targetTop - 8);
-      heading.tabIndex = -1;
-      heading.focus({ preventScroll: true });
+      if (lastHash !== undefined) {
+        heading.tabIndex = -1;
+        heading.focus({ preventScroll: true });
+      }
     }
     if (lastHash !== undefined && typeof history.state?.y === "number") scrollTo(0, history.state.y);
   }
@@ -174,12 +191,18 @@ function escapeTip(event: KeyboardEvent) {
   if (event.key === "Escape") hideTip();
 }
 
+watch(() => route.value.mode, mode => { if (mode === "actions") void ready(); });
+watch(() => [assessmentMode.value, route.value.id, route.value.query?.rubric], ([mode]) => {
+  if (mode) void ready();
+}, { flush: "post" });
+
 onMounted(() => {
   if (props.initialRoute !== undefined) history.replaceState(null, "", "#" + props.initialRoute);
   window.addEventListener("hashchange", syncHash);
   window.addEventListener("click", rememberScroll, true);
   window.addEventListener("scroll", onScroll, { passive: true, capture: true });
   window.addEventListener("keydown", escapeTip);
+  if (assessmentMode.value) void ready();
 });
 onUnmounted(() => {
   clearTimeout(scrollTimer);
@@ -192,12 +215,12 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <PageFrame class="seikika-report" @mouseover="showTip" @mouseout="deferHide" @focusin="showTip" @focusout="deferHide">
+  <component :is="embedded ? 'div' : PageFrame" :class="embedded ? 'seikika-report seikika-ui' : 'seikika-report'" @mouseover="showTip" @mouseout="deferHide" @focusin="showTip" @focusout="deferHide">
     <button type="button" class="skip" @click="content?.focus()">Skip to content</button>
-    <PageHeader :title="portal">
+    <PageHeader :title="portal" :heading="embedded ? 'h2' : 'h1'">
       <template #title><span class="top"><ReportContent as="span" :build="boxLogo" />{{ portal }}</span></template>
       <template #meta>
-        <div class="meta">
+        <div v-if="showSummary" class="meta">
           {{ plural(summary.entityCount, "entity", "entities") }} tracked ({{ fmt(Object.keys(summary.worst).length) }} scored) ·
           {{ plural(levelCards, "scorecard") }}
           <template v-if="comparisons"> · {{ plural(comparisons, "comparison factor") }}</template>
@@ -205,6 +228,14 @@ onUnmounted(() => {
         </div>
       </template>
     </PageHeader>
+    <details v-if="data.sources && showSummary" class="report-sources">
+      <summary>{{ Object.keys(data.sources).length }} portal sources</summary>
+      <ul><li v-for="(source, key) in data.sources" :key="key">
+        {{ sourceLabel(data, String(key)) }}
+        <code v-if="source.commit">{{ source.commit.slice(0, 12) }}</code>
+        <span v-if="source.error" class="sub"> · {{ source.error }}</span>
+      </li></ul>
+    </details>
     <div ref="navigation" class="modes" role="tablist" aria-label="Report views" :style="{ '--tabcols': columns }" @keydown="arrow" @scroll="scrollTabs">
       <button v-for="tab in tabs" :id="'tab-' + tab.id" :key="tab.id" type="button" role="tab"
         :aria-selected="active === tab.id" aria-controls="report-body"
@@ -213,8 +244,12 @@ onUnmounted(() => {
       </button>
     </div>
     <div id="report-body" ref="content" tabindex="-1" :role="active ? 'tabpanel' : undefined" :aria-labelledby="active ? 'tab-' + active : undefined">
-      <ReportView :data="data" :summary="summary" :route="route" @ready="ready" />
+      <ReportActions v-if="route.mode === 'actions'" :data="data" :entity="route.query?.entity" :request="requestAction" />
+      <div v-else-if="assessmentMode" class="view">
+        <AssessmentView :data="data" :mode="assessmentMode" :id="route.id" :filters="route.query" />
+      </div>
+      <ReportView v-else :data="data" :summary="summary" :route="route" @ready="ready" />
     </div>
     <div ref="tooltip" class="ftip" :hidden="!tip" aria-hidden="true" :style="tipPosition" @mouseenter="keepTip">{{ tip }}</div>
-  </PageFrame>
+  </component>
 </template>

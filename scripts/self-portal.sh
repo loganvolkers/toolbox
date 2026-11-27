@@ -15,7 +15,10 @@ cd "$(dirname "$0")/.."
 T=target/debug
 PORTAL=portal
 
-build() { cargo build -q -p seikika-cli -p seikika-connector-workspace -p seikika-connector-runner; }
+build() {
+  pnpm build
+  cargo build -q -p seikika-cli -p seikika-connector-workspace -p seikika-connector-runner
+}
 
 # The connector's config from the manifest, as JSON.
 config() {
@@ -26,15 +29,15 @@ config() {
 # Run one connector's resync and keep only its record messages (fixture format).
 resync() {
   local name=$1 out=$2
-  echo '{"type":"command","command":"resync","command_id":"snapshot"}' \
-    | SEIKIKA_CONNECTOR_CONFIG="$(config "$name")" "$T/seikika-connector-$name" \
-    | python3 -c 'import json,sys
+  echo '{"type":"command","command":"resync","command_id":"snapshot"}' |
+    SEIKIKA_CONNECTOR_CONFIG="$(config "$name")" "$T/seikika-connector-$name" |
+    python3 -c 'import json,sys
 for l in sys.stdin:
     m=json.loads(l)
     if m["type"]=="record":
         m.pop("command_id",None); print(json.dumps(m,sort_keys=True))
     elif m["type"]=="complete" and m["status"]!="succeeded":
-        sys.exit("connector failed: "+json.dumps(m.get("errors")))' > "$out"
+        sys.exit("connector failed: "+json.dumps(m.get("errors")))' >"$out"
 }
 
 snapshot() {
@@ -47,16 +50,26 @@ snapshot() {
 
 case "${1:-report}" in
   serve)
-    shift; build
-    LISTEN=127.0.0.1:8090; [[ "${1:-}" == "--listen" ]] && LISTEN=$2
-    exec env SEIKIKA_CONNECTORS_DIR="$PWD/$T" "$T/seikika" serve "$PORTAL" --listen "$LISTEN" ;;
+    shift
+    build
+    LISTEN=127.0.0.1:8090
+    [[ "${1:-}" == "--listen" ]] && LISTEN=$2
+    exec env SEIKIKA_CONNECTORS_DIR="$PWD/$T" "$T/seikika" serve "$PORTAL" --listen "$LISTEN"
+    ;;
   snapshot)
-    build; snapshot "${2:?usage: snapshot DIR [--static]}" "${3:-}"
-    wc -l "$2"/*.ndjson ;;
+    build
+    snapshot "${2:?usage: snapshot DIR [--static]}" "${3:-}"
+    wc -l "$2"/*.ndjson
+    ;;
   report)
     # `seikika report` does this natively now (F1); extra args pass through, e.g.
     # `scripts/self-portal.sh report --skip runner --baseline portal/results.json`.
-    shift; build
-    exec env SEIKIKA_CONNECTORS_DIR="$PWD/$T" "$T/seikika" report "$PORTAL" "$@" ;;
-  *) sed -n '2,12p' "$0"; exit 2 ;;
+    shift
+    build
+    exec env SEIKIKA_CONNECTORS_DIR="$PWD/$T" "$T/seikika" report "$PORTAL" "$@"
+    ;;
+  *)
+    sed -n '2,12p' "$0"
+    exit 2
+    ;;
 esac

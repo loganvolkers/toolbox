@@ -1,0 +1,42 @@
+# Maintainer SDLC correctness contracts. Paths are repository-relative.
+- id: reference-derivation
+  title: Reference portal derivation and plan
+  contract: >-
+    The reference portal recomputes to its expected outputs regardless of
+    record arrival order. Planning reports semantic changes and leaves
+    identical inputs unchanged.
+  specification: docs/v1-spec.md
+  implementation:
+  - crates/seikika-derive/src/lib.rs
+  - crates/seikika-derive/src/plan.rs
+  tests:
+  - crates/seikika-derive/tests/reference.rs
+  - examples/reference-portal/tools/reference.py
+  fixtures:
+  - examples/reference-portal/seikika.yaml
+  - examples/reference-portal/authz/tuples.expected.json
+  - examples/reference-portal/expected/entities.json
+  - examples/reference-portal/expected/options.json
+  - examples/reference-portal/expected/orphans.json
+  - examples/reference-portal/expected/scorecards.json
+  ci: .github/workflows/ci.yml
+
+- id: scorecard-ratchet
+  title: Scorecard regression gate
+  contract: >-
+    A new regression fails CI with actionable evidence. Existing debt and
+    advisory findings remain visible, and skipped evidence stays unknown.
+  specification: docs/design/seikika-for-seikika.md
+  implementation: [crates/seikika-cli/src/report.rs]
+  tests: [crates/seikika-cli/tests/ratchet.rs]
+  ci: .github/workflows/ci.yml
+
+- id: action-lifecycle
+  title: Repository and federated actions
+  contract: >-
+    Approved changes can be run and verified via the public CLI. Refused or
+    rejected actions leave the target branch untouched.
+  specification: docs/design/action-runs.md
+  implementation: [crates/seikika-cli/src/run.rs]
+  tests: [scripts/m5-acceptance.sh]
+  ci: .github/workflows/ci.yml

@@ -27,7 +27,7 @@ function follow(event: MouseEvent) {
   const link = (event.target as Element | null)?.closest("a");
   if (!link || link.target || link.download || link.origin !== location.origin) return;
   const target = new URL(link.href);
-  if (target.hash) return;
+  if (target.hash || target.pathname === "/report/" || target.pathname === "/report") return;
   event.preventDefault();
   navigate(target.pathname + target.search);
 }
@@ -106,7 +106,7 @@ onUnmounted(() => {
 <template>
   <PageFrame class="portal-ui" @click="follow">
     <template #navigation>
-      <PortalHeader :user="user" :newer="newer" @navigate="navigate" @reload="revision++" />
+      <PortalHeader :user="user" :newer="newer" :assessments="route.page === 'assessments'" @navigate="navigate" @reload="revision++" />
     </template>
     <PortalView :route="route" :result="result" :ownership="ownership" :refresh="refresh"
       @navigate="navigate" @refresh="refreshEntity" @retry="revision++" />

@@ -27,7 +27,19 @@ fn outputs_are_byte_identical_to_the_reference_model() {
     let (m, snap) = reference();
     let d = FullRecompute.recompute(&m, &snap);
     assert!(d.diagnostics.is_empty(), "{:#?}", d.diagnostics);
-    for (rel, text) in d.reference_files() {
+    let mut files = d.reference_files();
+    files.sort_unstable_by_key(|(rel, _)| *rel);
+    assert_eq!(
+        files.iter().map(|(rel, _)| *rel).collect::<Vec<_>>(),
+        [
+            "authz/tuples.expected.json",
+            "expected/entities.json",
+            "expected/options.json",
+            "expected/orphans.json",
+            "expected/scorecards.json",
+        ]
+    );
+    for (rel, text) in files {
         let expected = std::fs::read_to_string(portal().join(rel)).unwrap();
         assert!(
             text == expected,
@@ -67,6 +79,8 @@ fn output_does_not_depend_on_arrival_order() {
         FullRecompute.recompute(&m, &backward.snapshot()),
     );
     assert_eq!(a.reference_files(), b.reference_files());
+    let no_changes = plan::diff(&m, &a, &m, &b);
+    assert!(no_changes.is_empty(), "{no_changes:#?}");
 }
 
 #[test]

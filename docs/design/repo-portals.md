@@ -28,7 +28,7 @@ portal, these repos are already its children ([federation.md](./federation.md) �
 | Work lists | `seikika scorecard <name> --rule R` / MCP `scorecard_report` (needs `serve`) | ✅ |
 | Live, agent-driven loop | `seikika serve` + `seikika mcp`, with refreshes that report what changed | ✅ |
 | Static publishing | `report -o html`: one self-contained page. `report -o web`: the same page plus `<seikika-report>` and its JSON, so a host fills header, nav, and footer slots | ✅ (§4); a multi-page site is a proposal (§5) |
-| **GitHub Action** | `uses: seikika/seikika/actions/report@<sha>`: one step, with a starter portal ([examples/repo-portal-starter](../../examples/repo-portal-starter/README.md)) | ✅ (D69, §6) |
+| **GitHub Actions** | Set up the CLI, ratchet, or build a static portal in separate steps. Use `actions/report` for the bundled workflow. | ✅ (D69, [D01M8DGVXNG05GF6W3996FEFT6C](../decisions/D01M8DGVXNG05GF6W3996FEFT6C.md), §6) |
 | Readers for existing ratchets | Betterer results files; ESLint, PHPStan and basedpyright baselines | Betterer ✅; others proposed (ratchets.md R2) |
 
 ## 2. What runs where
@@ -106,28 +106,36 @@ viewer-specific permissions.
 | S2 | **Static federation:** an index page that loads several children's `report -o json` files (by URL or path) and shows them together, like Storybook composition (secondary) | A "parent" with no server, the minimal answer to [federation.md](./federation.md) FQ5 |
 | S3 | Embed the snapshot id and git commit in the page; link entities to files at that commit | Every claim on the page is checkable |
 
-## 6. Adoption in one step: the GitHub Action
+## 6. GitHub Actions for the operator SDLC
 
-**[`actions/report`](../../actions/report/README.md)** is a composite action. A pilot repository:
-1. copies the starter manifest to `.seikika/seikika.yaml`;
-2. adds one workflow step;
-3. runs it once with `mode: update` to create `.seikika/results.json`.
+Copy the starter to `.seikika/` or initialize a repo portal with `seikika init`. Choose the
+steps that match the job.
 
-From then on, pull requests fail on regressions and on unrecorded improvements. The job summary says
-which, and how to update the baseline. The Markdown and HTML reports are uploaded as an artifact.
-
-| Design choice | Why |
+| Action | Job boundary |
 |---|---|
-| Composite action + `run.sh` | Testable locally with the same environment variables. This repo tested `run.sh` through every result: missing baseline, update, pass, regression, unrecorded improvement, unknown mode, missing portal |
-| Build from the action's own source at the pinned commit, cached by a hash of `Cargo.lock`, the toolchain file, `crates/` and `crates/seikika-model/schema/` | No releases exist yet (licence Q1). Pinning a commit pins both the action and the seikika it runs |
-| `seikika-dir` input | Repos that already build seikika (this one) skip the build |
-| Starter: `repo-hygiene` + `docs` | Useful on day one in any repository, with no build and no network. Silver accepts team CODEOWNERS or personal-only handles (D01M7Y57FVX0XYNGMX0A0XJ4GK9). It is also stage 1 of the federation graduation example |
-| `pull_request`, never `pull_request_target` | Connectors run the manifest's commands; fork code must not get write tokens |
+| [`actions/setup`](../../actions/setup/README.md) | Set PATH for later steps. Accept a published CLI version or prebuilt directory. Run validate, test, and other CLI commands directly. |
+| [`actions/ratchet`](../../actions/ratchet/README.md) | Compare against a committed baseline. Give the caller a failed step, structured verdict, annotations, and Markdown evidence as appropriate. |
+| [`actions/build-portal`](../../actions/build-portal/README.md) | Generate a host-ready directory, independent of baseline contents. Use the caller's artifact or deployment steps. |
+| [`actions/report`](../../actions/report/README.md) | Keep one step for scorecards, baseline management, artifacts, and a cached source build. |
 
-**Dogfooding.** This repository's CI:
-- runs the Seikika-for-Seikika ratchet through the action, with prebuilt binaries;
-- runs a `report-action` job that builds from source, sets up a pilot from the starter, creates its
-  baseline in `update` mode, and passes in `ci` mode.
+Keep baseline updates explicit. Run `seikika report --baseline … --update` or the bundled
+action's update mode, review the result, and commit it. For pull request scoring, use
+`pull_request` and read-only checkout permissions. A portal can run commands in the checkout.
+Grant publication credentials to the deployment job on a trusted ref.
+
+The required consumer pilot runs the bundled action from a cached source build. It exercises
+the independent actions and checks that strict mode rejects an unrecorded improvement,
+regression-only mode allows it, and a real regression fails both gates. The HTML and web
+builds leave the baseline unchanged. The pilot also checks that setup rejects a release
+archive with a mismatched checksum. [Consumer pilot](../../.github/workflows/ci.yml)
+
+After a stable release, the consumer smoke test installs the published CLI and connectors
+on Linux x64 and ARM64. It uses those binaries to enforce the starter's baseline and build
+its static portal. The scheduled and manual runs use the starter's pinned version.
+[Release smoke workflow](../../.github/workflows/mise.yml)
+
+[Consumer action comparison](../audits/consumer-github-actions.md) ·
+[Operator workflow examples](../../site/src/content/docs/operators/ci.md)
 
 ## Sources
 

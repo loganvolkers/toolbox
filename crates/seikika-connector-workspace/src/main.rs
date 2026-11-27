@@ -47,6 +47,8 @@
 //!   federates, with the actions it declares and how to reach it (docs/design/federated-actions.md);
 //!   with `git` (`[{key, url, branch}]`, from `federation.children`), one per repository instead,
 //!   each cloned into `<root>/<key>` and read at the tip of its branch (`clones`);
+//! - `federated-repo` (`githubOrg: {organization, publicOnly}`): repository basics from each
+//!   visible GitHub default branch, using existing GitHub credentials without checking out code.
 //! - `assessment` (`assessments` globs): one per assessment file (YAML or JSON, see
 //!   `crates/seikika-model/schema/assessment.schema.json`): agents' judgements of entities against the portal's rubrics.
 //!
@@ -76,10 +78,13 @@ mod data;
 mod deps;
 mod examples;
 mod expo;
+mod github_org;
 mod hygiene;
 mod js_workspace;
 mod npm;
+mod org_workflows;
 mod plugins;
+mod portal_report;
 mod portals;
 mod repo;
 mod rust;
@@ -135,6 +140,7 @@ struct Workspace {
     portals: Vec<Regex>,
     /// Child portals by git repository, cloned under `root` (`clones`).
     git: Vec<clones::Source>,
+    github_org: Option<github_org::Config>,
     captures: Vec<(String, Regex)>,
     counts: Vec<(String, Regex)>,
     crates: bool,
@@ -381,6 +387,7 @@ impl Workspace {
             storybooks: globs(&cfg, "storybooks")?,
             portals: globs(&cfg, "portals")?,
             git: clones::sources(&cfg),
+            github_org: github_org::Config::from_value(&cfg["githubOrg"])?,
             captures: named_regexes(&cfg, "captures")?,
             counts: named_regexes(&cfg, "counts")?,
             crates: cfg["crates"].as_bool().unwrap_or(true),
@@ -833,7 +840,7 @@ impl Workspace {
         let found: Vec<(&String, Value)> = paths
             .iter()
             .filter(|p| Self::matches(&self.portals, p))
-            .map(|rel| (rel, portals::analyse(&self.root, rel)))
+            .map(|rel| (rel, self.local_portal(rel)))
             .collect();
         for (rel, rec) in portals::flag_duplicates(found) {
             out.record("portal", &portals::id(rel), rec);
@@ -1185,9 +1192,22 @@ impl Workspace {
             Ok(commit) => {
                 let mut rec = portals::analyse(&self.root, &rel);
                 rec["git"] = clones::origin(s, &commit);
+                portal_report::attach(
+                    &mut rec,
+                    portal_report::committed(&self.root.join(&s.key), &commit),
+                );
                 rec
             }
         }
+    }
+
+    fn local_portal(&self, rel: &str) -> Value {
+        let mut record = portals::analyse(&self.root, rel);
+        let manifest = self.root.join(rel);
+        if let Some(directory) = manifest.parent() {
+            portal_report::attach(&mut record, portal_report::local(&self.root, directory));
+        }
+        record
     }
 
     fn refresh_portal(&self, id: &str, out: &mut Out) {
@@ -1197,7 +1217,7 @@ impl Workspace {
             return;
         }
         if Self::matches(&self.portals, rel) && self.root.join(rel).is_file() {
-            out.record("portal", id, portals::analyse(&self.root, rel));
+            out.record("portal", id, self.local_portal(rel));
         } else {
             out.not_found("portal", id);
         }
@@ -1335,6 +1355,17 @@ impl Source for Workspace {
     }
 
     fn capabilities(&self) -> Value {
+        if let Some(config) = &self.github_org {
+            let mut kinds = vec![github_org::KIND];
+            if config.workflows {
+                kinds.push(github_org::WORKFLOW_KIND);
+            }
+            let refresh: Map<String, Value> = kinds
+                .iter()
+                .map(|kind| (kind.to_string(), json!(["external_ids"])))
+                .collect();
+            return json!({"refresh": refresh, "resync": kinds, "max_concurrency": 1});
+        }
         // Only the kinds this configuration produces.
         let on = [
             ("repo", self.repo),
@@ -1372,12 +1403,104 @@ impl Source for Workspace {
     }
 
     async fn handle(&mut self, cmd: &Value, out: &mut Out) -> Result<(), String> {
+        if let Some(config) = &self.github_org {
+            return federated_repositories(config, cmd, out).await;
+        }
         match cmd["command"].as_str() {
             Some("resync") => self.resync(cmd, out),
             Some("refresh") => self.refresh(cmd, out),
             other => Err(format!("unsupported command {other:?}")),
         }
     }
+}
+
+async fn federated_repositories(
+    config: &github_org::Config,
+    cmd: &Value,
+    out: &mut Out,
+) -> Result<(), String> {
+    let kind = github_org::KIND;
+    let workflow = github_org::WORKFLOW_KIND;
+    let requested = |kind: &str| {
+        cmd["kinds"]
+            .as_array()
+            .is_none_or(|kinds| kinds.iter().any(|k| k == kind))
+    };
+    match cmd["command"].as_str() {
+        Some("resync") => {
+            let kinds: Vec<_> = [kind, workflow]
+                .into_iter()
+                .filter(|kind| requested(kind) && (*kind != workflow || config.workflows))
+                .collect();
+            if kinds.is_empty() {
+                return Ok(());
+            }
+            for (id, (kind, record)) in organization_rows(config.scan().await?) {
+                if kinds.contains(&kind) {
+                    out.record(kind, &id, record);
+                }
+            }
+            for kind in kinds {
+                out.snapshot_complete(kind);
+            }
+        }
+        Some("refresh") => {
+            let ids: BTreeSet<_> = cmd["external_ids"]
+                .as_array()
+                .into_iter()
+                .flatten()
+                .filter_map(Value::as_str)
+                .collect();
+            let mut records = if ids.iter().any(|id| {
+                id.split_once(':').is_some_and(|(prefix, _)| {
+                    prefix == kind || config.workflows && prefix == workflow
+                })
+            }) {
+                organization_rows(config.scan().await?)
+            } else {
+                BTreeMap::new()
+            };
+            for id in ids {
+                match records.remove(id) {
+                    Some((kind, record)) => out.record(kind, id, record),
+                    None => out.not_found(
+                        if id.starts_with("federated-workflow:") {
+                            workflow
+                        } else {
+                            kind
+                        },
+                        id,
+                    ),
+                }
+            }
+        }
+        other => return Err(format!("unsupported command {other:?}")),
+    }
+    Ok(())
+}
+
+fn organization_rows(
+    repositories: BTreeMap<String, Value>,
+) -> BTreeMap<String, (&'static str, Value)> {
+    let kind = github_org::KIND;
+    let workflow = github_org::WORKFLOW_KIND;
+    let mut rows = BTreeMap::new();
+    for (name, mut record) in repositories {
+        if let Some(Value::Array(workflows)) =
+            record.as_object_mut().and_then(|o| o.remove("workflows"))
+        {
+            for entry in workflows {
+                if let Some(id) = entry["id"]
+                    .as_str()
+                    .and_then(|id| id.strip_prefix("workflow:"))
+                {
+                    rows.insert(format!("{workflow}:{id}"), (workflow, entry));
+                }
+            }
+        }
+        rows.insert(format!("{kind}:{name}"), (kind, record));
+    }
+    rows
 }
 
 #[tokio::main]

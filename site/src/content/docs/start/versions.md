@@ -10,7 +10,7 @@ These docs describe the current Seikika source. Check what your build can do wit
 | Version or status | What to use |
 |---|---|
 | 0.1 releases | The release tag's README and `toolbox` assets. These releases predate the Seikika command and manifest rename. |
-| 0.2 documentation | The revision in [Install Seikika](/start/install/#build-from-source) or a matching published release. Check the release assets before relying on installer or container examples. |
+| 0.2 documentation | A current [source build](/start/install/#build-from-source) or a matching published release. Check the release assets before relying on installer or container examples. |
 | Planned | Design documents describe work such as live remote planning and a generated portal client. Check [what Seikika supports](/concepts/capabilities/) for available workflows and proposed features. |
 
 ## Change a release pin with mise

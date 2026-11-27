@@ -65,7 +65,9 @@ python3 scripts/test-apply-changesets.py
    built on a `release` event. For a tag released before this job existed, run
    `gh workflow run image.yml -f tag=vX.Y.Z`.
 6. The `custom-mise` job [checks the operator install](#install-what-a-consumer-needs) after
-   the stable release is announced.
+   the stable release is announced. Its consumer-action smoke test downloads the tagged
+   CLI and connectors on Linux x64 and ARM64, then runs the ratchet and builds a static
+   repo portal. The scheduled and manual runs use the starter's pinned version.
 
 Before tagging, run the **image rehearsal** workflow against the release commit. It builds
 both Linux release archives with cargo-dist, verifies checksums, and builds the amd64 and
@@ -131,15 +133,22 @@ Verify the archives and build the standalone connector scaffold against the pack
 from the release commit. CI and the publishing workflow both run these checks.
 
 ```bash
-cargo package --workspace --locked
+pnpm install --frozen-lockfile
+pnpm build
+cargo package --workspace --locked --allow-dirty
 python3 scripts/check-crates-release.py sdk target/package
 ```
+
+Cargo includes the generated portal and report assets in the crates that embed them.
+The packaging command needs `--allow-dirty` because those files are Git-ignored.
+Start from a clean release checkout. Released Rust crates already contain the assets and build
+without frontend tooling.
 
 For new crate names, use an authenticated crates.io account with permission to publish new
 crates. Publish from the verified release commit, then check each version in the registry.
 
 ```bash
-cargo publish --workspace --locked
+cargo publish --workspace --locked --allow-dirty
 ```
 
 After the first publish, register a GitHub Actions trusted publisher for each public crate.
@@ -286,6 +295,8 @@ Build the current checkout and run the freshness gate with the same connector an
 in CI. Then review missing independent assessments for the change with the release owner.
 
 ```bash
+pnpm install --frozen-lockfile
+pnpm build
 cargo build --locked
 target/debug/seikika assess check portal --skip runner,github-actions --require-fresh
 ```

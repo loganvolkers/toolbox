@@ -11,10 +11,13 @@ publish.workspace = true
 [dependencies]
 proc-macro2 = { version = "1", features = ["span-locations"] }
 regex = "1"
+reqwest.workspace = true
+serde.workspace = true
 serde_json.workspace = true
 serde_norway.workspace = true
 sha2.workspace = true
 syn = { version = "3", default-features = false, features = ["full", "parsing", "visit", "printing"] }
+tempfile = "3"
 tokio.workspace = true
 seikika-connect.workspace = true
 seikika-model.workspace = true

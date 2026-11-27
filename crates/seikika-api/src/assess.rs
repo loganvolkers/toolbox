@@ -46,9 +46,12 @@ pub fn applies(r: &Rubric, fields: &Map<String, Value>) -> bool {
     fields.get("rubric").and_then(Value::as_str) != Some(r.name.as_str())
 }
 
-/// Version of the complete rubric used to prepare an assessment.
+/// Version of the rubric used to prepare an assessment. Documentation links can change without
+/// invalidating a verdict.
 pub fn rubric_hash(r: &Rubric) -> String {
-    let body = serde_json::to_vec(r).expect("rubric serializes");
+    let mut definition = r.clone();
+    definition.links.clear();
+    let body = serde_json::to_vec(&definition).expect("rubric serializes");
     Sha256::digest(body)
         .iter()
         .map(|byte| format!("{byte:02x}"))
@@ -92,7 +95,7 @@ pub fn brief(m: &Manifest, entity: &Value, rubric_name: Option<&str>) -> Result<
     );
     Ok(json!({
         "entity": id, "kind": kind,
-        "rubric": {"name": r.name, "description": r.description, "subject": r.subject(),
+        "rubric": {"name": r.name, "description": r.description, "subject": r.subject(), "links": r.links,
                    "criteria": r.criteria.iter().map(|c| json!({"name": c.name, "question": c.question, "guidance": c.guidance})).collect::<Vec<_>>()},
         "subjectHash": hash,
         "rubricHash": rubric_hash,

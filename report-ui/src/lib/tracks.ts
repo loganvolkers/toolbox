@@ -101,9 +101,6 @@ export function tracksSorted(D: ReportData, S: Summary) {
     .map(function (n) {
       return trackStats(D, S, n);
     })
-    .filter(function (t) {
-      return t.rows.length || t.campaigns.length;
-    })
     .sort(function (a, b) {
       return (a.compare ? 1 : 0) - (b.compare ? 1 : 0) || (a.pct == null ? 101 : a.pct) - (b.pct == null ? 101 : b.pct) || b.none - a.none || a.name.localeCompare(b.name);
     });
