@@ -1,0 +1,31 @@
+apiVersion: seikika.com/assessment/v1
+entity: rule:impeccable/engine-distribution/release-check-passes
+rubric: rule-quality
+subjectHash: 831a97afe9f0
+rubricHash: 696a7d3fef1c024786016ca0a353e402b5c1a7aaf7644da6825b20e218dc4a96
+assessor: {kind: agent, name: codex}
+at: 2026-11-27
+verdicts:
+  - criterion: measures-intent
+    verdict: pass
+    reason: >-
+      .seikika/seikika.yaml reads the exact tool exit status.
+      .seikika/check-engine-pins.mjs exits nonzero for a differing launcher
+      pin.
+  - criterion: hard-to-game
+    verdict: pass
+    reason: >-
+      .seikika/check-engine-pins.mjs reads launcher metadata and rejects an
+      all-zero checksum placeholder. .seikika/tests/release.test.yaml captures
+      the resulting diagnostic.
+  - criterion: fix-leads-to-pass
+    verdict: pass
+    reason: >-
+      .seikika/seikika.yaml identifies the paths that must agree.
+      .seikika/check-engine-pins.mjs supplies the mismatch in its failure
+      output.
+  - criterion: threshold-justified
+    verdict: pass
+    reason: >-
+      .seikika/check-engine-pins.mjs implements a binary preflight contract.
+      .seikika/tests/release.test.yaml covers both outcomes directly.

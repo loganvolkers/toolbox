@@ -1,0 +1,100 @@
+apiVersion: seikika.com/v1alpha1
+portal:
+  name: plannotator
+  title: Plannotator
+  owner: group:maintainers
+  seikika: "0.2"
+include:
+  - {package: ../../../../packages/meta-scoring, with: {track: portal-quality}}
+
+tracks:
+  - name: release
+    title: Release readiness
+    owner: group:maintainers
+    description: Verify the repository's release contract before distributing packages.
+  - name: portal-quality
+    title: Portal quality
+    owner: group:maintainers
+    description: Verify the fixture and review evidence behind the release standard.
+
+connectors:
+  - name: release-check
+    package: builtin:runner
+    runtime: in-image
+    config:
+      name: release-check
+      jobs:
+        - name: release-versions
+          command: [node, scripts/check-release-version.mjs]
+          parse: exit
+    records: [release-versions]
+    refresh: {release-versions: [external_ids]}
+    freshness: {release-versions: 5m}
+
+kinds:
+  - name: ReleaseVersions
+    description: >-
+      Whether npm and agent integration manifests agree on the Plannotator
+      release version.
+    identityFrom: [connector:release-check]
+    fields:
+      command:
+        type: string
+        description: Command that reproduces the release check in the checkout.
+      exitCode:
+        type: integer
+        description: Process exit status for the release check.
+      evidence:
+        type: list
+        items: string
+        description: Bounded diagnostics from a failed release check.
+    sources: {default: [connector:release-check]}
+    map:
+    - from: release-check/release-versions
+      id: "'release-versions:' + record.name"
+      set: >-
+        {'command': record.command, 'exitCode': record.exitCode, 'evidence':
+        record.evidence}
+
+scorecards:
+  - name: release-versions
+    title: Release versions aligned
+    kind: ReleaseVersions
+    description: >-
+      Whether npm and agent integration manifests agree on the Plannotator
+      release version.
+    rationale: >-
+      A release that fails this preflight can leave users installing stale or
+      unusable artifacts.
+    links:
+    - title: Upstream release contract
+      url: https://github.com/seikika/plannotator/blob/main/scripts/check-release-version.mjs
+    owner: group:maintainers
+    track: release
+    levels: [ready]
+    ratchet: {newEntitiesAtLeast: ready}
+    rules:
+    - name: release-check-passes
+      level: ready
+      check: entity.exitCode == 0
+      evidence: >-
+        ['Exit ' + string(entity.exitCode) + ': ' + entity.command] +
+        entity.evidence
+      fix: >-
+        Align the version at each path printed by `node
+        scripts/check-release-version.mjs` with the intended root package.json
+        version.
+      rationale: >-
+        The repository preflight uses exit status zero when all inputs agree
+        with the release contract.
+    facets: {summary: public, details: public}
+
+campaigns:
+  - name: release-preflight
+    title: Keep the release preflight passing
+    owner: group:maintainers
+    track: release
+    description: Resolve release distribution findings before packaging the next release.
+    includes: [{scorecard: release-versions, atLeast: ready}]
+
+tests: [tests/release.test.yaml]

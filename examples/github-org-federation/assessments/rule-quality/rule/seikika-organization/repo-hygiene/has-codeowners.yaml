@@ -1,0 +1,36 @@
+apiVersion: seikika.com/assessment/v1
+entity: rule:seikika-organization/repo-hygiene/has-codeowners
+rubric: rule-quality
+subjectHash: 998be401d258
+rubricHash: 696a7d3fef1c024786016ca0a353e402b5c1a7aaf7644da6825b20e218dc4a96
+assessor: {kind: agent, name: codex}
+at: 2026-11-27
+verdicts:
+  - criterion: measures-intent
+    verdict: pass
+    reason: >-
+      examples/github-org-federation/standards.yaml requires at least one
+      parsed CODEOWNERS rule with a recognizable team handle, personal handle,
+      or email. The bronze check uses the syntactic count from
+      crates/seikika-connector-workspace/src/repo.rs.
+  - criterion: hard-to-game
+    verdict: pass
+    reason: >-
+      crates/seikika-connector-workspace/src/repo.rs excludes plain tokens and
+      malformed handles from the recognized owner count.
+      examples/github-org-federation/standards.test.yaml covers a malformed
+      handle and accepts a syntactically valid email at bronze. This static
+      test does not authenticate GitHub permissions.
+  - criterion: fix-leads-to-pass
+    verdict: pass
+    reason: >-
+      examples/github-org-federation/standards.yaml gives the preferred
+      .github/CODEOWNERS location and a concrete owner pattern.
+      examples/github-org-federation/standards.test.yaml distinguishes a
+      repository with the recognized owner from a repository with no file.
+  - criterion: threshold-justified
+    verdict: pass
+    reason: >-
+      examples/github-org-federation/standards.yaml sets the entry point at
+      bronze and reserves the default rule and consistent handle policy for
+      silver.

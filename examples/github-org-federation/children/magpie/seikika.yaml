@@ -1,0 +1,95 @@
+apiVersion: seikika.com/v1alpha1
+portal: {name: magpie, title: Magpie, owner: group:maintainers, seikika: "0.2"}
+include:
+  - {package: ../../../../packages/meta-scoring, with: {track: portal-quality}}
+
+tracks:
+  - name: release
+    title: Release readiness
+    owner: group:maintainers
+    description: Verify the repository's release contract before distributing packages.
+  - name: portal-quality
+    title: Portal quality
+    owner: group:maintainers
+    description: Verify the fixture and review evidence behind the release standard.
+
+connectors:
+  - name: release-check
+    package: builtin:runner
+    runtime: in-image
+    config:
+      name: release-check
+      jobs:
+        - name: packed-gui-assets
+          command: [python3, .seikika/check-packed-assets.py]
+          parse: exit
+    records: [packed-gui-assets]
+    refresh: {packed-gui-assets: [external_ids]}
+    freshness: {packed-gui-assets: 5m}
+
+kinds:
+  - name: PackedGuiAssets
+    description: >-
+      Magpie’s release packer preserves the paths and bytes the embedded GUI
+      reader expects.
+    identityFrom: [connector:release-check]
+    fields:
+      command:
+        type: string
+        description: Command that reproduces the release check in the checkout.
+      exitCode:
+        type: integer
+        description: Process exit status for the release check.
+      evidence:
+        type: list
+        items: string
+        description: Bounded diagnostics from a failed release check.
+    sources: {default: [connector:release-check]}
+    map:
+    - from: release-check/packed-gui-assets
+      id: "'packed-gui-assets:' + record.name"
+      set: >-
+        {'command': record.command, 'exitCode': record.exitCode, 'evidence':
+        record.evidence}
+
+scorecards:
+  - name: packed-gui-assets
+    title: Packed GUI assets preserve the embedded tree
+    kind: PackedGuiAssets
+    description: >-
+      Magpie’s release packer preserves the paths and bytes the embedded GUI
+      reader expects.
+    rationale: >-
+      A release that fails this preflight can leave users installing stale or
+      unusable artifacts.
+    links:
+    - title: Upstream release contract
+      url: https://github.com/seikika/magpie/blob/main/build/assetpack/main.go
+    owner: group:maintainers
+    track: release
+    levels: [ready]
+    ratchet: {newEntitiesAtLeast: ready}
+    rules:
+    - name: release-check-passes
+      level: ready
+      check: entity.exitCode == 0
+      evidence: >-
+        ['Exit ' + string(entity.exitCode) + ': ' + entity.command] +
+        entity.evidence
+      fix: >-
+        Update build/assetpack/main.go so the listed archive entry matches the
+        embedded GUI layout and its source bytes.
+      rationale: >-
+        The repository preflight uses exit status zero when all inputs agree
+        with the release contract.
+    facets: {summary: public, details: public}
+
+campaigns:
+  - name: release-preflight
+    title: Keep the release preflight passing
+    owner: group:maintainers
+    track: release
+    description: Resolve release distribution findings before packaging the next release.
+    includes: [{scorecard: packed-gui-assets, atLeast: ready}]
+
+tests: [tests/release.test.yaml]

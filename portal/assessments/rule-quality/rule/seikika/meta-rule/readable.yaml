@@ -12,21 +12,24 @@ verdicts:
       (crates/seikika-cli/src/meta.rs:182-188, via seikika_expr::analysis), so
       formatting and identifier length don't change it, and the number of
       nodes is a fair stand-in for how much a reader must hold at once. The
-      check is at portal/standards/meta.yaml:484-490.
+      check is at
+      https://github.com/seikika/seikika/blob/05510a57fafd8707979370858b578b78b935cf0e/portal/standards/meta.yaml#L484-L490.
   - criterion: hard-to-game
     verdict: pass
     reason: >-
       Moving logic into a computed field is the intended fix, and such fields
       are scored by meta-field's `computed-readable` (at most 60 nodes, no
-      nested loops, portal/standards/meta.yaml:800-813). Splitting a check
-      into two rules or moving logic into the connector is also the right
-      thing.
+      nested loops,
+      https://github.com/seikika/seikika/blob/05510a57fafd8707979370858b578b78b935cf0e/portal/standards/meta.yaml#L800-L813).
+      Splitting a check into two rules or moving logic into the connector is
+      also the right thing.
   - criterion: fix-leads-to-pass
     verdict: pass
     reason: >-
       The fix names where to move the logic (a computed field or the
-      connector, portal/standards/meta.yaml:494-496), and the evidence gives
-      the node count against 30.
+      connector,
+      https://github.com/seikika/seikika/blob/05510a57fafd8707979370858b578b78b935cf0e/portal/standards/meta.yaml#L494-L496),
+      and the evidence gives the node count against 30.
   - criterion: threshold-justified
     verdict: pass
     reason: >-

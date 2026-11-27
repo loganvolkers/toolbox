@@ -1,0 +1,32 @@
+apiVersion: seikika.com/assessment/v1
+entity: assessment:scorecard-quality/scorecard:impeccable/engine-distribution
+rubric: assessment-quality
+subjectHash: 184446c62f42
+rubricHash: e30700fc6322cf9f05a301bb4638d6708e9f5eb5aea0281911229ce75bd37bf7
+assessor: {kind: agent, name: codex-astra-fork-a, model: gpt-6.2-astra}
+at: 2026-11-27
+verdicts:
+  - criterion: supported
+    verdict: pass
+    reason: >-
+      The binary .seikika/seikika.yaml standard explicitly describes offline
+      metadata integrity, and .seikika/tests/release.test.yaml covers ready
+      and failing outcomes.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      The scoped no-obvious-gap judgment matches the five platform rows and
+      both version inputs enforced by .seikika/check-engine-pins.mjs.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      A valid checkout passed and a zero digest in
+      skill/scripts/engine-checksums.txt failed with the affected platform,
+      consistent with the scoped scorecard and its repair text in
+      .seikika/seikika.yaml.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      All original verdicts are pass. The assessment attaches no suggestions
+      that would direct a maintainer to change a different entity. See
+      .seikika/assessments/scorecard-quality/scorecard/impeccable/engine-distribution.yaml.

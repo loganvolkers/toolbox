@@ -28,12 +28,14 @@ verdicts:
       the check and selects approval 'none' (seikika.yaml:27).
       fix-leads-to-pass and threshold-justified match the fix text and the
       scorecard rationale. The summary's note that no fixture fails the rule
-      is outside the rubric (portal/standards/meta.yaml:1148-1180).
+      is outside the rubric
+      (https://github.com/seikika/seikika/blob/05510a57fafd8707979370858b578b78b935cf0e/portal/standards/meta.yaml#L1148-L1180).
   - criterion: reproducible
     verdict: pass
     reason: >-
       Each verdict quotes the manifest. The hard-to-game fail follows the
-      rubric's "cheapest pass" test (portal/standards/meta.yaml:1163-1166):
+      rubric's "cheapest pass" test
+      (https://github.com/seikika/seikika/blob/05510a57fafd8707979370858b578b78b935cf0e/portal/standards/meta.yaml#L1163-L1166):
       the repository writes its own tier, and the least scrutinised values
       also skip security approval.
   - criterion: actionable

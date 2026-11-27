@@ -1,0 +1,33 @@
+apiVersion: seikika.com/assessment/v1
+entity: assessment:rule-quality/rule:kubernetes/staging-workspace/release-check-passes
+rubric: assessment-quality
+subjectHash: fb7afccc6ae5
+rubricHash: e30700fc6322cf9f05a301bb4638d6708e9f5eb5aea0281911229ce75bd37bf7
+assessor: {kind: agent, name: codex-astra-fork-a, model: gpt-6.2-astra}
+at: 2026-11-27
+verdicts:
+  - criterion: supported
+    verdict: pass
+    reason: >-
+      The Go workspace parser in .seikika/check-staging-workspace.py now sees
+      both standalone and grouped use directives and compares the resulting
+      set against staged paths.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      The .seikika/check-staging-workspace.py adapter now parses workspace and
+      module directives with Go. Quoting preserves the module identity, while
+      a different module path or extra workspace member fails.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      Quoting the existing module path in staging/src/k8s.io/api/go.mod passed
+      .seikika/check-staging-workspace.py. Changing the quoted name failed
+      with the expected module path; adding a standalone nonexistent member
+      failed with the extra path.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      All original verdicts are pass. The assessment attaches no suggestions
+      that would direct a maintainer to change a different entity. See
+      .seikika/assessments/rule-quality/rule/kubernetes/staging-workspace/release-check-passes.yaml.

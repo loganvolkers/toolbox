@@ -47,10 +47,10 @@ verdicts:
     verdict: fail
     reason: >-
       "Support refresh by external id for each listed record kind"
-      (portal/standards/meta.yaml:891-892) names no place. An agent that
-      implements refresh in the connector, where the capability actually
-      lives, still fails, because the rule reads only the manifest's
-      `refresh:` map and the fix never mentions it.
+      (https://github.com/seikika/seikika/blob/05510a57fafd8707979370858b578b78b935cf0e/portal/standards/meta.yaml#L891-L892)
+      names no place. An agent that implements refresh in the connector, where
+      the capability actually lives, still fails, because the rule reads only
+      the manifest's `refresh:` map and the fix never mentions it.
     suggestion: >-
       Name both places: "Declare `refresh: {<record>: [external_ids]}` on the
       connector in seikika.yaml, and make sure its package registers that

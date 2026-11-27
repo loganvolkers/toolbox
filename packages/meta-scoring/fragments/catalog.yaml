@@ -1,13 +1,11 @@
 # Scorecards for scorecards: the portal's own model (docs/design/scorecards-for-scorecards.md).
-# Included by portal/seikika.yaml; see portal/README.md for the layout.
 
 kinds:
   - name: Scorecard
     description: >-
-      A named set of rules, in levels, that rates every entity of one kind, in
-      this portal or in an example portal it describes (`repo/…` and
-      `acme/…`).
-    identityFrom: [connector:surfaces]
+      A set of rules that rates entities of one kind. Each entity here
+      identifies its source portal and the scorecard declared there.
+    identityFrom: [connector:meta-catalog]
     fields:
       portal: {type: string}
       name: {type: string}
@@ -47,13 +45,29 @@ kinds:
           The scorecard's own levels that some fixture entity reaches (none and
           skipped don't count).
         computed: entity.levels.filter(l, l in entity.fixtureLevels)
+      reviewRubricHash:
+        type: string
+        description: Version of the scorecard-quality rubric declared by the portal.
       reviewState:
         type: string
         description: "scorecard-quality assessment: fresh, stale or missing."
         computed: >-
           inbound.assessesScorecard.size() == 0 ? 'missing' :
-          (inbound.assessesScorecard[0].subjectHash == entity.hash ? 'fresh' :
-          'stale')
+          (inbound.assessesScorecard[0].subjectHash == entity.hash &&
+          inbound.assessesScorecard[0].rubricValid &&
+          (!has(inbound.assessesScorecard[0].rubricHash) ||
+          (has(entity.reviewRubricHash) && inbound.assessesScorecard[0].rubricHash
+          == entity.reviewRubricHash)) ? 'fresh' : 'stale')
+      reviewVerified:
+        type: boolean
+        description: >-
+          Complete assessment on the current rubric with a passing independent
+          review.
+        computed: >-
+          inbound.assessesScorecard.size() > 0 &&
+          inbound.assessesScorecard[0].rubricCurrent &&
+          inbound.assessesScorecard[0].reasons.size() > 0 &&
+          inbound.assessesScorecard[0].independentReview == 'pass'
       reviewFailing:
         type: list
         items: string
@@ -77,9 +91,9 @@ kinds:
         computed: >-
           inbound.assessesScorecard.size() == 0 ? [] :
           inbound.assessesScorecard[0].uncited
-    sources: {default: [connector:surfaces]}
+    sources: {default: [connector:meta-catalog]}
     map:
-    - from: surfaces/scorecard
+    - from: meta-catalog/scorecard
       id: "'scorecard:' + record.portal + '/' + record.name"
       set: >-
         {'portal': record.portal, 'name': record.name, 'kind': record.kind, 'owner': record.owner,
@@ -87,6 +101,7 @@ kinds:
          'tested': record.tested, 'meta': record.meta, 'fixtureLevels': record.fixtureLevels,
          'described': has(record.described) ? record.described : false,
          'explained': has(record.explained) ? record.explained : false,
+         'reviewRubricHash': has(record.reviewRubricHash) ? record.reviewRubricHash : null,
          'links': has(record.links) ? record.links : 0,
          'liveEntities': has(record.liveEntities) ? record.liveEntities : null, 'hash': record.hash}
 
@@ -94,7 +109,7 @@ kinds:
     description: >-
       A rule of one of those scorecards: what it is made of, its tests and its
       outcomes.
-    identityFrom: [connector:surfaces]
+    identityFrom: [connector:meta-catalog]
     fields:
       portal: {type: string}
       scorecard: {type: string}
@@ -157,12 +172,28 @@ kinds:
         description: >-
           Content hash of the rule's definition: assessments of it go stale when
           it changes.
+      reviewRubricHash:
+        type: string
+        description: Version of the rule-quality rubric declared by the portal.
       reviewState:
         type: string
         description: "rule-quality assessment: fresh, stale or missing."
         computed: >-
           inbound.assessesRule.size() == 0 ? 'missing' :
-          (inbound.assessesRule[0].subjectHash == entity.hash ? 'fresh' : 'stale')
+          (inbound.assessesRule[0].subjectHash == entity.hash &&
+          inbound.assessesRule[0].rubricValid &&
+          (!has(inbound.assessesRule[0].rubricHash) ||
+          (has(entity.reviewRubricHash) && inbound.assessesRule[0].rubricHash ==
+          entity.reviewRubricHash)) ? 'fresh' : 'stale')
+      reviewVerified:
+        type: boolean
+        description: >-
+          Complete assessment on the current rubric with a passing independent
+          review.
+        computed: >-
+          inbound.assessesRule.size() > 0 && inbound.assessesRule[0].rubricCurrent
+          && inbound.assessesRule[0].reasons.size() > 0 &&
+          inbound.assessesRule[0].independentReview == 'pass'
       reviewFailing:
         type: list
         items: string
@@ -182,9 +213,9 @@ kinds:
         computed: >-
           inbound.assessesRule.size() == 0 ? [] : inbound.assessesRule[0].uncited
     relations: {ruleOf: {to: Scorecard, many: false}}
-    sources: {default: [connector:surfaces]}
+    sources: {default: [connector:meta-catalog]}
     map:
-    - from: surfaces/rule
+    - from: meta-catalog/rule
       id: "'rule:' + record.card + '/' + record.name"
       set: >-
         {'portal': record.portal, 'scorecard': record.scorecard, 'name': record.name, 'level': record.level,
@@ -194,16 +225,16 @@ kinds:
          'live': has(record.live) ? record.live : null, 'hash': record.hash,
          'checkCel': record.definition.check, 'evidenceCel': record.definition.evidence, 'fixText': record.definition.fix,
          'explained': has(record.explained) ? record.explained : false,
+         'reviewRubricHash': has(record.reviewRubricHash) ? record.reviewRubricHash : null,
          'links': has(record.links) ? record.links : 0,
          'basis': has(record.basis) ? record.basis : 'measured'}
       relations: {ruleOf: "['scorecard:' + record.card]"}
 
   - name: Kind
     description: >-
-      A kind of entity declared by this portal (ids `seikika/…`, the kinds the
-      catalog lists) or by an example portal it describes (`repo/…` and
-      `acme/…`), so this kind counts more than the catalog's kinds.
-    identityFrom: [connector:surfaces]
+      An entity kind declared in one of the portal manifests selected for
+      inspection. Its ID includes the source portal and the kind name.
+    identityFrom: [connector:meta-catalog]
     fields:
       portal: {type: string, description: Portal that declares it.}
       name: {type: string, description: "The kind's name."}
@@ -227,16 +258,16 @@ kinds:
         items: string
         description: Relations other kinds declare to it, as Kind.relation.
       fixtureEntities: {type: integer, description: Entities of this kind the portal's fixtures produce.}
-      tested: {type: boolean, description: A test expectation names one of those entities.}
+      tested: {type: boolean, description: A passing assertion reads one of those fixture entities.}
       hash: {type: string, description: Content hash of the kind's definition.}
       undescribedFields:
         type: list
         items: string
         description: Fields without a description.
         computed: inbound.fieldOf.filter(f, !f.described).map(f, f.name)
-    sources: {default: [connector:surfaces]}
+    sources: {default: [connector:meta-catalog]}
     map:
-    - from: surfaces/kind
+    - from: meta-catalog/kind
       id: "'kind:' + record.portal + '/' + record.name"
       set: >-
         {'portal': record.portal, 'name': record.name, 'described': record.described,
@@ -246,7 +277,7 @@ kinds:
 
   - name: Field
     description: A field of a kind in one of the described portals.
-    identityFrom: [connector:surfaces]
+    identityFrom: [connector:meta-catalog]
     fields:
       portal: {type: string, description: Portal that declares it.}
       kind: {type: string, description: The kind it belongs to.}
@@ -289,9 +320,9 @@ kinds:
         type: integer
         description: Comprehension nesting in the field's `computed:` expression.
     relations: {fieldOf: {to: Kind, many: false}}
-    sources: {default: [connector:surfaces]}
+    sources: {default: [connector:meta-catalog]}
     map:
-    - from: surfaces/field
+    - from: meta-catalog/field
       id: "'field:' + record.portal + '/' + record.kind + '.' + record.name"
       set: >-
         {'portal': record.portal, 'kind': record.kind, 'name': record.name, 'fieldType': record.type,
@@ -305,7 +336,7 @@ kinds:
   - name: PortalConnector
     title: Declared connector
     description: A connector one of the described portals declares.
-    identityFrom: [connector:surfaces]
+    identityFrom: [connector:meta-catalog]
     fields:
       portal: {type: string, description: Portal that declares it.}
       name: {type: string, description: "The connector's name."}
@@ -335,9 +366,9 @@ kinds:
       hash:
         type: string
         description: Content hash of the connector's declaration.
-    sources: {default: [connector:surfaces]}
+    sources: {default: [connector:meta-catalog]}
     map:
-    - from: surfaces/connector
+    - from: meta-catalog/connector
       id: "'connector:' + record.portal + '/' + record.name"
       set: >-
         {'portal': record.portal, 'name': record.name, 'runtime': record.runtime, 'package': record.package,
@@ -348,7 +379,7 @@ kinds:
     description: >-
       A rubric one of the described portals declares, with how it has been
       used.
-    identityFrom: [connector:surfaces]
+    identityFrom: [connector:meta-catalog]
     fields:
       portal: {type: string, description: Portal that declares it.}
       name: {type: string, description: "The rubric's name."}
@@ -369,20 +400,23 @@ kinds:
         type: list
         items: string
         description: "With three or more assessments: criteria every one passed."
+      oneSided:
+        type: list
+        items: string
+        description: Criteria missing a pass or a fail among valid assessments of the rubric.
       hash: {type: string, description: Content hash of the rubric.}
-    sources: {default: [connector:surfaces]}
+    sources: {default: [connector:meta-catalog]}
     map:
-    - from: surfaces/rubric
+    - from: meta-catalog/rubric
       id: "'rubric:' + record.portal + '/' + record.name"
       set: >-
         {'portal': record.portal, 'name': record.name, 'rubricKind': record.kind, 'subject': record.subject,
          'described': record.described, 'criteria': record.criteria, 'unguided': record.unguided,
-         'assessments': record.assessments, 'alwaysPass': record.alwaysPass, 'hash': record.hash}
+         'assessments': record.assessments, 'alwaysPass': record.alwaysPass, 'oneSided': has(record.oneSided) ? record.oneSided : record.criteria, 'hash': record.hash}
 
 scorecards:
-  # They score every rule and scorecard of this portal, the starter and the reference portal —
-  # themselves included, so there is no further level. Only deterministic facts (manifest, CEL,
-  # tests, fixtures) are scored; live outcomes are shown, not scored.
+  # The form cards evaluate declarations and fixture results, including their
+  # own definitions. Live outcomes provide context for the reader.
   - name: meta-rule
     title: Rules are well-formed
     kind: Rule
@@ -406,8 +440,8 @@ scorecards:
       url: https://github.com/seikika/seikika/blob/main/docs/decisions/D01M7W0J8YR0000000000000000.md
     - title: Meta standards review
       url: https://github.com/seikika/seikika/blob/main/docs/design/meta-standards-review.md
-    owner: group:maintainers
-    track: standards
+    owner: ${param:owner}
+    track: ${param:track}
     levels: [bronze, silver, gold]
     ratchet: {newEntitiesAtLeast: bronze} # a new rule or scorecard must be tested and explained from day one
     rules:
@@ -443,13 +477,13 @@ scorecards:
       level: bronze
       check: entity.tested
       evidence: >-
-        ['no expectation in the portal tests names ' + entity.scorecard + '/' +
-        entity.name]
+        ['no passing fixture assertion requires an outcome for ' +
+        entity.scorecard + '/' + entity.name]
       fix: >-
-        In the portal's tests (tests/*.test.yaml), add an expectation that pins
-        the rule: `score('<card>', '<entity>').rules['<rule>'] == 'fail'`, or
-        its evidence compared (`.evidence['<rule>'] == [...]`). A bare mention
-        doesn't count.
+        In a file listed under the portal's `tests:`, add a passing expectation
+        that requires a concrete outcome (`score('<card>',
+        '<entity>').rules['<rule>'] == 'fail'`) or compare the failing rule's
+        evidence with a literal (`.evidence['<rule>'] == [...]`).
       rationale: >-
         An untested rule can change outcome after an edit with nothing to catch
         it. The first rules here gave false positives on a numbered Sources
@@ -592,16 +626,18 @@ scorecards:
       url: https://github.com/seikika/seikika/blob/main/docs/design/thresholds.md#3-the-ladders
     - title: Meta gold is not good
       url: https://github.com/seikika/seikika/blob/main/docs/decisions/D01M831P5QWJQ4A2FT85N5MXJQF.md
-    owner: group:maintainers
-    track: standards
+    owner: ${param:owner}
+    track: ${param:track}
     levels: [bronze, silver, gold]
     ratchet: {newEntitiesAtLeast: bronze} # a new rule or scorecard must be tested and explained from day one
     rules:
     - name: tested
       level: bronze
       check: entity.tested
-      evidence: "['no expectation names score(' + entity.name + ', …)']"
-      fix: Add at least one expectation for the scorecard in the portal's tests.
+      evidence: "['no passing fixture assertion pins a score for ' + entity.name]"
+      fix: >-
+        Pin a level or rule outcome for an in-scope fixture in a file listed
+        under the portal's `tests:`.
       rationale: >-
         A scorecard no expectation names can change its levels or lose a rule
         with no test noticing; on the first run, `user-cli` had no test of any
@@ -679,7 +715,8 @@ scorecards:
         fixture entity reaches ' + l)
       fix: >-
         Add fixture entities that reach each listed level, so every rung of the
-        ladder is exercised in tests (portal/fixtures/).
+        ladder is exercised in tests. Place the records in `fixtures/` next to
+        the manifest.
       rationale: >-
         A level no fixture reaches is untested: its rules may never pass
         together, and nothing shows that an entity can reach it (lesson L12).
@@ -703,8 +740,8 @@ scorecards:
       url: https://github.com/seikika/seikika/blob/main/docs/design/scorecards-for-scorecards.md#4-holistic-review-which-parts-of-a-portal-need-standards
     - title: 'Decision: every part is scored'
       url: https://github.com/seikika/seikika/blob/main/docs/decisions/D01M7WHQA9G0000000000000000.md
-    owner: group:maintainers
-    track: standards
+    owner: ${param:owner}
+    track: ${param:track}
     levels: [bronze, silver, gold]
     ratchet: {newEntitiesAtLeast: bronze} # a new kind must be in the fixtures and the tests
     rules:
@@ -723,7 +760,7 @@ scorecards:
     - name: tested
       level: bronze
       check: entity.tested
-      evidence: "['no test expectation names an entity of ' + entity.name]"
+      evidence: "['no passing test reads a fixture entity of ' + entity.name]"
       fix: >-
         Add a test expectation about one of the kind's fixture entities (a
         field, a relation or a score).
@@ -772,8 +809,8 @@ scorecards:
       url: https://github.com/seikika/seikika/blob/main/docs/design/scorecards-for-scorecards.md#5-the-rest-of-the-model-kinds-fields-connectors
     - title: 'Decision: every part is scored'
       url: https://github.com/seikika/seikika/blob/main/docs/decisions/D01M7WHQA9G0000000000000000.md
-    owner: group:maintainers
-    track: standards
+    owner: ${param:owner}
+    track: ${param:track}
     levels: [bronze, silver, gold]
     ratchet: {newEntitiesAtLeast: bronze} # a new field must have a value somewhere in the fixtures
     rules:
@@ -849,8 +886,8 @@ scorecards:
       url: https://github.com/seikika/seikika/blob/main/docs/design/scorecards-for-scorecards.md#5-the-rest-of-the-model-kinds-fields-connectors
     - title: 'Decision: every part is scored'
       url: https://github.com/seikika/seikika/blob/main/docs/decisions/D01M7WHQA9G0000000000000000.md
-    owner: group:maintainers
-    track: standards
+    owner: ${param:owner}
+    track: ${param:track}
     levels: [bronze, silver, gold]
     ratchet: {newEntitiesAtLeast: bronze} # a new connector needs fixtures and a mapping for every record
     rules:
@@ -919,11 +956,11 @@ scorecards:
       url: https://github.com/seikika/seikika/blob/main/docs/decisions/D01M7WHQA9G0000000000000000.md
     - title: Meta standards review
       url: https://github.com/seikika/seikika/blob/main/docs/design/meta-standards-review.md
-    owner: group:maintainers
-    track: standards
+    owner: ${param:owner}
+    track: ${param:track}
     levels: [bronze, silver, gold]
     ratchet: {advisory: true}
-    appliesTo: entity.portal == 'seikika' # our own rules; the starter and reference are examples
+    appliesTo: ${param:reviewScope}
     rules:
     - name: no-open-findings
       level: bronze
@@ -933,7 +970,7 @@ scorecards:
         a stale review: re-assess to close it)') : entity.reviewFailing
       fix: >-
         A current rule-quality assessment failed the listed criteria: act on its
-        suggestions (portal/assessments/), then re-assess. If the finding is
+        suggestions in the assessment file, then re-assess. If the finding is
         wrong, say why in a new assessment by another assessor.
       rationale: >-
         A failing review names a way the rule misleads or can be gamed. Two such
@@ -946,8 +983,9 @@ scorecards:
         [entity.reviewState == 'stale' ? 'the rule changed since it was
         assessed' : 'not assessed against rule-quality']
       fix: >-
-        Run `seikika assess brief <rule id> --portal portal`, have your agent
-        write the assessment file it names, then `seikika assess check portal`.
+        Run `seikika assess brief <rule id> --portal <manifest>`, have your
+        agent write the assessment file it names, then `seikika assess check
+        <manifest>`.
       rationale: >-
         Without a current review, nobody has judged whether the rule as it now
         stands measures its intent; a verdict on an earlier version may not
@@ -956,14 +994,16 @@ scorecards:
       level: gold
       check: >-
         entity.reviewState == 'fresh' && entity.reviewFailing.size() == 0 &&
-        entity.reviewUncited.size() == 0
+        entity.reviewUncited.size() == 0 && entity.reviewVerified
       evidence: >-
         entity.reviewState != 'fresh' ? ['no current assessment'] :
         entity.reviewFailing + entity.reviewUncited.map(c, c + ' cites nothing
-        that resolves')
+        that resolves') + (entity.reviewVerified ? [] : ['need a complete
+        versioned assessment and a passing independent review'])
       fix: >-
-        Act on the failing criteria's suggestions in the assessment
-        (portal/assessments/), then re-assess.
+        Act on each finding in the assessment file. Add resolving citations for
+        uncited reasons. Run seikika assess brief for the current rubric and
+        obtain a passing independent assessment-quality review.
       rationale: >-
         A review that fails a criterion found a problem, and one whose reasons
         cite nothing that resolves can't be checked; either way the rule isn't
@@ -1007,11 +1047,11 @@ scorecards:
       url: https://github.com/seikika/seikika/blob/main/docs/decisions/D01M7WHQA9G0000000000000000.md
     - title: Meta standards review
       url: https://github.com/seikika/seikika/blob/main/docs/design/meta-standards-review.md
-    owner: group:maintainers
-    track: standards
+    owner: ${param:owner}
+    track: ${param:track}
     levels: [bronze, silver, gold]
     ratchet: {advisory: true}
-    appliesTo: entity.portal == 'seikika'
+    appliesTo: ${param:reviewScope}
     rules:
     - name: no-open-findings
       level: bronze
@@ -1021,8 +1061,8 @@ scorecards:
         a stale review: re-assess to close it)') : entity.reviewFailing
       fix: >-
         A current scorecard-quality assessment failed the listed criteria: act
-        on its suggestions (portal/assessments/), then re-assess. If the finding
-        is wrong, say why in a new assessment by another assessor.
+        on its suggestions in the assessment file, then re-assess. If the
+        finding is wrong, say why in a new assessment by another assessor.
       rationale: >-
         A failing review names a gap or a broken ladder that every entity the
         scorecard scores inherits; dropping the scorecard to none keeps the
@@ -1034,9 +1074,9 @@ scorecards:
         [entity.reviewState == 'stale' ? 'the scorecard changed since it was
         assessed' : 'not assessed against scorecard-quality']
       fix: >-
-        Run `seikika assess brief <scorecard id> --portal portal`, have your
+        Run `seikika assess brief <scorecard id> --portal <manifest>`, have your
         agent write the assessment file it names, then `seikika assess check
-        portal`.
+        <manifest>`.
       rationale: >-
         A review is tied to the scorecard's content hash; once the scorecard
         changes, the old verdict may no longer describe its rules or levels.
@@ -1044,14 +1084,16 @@ scorecards:
       level: gold
       check: >-
         entity.reviewState == 'fresh' && entity.reviewFailing.size() == 0 &&
-        entity.reviewUncited.size() == 0
+        entity.reviewUncited.size() == 0 && entity.reviewVerified
       evidence: >-
         entity.reviewState != 'fresh' ? ['no current assessment'] :
         entity.reviewFailing + entity.reviewUncited.map(c, c + ' cites nothing
-        that resolves')
+        that resolves') + (entity.reviewVerified ? [] : ['need a complete
+        versioned assessment and a passing independent review'])
       fix: >-
-        Act on the failing criteria's suggestions in the assessment
-        (portal/assessments/), then re-assess.
+        Act on each finding in the assessment file. Add resolving citations for
+        uncited reasons. Run seikika assess brief for the current rubric and
+        obtain a passing independent assessment-quality review.
       rationale: >-
         A review that fails a criterion found a problem, and one whose reasons
         cite nothing that resolves can't be checked; either way the scorecard
@@ -1089,8 +1131,8 @@ scorecards:
       url: https://github.com/seikika/seikika/blob/main/docs/design/scorecards-for-scorecards.md#61-assessments-and-rubrics-are-standards-too-d80
     - title: 'Decision: rubrics are scored'
       url: https://github.com/seikika/seikika/blob/main/docs/decisions/D01M7WJVW700000000000000000.md
-    owner: group:maintainers
-    track: standards
+    owner: ${param:owner}
+    track: ${param:track}
     levels: [bronze, silver, gold]
     ratchet: {newEntitiesAtLeast: bronze} # a new rubric must be described and used once
     rules:
@@ -1130,18 +1172,19 @@ scorecards:
         url: https://github.com/seikika/seikika/blob/main/docs/design/thresholds.md#2-the-numbers
     - name: discriminates
       level: gold
-      check: entity.assessments >= 3 && entity.alwaysPass.size() == 0
+      check: entity.assessments >= 3 && entity.oneSided.size() == 0
       evidence: >-
         entity.assessments < 3 ? ['only ' + string(entity.assessments) + '
         assessment(s); 3 show whether criteria discriminate'] :
-        entity.alwaysPass.map(c, c + ' passed in every assessment')
+        entity.oneSided.map(c, c + ' needs a passing and a failing example')
       fix: >-
-        Sharpen or drop a criterion that everything passes; a question nothing
-        fails asks nothing.
+        Assess representative examples of each listed criterion, including a
+        case that should pass and one that should fail. Revise guidance when the
+        evidence leaves assessors unsure.
       rationale: >-
-        A criterion every assessment passes costs assessor effort and tells
-        nothing apart: `rule-quality`'s `fix-leads-to-pass` passed all four of
-        its first rule assessments.
+        Passing and failing examples show the decision boundary in use. An
+        unsure outcome identifies a question to resolve about the evidence or
+        guidance.
     facets: {summary: public, details: public}
 
 rubrics:
@@ -1182,9 +1225,8 @@ rubrics:
   - name: scorecard-quality
     kind: Scorecard
     description: >-
-      Is this scorecard a good standard? Read it in the portal's seikika.yaml
-      with the doc that motivates it (portal/README.md says which layer it
-      raises).
+      Is this scorecard a good standard? Read its definition, fixture tests
+      and the design or operator guide that states who uses it and why.
     criteria:
     - name: one-concern
       question: >-

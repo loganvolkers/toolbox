@@ -1,0 +1,30 @@
+apiVersion: seikika.com/assessment/v1
+entity: rule:security-audit-skill/skill-distribution/release-check-passes
+rubric: rule-quality
+subjectHash: 1ca67fe77db1
+rubricHash: 696a7d3fef1c024786016ca0a353e402b5c1a7aaf7644da6825b20e218dc4a96
+assessor: {kind: agent, name: codex}
+at: 2026-11-27
+verdicts:
+  - criterion: measures-intent
+    verdict: pass
+    reason: >-
+      .seikika/check-skill-distribution.py compares the README.md Files table
+      with the installable directory and checks the SKILL.md package name.
+  - criterion: hard-to-game
+    verdict: pass
+    reason: >-
+      .seikika/check-skill-distribution.py checks the installed file tree
+      recursively. .seikika/tests/release.test.yaml records both an
+      undocumented nested file and a missing entrypoint.
+  - criterion: fix-leads-to-pass
+    verdict: pass
+    reason: >-
+      .seikika/seikika.yaml identifies the README.md table and installed
+      directory. The evidence reports the missing file by name.
+  - criterion: threshold-justified
+    verdict: pass
+    reason: >-
+      .seikika/check-skill-distribution.py checks the documented inventory.
+      The ready requirement expects the complete listed set and matching
+      entrypoint metadata.

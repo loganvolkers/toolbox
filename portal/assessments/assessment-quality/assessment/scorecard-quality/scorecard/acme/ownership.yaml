@@ -28,8 +28,9 @@ verdicts:
       whether that claim can be trusted, and bronze is contained in silver. No
       rule checks the review that claim-verified's rationale promises
       (seikika.yaml:203-206). No rule has evidence, and the rubric says to
-      fail that (portal/standards/meta.yaml:1214-1216), even though `seikika
-      owner` can explain it.
+      fail that
+      (https://github.com/seikika/seikika/blob/05510a57fafd8707979370858b578b78b935cf0e/portal/standards/meta.yaml#L1214-L1216),
+      even though `seikika owner` can explain it.
   - criterion: reproducible
     verdict: pass
     reason: >-

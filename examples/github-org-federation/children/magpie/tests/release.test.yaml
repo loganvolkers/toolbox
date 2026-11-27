@@ -1,0 +1,15 @@
+name: Magpie packed GUI assets
+assert:
+  - name: Packed assets matching the embedded tree reach ready
+    expect: >-
+      score('packed-gui-assets', 'packed-gui-assets:packed-gui-assets').level
+      == 'ready' && score('packed-gui-assets',
+      'packed-gui-assets:packed-gui-assets').rules['release-check-passes'] ==
+      'pass'
+  - name: A divergent archive fails with the specific layout mismatch
+    expect: >-
+      score('packed-gui-assets',
+      'packed-gui-assets:broken').rules['release-check-passes'] == 'fail' &&
+      score('packed-gui-assets',
+      'packed-gui-assets:broken').evidence['release-check-passes'][1].contains('asset
+      archive entries differ from the embedded tree')

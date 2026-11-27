@@ -260,6 +260,12 @@ The repository quickstart recorded a baseline, exited 1 after moving its linked 
 - Compared the federated workflow paths with GitHub's Contents API at each of the 13 commits. All 96 paths matched and had a zizmor score. Thirty reached gold and the audit returned 788 findings. The organization portal's ten assertions cover hygiene, workflow severity, and unavailable audits. All seven forks passed their repository ratchet before publishing their child snapshots.
 - The federation browser test builds two child portals with identical definition and entity IDs, plus one child with a malformed snapshot. It verifies source isolation, scoped read access, action form choices, and a static preview with no write requests. [Reproduction commands](../examples/github-org-federation/README.md)
 - Compared the live loopback API with the offline report built from the same GitHub organization. The catalog, entity fields, scorecards and results, tracks, campaigns, child snapshots, and action list matched for 13 repositories, 96 workflows, and seven child publications. Both reads used the existing GitHub credential without a GitHub App or Postgres. The separate public docs report included 11 repositories and 92 workflows.
+- Replayed the release checks on the seven pinned fork checkouts and confirmed
+  command-level failures with modified release inputs. All seven checks reached
+  ready on the pinned inputs, and each child rule and scorecard reached gold on
+  fixtures and independent review. The parent replay loaded the seven child
+  reports and reached gold in review for all eight parent rules and both parent
+  scorecards. [Pinned checkouts and commands](../examples/github-org-federation/README.md#verify-a-child-implementation)
 
 ## Shell script standard
 

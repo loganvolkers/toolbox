@@ -1,0 +1,34 @@
+apiVersion: seikika.com/assessment/v1
+entity: scorecard:seikika-organization/workflow-zizmor
+rubric: scorecard-quality
+subjectHash: 6e88c7ba2b3b
+rubricHash: 1d01a2d06d609948839eb0695b1bba667b2ebe2c4b50224dbd8ac05d5b3cb334
+assessor: {kind: agent, name: codex}
+at: 2026-11-27
+verdicts:
+  - criterion: one-concern
+    verdict: pass
+    reason: >-
+      examples/github-org-federation/workflows.yaml applies the same offline
+      workflow audit and severity budget to every audited workflow.
+  - criterion: levels-are-a-ladder
+    verdict: pass
+    reason: >-
+      examples/github-org-federation/standards.test.yaml exercises none,
+      bronze, silver and gold with a fixture at each severity boundary.
+  - criterion: no-obvious-gap
+    verdict: pass
+    reason: >-
+      crates/seikika-connector-workspace/src/org_workflows.rs requires
+      completed zizmor SARIF and classifies its severity property before the
+      connector marks an audit available.
+      examples/github-org-federation/standards.test.yaml preserves unknown
+      when no audit completed.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      examples/github-org-federation/workflows.yaml names the audit and
+      workflow line to change. In
+      examples/github-org-federation/fixtures/github-org.ndjson clearing the
+      single medium finding would bring medium.yml directly to gold; low.yml
+      separately demonstrates silver when a low finding remains.

@@ -6,8 +6,9 @@
 use crate::Derived;
 use seikika_expr::{Env, Expr};
 use serde::{Deserialize, Serialize};
+use std::collections::BTreeSet;
 use std::path::Path;
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 
 #[derive(Debug, Deserialize)]
 struct Suite {
@@ -39,20 +40,38 @@ fn json(v: impl Serialize) -> Result<serde_json::Value, String> {
     serde_json::to_value(v).map_err(|e| e.to_string())
 }
 
-fn env(d: Arc<Derived>) -> Env {
+type Lookups = Arc<Mutex<BTreeSet<String>>>;
+
+fn lookup<T>(result: Result<T, String>, id: &str, lookups: &Option<Lookups>) -> Result<T, String> {
+    if result.is_ok()
+        && let Some(lookups) = lookups
+    {
+        lookups.lock().expect("fixture lookups").insert(id.into());
+    }
+    result
+}
+
+fn env(d: Arc<Derived>, lookups: Option<Lookups>) -> Env {
     let mut env = Env::default();
     let e = d.clone();
+    let entity_lookups = lookups.clone();
     env.function1("entity", move |id| {
-        e.entity_json(id).ok_or_else(|| format!("no entity {id}"))
+        lookup(
+            e.entity_json(id).ok_or_else(|| format!("no entity {id}")),
+            id,
+            &entity_lookups,
+        )
     })
     .expect("entity is not a stdlib function");
     let s = d.clone();
     env.function2("score", move |card, id| {
-        s.scores
+        let result = s
+            .scores
             .get(card)
             .and_then(|m| m.get(id))
             .ok_or_else(|| format!("no score {card} for {id}"))
-            .and_then(json)
+            .and_then(json);
+        lookup(result, id, &lookups)
     })
     .expect("score is not a stdlib function");
     let c = d.clone();
@@ -79,17 +98,80 @@ fn env(d: Arc<Derived>) -> Env {
     env
 }
 
+/// Evidence collected from passing fixture assertions.
+#[derive(Default)]
+pub struct FixtureCoverage {
+    pub scores: Vec<seikika_expr::analysis::ScoreAssertion>,
+    pub entities: BTreeSet<String>,
+}
+
+/// Collect required score comparisons and successful entity and score lookups.
+pub fn verified_coverage(
+    root: &Path,
+    files: &[String],
+    derived: Arc<Derived>,
+) -> Result<FixtureCoverage, String> {
+    let lookups = Lookups::default();
+    let env = env(derived.clone(), Some(lookups.clone()));
+    let mut coverage = FixtureCoverage::default();
+    for file in files {
+        for case in read_suite(root, file)?.cases {
+            if let Ok(expr) = Expr::compile(&case.expect)
+                && expr
+                    .eval_in(&env.scope())
+                    .is_ok_and(|outcome| outcome.as_bool() == Some(true))
+            {
+                coverage
+                    .scores
+                    .extend(
+                        expr.score_assertions()
+                            .into_iter()
+                            .filter_map(|mut assertion| {
+                                let score = derived
+                                    .scores
+                                    .get(&assertion.card)?
+                                    .get(&assertion.entity)?;
+                                if score.level == "skipped" {
+                                    return None;
+                                }
+                                if let Some((rule, outcome)) = &mut assertion.rule
+                                    && outcome == "evidence"
+                                {
+                                    let actual = score.rules.as_ref()?.get(rule)?;
+                                    if actual != "fail" {
+                                        return None;
+                                    }
+                                    outcome.clone_from(actual);
+                                }
+                                Some(assertion)
+                            }),
+                    );
+                coverage
+                    .entities
+                    .append(&mut lookups.lock().expect("fixture lookups"));
+            } else {
+                lookups.lock().expect("fixture lookups").clear();
+            }
+        }
+    }
+    Ok(coverage)
+}
+
+fn read_suite(root: &Path, file: &str) -> Result<Suite, String> {
+    let text = std::fs::read_to_string(root.join(file)).map_err(|e| format!("{file}: {e}"))?;
+    serde_norway::from_str(&text).map_err(|e| format!("{file}: {e}"))
+}
+
 /// Run the expectation files listed in the manifest's `tests` (paths relative to `root`).
 pub fn run(
     root: &Path,
     files: &[String],
     derived: Arc<Derived>,
 ) -> Result<Vec<TestResult>, String> {
-    let env = env(derived);
+    let env = env(derived, None);
     let mut out = Vec::new();
     for file in files {
-        let text = std::fs::read_to_string(root.join(file)).map_err(|e| format!("{file}: {e}"))?;
-        let suite: Suite = serde_norway::from_str(&text).map_err(|e| format!("{file}: {e}"))?;
+        let suite = read_suite(root, file)?;
         for case in suite.cases {
             let outcome = Expr::compile(&case.expect).and_then(|e| e.eval_in(&env.scope()));
             let (passed, error) = match outcome {

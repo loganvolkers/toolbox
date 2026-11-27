@@ -338,3 +338,96 @@ fn reviews_stop_at_one_level() {
     );
     let _ = std::fs::remove_dir_all(&dir);
 }
+
+#[test]
+fn rubric_usage_requires_a_valid_unambiguous_assessment_of_the_current_rubric() {
+    let dir = portal_with("rubric-usage", MANIFEST);
+    let assessments = dir.join("assessments");
+    let path = assessments.join("a.yaml");
+    let count = || {
+        let output = stdout(&seikika(&["describe", "portal", dir.to_str().unwrap()]));
+        output
+            .lines()
+            .map(|line| serde_json::from_str::<Value>(line).unwrap())
+            .find(|record| record["externalId"] == "rubric:demo/thing-review")
+            .unwrap()["data"]["assessments"]
+            .as_u64()
+            .unwrap()
+    };
+
+    std::fs::write(&path, ASSESSMENT).unwrap();
+    assert_eq!(count(), 1);
+
+    let duplicate = assessments.join("duplicate.yaml");
+    std::fs::write(&duplicate, ASSESSMENT).unwrap();
+    assert_eq!(count(), 0);
+    std::fs::remove_file(duplicate).unwrap();
+
+    let stale = format!("{ASSESSMENT}rubricHash: \"{}\"\n", "0".repeat(64));
+    std::fs::write(&path, stale).unwrap();
+    assert_eq!(count(), 0);
+
+    std::fs::write(
+        &path,
+        ASSESSMENT.replace("criterion: useful", "criterion: typo"),
+    )
+    .unwrap();
+    assert_eq!(count(), 0);
+    std::fs::remove_dir_all(dir).unwrap();
+}
+
+#[test]
+fn uncertain_rubric_verdicts_do_not_supply_a_decision_boundary() {
+    let dir = portal_with("rubric-boundary", MANIFEST);
+    let assessments = dir.join("assessments");
+    for (name, verdict) in [("a", "pass"), ("b", "unsure"), ("c", "unsure")] {
+        let body = ASSESSMENT
+            .replace("thing:a", &format!("thing:{name}"))
+            .replace("verdict: pass", &format!("verdict: {verdict}"));
+        std::fs::write(assessments.join(format!("{name}.yaml")), body).unwrap();
+    }
+    let coverage = || {
+        let output = stdout(&seikika(&["describe", "portal", dir.to_str().unwrap()]));
+        output
+            .lines()
+            .map(|line| serde_json::from_str::<Value>(line).unwrap())
+            .find(|record| record["externalId"] == "rubric:demo/thing-review")
+            .unwrap()["data"]["oneSided"]
+            .clone()
+    };
+    assert_eq!(coverage(), serde_json::json!(["useful"]));
+    std::fs::write(
+        assessments.join("b.yaml"),
+        ASSESSMENT
+            .replace("thing:a", "thing:b")
+            .replace("verdict: pass", "verdict: fail"),
+    )
+    .unwrap();
+    assert_eq!(coverage(), serde_json::json!([]));
+    std::fs::remove_dir_all(dir).unwrap();
+}
+
+#[test]
+fn kind_coverage_requires_a_lookup_in_a_passing_assertion() {
+    let dir = portal_with("kind-coverage", MANIFEST);
+    let tests = dir.join("tests/t.test.yaml");
+    let tested = |expression| {
+        let fixture =
+            format!("name: t\nassert:\n  - name: coverage\n    expect: >-\n      {expression}\n");
+        std::fs::write(&tests, fixture).unwrap();
+        let output = stdout(&seikika(&["describe", "portal", dir.to_str().unwrap()]));
+        output
+            .lines()
+            .map(|line| serde_json::from_str::<Value>(line).unwrap())
+            .find(|record| record["externalId"] == "kind:demo/Thing")
+            .unwrap()["data"]["tested"]
+            .as_bool()
+            .unwrap()
+    };
+    assert!(!tested("'thing:a' == 'thing:a'"));
+    assert!(!tested("true || entity('thing:a').title == 'a'"));
+    assert!(!tested("entity('thing:a').title == 'wrong'"));
+    assert!(tested("entity('thing:a').title == 'a'"));
+    assert!(tested("score('reviewed', 'thing:a').level == 'none'"));
+    std::fs::remove_dir_all(dir).unwrap();
+}

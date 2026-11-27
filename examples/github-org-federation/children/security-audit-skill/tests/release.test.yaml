@@ -1,0 +1,24 @@
+name: Skill distribution inventory
+assert:
+  - name: A documented set of installed files reaches ready
+    expect: >-
+      score('skill-distribution',
+      'skill-distribution:skill-distribution').level == 'ready' &&
+      score('skill-distribution',
+      'skill-distribution:skill-distribution').rules['release-check-passes']
+      == 'pass'
+  - name: A missing installed file is reported by name
+    expect: >-
+      score('skill-distribution',
+      'skill-distribution:broken').rules['release-check-passes'] == 'fail' &&
+      score('skill-distribution',
+      'skill-distribution:broken').evidence['release-check-passes'] == ['Exit
+      1: python3 .seikika/check-skill-distribution.py', 'README.md lists
+      missing installed file SKILL.md']
+  - name: Reject an undocumented nested package file
+    expect: >-
+      score('skill-distribution',
+      'skill-distribution:unlisted-nested').rules['release-check-passes'] ==
+      'fail' && score('skill-distribution',
+      'skill-distribution:unlisted-nested').evidence['release-check-passes'][1].contains('README.md
+      does not list installed file extras/checklist.md')

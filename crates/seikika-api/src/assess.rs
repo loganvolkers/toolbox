@@ -3,11 +3,10 @@
 //! calls a model: the agent the developer already runs reads the brief (from `seikika assess brief`
 //! or the `assessment_brief` MCP tool), assesses, and writes an assessment file or pushes it.
 
+pub use seikika_connect::assessment::{problems, rubric_hash};
 use seikika_model::Manifest;
 use seikika_model::manifest::Rubric;
 use serde_json::{Map, Value, json};
-use sha2::{Digest, Sha256};
-use std::collections::BTreeSet;
 use std::fmt::Write as _;
 
 /// Where an assessment of `entity` against `rubric` lives, relative to the portal directory.
@@ -44,18 +43,6 @@ pub fn rubric<'a>(m: &'a Manifest, kind: &str, name: Option<&str>) -> Result<&'a
 /// itself, so reviews stop at one level (docs/design/scorecards-for-scorecards.md §1, §6.1).
 pub fn applies(r: &Rubric, fields: &Map<String, Value>) -> bool {
     fields.get("rubric").and_then(Value::as_str) != Some(r.name.as_str())
-}
-
-/// Version of the rubric used to prepare an assessment. Documentation links can change without
-/// invalidating a verdict.
-pub fn rubric_hash(r: &Rubric) -> String {
-    let mut definition = r.clone();
-    definition.links.clear();
-    let body = serde_json::to_vec(&definition).expect("rubric serializes");
-    Sha256::digest(body)
-        .iter()
-        .map(|byte| format!("{byte:02x}"))
-        .collect()
 }
 
 /// The brief for `entity` (a `GET /v1/entities/{id}` body: `{id, kind, fields}`).
@@ -147,40 +134,4 @@ pub fn markdown(b: &Value) -> String {
         b["template"].as_str().unwrap_or("")
     );
     s
-}
-
-/// Problems with an assessment document against the schema and the portal's rubrics.
-pub fn problems(m: &Manifest, doc: &Value) -> Vec<String> {
-    let mut out: Vec<String> =
-        seikika_model::schema::errors(seikika_model::schema::assessment(), doc)
-            .into_iter()
-            .map(|(p, e)| format!("{}: {e}", if p.is_empty() { "/" } else { &p }))
-            .collect();
-    let Some(r) = m
-        .rubrics
-        .iter()
-        .find(|r| Some(r.name.as_str()) == doc["rubric"].as_str())
-    else {
-        out.push(format!("unknown rubric {}", doc["rubric"]));
-        return out;
-    };
-    let mut named = BTreeSet::new();
-    for n in doc["verdicts"]
-        .as_array()
-        .into_iter()
-        .flatten()
-        .filter_map(|v| v["criterion"].as_str())
-    {
-        if !named.insert(n) {
-            out.push(format!("duplicate verdict for criterion {n}"));
-        } else if !r.criteria.iter().any(|c| c.name == n) {
-            out.push(format!("{n} is not a criterion of {}", r.name));
-        }
-    }
-    for c in &r.criteria {
-        if !named.contains(&c.name.as_str()) {
-            out.push(format!("no verdict for criterion {}", c.name));
-        }
-    }
-    out
 }

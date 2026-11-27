@@ -1,0 +1,98 @@
+apiVersion: seikika.com/v1alpha1
+portal: {name: astryx, title: Astryx, owner: group:maintainers, seikika: "0.2"}
+include:
+  - {package: ../../../../packages/meta-scoring, with: {track: portal-quality}}
+
+tracks:
+  - name: release
+    title: Release readiness
+    owner: group:maintainers
+    description: Verify the repository's release contract before distributing packages.
+  - name: portal-quality
+    title: Portal quality
+    owner: group:maintainers
+    description: Verify the fixture and review evidence behind the release standard.
+
+connectors:
+  - name: release-check
+    package: builtin:runner
+    runtime: in-image
+    config:
+      name: release-check
+      jobs:
+        - name: published-dependencies
+          command: [node, .seikika/check-published-dependencies.mjs]
+          parse: exit
+    records: [published-dependencies]
+    refresh: {published-dependencies: [external_ids]}
+    freshness: {published-dependencies: 5m}
+
+kinds:
+  - name: PublishedDependencies
+    description: >-
+      Published Astryx packages depend on package versions from the same
+      release.
+    identityFrom: [connector:release-check]
+    fields:
+      command:
+        type: string
+        description: Command that reproduces the release check in the checkout.
+      exitCode:
+        type: integer
+        description: Process exit status for the release check.
+      evidence:
+        type: list
+        items: string
+        description: Bounded diagnostics from a failed release check.
+    sources: {default: [connector:release-check]}
+    map:
+    - from: release-check/published-dependencies
+      id: "'published-dependencies:' + record.name"
+      set: >-
+        {'command': record.command, 'exitCode': record.exitCode, 'evidence':
+        record.evidence}
+
+scorecards:
+  - name: published-dependencies
+    title: Astryx packaging contract
+    kind: PublishedDependencies
+    description: >-
+      Published Astryx packages depend on package versions from the same
+      release.
+    rationale: >-
+      A release that fails this preflight can leave users installing stale or
+      unusable artifacts.
+    links:
+    - title: Upstream release contract
+      url: https://github.com/seikika/astryx/blob/main/scripts/npm/published-manifests.mjs
+    owner: group:maintainers
+    track: release
+    levels: [ready]
+    ratchet: {newEntitiesAtLeast: ready}
+    rules:
+    - name: release-check-passes
+      level: ready
+      check: entity.exitCode == 0
+      evidence: >-
+        ['Exit ' + string(entity.exitCode) + ': ' + entity.command] +
+        entity.evidence
+      fix: >-
+        Update the package manifest named in the diagnostic so its workspace
+        dependency matches the published package version for this release. For
+        duplicate names, give the listed manifests distinct package names or
+        remove the unintended copy from publication. If the inventory is empty,
+        restore the publishable manifests under packages/ or packages/themes/.
+      rationale: >-
+        The repository preflight uses exit status zero when all inputs agree
+        with the release contract.
+    facets: {summary: public, details: public}
+
+campaigns:
+  - name: release-preflight
+    title: Keep the release preflight passing
+    owner: group:maintainers
+    track: release
+    description: Resolve release distribution findings before packaging the next release.
+    includes: [{scorecard: published-dependencies, atLeast: ready}]
+
+tests: [tests/release.test.yaml]

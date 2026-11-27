@@ -1,0 +1,33 @@
+apiVersion: seikika.com/assessment/v1
+entity: rule:kubernetes/staging-workspace/release-check-passes
+rubric: rule-quality
+subjectHash: c7145e23d6ab
+rubricHash: 696a7d3fef1c024786016ca0a353e402b5c1a7aaf7644da6825b20e218dc4a96
+assessor: {kind: agent, name: codex}
+at: 2026-11-27
+verdicts:
+  - criterion: measures-intent
+    verdict: pass
+    reason: >-
+      The staging adapter in .seikika/check-staging-workspace.py compares
+      go.work membership with staging go.mod files and checks their declared
+      import paths.
+  - criterion: hard-to-game
+    verdict: pass
+    reason: >-
+      The Go workspace parser in .seikika/check-staging-workspace.py checks
+      both grouped and standalone declarations.
+      .seikika/tests/release.test.yaml records the failure of an added
+      standalone member.
+  - criterion: fix-leads-to-pass
+    verdict: pass
+    reason: >-
+      The finding tells the maintainer which entry or module declaration to
+      repair. The fix in .seikika/seikika.yaml points to the tool-owned
+      go.work dependency configuration.
+  - criterion: threshold-justified
+    verdict: pass
+    reason: >-
+      go.work is generated workspace membership. Each staging module must
+      resolve under its declared path, so zero membership or name
+      discrepancies is the ready boundary in .seikika/seikika.yaml.

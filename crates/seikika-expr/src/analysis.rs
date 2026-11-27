@@ -183,9 +183,140 @@ pub fn required_equalities(expr: &str) -> Vec<(String, String)> {
     out
 }
 
+/// A scorecard level or rule outcome required by a fixture assertion.
+#[derive(Debug, PartialEq, Eq)]
+pub struct ScoreAssertion {
+    pub card: String,
+    pub entity: String,
+    /// A rule and its asserted status, or `evidence` for an asserted diagnostic.
+    pub rule: Option<(String, String)>,
+}
+
+fn string_literal(e: &IdedExpr) -> Option<&str> {
+    match &e.expr {
+        Expr::Literal(cel::common::ast::LiteralValue::String(s)) => Some(s.inner()),
+        _ => None,
+    }
+}
+
+fn score_selection(e: &IdedExpr) -> Option<(&str, &str, &str)> {
+    let Expr::Select(select) = &e.expr else {
+        return None;
+    };
+    let Expr::Call(score) = &select.operand.expr else {
+        return None;
+    };
+    match score.args.as_slice() {
+        [card, id] if score.func_name == "score" && score.target.is_none() && !select.test => {
+            Some((string_literal(card)?, string_literal(id)?, &select.field))
+        }
+        _ => None,
+    }
+}
+
+fn is_literal(e: &IdedExpr) -> bool {
+    match &e.expr {
+        Expr::Literal(_) => true,
+        Expr::List(list) => list.elements.iter().all(is_literal),
+        _ => false,
+    }
+}
+
+fn score_comparison(left: &IdedExpr, right: &IdedExpr) -> Option<ScoreAssertion> {
+    if let Some((card, entity, "level")) = score_selection(left) {
+        string_literal(right)?;
+        return Some(ScoreAssertion {
+            card: card.into(),
+            entity: entity.into(),
+            rule: None,
+        });
+    }
+    let Expr::Call(index) = &left.expr else {
+        return None;
+    };
+    let [map, key] = index.args.as_slice() else {
+        return None;
+    };
+    if index.func_name != "_[_]" || index.target.is_some() {
+        return None;
+    }
+    let (card, entity, field) = score_selection(map)?;
+    let rule = string_literal(key)?;
+    let outcome = match field {
+        "rules" => match string_literal(right)? {
+            o @ ("pass" | "fail" | "unknown" | "skipped" | "waived") => o,
+            _ => return None,
+        },
+        "evidence" if is_literal(right) => "evidence",
+        _ => return None,
+    };
+    Some(ScoreAssertion {
+        card: card.into(),
+        entity: entity.into(),
+        rule: Some((rule.into(), outcome.into())),
+    })
+}
+
+/// Recognize direct score comparisons in required branches of an assertion. For example, an
+/// operand of `||` may be skipped, and text inside a string is never a score comparison.
+pub(crate) fn score_assertions(expr: &IdedExpr) -> Vec<ScoreAssertion> {
+    fn walk(e: &IdedExpr, out: &mut Vec<ScoreAssertion>) {
+        let Expr::Call(c) = &e.expr else { return };
+        match (c.func_name.as_str(), c.target.is_none(), c.args.as_slice()) {
+            ("_&&_", true, [a, b]) => {
+                walk(a, out);
+                walk(b, out);
+            }
+            ("_==_", true, [a, b]) => {
+                out.extend(score_comparison(a, b).or_else(|| score_comparison(b, a)));
+            }
+            _ => {}
+        }
+    }
+
+    let mut out = Vec::new();
+    walk(expr, &mut out);
+    out
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn counts_only_required_score_comparisons() {
+        let assertions = |src| crate::Expr::compile(src).unwrap().score_assertions();
+        let a = |card: &str, entity: &str, rule: &str, outcome: &str| ScoreAssertion {
+            card: card.into(),
+            entity: entity.into(),
+            rule: Some((rule.into(), outcome.into())),
+        };
+        assert_eq!(
+            assertions(
+                "score('a', 'x:1').rules['first'] == 'pass' &&
+                 score('b', 'x:2').evidence['second'] == ['missing'] &&
+                 'gold' == score('c', 'x:3').level",
+            ),
+            [
+                a("a", "x:1", "first", "pass"),
+                a("b", "x:2", "second", "evidence"),
+                ScoreAssertion {
+                    card: "c".into(),
+                    entity: "x:3".into(),
+                    rule: None
+                },
+            ]
+        );
+        for source in [
+            "true || score('a', 'x:1').rules['first'] == 'pass'",
+            "score('a', 'x:1').rules['first'] == score('a', 'x:1').rules['first']",
+            "score('a', 'x:1').rules['first'] != 'fail'",
+            "score('a', 'x:1').evidence['first'] == score('a', 'x:1').evidence['first']",
+            "true || string(\"score('a', 'x:1').rules['first'] == 'pass'\") == ''",
+        ] {
+            assert!(assertions(source).is_empty(), "{source}");
+        }
+    }
 
     #[test]
     fn finds_the_equalities_a_filter_requires() {

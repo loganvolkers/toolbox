@@ -1,0 +1,32 @@
+apiVersion: seikika.com/assessment/v1
+entity: scorecard:astryx/published-dependencies
+rubric: scorecard-quality
+subjectHash: 51566315ceba
+rubricHash: 1d01a2d06d609948839eb0695b1bba667b2ebe2c4b50224dbd8ac05d5b3cb334
+assessor: {kind: agent, name: codex}
+at: 2026-11-27
+verdicts:
+  - criterion: one-concern
+    verdict: pass
+    reason: >-
+      .seikika/seikika.yaml measures the internal dependency versions of the
+      packages Astryx plans to release together.
+  - criterion: levels-are-a-ladder
+    verdict: pass
+    reason: >-
+      .seikika/tests/release.test.yaml exercises ready and drifted
+      dependencies. A release dependency contract has a single ready state.
+  - criterion: no-obvious-gap
+    verdict: pass
+    reason: >-
+      .seikika/check-published-dependencies.mjs rejects an empty inventory and
+      duplicate names before reporting readiness. The upstream library covers
+      stable and canary package selection.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      The duplicate-name diagnostic in .seikika/tests/release.test.yaml
+      identifies packages/themes/butter/package.json and
+      packages/themes/chocolate/package.json. The guidance in
+      .seikika/seikika.yaml explains how to resolve the collision or correct
+      version drift.

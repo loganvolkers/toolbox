@@ -1,0 +1,34 @@
+apiVersion: seikika.com/assessment/v1
+entity: assessment:scorecard-quality/scorecard:kubernetes/staging-workspace
+rubric: assessment-quality
+subjectHash: 3d25f62ca16c
+rubricHash: e30700fc6322cf9f05a301bb4638d6708e9f5eb5aea0281911229ce75bd37bf7
+assessor: {kind: agent, name: codex-astra-fork-a, model: gpt-6.2-astra}
+at: 2026-11-27
+verdicts:
+  - criterion: supported
+    verdict: pass
+    reason: >-
+      The standalone extra-member finding described by
+      .seikika/tests/release.test.yaml reproduced. The
+      .seikika/check-staging-workspace.py workspace parser now checks both
+      directive forms.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      The single ready level in .seikika/seikika.yaml applies to staged module
+      names and workspace membership. Go parsing in
+      .seikika/check-staging-workspace.py covers equivalent declarations and
+      detects actual membership or name drift.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      The accepted quoted name in staging/src/k8s.io/api/go.mod, rejected
+      wrong name and rejected standalone extra member independently reproduce
+      the boundaries of .seikika/check-staging-workspace.py.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      All original verdicts are pass. The assessment attaches no suggestions
+      that would direct a maintainer to change a different entity. See
+      .seikika/assessments/scorecard-quality/scorecard/kubernetes/staging-workspace.yaml.

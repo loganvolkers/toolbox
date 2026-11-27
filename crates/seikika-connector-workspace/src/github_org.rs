@@ -13,6 +13,7 @@ pub(crate) const KIND: &str = "federated-repo";
 const API: &str = "https://api.github.com";
 const JSON_LIMIT: usize = 10 * 1024 * 1024;
 const README_LIMIT: usize = 1024 * 1024;
+const LICENSE_LIMIT: usize = 256 * 1024;
 const CODEOWNERS_LIMIT: usize = 3 * 1024 * 1024;
 
 #[derive(Clone, Deserialize)]
@@ -357,6 +358,14 @@ impl Api {
                 && let Some(text) = self.text(&prefix, &files[path], limit).await?
             {
                 texts.insert(path, text);
+            }
+        }
+        for path in repo::license_paths(&paths) {
+            if let Some(text) = self.text(&prefix, &files[path], LICENSE_LIMIT).await?
+                && !text.trim().is_empty()
+            {
+                texts.insert(path, text);
+                break;
             }
         }
         let mut facts = repo::basics(&repository.full_name, &paths, |path| {
@@ -762,6 +771,8 @@ mod tests {
         assert_eq!(claims["visibility"], "public");
         assert_eq!(claims["readmeWords"], 3);
         assert_eq!(claims["license"], Value::Null);
+        assert_eq!(claims["licenseHasContent"], false);
+        assert_eq!(claims["readmeEntrypoint"], false);
         assert_eq!(claims["owners"], json!(["@acme/platform"]));
         assert_eq!(records["acme/oversized"]["scanned"], true);
         assert_eq!(records["acme/oversized"]["readmeWords"], 0);

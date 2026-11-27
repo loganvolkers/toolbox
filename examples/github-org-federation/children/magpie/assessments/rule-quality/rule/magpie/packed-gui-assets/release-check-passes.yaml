@@ -1,0 +1,30 @@
+apiVersion: seikika.com/assessment/v1
+entity: rule:magpie/packed-gui-assets/release-check-passes
+rubric: rule-quality
+subjectHash: a25c11d37fff
+rubricHash: 696a7d3fef1c024786016ca0a353e402b5c1a7aaf7644da6825b20e218dc4a96
+assessor: {kind: agent, name: codex}
+at: 2026-11-27
+verdicts:
+  - criterion: measures-intent
+    verdict: pass
+    reason: >-
+      .seikika/check-packed-assets.py runs build/assetpack/main.go and
+      compares archive names and bytes with the fixture asset tree.
+  - criterion: hard-to-game
+    verdict: pass
+    reason: >-
+      Switching the packer prefix in build/assetpack/main.go produced a real
+      violation. The same fixture includes hidden files and an excluded
+      directory.
+  - criterion: fix-leads-to-pass
+    verdict: pass
+    reason: >-
+      The archive diagnostic identifies the unexpected paths, and the fix in
+      .seikika/seikika.yaml names build/assetpack/main.go.
+  - criterion: threshold-justified
+    verdict: pass
+    reason: >-
+      internal/gui/assets_packed.go consumes the archive from the release
+      build. Each expected path must have its original bytes before the
+      fixture can reach ready.

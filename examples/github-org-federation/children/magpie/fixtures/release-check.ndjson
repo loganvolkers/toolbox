@@ -1,0 +1,2 @@
+{"type":"record","kind":"packed-gui-assets","externalId":"packed-gui-assets:packed-gui-assets","data":{"name":"packed-gui-assets","command":"python3 .seikika/check-packed-assets.py","exitCode":0,"evidence":[]}}
+{"type":"record","kind":"packed-gui-assets","externalId":"packed-gui-assets:broken","data":{"name":"broken","command":"python3 .seikika/check-packed-assets.py","exitCode":1,"evidence":["asset archive entries differ from the embedded tree"]}}

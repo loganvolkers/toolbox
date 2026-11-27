@@ -1,0 +1,41 @@
+apiVersion: seikika.com/assessment/v1
+entity: assessment:scorecard-quality/scorecard:seikika-organization/workflow-zizmor
+rubric: assessment-quality
+subjectHash: 898d9f09c3a9
+rubricHash: e30700fc6322cf9f05a301bb4638d6708e9f5eb5aea0281911229ce75bd37bf7
+assessor:
+  kind: agent
+  name: codex-astra-parent-workflows
+  model: gpt-6.2-astra
+at: 2026-11-27
+verdicts:
+  - criterion: supported
+    verdict: pass
+    reason: >-
+      examples/github-org-federation/workflows.yaml specifies a single offline
+      audit with escalating severity thresholds.
+      examples/github-org-federation/fixtures/github-org.ndjson confirms that
+      removing the only medium finding gives gold and that a separate low-only
+      workflow reaches silver.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      crates/seikika-connector-workspace/src/org_workflows.rs rejects
+      incomplete reports and explicitly failed invocations.
+      crates/seikika-connector-workspace/src/github_org.rs represents such
+      errors as unavailable;
+      examples/github-org-federation/standards.test.yaml checks unknown
+      alongside each earned level.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      examples/github-org-federation/standards.test.yaml exercises the none,
+      bronze, silver and gold boundaries.
+      crates/seikika-connector-workspace/src/org_workflows.rs has concrete
+      cases for failed invocation, valid empty results, and normalization of
+      an actual Low severity spelling.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      examples/github-org-federation/assessments/scorecard-quality/scorecard/seikika-organization/workflow-zizmor.yaml
+      records only passes and attaches no misdirected corrective suggestions.

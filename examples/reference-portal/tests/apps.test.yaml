@@ -21,3 +21,7 @@ assert:
       options('install-approved-app', 'repository:checkout-web') ==
       ['snyk-security'] && options('install-approved-app',
       'repository:ledger') == ['renovate', 'snyk-security']
+  - name: the installation retains the GitHub App and repository selection mode
+    expect: >-
+      entity('installation:4412').app == 'renovate' &&
+      entity('installation:4412').selection == 'selected'

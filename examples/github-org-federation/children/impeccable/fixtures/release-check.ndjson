@@ -1,0 +1,3 @@
+{"type":"record","kind":"engine-distribution","externalId":"engine-distribution:check","data":{"command":"node .seikika/check-engine-pins.mjs","exitCode":0,"evidence":[],"name":"engine-distribution"}}
+{"type":"record","kind":"engine-distribution","externalId":"engine-distribution:broken","data":{"command":"node .seikika/check-engine-pins.mjs","exitCode":1,"evidence":["skill/scripts/VERSION disagrees with ENGINE_VERSION"],"name":"broken"}}
+{"type":"record","kind":"engine-distribution","externalId":"engine-distribution:zero-hash","data":{"command":"node .seikika/check-engine-pins.mjs","exitCode":1,"evidence":["skill/scripts/engine-checksums.txt requires one nonzero SHA-256 entry for impeccable-darwin-arm64 at 0.1.31."],"name":"zero-hash"}}

@@ -5,16 +5,39 @@
 
 use regex::Regex;
 use serde_json::{Value, json};
-use std::path::Path;
+use std::{path::Path, sync::LazyLock};
 
 /// GitHub's CODEOWNERS locations, in the order GitHub looks.
 pub(crate) const CODEOWNERS: &[&str] = &[".github/CODEOWNERS", "CODEOWNERS", "docs/CODEOWNERS"];
 
+fn readme_entrypoint(path: &str) -> bool {
+    matches!(
+        path.to_ascii_lowercase().as_str(),
+        "readme" | "readme.md" | "readme.markdown" | "readme.rst" | "readme.txt" | "readme.adoc"
+    )
+}
+
 pub(crate) fn readme_path(paths: &[String]) -> Option<&str> {
     paths
         .iter()
-        .find(|p| !p.contains('/') && p.to_ascii_lowercase().starts_with("readme"))
+        .find(|p| readme_entrypoint(p))
+        .or_else(|| {
+            paths
+                .iter()
+                .find(|p| !p.contains('/') && p.to_ascii_lowercase().starts_with("readme"))
+        })
         .map(String::as_str)
+}
+
+pub(crate) fn license_paths(paths: &[String]) -> impl Iterator<Item = &str> {
+    paths.iter().map(String::as_str).filter(|path| {
+        !path.contains('/')
+            && ["license", "copying"].iter().any(|prefix| {
+                path.to_ascii_lowercase()
+                    .strip_prefix(prefix)
+                    .is_some_and(|suffix| suffix.is_empty() || suffix.starts_with(['.', '-', '_']))
+            })
+    })
 }
 
 pub(crate) fn codeowners_path(paths: &[String]) -> Option<&'static str> {
@@ -47,19 +70,35 @@ fn name(root: &Path) -> String {
         .unwrap_or_else(|| "repo".into())
 }
 
-/// CODEOWNERS rules: `{pattern, owners, line}`; comments and blank lines skipped.
+static HANDLE: LazyLock<Regex> = LazyLock::new(|| {
+    Regex::new(r"^@[a-zA-Z0-9]+(?:-[a-zA-Z0-9]+)*(?:/[a-zA-Z0-9][a-zA-Z0-9_-]*)?$").unwrap()
+});
+static EMAIL: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(r"^[^@\s]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)+$").unwrap());
+
+fn valid_handle(owner: &str) -> bool {
+    HANDLE.is_match(owner)
+        && owner
+            .split('/')
+            .next()
+            .is_some_and(|login| login.len() <= 40)
+}
+
+/// CODEOWNERS rules with raw owners and a count of recognizable owner identifiers.
 pub fn parse_codeowners(text: &str) -> Vec<Value> {
     text.lines()
         .enumerate()
         .filter_map(|(i, line)| {
-            let line = line.split(" #").next().unwrap_or(line).trim();
-            if line.is_empty() || line.starts_with('#') {
-                return None;
-            }
-            let mut parts = line.split_whitespace();
+            let mut parts = line
+                .split_whitespace()
+                .take_while(|part| !part.starts_with('#'));
             let pattern = parts.next()?;
             let owners: Vec<&str> = parts.collect();
-            Some(json!({"pattern": pattern, "owners": owners, "line": i + 1}))
+            let valid = owners
+                .iter()
+                .filter(|o| valid_handle(o) || EMAIL.is_match(o))
+                .count();
+            Some(json!({"pattern": pattern, "owners": owners, "validOwners": valid, "line": i + 1}))
         })
         .collect()
 }
@@ -93,13 +132,17 @@ pub(crate) fn basics<E>(
         .iter()
         .filter(|p| !p.contains('/') || p.starts_with(".github/"))
         .collect();
-    let first = |pred: &dyn Fn(&str) -> bool| {
-        top.iter()
-            .find(|p| pred(&p.to_lowercase()))
-            .map(|p| p.to_string())
-    };
     let readme = readme_path(paths);
-    let license = first(&|p| p.starts_with("license") || p.starts_with("copying"));
+    let mut license = None;
+    let mut license_has_content = false;
+    for path in license_paths(paths) {
+        license.get_or_insert(path);
+        if read(path)?.is_some_and(|text| !text.trim().is_empty()) {
+            license = Some(path);
+            license_has_content = true;
+            break;
+        }
+    }
     let codeowners = match codeowners_path(paths) {
         Some(path) => {
             read(path)?.map(|text| json!({"path": path, "rules": parse_codeowners(&text)}))
@@ -126,14 +169,16 @@ pub(crate) fn basics<E>(
         "files": top,
         "readme": readme,
         "readmeWords": readme_words,
+        "readmeEntrypoint": readme.is_some_and(readme_entrypoint),
         "license": license,
+        "licenseHasContent": license_has_content,
         "codeowners": codeowners,
     }))
 }
 
 /// True when every owner is `@org/team`, or every owner is a personal `@user` (D01M7Y57FVX0XYNGMX0A0XJ4GK9).
 fn owners_ok(owners: &[String]) -> bool {
-    if owners.is_empty() || !owners.iter().all(|o| o.starts_with('@')) {
+    if owners.is_empty() || !owners.iter().all(|o| valid_handle(o)) {
         return false;
     }
     let all_teams = owners.iter().all(|o| o.contains('/'));
@@ -256,8 +301,8 @@ mod tests {
         assert_eq!(
             rules,
             vec![
-                json!({"pattern": "*", "owners": ["@acme/platform"], "line": 2}),
-                json!({"pattern": "/docs/", "owners": ["@acme/docs", "@alice"], "line": 4}),
+                json!({"pattern": "*", "owners": ["@acme/platform"], "validOwners": 1, "line": 2}),
+                json!({"pattern": "/docs/", "owners": ["@acme/docs", "@alice"], "validOwners": 2, "line": 4}),
             ]
         );
     }
@@ -270,6 +315,36 @@ mod tests {
         assert!(!owners_ok(&[]));
         assert!(!owners_ok(&["@acme/platform".into(), "@alice".into()]));
         assert!(!owners_ok(&["alice@acme.com".into()]));
+        assert!(!owners_ok(&["@foo-".into()]));
+        assert!(!owners_ok(&["@foo--bar".into()]));
+        assert_eq!(parse_codeowners("* nobody")[0]["validOwners"], 0);
+        assert_eq!(
+            parse_codeowners("/private/\t# @org/team")[0]["validOwners"],
+            0
+        );
+        assert_eq!(
+            parse_codeowners("* @org/team\t# explanation")[0]["validOwners"],
+            1
+        );
+        assert!(!owners_ok(&[format!("@{}", "a".repeat(40))]));
+    }
+
+    #[test]
+    fn empty_copying_does_not_mask_the_license() {
+        let files = vec!["COPYING".into(), "LICENSE".into()];
+        let facts = basics("example", &files, |path| {
+            Ok::<_, ()>(Some(
+                if path == "LICENSE" {
+                    "reuse terms"
+                } else {
+                    " "
+                }
+                .into(),
+            ))
+        })
+        .unwrap();
+        assert_eq!(facts["license"], "LICENSE");
+        assert_eq!(facts["licenseHasContent"], true);
     }
 
     #[test]

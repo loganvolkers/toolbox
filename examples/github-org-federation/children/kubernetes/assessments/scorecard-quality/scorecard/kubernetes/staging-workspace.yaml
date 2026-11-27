@@ -1,0 +1,31 @@
+apiVersion: seikika.com/assessment/v1
+entity: scorecard:kubernetes/staging-workspace
+rubric: scorecard-quality
+subjectHash: 5c3d36d13262
+rubricHash: 1d01a2d06d609948839eb0695b1bba667b2ebe2c4b50224dbd8ac05d5b3cb334
+assessor: {kind: agent, name: codex}
+at: 2026-11-27
+verdicts:
+  - criterion: one-concern
+    verdict: pass
+    reason: >-
+      The staging-workspace card in .seikika/seikika.yaml evaluates one
+      workspace integrity contract for maintainers.
+  - criterion: levels-are-a-ladder
+    verdict: pass
+    reason: >-
+      The workspace contract has a single usable state.
+      .seikika/tests/release.test.yaml exercises ready and a missing member.
+  - criterion: no-obvious-gap
+    verdict: pass
+    reason: >-
+      The Go parser in .seikika/check-staging-workspace.py yields all
+      workspace members, including standalone use directives. The adapter
+      checks missing, extra and duplicate members and verifies each staged
+      module's import path.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      The failure fixture in .seikika/tests/release.test.yaml identifies the
+      missing API path. Restoring that path to go.work recovered the real
+      checkout outcome.

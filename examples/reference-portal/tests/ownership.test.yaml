@@ -48,3 +48,10 @@ assert:
       catalog-info for a repository GitHub doesn't report creates no entity
       (identityFrom)
     expect: orphans() == ['repository:ghost-service']
+  - name: the identity provider preserves the group hierarchy and GitHub team
+    expect: >-
+      entity('group:payments').parent == 'group:engineering' &&
+      entity('group:payments').githubTeam == 'acme/payments' &&
+      entity('group:payments').members == ['alice']
+  - name: the identity provider supplies the user's display name
+    expect: entity('user:alice').displayName == 'Alice Ng'

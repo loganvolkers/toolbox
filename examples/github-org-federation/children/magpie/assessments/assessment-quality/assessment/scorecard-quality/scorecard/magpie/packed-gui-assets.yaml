@@ -1,0 +1,33 @@
+apiVersion: seikika.com/assessment/v1
+entity: assessment:scorecard-quality/scorecard:magpie/packed-gui-assets
+rubric: assessment-quality
+subjectHash: 5a570ee81ee3
+rubricHash: e30700fc6322cf9f05a301bb4638d6708e9f5eb5aea0281911229ce75bd37bf7
+assessor: {kind: agent, name: codex-astra-fork-a, model: gpt-6.2-astra}
+at: 2026-11-27
+verdicts:
+  - criterion: supported
+    verdict: pass
+    reason: >-
+      The single ready level in .seikika/seikika.yaml scores the archive
+      layout and bytes; .seikika/tests/release.test.yaml covers success and
+      the wrong-prefix finding. The authored verdict is in
+      .seikika/assessments/scorecard-quality/scorecard/magpie/packed-gui-assets.yaml.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      The standard addresses one release-packer concern and tests nested
+      visible paths, bytes and excluded entries. The fix points to
+      build/assetpack/main.go.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      Running .seikika/check-packed-assets.py against build/assetpack/main.go
+      exercises the same binary boundary. The wrong-prefix change yields
+      different archive paths and the original packer passes.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      All original verdicts are pass. The assessment attaches no suggestions
+      that would direct a maintainer to change a different entity. See
+      .seikika/assessments/scorecard-quality/scorecard/magpie/packed-gui-assets.yaml.

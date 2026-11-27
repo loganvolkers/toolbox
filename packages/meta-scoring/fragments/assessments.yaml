@@ -1,19 +1,29 @@
 # Judgement pushed by coding agents, and its standards (D79, D80).
-# Included by portal/seikika.yaml; see portal/README.md for the layout.
 
 kinds:
   - name: Assessment
     description: >-
       One coding agent's (or person's) judgement of one entity against a
-      rubric: a file in portal/assessments/, written after `seikika assess
-      brief`.
-    identityFrom: [connector:workspace]
+      rubric: a file in the portal's `assessments/` directory, written after
+      `seikika assess brief`.
+    identityFrom: [connector:meta-assessments]
     fields:
       entity: {type: string, description: The entity assessed.}
       rubric: {type: string, description: The rubric it was assessed against.}
       subjectHash:
         type: string
         description: The entity's hash when assessed; a different hash now means stale.
+      rubricHash:
+        type: string
+        description: Rubric version recorded when the assessor prepared the assessment.
+      rubricValid:
+        type: boolean
+        description: The assessment covers the criteria of the current rubric.
+      rubricCurrent:
+        type: boolean
+        description: >-
+          The connector validated the assessment against the current rubric and
+          matched its hash.
       assessorName:
         type: string
         description: The agent harness or person (assessor.name).
@@ -73,8 +83,10 @@ kinds:
         description: "assessment-quality review: fresh, stale or missing."
         computed: >-
           inbound.assessesAssessment.size() == 0 ? 'missing' :
-          (inbound.assessesAssessment[0].subjectHash == entity.hash ? 'fresh' :
-          'stale')
+          (inbound.assessesAssessment[0].subjectHash == entity.hash &&
+          inbound.assessesAssessment[0].rubricValid &&
+          (!has(inbound.assessesAssessment[0].rubricHash) ||
+          inbound.assessesAssessment[0].rubricCurrent) ? 'fresh' : 'stale')
       reviewFailing:
         type: list
         items: string
@@ -106,6 +118,11 @@ kinds:
         computed: >-
           inbound.assessesAssessment.size() > 0 &&
           inbound.assessesAssessment[0].groundedIn.size() > 0
+      reviewVerified:
+        type: boolean
+        description: A complete, current review by a different named assessor.
+        computed: >-
+          entity.independentReview != ''
       selfReviewed:
         type: boolean
         description: >-
@@ -116,20 +133,20 @@ kinds:
           inbound.assessesAssessment[0].assessorName == entity.assessorName
     relations:
       assessesAssessment: {to: Assessment, many: false, unresolved: ignore}
-      assessesSdlcStage: {to: SdlcStage, many: false, unresolved: ignore}
+      assessesSdlcStage: ${param:sdlcStageRelation}
       assessesRule: {to: Rule, many: false, unresolved: ignore}
       assessesScorecard: {to: Scorecard, many: false, unresolved: ignore}
-      assessesTestingContract:
-        to: TestingContract
-        many: false
-        unresolved: ignore
-      assessesCrate: {to: Crate, many: false, unresolved: ignore}
-    sources: {default: [connector:workspace]}
+      assessesTestingContract: ${param:testingContractRelation}
+      assessesCrate: ${param:crateRelation}
+    sources: {default: [connector:meta-assessments]}
     map:
-    - from: workspace/assessment
+    - from: meta-assessments/assessment
       id: "'assessment:' + record.rubric + '/' + record.entity"
       set: >-
         {'entity': record.entity, 'rubric': record.rubric, 'subjectHash': record.subjectHash,
+         'rubricHash': has(record.rubricHash) ? record.rubricHash : null,
+         'rubricValid': !has(record.rubricValid) || record.rubricValid,
+         'rubricCurrent': has(record.rubricCurrent) && record.rubricCurrent,
          'assessorName': has(record.assessor.name) ? record.assessor.name : null, 'assessorKind': record.assessor.kind,
          'at': string(record.at), 'verdict': record.verdict, 'failing': record.failing, 'unsure': record.unsure,
          'reasons': record.verdicts.map(v, v.verdict + ' ' + v.criterion + ': ' + v.reason),
@@ -140,14 +157,18 @@ kinds:
          'groundedIn': has(record.groundedIn) ? record.groundedIn : [],
          'independentReview': has(record.independentReview) ? record.independentReview : ''}
       relations:
-        assessesAssessment: "record.entity.startsWith('assessment:') ? [record.entity] : []"
-        assessesSdlcStage: "record.entity.startsWith('sdlc-stage:') ? [record.entity] : []"
-        assessesRule: "record.entity.startsWith('rule:') ? [record.entity] : []"
-        assessesScorecard: "record.entity.startsWith('scorecard:') ? [record.entity] : []"
-        assessesTestingContract: >-
-          record.rubric == 'testing-contract-quality' &&
-          record.entity.startsWith('testing-contract:') ? [record.entity] : []
-        assessesCrate: "record.entity.startsWith('crate:') ? [record.entity] : []"
+        assessesAssessment: >-
+          record.rubric == 'assessment-quality' &&
+          record.entity.startsWith('assessment:') ? [record.entity] : []
+        assessesSdlcStage: ${param:sdlcStageMapping}
+        assessesRule: >-
+          record.rubric == 'rule-quality' && record.entity.startsWith('rule:') ?
+          [record.entity] : []
+        assessesScorecard: >-
+          record.rubric == 'scorecard-quality' &&
+          record.entity.startsWith('scorecard:') ? [record.entity] : []
+        assessesTestingContract: ${param:testingContractMapping}
+        assessesCrate: ${param:crateMapping}
 
 scorecards:
   # Deterministic, so ratcheted: what any assessment must contain to be worth reading.
@@ -171,8 +192,8 @@ scorecards:
       url: https://github.com/seikika/seikika/blob/main/docs/design/scorecards-for-scorecards.md#61-assessments-and-rubrics-are-standards-too-d80
     - title: assess-entity skill
       url: https://github.com/seikika/seikika/blob/main/plugins/seikika-operator/skills/assess-entity/SKILL.md
-    owner: group:maintainers
-    track: standards
+    owner: ${param:owner}
+    track: ${param:track}
     levels: [bronze, silver, gold]
     ratchet: {newEntitiesAtLeast: bronze} # a new assessment must name its assessor and suggest fixes
     rules:
@@ -188,8 +209,13 @@ scorecards:
         rediscover the fix, so the finding tends to go unacted.
     - name: assessor-named
       level: bronze
-      check: has(entity.assessorName) && entity.assessorName.size() > 0
-      evidence: "['assessor.name is empty']"
+      check: >-
+        has(entity.assessorName) &&
+        entity.assessorName.matches('[[:alnum:]]|\\p{L}|\\p{N}') &&
+        !entity.assessorName.matches('(?i)^\\s*(tbd|unknown|anonymous|n/a|placeholder)\\s*$')
+      evidence: >-
+        has(entity.assessorName) ? ['replace assessor.name: ' +
+        entity.assessorName] : ['add assessor.name']
       fix: >-
         Set `assessor.name` to the agent harness or person who made the
         assessment.
@@ -204,11 +230,11 @@ scorecards:
         entity.unsure).size() == 0
       evidence: entity.uncited.filter(c, c in entity.failing || c in entity.unsure)
       fix: >-
-        In the assessment file under portal/assessments/, cite what each listed
-        fail or unsure reason rests on, in a form a reader can open: a
-        repository path (`crates/x/src/lib.rs:40`), a file name only one file
-        has, a decision or question id that exists (D71, Q10), or a full URL. A
-        section sign or a bare number alone isn't checkable.
+        In the assessment file under the portal's `assessments/` directory, cite
+        what each listed fail or unsure reason rests on, in a form a reader can
+        open: a repository path (`crates/x/src/lib.rs:40`), a file name only one
+        file has, a decision or question id that exists (D71, Q10), or a full
+        URL. A section sign or a bare number alone isn't checkable.
       rationale: >-
         A finding that cites nothing a reader can open can be neither verified
         nor disputed; on the first run, 6 of 9 assessments fell below silver
@@ -248,8 +274,8 @@ scorecards:
       url: https://github.com/seikika/seikika/blob/main/docs/decisions/D01M831P5QWJQ4A2FT85N5MXJQF.md
     - title: Meta standards review
       url: https://github.com/seikika/seikika/blob/main/docs/design/meta-standards-review.md
-    owner: group:maintainers
-    track: standards
+    owner: ${param:owner}
+    track: ${param:track}
     levels: [bronze, silver, gold]
     ratchet: {advisory: true}
     appliesTo: entity.rubric != 'assessment-quality'
@@ -262,8 +288,8 @@ scorecards:
         a stale review: re-assess to close it)') : entity.reviewFailing
       fix: >-
         A current assessment-quality assessment failed the listed criteria: act
-        on its suggestions (portal/assessments/), then re-assess. If the finding
-        is wrong, say why in a new assessment by another assessor.
+        on its suggestions in the assessment file, then re-assess. If the
+        finding is wrong, say why in a new assessment by another assessor.
       rationale: >-
         Failing reviews were lost among the unreviewed lines and went unacted
         for days; putting the assessment at none makes an open finding head the
@@ -277,8 +303,8 @@ scorecards:
         changed since it was reviewed' : 'not reviewed against
         assessment-quality')]
       fix: >-
-        Run `seikika assess brief <assessment id> --portal portal`; a different
-        agent or person should review it.
+        Run `seikika assess brief <assessment id> --portal <manifest>`; a
+        different agent or person should review it.
       rationale: >-
         A review by the assessment's own assessor repeats its blind spots and is
         no independent check; one of the first three assessment reviews was a
@@ -287,19 +313,21 @@ scorecards:
       level: gold
       check: >-
         entity.reviewState == 'fresh' && entity.reviewFailing.size() == 0 &&
-        entity.reviewUncited.size() == 0 && entity.reviewGrounded
+        entity.reviewUncited.size() == 0 && entity.reviewGrounded &&
+        entity.reviewVerified
       evidence: >-
         entity.reviewState != 'fresh' ? ['no current review'] :
         entity.reviewFailing + entity.reviewUncited.map(c, c + ' cites nothing
         that resolves (fix the review)') + (entity.reviewGrounded ? [] : ['the
         review cites neither this assessment nor anything it cites (fix the
-        review)'])
+        review)']) + (entity.reviewVerified ? [] : ['need a complete current
+        review with a rubric hash and a different named assessor'])
       fix: >-
-        For a listed criterion, revise the assessment file in
-        portal/assessments/ where the review found it unsupported or incomplete,
-        then have it reviewed again. For an item marked "fix the review", the
-        review file is at fault: its reasons must cite what they rest on,
-        including this assessment's file or the sources it cites.
+        For a listed criterion, revise the assessment file in the portal's
+        `assessments/` directory where the review found it unsupported or
+        incomplete, then have it reviewed again. For an item marked "fix the
+        review", the review file is at fault: its reasons must cite what they
+        rest on, including this assessment's file or the sources it cites.
       rationale: >-
         Gold means an independent reviewer checked the assessment against its
         own sources and found it sound; a review that cites only unrelated files

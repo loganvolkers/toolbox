@@ -168,13 +168,18 @@ struct Ctx<'a> {
     pop: BTreeMap<String, (Vec<String>, BTreeMap<String, u64>)>,
 }
 
-fn kind_record(portal: &str, k: &seikika_model::manifest::Kind, ctx: &Ctx, expects: &str) -> Value {
+fn kind_record(
+    portal: &str,
+    k: &seikika_model::manifest::Kind,
+    ctx: &Ctx,
+    tested_entities: &BTreeSet<String>,
+) -> Value {
     let ids = ctx
         .pop
         .get(&k.name)
         .map(|p| p.0.clone())
         .unwrap_or_default();
-    let tested = ids.iter().any(|id| expects.contains(&format!("'{id}'")));
+    let tested = ids.iter().any(|id| tested_entities.contains(id));
     let scorecards: Vec<&String> = ctx
         .m
         .scorecards
@@ -230,25 +235,46 @@ fn connector_record(portal: &str, c: &seikika_model::manifest::Connector, local:
         "portal": portal, "name": c.name, "runtime": c.runtime, "package": c.package, "records": c.records,
         "unmapped": c.records.iter().filter(|r| !mapped.contains(r.as_str())).collect::<Vec<_>>(),
         "withoutFreshness": c.records.iter().filter(|r| !freshness.contains(r.as_str())).collect::<Vec<_>>(),
-        "refreshable": c.refresh.keys().collect::<Vec<_>>(),
+        "refreshable": c.refresh.iter()
+            .filter(|(_, modes)| modes.iter().any(|mode| mode == "external_ids"))
+            .map(|(kind, _)| kind).collect::<Vec<_>>(),
         "fixtureRecords": fixtures, "hash": hash(c),
     })
 }
 
-/// The portal's assessment files (`assessments/**`), parsed; unreadable files are skipped
-/// (`seikika assess check` reports them).
+/// Include only valid assessments on the current rubric. Omit ambiguous subjects entirely
+/// when more than one file claims the same rubric and entity.
 fn assessments(local: &Local) -> Vec<Value> {
     let dir = local.root.join("assessments");
-    seikika_connect::files::walk(&dir)
+    let hashes: BTreeMap<_, _> = local
+        .manifest
+        .rubrics
+        .iter()
+        .map(|r| (r.name.as_str(), seikika_api::assess::rubric_hash(r)))
+        .collect();
+    let mut subjects = BTreeMap::new();
+    for doc in seikika_connect::files::walk(&dir)
         .iter()
         .filter(|r| r.ends_with(".yaml") || r.ends_with(".yml") || r.ends_with(".json"))
         .filter_map(|r| std::fs::read_to_string(dir.join(r)).ok())
         .filter_map(|t| serde_norway::from_str::<Value>(&t).ok())
-        .collect()
+    {
+        let valid = seikika_api::assess::problems(&local.manifest, &doc).is_empty();
+        let key = seikika_connect::assessment::external_id(&doc);
+        let current = doc["rubricHash"].as_str().is_none_or(|hash| {
+            hashes
+                .get(doc["rubric"].as_str().unwrap_or_default())
+                .is_some_and(|expected| expected == hash)
+        });
+        subjects
+            .entry(key)
+            .and_modify(|value| *value = None)
+            .or_insert((valid && current).then_some(doc));
+    }
+    subjects.into_values().flatten().collect()
 }
 
-/// A rubric with how it has been used: assessments made with it and, once there are three or more,
-/// the criteria every one of them passed (a question that never discriminates).
+/// Report the rubric's usage and whether each criterion has both decisive outcomes.
 fn rubric_record(portal: &str, r: &seikika_model::manifest::Rubric, docs: &[Value]) -> Value {
     let used: Vec<&Value> = docs
         .iter()
@@ -269,12 +295,23 @@ fn rubric_record(portal: &str, r: &seikika_model::manifest::Rubric, docs: &[Valu
     } else {
         vec![]
     };
+    let one_sided: Vec<_> = r
+        .criteria
+        .iter()
+        .map(|c| &c.name)
+        .filter(|name| {
+            let verdicts = verdicts_for(name);
+            !["pass", "fail"]
+                .iter()
+                .all(|outcome| verdicts.iter().any(|v| v["verdict"] == *outcome))
+        })
+        .collect();
     json!({
         "portal": portal, "name": r.name, "kind": r.kind, "subject": r.subject(),
         "described": filled(&r.description),
         "criteria": r.criteria.iter().map(|c| &c.name).collect::<Vec<_>>(),
         "unguided": r.criteria.iter().filter(|c| !guides(&c.guidance)).map(|c| &c.name).collect::<Vec<_>>(),
-        "assessments": used.len(), "alwaysPass": always_pass, "hash": hash(r),
+        "assessments": used.len(), "alwaysPass": always_pass, "oneSided": one_sided, "hash": hash(r),
     })
 }
 
@@ -301,9 +338,8 @@ fn guides(text: &Option<String>) -> bool {
     })
 }
 
-/// `kind`, `field`, `rubric` and `connector` records for a loaded portal; `expects` is the text of its test
-/// expectations (to tell which kinds tests reach).
-pub fn records(local: &Local, expects: &str) -> Vec<(String, String, Value)> {
+/// `kind`, `field`, `rubric` and `connector` records for a loaded portal.
+pub fn records(local: &Local, tested_entities: &BTreeSet<String>) -> Vec<(String, String, Value)> {
     let m = &local.manifest;
     let portal = m.portal.name.as_str();
     let ctx = Ctx {
@@ -316,7 +352,7 @@ pub fn records(local: &Local, expects: &str) -> Vec<(String, String, Value)> {
         out.push((
             "kind".into(),
             format!("kind:{portal}/{}", k.name),
-            kind_record(portal, k, &ctx, expects),
+            kind_record(portal, k, &ctx, tested_entities),
         ));
         for (name, f) in &k.fields {
             out.push((
