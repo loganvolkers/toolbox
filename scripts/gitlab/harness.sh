@@ -2,6 +2,7 @@
 # A real GitLab on this machine: GitLab CE and a GitLab Runner in Docker, for the GitLab
 # acceptance script and the actions-gitlab benchmark (docs/design/forges.md §6).
 #
+#   scripts/gitlab/harness.sh start   start GitLab without waiting for it to be ready
 #   scripts/gitlab/harness.sh up      start (or reuse) GitLab and its runner; print the env file
 #   scripts/gitlab/harness.sh env     print the env file of a running harness
 #   scripts/gitlab/harness.sh down    remove both containers and their volumes
@@ -17,7 +18,6 @@ PORT=${GITLAB_PORT:-8929}
 NAME=${GITLAB_NAME:-seikika-gitlab}
 URL=http://127.0.0.1:$PORT
 STATE=${GITLAB_HARNESS_DIR:-/tmp/seikika-gitlab}
-BIN=$(cd "${SEIKIKA_BIN_DIR:-target/debug}" && pwd)
 ENVFILE=$STATE/env
 # A fixed root token keeps the harness scriptable; it only ever exists on this machine.
 ROOT_TOKEN=${GITLAB_ROOT_TOKEN:-glpat-seikika-harness-root-0001}
@@ -26,8 +26,7 @@ $DOCKER info >/dev/null 2>&1 || DOCKER="sudo docker"
 
 ready() { [ "$(curl -s -o /dev/null -w '%{http_code}' -H "PRIVATE-TOKEN: $ROOT_TOKEN" "$URL/api/v4/version")" = 200 ]; }
 
-up() {
-  mkdir -p "$STATE"
+start() {
   if ! $DOCKER inspect "$NAME" >/dev/null 2>&1; then
     $DOCKER run -d --name "$NAME" --shm-size 256m -p "127.0.0.1:$PORT:$PORT" \
       -e GITLAB_ROOT_PASSWORD="seikika-harness-$(date +%s)" \
@@ -39,6 +38,13 @@ up() {
         gitlab_rails['initial_shared_runners_registration_token'] = nil" \
       "gitlab/gitlab-ce:$VERSION-ce.0" >/dev/null
   fi
+}
+
+up() {
+  local bin
+  bin=$(cd "${SEIKIKA_BIN_DIR:-target/debug}" && pwd)
+  mkdir -p "$STATE"
+  start
   echo "waiting for GitLab at $URL" >&2
   for _ in $(seq 1 120); do
     code=$(curl -s -o /dev/null -w '%{http_code}' "$URL/users/sign_in" || true)
@@ -67,7 +73,7 @@ up() {
     created=$(curl -sf -X POST -H "PRIVATE-TOKEN: $ROOT_TOKEN" "$URL/api/v4/user/runners" \
       --data runner_type=instance_type --data run_untagged=true --data description=seikika-harness)
     RUNNER_TOKEN=$(python3 -c 'import json,sys; print(json.loads(sys.argv[1])["token"])' "$created")
-    $DOCKER run -d --name "$NAME-runner" --network host -v "$BIN:/seikika/bin:ro" \
+    $DOCKER run -d --name "$NAME-runner" --network host -v "$bin:/seikika/bin:ro" \
       "gitlab/gitlab-runner:ubuntu-v$VERSION" >/dev/null
     $DOCKER exec "$NAME-runner" gitlab-runner register --non-interactive --url "$URL" \
       --token "$RUNNER_TOKEN" --executor shell --name seikika-harness \
@@ -79,6 +85,7 @@ up() {
 }
 
 case "${1:-}" in
+  start) start ;;
   up) up ;;
   env) ready && cat "$ENVFILE" ;;
   down)
@@ -86,7 +93,7 @@ case "${1:-}" in
     rm -rf "$STATE"
     ;;
   *)
-    echo "usage: $0 up|env|down" >&2
+    echo "usage: $0 start|up|env|down" >&2
     exit 2
     ;;
 esac
