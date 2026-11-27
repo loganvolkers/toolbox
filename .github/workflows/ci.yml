@@ -269,6 +269,8 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with: {persist-credentials: false}
+      - name: Setup rejects a release archive with a mismatched checksum
+        run: bash scripts/test-action-install.sh
       - name: A pilot repository, set up from the starter
         run: |
           mkdir -p "$RUNNER_TEMP/pilot/.seikika" "$RUNNER_TEMP/pilot/.github"
@@ -338,6 +340,29 @@ jobs:
         uses: ./actions/ratchet # zizmor: ignore[self-repository] actionlint 1.7.12 rejects $/
         with:
           working-directory: ${{ runner.temp }}/pilot
+      - name: Improve a score without updating the baseline
+        run: printf 'License fixture\n' > "$RUNNER_TEMP/pilot/LICENSE"
+      - name: Strict mode requires the improvement to be recorded
+        id: stale
+        continue-on-error: true
+        uses: ./actions/ratchet # zizmor: ignore[self-repository] actionlint 1.7.12 rejects $/
+        with:
+          working-directory: ${{ runner.temp }}/pilot
+      - name: Regression-only mode allows the same improvement
+        id: check
+        uses: ./actions/ratchet # zizmor: ignore[self-repository] actionlint 1.7.12 rejects $/
+        with:
+          working-directory: ${{ runner.temp }}/pilot
+          mode: check
+      - name: Compare enforcement modes on the same change
+        env:
+          STRICT_OUTCOME: ${{ steps.stale.outcome }}
+          STRICT_VERDICT: ${{ steps.stale.outputs.verdict }}
+          CHECK_VERDICT: ${{ steps.check.outputs.verdict }}
+        run: |
+          test "$STRICT_OUTCOME" = failure
+          jq -e '.result == "stale" and .exitCode == 1 and (.improvements | length > 0)' "$STRICT_VERDICT"
+          jq -e '.result == "stale" and .exitCode == 0 and (.regressions | length == 0)' "$CHECK_VERDICT"
       - name: A pull request makes something worse (an individual in CODEOWNERS)
         run: echo '/docs/ @alice' >> "$RUNNER_TEMP/pilot/.github/CODEOWNERS"
       - name: Then the ratchet fails the job (mode ci)
@@ -355,12 +380,13 @@ jobs:
           test "$OUTCOME" = failure
           jq -e '.result == "regressed" and .exitCode == 1' "$VERDICT"
           jq -e '.regressions[] | select(.entity == "repository:acme/pilot" and .message == "owners-are-teams now fails")' "$VERDICT"
-      - name: The independent ratchet blocks the same regression
+      - name: Regression-only mode still blocks a real regression
         id: gate
         continue-on-error: true
         uses: ./actions/ratchet # zizmor: ignore[self-repository] actionlint 1.7.12 rejects $/
         with:
           working-directory: ${{ runner.temp }}/pilot
+          mode: check
       - name: Build a portal for an Astro host despite the score regression
         id: web
         uses: ./actions/build-portal # zizmor: ignore[self-repository] actionlint 1.7.12 rejects $/

@@ -123,10 +123,16 @@ action's update mode, review the result, and commit it. For pull request scoring
 `pull_request` and read-only checkout permissions. A portal can run commands in the checkout.
 Grant publication credentials to the deployment job on a trusted ref.
 
-The repo's CI runs its own ratchet with prebuilt binaries. Its consumer pilot runs the
-bundled action from a cached source build, then uses the same CLI for validate, test, and
-the independent ratchet. The pilot checks that a regression fails the gate and that the
-HTML and web portal builds succeed with the same baseline bytes.
+The required consumer pilot runs the bundled action from a cached source build. It exercises
+the independent actions and checks that strict mode rejects an unrecorded improvement,
+regression-only mode allows it, and a real regression fails both gates. The HTML and web
+builds leave the baseline unchanged. The pilot also checks that setup rejects a release
+archive with a mismatched checksum. [Consumer pilot](../../.github/workflows/ci.yml)
+
+After a stable release, the consumer smoke test installs the published CLI and connectors
+on Linux x64 and ARM64. It uses those binaries to enforce the starter's baseline and build
+its static portal. The scheduled and manual runs use the starter's pinned version.
+[Release smoke workflow](../../.github/workflows/mise.yml)
 
 [Consumer action comparison](../audits/consumer-github-actions.md) ·
 [Operator workflow examples](../../site/src/content/docs/operators/ci.md)
