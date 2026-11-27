@@ -2666,8 +2666,10 @@ version = "0.2.1"
 dependencies = [
  "proc-macro2",
  "regex",
+ "reqwest",
  "seikika-connect",
  "seikika-model",
+ "serde",
  "serde_json",
  "serde_norway",
  "sha2",

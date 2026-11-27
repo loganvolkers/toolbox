@@ -40,6 +40,10 @@ jobs:
           yamark format --check $(git ls-files '*.yaml' '*.yml' ':!.github/workflows/release.yml' ':!pnpm-lock.yaml')
       - name: M0 parity with tools/validate.py
         run: cargo build --locked && python scripts/validate-parity.py
+      - name: Organization federation standards
+        run: |
+          target/debug/seikika validate examples/github-org-federation/public.yaml
+          target/debug/seikika test examples/github-org-federation
       - name: Verify the crates.io archives
         env: {CARGO_PROFILE_DEV_DEBUG: "0", CARGO_INCREMENTAL: "0"}
         run: |

@@ -39,6 +39,8 @@ Set `docs` to Markdown file patterns for `doc` records with links and other docu
 
 Workspace reads the local tree for these checks. A parent portal can also fetch repositories configured for federation and read them as `portal` records. [Federate repository actions](/operators/federate-actions/)
 
+Set `githubOrg` to score an organization from GitHub's default branches with a single parent scorecard. [Organization scorecards](/demo/organization/)
+
 ## Troubleshoot missing records
 
 - If no files match, check your working directory, `root`, and any `exclude` patterns. Patterns are relative to `root`.

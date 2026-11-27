@@ -47,6 +47,8 @@
 //!   federates, with the actions it declares and how to reach it (docs/design/federated-actions.md);
 //!   with `git` (`[{key, url, branch}]`, from `federation.children`), one per repository instead,
 //!   each cloned into `<root>/<key>` and read at the tip of its branch (`clones`);
+//! - `federated-repo` (`githubOrg: {organization, publicOnly}`): repository basics from each
+//!   visible GitHub default branch, using existing GitHub credentials without checking out code.
 //! - `assessment` (`assessments` globs): one per assessment file (YAML or JSON, see
 //!   `crates/seikika-model/schema/assessment.schema.json`): agents' judgements of entities against the portal's rubrics.
 //!
@@ -76,6 +78,7 @@ mod data;
 mod deps;
 mod examples;
 mod expo;
+mod github_org;
 mod hygiene;
 mod js_workspace;
 mod npm;
@@ -135,6 +138,7 @@ struct Workspace {
     portals: Vec<Regex>,
     /// Child portals by git repository, cloned under `root` (`clones`).
     git: Vec<clones::Source>,
+    github_org: Option<github_org::Config>,
     captures: Vec<(String, Regex)>,
     counts: Vec<(String, Regex)>,
     crates: bool,
@@ -381,6 +385,7 @@ impl Workspace {
             storybooks: globs(&cfg, "storybooks")?,
             portals: globs(&cfg, "portals")?,
             git: clones::sources(&cfg),
+            github_org: github_org::Config::from_value(&cfg["githubOrg"])?,
             captures: named_regexes(&cfg, "captures")?,
             counts: named_regexes(&cfg, "counts")?,
             crates: cfg["crates"].as_bool().unwrap_or(true),
@@ -1335,6 +1340,10 @@ impl Source for Workspace {
     }
 
     fn capabilities(&self) -> Value {
+        if self.github_org.is_some() {
+            return json!({"refresh": {(github_org::KIND): ["external_ids"]},
+                          "resync": [github_org::KIND], "max_concurrency": 1});
+        }
         // Only the kinds this configuration produces.
         let on = [
             ("repo", self.repo),
@@ -1372,12 +1381,62 @@ impl Source for Workspace {
     }
 
     async fn handle(&mut self, cmd: &Value, out: &mut Out) -> Result<(), String> {
+        if let Some(config) = &self.github_org {
+            return federated_repositories(config, cmd, out).await;
+        }
         match cmd["command"].as_str() {
             Some("resync") => self.resync(cmd, out),
             Some("refresh") => self.refresh(cmd, out),
             other => Err(format!("unsupported command {other:?}")),
         }
     }
+}
+
+async fn federated_repositories(
+    config: &github_org::Config,
+    cmd: &Value,
+    out: &mut Out,
+) -> Result<(), String> {
+    let kind = github_org::KIND;
+    match cmd["command"].as_str() {
+        Some("resync") => {
+            if cmd["kinds"]
+                .as_array()
+                .is_some_and(|k| !k.iter().any(|k| k == kind))
+            {
+                return Ok(());
+            }
+            for (name, record) in config.scan().await? {
+                out.record(kind, &format!("{kind}:{name}"), record);
+            }
+            out.snapshot_complete(kind);
+        }
+        Some("refresh") => {
+            let ids: BTreeSet<_> = cmd["external_ids"]
+                .as_array()
+                .into_iter()
+                .flatten()
+                .filter_map(Value::as_str)
+                .collect();
+            let prefix = format!("{kind}:");
+            let mut records = if ids.iter().any(|id| id.starts_with(&prefix)) {
+                config.scan().await?
+            } else {
+                BTreeMap::new()
+            };
+            for id in ids {
+                match id
+                    .strip_prefix(&prefix)
+                    .and_then(|name| records.remove(name))
+                {
+                    Some(record) => out.record(kind, id, record),
+                    None => out.not_found(kind, id),
+                }
+            }
+        }
+        other => return Err(format!("unsupported command {other:?}")),
+    }
+    Ok(())
 }
 
 #[tokio::main]

@@ -1,0 +1,12 @@
+---
+title: Seikika organization scorecards
+description: Repository hygiene scores for the public repositories in the Seikika GitHub organization.
+---
+
+import OrganizationReport from "../../../components/OrganizationReport.astro";
+
+Seikika checks README length, CODEOWNERS, and licensing at each repository’s default-branch commit. GitHub inventory supplies the repository list. A repo portal is marked present when it has a manifest at `.seikika/seikika.yaml` or `portal/seikika.yaml`.
+
+<OrganizationReport />
+
+The [Seikika repository report](/report/) has the additional standards and campaigns for the framework repository. See the [organization federation example](https://github.com/seikika/seikika/tree/main/examples/github-org-federation) for the local setup and authenticated access to private repositories.

@@ -7,8 +7,9 @@
 > actions, read through the workspace connector's `portal` records) and *runs down* (a run is
 > dispatched to the child that owns the effect, through a runner the parent allows, with
 > approvals the parent signs). Children are keyed by where they are found. "No runtime coupling"
-> becomes "no portal queries another; a run is the one call that goes down". Results up and the
-> rest of this document remain design.
+> becomes "no portal queries another; a run is the one call that goes down".
+> The GitHub organization portal now runs a common scorecard from default-branch Git objects
+> (option C in §4) and publishes a static snapshot. See the [organization federation example](../../examples/github-org-federation/README.md).
 
 The remaining design covers standards distribution, catalog and score roll-up, and graduation of
 standards. It builds on
@@ -99,6 +100,12 @@ and pinning packages from a registry: an OCI artifact, a git ref, or npm, alongs
 **Recommendation.** Start with A. Use C for checks that don't need a build: the static
 `workspace`-type facts that OpenSSF Scorecard proves can run fleet-wide. Use B only for children
 that run their own `serve`.
+
+**GitHub organization snapshot.** Seikika discovers the complete inventory visible to the operator
+and evaluates the parent scorecard through `seikika report`. The reader pins each default-branch
+commit and reads a small set of Git objects. The inventory owns repository identity and visibility.
+The parent evaluates its own rules from those facts without opening a child manifest or report.
+The docs job builds a public-only snapshot on the same Pages pipeline as the repository report.
 
 **Trust.**
 - Results a child reports about itself are claims. A parent scorecard can require them to be
