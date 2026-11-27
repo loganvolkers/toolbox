@@ -21,6 +21,73 @@ const dir = resolve(argv.find((a, i) => !a.startsWith("--") && !(i && argv[i - 1
 const filter = opt("filter");
 const contractsOnly = argv.includes("--contracts-only");
 const contracts = {
+  "hosted-portal--meta-scorecard": async (page) => {
+    const body = page.locator("#report-body");
+    await body.getByText("CEL filter over", { exact: false }).waitFor();
+    await body.locator('#kind-list a[href="#scorecard/readiness"]').click();
+    await body.getByRole("heading", { name: "Production readiness", exact: true }).waitFor();
+    await body.getByRole("button", { name: "Refresh", exact: true }).waitFor();
+    assert.equal(await body.locator(".report-catalog-details .asof code").textContent(), "demo-1");
+    await page.evaluate(() => { location.hash = "catalog/Campaign"; });
+    await body.locator('#kind-list a[href="#campaign/production"]').click();
+    await body.getByRole("link", { name: "Browse Campaign in Catalog" }).click();
+    await body.locator('#kind-list a[href="#campaign/production"]').waitFor();
+    assert.equal(await body.getByText("CEL filter over", { exact: false }).count(), 0);
+  },
+  "pages-seikika-for-seikika--meta-catalog": async (page) => {
+    const body = page.locator("#report-body");
+    const navigate = path => page.evaluate(path => { location.hash = path; }, path);
+    const cases = [
+      ["Scorecard", "scorecard:seikika/maintainer-skill", "scorecard/maintainer-skill", "How this scorecard is evaluated"],
+      ["Rule", "rule:seikika/maintainer-skill/has-example", "rule/maintainer-skill/has-example", "How it is decided"],
+      ["Campaign", "campaign:seikika/cli-skill-coverage", "campaign/cli-skill-coverage", "CLI skills present"],
+      ["Track", "track:seikika/delivery", "track/ci-and-supply-chain", "CI and supply chain"],
+      ["Scorecard", "scorecard:seikika/vs-backstage-capabilities", "compare/vs-backstage-capabilities", "Every factor"],
+      ["Rubric", "rubric:seikika/assessment-quality", "rubric/rubric%3Aseikika%2Fassessment-quality", "Rubric criteria"],
+      ["Assessment", "assessment:crate-design/crate:seikika-expr", "assessment/assessment%3Acrate-design%2Fcrate%3Aseikika-expr", "Criterion results"],
+      ["Action", "action:seikika/Review skill", "action/action%3Aseikika%2FReview%20skill", "Review skill"],
+    ];
+    for (const [kind, id, path, heading] of cases) {
+      if (kind === "Action") {
+        await page.getByRole("tab", { name: /^Actions/ }).click();
+        await body.getByRole("combobox", { name: "Action" }).selectOption({ label: "Review skill" });
+        assert.equal(new URL(page.url()).hash, "#" + path);
+      } else {
+        await navigate(path);
+      }
+      await body.getByRole("heading", { name: heading, exact: true }).waitFor();
+      const backToKind = body.getByRole("link", { name: `Browse ${kind} in Catalog`, exact: true });
+      await backToKind.waitFor();
+      const detail = await body.innerText();
+      await backToKind.click();
+      const list = body.locator("#kind-list");
+      await list.getByRole("searchbox").fill(id);
+      await list.locator(`a[href="#${path}"]`).click();
+      await body.getByRole("heading", { name: heading, exact: true }).waitFor();
+      await backToKind.waitFor();
+      assert.equal(await body.innerText(), detail, `${kind} detail from the catalog`);
+      await backToKind.click();
+      await list.waitFor();
+      await navigate("entity/" + encodeURIComponent(id));
+      await backToKind.waitFor();
+      assert.equal(await body.innerText(), detail, `${kind} detail from an existing entity link`);
+    }
+    await page.getByRole("tab", { name: /^Campaigns/ }).click();
+    await body.getByRole("link", { name: "Browse Campaign in Catalog" }).waitFor();
+    await navigate("scorecard/maintainer-skill");
+    const evaluated = "How this scorecard is evaluated";
+    await body.getByRole("button", { name: evaluated, exact: true }).press("Enter");
+    await page.waitForFunction(title => document.activeElement?.tagName === "H2" && document.activeElement.textContent === title, evaluated);
+    await body.getByText("Show rule results", { exact: true }).click();
+    await body.locator(".report-catalog-scores .sc-block").first().waitFor();
+    await body.getByText("Catalog fields and relationships", { exact: true }).click();
+    await body.getByText("Skill scorecard catalog field", { exact: true }).waitFor();
+    await body.getByRole("link", { name: "rule:seikika/maintainer-skill/has-example", exact: true }).click();
+    await body.getByRole("heading", { name: "How it is decided" }).waitFor();
+    await navigate("entity/" + encodeURIComponent("scorecard:example/maintainer-skill"));
+    await body.getByText("Example portal catalog field", { exact: true }).waitFor();
+    assert.equal(await body.getByRole("heading", { name: "Catalog details" }).count(), 0);
+  },
   "components--campaign-bars": async (page) => {
     const segments = await page.locator(".kpi-bar.short span.hollow").evaluateAll(
       (nodes) => nodes.map((node) => getComputedStyle(node).backgroundImage),

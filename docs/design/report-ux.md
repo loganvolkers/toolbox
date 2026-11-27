@@ -89,6 +89,10 @@ repo-portals §4). Catalog browse and entity score rollups are computed in the e
   can be shared; so does the catalog's name filter (`#catalog/<Kind>?q=<text>`).
 - The tab title names the page ("Agent skills · Seikika for Seikika"), and each history entry keeps its
   scroll position, so Back returns to the same place in a long list.
+- Catalog links for scorecards, rules, campaigns, tracks, comparison factors, rubrics, assessment
+  runs, and actions open their report detail pages. Existing `#entity/<id>` links resolve to the
+  same page. The detail includes the catalog fields, relationships and scores present in the
+  snapshot. Definitions without catalog records are listed under their kind in the report.
 - Mode chrome uses `role="tab"` / `aria-selected` with arrow-key movement.
 - Every row is one link or one `<summary>`, never a clickable row that contains a link (axe
   `nested-interactive`).

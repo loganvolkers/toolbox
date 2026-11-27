@@ -390,6 +390,10 @@ details.ent>summary{grid-template-columns:76px minmax(0,1fr)}details.ent>summary
 .report-entity-details { overflow-wrap: anywhere; }
 .report-entity-details dt { font-weight: 600; }
 .report-entity-details dd { margin: 0 0 .5rem; }
+.report-catalog-scores li > a { display: inline-flex; align-items: center; min-height: 28px; }
+.report-catalog-scores li + li { margin-block-start: 6px; }
+.report-catalog-disclosure > summary { cursor: pointer; min-height: 24px; font-weight: 600; }
+.report-catalog-disclosure[open] > summary { margin-block-end: .75rem; }
 .federated-campaign .picker { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; margin-block: 1rem; }
 .federated-campaign .picker select { max-width: 100%; min-height: 2rem; }
 .federated-campaign .gap { grid-template-columns: minmax(0, 1fr); overflow-wrap: anywhere; }

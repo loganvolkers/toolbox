@@ -7,7 +7,7 @@ import "./report.css";
 import type { CatalogFilter, ReportData } from "./types";
 import { boxLogo } from "./lib/bars";
 import { aliasLevels } from "./lib/levels";
-import { parseHash, trackByPath } from "./lib/routes";
+import { parseHash, reportRoute } from "./lib/routes";
 import { registerIds } from "./lib/rings";
 import { ruleTitles } from "./lib/rules";
 import { campaignNamesSorted, summarize } from "./lib/summary";
@@ -17,6 +17,7 @@ import ReportContent from "./ReportContent.vue";
 import ReportView from "./ReportView.vue";
 import ReportActions from "./ReportActions.vue";
 import AssessmentView from "./AssessmentView.vue";
+import MetaCatalogDetails from "./MetaCatalogDetails.vue";
 import { aggregateReport, sourceLabel } from "./lib/federation";
 import type { ActionRequest } from "./action-request";
 
@@ -50,12 +51,13 @@ watch(data, data => {
 const summary = computed(() => summarize(data.value));
 const route = computed(() => {
   const value = parseHash(hash.value, props.extraViews);
-  if (data.value.publicCatalog && !["catalog", "entity"].includes(value.mode) && !props.extraViews?.includes(value.mode)) {
-    return { mode: "catalog" };
-  }
-  if (value.mode === "tracks" && value.name) value.name = trackByPath(data.value, value.name);
-  return value;
+  if (!data.value.publicCatalog) return reportRoute(data.value, value);
+  return ["catalog", "entity"].includes(value.mode) || props.extraViews?.includes(value.mode)
+    ? value : { mode: "catalog" };
 });
+const actionsMode = computed(() => route.value.mode === "actions" || route.value.mode === "action");
+const catalogFilter = computed(() => route.value.kind && Object.hasOwn(props.data.catalog, route.value.kind)
+  ? props.filterCatalog : undefined);
 const assessmentMode = computed(() => {
   const mode = route.value.mode;
   if (mode === "assessments" || mode === "assessment" || mode === "rubric" || mode === "rubrics") return mode;
@@ -64,6 +66,7 @@ const extra = computed(() => props.extraViews?.includes(route.value.mode));
 const active = computed(() => {
   if (extra.value || props.pending) return null;
   if (assessmentMode.value) return "assessments";
+  if (actionsMode.value) return "actions";
   const current = route.value;
   if (current.mode === "missing") return null;
   if (current.bare && !data.value.scorecards[current.name ?? ""]) return null;
@@ -119,6 +122,10 @@ function go(path: string) {
     history.replaceState(null, "", "#" + path);
     syncHash();
   }
+}
+function selectAction(id: string) {
+  const entity = route.value.query?.entity;
+  go("action/" + encodeURIComponent(id) + (entity ? "?entity=" + encodeURIComponent(entity) : ""));
 }
 function selectTab(event: MouseEvent, path: string) {
   tabFocus = event.currentTarget === document.activeElement;
@@ -207,9 +214,9 @@ function escapeTip(event: KeyboardEvent) {
 }
 
 watch(() => props.data, () => { if (props.initialRoute === undefined) syncHash(); }, { flush: "sync" });
-watch(() => route.value, route => {
-  if (route.mode === "actions" || extra.value) void ready();
-});
+watch(route, () => {
+  if (actionsMode.value || extra.value) void ready();
+}, { flush: "post" });
 watch(() => [assessmentMode.value, route.value.id, route.value.query?.rubric], ([mode]) => {
   if (mode) void ready();
 }, { flush: "post" });
@@ -220,7 +227,7 @@ onMounted(() => {
   window.addEventListener("click", rememberScroll, true);
   window.addEventListener("scroll", onScroll, { passive: true, capture: true });
   window.addEventListener("keydown", escapeTip);
-  if (assessmentMode.value || extra.value) void ready();
+  if (assessmentMode.value || actionsMode.value || extra.value) void ready();
 });
 onUnmounted(() => {
   clearTimeout(scrollTimer);
@@ -265,12 +272,25 @@ onUnmounted(() => {
     <div id="report-body" ref="content" tabindex="-1" :role="active ? 'tabpanel' : undefined" :aria-labelledby="active ? 'tab-' + active : undefined">
       <slot v-if="extra" name="extra-view" :route="route" />
       <div v-else-if="pending" class="view"><slot name="pending" /></div>
-      <ReportActions v-else-if="route.mode === 'actions'" :data="data" :entity="route.query?.entity" :request="requestAction" />
+      <ReportActions v-else-if="actionsMode" :data="data" :id="route.id" :entity="route.query?.entity" :request="requestAction" @select="selectAction">
+        <template #default="{ id }">
+          <MetaCatalogDetails :data="data" :summary="summary" :id="id" show-scores>
+            <template v-if="$slots['entity-tools']" #entity-tools="context">
+              <slot name="entity-tools" v-bind="context" />
+            </template>
+          </MetaCatalogDetails>
+        </template>
+      </ReportActions>
       <div v-else-if="assessmentMode" class="view">
         <AssessmentView :data="data" :mode="assessmentMode" :id="route.id" :filters="route.query" />
+        <MetaCatalogDetails v-if="route.catalogId" :data="data" :summary="summary" :id="route.catalogId">
+          <template v-if="$slots['entity-tools']" #entity-tools="context">
+            <slot name="entity-tools" v-bind="context" />
+          </template>
+        </MetaCatalogDetails>
       </div>
       <template v-else>
-        <ReportView :data="data" :summary="summary" :route="route" :filter-catalog="filterCatalog" @ready="ready">
+        <ReportView :data="data" :summary="summary" :route="route" :filter-catalog="catalogFilter" @ready="ready">
           <template v-if="$slots['entity-tools']" #entity-tools="context">
             <slot name="entity-tools" v-bind="context" />
           </template>

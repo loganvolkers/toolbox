@@ -348,6 +348,7 @@ pub fn snapshot(
         .collect();
     json!({
         "portal": m.portal.title.as_deref().unwrap_or(&m.portal.name),
+        "portalName": m.portal.name,
         "organization": organization(m),
         "snapshot": d.snapshot,
         "catalog": catalog,
@@ -854,7 +855,7 @@ mod tests {
     fn report_includes_rubrics_before_any_assessments_are_published() {
         let manifest: Manifest = serde_json::from_value(json!({
             "apiVersion": "seikika.com/v1alpha1",
-            "portal": {"name": "review", "owner": "group:operators", "seikika": "0.2"},
+            "portal": {"name": "review", "title": "Design reviews", "owner": "group:operators", "seikika": "0.2"},
             "kinds": [],
             "rubrics": [{"name": "design-quality", "kind": "Service",
                 "criteria": [{"name": "documented", "question": "Can readers find the design?",
@@ -863,6 +864,8 @@ mod tests {
         }))
         .unwrap();
         let report = snapshot(&manifest, &Derived::default(), &Map::new(), None);
+        assert_eq!(report["portal"], "Design reviews");
+        assert_eq!(report["portalName"], "review");
         assert_eq!(report["catalog"], json!({}));
         assert_eq!(report["assessmentKinds"], json!([]));
         assert_eq!(

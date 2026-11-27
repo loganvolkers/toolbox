@@ -139,7 +139,7 @@ try {
   const response = await fetch(live + "/v1/views/report", { headers: { "x-seikika-user": "fixture" } });
   assert.equal(response.headers.get("cache-control"), "private, no-store");
   const served = await response.json();
-  for (const key of ["catalog", "entities", "scorecards", "scores", "tracks", "campaigns", "actions", "children"]) {
+  for (const key of ["portalName", "catalog", "entities", "scorecards", "scores", "tracks", "campaigns", "actions", "children"]) {
     assert.deepEqual(served[key], snapshot[key], key);
   }
 
@@ -165,6 +165,17 @@ try {
     await page.evaluate(() => location.hash = "campaign/" + encodeURIComponent("@alpha/zizmor"));
     await page.getByRole("heading", { name: "Resolve zizmor findings · Child-defined · alpha portal", exact: true }).waitFor();
     await page.getByText("zizmor findings require review", { exact: false }).first().waitFor();
+    const body = page.locator("#report-body");
+    const alphaCampaign = await body.innerText();
+    await body.getByRole("link", { name: "Browse Campaign in Catalog" }).click();
+    const campaigns = body.locator(".federated-catalog-row");
+    await campaigns.filter({ hasText: "Child-defined · alpha portal" }).getByRole("link", { name: "Resolve zizmor findings" }).click();
+    await page.getByRole("heading", { name: "Resolve zizmor findings · Child-defined · alpha portal", exact: true }).waitFor();
+    assert.equal(await body.innerText(), alphaCampaign);
+    await body.getByRole("link", { name: "Browse Campaign in Catalog" }).click();
+    await campaigns.filter({ hasText: "Child-defined · beta portal" }).getByRole("link", { name: "Resolve zizmor findings" }).click();
+    await page.getByRole("heading", { name: "Resolve zizmor findings · Child-defined · beta portal", exact: true }).waitFor();
+    assert.equal(await body.getByText("zizmor findings require review", { exact: false }).count(), 0);
     await page.getByRole("tab", { name: /Tracks/ }).click();
     await page.getByText("Workflow security · Child-defined · beta portal", { exact: true }).filter({ visible: true }).first().waitFor();
     await page.getByRole("tab", { name: /Actions/ }).click();

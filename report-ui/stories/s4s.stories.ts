@@ -1,4 +1,5 @@
 import snapshot from "../fixtures/s4s.json";
+import assessments from "../fixtures/s4s-assessments.json";
 import { fixture, page, routes } from "./report";
 
 const s4s = fixture(snapshot);
@@ -21,3 +22,21 @@ export const Rule = page(s4s, r.rule);
 export const Compare = page(s4s, r.compare);
 export const CompareFactor = page(s4s, r.compareFactor);
 export const NotFound = page(s4s, r.notFound);
+
+const assessmentData = fixture(assessments);
+const scoredCard = "scorecard:seikika/maintainer-skill";
+const exampleCard = "scorecard:example/maintainer-skill";
+export const MetaCatalog = page({
+  ...s4s,
+  catalog: { ...s4s.catalog, Scorecard: [exampleCard, ...s4s.catalog.Scorecard], Assessment: assessmentData.catalog.Assessment },
+  rubrics: assessmentData.rubrics,
+  entities: {
+    ...assessmentData.entities,
+    [scoredCard]: {
+      fields: { catalogFact: "Skill scorecard catalog field" },
+      relations: { in: [{ relation: "ruleOf", from: "rule:seikika/maintainer-skill/has-example" }], out: [] },
+    },
+    [exampleCard]: { fields: { catalogFact: "Example portal catalog field" } },
+  },
+  actions: ["First action", "Review skill"].map(name => ({ name, kind: "Scorecard", entities: [scoredCard], executor: "command" })),
+}, "catalog");

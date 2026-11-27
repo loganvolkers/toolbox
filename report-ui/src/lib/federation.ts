@@ -1,4 +1,5 @@
-import type { ReportAction, ReportChild, ReportData, Score } from "../types";
+import type { CatalogReport, ReportAction, ReportChild, ReportData, Score } from "../types";
+import { withMetaCatalog } from "./meta-catalog";
 
 const map = <T>(): Record<string, T> => Object.create(null);
 const entries = <T>(value?: Record<string, T>) => Object.entries(value ?? {});
@@ -34,7 +35,7 @@ const edge = (value: unknown, endpoint: string) => record(value)
   && typeof value.relation === "string" && typeof value[endpoint] === "string";
 
 function valid(data: unknown): data is ReportData {
-  return record(data) && typeof data.portal === "string"
+  return record(data) && typeof data.portal === "string" && textFields(data, ["portalName"])
     && validMap(data.catalog, (value, kind) => kindName.test(kind) && strings(value))
     && validMap(data.scorecards, value => record(value)
       && textFields(value, ["title", "description", "rationale", "owner", "track", "appliesTo"])
@@ -90,12 +91,13 @@ function reportScore(row: Score): Score {
 }
 
 /** Flatten snapshots while keeping the parent policy and every child's data independently keyed. */
-export function aggregateReport(parent: ReportData): ReportData {
+export function aggregateReport(snapshot: ReportData): CatalogReport {
+  const parent = withMetaCatalog(snapshot);
   if (!parent.children?.length && !parent.organization) return parent;
-  const out: ReportData = {
+  const out: CatalogReport = {
     ...parent, catalog: map(), scorecards: map(), scores: map(), campaigns: map(), tracks: map(),
     entityOverview: map(), entities: map(), kinds: map(), unassessed: map(), comparisons: map(), rubrics: map(),
-    sources: map(), entitySources: map(), actions: [], kindGroups: [], assessmentIds: [],
+    sources: map(), entitySources: map(), actions: [], kindGroups: [], assessmentIds: [], metaDetails: map(),
   };
   const sources = out.sources!;
   const entitySources = out.entitySources!;
@@ -113,7 +115,7 @@ export function aggregateReport(parent: ReportData): ReportData {
   }
   const matched = new Set<ReportAction>();
   const grouped = new Set<string>();
-  function add(doc: ReportData, key: string, path: string[], depth: number) {
+  function add(doc: CatalogReport, key: string, path: string[], depth: number) {
     const mapped = new Map<string, string>();
     function id(original: string) {
       if (!path.length) return original;
@@ -127,13 +129,14 @@ export function aggregateReport(parent: ReportData): ReportData {
     }
     const owner = <T>(value: T) => typeof value === "string" && doc.entityOverview?.[value] ? id(value) : value;
     for (const [kind, metadata] of entries(doc.kinds)) out.kinds![kind] ??= metadata;
-    const assessmentKinds = new Set(doc.assessmentKinds ?? (doc.catalog.Assessment ? ["Assessment"] : []));
     for (const [kind, ids] of entries(doc.catalog)) {
       const values = out.catalog[kind] ??= [];
       for (const original of [...new Set(ids)]) {
         const entity = id(original);
+        const meta = doc.metaDetails[original];
+        if (meta) out.metaDetails[entity] = "name" in meta ? { ...meta, name: id(meta.name) } : meta;
         values.push(entity);
-        if (assessmentKinds.has(kind)) out.assessmentIds!.push(entity);
+        if (meta?.kind === "Assessment") out.assessmentIds!.push(entity);
         const overview = doc.entityOverview?.[original];
         const repository = !path.length && parent.organization
           ? overview?.repository ?? (kind === "Repository" ? overview?.name : undefined)
@@ -202,6 +205,7 @@ export function aggregateReport(parent: ReportData): ReportData {
       if (link) matched.add(link);
       actionRows.push({
         ...item, ...(link ? { inputs: link.inputs, approval: link.approval, permission: link.permission } : {}),
+        catalogId: item.catalogId && id(item.catalogId),
         source: key, entities: item.entities.map(id), target: link?.entities[0],
         choices: item.choices && Object.fromEntries(entries(item.choices).map(([input, targets]) =>
           [input, Object.fromEntries(entries(targets).map(([target, values]) => [id(target), values]))])),
@@ -221,13 +225,23 @@ export function aggregateReport(parent: ReportData): ReportData {
         commit: typeof child.commit === "string" ? child.commit : undefined,
         error: typeof child.error === "string" ? child.error : undefined,
       };
-      if (valid(child.report)) add(child.report, sourceKey, next, depth + 1);
+      if (valid(child.report)) add(withMetaCatalog(child.report), sourceKey, next, depth + 1);
       else sources[sourceKey].error ??= "The published report could not be loaded.";
     }
   }
   add(parent, parentKey, [], 0);
   for (const action of parent.actions ?? []) {
-    if (!action.portal || matched.has(action)) continue;
+    if (!action.portal) continue;
+    if (matched.has(action)) {
+      const id = action.catalogId!;
+      delete out.metaDetails[id];
+      if (!snapshot.catalog.Action?.includes(id)) {
+        out.catalog.Action = out.catalog.Action.filter(item => item !== id);
+        delete out.entityOverview![id];
+        delete entitySources[id];
+      }
+      continue;
+    }
     const key = "child:" + JSON.stringify([action.portal.key]);
     actionRows.push({ ...action, source: sources[key] ? key : undefined });
   }
