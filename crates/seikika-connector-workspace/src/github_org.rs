@@ -3,7 +3,7 @@
 
 use crate::repo;
 use reqwest::{Client, RequestBuilder, Response, StatusCode};
-use seikika_connect::github_app::Installation;
+use seikika_connect::github_app::{Installation, request_failure};
 use serde::Deserialize;
 use serde_json::{Value, json};
 use std::collections::BTreeMap;
@@ -130,7 +130,11 @@ impl Config {
             .timeout(Duration::from_secs(25))
             .build()
             .map_err(|_| "could not build GitHub client")?;
-        self.scan_with(client, API).await
+        let result = self.scan_with(client, API).await;
+        if let Err(error) = &result {
+            eprintln!("seikika: github-org scan failed: {error}");
+        }
+        result
     }
 
     async fn scan_with(
@@ -217,17 +221,20 @@ impl Api {
                 repository.record(result)
             });
             if jobs.len() == 6 {
-                let (name, record) = jobs.join_next().await.unwrap().map_err(|e| e.to_string())?;
+                let (name, record) = repository_read(jobs.join_next().await.unwrap())?;
                 records.insert(name, record);
             }
         }
         while let Some(result) = jobs.join_next().await {
-            let (name, record) = result.map_err(|e| e.to_string())?;
+            let (name, record) = repository_read(result)?;
             records.insert(name, record);
         }
         if config.public_only {
             // A repository may become private while an authenticated read is in flight.
-            let current = self.inventory(config).await?;
+            let current = self
+                .inventory(config)
+                .await
+                .map_err(|error| format!("public inventory recheck: {error}"))?;
             if current.len() != records.len()
                 || current.iter().any(|repo| {
                     records
@@ -523,15 +530,17 @@ impl Repository {
     }
 }
 
+fn repository_read(
+    result: Result<(String, Value), tokio::task::JoinError>,
+) -> Result<(String, Value), &'static str> {
+    result.map_err(|_| "GitHub repository read task failed")
+}
+
 async fn send(request: RequestBuilder, what: &str) -> Result<Response, String> {
-    request.send().await.map_err(|error| {
-        let reason = if error.is_timeout() {
-            "timed out"
-        } else {
-            "request failed"
-        };
-        format!("{what}: {reason}")
-    })
+    request
+        .send()
+        .await
+        .map_err(|error| format!("{what}: {}", request_failure(&error)))
 }
 
 fn success(response: Response, what: &str) -> Result<Response, String> {
