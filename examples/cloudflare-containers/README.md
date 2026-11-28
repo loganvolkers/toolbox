@@ -83,10 +83,11 @@ of public GitHub `owner/repo` names. For an isolated preview, set the
 
 The demo uses the same organization connector and meta-scoring package as the public organization
 report. Install a GitHub App on the organization repositories the demo should scan. Give the app
-read access to repository Contents. Set `GITHUB_APP_ID` and `SEIKIKA_SECRET_GITHUB_APP_PRIVATE_KEY`
-as runtime secrets on the Worker. Store the original RSA PEM as the private key secret. The
-connector looks up the App installation for the configured organization and mints a short-lived
-token for each scan.
+read access to repository Contents. The production `seikika` build sets `GITHUB_APP_ID` in the
+staged Wrangler configuration. For a separate deployment, set the numeric `GITHUB_APP_ID` from
+the App settings under Wrangler `[vars]`. Store the original RSA PEM as the Worker secret
+`SEIKIKA_SECRET_GITHUB_APP_PRIVATE_KEY`. The connector looks up the App installation for the
+configured organization and mints a short-lived token for each scan.
 Roll the container after configuring or rotating the key so it loads the new Worker bindings.
 [Authenticate as a GitHub App installation](https://docs.github.com/en/apps/creating-github-apps/authenticating-with-a-github-app/authenticating-as-a-github-app-installation)
 
