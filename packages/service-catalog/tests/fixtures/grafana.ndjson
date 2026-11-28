@@ -1,0 +1,2 @@
+{"type":"record","kind":"grafana-observation","externalId":"grafana-observation:checkout@staging","data":{"target":"checkout@staging","serviceName":"another-service","dashboardUid":"checkout-staging","observedAt":1795700000,"metrics":[]}}
+{"type":"record","kind":"grafana-observation","externalId":"grafana-observation:undeclared@production","data":{"target":"undeclared@production","serviceName":"undeclared","dashboardUid":"undeclared","observedAt":1795700000,"metrics":[]}}

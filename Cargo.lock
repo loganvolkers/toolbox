@@ -2612,6 +2612,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "seikika-connector-cloudflare"
+version = "0.2.1"
+dependencies = [
+ "reqwest",
+ "seikika-connect",
+ "serde",
+ "serde_json",
+ "tokio",
+]
+
+[[package]]
 name = "seikika-connector-git-files"
 version = "0.2.1"
 dependencies = [
@@ -2638,6 +2649,17 @@ version = "0.2.1"
 dependencies = [
  "reqwest",
  "seikika-connect",
+ "serde_json",
+ "tokio",
+]
+
+[[package]]
+name = "seikika-connector-grafana"
+version = "0.2.1"
+dependencies = [
+ "reqwest",
+ "seikika-connect",
+ "serde",
  "serde_json",
  "tokio",
 ]

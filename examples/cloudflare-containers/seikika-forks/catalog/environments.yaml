@@ -1,0 +1,11 @@
+- id: seikika-demo@production
+  service: seikika-demo
+  title: Production
+  environment: production
+  worker: seikika
+  serviceName: seikika-demo
+  dashboardUid: seikika-runtime
+  links:
+  - {title: Running portal, url: https://demo.seikika.com/}
+  - title: Cloudflare deployments
+    url: https://dash.cloudflare.com/57b52d710613513557f3ad97ae4f4ba6/workers/services/view/seikika/production/deployments

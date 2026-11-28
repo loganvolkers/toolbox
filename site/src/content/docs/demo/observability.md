@@ -5,6 +5,8 @@ description: Follow a real request through the Seikika demo's OpenTelemetry metr
 
 [Open the live runtime dashboard](https://observe.seikika.com/) to see real requests and connector activity from the hosted Seikika demo. Grafana opens in a read-only guest session without an account.
 
+The [Seikika demo service](https://demo.seikika.com/e/service%3Aseikika-demo) shows how the source repository, Worker deployments, and these metrics share a catalog identity.
+
 ## Follow a request
 
 1. Open the [hosted demo](https://demo.seikika.com/) in a second tab. Refresh its home page or select **Catalog**. Those actions make real HTTP requests.

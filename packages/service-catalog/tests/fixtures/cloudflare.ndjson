@@ -1,0 +1,1 @@
+{"type":"record","kind":"worker-deployments","externalId":"worker-deployments:checkout@staging","data":{"target":"checkout@staging","worker":"checkout-production","observedAt":1795700000,"recent":[]}}

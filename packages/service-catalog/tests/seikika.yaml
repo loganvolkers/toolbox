@@ -1,0 +1,7 @@
+apiVersion: seikika.com/v1alpha1
+portal:
+  name: service-catalog-package
+  owner: group:maintainers
+  seikika: "0.1"
+include: [{package: ..}]
+tests: [identities.test.yaml]

@@ -4102,11 +4102,6 @@
       }
     },
     "operator-cli": {
-      "command:connector-drive": {
-        "exercised": [
-          "c24f8671"
-        ]
-      },
       "command:connector-records": {
         "exercised": [
           "13b65a2b"
@@ -4946,6 +4941,9 @@
       }
     },
     "maintainer-connector": {
+      "connector:crates/seikika-connector-cloudflare": {
+        "level": "gold"
+      },
       "connector:crates/seikika-connector-git-files": {
         "level": "gold"
       },
@@ -4953,6 +4951,9 @@
         "level": "gold"
       },
       "connector:crates/seikika-connector-gitlab": {
+        "level": "gold"
+      },
+      "connector:crates/seikika-connector-grafana": {
         "level": "gold"
       },
       "connector:crates/seikika-connector-runner": {
@@ -5015,6 +5016,13 @@
           "tests-pass"
         ]
       },
+      "crate:seikika-connector-cloudflare": {
+        "level": "gold",
+        "unknown": [
+          "clippy-clean",
+          "tests-pass"
+        ]
+      },
       "crate:seikika-connector-git-files": {
         "level": "gold",
         "unknown": [
@@ -5034,6 +5042,13 @@
         ]
       },
       "crate:seikika-connector-gitlab": {
+        "level": "gold",
+        "unknown": [
+          "clippy-clean",
+          "tests-pass"
+        ]
+      },
+      "crate:seikika-connector-grafana": {
         "level": "gold",
         "unknown": [
           "clippy-clean",
@@ -5871,6 +5886,9 @@
       "doc:docs/decisions/D01M8FRFDEKE0F5XHG7ZSNEJ9S8.md": {
         "level": "skipped"
       },
+      "doc:docs/decisions/D01M8FXW9XRMTM2EPQZEZ49HH9F.md": {
+        "level": "skipped"
+      },
       "doc:docs/decisions/README.md": {
         "level": "skipped"
       },
@@ -6045,6 +6063,9 @@
       "doc:docs/design/seikika-for-seikika.md": {
         "level": "silver"
       },
+      "doc:docs/design/service-catalog.md": {
+        "level": "silver"
+      },
       "doc:docs/design/site-standards.md": {
         "level": "silver"
       },
@@ -6154,6 +6175,9 @@
         "level": "silver"
       },
       "doc:examples/secret-vault-gcp/README.md": {
+        "level": "silver"
+      },
+      "doc:examples/service-catalog/README.md": {
         "level": "silver"
       },
       "doc:experiments/actions-ab/README.md": {
@@ -6435,6 +6459,9 @@
         "level": "gold"
       },
       "example:examples/secret-vault-gcp/README.md": {
+        "level": "gold"
+      },
+      "example:examples/service-catalog/README.md": {
         "level": "gold"
       },
       "example:experiments/README.md": {
@@ -6741,6 +6768,9 @@
       "site-page:site/src/content/docs/concepts/scorecards.md": {
         "level": "gold"
       },
+      "site-page:site/src/content/docs/connectors/cloudflare.md": {
+        "level": "gold"
+      },
       "site-page:site/src/content/docs/connectors/git-files.md": {
         "level": "gold"
       },
@@ -6748,6 +6778,9 @@
         "level": "gold"
       },
       "site-page:site/src/content/docs/connectors/gitlab.md": {
+        "level": "gold"
+      },
+      "site-page:site/src/content/docs/connectors/grafana.md": {
         "level": "gold"
       },
       "site-page:site/src/content/docs/connectors/index.mdx": {
@@ -6847,6 +6880,9 @@
         "level": "gold"
       },
       "site-page:site/src/content/docs/packages/semgrep.md": {
+        "level": "gold"
+      },
+      "site-page:site/src/content/docs/packages/service-catalog.md": {
         "level": "gold"
       },
       "site-page:site/src/content/docs/packages/shell.md": {
@@ -14024,10 +14060,7 @@
         "level": "skipped"
       },
       "command:connector-drive": {
-        "failing": {
-          "exercised": 1
-        },
-        "level": "bronze"
+        "level": "silver"
       },
       "command:connector-records": {
         "failing": {

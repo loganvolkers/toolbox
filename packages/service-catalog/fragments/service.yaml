@@ -1,0 +1,132 @@
+connectors:
+  - name: service-inventory
+    package: builtin:workspace
+    runtime: in-image
+    config:
+      root: ${param:root}
+      data:
+        - {kind: service, globs: [catalog/services.yaml]}
+        - {kind: service-environment, globs: [catalog/environments.yaml]}
+    records: [service, service-environment]
+    refresh: {service: [external_ids], service-environment: [external_ids]}
+    freshness: {service: 15m, service-environment: 15m}
+  - name: cloudflare
+    package: builtin:cloudflare
+    runtime: in-image
+    config: ${param:cloudflare}
+    records: [worker-deployments]
+    refresh: {worker-deployments: [external_ids]}
+    freshness: {worker-deployments: 2m}
+  - name: grafana
+    package: builtin:grafana
+    runtime: in-image
+    config: ${param:grafana}
+    records: [grafana-observation]
+    refresh: {grafana-observation: [external_ids]}
+    freshness: {grafana-observation: 1m}
+
+kinds:
+  - name: Service
+    description: An independently operated unit of software with an accountable owner.
+    identityFrom: [connector:service-inventory]
+    fields:
+      title: {type: string, description: Human-readable name of the service.}
+      description:
+        type: string
+        description: User journey or responsibility the service supports.
+      owner: {type: string, description: Accountable team by catalog ID.}
+      lifecycle:
+        type: enum
+        values: [experimental, production, deprecated]
+        description: The service's operational commitment.
+      repository:
+        type: string
+        description: Catalog entity ID of the primary source repository.
+      code:
+        type: string
+        description: Source forge project slug such as owner/repository.
+      links:
+        type: list
+        items: object
+        description: Labeled links to service tools and documentation.
+    sources: {default: [connector:service-inventory]}
+    map:
+    - from: service-inventory/service
+      id: "'service:' + record.id"
+      set: >-
+        {'title': record.title, 'description': record.description, 'owner':
+        record.owner, 'lifecycle': record.lifecycle, 'code': record.code,
+        'repository': has(record.repository) ? record.repository : null,
+        'links': has(record.links) ? record.links : []}
+  - name: ServiceEnvironment
+    title: Service environment
+    description: >-
+      A declared environment with independently refreshed deployment and
+      telemetry evidence.
+    identityFrom: [connector:service-inventory]
+    relations: {environmentOf: {to: Service}}
+    fields:
+      title: {type: string, description: Display name of the environment.}
+      environment:
+        type: string
+        description: Stable environment name used to scope deployments and telemetry.
+      worker:
+        type: string
+        description: Cloudflare Worker script name for a Workers deployment.
+      serviceName:
+        type: string
+        description: OpenTelemetry service.name used by the queried metrics.
+      dashboardUid:
+        type: string
+        description: Grafana dashboard UID for this environment.
+      links:
+        type: list
+        items: object
+        description: Labeled links to the runtime and operational tools.
+      cloudflareObservation:
+        type: object
+        facet: operator
+        description: Raw Cloudflare record before the declared Worker name is checked.
+      grafanaObservation:
+        type: object
+        facet: operator
+        description: Raw Grafana record before the declared telemetry identity is checked.
+      deployments:
+        type: object
+        description: Latest Cloudflare rollout history and collection time.
+        computed: >-
+          has(entity.worker) && has(entity.cloudflareObservation) && entity.worker
+          == entity.cloudflareObservation.worker ? entity.cloudflareObservation :
+          null
+      metrics:
+        type: object
+        description: >-
+          Grafana instant results and collection time for the declared telemetry
+          identity.
+        computed: >-
+          has(entity.serviceName) && has(entity.dashboardUid) &&
+          has(entity.grafanaObservation) && entity.serviceName ==
+          entity.grafanaObservation.serviceName && entity.dashboardUid ==
+          entity.grafanaObservation.dashboardUid ? entity.grafanaObservation :
+          null
+    sources:
+      default: [connector:service-inventory]
+      fields:
+        cloudflareObservation: [connector:cloudflare]
+        grafanaObservation: [connector:grafana]
+    map:
+    - from: service-inventory/service-environment
+      id: "'service-environment:' + record.service + '@' + record.environment"
+      set: >-
+        {'title': record.title, 'environment': record.environment, 'worker':
+        has(record.worker) ? record.worker : null, 'serviceName':
+        has(record.serviceName) ? record.serviceName : null, 'dashboardUid':
+        has(record.dashboardUid) ? record.dashboardUid : null, 'links':
+        has(record.links) ? record.links : []}
+      relations: {environmentOf: "['service:' + record.service]"}
+    - from: cloudflare/worker-deployments
+      id: "'service-environment:' + record.target"
+      set: "{'cloudflareObservation': record}"
+    - from: grafana/grafana-observation
+      id: "'service-environment:' + record.target"
+      set: "{'grafanaObservation': record}"

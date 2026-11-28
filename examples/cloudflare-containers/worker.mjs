@@ -52,7 +52,10 @@ function containerEnvironment(env) {
       SEIKIKA_SEED_ADMIN: SEIKIKA_PREVIEW_ACCESS_ADMIN,
     };
   }
-  const values = { ...organization, DATABASE_URL, SEIKIKA_SIGNING_KEY, SEIKIKA_AUTH_MODE };
+  const catalog = env.SEIKIKA_CLOUDFLARE_CATALOG_TOKEN
+    ? { SEIKIKA_CLOUDFLARE_CATALOG_TOKEN: env.SEIKIKA_CLOUDFLARE_CATALOG_TOKEN }
+    : {};
+  const values = { ...organization, ...catalog, DATABASE_URL, SEIKIKA_SIGNING_KEY, SEIKIKA_AUTH_MODE };
   if (SEIKIKA_AUTH_MODE === "cloudflare-access") {
     const { SEIKIKA_CF_TEAM_DOMAIN, SEIKIKA_AUDIENCE } = env;
     if (!SEIKIKA_CF_TEAM_DOMAIN || !SEIKIKA_AUDIENCE) {

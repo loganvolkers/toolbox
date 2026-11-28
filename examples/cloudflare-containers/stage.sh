@@ -14,7 +14,7 @@ cp -- "$example_dir"/{Dockerfile,worker.mjs,wrangler.toml,.dockerignore,package.
 cp -R -T -- "$portal_dir" "$destination/portal"
 for binary in seikika seikika-connector-workspace seikika-connector-github \
   seikika-connector-git-files seikika-connector-gitlab seikika-connector-runner \
-  seikika-connector-scim; do
+  seikika-connector-scim seikika-connector-cloudflare seikika-connector-grafana; do
   install -D -m 0755 "$binaries_dir/$binary" "$destination/bin/$binary"
 done
 bash "$repo_dir/scripts/ci-tools.sh" "$destination/bin" openfga
@@ -25,7 +25,7 @@ if [[ "$portal_dir" -ef "$example_dir/seikika-forks" ]]; then
   mkdir -p "$organization" "$destination/portal/packages"
   cp -- "$source"/{public,public-connector,self-publication,repositories,standards,workflows,meta,standards.test}.yaml "$organization/"
   cp -R -- "$source"/{assessments,fixtures} "$organization/"
-  cp -R -- "$repo_dir/packages/meta-scoring" "$destination/portal/packages/"
+  cp -R -- "$repo_dir/packages/"{meta-scoring,service-catalog} "$destination/portal/packages/"
   bundle=$(cd -- "$destination/portal" && pwd)
   # The assessment connector verifies citations against these original files.
   (

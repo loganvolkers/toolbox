@@ -93,7 +93,7 @@ The shared report accepts a signed-out audience on the public catalog route. The
 `policies.publicReportSources` lists the connectors whose records, public fields, and score evidence
 guests can browse. Include only sources approved for publication. A GitHub organization source
 with `publicOnly: true` and `reports: true` also includes child reports committed to its public
-repositories. The direct public repository endpoints use the configured repository list.
+repositories. The direct public repository endpoints use the configured repository list. Service and environment deep links use the same source policy as the report.
 `policies.reportNamespace` gives report catalog links and rubrics the same IDs as the organization
 report while the demo keeps its own portal identity for authorization and storage.
 
@@ -154,3 +154,7 @@ seikika run --url "$SEIKIKA_URL" -o json
 Use a second identity to confirm it cannot preview an action granted only to the operator. For actions with approval requirements, add the `approval_key` returned by the parent to each child under `federation.acceptApprovalsFrom` and verify a test run. [Federate repository actions](../federated-actions/README.md)
 
 Use the same Durable Object name and a single container instance. The container's checkout cache is rebuilt after an idle shutdown or replacement. Size its disk for full clones of the configured children. PostgreSQL and the signing secret survive replacement. If you change the portal image or a secret passed at process startup, roll the container and recheck readiness and discovery. Keep snapshot refresh and long actions in mind when tuning the idle timeout in `worker.mjs`. [Container operation](https://developers.cloudflare.com/containers/) · [Container inactivity](https://developers.cloudflare.com/containers/api/durable-object-container/#setinactivitytimeout)
+
+## Publish the demo service
+
+The bundled seven-fork portal includes the [Seikika demo service](seikika-forks/seikika.yaml). Add the optional Worker secret `SEIKIKA_CLOUDFLARE_CATALOG_TOKEN` using an account-owned token with Metadata Read-Only access to the `seikika` Worker. It gives the catalog rollout history for the declared production Worker. The Grafana connector uses the already public demo endpoint. After a rollout, open `/e/service%3Aseikika-demo` as a guest, match the latest Worker version and traffic shares with Cloudflare, and compare recent metric values with the linked dashboard.

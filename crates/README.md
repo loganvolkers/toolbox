@@ -12,6 +12,8 @@ from the repository root.
 | [seikika-connect](seikika-connect/README.md) | Defines how Seikika and connectors exchange records and commands. |
 | [seikika-connector-git-files](seikika-connector-git-files/README.md) | Reads catalog files from local checkouts or through the GitHub contents API. |
 | [seikika-connector-github](seikika-connector-github/README.md) | Reads GitHub repositories, CODEOWNERS, apps, and installations. |
+| [seikika-connector-cloudflare](seikika-connector-cloudflare/README.md) | Reads Workers deployments and version traffic splits. |
+| [seikika-connector-grafana](seikika-connector-grafana/README.md) | Reads Prometheus metrics and dashboard links through Grafana. |
 | [seikika-connector-gitlab](seikika-connector-gitlab/README.md) | Reads projects and group membership from GitLab.com or a self-managed GitLab instance. |
 | [seikika-connector-runner](seikika-connector-runner/README.md) | Runs configured local tools and feeds their results into Seikika. |
 | [seikika-connector-scim](seikika-connector-scim/README.md) | Receives user and group changes from an identity provider over System for Cross-domain Identity Management (SCIM) 2.0 and sends them to Seikika. |
