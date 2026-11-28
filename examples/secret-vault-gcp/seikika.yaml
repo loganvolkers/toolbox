@@ -17,7 +17,6 @@ connectors:
       org: acme
       appId: ${env:GITHUB_APP_ID}
       privateKey: ${secret:github-app-private-key}
-      installationId: ${env:GITHUB_INSTALLATION_ID}
     records: [repository, codeowners, app, installation]
 
   - name: jira

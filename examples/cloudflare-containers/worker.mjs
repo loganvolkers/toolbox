@@ -3,7 +3,7 @@ import { DurableObject } from "cloudflare:workers";
 const PORT = 8080;
 const IDLE_TIMEOUT_MS = 30 * 60 * 1000;
 const STARTUP_TIMEOUT_MS = 25_000;
-const GITHUB_APP_BINDINGS = ["GITHUB_APP_ID", "GITHUB_INSTALLATION_ID", "SEIKIKA_SECRET_GITHUB_APP_PRIVATE_KEY"];
+const GITHUB_APP_BINDINGS = ["GITHUB_APP_ID", "SEIKIKA_SECRET_GITHUB_APP_PRIVATE_KEY"];
 
 function telemetryEnvironment(env) {
   const { SEIKIKA_OTLP_ENDPOINT, SEIKIKA_OTLP_TOKEN } = env;
