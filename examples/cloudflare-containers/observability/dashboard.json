@@ -29,7 +29,7 @@
     {
       "id": 1,
       "title": "Snapshot lag",
-      "description": "Seconds since the last published snapshot. A flat zero can mean snapshots are publishing on schedule. Check the readiness request and ingestion together.",
+      "description": "Seconds since the last published snapshot. Age grows between publications. Compare it with connector ingestion and the expected refresh cadence.",
       "type": "timeseries",
       "datasource": {
         "type": "prometheus",
@@ -155,7 +155,8 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "histogram_quantile(0.95, sum by (le) (rate(traces_spanmetrics_latency_bucket{service=\"seikika-demo\",span_name=\"http.server.request\"}[$__rate_interval])))"
+          "expr": "histogram_quantile(0.95, sum by (le) (rate(traces_spanmetrics_latency_bucket{service=\"seikika-demo\",span_name=\"http.server.request\"}[$__rate_interval])))",
+          "legendFormat": "p95"
         }
       ],
       "fieldConfig": {
@@ -168,7 +169,7 @@
     {
       "id": 5,
       "title": "Recent request logs",
-      "description": "Expand a request to see its fields and open its Tempo trace. Refresh the demo portal to generate a new event.",
+      "description": "Expand a request to copy its trace_id, then select the matching Trace ID in the traces table. Refresh the demo portal to generate a new event.",
       "type": "logs",
       "datasource": {
         "type": "loki",
