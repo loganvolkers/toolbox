@@ -223,6 +223,11 @@ The repository quickstart recorded a baseline, exited 1 after moving its linked 
 - Replayed all seven historical cases. The current CLI rejected duplicate criterion verdicts and reported a bound assessment stale after a rubric edit. The historical assessment without a rubric hash retained its subject-only behavior. [Historical replay](../experiments/assessment-replay/README.md)
 - Passed 280 Storybook views. A temporary build that restored the two historical defects failed all eight targeted views. Passed 332 Rust tests, seven Python pilot tests, 142 self-portal expectations, and the strict report ratchet. Adapter execution and usage validation used fixtures.
 
+## Assessment improvement campaign (2026-11-28)
+
+- Repeated the maintainer assessment loop on Seikika itself. The checkpoint went from 7 to 96 of 374 Meets assessments passing, and the integration with main verified 92 of 375 after the self-portal move. The case study reconstructs effort, review freshness, and rule and evidence fixes from the retained outputs. [Retrospective](audits/assessment-improvement-2026-11-28.md)
+- Designed a repeatable comparison against an unaided agent and a composed standards workflow. It uses independent verification across repair, handoff, and upstream change. [Benchmark design](audits/assessment-improvement-benchmark.md)
+
 ## Cloudflare Containers example (2026-11-26)
 
 - Wrangler 4.168.0 built the example image and bundled the Worker with `wrangler deploy --dry-run`. The routing check exercised concurrent startup, request forwarding, and the public `/metrics` denial. Wrangler's local container driver could not connect to its Docker egress proxy in this environment.
