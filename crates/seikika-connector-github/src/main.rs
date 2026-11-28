@@ -16,6 +16,7 @@
 
 mod runs;
 
+use seikika_connect::github_app::Installation;
 use seikika_connect::sdk::{Out, Source, run_stdio};
 use serde_json::{Value, json};
 
@@ -25,7 +26,7 @@ struct GitHub {
     org: String,
     version: String,
     token: Option<String>,
-    app: Option<(String, String, String)>, // (app id, private key PEM, installation id)
+    app: Installation,
     /// `actions`: repositories whose workflow runs to summarise, the branch, and how many runs.
     actions: Option<(Vec<String>, String, u64)>,
 }
@@ -60,8 +61,8 @@ impl GitHub {
                 )
             }),
             app: match (s("appId"), s("privateKey"), s("installationId")) {
-                (Some(a), Some(k), Some(i)) => Some((a, k, i)),
-                _ => None,
+                (Some(a), Some(k), Some(i)) => Installation::new(a, k, i),
+                _ => Installation::default(),
             },
         })
     }
@@ -71,38 +72,7 @@ impl GitHub {
         if let Some(t) = &self.token {
             return Ok(Some(t.clone()));
         }
-        let Some((app_id, pem, inst)) = &self.app else {
-            return Ok(None);
-        };
-        let now = std::time::SystemTime::now()
-            .duration_since(std::time::UNIX_EPOCH)
-            .unwrap_or_default()
-            .as_secs();
-        let claims = json!({"iat": now - 60, "exp": now + 540, "iss": app_id});
-        let key = jsonwebtoken::EncodingKey::from_rsa_pem(pem.as_bytes())
-            .map_err(|e| format!("privateKey: {e}"))?;
-        let jwt = jsonwebtoken::encode(
-            &jsonwebtoken::Header::new(jsonwebtoken::Algorithm::RS256),
-            &claims,
-            &key,
-        )
-        .map_err(|e| e.to_string())?;
-        let r: Value = self
-            .http
-            .post(format!(
-                "{}/app/installations/{inst}/access_tokens",
-                self.api
-            ))
-            .bearer_auth(jwt)
-            .header("accept", "application/vnd.github+json")
-            .header("user-agent", "seikika-connector-github")
-            .send()
-            .await
-            .map_err(|e| e.to_string())?
-            .json()
-            .await
-            .map_err(|e| e.to_string())?;
-        Ok(r["token"].as_str().map(str::to_owned))
+        self.app.token(&self.http, &self.api, &self.version).await
     }
 
     /// GET a path; `Ok(None)` on 404.

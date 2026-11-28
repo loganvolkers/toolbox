@@ -2600,6 +2600,7 @@ dependencies = [
 name = "seikika-connect"
 version = "0.2.1"
 dependencies = [
+ "jsonwebtoken",
  "regex",
  "reqwest",
  "seikika-model",
@@ -2625,7 +2626,6 @@ dependencies = [
 name = "seikika-connector-github"
 version = "0.2.1"
 dependencies = [
- "jsonwebtoken",
  "reqwest",
  "seikika-connect",
  "serde_json",

@@ -3,6 +3,7 @@ import { DurableObject } from "cloudflare:workers";
 const PORT = 8080;
 const IDLE_TIMEOUT_MS = 30 * 60 * 1000;
 const STARTUP_TIMEOUT_MS = 25_000;
+const GITHUB_APP_BINDINGS = ["GITHUB_APP_ID", "GITHUB_INSTALLATION_ID", "SEIKIKA_SECRET_GITHUB_APP_PRIVATE_KEY"];
 
 function telemetryEnvironment(env) {
   const { SEIKIKA_OTLP_ENDPOINT, SEIKIKA_OTLP_TOKEN } = env;
@@ -33,15 +34,15 @@ function containerEnvironment(env) {
   const publicCatalog = env.SEIKIKA_PUBLIC_REPOSITORIES
     ? { SEIKIKA_PUBLIC_REPOSITORIES: env.SEIKIKA_PUBLIC_REPOSITORIES }
     : {};
-  const organization = env.SEIKIKA_ORG_GITHUB_TOKEN ? { GH_TOKEN: env.SEIKIKA_ORG_GITHUB_TOKEN } : {};
-  const telemetry = telemetryEnvironment(env);
+  const organization = Object.fromEntries(
+    GITHUB_APP_BINDINGS.filter(name => env[name]).map(name => [name, env[name]]),
+  );
   if (SEIKIKA_PREVIEW_ACCESS_ISSUER || SEIKIKA_PREVIEW_ACCESS_AUDIENCE || SEIKIKA_PREVIEW_ACCESS_ADMIN) {
     if (!SEIKIKA_PREVIEW_ACCESS_ISSUER || !SEIKIKA_PREVIEW_ACCESS_AUDIENCE || !SEIKIKA_PREVIEW_ACCESS_ADMIN) {
       throw new Error("Set all three managed Preview Access bindings");
     }
     return {
       ...organization,
-      ...telemetry,
       ...publicCatalog,
       DATABASE_URL,
       SEIKIKA_SIGNING_KEY,
@@ -51,7 +52,7 @@ function containerEnvironment(env) {
       SEIKIKA_SEED_ADMIN: SEIKIKA_PREVIEW_ACCESS_ADMIN,
     };
   }
-  const values = { ...organization, ...telemetry, DATABASE_URL, SEIKIKA_SIGNING_KEY, SEIKIKA_AUTH_MODE };
+  const values = { ...organization, DATABASE_URL, SEIKIKA_SIGNING_KEY, SEIKIKA_AUTH_MODE };
   if (SEIKIKA_AUTH_MODE === "cloudflare-access") {
     const { SEIKIKA_CF_TEAM_DOMAIN, SEIKIKA_AUDIENCE } = env;
     if (!SEIKIKA_CF_TEAM_DOMAIN || !SEIKIKA_AUDIENCE) {
@@ -71,7 +72,8 @@ export class SeikikaContainer extends DurableObject {
 
   async #start(container) {
     if (!container.running) {
-      container.start({ env: containerEnvironment(this.env), enableInternet: true });
+      const env = { ...containerEnvironment(this.env), ...telemetryEnvironment(this.env) };
+      container.start({ env, enableInternet: true });
     }
     await container.setInactivityTimeout(IDLE_TIMEOUT_MS);
     const port = container.getTcpPort(PORT);
