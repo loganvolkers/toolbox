@@ -3,6 +3,7 @@ import { DurableObject } from "cloudflare:workers";
 const PORT = 8080;
 const IDLE_TIMEOUT_MS = 30 * 60 * 1000;
 const STARTUP_TIMEOUT_MS = 25_000;
+const GITHUB_APP_BINDINGS = ["GITHUB_APP_ID", "GITHUB_INSTALLATION_ID", "SEIKIKA_SECRET_GITHUB_APP_PRIVATE_KEY"];
 
 function containerEnvironment(env) {
   const { DATABASE_URL, SEIKIKA_SIGNING_KEY, SEIKIKA_AUTH_MODE } = env;
@@ -13,7 +14,9 @@ function containerEnvironment(env) {
   const publicCatalog = env.SEIKIKA_PUBLIC_REPOSITORIES
     ? { SEIKIKA_PUBLIC_REPOSITORIES: env.SEIKIKA_PUBLIC_REPOSITORIES }
     : {};
-  const organization = env.SEIKIKA_ORG_GITHUB_TOKEN ? { GH_TOKEN: env.SEIKIKA_ORG_GITHUB_TOKEN } : {};
+  const organization = Object.fromEntries(
+    GITHUB_APP_BINDINGS.filter(name => env[name]).map(name => [name, env[name]]),
+  );
   if (SEIKIKA_PREVIEW_ACCESS_ISSUER || SEIKIKA_PREVIEW_ACCESS_AUDIENCE || SEIKIKA_PREVIEW_ACCESS_ADMIN) {
     if (!SEIKIKA_PREVIEW_ACCESS_ISSUER || !SEIKIKA_PREVIEW_ACCESS_AUDIENCE || !SEIKIKA_PREVIEW_ACCESS_ADMIN) {
       throw new Error("Set all three managed Preview Access bindings");

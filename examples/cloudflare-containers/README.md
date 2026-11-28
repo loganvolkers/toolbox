@@ -82,8 +82,12 @@ of public GitHub `owner/repo` names. For an isolated preview, set the
 `SEIKIKA_PUBLIC_REPOSITORIES` runtime variable on that preview.
 
 The demo uses the same organization connector and meta-scoring package as the public organization
-report. Set the Worker secret `SEIKIKA_ORG_GITHUB_TOKEN` to a GitHub credential with read access to
-the public organization repositories. The scan can exceed GitHub’s unauthenticated API limit.
+report. Install a GitHub App on the organization repositories the demo should scan. Give the app
+read access to repository Contents. Set `GITHUB_APP_ID`, `GITHUB_INSTALLATION_ID`, and
+`SEIKIKA_SECRET_GITHUB_APP_PRIVATE_KEY` as runtime secrets on the Worker. Store the original RSA PEM
+as the private key secret. The connector mints a short-lived installation token for each scan.
+Roll the container after configuring or rotating the key so it loads the new Worker bindings.
+[Authenticate as a GitHub App installation](https://docs.github.com/en/apps/creating-github-apps/authenticating-with-a-github-app/authenticating-as-a-github-app-installation)
 
 The shared report accepts a signed-out audience on the public catalog route. The host manifest’s
 `policies.publicReportSources` lists the connectors whose records, public fields, and score evidence
