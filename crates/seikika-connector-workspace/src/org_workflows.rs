@@ -30,6 +30,8 @@ pub(crate) async fn audit(text: &str) -> Result<Vec<Value>, &'static str> {
         .current_dir(root.path())
         .env_clear()
         .env("PATH", std::env::var_os("PATH").unwrap_or_default())
+        // zizmor needs a home directory even offline. The container UID has no passwd entry.
+        .env("HOME", root.path())
         .kill_on_drop(true);
     let result = tokio::time::timeout(Duration::from_secs(15), command.output())
         .await
