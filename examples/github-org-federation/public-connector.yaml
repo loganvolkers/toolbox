@@ -8,6 +8,10 @@ connectors:
         workflows: true
         reports: true
         publicOnly: true
+        app:
+          appId: ${env:GITHUB_APP_ID}
+          privateKey: ${secret:github-app-private-key}
+          installationId: ${env:GITHUB_INSTALLATION_ID}
     records: [federated-repo, federated-workflow]
     refresh:
       federated-repo: [external_ids]

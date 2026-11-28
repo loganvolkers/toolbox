@@ -3,6 +3,7 @@
 
 use crate::repo;
 use reqwest::{Client, RequestBuilder, Response, StatusCode};
+use seikika_connect::github_app::Installation;
 use serde::Deserialize;
 use serde_json::{Value, json};
 use std::collections::BTreeMap;
@@ -11,6 +12,7 @@ use std::time::Duration;
 pub(crate) const WORKFLOW_KIND: &str = "federated-workflow";
 pub(crate) const KIND: &str = "federated-repo";
 const API: &str = "https://api.github.com";
+const API_VERSION: &str = "2022-11-28";
 const JSON_LIMIT: usize = 10 * 1024 * 1024;
 const README_LIMIT: usize = 1024 * 1024;
 const LICENSE_LIMIT: usize = 256 * 1024;
@@ -26,6 +28,8 @@ pub(crate) struct Config {
     pub(crate) workflows: bool,
     #[serde(default)]
     reports: bool,
+    #[serde(default)]
+    app: Installation,
     token: Option<String>,
 }
 
@@ -119,15 +123,23 @@ impl Config {
     }
 
     pub(crate) async fn scan(&self) -> Result<BTreeMap<String, Value>, String> {
-        let api = Api {
-            client: Client::builder()
-                .user_agent("seikika-federation")
-                .redirect(reqwest::redirect::Policy::none())
-                .timeout(Duration::from_secs(25))
-                .build()
-                .map_err(|_| "could not build GitHub client")?,
-            base: API.to_owned(),
-            token: match self
+        let client = Client::builder()
+            .user_agent("seikika-federation")
+            .redirect(reqwest::redirect::Policy::none())
+            .timeout(Duration::from_secs(25))
+            .build()
+            .map_err(|_| "could not build GitHub client")?;
+        self.scan_with(client, API).await
+    }
+
+    async fn scan_with(
+        &self,
+        client: Client,
+        base: &str,
+    ) -> Result<BTreeMap<String, Value>, String> {
+        let token = match self.app.token(&client, base, API_VERSION).await? {
+            Some(token) => Some(token),
+            None => match self
                 .token
                 .as_deref()
                 .map(str::trim)
@@ -137,9 +149,14 @@ impl Config {
                 None => existing_token().await,
             },
         };
-        if !self.public_only && api.token.is_none() {
-            return Err("GitHub federation needs gh auth login, GH_TOKEN or GITHUB_TOKEN to inventory visible repositories".into());
+        if !self.public_only && token.is_none() {
+            return Err("GitHub federation needs a GitHub App, gh auth login, GH_TOKEN or GITHUB_TOKEN to inventory visible repositories".into());
         }
+        let api = Api {
+            client,
+            base: base.to_owned(),
+            token,
+        };
         api.scan(self).await
     }
 }
@@ -180,7 +197,7 @@ impl Api {
             .client
             .get(format!("{}{path}", self.base))
             .header(reqwest::header::ACCEPT, accept)
-            .header("X-GitHub-Api-Version", "2022-11-28");
+            .header("X-GitHub-Api-Version", API_VERSION);
         match &self.token {
             Some(token) => request.bearer_auth(token),
             None => request,
@@ -594,18 +611,32 @@ mod tests {
                     request.push(socket.read_u8().await.unwrap());
                 }
                 let request = String::from_utf8(request).unwrap();
-                assert!(
-                    request
-                        .to_ascii_lowercase()
-                        .contains("authorization: bearer fixture")
-                );
-                let path = request
+                let mut request_line = request.lines().next().unwrap().split_whitespace();
+                let method = request_line.next().unwrap();
+                let path = request_line.next().unwrap();
+                let authorization = request
                     .lines()
-                    .next()
-                    .unwrap()
-                    .split_whitespace()
-                    .nth(1)
+                    .find_map(|line| {
+                        let (header, value) = line.split_once(": ")?;
+                        header
+                            .eq_ignore_ascii_case("authorization")
+                            .then_some(value)
+                    })
                     .unwrap();
+                if path == "/app/installations/456/access_tokens" {
+                    assert_eq!(method, "POST");
+                    assert_eq!(
+                        authorization
+                            .strip_prefix("Bearer ")
+                            .unwrap()
+                            .split('.')
+                            .count(),
+                        3
+                    );
+                } else {
+                    assert_eq!(method, "GET");
+                    assert_eq!(authorization, "Bearer fixture");
+                }
                 observed.lock().unwrap().push(path.to_owned());
                 let unknown = Reply {
                     status: "500 Unexpected",
@@ -760,6 +791,7 @@ mod tests {
                 public_only: false,
                 workflows: false,
                 reports: false,
+                app: Installation::default(),
                 token: None,
             })
             .await
@@ -816,12 +848,43 @@ mod tests {
                 public_only: true,
                 workflows: false,
                 reports: false,
+                app: Installation::default(),
                 token: None,
             })
             .await
             .unwrap();
         assert!(records.is_empty());
         assert_eq!(*requests.lock().unwrap(), [path, path]);
+        server.abort();
+    }
+
+    #[tokio::test]
+    async fn uses_one_installation_token_per_public_scan() {
+        let exchange = "/app/installations/456/access_tokens";
+        let inventory = "/orgs/acme/repos?type=public&per_page=100&page=1";
+        let (api, requests, server) = fixture(BTreeMap::from([
+            (exchange.into(), Reply::json(json!({"token": "fixture"}))),
+            (
+                inventory.into(),
+                Reply::json(json!([repository("private", "private", "main")])),
+            ),
+        ]))
+        .await;
+        let config = Config::from_value(&json!({
+            "organization": "acme", "publicOnly": true, "token": "legacy",
+            "app": {"appId": "123", "installationId": "456",
+                "privateKey": include_str!("../../seikika-authz/tests/fixtures/test-rsa.pem")}
+        }))
+        .unwrap()
+        .unwrap();
+        assert!(
+            config
+                .scan_with(api.client, &api.base)
+                .await
+                .unwrap()
+                .is_empty()
+        );
+        assert_eq!(*requests.lock().unwrap(), [exchange, inventory, inventory]);
         server.abort();
     }
 
@@ -841,6 +904,7 @@ mod tests {
                 public_only: false,
                 workflows: false,
                 reports: false,
+                app: Installation::default(),
                 token: None,
             })
             .await;

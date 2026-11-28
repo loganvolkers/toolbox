@@ -41,6 +41,8 @@ Workspace reads the local tree for these checks. A parent portal can also fetch 
 
 Set `githubOrg` to score an organization from GitHub's default branches with a single parent scorecard. [Organization scorecards](/demo/organization/)
 
+For a hosted scanner, set `githubOrg.app` with `appId`, `installationId`, and a `privateKey` secret reference. Install the app on the repositories to scan with Contents read permission. The Workspace connector uses the installation to authenticate each scan. [GitHub App deployment example](https://github.com/seikika/seikika/tree/main/examples/cloudflare-containers#publish-a-public-catalog)
+
 ## Troubleshoot missing records
 
 - If no files match, check your working directory, `root`, and any `exclude` patterns. Patterns are relative to `root`.
