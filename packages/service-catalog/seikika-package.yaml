@@ -1,0 +1,20 @@
+apiVersion: seikika.com/package/v0
+name: service-catalog
+version: 0.2.1
+description: >-
+  The default Service and ServiceEnvironment kinds, with optional
+  Cloudflare Workers rollouts and Grafana observations.
+parameters:
+  root:
+    type: string
+    default: .
+    description: Root directory for the checked-in inventory files.
+  cloudflare:
+    type: object
+    default: {}
+    description: Cloudflare connector configuration. Omit for a declaration-only catalog.
+  grafana:
+    type: object
+    default: {}
+    description: Grafana connector configuration. Omit for a declaration-only catalog.
+fragments: [fragments/*.yaml]

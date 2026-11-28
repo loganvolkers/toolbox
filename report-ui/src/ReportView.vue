@@ -15,6 +15,7 @@ import type { Summary } from "./lib/summary";
 import { buildView } from "./report-view";
 import ReportContent from "./ReportContent.vue";
 import CatalogEntityFacts from "./CatalogEntityFacts.vue";
+import ServiceRuntime from "./ServiceRuntime.vue";
 import CatalogEntityContext from "./CatalogEntityContext.vue";
 import MetaCatalogDetails from "./MetaCatalogDetails.vue";
 
@@ -132,6 +133,12 @@ function showSourceFields() {
   heading.scrollIntoView({ block: "start" });
 }
 const offer = computed(() => entity.value && props.data.actions?.some(item => item.entities.includes(entity.value!.id)));
+const service = computed(() => {
+  const item = entity.value;
+  if (item?.kind !== "Service") return;
+  const detail = props.data.entities?.[item.id];
+  if (typeof detail?.fields.code === "string") return detail;
+});
 const scoredBy = computed(() => {
   const id = entity.value?.id;
   return id ? Object.keys(props.data.scores).filter(name => props.data.scores[name][id]) : [];
@@ -155,7 +162,10 @@ const scoredBy = computed(() => {
     <slot name="entity-tools" :id="entity.id" :source="data.entitySources?.[entity.id]?.source" :snapshot="data.snapshot" />
     <CatalogEntityContext :id="entity.id" :data="data" />
     <ReportContent v-if="!data.publicCatalog" :build="() => body ?? null" />
-    <div ref="facts"><CatalogEntityFacts :data="data" :summary="summary" :id="entity.id" /></div>
+    <div ref="facts">
+      <ServiceRuntime v-if="service" :data="data" :id="entity.id" :detail="service" />
+      <CatalogEntityFacts v-else :data="data" :summary="summary" :id="entity.id" />
+    </div>
     <SectionCard v-if="offer" title="Actions">
       <a :href="'#actions?entity=' + encodeURIComponent(entity.id)">Preview actions for {{ entity.title }}</a>
     </SectionCard>

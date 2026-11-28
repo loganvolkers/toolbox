@@ -265,6 +265,10 @@ jobs:
           M4 acceptance (real connectors only, A1–A5, A11 in a browser, SCIM
           revocation, conformance kit)
         run: PGDIR=$RUNNER_TEMP/pg4 scripts/m4-acceptance.sh
+      - name: >-
+          Service catalog (Grafana container, Cloudflare/GitHub emulators, and
+          browser)
+        run: scripts/service-catalog-acceptance.sh
   gitlab-acceptance:
     # Federated actions on a real GitLab: GitLab CE and a GitLab Runner in Docker on the runner
     # (scripts/gitlab/harness.sh, docs/design/forges.md §6). Its own job, because GitLab's first

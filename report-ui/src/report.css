@@ -404,3 +404,8 @@ details.ent>summary{grid-template-columns:76px minmax(0,1fr)}details.ent>summary
 .federated-campaign .gap { grid-template-columns: minmax(0, 1fr); overflow-wrap: anywhere; }
 .federated-campaign-findings summary { min-height: 24px; cursor: pointer; }
 @media (max-width: 560px) { .federated-catalog-row { grid-template-columns: minmax(0, 1fr); } }
+
+.service-identities { display: flex; flex-wrap: wrap; gap: 1rem 2rem; }
+.service-identities dt { color: var(--muted); }
+.service-identities dd { margin: .25rem 0 0; overflow-wrap: anywhere; }
+.service-links { display: flex; flex-wrap: wrap; gap: .5rem 1rem; list-style: none; padding: 0; }

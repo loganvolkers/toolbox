@@ -1,0 +1,14 @@
+- id: seikika-demo
+  title: Seikika demo
+  description: >-
+    Public Seikika portal for exploring the software catalog and open-source
+    scorecards.
+  owner: group:platform
+  lifecycle: production
+  code: seikika/seikika
+  repository: repository:seikika
+  links:
+  - {title: Source, url: https://github.com/seikika/seikika}
+  - {title: Runbook, url: https://seikika.com/operators/observability/}
+  - title: Grafana dashboard
+    url: https://observe.seikika.com/d/seikika-runtime/seikika-runtime

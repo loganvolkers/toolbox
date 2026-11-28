@@ -45,7 +45,12 @@ function record(value: unknown): Record<string, unknown> {
     : {};
 }
 
-function safeLink(value: unknown): string | undefined {
+/**
+ * Returns a browser-safe absolute HTTP or HTTPS URL without embedded credentials.
+ *
+ * @param value - A URL from catalog or connector data.
+ */
+export function safeWebHref(value: unknown): string | undefined {
   const url = text(value);
   if (!url) return;
   try {
@@ -74,7 +79,7 @@ export function entityOverview(id: string, kind: string, fields: Record<string, 
   const ownership = record(fields.ownership);
   const links = new Map<string, EntityLink>();
   const add = (label: unknown, url: unknown) => {
-    const href = safeLink(url);
+    const href = safeWebHref(url);
     if (href && !links.has(href)) links.set(href, { href, label: text(label) ?? new URL(href).hostname });
   };
   if (Array.isArray(fields.links)) {

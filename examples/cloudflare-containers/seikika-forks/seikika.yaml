@@ -1,5 +1,31 @@
 apiVersion: seikika.com/v1alpha1
 include:
+  - package: ../../../packages/service-catalog
+    with:
+      cloudflare:
+        accountId: 57b52d710613513557f3ad97ae4f4ba6
+        token: ${env:SEIKIKA_CLOUDFLARE_CATALOG_TOKEN}
+        targets: {seikika-demo@production: seikika}
+      grafana:
+        url: https://observe.seikika.com
+        datasourceUid: prometheus
+        targets:
+          seikika-demo@production:
+            serviceName: seikika-demo
+            dashboardUid: seikika-runtime
+            metrics:
+              - id: snapshot-lag
+                label: Snapshot lag
+                unit: s
+                expr: 'max(seikika_snapshot_lag_seconds{service_name={{service}}})'
+              - id: ingest-records
+                label: Records ingested (5m)
+                unit: records
+                expr: 'sum(increase(seikika_ingest_records_total{service_name={{service}}}[5m]))'
+              - id: ingest-batches
+                label: Batches ingested (5m)
+                unit: batches
+                expr: 'sum(increase(seikika_ingest_batches_total{service_name={{service}}}[5m]))'
   - ../../github-org-federation/repositories.yaml
   - ../../github-org-federation/standards.yaml
   - ../../github-org-federation/workflows.yaml
@@ -19,7 +45,13 @@ include:
 
 policies:
   reportNamespace: seikika-organization
-  publicReportSources: [github-org, meta-catalog, meta-assessments]
+  publicReportSources:
+    - github-org
+    - meta-catalog
+    - meta-assessments
+    - service-inventory
+    - cloudflare
+    - grafana
 
 portal:
   name: seikika-federation

@@ -967,14 +967,7 @@ pub(crate) async fn view(
 }
 
 pub(crate) fn guest_view(state: &AppState) -> Option<Response> {
-    let sources: BTreeSet<&str> = state
-        .manifest
-        .policies
-        .get("publicReportSources")?
-        .as_array()?
-        .iter()
-        .filter_map(Value::as_str)
-        .collect();
+    let sources = public_sources(&state.manifest);
     if sources.is_empty() {
         return None;
     }
@@ -992,16 +985,7 @@ pub(crate) fn guest_view(state: &AppState) -> Option<Response> {
             .derived
             .entities
             .iter()
-            .filter(|(_, entity)| {
-                !entity.records.is_empty()
-                    && entity
-                        .records
-                        .iter()
-                        .all(|(name, _, _)| sources.contains(name.as_str()))
-                    && (!matches!(entity.kind.as_str(), "Repository" | "Workflow")
-                        || entity.fields.get("visibility").and_then(Value::as_str)
-                            == Some("public"))
-            })
+            .filter(|(_, entity)| published_for_guests(entity, &sources))
             .map(|(id, _)| {
                 (
                     id.as_str(),
@@ -1022,6 +1006,55 @@ pub(crate) fn guest_view(state: &AppState) -> Option<Response> {
         federation,
         &state.report_publications,
     ))
+}
+
+pub(crate) fn public_sources(manifest: &Manifest) -> BTreeSet<&str> {
+    manifest
+        .policies
+        .get("publicReportSources")
+        .and_then(Value::as_array)
+        .into_iter()
+        .flatten()
+        .filter_map(Value::as_str)
+        .collect()
+}
+
+pub(crate) fn published_for_guests(
+    entity: &seikika_derive::Entity,
+    sources: &BTreeSet<&str>,
+) -> bool {
+    !entity.records.is_empty()
+        && entity
+            .records
+            .iter()
+            .all(|(name, _, _)| sources.contains(name.as_str()))
+        && (!matches!(entity.kind.as_str(), "Repository" | "Workflow")
+            || entity.fields.get("visibility").and_then(Value::as_str) == Some("public"))
+}
+
+pub(crate) fn guest_service_entity(
+    manifest: &Manifest,
+    derived: &Derived,
+    id: &str,
+    sources: &BTreeSet<&str>,
+) -> Option<Value> {
+    let entity = derived.entities.get(id)?;
+    if !matches!(entity.kind.as_str(), "Service" | "ServiceEnvironment")
+        || !published_for_guests(entity, sources)
+    {
+        return None;
+    }
+    let audience = Audience {
+        admin: false,
+        guest: true,
+        entities: BTreeMap::new(),
+    };
+    let kind = manifest
+        .kinds
+        .iter()
+        .find(|kind| kind.name == entity.kind)?;
+    let fields = entity_fields(derived, id, Some(&kind.fields), false, Some(&audience));
+    Some(json!({"id": id, "kind": entity.kind, "fields": fields}))
 }
 
 type FederationProblem = (StatusCode, &'static str, &'static str);
