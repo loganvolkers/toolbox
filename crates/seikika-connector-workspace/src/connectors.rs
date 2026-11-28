@@ -190,13 +190,16 @@ fn ci_mentions(root: &Path, package: &str) -> (i64, i64) {
             continue;
         }
         let text = read(root, &rel);
-        if !text.contains(package) {
+        let mut mentions = text
+            .lines()
+            .filter(|line| !line.trim_start().starts_with('#') && line.contains(package))
+            .peekable();
+        if mentions.peek().is_none() {
             continue;
         }
         files += 1;
-        conformance += text
-            .lines()
-            .filter(|l| l.contains(package) && l.contains("connector test"))
+        conformance += mentions
+            .filter(|line| line.contains("connector test"))
             .count() as i64;
     }
     (conformance, files)
@@ -348,7 +351,11 @@ mod tests {
                 ("crates/demo/widget/src/main.rs", &src),
                 (
                     "scripts/check.sh",
-                    "seikika connector test -- target/debug/seikika-connector-widget\n",
+                    "seikika connector test -- target/debug/seikika-connector-widget\n  # seikika connector test -- seikika-connector-widget\n",
+                ),
+                (
+                    ".github/workflows/comment-only.yml",
+                    "# seikika connector test -- seikika-connector-widget\n",
                 ),
             ],
         );

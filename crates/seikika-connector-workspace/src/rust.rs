@@ -38,7 +38,19 @@ struct Metrics {
 }
 
 fn has_doc(attrs: &[syn::Attribute]) -> bool {
-    attrs.iter().any(|a| a.path().is_ident("doc"))
+    attrs.iter().any(|attr| {
+        let syn::Meta::NameValue(doc) = &attr.meta else {
+            return false;
+        };
+        doc.path.is_ident("doc")
+            && match &doc.value {
+                syn::Expr::Lit(lit) => {
+                    matches!(&lit.lit, syn::Lit::Str(text) if !text.value().trim().is_empty())
+                }
+                syn::Expr::Macro(_) => true,
+                _ => false,
+            }
+    })
 }
 
 fn is_test_fn(attrs: &[syn::Attribute]) -> bool {
@@ -65,10 +77,6 @@ fn is_cfg_test(attrs: &[syn::Attribute]) -> bool {
                 .require_list()
                 .is_ok_and(|l| l.tokens.to_string().trim() == "test")
     })
-}
-
-fn lines_of(span: proc_macro2::Span) -> usize {
-    span.end().line.saturating_sub(span.start().line) + 1
 }
 
 /// Cyclomatic complexity of a function body: 1 + branches.
@@ -127,28 +135,27 @@ impl Walker<'_> {
     fn function(
         &mut self,
         attrs: &[syn::Attribute],
-        name: &str,
-        span: proc_macro2::Span,
+        signature: &syn::Signature,
         block: &syn::Block,
     ) {
+        let name = signature.ident.to_string();
+        let line = signature.span().start().line;
         if is_test_fn(attrs) {
             self.m.unit_tests += 1;
             if self.disabled || is_cfg_disabled(attrs) {
-                let q = self.qualified(name);
+                let q = self.qualified(&name);
                 self.m
                     .disabled_tests
-                    .push(format!("{q} ({}:{})", self.file, span.start().line));
+                    .push(format!("{q} ({}:{line})", self.file));
             }
             let mut a = Asserts::new(self.helpers);
             a.visit_block(block);
             let should_panic = attrs.iter().any(|x| x.path().is_ident("should_panic"));
             if !a.found && !should_panic {
-                let q = self.qualified(name);
-                self.m.tests_without_asserts.push(format!(
-                    "{q} ({}:{})",
-                    self.file,
-                    span.start().line
-                ));
+                let q = self.qualified(&name);
+                self.m
+                    .tests_without_asserts
+                    .push(format!("{q} ({}:{line})", self.file));
             }
             return;
         }
@@ -158,9 +165,9 @@ impl Walker<'_> {
         let mut c = Complexity(1);
         c.visit_block(block);
         self.m.functions.push(Function {
-            name: self.qualified(name),
-            at: format!("{}:{}", self.file, span.start().line),
-            lines: lines_of(span),
+            name: self.qualified(&name),
+            at: format!("{}:{line}", self.file),
+            lines: block.span().end().line.saturating_sub(line) + 1,
             complexity: c.0,
         });
     }
@@ -236,10 +243,16 @@ impl<'ast> Visit<'ast> for Asserts<'_> {
 
     fn visit_expr_call(&mut self, c: &'ast syn::ExprCall) {
         if let syn::Expr::Path(p) = &*c.func
-            && p.path
-                .segments
-                .last()
-                .is_some_and(|s| self.helpers.contains(&s.ident.to_string()))
+            && p.qself.is_none()
+            && p.path.leading_colon.is_none()
+            && p.path.segments.last().is_some_and(|segment| {
+                let local = match p.path.segments.len() {
+                    1 => true,
+                    2 => p.path.segments[0].ident == "self",
+                    _ => false,
+                };
+                local && self.helpers.contains(&segment.ident.to_string())
+            })
         {
             self.found = true;
         }
@@ -332,7 +345,7 @@ impl<'ast> Visit<'ast> for Walker<'_> {
     }
 
     fn visit_item_fn(&mut self, f: &'ast syn::ItemFn) {
-        self.function(&f.attrs, &f.sig.ident.to_string(), f.span(), &f.block);
+        self.function(&f.attrs, &f.sig, &f.block);
         let was = self.in_test;
         self.in_test |= is_test_fn(&f.attrs);
         visit::visit_item_fn(self, f);
@@ -342,13 +355,13 @@ impl<'ast> Visit<'ast> for Walker<'_> {
     fn visit_impl_item_fn(&mut self, f: &'ast syn::ImplItemFn) {
         let line = f.span().start().line;
         self.public(&f.vis, &f.attrs, &f.sig.ident.to_string(), line);
-        self.function(&f.attrs, &f.sig.ident.to_string(), f.span(), &f.block);
+        self.function(&f.attrs, &f.sig, &f.block);
         visit::visit_impl_item_fn(self, f);
     }
 
     fn visit_trait_item_fn(&mut self, f: &'ast syn::TraitItemFn) {
         if let Some(block) = &f.default {
-            self.function(&f.attrs, &f.sig.ident.to_string(), f.span(), block);
+            self.function(&f.attrs, &f.sig, block);
         }
         visit::visit_trait_item_fn(self, f);
     }
@@ -493,6 +506,54 @@ mod tests {
     use super::*;
 
     #[test]
+    fn blank_and_hidden_attributes_do_not_document_public_items() {
+        let dir = tempfile::tempdir().unwrap();
+        let src = dir.path().join("src");
+        std::fs::create_dir(&src).unwrap();
+        let path = src.join("lib.rs");
+        std::fs::write(
+            &path,
+            "/// \npub struct Empty;\n#[doc(hidden)]\npub struct Hidden;\n/// Real docs.\npub struct Documented;\n",
+        )
+        .unwrap();
+        let facts = analyse(dir.path(), Some(&path));
+        assert_eq!(facts["pubItems"], 3);
+        assert_eq!(facts["pubDocumented"], 1);
+    }
+
+    #[test]
+    fn function_length_starts_at_the_signature() {
+        let dir = tempfile::tempdir().unwrap();
+        let src = dir.path().join("src");
+        std::fs::create_dir(&src).unwrap();
+        let path = src.join("lib.rs");
+        std::fs::write(
+            &path,
+            "/// Documented.\n#[inline]\npub fn example() -> i32 {\n    42\n}\n",
+        )
+        .unwrap();
+        let facts = analyse(dir.path(), Some(&path));
+        assert_eq!(facts["functions"][0]["at"], "src/lib.rs:3");
+        assert_eq!(facts["functions"][0]["lines"], 3);
+    }
+
+    #[test]
+    fn crate_docs_require_nonblank_text_or_a_doc_expression() {
+        for source in [
+            "//!   \n",
+            "#![doc(html_root_url = \"https://example.com\")]",
+        ] {
+            assert!(!has_doc(&syn::parse_file(source).unwrap().attrs));
+        }
+        for source in [
+            "//! A connector for repository files.\n",
+            "#![doc = include_str!(\"../README.md\")]",
+        ] {
+            assert!(has_doc(&syn::parse_file(source).unwrap().attrs));
+        }
+    }
+
+    #[test]
     fn tests_must_assert_something_that_can_fail_and_disabled_tests_are_found() {
         let dir = std::env::temp_dir().join(format!("seikika-rust-{}", std::process::id()));
         std::fs::create_dir_all(dir.join("src")).unwrap();
@@ -500,11 +561,17 @@ mod tests {
             dir.join("src/lib.rs"),
             r#"
 pub fn add(a: i32, b: i32) -> i32 { a + b }
+struct Config;
+impl Config {
+    fn new() -> Self { "10".parse::<u32>().unwrap(); Self }
+}
 #[cfg(test)]
 mod tests {
     use super::*;
     fn check(a: i32, b: i32, want: i32) { assert_eq!(add(a, b), want); }
     #[test] fn table() { for (a, b, w) in [(1, 2, 3)] { check(a, b, w); } }
+    #[test] fn local_helper() { self::check(1, 2, 3); }
+    #[test] fn unrelated_constructor() { let unused: Vec<u8> = Vec::new(); }
     #[test] fn fallible() -> Result<(), String> { "1".parse::<i32>().map_err(|e| e.to_string())?; Ok(()) }
     #[test] fn real() { assert_eq!(add(1, 1), 2); }
     #[test] fn vacuous() { assert!(true); }
@@ -527,7 +594,12 @@ mod gone { #[test] fn also_off() { assert_eq!(super::add(0, 0), 1); } }
         };
         assert_eq!(
             names("testsWithoutAsserts"),
-            ["tests::vacuous", "tests::same_sides", "tests::empty"]
+            [
+                "tests::unrelated_constructor",
+                "tests::vacuous",
+                "tests::same_sides",
+                "tests::empty"
+            ]
         );
         assert_eq!(names("disabledTests"), ["tests::off", "gone::also_off"]);
         let _ = std::fs::remove_dir_all(&dir);

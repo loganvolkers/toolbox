@@ -1,7 +1,7 @@
 apiVersion: seikika.com/assessment/v1
 entity: assessment:rule-quality/rule:seikika/meta-rule/pins-both-outcomes
 rubric: assessment-quality
-subjectHash: 990dd60b14ce
+subjectHash: ad9eaf261cc4
 rubricHash: e30700fc6322cf9f05a301bb4638d6708e9f5eb5aea0281911229ce75bd37bf7
 assessor: {kind: agent, name: codex-astra-self, model: gpt-6.2-astra}
 at: 2026-11-27

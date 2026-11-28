@@ -1,7 +1,7 @@
 apiVersion: seikika.com/assessment/v1
 entity: assessment:rule-quality/rule:seikika/meta-assessment/assessor-named
 rubric: assessment-quality
-subjectHash: 74e3ee316ea1
+subjectHash: cebc0b088dee
 rubricHash: e30700fc6322cf9f05a301bb4638d6708e9f5eb5aea0281911229ce75bd37bf7
 assessor: {kind: agent, name: codex-astra-self, model: gpt-6.2-astra}
 at: 2026-11-27

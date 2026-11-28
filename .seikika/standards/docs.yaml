@@ -114,8 +114,8 @@ scorecards:
         [string(entity.counts.sdlc - entity.counts.layeredSdlc) + ' mention(s)
         of "SDLC" without a layer']
       fix: >-
-        Say which SDLC you mean: maintainer, operator or user (docs/sdlc.md,
-        D63).
+        Name the SDLC layer: maintainer, package author, operator or user
+        (docs/sdlc.md, D63 and D87).
       rationale: >-
         Seikika has four SDLC layers with different builders and checks, so a
         bare "SDLC" leaves the reader to guess whose loop the doc is about.

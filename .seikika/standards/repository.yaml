@@ -158,8 +158,8 @@ scorecards:
       check: cards.all(c, c.rank >= 1)
       evidence: cards.filter(c, c.rank < 1).map(c, c.name + ' is ' + c.level)
       fix: >-
-        The repository level is the lowest constituent scorecard. Raise each one
-        in the evidence to bronze.
+        Correct unresolved names in policy.repoRollup, then use each named
+        constituent's findings to raise it to bronze.
       rationale: >-
         One area below its floor is a weakness an average would hide, so the
         repository can't claim bronze until every counted scorecard reaches it.
@@ -168,8 +168,9 @@ scorecards:
       check: cards.all(c, c.rank >= 2)
       evidence: cards.filter(c, c.rank < 2).map(c, c.name + ' is ' + c.level)
       fix: >-
-        Raise each constituent in the evidence to silver. A card whose highest
-        level is bronze caps the repository at bronze.
+        Raise each listed constituent that defines silver to that level. For a
+        shorter ladder, review the constituent's levels and inclusion in
+        policy.repoRollup against the repository level design.
       rationale: >-
         A repository called silver should be silver in every counted area, not
         on average; a lagging scorecard is exactly what the level exposes.
@@ -177,8 +178,11 @@ scorecards:
       level: gold
       check: cards.all(c, c.rank >= 3)
       evidence: cards.filter(c, c.rank < 3).map(c, c.name + ' is ' + c.level)
-      fix: Raise each constituent in the evidence to gold.
+      fix: >-
+        Raise each listed constituent that defines gold to that level. For a
+        shorter ladder, review the constituent's levels and inclusion in
+        policy.repoRollup against the repository level design.
       rationale: >-
-        Gold claims the top level in every counted area, so a single scorecard
+        Gold claims rank three in every counted area, so a single scorecard
         short of gold holds the repository back and is named as the next step.
     facets: {summary: public, details: public}

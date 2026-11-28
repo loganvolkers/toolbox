@@ -1,51 +1,38 @@
 apiVersion: seikika.com/assessment/v1
 entity: assessment:crate-design/crate:seikika-model
 rubric: assessment-quality
-subjectHash: e7141e0ab6ba
-assessor: {kind: agent, name: cursor-reviewer-24, model: claude-opus-5.5}
-at: 2026-11-25
+subjectHash: 66a7efadcc68
+rubricHash: e30700fc6322cf9f05a301bb4638d6708e9f5eb5aea0281911229ce75bd37bf7
+assessor: {kind: agent, name: Codex, model: GPT-6}
+at: 2026-11-28
 verdicts:
   - criterion: supported
-    verdict: pass
+    verdict: fail
     reason: >-
-      .seikika/assessments/crate-design/crate/seikika-model.yaml quotes the
-      crate doc and it is the one at crates/seikika-model/src/lib.rs:1-6, and
-      docs/v1-spec.md:88 is the matching row. schema::manifest and the other
-      three functions return &'static jsonschema::Validator
-      (src/schema.rs:28-49). seikika-exec calls is_valid on that value at
-      executor/webhook.rs:97 and does not list jsonschema in its Cargo.toml.
-      The extra jobs the fail names are in src/forge.rs, src/ci.rs,
-      src/artifacts.rs, src/package.rs and src/federation.rs, each with the
-      module doc the reason cites.
+      I checked the claims in
+      .seikika/assessments/crate-design/crate/seikika-model.yaml against the
+      cited sources. Cargo.toml currently pins jsonschema 0.63, while the
+      assessment says 0.61. Its underlying point about the exposed Validator
+      type is supported by crates/seikika-model/src/schema.rs.
+    suggestion: >-
+      Update the dependency citation and preserve the separate finding about
+      the exposed validator type.
   - criterion: complete
     verdict: pass
     reason: >-
-      one-responsibility fails because the crate doc still says only loading
-      and validation while forge and ci resolution landed with
-      D01M87T16JRH53YV6VVWM8PH169. small-contract fails because Validator
-      crosses the boundary. replaceable-defaults is right to pass: jsonschema
-      is not a charter default, and the leak is already counted under
-      small-contract. tests-match-risk passes: forge.rs:240 and ci.rs:198 have
-      direct tests, and tests/cases.json:37-44 holds the new forge and CI
-      diagnostics. The untested schema message wording is the minor gap the
-      reason names, not a missed fail.
+      The assessment examines manifest loading, helper modules beyond the
+      opening crate docs, public documentation, and schema and fixture
+      coverage in crates/seikika-model/tests/reference.rs.
   - criterion: reproducible
     verdict: pass
     reason: >-
-      The fail is the mismatch between lib.rs:1-6 and the modules on disk. A
-      second reader does not have to decide whether forge resolution "belongs"
-      in a model crate; the criterion asks whether the crate doc states the
-      job, and it does not state these.
+      crates/seikika-model/src/lib.rs and crates/seikika-model/src/schema.rs
+      expose the responsibilities and shared validator signatures a second
+      reviewer can inspect directly.
   - criterion: actionable
     verdict: pass
     reason: >-
-      The one-responsibility suggestion updates lib.rs and the v1-spec.md:88
-      row, which is what the fail cites. The small-contract suggestion stops
-      returning Validator and points callers at schema::errors, which is the
-      function already next to those returns (schema.rs:52). Either change
-      removes its fail.
-summary: >-
-  The refreshed seikika-model assessment is right about the stale crate
-  doc and the jsonschema Validator in the public schema API. The forge and
-  CI checks it says are tested are in forge.rs, ci.rs and
-  tests/cases.json. The two suggestions change those two verdicts.
+      Documenting the shared manifest types and replacing third-party
+      signatures with Seikika-owned validation calls would address the
+      contract issues in crates/seikika-model/src/manifest.rs and
+      crates/seikika-model/src/schema.rs.

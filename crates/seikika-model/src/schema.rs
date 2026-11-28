@@ -48,6 +48,28 @@ pub fn assessment() -> &'static Validator {
     V.get_or_init(|| compile(ASSESSMENT_SCHEMA))
 }
 
+/// Check the manifest against the published Agent Plugins 1.0.0 schema.
+pub fn agent_plugin_manifest_valid(doc: &Value) -> bool {
+    static V: OnceLock<Validator> = OnceLock::new();
+    V.get_or_init(|| {
+        compile(include_str!(
+            "../schema/agent-plugins-1.0.0/plugin.schema.json"
+        ))
+    })
+    .is_valid(doc)
+}
+
+/// Check the MCP configuration against the published Agent Plugins 1.0.0 schema.
+pub fn agent_plugin_mcp_valid(doc: &Value) -> bool {
+    static V: OnceLock<Validator> = OnceLock::new();
+    V.get_or_init(|| {
+        compile(include_str!(
+            "../schema/agent-plugins-1.0.0/mcp.schema.json"
+        ))
+    })
+    .is_valid(doc)
+}
+
 /// Validate `doc` and return `(json pointer, message)` pairs. Messages that would embed a large
 /// value (e.g. a whole action failing `anyOf`) refer to it as "this value" instead, and known
 /// `anyOf` rules get a plain-language hint.

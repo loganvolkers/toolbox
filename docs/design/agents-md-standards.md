@@ -65,12 +65,12 @@ this repository.
 |---|---|---|
 | bronze | `single-source` | The file is `AGENTS.md`, or it points at one |
 | bronze | `links-resolve` | No missing relative target |
+| bronze | `no-hardcoded-secrets` | No secret shape |
+| bronze | `no-hidden-instructions` | No hidden or bidi character |
 | silver | `has-commands` | A canonical file names a build or test command. An alias does not have to repeat it |
 | silver | `within-budget` | At most 500 lines |
 | gold | `names-the-decision-log` | A canonical file mentions `docs/decisions`. An alias does not have to |
 | gold | `checks-run-in-ci` | A canonical file's backtick check commands appear in a workflow. An alias does not have to repeat them |
-| gold | `no-hardcoded-secrets` | No secret shape |
-| gold | `no-hidden-instructions` | No hidden or bidi character |
 
 ## 5. This repository
 

@@ -131,8 +131,8 @@ scorecards:
       level: silver
       check: entity.exercisedBy.size() > 0
       evidence: >-
-        ['no script under scripts/ and no test under crates/*/tests runs seikika
-        ' + entity.name]
+        ['no script, integration test, or workflow record mentions seikika ' +
+        entity.name]
       fix: >-
         Run the command in an acceptance script (`scripts/m*-acceptance.sh`) or
         an integration test under `crates/seikika-cli/tests/`.
@@ -179,7 +179,7 @@ scorecards:
     - name: structured-output
       level: bronze
       check: entity.name == 'mcp' || entity.structuredOutput
-      evidence: "['seikika ' + entity.name + ' has no -o json output']"
+      evidence: "['seikika ' + entity.name + ' declares neither --output nor --format']"
       fix: >-
         Support `-o json` (or `--format json`) so scripts and apps can parse the
         output.
@@ -199,8 +199,8 @@ scorecards:
       level: silver
       check: entity.exercisedBy.size() > 0
       evidence: >-
-        ['no script under scripts/ and no test under crates/*/tests runs seikika
-        ' + entity.name]
+        ['no script, integration test, or workflow record mentions seikika ' +
+        entity.name]
       fix: >-
         Run the command in an acceptance script (`scripts/m*-acceptance.sh`) or
         an integration test under `crates/seikika-cli/tests/`.

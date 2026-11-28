@@ -392,8 +392,9 @@ scorecards:
         string(entity.runs.decided) + ' decided runs on ' + entity.runs.branch +
         ' failed on their first attempt (' + string(entity.runs.failRate) + '%
         still failed after re-runs; ' + string(entity.runs.cancelled) + '
-        cancelled runs not counted)'] + (has(entity.runs.failedRuns) ?
-        entity.runs.failedRuns : [])
+        cancelled runs not counted)'] + (has(entity.runs.firstTryFailedRuns) ?
+        entity.runs.firstTryFailedRuns : (has(entity.runs.failedRuns) ?
+        entity.runs.failedRuns : []))
       fix: >-
         Open the failed runs in the evidence, find the failing jobs, and fix
         their causes in the code or the workflow file. The rate is over the last
@@ -443,7 +444,9 @@ scorecards:
         string(entity.runs.decided) + ' decided runs: at least
         ${param:minDecidedRuns} are needed to tell the tiers apart'] :
         [string(entity.runs.firstTryFailRate) + '% failed on the first
-        attempt']) + (has(entity.runs.failedRuns) ? entity.runs.failedRuns : [])
+        attempt']) + (has(entity.runs.firstTryFailedRuns) ?
+        entity.runs.firstTryFailedRuns : (has(entity.runs.failedRuns) ?
+        entity.runs.failedRuns : []))
       fix: >-
         Open the failed runs in the evidence and classify each cause: a flaky
         test (fix or quarantine it in its test file), infrastructure (pin or
@@ -465,7 +468,9 @@ scorecards:
         string(entity.runs.decided) + ' decided runs: at least
         ${param:minDecidedRuns} are needed to tell the tiers apart'] :
         [string(entity.runs.firstTryFailRate) + '% failed on the first
-        attempt']) + (has(entity.runs.failedRuns) ? entity.runs.failedRuns : [])
+        attempt']) + (has(entity.runs.firstTryFailedRuns) ?
+        entity.runs.firstTryFailedRuns : (has(entity.runs.failedRuns) ?
+        entity.runs.failedRuns : []))
       fix: >-
         Open each failed run in the evidence and fix its cause where it lives
         (the test, the workflow file, or the check the pull request lacked), so
@@ -520,10 +525,13 @@ scorecards:
         level: silver
         dataFrom: github-actions
         check: entity.runs.p90Seconds <= ${param:p90Seconds}
-        evidence: "['p90 run time ' + string(entity.runs.p90Seconds / 60) + ' min']"
+        evidence: >-
+          ['p90 run time on ' + entity.runs.branch + ': ' +
+          string(entity.runs.p90Seconds) + ' s (limit ${param:p90Seconds} s)']
         fix: >-
-          Keep the p90 run under 15 minutes: split slow jobs, cache builds, move
-          long suites off the PR path.
+          Keep the p90 on the measured branch at or below ${param:p90Seconds}
+          seconds. Compare job durations in the slow runs, then cache repeated
+          work or parallelize independent steps.
         rationale: >-
           Past the bound, developers switch to other work while they wait and come
           back late to a failure. The bound is a chosen point, not a measured one.

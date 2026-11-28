@@ -1,48 +1,43 @@
 apiVersion: seikika.com/assessment/v1
 entity: assessment:scorecard-quality/scorecard:seikika/maintainer-dependency
 rubric: assessment-quality
-subjectHash: 28b38b57248f
-assessor: {kind: agent, name: cursor-reviewer-31, model: claude-opus-5.5}
-at: 2026-11-25
+subjectHash: 8fbc55b3cc5a
+rubricHash: e30700fc6322cf9f05a301bb4638d6708e9f5eb5aea0281911229ce75bd37bf7
+assessor: {kind: agent, name: Codex, model: GPT-6}
+at: 2026-11-28
 verdicts:
   - criterion: supported
-    verdict: pass
+    verdict: fail
     reason: >-
-      The rationale and track are .seikika/standards/dependencies.yaml:43-48
-      and :55, and the ladder is dependencies.yaml:31-34 and :59-123.
-      docs/design/dependency-standards.md:16-21 is the same ladder, :21 and
-      :30-31 leave advisories and licences out, :50 skips build-dependencies,
-      and :85-86 records the unused anyhow entry. .seikika/results.json has 33
-      dependencies, 31 gold, regex silver and syn bronze. The fixtures are
-      none, bronze and gold at .seikika/tests/standards.test.yaml:424-455.
-      Evidence and fixes name requirements, sources, versions and usedBy
-      (dependencies.yaml:62, :76, :87, :101, :113). deps.rs:21-40 reads each
-      declared normal dependency and does not ask whether the crate calls it.
+      I checked the claims in
+      .seikika/assessments/scorecard-quality/scorecard/seikika/maintainer-dependency.yaml
+      against the cited sources. The normal-dependency scope and
+      unused-dependency gap still match
+      crates/seikika-connector-workspace/src/deps.rs. The regex worked example
+      no longer reflects Cargo.toml or .seikika/results.json, which show the
+      workspace declaration and a gold result.
+    suggestion: >-
+      Refresh the measured distribution and describe regex as a completed
+      example. Keep the transitive duplicate issue tied to the dependency that
+      still exhibits it.
   - criterion: complete
     verdict: pass
     reason: >-
-      one-concern, levels-are-a-ladder and actionable pass. The unused
-      dependency is a real gap the design noticed only by hand
-      (dependency-standards.md:85-86) and the catalog does not score, so
-      no-obvious-gap should fail. The syn caveat is named and does not hide
-      another missing rule. No pass should have failed.
+      The assessment addresses the reproducibility scope, level progression,
+      unused and build dependencies, and the fix limits for a transitive
+      duplicate. The boundaries are documented in
+      docs/design/dependency-standards.md.
   - criterion: reproducible
     verdict: pass
     reason: >-
-      The gap is cargo-machete versus a connector that trusts the manifest
-      (deps.rs:21-40). A second assessor reading dependency-standards.md:21
-      and :85-86 fails no-obvious-gap for the same reason and passes the other
-      three.
+      The current outcomes can be counted in .seikika/results.json. The
+      fixtures and evidence for multiple resolved versions are in
+      .seikika/tests/standards.test.yaml, and Cargo.lock records the resolved
+      syn majors.
   - criterion: actionable
     verdict: pass
     reason: >-
-      A used rule fed by cargo-machete, with evidence naming crates that
-      declare the dependency and do not reference it, would pass
-      no-obvious-gap. The other three verdicts already pass. The syn note is
-      attached to actionable's pass and does not ask for a change that leaves
-      the verdict stuck.
-summary: >-
-  Trustworthy. The card is one concern with a real ladder, the live counts
-  are 31 gold, regex silver and syn bronze, and the fixtures reach none,
-  bronze and gold. The unused-dependency gap is the right fail, and a
-  cargo-machete rule would close it.
+      The suggested cargo-machete input and evidence locate the
+      unused-dependency gap without conflating it with advisories.
+      docs/design/dependency-standards.md already states that build
+      dependencies are excluded from collection.

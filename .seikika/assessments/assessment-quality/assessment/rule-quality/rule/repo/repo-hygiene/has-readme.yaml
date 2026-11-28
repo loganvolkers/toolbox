@@ -1,51 +1,37 @@
 apiVersion: seikika.com/assessment/v1
 entity: assessment:rule-quality/rule:repo/repo-hygiene/has-readme
 rubric: assessment-quality
-subjectHash: 2114132bc6d6
-assessor: {kind: agent, name: cursor-reviewer-18, model: claude-opus-5.5}
-at: 2026-11-25
+subjectHash: bf230253d33f
+rubricHash: e30700fc6322cf9f05a301bb4638d6708e9f5eb5aea0281911229ce75bd37bf7
+assessor: {kind: agent, name: Codex, model: GPT-6}
+at: 2026-11-28
 verdicts:
   - criterion: supported
     verdict: pass
     reason: >-
-      The citations in
+      I checked the claims in
       .seikika/assessments/rule-quality/rule/repo/repo-hygiene/has-readme.yaml
-      hold. In examples/repo-portal-starter/seikika.yaml the fix is at 96-97
-      and the evidence at 93-94.
-      crates/seikika-connector-workspace/src/repo.rs:73-76 counts whitespace
-      tokens in the whole file. legacy-tool's 12 words fail
-      (tests/standards.test.yaml:26-31). `rg` finds no 50-word row in
-      docs/design/thresholds.md. One claim is inaccurate. The reason says the
-      README is looked for "at the root or in .github/" (repo.rs:55-64), but
-      `first` tests the full lowercased path (:59-63), so `.github/README.md`
-      never matches either. Only root files count. That strengthens the
-      measures-intent fail rather than weakening it.
+      against the cited sources. The starter still uses a 50-word minimum, and
+      crates/seikika-connector-workspace/src/repo.rs counts whitespace tokens
+      and prefers root-level entrypoints. The precise search differs from the
+      historical description, but the missing docs directory and weak content
+      signal remain.
   - criterion: complete
     verdict: pass
     reason: >-
-      The verdicts are right. Token counting can pass with badges and code and
-      fails a README GitHub would show from docs/ or .github/, so
-      measures-intent fails. threshold-justified is fairly unsure, because no
-      source states 50. The hard-to-game pass is a close call: a repository
-      with a badge row and a code block already passes with no prose. But the
-      cheapest path for a repository with no README is still to write a short
-      one, as the reason argues.
+      The assessment addresses the proxy, incentive, evidence and lack of a
+      stated threshold source. The starter rationale and fixed floor remain
+      visible in examples/repo-portal-starter/seikika.yaml.
   - criterion: reproducible
     verdict: pass
     reason: >-
-      measures-intent and threshold-justified rest on code and on a source
-      that is missing, which a second assessor would confirm. The hard-to-game
-      pass involves some judgement about what is "cheap", but the reason
-      states it, and the rubric's examples (meta.yaml:1164-1166) don't cover
-      length padding.
+      The legacy fixture and assertion in
+      examples/repo-portal-starter/tests/standards.test.yaml reproduce the
+      short README failure. The word counting and entrypoint search are
+      visible in crates/seikika-connector-workspace/src/repo.rs.
   - criterion: actionable
     verdict: pass
     reason: >-
-      Counting prose outside code, images and HTML, and searching docs/ (and
-      .github/), flips measures-intent. A thresholds.md row with a source
-      flips threshold-justified.
-summary: >-
-  A sound assessment with correct citations. The fail and the unsure
-  follow from the sources. It understates the search gap:
-  `.github/README.md` is missed as well as docs/, because only root files
-  ever match. The hard-to-game pass is defensible but close.
+      The proposed prose count and docs path change name real scanner
+      behavior. Documenting the chosen floor in docs/design/thresholds.md
+      would address the unresolved justification criterion.

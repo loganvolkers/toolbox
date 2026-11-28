@@ -1,54 +1,41 @@
 apiVersion: seikika.com/assessment/v1
 entity: assessment:rule-quality/rule:seikika/maintainer-site/links-resolve
 rubric: assessment-quality
-subjectHash: e96f47201b0d
-assessor: {kind: agent, name: cursor-reviewer-13, model: claude-opus-5.5}
-at: 2026-11-25
+subjectHash: 4f66c08520f3
+rubricHash: e30700fc6322cf9f05a301bb4638d6708e9f5eb5aea0281911229ce75bd37bf7
+assessor: {kind: agent, name: Codex, model: GPT-6}
+at: 2026-11-28
 verdicts:
   - criterion: supported
-    verdict: pass
+    verdict: fail
     reason: >-
-      The citations in
+      I checked the claims in
       .seikika/assessments/rule-quality/rule/seikika/maintainer-site/links-resolve.yaml
-      resolve, all in crates/seikika-connector-workspace/src/site.rs.
-      site.rs:165-191 resolves root-relative links under the base. :213-220
-      joins a relative target to the source file's directory on disk. :136 is
-      the inline-only regex that strips `#fragment`. :142-147 skips http(s)
-      and mailto links, and :181-190 matches content, public and Astro pages.
-      site/astro.config.mjs:8-27 has no remark or rehype plugin that would
-      rewrite `.md` links. .seikika/standards/site.yaml:112-116 are the
-      evidence and fix. .seikika/tests/standards.test.yaml:778-779 pins
-      `/missing/`, and docs/design/site-standards.md:27-29 states the base
-      rule. "No live page uses a relative link" holds: rg finds no `](` target
-      under npm/site/src/content/docs that isn't root-relative or external.
-      All 30 pages are gold in .seikika/results.json.
+      against the cited sources. site/astro.config.mjs and
+      docs/design/site-standards.md describe the current domain-root
+      deployment. The assessment presents the older project prefix as the
+      current hosted base.
+    suggestion: >-
+      Distinguish the generic base-path test from the site’s current
+      domain-root configuration.
   - criterion: complete
     verdict: pass
     reason: >-
-      The measures-intent fail is right in both directions. A relative link is
-      checked on disk, so `catalog.md` passes though it 404s, while
-      `../catalog/` works in the browser but fails (site.rs:213-220).
-      hard-to-game passing is defensible: the fix allows correcting or
-      deleting the link (site.yaml:113-116). The regex also reads links inside
-      fenced code blocks (site.rs:136), which could fail a page that only
-      shows a link. That is another misfire, but measures-intent fails
-      already. fix-leads-to-pass and threshold-justified match site.yaml and
-      D91.
+      crates/seikika-connector-workspace/src/site.rs separates root-relative
+      routes from relative source files and does not validate heading
+      fragments. The assessment identifies both the path and syntax
+      limitations of .seikika/standards/site.yaml.
   - criterion: reproducible
     verdict: pass
     reason: >-
-      The fail follows from file_exists (site.rs:213-220) and the served base
-      `/seikika` (site/astro.config.mjs:7). A second assessor can reproduce
-      both misfires on a scratch page without judgement.
+      crates/seikika-connector-workspace/src/site.rs exposes the file-path
+      check and tests a synthetic root base.
+      .seikika/tests/standards.test.yaml pins the missing target evidence,
+      independent of the current production base.
   - criterion: actionable
     verdict: pass
     reason: >-
-      Two changes would remove both misfires measures-intent cites: resolving
-      a relative target against the served slug, as site_link_exists does for
-      root-relative ones (site.rs:165-191), and checking fragments,
-      reference-style links and `href=` values.
-summary: >-
-  Accurate. The one fail, relative links resolved on disk rather than as
-  the browser does, is shown by site.rs:213-220, and the latent-only
-  framing matches the 30 live pages. Links inside code fences are a
-  further misfire it doesn't mention, but that doesn't change a verdict.
+      Resolving relative paths in served-route terms and adding fragment and
+      reference checks would address the stated gaps in
+      crates/seikika-connector-workspace/src/site.rs. The fixture for a
+      configured base remains relevant.

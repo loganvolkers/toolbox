@@ -1,49 +1,36 @@
 apiVersion: seikika.com/assessment/v1
 entity: assessment:rule-quality/rule:seikika/maintainer-repo/constituents-at-least-gold
 rubric: assessment-quality
-subjectHash: ef1be47e3c31
-assessor: {kind: agent, name: cursor-reviewer-13, model: claude-opus-5.5}
-at: 2026-11-25
+subjectHash: 5ad59362b45a
+rubricHash: e30700fc6322cf9f05a301bb4638d6708e9f5eb5aea0281911229ce75bd37bf7
+assessor: {kind: agent, name: Codex, model: GPT-6}
+at: 2026-11-28
 verdicts:
   - criterion: supported
     verdict: pass
     reason: >-
-      The citations in
+      I checked the claims in
       .seikika/assessments/rule-quality/rule/seikika/maintainer-repo/constituents-at-least-gold.yaml
-      resolve. .seikika/standards/docs.yaml:97 is `levels: [bronze, silver]`,
-      and packages/github-actions/fragments/github-actions.yaml:552 is
-      `levels: [bronze]`. Both cards are in .seikika/seikika.yaml:30-43.
-      .seikika/fixtures/workspace.ndjson:59 is acme/focused watching only
-      maintainer-plugin, and repository.yaml:180 is the gold fix.
-      crates/seikika-derive/src/lib.rs:1174-1192 is `constituent_summaries`.
-      The six live evidence keys in .seikika/results.json hash
-      (crates/seikika-cli/src/causes.rs:61-73) to the four silver laggards
-      plus `maintainer-docs is silver` and `maintainer-package is silver`, as
-      the hard-to-game reason says.
+      against the cited sources. The gold predicate still requires rank three
+      in .seikika/standards/repository.yaml, while
+      .seikika/standards/docs.yaml and
+      packages/github-actions/fragments/github-actions.yaml define shorter
+      ladders for counted constituents.
   - criterion: complete
     verdict: pass
     reason: >-
-      No other rollup card is short of gold. The only other two-level card in
-      the repository, the CI-speed card at github-actions.yaml:495, is not in
-      `repoRollup`. So "two constituents can never reach rank 3" is the full
-      list. The fix-leads-to-pass fail is right: repository.yaml:180 gives no
-      warning, unlike the silver fix at 171-172. threshold-justified rests on
-      D86 and docs/design/repo-level.md:19-24.
+      The assessment covers the unattainable rank, why removing a constituent
+      affects the minimum, the mismatch with the fix and the declared rule
+      definition in docs/design/repo-level.md.
   - criterion: reproducible
     verdict: pass
     reason: >-
-      The verdicts follow from ladder lengths (docs.yaml:97,
-      github-actions.yaml:552) and a single-card fixture
-      (workspace.ndjson:59). None depends on judgement.
+      Compare levels and the watch list in .seikika/seikika.yaml with the gold
+      predicate in .seikika/standards/repository.yaml. The focused portal
+      fixture demonstrates gold for a constituent that has that rank.
   - criterion: actionable
     verdict: pass
     reason: >-
-      A per-card top rank in `constituent_summaries` (lib.rs:1174-1192) would
-      remove the permanent cap that the measures-intent and fix-leads-to-pass
-      fails rest on. A size check would remove the vacuous route. A ratchet
-      guard on rollup removals would close the cheap route hard-to-game names.
-summary: >-
-  Accurate and complete. Two rollup cards stop below gold (docs.yaml:97,
-  github-actions.yaml:552), so the rule can't pass on the live repository,
-  and its fix doesn't say so. The six evidence lines in results.json match
-  the cards named, and each suggestion targets the cause of its fail.
+      The top-rank proposal identifies the summary field and comparison that
+      would be needed. The separate missing-name proposal was addressed in
+      crates/seikika-derive/src/lib.rs.

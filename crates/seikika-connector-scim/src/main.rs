@@ -168,7 +168,11 @@ async fn remove(
 async fn fetch(
     State(app): State<Arc<App>>,
     Path((resource, id)): Path<(String, String)>,
+    headers: HeaderMap,
 ) -> Response {
+    if !authorized(&app, &headers) {
+        return StatusCode::UNAUTHORIZED.into_response();
+    }
     let found = match resource.as_str() {
         "Users" => app.users.lock().unwrap().get(&id).cloned(),
         "Groups" => app.groups.lock().unwrap().get(&id).cloned(),
@@ -277,6 +281,23 @@ mod tests {
         );
         let r = user_record(&json!({"userName": "ada", "displayName": "Ada L"}));
         assert_eq!(r["data"]["name"], "Ada L");
+    }
+
+    #[tokio::test]
+    async fn reads_require_the_configured_bearer_token() {
+        let app = Arc::new(app(Some("test-token")));
+        app.users
+            .lock()
+            .unwrap()
+            .insert("u1".into(), json!({"userName": "ada"}));
+        let path = || Path(("Users".into(), "u1".into()));
+        let mut headers = HeaderMap::new();
+        let unauthenticated = fetch(State(app.clone()), path(), headers.clone()).await;
+        assert_eq!(unauthenticated.status(), StatusCode::UNAUTHORIZED);
+
+        headers.insert("authorization", "Bearer test-token".parse().unwrap());
+        let authenticated = fetch(State(app), path(), headers).await;
+        assert_eq!(authenticated.status(), StatusCode::OK);
     }
 
     #[test]

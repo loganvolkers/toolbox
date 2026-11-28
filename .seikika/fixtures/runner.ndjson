@@ -6,3 +6,4 @@
 {"data": {"crate": "seikika-connector-git-files", "durationMs": 700, "errors": 0, "messages": ["src/main.rs:12 clippy::needless_return unneeded `return` statement"], "status": "fail", "warnings": 1}, "externalId": "clippy:seikika-connector-git-files", "kind": "clippy", "type": "record"}
 {"data": {"calls": 2, "errors": 2, "tool": "get"}, "externalId": "mcp-calls:get", "kind": "mcp-calls", "type": "record"}
 {"data": {"calls": 4, "errors": 1, "tool": "search"}, "externalId": "mcp-calls:search", "kind": "mcp-calls", "type": "record"}
+{"data": {"crate": "fixture-undocumented", "durationMs": 1, "errors": 0, "messages": [], "status": "error", "warnings": 0}, "externalId": "clippy:fixture-undocumented", "kind": "clippy", "type": "record"}

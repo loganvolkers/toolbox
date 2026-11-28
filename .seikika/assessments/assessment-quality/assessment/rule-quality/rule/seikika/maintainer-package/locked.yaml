@@ -1,52 +1,38 @@
 apiVersion: seikika.com/assessment/v1
 entity: assessment:rule-quality/rule:seikika/maintainer-package/locked
 rubric: assessment-quality
-subjectHash: 385eb4641194
-assessor: {kind: agent, name: cursor-reviewer-06, model: claude-opus-5.5}
-at: 2026-11-25
+subjectHash: a6d810e00617
+rubricHash: e30700fc6322cf9f05a301bb4638d6708e9f5eb5aea0281911229ce75bd37bf7
+assessor: {kind: agent, name: Codex, model: GPT-6}
+at: 2026-11-28
 verdicts:
   - criterion: supported
     verdict: fail
     reason: >-
-      Most citations in
+      I checked the claims in
       .seikika/assessments/rule-quality/rule/seikika/maintainer-package/locked.yaml
-      hold. crates/seikika-connector-workspace/src/npm.rs:113-138 walks up to
-      the root, :125 is a bare `is_file()`, and :270 passes with a `{}`
-      lockfile. .seikika/standards/packages.yaml:111-117 is the evidence and
-      fix, and the fix names only pnpm-lock.yaml / yarn.lock for the root.
-      .seikika/tests/standards.test.yaml:538-540 pins the message. D76 says
-      "silver is a sibling lockfile". The OpenSSF npm guide's recommendation 7
-      says an application should commit a lockfile ("Lockfiles and commands").
-      One citation fails. docs/design/package-standards.md:95 is a table
-      separator. The lockfile row (96) does not concede that the walk fails to
-      prove coverage. It says a root pnpm-lock.yaml "does not mean workspace
-      hygiene (packageManager pin, linker, frozen CI) is covered", which is a
-      different point.
+      against the cited sources. crates/seikika-connector-workspace/src/npm.rs
+      confirms the existence-only ancestor scan.
+      docs/design/package-standards.md:95 is a table separator, and the
+      lockfile row discusses the limits of other workspace-hygiene checks
+      rather than asserting insufficient package coverage.
     suggestion: >-
-      Drop the package-standards.md citation or cite line 96 for what it says.
-      npm.rs:113-138 and packages.yaml:114-117 already carry the reason.
+      Use the actual lockfile scan and its fixtures to support the coverage
+      finding.
   - criterion: complete
     verdict: pass
     reason: >-
-      Both fails are right. An ancestor package-lock.json passes outside a
-      declared workspace (npm.rs:124-135), and an empty file named
-      package-lock.json passes (npm.rs:125). The fix's commit-a-lockfile step
-      makes the check pass. D76 and OpenSSF recommendation 7 support the
-      silver placement. No other criterion should fail.
+      The assessment distinguishes discovery, workspace membership, lockfile
+      contents, the repair, and the silver placement in
+      .seikika/standards/packages.yaml.
   - criterion: reproducible
     verdict: pass
     reason: >-
-      Both fails follow from reading npm.rs:113-138, and the empty-lockfile
-      route is the connector's own unit-test fixture (npm.rs:270).
+      crates/seikika-connector-workspace/src/npm.rs scans ancestor paths by
+      filename, and its package fixture uses a minimal lockfile. This is
+      enough to reproduce why mere discovery passes.
   - criterion: actionable
     verdict: pass
     reason: >-
-      Accepting an ancestor lockfile only when its workspace config includes
-      the package would flip measures-intent. Requiring the lockfile to parse
-      and list the package's dependencies would flip hard-to-game. Each change
-      removes the route its reason names.
-summary: >-
-  The verdicts hold and are well evidenced: the check is a filename test
-  anywhere above the manifest, and the connector's own test passes with
-  `{}`. It fails `supported` because docs/design/package-standards.md:95
-  (really 96) is made to concede lockfile coverage, which it doesn't say.
+      Checking workspace membership and parsed coverage would address the two
+      failures identified against .seikika/standards/packages.yaml.

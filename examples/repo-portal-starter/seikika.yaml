@@ -34,6 +34,9 @@ kinds:
       readme: {type: string}
       readmeWords: {type: integer}
       license: {type: string}
+      licenseHasContent:
+        type: boolean
+        description: Whether the connector read nonblank text from a root licence file.
       codeowners: {type: object} # {path, rules: [{pattern, owners, line}]}
       owners: {type: list, items: string} # every owner CODEOWNERS names (sorted, unique)
       ownersOk:
@@ -49,6 +52,8 @@ kinds:
       set: >-
         {'name': record.name, 'files': record.files, 'readme': record.readme,
          'readmeWords': record.readmeWords, 'license': record.license,
+         'licenseHasContent': has(record.licenseHasContent) &&
+         record.licenseHasContent,
          'codeowners': record.codeowners, 'owners': record.owners, 'ownersOk':
          record.ownersOk}
 
@@ -102,19 +107,24 @@ scorecards:
         from the code.
     - name: has-codeowners
       level: bronze
-      check: has(entity.codeowners)
-      evidence: "['no CODEOWNERS in .github/, the root or docs/']"
-      fix: Add .github/CODEOWNERS so changes are routed to an owning team.
+      check: >-
+        has(entity.codeowners) && entity.codeowners.rules.exists(r,
+        r.owners.size() > 0)
+      evidence: >-
+        has(entity.codeowners) ? [entity.codeowners.path + ' names no owner'] :
+        ['no CODEOWNERS in .github/, the root or docs/']
+      fix: Add an owned rule to CODEOWNERS, creating .github/CODEOWNERS if missing.
       rationale: >-
         Without CODEOWNERS, GitHub requests no reviewer for a pull request and
         nothing in the repository says who owns the code.
     - name: codeowners-catch-all
       level: silver
       check: >-
-        has(entity.codeowners) && entity.codeowners.rules.exists(r, r.pattern ==
-        '*')
+        has(entity.codeowners) && entity.codeowners.rules != [] &&
+        entity.codeowners.rules[0].pattern in ['*', '**', '/**'] &&
+        entity.codeowners.rules[0].owners != []
       evidence: "has(entity.codeowners) ? entity.codeowners.rules.map(r, r.pattern) : []"
-      fix: Start CODEOWNERS with a `*` rule so every path has an owner.
+      fix: Start CODEOWNERS with a `*` rule that names a default owner.
       rationale: >-
         A path no rule matches has no owner, so changes to it get no automatic
         reviewer. A leading catch-all gives every path a default that later,
@@ -140,11 +150,13 @@ scorecards:
         url: https://github.com/seikika/seikika/blob/main/docs/decisions/D01M7Y57FVX0XYNGMX0A0XJ4GK9.md
     - name: has-license
       level: silver
-      check: has(entity.license)
-      evidence: "['no LICENSE or COPYING file at the root']"
+      check: entity.licenseHasContent
+      evidence: >-
+        has(entity.license) ? [entity.license + ' has no readable licence text']
+        : ['no LICENSE, LICENCE or COPYING file at the root']
       fix: >-
-        Add a LICENSE file (or a note in the README if the code is
-        internal-only).
+        Put the applicable licence text or internal-use terms in a root LICENSE,
+        LICENCE or COPYING file.
       rationale: >-
         Without a licence, default copyright applies and nobody else may legally
         use, change or share the code, even in a public repository.

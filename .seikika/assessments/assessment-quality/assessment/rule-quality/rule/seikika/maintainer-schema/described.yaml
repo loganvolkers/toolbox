@@ -1,40 +1,34 @@
 apiVersion: seikika.com/assessment/v1
 entity: assessment:rule-quality/rule:seikika/maintainer-schema/described
 rubric: assessment-quality
-subjectHash: a3ae29488a33
-assessor: {kind: agent, name: cursor-reviewer-10, model: claude-opus-5.5}
-at: 2026-11-25
+subjectHash: bd0bf99c775d
+rubricHash: e30700fc6322cf9f05a301bb4638d6708e9f5eb5aea0281911229ce75bd37bf7
+assessor: {kind: agent, name: Codex, model: GPT-6}
+at: 2026-11-28
 verdicts:
   - criterion: supported
     verdict: pass
     reason: >-
-      The reasons' citations in
+      I checked the claims in
       .seikika/assessments/rule-quality/rule/seikika/maintainer-schema/described.yaml
-      hold. specs.rs:31 counts the trimmed root `description`.
-      schemas.yaml:85, 86 and 87-92 are the check, evidence, fix and
-      rationale. schema-standards.md:24-26 exempts property descriptions and
-      :20 groups it with dialect and id. standards.test.yaml:608-609 pins "no
-      description". executor-messages' root description is 414 characters. D77
-      says "a root description". A scratch schema with `"description": "x"`
-      gave descriptionChars 1.
+      against the cited sources.
+      crates/seikika-connector-workspace/src/specs.rs reads trimmed root
+      descriptions and .seikika/standards/schemas.yaml uses this count for its
+      bronze presence check. The design in docs/design/schema-standards.md
+      explains why per-property descriptions are a separate question.
   - criterion: complete
     verdict: pass
     reason: >-
-      One character passes `descriptionChars > 0` (schemas.yaml:85), so
-      hard-to-game fails. The check reads the field the fix names, so
-      measures-intent passes. D77 decides the bronze placement.
+      The assessment covers presence, placeholder content, the evidence and
+      fix, and the criterion’s level in .seikika/standards/schemas.yaml.
   - criterion: reproducible
     verdict: pass
     reason: >-
-      Every verdict rests on a one-line check, a decision and a scratch run.
+      crates/seikika-connector-workspace/src/specs.rs shows that a nonempty
+      single character passes, and .seikika/tests/standards.test.yaml pins the
+      evidence for missing text.
   - criterion: actionable
     verdict: pass
     reason: >-
-      A length floor, or a description that must differ from the title,
-      rejects `"x"` and changes the hard-to-game fail. The suggestion cites
-      docs/design/thresholds.md:38 for maintainer-site's floor, but that row
-      is line 39 (38 is `tests-pass`).
-summary: >-
-  Correct verdicts, all grounded in specs.rs, schemas.yaml and D77, and
-  the scratch result reproduces. The only slip is a suggestion citing
-  thresholds.md:38 where the site title row is line 39.
+      Documenting a justified minimum or comparing description and title would
+      address the placeholder finding under .seikika/standards/schemas.yaml.

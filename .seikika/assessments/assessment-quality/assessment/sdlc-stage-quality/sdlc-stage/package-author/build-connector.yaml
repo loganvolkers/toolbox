@@ -1,52 +1,39 @@
 apiVersion: seikika.com/assessment/v1
 entity: assessment:sdlc-stage-quality/sdlc-stage:package-author/build-connector
 rubric: assessment-quality
-subjectHash: 0ef8bd8a1617
-assessor: {kind: agent, name: cursor-reviewer-22, model: claude-opus-5.5}
-at: 2026-11-25
+subjectHash: eae81225e9bc
+rubricHash: e30700fc6322cf9f05a301bb4638d6708e9f5eb5aea0281911229ce75bd37bf7
+assessor: {kind: agent, name: Codex, model: GPT-6}
+at: 2026-11-28
 verdicts:
   - criterion: supported
     verdict: pass
     reason: >-
-      Every citation in
+      I checked the claims in
       .seikika/assessments/sdlc-stage-quality/sdlc-stage/package-author/build-connector.yaml
-      holds. crates/seikika-connect/src/conformance.rs:72 is `pub async fn
-      run`, and `connector test` returns exit code 1 on any failed check
-      (crates/seikika-cli/src/main.rs:1144-1162). ci.yml:103-105 runs it on
-      workspace, surfaces and ci-lint. crates/seikika-cli/tests/install.rs:92
-      is install_pins_verifies_and_doctor_reports, which asserts that a
-      tampered archive "doesn't match" seikika.lock (lines 174-180).
-      examples/connector-scaffold/Cargo.toml:13 is the path dependency, and
-      Cargo.toml:11 sets `publish = false` for the workspace. The
-      author-connector skill and the scaffold README give the
-      copy/implement/stub/test/drive steps. No workflow mentions
-      connector-scaffold. package-author-sdlc.md §3.2 starts at line 108.
+      against the cited sources. The SDK dependency is a workspace-relative
+      path in examples/connector-scaffold/Cargo.toml. The executable protocol
+      kit exists in crates/seikika-connect/src/conformance.rs, and the CI
+      invocations in .github/workflows/ci.yml target workspace, surfaces and
+      ci-lint rather than the scaffold.
   - criterion: complete
     verdict: pass
     reason: >-
-      The verdicts match the stage
-      (.seikika/sdlc/stages/package-author.yaml:20-46). The exit criterion is
-      enforced by a kit that exits non-zero, and both listed checks are real
-      tests. reuses-artifacts fails correctly: an outside Rust author must
-      build this repository's unpublished SDK, which the scaffold README
-      admits ("point `seikika-connect` at a released Seikika checkout or path
-      dep"). Nothing in the steps needs a secret, and remote connectors and
-      `github:` installs need no crate here.
+      The assessment covers all six criteria and distinguishes compiling the
+      SDK, testing the executable, pinned archive distribution and actually
+      exercising a scaffold. The standalone author steps are in
+      examples/connector-scaffold/README.md.
   - criterion: reproducible
     verdict: pass
     reason: >-
-      Each verdict rests on a file a second assessor can read: the path
-      dependency (scaffold Cargo.toml:13), the publish flag (Cargo.toml:11),
-      the exit code (main.rs:1158-1162) and the CI step (ci.yml:103-105). None
-      rests on taste.
+      The scaffold README lists build and conformance invocations, while
+      .github/workflows/ci.yml names the connector binaries that CI exercises.
+      Inspect examples/connector-scaffold/Cargo.toml and Cargo.toml for the
+      dependency and publication constraints.
   - criterion: actionable
     verdict: pass
     reason: >-
-      The one fail's suggestion (build-connector.yaml lines 38-40) is to
-      publish seikika-connect and switch the scaffold to a version dependency.
-      That removes the source build that failed reuses-artifacts.
-summary: >-
-  A sound assessment. Every citation lands, including the tamper assertion
-  behind install.rs:92 and the path dependency at scaffold Cargo.toml:13.
-  The single reuses-artifacts fail is the one the sources support, and
-  publishing the SDK would flip it.
+      The assessment identifies a released version dependency for the
+      scaffold, a local timing in examples/connector-scaffold/README.md, and a
+      second exercised reference linked from
+      .seikika/sdlc/stages/package-author.yaml.

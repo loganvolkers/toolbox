@@ -1,54 +1,43 @@
 apiVersion: seikika.com/assessment/v1
 entity: assessment:rule-quality/rule:seikika/meta-rubric/discriminates
 rubric: assessment-quality
-subjectHash: c9dbd1873b2c
-assessor: {kind: agent, name: cursor-reviewer-34, model: claude-opus-5.5}
-at: 2026-11-25
+subjectHash: 90b811d2a332
+rubricHash: e30700fc6322cf9f05a301bb4638d6708e9f5eb5aea0281911229ce75bd37bf7
+assessor: {kind: agent, name: Codex, model: GPT-6}
+at: 2026-11-28
 verdicts:
   - criterion: supported
     verdict: fail
     reason: >-
-      The code citations in
+      I checked the claims in
       .seikika/assessments/rule-quality/rule/seikika/meta-rubric/discriminates.yaml
-      hold: crates/seikika-cli/src/model.rs:240-248 reads every assessment
-      file, :257-268 keeps a criterion when every verdict is pass, and
-      Iterator::all on an empty list is true, so a renamed criterion with no
-      verdicts is listed. .seikika/standards/meta.yaml:1134-1144 is the "only
-      N assessment(s)" evidence and the sharpen-or-drop fix. The count does
-      not: "threshold-justified had passed all 19 assessments" is not what
-      .seikika/assessments/rule-quality holds. The 15 tracked seikika rule
-      assessments all pass that criterion, and the working tree has fails and
-      unsures among far more than 19 files.
+      against the cited sources. packages/meta-scoring/fragments/catalog.yaml
+      now scores oneSided, which requires both a pass and a fail. The
+      assessment’s main explanation is based on alwaysPass, which is still
+      recorded by crates/seikika-cli/src/model.rs but is no longer the
+      scorecard input.
     suggestion: >-
-      Replace "all 19" with the set actually counted, or drop the number and
-      cite model.rs:263-268 for the all-pass and empty-iterator behaviour.
+      Reassess the rule using oneSided and distinguish current rubric hashes
+      from stale subjects.
   - criterion: complete
-    verdict: pass
+    verdict: fail
     reason: >-
-      measures-intent, hard-to-game and fix-leads-to-pass should fail. One
-      unsure drops a criterion (model.rs:267), stale files count
-      (model.rs:240-248), sharpening the question leaves old verdicts, and the
-      under-three evidence (meta.yaml:1135-1136) is not what the fix
-      addresses. threshold-justified is rightly unsure:
-      docs/design/thresholds.md:5-7 says the justification lives there, and
-      that page has no row for the three-assessment bar
-      (scorecards-for-scorecards.md:295 states it without a reason).
+      The assessment’s suggested rewrite is outdated:
+      packages/meta-scoring/fragments/catalog.yaml already directs authors to
+      assess representative cases, and docs/design/thresholds.md now explains
+      the three-assessment floor.
+    suggestion: >-
+      Replace the old fix and threshold findings with findings that are
+      demonstrable against the current rule.
   - criterion: reproducible
     verdict: pass
     reason: >-
-      The four verdicts follow from the filter and the fix text. A second
-      assessor does not need the count of 19 to fail the first three criteria
-      or to stay unsure on the unexplained 3.
+      crates/seikika-cli/src/model.rs shows exactly how unsure, a pass and a
+      fail feed the current one-sided field. Following that code no longer
+      reproduces the claimed effect of one unsure result.
   - criterion: actionable
     verdict: pass
     reason: >-
-      Counting only fresh fails, rewriting the fix to say re-assess, and
-      leaving a criterion with no verdicts off the list would change the three
-      fails. A thresholds.md row that says why three assessments are enough
-      would change the unsure. Each suggestion is attached to the verdict it
-      would move.
-summary: >-
-  The discriminates verdicts match the code: an unsure or a stale file
-  clears a criterion, and the fix does not change the verdicts the rule
-  reads. The "all 19 assessments" count does not match the tracked set of
-  15 or the files now under .seikika/assessments/rule-quality.
+      The request for pass and fail examples is now reflected in
+      packages/meta-scoring/fragments/catalog.yaml. Subject freshness is a
+      distinct remaining question for the assessment to address.

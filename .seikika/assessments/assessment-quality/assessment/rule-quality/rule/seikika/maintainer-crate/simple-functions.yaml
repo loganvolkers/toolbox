@@ -1,56 +1,37 @@
 apiVersion: seikika.com/assessment/v1
 entity: assessment:rule-quality/rule:seikika/maintainer-crate/simple-functions
 rubric: assessment-quality
-subjectHash: 734409d6a645
-assessor: {kind: agent, name: cursor-reviewer-07, model: claude-opus-5.5}
-at: 2026-11-25
+subjectHash: d179706b9e5a
+rubricHash: e30700fc6322cf9f05a301bb4638d6708e9f5eb5aea0281911229ce75bd37bf7
+assessor: {kind: agent, name: Codex, model: GPT-6}
+at: 2026-11-28
 verdicts:
   - criterion: supported
     verdict: pass
     reason: >-
-      The citations in
+      I checked the claims in
       .seikika/assessments/rule-quality/rule/seikika/maintainer-crate/simple-functions.yaml
-      hold. The counter (crates/seikika-connector-workspace/src/rust.rs:74-92)
-      ignores `?` and `let ... else`. A connector rerun shows exactly four
-      functions at 15: GitFiles::handle
-      (crates/seikika-connector-git-files/src/main.rs:312), Runner::execute
-      (runner src/main.rs:529), Ci::recheck (exec src/ci/mod.rs:193) and
-      conformance `run` (connect src/conformance.rs:71). GitFiles::handle's
-      five `?` are at main.rs:327, 337, 342, 352 and 367. Six crates fail, as
-      results.json says. The rationale, fix, evidence and links are
-      .seikika/standards/crates.yaml:322-325, 318-321, 104-109 and 326-328.
-      The counting rule is written at
-      docs/design/seikika-for-seikika.md:240-241.
+      against the cited sources. The explicit branches visited in
+      crates/seikika-connector-workspace/src/rust.rs exclude try expressions
+      and let-else paths. The gold limit of 15 is explicit in
+      .seikika/standards/crates.yaml.
   - criterion: complete
     verdict: pass
     reason: >-
-      threshold-justified was left unsure because the NIST PDF couldn't be
-      read. It can be read. NIST SP 500-235 §2.5 (printed p. 15) says McCabe's
-      10 "has significant supporting evidence, but limits as high as 15 have
-      been used successfully as well". It reserves limits over 10 for projects
-      with "several operational advantages", such as experienced staff and a
-      comprehensive test plan. So the linked source states 15 only
-      conditionally, and neither the rule nor thresholds.md argues that those
-      conditions hold. Unsure remains right until someone does. The other
-      three verdicts hold.
+      The assessment addresses scope, incentives to extract helpers, location
+      evidence and the basis for the limit. docs/design/thresholds.md now
+      identifies the limit as chosen.
   - criterion: reproducible
     verdict: pass
     reason: >-
-      measures-intent rests on rust.rs:74-92 and the five `?` in
-      GitFiles::handle. hard-to-game rests on the same reasoning as the
-      bounded-complexity assessment. The unsure is about access, which the
-      reason names, not taste. With §2.5 quoted, a second assessor still lands
-      on unsure or fail, not pass, because the conditions go unargued.
+      The visitor match in crates/seikika-connector-workspace/src/rust.rs
+      lists every recognized expression form. The related crate fixture rules
+      in .seikika/tests/standards.test.yaml verify evidence and outcomes for
+      the reported complexity.
   - criterion: actionable
     verdict: pass
     reason: >-
-      Counting `?` and `let ... else` would put GitFiles::handle at 20 and
-      make the gold bound mean what its rationale says. The suggestion to
-      quote the NIST passage in a thresholds.md row, or to label 15 as chosen,
-      settles threshold-justified. The passage is §2.5 above.
-summary: >-
-  An accurate assessment. Four live functions sit exactly at 15, one with
-  five uncounted `?`, and every citation checks out. The unsure on 15 was
-  honest about access: NIST §2.5 allows 15 only for teams with listed
-  advantages, which nothing here argues, so the unsure stands, and quoting
-  that passage is the next step.
+      The suggested visitor additions and boundary fixture would exercise the
+      omitted paths in crates/seikika-connector-workspace/src/rust.rs. The
+      alternative of documenting the chosen threshold was applied in
+      docs/design/thresholds.md.

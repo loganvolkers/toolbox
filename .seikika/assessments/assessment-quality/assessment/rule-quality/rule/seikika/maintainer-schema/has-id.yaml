@@ -1,42 +1,40 @@
 apiVersion: seikika.com/assessment/v1
 entity: assessment:rule-quality/rule:seikika/maintainer-schema/has-id
 rubric: assessment-quality
-subjectHash: 4ce79d60207d
-assessor: {kind: agent, name: cursor-reviewer-10, model: claude-opus-5.5}
-at: 2026-11-25
+subjectHash: 2ee2f83a48d6
+rubricHash: e30700fc6322cf9f05a301bb4638d6708e9f5eb5aea0281911229ce75bd37bf7
+assessor: {kind: agent, name: Codex, model: GPT-6}
+at: 2026-11-28
 verdicts:
   - criterion: supported
     verdict: pass
     reason: >-
-      The citations in
+      I checked the claims in
       .seikika/assessments/rule-quality/rule/seikika/maintainer-schema/has-id.yaml
-      hold. schemas.yaml:74, 75 and 76-78 are the check, evidence and fix.
-      specs.rs:29 trims `$id`. schema-standards.md:32 says `$id` should be
-      absolute. standards.test.yaml:606-607 pins "no $id". The live ids are as
-      quoted: crates/seikika-model/schema/assessment.schema.json:3 is
-      `https://seikika.com/schema/assessment.schema.json` and the other three
-      are `/schemas/<name>/v1…`. A scratch schema with `"$id": "https://x"`
-      gave schemaId `https://x` and passed.
+      against the cited sources.
+      crates/seikika-connector-workspace/src/specs.rs trims the root
+      identifier before .seikika/standards/schemas.yaml tests the HTTPS
+      prefix. The assessment identifies that exact check and discusses what
+      still passes.
   - criterion: complete
-    verdict: pass
+    verdict: fail
     reason: >-
-      A placeholder `https://` string is the cheapest pass, so hard-to-game
-      fails. The check is the fix's "absolute https URI", so measures-intent
-      passes. The fix leads to a pass, and D77 sets the bronze placement.
+      .seikika/standards/schemas.yaml only tests a prefix. The assessment
+      passes measures-intent on the basis that it tests exactly for an
+      absolute HTTPS URI, while even a missing host is not validated.
+    suggestion: >-
+      Distinguish prefix matching from URI validation and assess the
+      missing-host case.
   - criterion: reproducible
     verdict: pass
     reason: >-
-      Every verdict rests on a `startsWith` check, D77 and a scratch run. The
-      inconsistent live ids are a fact anyone can read in
-      crates/seikika-model/schema/*.json.
+      The predicate in .seikika/standards/schemas.yaml and root extraction in
+      crates/seikika-connector-workspace/src/specs.rs show that neither full
+      URI syntax nor uniqueness is tested.
   - criterion: actionable
     verdict: pass
     reason: >-
-      A namespace-and-version pattern rejects `https://x`, which changes the
-      hard-to-game verdict. Today it would also fail
-      crates/seikika-model/schema/assessment.schema.json, which the summary
-      already flags.
-summary: >-
-  The citations and scratch result hold, and the verdicts are right. The
-  suggested namespace pattern would close the placeholder route, and it
-  would also catch the assessment schema's off-pattern id.
+      URI validation and uniqueness checks under
+      .seikika/standards/schemas.yaml would address the identifier gap. A
+      project convention needs to reflect the identifiers the project
+      intentionally supports.

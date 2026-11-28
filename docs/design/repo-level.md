@@ -22,10 +22,19 @@ level a reader already knows: none, bronze, silver or gold.
 | Does every counted scorecard reach silver? | The same minimum | silver |
 | Does every counted scorecard reach gold? | The same minimum | gold |
 
+Ranks use the position in each declared ladder. A constituent that stops at
+bronze or silver caps the repository at that level even when all its rules
+pass. For example, `maintainer-action-deps` has only bronze and
+`maintainer-docs` stops at silver. Reaching a higher repository level with
+those constituents would require a change to their ladders or to which
+scorecards the repository declares in `policy.repoRollup`.
+
 Unknown rules are left out of a constituent's level before the minimum, so a missing runner does
 not force the repository to none. Fixture entities whose id contains `/demo/` are left out, so the
 ladder fixtures do not drag the live repository down. Runner-backed cards stay off the list for
 the same reason: with the runner skipped they have no level.
+If a watched name does not identify a declared constituent, the repository
+falls below bronze and the evidence names the unresolved entry.
 
 ## 2. What the field says
 

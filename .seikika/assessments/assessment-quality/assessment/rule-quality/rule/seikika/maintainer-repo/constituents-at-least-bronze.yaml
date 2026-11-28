@@ -1,57 +1,37 @@
 apiVersion: seikika.com/assessment/v1
 entity: assessment:rule-quality/rule:seikika/maintainer-repo/constituents-at-least-bronze
 rubric: assessment-quality
-subjectHash: 8d4220c451bc
-assessor: {kind: agent, name: cursor-reviewer-13, model: claude-opus-5.5}
-at: 2026-11-25
+subjectHash: fcaba21831fa
+rubricHash: e30700fc6322cf9f05a301bb4638d6708e9f5eb5aea0281911229ce75bd37bf7
+assessor: {kind: agent, name: Codex, model: GPT-6}
+at: 2026-11-28
 verdicts:
   - criterion: supported
     verdict: pass
     reason: >-
-      The citations in
+      I checked the claims in
       .seikika/assessments/rule-quality/rule/seikika/maintainer-repo/constituents-at-least-bronze.yaml
-      land where they say. crates/seikika-derive/src/lib.rs:930-934 filters
-      `summaries` by `watch`, and 1183-1188 skips a card with no rows or no
-      level. .seikika/seikika.yaml:30-43 is `repoRollup`, and
-      .seikika/tests/standards.test.yaml:782-792 is the repository-level test.
-      .seikika/standards/repository.yaml:159 and 160-162 are the evidence and
-      the fix. packages/github-actions/fragments/github-actions.yaml:552 is
-      `levels: [bronze]`, and docs/design/repo-level.md:13-24 is the
-      lowest-constituent table. Two phrasings are loose without changing a
-      verdict. First, "no code reads repoRollup apart from the report JSON"
-      overlooks the CEL that derives `watch` from it (repository.yaml:44-45),
-      though nothing validates the names. Second, no fixture shows
-      acme/unsafe's supply-chain card reaching bronze; that example is
-      hypothetical.
+      against the cited sources. The old selection in
+      crates/seikika-derive/src/lib.rs omitted unrecognized watched names. The
+      new aggregate path preserves them as failing constituent evidence while
+      keeping declared cards with no counted data outside the minimum.
   - criterion: complete
     verdict: pass
     reason: >-
-      Both fails follow from the code. A watched name with no summary drops
-      out (lib.rs:930-934), so `cards.all(...)` holds over whatever remains,
-      and on an empty list it is true. Nothing guards deleting a name from
-      .seikika/seikika.yaml:30-43. fix-leads-to-pass is right because every
-      rollup card has a bronze rung: the shortest ladder is
-      github-actions.yaml:552. threshold-justified is the definition in D86
-      (docs/decisions/D01M7WMSMS50000000000000000.md:9). Live, the repository
-      is bronze with this rule passing (.seikika/results.json), as the reason
-      says.
+      The assessment covers rank, constituent selection, removal from the
+      watch list, remediation and the floor defined in
+      docs/design/repo-level.md.
   - criterion: reproducible
     verdict: pass
     reason: >-
-      Both fails rest on code a second assessor can read (lib.rs:930-934,
-      1183-1188) and on a one-word edit to a fixture's `watchOverride`
-      (.seikika/fixtures/workspace.ndjson:61). They don't rest on taste.
+      The original failure can be reproduced by setting a watched name without
+      a matching scorecard, the scenario now pinned in
+      .seikika/tests/standards.test.yaml. The rank and evidence logic are in
+      .seikika/standards/repository.yaml.
   - criterion: actionable
     verdict: pass
     reason: >-
-      Two checks would close the misfire measures-intent names: requiring
-      `cards.size() == entity.watch.size()` and having `seikika validate`
-      reject unknown `repoRollup` names. hard-to-game's ratchet guard on
-      `repoRollup` removals removes the cheap route it names
-      (.seikika/seikika.yaml:30-43).
-summary: >-
-  A sound assessment. Its fails on measures-intent and hard-to-game rest
-  on lib.rs:930-934, which drops unknown watched names, and on an
-  unguarded `repoRollup`. Every line citation resolves. Two sentences
-  overreach slightly: one says no code reads `repoRollup`, the other cites
-  a fixture that doesn't exist. Neither changes a verdict.
+      The proposed unresolved-name evidence was implemented in
+      crates/seikika-derive/src/lib.rs. Guarding removals from
+      policy.repoRollup would require tracking the declared list in the
+      ratchet.

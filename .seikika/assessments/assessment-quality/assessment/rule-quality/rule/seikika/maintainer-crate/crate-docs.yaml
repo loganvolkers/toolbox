@@ -1,51 +1,41 @@
 apiVersion: seikika.com/assessment/v1
 entity: assessment:rule-quality/rule:seikika/maintainer-crate/crate-docs
 rubric: assessment-quality
-subjectHash: 0cad12c468e3
-assessor: {kind: agent, name: cursor-reviewer-07, model: claude-opus-5.5}
-at: 2026-11-25
+subjectHash: 3656f3287f9e
+rubricHash: e30700fc6322cf9f05a301bb4638d6708e9f5eb5aea0281911229ce75bd37bf7
+assessor: {kind: agent, name: Codex, model: GPT-6}
+at: 2026-11-28
 verdicts:
   - criterion: supported
-    verdict: pass
+    verdict: fail
     reason: >-
-      The citations in
+      I checked the claims in
       .seikika/assessments/rule-quality/rule/seikika/maintainer-crate/crate-docs.yaml
-      land. `has_doc` matches any `doc` attribute
-      (crates/seikika-connector-workspace/src/rust.rs:40-42), and `crateDoc`
-      is set from the entry file's inner attributes (rust.rs:430-432). An
-      empty `//!` desugars to `#![doc = ""]`, so it passes. The entry is the
-      lib target, else the first bin
-      (crates/seikika-connector-workspace/src/main.rs:536-553). The evidence,
-      fix and rationale are .seikika/standards/crates.yaml:170, 171-173 and
-      174-177. The fixtures' three applicable crates all have `crateDoc: true`
-      (.seikika/fixtures/workspace.ndjson lines 1, 2 and 4; seikika-durable is
-      skipped at 0 lines). The only test mention is the absence check at
-      .seikika/tests/standards.test.yaml:89-93. A rerun of the connector shows
-      all 17 scored crates with `crateDoc: true`.
+      against the cited sources. The original correctly identified acceptance
+      of blank doc attributes in
+      crates/seikika-connector-workspace/src/rust.rs. Its claim that the
+      evidence named the crate was unsupported because
+      .seikika/standards/crates.yaml accessed entity.name, which its Crate
+      mapping does not supply. Both issues were fixed during review.
+    suggestion: >-
+      Reassess the check with the blank-doc fixture and separately evaluate
+      whether entrypoint and documentation content coverage are sufficient.
   - criterion: complete
     verdict: pass
     reason: >-
-      Nothing tests `crateDoc` itself either. The only rust.rs unit test
-      (rust.rs:495-534) checks tests and disabled tests, so the "untested"
-      point goes further than the assessment says. Both fails match the
-      rubric's "an empty doc comment would pass it"
-      (.seikika/standards/meta.yaml:1165). fix-leads-to-pass and
-      threshold-justified are right for a yes/no bronze rule placed by
-      docs/design/seikika-for-seikika.md:103.
+      The assessment covers doc content, target selection, the cheap empty
+      form, the fix and bronze placement. The entrypoint selection is visible
+      in crates/seikika-connector-workspace/src/main.rs.
   - criterion: reproducible
     verdict: pass
     reason: >-
-      The fails follow from rust.rs:40-42 alone, and a one-file scratch crate
-      reproduces them. Nothing rests on taste.
+      The scanner tests in crates/seikika-connector-workspace/src/rust.rs now
+      distinguish blank text, rustdoc options and actual docs.
+      .seikika/tests/standards.test.yaml checks both the pass and the
+      missing-doc evidence.
   - criterion: actionable
     verdict: pass
     reason: >-
-      Reporting the crate doc's text or length and requiring a sentence and a
-      spec reference would fail an empty `//!`. That flips both
-      measures-intent and hard-to-game. The failing fixture and evidence test
-      it proposes would also make the rule tested.
-summary: >-
-  An accurate assessment. Every code and manifest citation checks out, an
-  empty `//!` really does pass, and neither the fixtures nor rust.rs's own
-  unit test ever exercise `crateDoc: false`. The two fails are the
-  rubric's named cases, and the suggestions would turn both.
+      The proposed scanner and fixture work is concrete. The first part was
+      implemented, while a spec-link requirement would need to be stated in
+      the check and supported by evidence in .seikika/standards/crates.yaml.

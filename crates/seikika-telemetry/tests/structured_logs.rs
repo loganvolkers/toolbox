@@ -1,6 +1,17 @@
 //! Structured JSON logging is available via SEIKIKA_LOG_FORMAT / options.
 
 #[test]
+fn telemetry_readme_documents_the_service_name_override() {
+    let readme = include_str!("../README.md");
+    assert!(
+        readme.lines().any(|line| {
+            line.starts_with("| `OTEL_SERVICE_NAME` |") && line.contains("service.name")
+        }),
+        "README must explain how OTEL_SERVICE_NAME sets service.name"
+    );
+}
+
+#[test]
 fn init_accepts_json_log_format() {
     let g = seikika_telemetry::init(seikika_telemetry::TelemetryOptions {
         mode: Some(seikika_telemetry::TelemetryMode::Ci),

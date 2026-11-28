@@ -1,6 +1,8 @@
-//! Inputs to the derived-state pipeline (docs/v1-spec.md §6.1, §8): raw connector records and
-//! native values, a consistent [`InputSnapshot`] of them, an in-memory store for tests and
-//! `seikika dev`, and the NDJSON fixture loader. `PgStore` arrives with M2.
+//! Seikika's storage layer (docs/v1-spec.md §6.1, §8). The [`Store`] trait exposes raw connector
+//! records and native values through a consistent [`InputSnapshot`]. [`MemStore`] and the NDJSON
+//! fixture loader support local development and tests. [`PgStore`] persists inputs, published
+//! snapshots and authorization tuples, personal access tokens, action runs, and spent confirmation
+//! tokens.
 
 pub mod pg;
 
@@ -65,7 +67,8 @@ pub enum StoreError {
 pub trait Store: Send + Sync {
     /// Apply one batch of connector messages atomically; returns the new input version.
     async fn ingest(&self, connector: &str, batch: &[Value]) -> Result<u64, StoreError>;
-    /// Write native values; a non-zero `revision` must be the next revision (optimistic locking).
+    /// Write native values atomically. A revision of zero requests the next revision. A nonzero
+    /// revision must match the next revision or the batch returns a conflict.
     async fn put_native(&self, values: Vec<NativeValue>) -> Result<u64, StoreError>;
     /// The latest committed input version.
     async fn input_version(&self) -> Result<u64, StoreError>;
@@ -83,7 +86,7 @@ impl Store for SharedMem {
         Ok(self.0.lock().unwrap().ingest(connector, batch))
     }
     async fn put_native(&self, values: Vec<NativeValue>) -> Result<u64, StoreError> {
-        Ok(self.0.lock().unwrap().put_native(values))
+        self.0.lock().unwrap().write_native(values)
     }
     async fn input_version(&self) -> Result<u64, StoreError> {
         Ok(self.0.lock().unwrap().version)
@@ -145,6 +148,31 @@ impl MemStore {
         }
         self.version += 1;
         self.version
+    }
+
+    /// Apply runtime writes according to the Store contract, using a staging map so a conflict
+    /// leaves both the stored values and the input version intact.
+    fn write_native(&mut self, values: Vec<NativeValue>) -> Result<u64, StoreError> {
+        let mut pending = BTreeMap::<_, NativeValue>::new();
+        for mut value in values {
+            let key = (value.entity.clone(), value.field.clone());
+            let current = pending.get(&key).or_else(|| self.native.get(&key));
+            let next = current.map_or(0, |previous| previous.revision);
+            let next = next.checked_add(1).ok_or_else(|| {
+                StoreError::Conflict(format!("{}.{}: revision exhausted", key.0, key.1))
+            })?;
+            if value.revision != 0 && value.revision != next {
+                return Err(StoreError::Conflict(format!(
+                    "{}.{}: expected revision {next}, got {}",
+                    key.0, key.1, value.revision
+                )));
+            }
+            value.revision = next;
+            pending.insert(key, value);
+        }
+        self.native.extend(pending);
+        self.version += 1;
+        Ok(self.version)
     }
 
     pub fn snapshot(&self) -> InputSnapshot {
@@ -273,6 +301,24 @@ mod tests {
             .map(|v| (v.field.as_str(), v.value.clone()))
             .collect();
         assert_eq!(got, vec![("a", json!(1)), ("b", json!(2))]);
+    }
+
+    #[test]
+    fn runtime_native_writes_assign_revisions_and_reject_conflicts_atomically() {
+        let mut store = MemStore::new();
+        assert_eq!(
+            store
+                .write_native(vec![native("a", 10, 0), native("a", 20, 2)])
+                .unwrap(),
+            1
+        );
+        let snapshot = store.snapshot();
+        assert_eq!(snapshot.native[0].revision, 2);
+        assert_eq!(snapshot.native[0].value, json!(20));
+
+        let conflict = store.write_native(vec![native("b", 30, 0), native("a", 40, 2)]);
+        assert!(matches!(conflict, Err(StoreError::Conflict(_))));
+        assert_eq!(store.snapshot(), snapshot);
     }
 
     #[test]

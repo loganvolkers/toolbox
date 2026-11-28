@@ -109,6 +109,23 @@ fn is_remote(spec: &str) -> bool {
     .iter()
     .any(|p| s.starts_with(p))
         || s.contains("git+")
+        || github_shorthand(s)
+}
+
+fn github_shorthand(spec: &str) -> bool {
+    let repo = spec.split('#').next().unwrap_or(spec);
+    let Some((owner, name)) = repo.split_once('/') else {
+        return false;
+    };
+    !owner.is_empty()
+        && owner
+            .bytes()
+            .all(|c| c.is_ascii_alphanumeric() || c == b'-')
+        && !name.is_empty()
+        && !matches!(name, "." | "..")
+        && name
+            .bytes()
+            .all(|c| c.is_ascii_alphanumeric() || matches!(c, b'-' | b'_' | b'.'))
 }
 
 /// Lockfile beside the manifest, or at an ancestor up to the checkout root (pnpm/yarn workspaces).
@@ -267,15 +284,15 @@ mod tests {
         let tmp = scratch(
             "good",
             &[
-                ("ui/package.json", manifest),
-                ("ui/package-lock.json", "{}\n"),
+                ("npm/ui/package.json", manifest),
+                ("npm/ui/package-lock.json", "{}\n"),
                 (
                     ".github/workflows/ci.yml",
                     "jobs:\n  ui:\n    defaults: {run: {working-directory: ui}}\n    steps:\n      - run: npm ci\n",
                 ),
             ],
         );
-        let rec = analyse(&tmp.0, "ui/package.json");
+        let rec = analyse(&tmp.0, "npm/ui/package.json");
         assert_eq!(rec["name"], "focused");
         assert_eq!(rec["private"], true);
         assert_eq!(rec["lockfile"], "package-lock.json");
@@ -327,6 +344,11 @@ mod tests {
         assert!(is_wildcard("latest"));
         assert!(!is_remote("file:../ui"));
         assert!(is_remote("github:left/pad"));
+        assert!(is_remote("left/pad#v1.0.0"));
+        assert!(is_remote("left/pad"));
+        assert!(!is_remote("../left/pad"));
+        assert!(!is_remote("workspace:../left/pad"));
+        assert!(!is_remote("npm:@scope/pad@^1.0.0"));
         assert!(is_remote("https://example.invalid/pkg.tgz"));
     }
 
@@ -406,6 +428,7 @@ mod tests {
         assert_eq!(builder["lockfile"], "package-lock.json");
         assert!(builder["checkScripts"].as_i64().unwrap() >= 1);
         assert_eq!(builder["ciUsesInstall"], false);
-        assert_eq!(builder["descriptionChars"], 0);
+        assert!(builder["descriptionChars"].as_i64().unwrap_or_default() >= 20);
+        assert_eq!(builder["engines"], true);
     }
 }

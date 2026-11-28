@@ -1,50 +1,36 @@
 apiVersion: seikika.com/assessment/v1
 entity: assessment:rule-quality/rule:seikika/maintainer-skill/portable-paths
 rubric: assessment-quality
-subjectHash: 30729e25ad94
-assessor: {kind: agent, name: cursor-reviewer-32, model: claude-opus-5.5}
-at: 2026-11-25
+subjectHash: 62452e6f2e4b
+rubricHash: e30700fc6322cf9f05a301bb4638d6708e9f5eb5aea0281911229ce75bd37bf7
+assessor: {kind: agent, name: Codex, model: GPT-6}
+at: 2026-11-28
 verdicts:
   - criterion: supported
     verdict: pass
     reason: >-
-      The citations in
+      I checked the claims in
       .seikika/assessments/rule-quality/rule/seikika/maintainer-skill/portable-paths.yaml
-      match the files. crates/seikika-connector-workspace/src/skills.rs:32
-      compiles `[A-Za-z]:\\[^\s]+|\\\\[^\s]+`, a drive letter or a doubled
-      backslash, and windows_in (skills.rs:422-429) records file:line. A
-      single backslash in `scripts\helper.py` matches neither alternative, and
-      a doubled backslash in a JSON regex does match the second.
-      .seikika/standards/skills.yaml:189 wants windowsPaths empty, and
-      :198-200 is the Anthropic "avoid Windows-style paths" link the rationale
-      cites. standards.test.yaml:370 pins `SKILL.md:4`.
-      docs/design/skill-standards.md:95 places the rule at silver. There are
-      43 SKILL.md files outside target/, and .seikika/results.json shows no
-      maintainer-skill entity failing portable-paths.
+      against the cited sources.
+      crates/seikika-connector-workspace/src/skills.rs:32 and :422-430
+      recognize drive prefixes or doubled backslashes, supporting the
+      relative-path omission and escape false positive described in the
+      assessment.
   - criterion: complete
     verdict: pass
     reason: >-
-      measures-intent fails because the regex misses the relative backslash
-      path the rationale (skills.yaml:194-197) is about, and flags a doubled
-      backslash that is not a path. hard-to-game passes for a hit that is
-      reported: the check has no suppression, so clearing a listed line means
-      rewriting it. The detection hole is the measures-intent fail, which the
-      reason says. The fix names the evidence lines, and silver is the
-      skill-standards.md:95 row.
+      The assessment distinguishes detection coverage, the repair of a flagged
+      line and the silver threshold in .seikika/standards/skills.yaml. It also
+      documents when the suggested repair would be inappropriate.
   - criterion: reproducible
     verdict: pass
     reason: >-
-      The regex at skills.rs:32 decides both the miss and the false hit. A
-      second assessor fails measures-intent and passes the other three.
+      crates/seikika-connector-workspace/src/skills.rs:32 and :422-430 make
+      the recorded line and pattern visible, and
+      .seikika/tests/standards.test.yaml checks the location detail.
   - criterion: actionable
     verdict: pass
     reason: >-
-      Matching a relative backslash path that ends in an extension, and
-      limiting the doubled backslash to a UNC host, would catch
-      `scripts\helper.py` and stop flagging an escaped regex. That is the
-      measures-intent suggestion, and it would change that fail.
-summary: >-
-  Trustworthy. The regex at skills.rs:32 misses a relative backslash path
-  and flags a doubled backslash, which is the measures-intent fail, and
-  the silver placement, the fixture pin and the 43 live skills all match
-  the files.
+      The suggested relative-path coverage and matching test for ordinary
+      escaped text would address the two defects in
+      crates/seikika-connector-workspace/src/skills.rs.

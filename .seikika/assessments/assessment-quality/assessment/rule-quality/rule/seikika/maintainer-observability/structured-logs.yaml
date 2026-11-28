@@ -1,49 +1,38 @@
 apiVersion: seikika.com/assessment/v1
 entity: assessment:rule-quality/rule:seikika/maintainer-observability/structured-logs
 rubric: assessment-quality
-subjectHash: 197f258deac7
-assessor: {kind: agent, name: cursor-reviewer-31, model: claude-opus-5.5}
-at: 2026-11-25
+subjectHash: 8573ed0f2e58
+rubricHash: e30700fc6322cf9f05a301bb4638d6708e9f5eb5aea0281911229ce75bd37bf7
+assessor: {kind: agent, name: Codex, model: GPT-6}
+at: 2026-11-28
 verdicts:
   - criterion: supported
     verdict: pass
     reason: >-
-      The check is a missing path (.seikika/standards/observability.yaml:57-62
-      and :166), and the path is chosen in
-      .seikika/observability/runtime.yaml:14. The test at
-      crates/seikika-telemetry/tests/structured_logs.rs:4-15 asserts init,
-      service name and mode, and never reads a log line.
-      crates/seikika-cli/src/server.rs has 22 eprintln! calls, including lines
-      130, 153 and 159. The demo-partial fixture names
-      docs/missing-structured-log-test.rs at
-      .seikika/fixtures/workspace.ndjson:82. Silver is
-      observability.yaml:102-103, and the Logs row is
-      docs/design/observability.md:19. The log-to-trace check the suggestion
-      names is experiments/otel-testbed/README.md:42.
+      I checked the claims in
+      .seikika/assessments/rule-quality/rule/seikika/maintainer-observability/structured-logs.yaml
+      against the cited sources. The declared test in
+      crates/seikika-telemetry/tests/structured_logs.rs configures JSON
+      logging and emits a log, but asserts no serialized trace identifier. The
+      scorecard in .seikika/standards/observability.yaml relies on its
+      missing-path field.
   - criterion: complete
     verdict: pass
     reason: >-
-      measures-intent and hard-to-game should fail: the rationale wants JSON
-      with a trace id (observability.yaml:171-174), and any existing file
-      clears missingStructuredLogTest. fix-leads-to-pass passes because adding
-      the file the evidence names passes, and the eprintln half is extra.
-      There is no threshold. Nothing else in the sources should have failed.
+      The assessment distinguishes configuring logging, proving correlation,
+      routing failures through tracing and setting the silver threshold. The
+      operational expectation is documented in docs/design/observability.md.
   - criterion: reproducible
     verdict: pass
     reason: >-
-      The test body and the path check are unambiguous. A second assessor
-      reading structured_logs.rs:4-15 and observability.yaml:166 reaches the
-      same two fails.
+      Inspect the named test in
+      crates/seikika-telemetry/tests/structured_logs.rs and the path-based
+      fixture outcomes in .seikika/tests/standards.test.yaml. The testbed in
+      experiments/otel-testbed/README.md documents a separate correlation
+      check.
   - criterion: actionable
     verdict: pass
     reason: >-
-      Asserting a JSON line with trace_id, or requiring the test to be the one
-      CI runs, would make an empty or unrelated file fail both measures-intent
-      and hard-to-game. Dropping the eprintln sentence from the fix is the
-      other half of the same suggestion. fix-leads-to-pass and
-      threshold-justified already pass.
-summary: >-
-  Trustworthy. The rule only checks that a path exists, the test it points
-  at does not read a log line, and server.rs still has 22 eprintln! calls.
-  The two fails and two passes match those sources, and the suggestion
-  would make the check assert JSON.
+      The proposed capture-and-parse assertion identifies the specific
+      artifact to test. experiments/otel-testbed/README.md gives a separate
+      testbed method for demonstrating correlation.

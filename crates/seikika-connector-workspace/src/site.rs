@@ -168,7 +168,11 @@ fn in_sidebar(root: &Path, rel: &str, slug: &str, draft: bool, hidden: bool) -> 
     let Some(dir) = site_dir(rel) else {
         return false;
     };
-    let config = read_config(root, dir);
+    let config = read_config(root, dir)
+        .lines()
+        .filter(|line| !line.trim_start().starts_with("//"))
+        .collect::<Vec<_>>()
+        .join("\n");
     let dirs = compile(r#"directory\s*:\s*['"]([^'"]+)['"]"#);
     if dirs.captures_iter(&config).any(|c| {
         let dir = c.get(1).map(|m| m.as_str()).unwrap_or("");
@@ -365,16 +369,16 @@ mod tests {
             "generated-page",
             &[
                 (
-                    "site/astro.config.mjs",
+                    "npm/site/astro.config.mjs",
                     "export default { base: '/seikika' };",
                 ),
                 (
-                    "site/src/data/site-routes.json",
+                    "npm/site/src/data/site-routes.json",
                     r#"{"report":"/report","storybook":"/storybook"}"#,
                 ),
             ],
         );
-        let from = "site/src/content/docs/index.md";
+        let from = "npm/site/src/content/docs/index.md";
         assert!(site_link_exists(&root.0, from, "/seikika/report/"));
         assert!(site_link_exists(&root.0, from, "/seikika/storybook/"));
         assert!(!site_link_exists(&root.0, from, "/report/"));
@@ -387,20 +391,20 @@ mod tests {
             "good",
             &[
                 (
-                    "site/astro.config.mjs",
+                    "npm/site/astro.config.mjs",
                     "sidebar: [{ autogenerate: { directory: 'concepts' } }]",
                 ),
                 (
-                    "site/src/content/docs/concepts/scorecards.md",
+                    "npm/site/src/content/docs/concepts/scorecards.md",
                     "---\ntitle: Scorecards\ndescription: Levels and evidence.\n---\nSee [the catalog](/concepts/catalog/).\n",
                 ),
                 (
-                    "site/src/content/docs/concepts/catalog.md",
+                    "npm/site/src/content/docs/concepts/catalog.md",
                     "---\ntitle: Catalog\ndescription: Entities.\n---\n",
                 ),
             ],
         );
-        let page = analyse(&tmp.0, "site/src/content/docs/concepts/scorecards.md");
+        let page = analyse(&tmp.0, "npm/site/src/content/docs/concepts/scorecards.md");
         assert_eq!(page["slug"], "concepts/scorecards");
         assert_eq!(page["title"], "Scorecards");
         assert_eq!(page["descriptionChars"], 20);
@@ -414,18 +418,18 @@ mod tests {
         let tmp = scratch(
             "base",
             &[
-                ("site/astro.config.mjs", "base: '/seikika',"),
+                ("npm/site/astro.config.mjs", "base: '/seikika',"),
                 (
-                    "site/src/content/docs/index.md",
+                    "npm/site/src/content/docs/index.md",
                     "---\ntitle: Home\ndescription: Home.\n---\n[Run](/start/run/) [ok](/seikika/start/run/)\n",
                 ),
                 (
-                    "site/src/content/docs/start/run.md",
+                    "npm/site/src/content/docs/start/run.md",
                     "---\ntitle: Run\ndescription: Run.\n---\n",
                 ),
             ],
         );
-        let page = analyse(&tmp.0, "site/src/content/docs/index.md");
+        let page = analyse(&tmp.0, "npm/site/src/content/docs/index.md");
         assert_eq!(page["missingFiles"], json!(["/start/run/"]));
     }
 
@@ -434,15 +438,15 @@ mod tests {
         let tmp = scratch(
             "public",
             &[
-                ("site/astro.config.mjs", "base: '/seikika',"),
-                ("site/public/report/index.html", "<h1>report</h1>"),
+                ("npm/site/astro.config.mjs", "base: '/seikika',"),
+                ("npm/site/public/report/index.html", "<h1>report</h1>"),
                 (
-                    "site/src/content/docs/demo/report.md",
+                    "npm/site/src/content/docs/demo/report.md",
                     "---\ntitle: Report\ndescription: The report.\n---\n[Open it](/seikika/report/)\n",
                 ),
             ],
         );
-        let page = analyse(&tmp.0, "site/src/content/docs/demo/report.md");
+        let page = analyse(&tmp.0, "npm/site/src/content/docs/demo/report.md");
         assert_eq!(page["missingFiles"], json!([]));
         assert_eq!(page["inSidebar"], false);
     }
@@ -452,18 +456,18 @@ mod tests {
         let tmp = scratch(
             "astro",
             &[
-                ("site/astro.config.mjs", "base: '/seikika',"),
+                ("npm/site/astro.config.mjs", "base: '/seikika',"),
                 (
-                    "site/src/pages/report-hosted.astro",
+                    "npm/site/src/pages/report-hosted.astro",
                     "<seikika-report></seikika-report>\n",
                 ),
                 (
-                    "site/src/content/docs/demo/report.md",
+                    "npm/site/src/content/docs/demo/report.md",
                     "---\ntitle: Report\ndescription: The report.\n---\n[Hosted](/seikika/report-hosted/)\n",
                 ),
             ],
         );
-        let page = analyse(&tmp.0, "site/src/content/docs/demo/report.md");
+        let page = analyse(&tmp.0, "npm/site/src/content/docs/demo/report.md");
         assert_eq!(page["missingFiles"], json!([]));
     }
 
@@ -472,13 +476,47 @@ mod tests {
         let tmp = scratch(
             "draft",
             &[(
-                "site/src/content/docs/draft.md",
+                "npm/site/src/content/docs/draft.md",
                 "---\ntitle: Later\ndescription: Not published.\ndraft: true\n---\n",
             )],
         );
-        let page = analyse(&tmp.0, "site/src/content/docs/draft.md");
+        let page = analyse(&tmp.0, "npm/site/src/content/docs/draft.md");
         assert_eq!(page["draft"], true);
         assert_eq!(page["inSidebar"], false);
+    }
+
+    #[test]
+    fn commented_sidebar_entries_do_not_make_pages_reachable() {
+        let tmp = scratch(
+            "commented-sidebar",
+            &[
+                (
+                    "npm/site/astro.config.mjs",
+                    "sidebar: [\n  // { autogenerate: { directory: 'concepts' } },\n  // { slug: 'concepts/catalog' },\n]\n",
+                ),
+                (
+                    "npm/site/src/content/docs/concepts/catalog.md",
+                    "---\ntitle: Catalog\n---\n",
+                ),
+            ],
+        );
+        let page = analyse(&tmp.0, "npm/site/src/content/docs/concepts/catalog.md");
+        assert_eq!(page["inSidebar"], false);
+    }
+
+    #[test]
+    fn a_draft_with_the_same_title_is_reported_as_a_duplicate() {
+        let published = "npm/site/src/content/docs/catalog.md";
+        let draft = "npm/site/src/content/docs/draft.mdx";
+        let tmp = scratch(
+            "duplicate-title",
+            &[
+                (published, "---\ntitle: Catalog\n---\n"),
+                (draft, "---\ntitle: catalog\ndraft: true\n---\n"),
+            ],
+        );
+        assert_eq!(analyse(&tmp.0, published)["duplicateTitle"], true);
+        assert_eq!(analyse(&tmp.0, draft)["duplicateTitle"], true);
     }
 
     #[test]
@@ -487,16 +525,16 @@ mod tests {
         let tmp = scratch(
             "bad",
             &[(
-                "site/src/content/docs/unsafe.md",
+                "npm/site/src/content/docs/unsafe.md",
                 &format!("---\n---\nSee [gone](/missing/).\n{token}\n"),
             )],
         );
-        let page = analyse(&tmp.0, "site/src/content/docs/unsafe.md");
+        let page = analyse(&tmp.0, "npm/site/src/content/docs/unsafe.md");
         assert_eq!(page["title"], "");
         assert_eq!(page["missingFiles"], json!(["/missing/"]));
         assert_eq!(
             page["secretHits"][0],
-            "site/src/content/docs/unsafe.md:4 github-token"
+            "npm/site/src/content/docs/unsafe.md:4 github-token"
         );
     }
 }

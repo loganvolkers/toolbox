@@ -1,58 +1,39 @@
 apiVersion: seikika.com/assessment/v1
 entity: assessment:sdlc-stage-quality/sdlc-stage:maintainer/monitor
 rubric: assessment-quality
-subjectHash: 510ed7b7e270
-assessor: {kind: agent, name: cursor-reviewer-21, model: claude-opus-5.5}
-at: 2026-11-25
+subjectHash: d62e5c5fa2ac
+rubricHash: e30700fc6322cf9f05a301bb4638d6708e9f5eb5aea0281911229ce75bd37bf7
+assessor: {kind: agent, name: Codex, model: GPT-6}
+at: 2026-11-28
 verdicts:
   - criterion: supported
     verdict: pass
     reason: >-
-      Every citation in
+      I checked the claims in
       .seikika/assessments/sdlc-stage-quality/sdlc-stage/maintainer/monitor.yaml
-      lands where it says. .github/workflows/ci.yml:107-113 is the ratchet
-      step through ./actions/report with `seikika-dir: target/debug` (line
-      112), and actions/report/action.yml:28-34 is the `mode` input that
-      defaults to `ci`. actions/report/run.sh:25 turns that into `--baseline …
-      --ci`, and .seikika/README.md:98-99 says CI also fails when an
-      improvement isn't recorded. ci.yml:78-82 is the `seikika tools install
-      .seikika --via pip` and `seikika doctor .seikika` step.
-      packages/openssf-scorecard/README.md:32 and 51-55 are the `--local` and
-      refresh notes. maintainer-sdlc.md:64 still reads "report, not yet a
-      gate", and seikika-for-seikika.md:223 says "built and gating".
-      .seikika/seikika.yaml:390-391 is `tool: ruff` and `version: 0.14.0`.
-      scripts/ci-tools.sh:9-11 checks SHA-256, and
-      examples/repo-portal-starter/README.md:3-6 is the action pilot repos
-      use.
+      against the cited sources. The rust job in .github/workflows/ci.yml
+      invokes actions/report/action.yml with the already built binaries. Its
+      default CI mode rejects regressions and stale or missing baselines.
+      .seikika/README.md documents local reproduction. The stale wording in
+      docs/design/maintainer-sdlc.md was corrected during this review.
   - criterion: complete
     verdict: pass
     reason: >-
-      The four verdicts match the sources. executable-exit holds because the
-      stage's checks (.seikika/sdlc/stages/maintainer.yaml:108) include
-      ci.yml, whose ratchet step fails on regressions and on a stale baseline.
-      agent-can-complete holds even though maintainer-sdlc.md lags.
-      seikika-for-seikika.md:17, a listed doc, links .seikika/README.md, which
-      gives the commands and tool pins (README:80-97). reuses-artifacts is
-      right too. With `seikika-dir` set, the action skips its own `cargo
-      build` (action.yml:119-122 run only when seikika-dir is empty). I found
-      no missed failure.
+      The assessment covers all six criteria, including the declared evidence
+      in .seikika/sdlc/stages/maintainer.yaml and the reusable pins in
+      scripts/ci-tools.sh. It distinguishes a functioning CI gate from
+      documentation and timing gaps.
   - criterion: reproducible
     verdict: pass
     reason: >-
-      Each verdict rests on a step, an input default or a line of text that a
-      second assessor can read in ci.yml, actions/report/action.yml and
-      .seikika/README.md. The doc lag the assessment notes
-      (maintainer-sdlc.md:64) is a matter of fact, not taste, and the
-      assessment names it without letting it decide a verdict.
+      The ratchet and baseline update commands are listed in
+      .seikika/README.md, and the CI action mode is in
+      actions/report/action.yml. The generated .seikika/results.json is the
+      artifact the CI run compares.
   - criterion: actionable
     verdict: pass
     reason: >-
-      There are no fail or unsure verdicts in
-      .seikika/assessments/sdlc-stage-quality/sdlc-stage/maintainer/monitor.yaml,
-      so no suggestions are needed.
-summary: >-
-  A trustworthy assessment. Every line number checks out. The key claim,
-  that the ratchet fails both on a regression and on an unrecorded
-  improvement, is backed by action.yml:28-34, run.sh:25 and
-  .seikika/README.md:98-99. The four passes are the verdicts the sources
-  support.
+      The timing and second reference suggestions name exact destinations. The
+      released consumer pilot in .github/workflows/mise.yml already runs a
+      second ratchet and is concrete evidence to cite in
+      .seikika/sdlc/stages/maintainer.yaml.

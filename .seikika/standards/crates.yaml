@@ -167,7 +167,7 @@ scorecards:
     - name: crate-docs
       level: bronze
       check: entity.crateDoc
-      evidence: "['crate ' + entity.name + ' has no //! crate doc']"
+      evidence: "[entity.path + ' has no //! crate doc']"
       fix: >-
         Start the crate's `src/lib.rs` or `src/main.rs` with `//!` docs: what it
         is and which spec section it implements.
@@ -238,11 +238,13 @@ scorecards:
       dataFrom: runner
       check: entity.clippy.status == 'pass'
       evidence: >-
-        has(entity.clippy) ? entity.clippy.messages : ['no clippy run yet
-        (refresh the crate)']
+        !has(entity.clippy) ? ['no clippy run yet (refresh the crate)'] :
+        entity.clippy.messages.size() > 0 ? entity.clippy.messages : ['clippy
+        status: ' + entity.clippy.status + ' (no diagnostics captured)']
       fix: >-
-        Fix the clippy warnings in the evidence (`cargo clippy -p <crate>
-        --all-targets`).
+        Run `cargo clippy -p <crate> --all-targets`. Fix the reported warnings
+        or errors. If no diagnostics were captured, check the command output for
+        the cause before refreshing the crate.
       rationale: >-
         Clippy's lints catch common bugs and unidiomatic code before review, and
         CI runs it with `-D warnings`, so a warning here would fail the build
@@ -336,8 +338,9 @@ scorecards:
         [string(entity.unwraps) + ' unwrap/expect calls in ' +
         string(entity.codeLines) + ' lines']
       fix: >-
-        At most one unwrap/expect per 100 lines outside tests: return errors or
-        document the invariant.
+        To reach one counted unwrap or expect per 100 source lines, replace
+        panic-on-error calls outside tests with error propagation or explicit
+        handling of the failure.
       rationale: >-
         Each unwrap or expect outside tests panics if its assumption fails,
         crashing the process instead of returning an error the caller can

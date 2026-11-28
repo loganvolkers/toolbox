@@ -58,11 +58,12 @@ pub fn stats(runs: &[Value]) -> Value {
         .count();
     // A run that passed on a later attempt failed on its first: counting it keeps a re-run from
     // hiding a failure from the fail rate.
-    let passed_on_retry = decided
+    let retried = |r: &Value| r["run_attempt"].as_u64().unwrap_or(1) > 1;
+    let first_try_failures: Vec<_> = decided
         .iter()
-        .filter(|r| !FAILED.contains(&conclusion(r).as_str()))
-        .filter(|r| r["run_attempt"].as_u64().unwrap_or(1) > 1)
-        .count();
+        .copied()
+        .filter(|r| FAILED.contains(&conclusion(r).as_str()) || retried(r))
+        .collect();
     let streak = decided
         .iter()
         .take_while(|r| FAILED.contains(&conclusion(r).as_str()))
@@ -79,7 +80,19 @@ pub fn stats(runs: &[Value]) -> Value {
         // would otherwise lower the rate unnoticed.
         "cancelled": completed.iter().filter(|r| conclusion(r) == "cancelled").count(),
         "failRate": pct(failed, decided.len()),
-        "firstTryFailRate": pct(failed + passed_on_retry, decided.len()),
+        "firstTryFailRate": pct(first_try_failures.len(), decided.len()),
+        "firstTryFailedRuns": first_try_failures
+            .into_iter()
+            .filter_map(|r| {
+                let url = r["html_url"].as_str()?;
+                Some(if retried(r) {
+                    format!("{url}/attempts/1")
+                } else {
+                    url.to_owned()
+                })
+            })
+            .take(5)
+            .collect::<Vec<_>>(),
         // Where to start: the newest failed runs, so the evidence names runs a reader can open.
         "failedRuns": decided
             .iter()
@@ -158,7 +171,7 @@ mod tests {
 
     #[test]
     fn cancelled_runs_and_reruns() {
-        let runs = vec![
+        let mut runs = vec![
             run(
                 "cancelled",
                 1,
@@ -168,6 +181,7 @@ mod tests {
             run("success", 2, "2026-01-01T00:00:00Z", "2026-01-01T00:02:00Z"),
             json!({"status": "in_progress"}),
         ];
+        runs[1]["html_url"] = json!("https://github.com/o/r/actions/runs/2");
         let s = stats(&runs);
         assert_eq!(
             (
@@ -178,6 +192,11 @@ mod tests {
             (Some(0), Some(1), Some(50))
         );
         assert_eq!(s["failingStreak"], 0);
+        assert_eq!(s["failedRuns"], json!([]));
+        assert_eq!(
+            s["firstTryFailedRuns"],
+            json!(["https://github.com/o/r/actions/runs/2/attempts/1"])
+        );
         assert_eq!(
             s["firstTryFailRate"], 100,
             "the only decided run passed on its second attempt"

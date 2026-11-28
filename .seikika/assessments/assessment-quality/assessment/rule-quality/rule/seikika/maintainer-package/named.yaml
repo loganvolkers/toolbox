@@ -1,43 +1,36 @@
 apiVersion: seikika.com/assessment/v1
 entity: assessment:rule-quality/rule:seikika/maintainer-package/named
 rubric: assessment-quality
-subjectHash: 378d9b183770
-assessor: {kind: agent, name: cursor-reviewer-35, model: claude-opus-5.5}
-at: 2026-11-25
+subjectHash: 3db654f99340
+rubricHash: e30700fc6322cf9f05a301bb4638d6708e9f5eb5aea0281911229ce75bd37bf7
+assessor: {kind: agent, name: Codex, model: GPT-6}
+at: 2026-11-28
 verdicts:
   - criterion: supported
     verdict: pass
     reason: >-
-      .seikika/standards/packages.yaml:63-72 is the named rule: the check is
-      name != '', the evidence is the name or 'no name' at line 66, and the
-      rationale says an unnamed manifest cannot be depended on or told apart.
-      npm.rs:19 stores the trimmed name string. The unsafe fixture is pinned
-      at .seikika/tests/standards.test.yaml:552-554 as ['no name'].
-      package-standards.md:21 and :63 put a set name at bronze, and D76 line 9
-      says bronze is a name, a private package or a version. A non-empty name
-      such as "My App" satisfies the check as written.
+      I checked the claims in
+      .seikika/assessments/rule-quality/rule/seikika/maintainer-package/named.yaml
+      against the cited sources. crates/seikika-connector-workspace/src/npm.rs
+      reads a trimmed name, and .seikika/standards/packages.yaml checks only
+      for a nonempty string. That supports the assessment’s distinction
+      between identity presence and npm validation.
   - criterion: complete
     verdict: pass
     reason: >-
-      Failing measures-intent is the right reading of the fix and the
-      rationale, which both talk about an npm identity, against a check that
-      accepts any non-empty string. hard-to-game stays a pass because writing
-      a real short name is what the rule asks. The fix names the file and
-      field, and bronze is sourced.
+      The assessment covers an invalid nonempty name, the missing-name
+      diagnostic, the prescribed field and the bronze requirement in
+      docs/design/package-standards.md.
   - criterion: reproducible
     verdict: pass
     reason: >-
-      The fail follows from packages.yaml:65 against npm.rs:19. A second
-      assessor comparing the check with the rationale's "depended on" claim
-      reaches the same split: the grammar gap is measures-intent, and a
-      placeholder name still does what the rule's name asks.
+      crates/seikika-connector-workspace/src/npm.rs and
+      .seikika/tests/standards.test.yaml let a second reviewer reproduce the
+      distinction between an absent name and one the static rule does not
+      validate.
   - criterion: actionable
     verdict: pass
     reason: >-
-      Checking a nameOk fact against npm's name grammar, as the suggestion
-      says, would make "My App" fail the rule. That is the change that flips
-      measures-intent. The other three verdicts are passes.
-summary: >-
-  The named assessment is sound. The check is a non-empty string, the
-  design and the rationale talk about an npm identity, and the suggestion
-  would close that gap. All four review criteria pass.
+      Checking package-name syntax would address the measured-intent finding
+      in .seikika/standards/packages.yaml, with fixtures for invalid and
+      scoped names.

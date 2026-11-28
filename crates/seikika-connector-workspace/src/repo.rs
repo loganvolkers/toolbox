@@ -22,6 +22,13 @@ pub(crate) fn readme_path(paths: &[String]) -> Option<&str> {
         .iter()
         .find(|p| readme_entrypoint(p))
         .or_else(|| {
+            [".github/", "docs/"].into_iter().find_map(|dir| {
+                paths
+                    .iter()
+                    .find(|p| p.strip_prefix(dir).is_some_and(readme_entrypoint))
+            })
+        })
+        .or_else(|| {
             paths
                 .iter()
                 .find(|p| !p.contains('/') && p.to_ascii_lowercase().starts_with("readme"))
@@ -29,10 +36,40 @@ pub(crate) fn readme_path(paths: &[String]) -> Option<&str> {
         .map(String::as_str)
 }
 
+fn readme_words(path: &str, text: &str) -> usize {
+    use pulldown_cmark::{Event, Options, Parser, Tag, TagEnd};
+
+    let extension = Path::new(path).extension().and_then(|ext| ext.to_str());
+    if extension.is_some_and(|ext| {
+        !["md", "markdown"]
+            .iter()
+            .any(|md| ext.eq_ignore_ascii_case(md))
+    }) {
+        return text.split_whitespace().count();
+    }
+
+    let mut ignored = 0;
+    let mut words = 0;
+    for event in Parser::new_ext(text, Options::ENABLE_YAML_STYLE_METADATA_BLOCKS) {
+        match event {
+            Event::Start(Tag::CodeBlock(_) | Tag::Image { .. }) => ignored += 1,
+            Event::End(TagEnd::CodeBlock | TagEnd::Image) => ignored -= 1,
+            Event::Text(prose) if ignored == 0 => {
+                words += prose
+                    .split_whitespace()
+                    .filter(|part| part.chars().any(char::is_alphanumeric))
+                    .count();
+            }
+            _ => {}
+        }
+    }
+    words
+}
+
 pub(crate) fn license_paths(paths: &[String]) -> impl Iterator<Item = &str> {
     paths.iter().map(String::as_str).filter(|path| {
         !path.contains('/')
-            && ["license", "copying"].iter().any(|prefix| {
+            && ["license", "licence", "copying"].iter().any(|prefix| {
                 path.to_ascii_lowercase()
                     .strip_prefix(prefix)
                     .is_some_and(|suffix| suffix.is_empty() || suffix.starts_with(['.', '-', '_']))
@@ -150,7 +187,7 @@ pub(crate) fn basics<E>(
         None => None,
     };
     let readme_words = match readme {
-        Some(path) => read(path)?.map_or(0, |text| text.split_whitespace().count()),
+        Some(path) => read(path)?.map_or(0, |text| readme_words(path, &text)),
         None => 0,
     };
     let mut owners: Vec<String> = codeowners
@@ -330,11 +367,26 @@ mod tests {
     }
 
     #[test]
+    fn readme_fallback_counts_markdown_prose_without_badges_or_code() {
+        let files = vec!["docs/README.md".into(), "README-notes.md".into()];
+        let facts = basics("example", &files, |path| {
+            assert_eq!(path, "docs/README.md");
+            Ok::<_, ()>(Some(
+                "# Getting started\n\nRun the application.\n\n[![Build status](badge.svg)](build)\n\n<!-- internal note -->\n\n```sh\nrun this example\n```\n".into(),
+            ))
+        })
+        .unwrap();
+        assert_eq!(facts["readme"], "docs/README.md");
+        assert_eq!(facts["readmeWords"], 5);
+        assert_eq!(facts["readmeEntrypoint"], false);
+    }
+
+    #[test]
     fn empty_copying_does_not_mask_the_license() {
-        let files = vec!["COPYING".into(), "LICENSE".into()];
+        let files = vec!["COPYING".into(), "LICENCE".into()];
         let facts = basics("example", &files, |path| {
             Ok::<_, ()>(Some(
-                if path == "LICENSE" {
+                if path == "LICENCE" {
                     "reuse terms"
                 } else {
                     " "
@@ -343,7 +395,7 @@ mod tests {
             ))
         })
         .unwrap();
-        assert_eq!(facts["license"], "LICENSE");
+        assert_eq!(facts["license"], "LICENCE");
         assert_eq!(facts["licenseHasContent"], true);
     }
 

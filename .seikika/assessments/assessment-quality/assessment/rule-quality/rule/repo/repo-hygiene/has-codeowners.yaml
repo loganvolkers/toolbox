@@ -1,40 +1,37 @@
 apiVersion: seikika.com/assessment/v1
 entity: assessment:rule-quality/rule:repo/repo-hygiene/has-codeowners
 rubric: assessment-quality
-subjectHash: ab957dc63f70
-assessor: {kind: agent, name: cursor-reviewer-18, model: claude-opus-5.5}
-at: 2026-11-25
+subjectHash: 906bb9dfdefb
+rubricHash: e30700fc6322cf9f05a301bb4638d6708e9f5eb5aea0281911229ce75bd37bf7
+assessor: {kind: agent, name: Codex, model: GPT-6}
+at: 2026-11-28
 verdicts:
   - criterion: supported
     verdict: pass
     reason: >-
-      The citations in
+      I checked the claims in
       .seikika/assessments/rule-quality/rule/repo/repo-hygiene/has-codeowners.yaml
-      hold. In examples/repo-portal-starter/seikika.yaml the check is at 105
-      and the fix and rationale at 107-110. In
-      crates/seikika-connector-workspace/src/repo.rs, 66-72 sets `codeowners`
-      whenever the file exists, `parse_codeowners` (37-51) returns `[]` for an
-      empty file, and 10-11 lists GitHub's three locations in order. The four
-      fixture repos (fixtures/workspace.ndjson) have no empty CODEOWNERS. One
-      line is off: the evidence is at seikika.yaml:106, not :105.
+      against the cited sources. The connector still records an existing
+      CODEOWNERS with an empty rules array in
+      crates/seikika-connector-workspace/src/repo.rs. The old existence-only
+      check failed to differentiate that case, and the starter rule now
+      requires a rule with an owner.
   - criterion: complete
     verdict: pass
     reason: >-
-      The verdicts are right. An empty or comment-only file passes and routes
-      no reviewer, so measures-intent and hard-to-game fail. The fix
-      (seikika.yaml:107) passes as written, and there is no number.
+      The assessment covers existence versus usable ownership, the three
+      supported paths, the remediation and its bronze placement. The
+      declarations agree with examples/repo-portal-starter/seikika.yaml.
   - criterion: reproducible
     verdict: pass
     reason: >-
-      Each verdict follows from `has(entity.codeowners)` (seikika.yaml:105)
-      and repo.rs:66-72, which `touch .github/CODEOWNERS` would confirm.
+      The empty-file behavior is visible in
+      crates/seikika-connector-workspace/src/repo.rs and is now exercised in
+      examples/repo-portal-starter/tests/standards.test.yaml alongside
+      populated files.
   - criterion: actionable
     verdict: pass
     reason: >-
-      Requiring a rule with an owner (`rules.exists(r, r.owners.size() > 0)`)
-      rejects the empty file, which flips both fails. The empty-file fixture
-      would pin it.
-summary: >-
-  An accurate, well-grounded assessment. The empty-CODEOWNERS route is
-  real and the suggestion closes it. The only flaw is an off-by-one line
-  for the evidence.
+      The suggested exists predicate and distinct evidence were applied in
+      examples/repo-portal-starter/seikika.yaml. The fix now explicitly
+      requires an owned rule.

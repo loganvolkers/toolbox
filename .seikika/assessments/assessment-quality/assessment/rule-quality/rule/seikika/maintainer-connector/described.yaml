@@ -1,47 +1,38 @@
 apiVersion: seikika.com/assessment/v1
 entity: assessment:rule-quality/rule:seikika/maintainer-connector/described
 rubric: assessment-quality
-subjectHash: e9f3c0220641
-assessor: {kind: agent, name: cursor-reviewer-10, model: claude-opus-5.5}
-at: 2026-11-25
+subjectHash: 350ffc345717
+rubricHash: e30700fc6322cf9f05a301bb4638d6708e9f5eb5aea0281911229ce75bd37bf7
+assessor: {kind: agent, name: Codex, model: GPT-6}
+at: 2026-11-28
 verdicts:
   - criterion: supported
     verdict: pass
     reason: >-
-      The reasons' citations in
+      I checked the claims in
       .seikika/assessments/rule-quality/rule/seikika/maintainer-connector/described.yaml
-      hold. connectors.yaml:79 is the check, 80-82 the two-way evidence and
-      83-88 the fix and rationale. connectors.rs:34 and 94-117 read the `//!`
-      block of main.rs, falling back to lib.rs. gitlab main.rs:1-19 is a
-      substantive doc. standards.test.yaml:410-415 pins "Cargo.toml has no
-      description". A scratch crate with `description = "x"` and `//! x.` gave
-      descriptionChars 1 and crateDoc true. D73 and connector-standards.md:20
-      place it at bronze.
+      against the cited sources.
+      crates/seikika-connector-workspace/src/connectors.rs:96-117 selects the
+      main source ahead of the library and joins leading crate documentation.
+      .seikika/standards/connectors.yaml checks that and a nonempty Cargo
+      description.
   - criterion: complete
     verdict: pass
     reason: >-
-      Both fails follow from connectors.rs:33-34: any non-empty description
-      and any `//!` line pass. The thin-main.rs case is real because crate_doc
-      prefers main.rs (connectors.rs:98-99). package_field only reads a
-      single-line `description = "` (connectors.rs:60-80), so
-      `description.workspace = true` would fail an honest crate. That is
-      another measures-intent route, but the verdict is already fail.
+      The assessment distinguishes minimum presence, usefulness, the two
+      separate diagnostics, and the bronze requirement in
+      docs/design/connector-standards.md.
   - criterion: reproducible
     verdict: pass
     reason: >-
-      The verdicts rest on code and a scratch run that any assessor can
-      repeat.
+      crates/seikika-connector-workspace/src/connectors.rs:96-117 and
+      .seikika/standards/connectors.yaml allow a reviewer to trace a thin
+      binary wrapper and a short description.
+      .seikika/tests/standards.test.yaml checks the missing-description
+      result.
   - criterion: actionable
     verdict: pass
     reason: >-
-      Requiring the doc to name a documentedKind and reading lib.rs behind a
-      thin main.rs closes the measures-intent case. A minimum length closes
-      the one-character pass. The hard-to-game suggestion cites
-      docs/design/thresholds.md:38, but the maintainer-site `titled` row is
-      line 39 (38 is `tests-pass`); the precedent it names is right.
-summary: >-
-  The two fails and two passes are correct and grounded in connectors.rs
-  and connectors.yaml, and the scratch result reproduces. A suggestion
-  cites thresholds.md:38 for the site title floor, which is at line 39. An
-  unparsed `description.workspace = true` is a further false fail the
-  assessment could have named.
+      Reading documentation from a thin wrapper’s library and requiring
+      description content tied to record kinds would address the two gaps
+      described against .seikika/standards/connectors.yaml.

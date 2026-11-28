@@ -1,66 +1,40 @@
 apiVersion: seikika.com/assessment/v1
 entity: assessment:rule-quality/rule:seikika/maintainer-ci-reliability/fail-rate-under-20
 rubric: assessment-quality
-subjectHash: 03a062f3cd75
-assessor: {kind: agent, name: cursor-reviewer-23, model: claude-opus-5.5}
-at: 2026-11-25
+subjectHash: bd86cc738e1e
+rubricHash: e30700fc6322cf9f05a301bb4638d6708e9f5eb5aea0281911229ce75bd37bf7
+assessor: {kind: agent, name: Codex, model: GPT-6}
+at: 2026-11-28
 verdicts:
   - criterion: supported
     verdict: fail
     reason: >-
-      Most citations in
+      I checked the claims in
       .seikika/assessments/rule-quality/rule/seikika/maintainer-ci-reliability/fail-rate-under-20.yaml
-      hold. In crates/seikika-connector-github/src/runs.rs, passed_on_retry is
-      59-65, firstTryFailRate 82, cancelled 78-80 and failedRuns 84-89 (failed
-      conclusions only). In
-      crates/seikika-connector-workspace/src/workflows.rs, masks_exit's
-      literal list is 106-112 and skipped_on_default 114-128. Also correct are
-      .seikika/fixtures/github-actions.ndjson:2 (slow.yml, firstTryFailRate
-      40, failedRuns []), .seikika/tests/standards.test.yaml:181-186,
-      packages/github-actions/seikika-package.yaml:26-32 and
-      docs/design/thresholds.md:31. The exception is the citation for the
-      check itself:
-      packages/github-actions/fragments/github-actions.yaml:349-352 is the
-      scorecard's appliesTo, `rules:` and the start of main-not-stuck-red.
-      fail-rate-under-20 is 386-409, with its check at 389. That breaks the
-      summary's claim that the line numbers were updated.
+      against the cited sources. The assessment cites
+      packages/github-actions/fragments/github-actions.yaml:349-352 as the
+      first-attempt check. Those lines introduce the rules and the streak
+      rule. The first-attempt predicate appears at :386-389.
     suggestion: >-
-      Cite packages/github-actions/fragments/github-actions.yaml:386-389 for
-      the rule and its check (fix 397-404).
+      Correct the rule location while retaining the separately supported
+      run-statistics findings.
   - criterion: complete
     verdict: pass
     reason: >-
-      The verdicts match the sources. hard-to-game fails correctly: masks_exit
-      matches only the four strings at workflows.rs:109, so `|| echo` passes,
-      and skipped_on_default (workflows.rs:124-127) only sees `!=` tests on
-      ref or ref_name. fix-leads-to-pass fails correctly: the fix says "Open
-      the failed runs in the evidence" (github-actions.yaml:398), but
-      failedRuns filters on FAILED (runs.rs:86), so slow.yml's evidence names
-      no run. Two more routes exist: excluding cancelled runs (runs.rs:80),
-      and narrowing `on:` so a flaky workflow never runs on main, which
-      github-actions.yaml:382 admits for still-running. Both only add to a
-      verdict that already fails.
+      The assessment covers the retry-aware calculation, limits of visibility,
+      missing run links for recovered attempts and the provenance of the
+      bronze bar. crates/seikika-connector-github/src/runs.rs:59-89
+      distinguishes the rate calculation from the evidence list.
   - criterion: reproducible
     verdict: pass
     reason: >-
-      Each verdict rests on code a second assessor can read: the literal list
-      at workflows.rs:109, the FAILED filter at runs.rs:86, and the fixture
-      row at .seikika/fixtures/github-actions.ndjson:2 that the test at
-      .seikika/tests/standards.test.yaml:185-187 pins as a fail. The 20% is
-      stated and labelled "Chosen, anchored to a measurement" at
-      docs/design/thresholds.md:31, so threshold-justified isn't taste.
+      .seikika/fixtures/github-actions.ndjson and
+      crates/seikika-connector-github/src/runs.rs:82-89 allow another reader
+      to verify that a high first-attempt rate can lack a failed run link.
   - criterion: actionable
     verdict: pass
     reason: >-
-      The hard-to-game suggestion treats any `||` without a non-zero exit as
-      masking, and evaluates `if:` on a push to the default branch. That
-      closes both routes the reason names at workflows.rs:106-128. The
-      fix-leads-to-pass suggestion adds runs that passed on retry to the
-      evidence (runs.rs:84-89), so slow.yml's evidence would name runs to
-      open. Each would change its own verdict.
-summary: >-
-  The verdicts are right and each suggestion would change its verdict.
-  Both fails reproduce from runs.rs, workflows.rs and the slow.yml
-  fixture. One citation is stale: the rule's check is at
-  packages/github-actions/fragments/github-actions.yaml:389, not 349-352,
-  which is main-not-stuck-red, so supported fails on that line number.
+      Adding evidence for unsuccessful first attempts and improving visibility
+      coverage would address the actionable gaps in
+      crates/seikika-connector-github/src/runs.rs and
+      crates/seikika-connector-workspace/src/workflows.rs.

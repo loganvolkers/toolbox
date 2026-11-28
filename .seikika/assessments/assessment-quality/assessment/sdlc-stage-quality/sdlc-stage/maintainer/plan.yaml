@@ -1,50 +1,38 @@
 apiVersion: seikika.com/assessment/v1
 entity: assessment:sdlc-stage-quality/sdlc-stage:maintainer/plan
 rubric: assessment-quality
-subjectHash: dda281f2cb14
-assessor: {kind: agent, name: cursor-reviewer-21, model: claude-opus-5.5}
-at: 2026-11-25
+subjectHash: 4882e3500c9d
+rubricHash: e30700fc6322cf9f05a301bb4638d6708e9f5eb5aea0281911229ce75bd37bf7
+assessor: {kind: agent, name: Codex, model: GPT-6}
+at: 2026-11-28
 verdicts:
   - criterion: supported
     verdict: pass
     reason: >-
-      Every citation in
+      I checked the claims in
       .seikika/assessments/sdlc-stage-quality/sdlc-stage/maintainer/plan.yaml
-      holds. .seikika/sdlc/stages/maintainer.yaml:3-12 is the plan stage, with
-      `checks: []` at line 10. .github/workflows/ci.yml:30-31 is the
-      `decision-id.py --self-test` step. .seikika/standards/docs.yaml:125-128
-      is `cited-decisions-exist`, which checks `entity.missingDecisions`.
-      docs/decisions/README.md:5 gives the mint-and-never-edit procedure.
-      scripts/decision-id.py:10-15 imports only `__future__`, argparse,
-      secrets, sys and time.
+      against the cited sources. The stage in
+      .seikika/sdlc/stages/maintainer.yaml still declares no checks. The CI
+      self-test in .github/workflows/ci.yml and cited-decisions-exist in
+      .seikika/standards/docs.yaml cover ID validity and existing citations
+      independently of the stage exit.
   - criterion: complete
     verdict: pass
     reason: >-
-      The executable-exit fail is right. ULID self-test and
-      cited-decisions-exist are the only decision checks, and rg finds no
-      Decision kind or any rule in .seikika/standards/ that ties a change to a
-      new decision file. The other three passes match the stage. It lists no
-      commands and builds nothing, and docs/decisions/README.md:5 plus
-      AGENTS.md tell an agent how to mint, add and link a decision without a
-      person or secret.
+      The assessment checks all six criteria. docs/decisions/README.md
+      supplies an agent-operable Markdown procedure, while the stage record
+      supplies no executable reference for the complete exit.
   - criterion: reproducible
     verdict: pass
     reason: >-
-      The fail rests on `checks: []` (maintainer.yaml:10) and on what the two
-      existing checks test, which anyone can read in ci.yml:30-31 and
-      docs.yaml:125-128. The passes rest on the absence of builds or secrets,
-      which is just as checkable.
+      Run the ID self-test as shown in .github/workflows/ci.yml, then compare
+      its scope with the declared stage exit in
+      .seikika/sdlc/stages/maintainer.yaml and the documentation rule in
+      .seikika/standards/docs.yaml.
   - criterion: actionable
     verdict: pass
     reason: >-
-      The executable-exit suggestion in
-      .seikika/assessments/sdlc-stage-quality/sdlc-stage/maintainer/plan.yaml
-      narrows the exit criterion to something checkable and lists checks that
-      would fail when it isn't met: decision-id.py --self-test, the
-      maintainer-docs ratchet and a new uncited-decision rule. With a
-      non-empty `checks:` that fails on a missed decision, the verdict would
-      turn to pass.
-summary: >-
-  A sound assessment. Every citation lands, the one fail (no check
-  enforces "a decision file and the owning doc updated") is correct, and
-  the suggestion would make it pass. Nothing was missed.
+      The suggestions identify a checkable decision-file and owning-doc
+      relationship along with a concrete place to wire and time it.
+      docs/decisions/README.md already states where new files and owning-doc
+      changes belong.

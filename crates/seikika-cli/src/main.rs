@@ -1225,6 +1225,18 @@ fn assess_command(what: AssessWhat) -> ExitCode {
     }
 }
 
+fn undescribed_mcp_inputs(properties: &serde_json::Map<String, serde_json::Value>) -> Vec<&str> {
+    properties
+        .iter()
+        .filter(|(_, property)| {
+            property["description"]
+                .as_str()
+                .is_none_or(|s| s.trim().is_empty())
+        })
+        .map(|(name, _)| name.as_str())
+        .collect()
+}
+
 /// One `command` record per CLI (sub)command and one `mcp-tool` record per built-in MCP tool.
 fn describe() -> ExitCode {
     use serde_json::{Value, json};
@@ -1272,11 +1284,7 @@ fn describe() -> ExitCode {
             .as_object()
             .cloned()
             .unwrap_or_default();
-        let undescribed: Vec<&String> = props
-            .iter()
-            .filter(|(_, p)| p.get("description").is_none())
-            .map(|(k, _)| k)
-            .collect();
+        let undescribed = undescribed_mcp_inputs(&props);
         let name = t["name"].as_str().unwrap_or_default();
         let cli: Vec<&str> = CLI_MCP_TOOLS
             .iter()
@@ -1293,6 +1301,21 @@ fn describe() -> ExitCode {
         println!("{line}");
     }
     ExitCode::SUCCESS
+}
+
+#[cfg(test)]
+#[test]
+fn mcp_input_descriptions_must_contain_text() {
+    let props = serde_json::json!({
+        "blank": {"description": "  "},
+        "missing": {},
+        "number": {"description": 42},
+        "valid": {"description": "Entity identifier"}
+    });
+    assert_eq!(
+        undescribed_mcp_inputs(props.as_object().unwrap()),
+        ["blank", "missing", "number"]
+    );
 }
 
 #[cfg(test)]

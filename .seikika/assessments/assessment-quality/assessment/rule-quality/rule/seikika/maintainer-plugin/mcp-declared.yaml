@@ -1,50 +1,41 @@
 apiVersion: seikika.com/assessment/v1
 entity: assessment:rule-quality/rule:seikika/maintainer-plugin/mcp-declared
 rubric: assessment-quality
-subjectHash: 77934036044b
-assessor: {kind: agent, name: cursor-reviewer-06, model: claude-opus-5.5}
-at: 2026-11-25
+subjectHash: 518bbae193ea
+rubricHash: e30700fc6322cf9f05a301bb4638d6708e9f5eb5aea0281911229ce75bd37bf7
+assessor: {kind: agent, name: Codex, model: GPT-6}
+at: 2026-11-28
 verdicts:
   - criterion: supported
     verdict: pass
     reason: >-
-      Every citation in
+      I checked the claims in
       .seikika/assessments/rule-quality/rule/seikika/maintainer-plugin/mcp-declared.yaml
-      checks out. .seikika/standards/plugins.yaml:119 is the check, 120-122
-      the evidence, 126-128 the vendor lock-in rationale and 75-76 the card's
-      "declares the MCP server portably".
-      crates/seikika-connector-workspace/src/plugins.rs:42-43 compares only
-      the `$schema` string, and 74-76 returns `commandToken: true` when
-      `mcpServers` is missing. The 1.0.0 spec
-      (https://github.com/agentplugins/agent-plugins-spec/blob/main/spec/1.0.0.md)
-      says this. §6.2: an absent fixed location is not an error. §7.2.1: an
-      empty `mcpServers` object is valid, `mcpServers` is required, and each
-      server needs `type` with no foreign field.
-      .seikika/tests/standards.test.yaml:689-694 pins 'no mcp.json'. D81 and
-      docs/design/plugin-standards.md:22,46 put it at silver.
+      against the cited sources. The one-field malformed manifest and the
+      missing mcpServers branch follow directly from
+      crates/seikika-connector-workspace/src/plugins.rs. The existence
+      requirement and its stated portability goal are both visible in
+      .seikika/standards/plugins.yaml.
   - criterion: complete
     verdict: pass
     reason: >-
-      The verdicts are right. measures-intent fails because the check never
-      looks for the vendor config its rationale warns about (plugins.rs:24-27,
-      42-43). hard-to-game fails because a one-line `$schema` file passes both
-      silver rules (plugins.rs:74-76). The fix names the file and the schema,
-      which is all the check reads. There is no number, and D81 sets the
-      level.
+      The assessment distinguishes optional MCP support from valid
+      declarations and covers both the silver requirement and the adjoining
+      command rule in .seikika/standards/plugins.yaml.
   - criterion: reproducible
     verdict: pass
     reason: >-
-      Both fails follow from plugins.rs:42-43 and 74-76 read against spec §6.2
-      and §7.2.1, with no judgement call.
+      The complete one-field JSON can be placed beside the existing valid
+      plugin manifest template in plugins/seikika-operator/plugin.json. The
+      connector in crates/seikika-connector-workspace/src/plugins.rs gives
+      sufficient detail to predict and check all three facts.
   - criterion: actionable
-    verdict: pass
+    verdict: fail
     reason: >-
-      Validating against the mcp schema rejects the one-liner, which flips
-      hard-to-game. Passing a plugin with no mcp.json unless a vendor MCP
-      config exists aligns the check with its rationale, which flips
-      measures-intent.
-summary: >-
-  Accurate and well sourced. The rule rewards an mcp.json with the right
-  `$schema` string, never detects the vendor config it warns about, fails
-  skills-only plugins the spec allows, and a one-line file reaches silver.
-  The two suggestions would flip both fails.
+      The proposed vendor configuration check leaves behavior unspecified when
+      both portable and vendor declarations exist, a case identified in the
+      assessment. .seikika/standards/plugins.yaml gives no reconciliation
+      policy for those declarations.
+    suggestion: >-
+      State which combinations should pass and how an empty portable
+      declaration should be handled alongside a populated vendor declaration.

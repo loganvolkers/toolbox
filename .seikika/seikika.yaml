@@ -210,6 +210,7 @@ connectors:
           - alerts
           - monitorAssessment
           - otlpTestbed
+          ci: [otlpTestbed]
         - kind: testing-contract
           globs: [.seikika/testing/*.yaml]
           paths: [specification, implementation, tests, fixtures, ci]

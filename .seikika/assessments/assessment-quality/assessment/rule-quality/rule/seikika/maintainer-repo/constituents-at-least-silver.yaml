@@ -1,57 +1,36 @@
 apiVersion: seikika.com/assessment/v1
 entity: assessment:rule-quality/rule:seikika/maintainer-repo/constituents-at-least-silver
 rubric: assessment-quality
-subjectHash: 87dc0c9a4373
-assessor: {kind: agent, name: cursor-reviewer-13, model: claude-opus-5.5}
-at: 2026-11-25
+subjectHash: 32023fcc26e4
+rubricHash: e30700fc6322cf9f05a301bb4638d6708e9f5eb5aea0281911229ce75bd37bf7
+assessor: {kind: agent, name: Codex, model: GPT-6}
+at: 2026-11-28
 verdicts:
   - criterion: supported
     verdict: pass
     reason: >-
-      The citations in
+      I checked the claims in
       .seikika/assessments/rule-quality/rule/seikika/maintainer-repo/constituents-at-least-silver.yaml
-      check out. crates/seikika-derive/src/lib.rs:1296-1305 is `level_rank`, a
-      position in the card's own `levels`.
-      packages/github-actions/fragments/github-actions.yaml:552 is `levels:
-      [bronze]`, with the quoted rationale at 543-544.
-      .seikika/standards/repository.yaml:170-175 is the silver fix and
-      rationale. The four live evidence keys for repo:seikika/seikika in
-      .seikika/results.json hash (FNV-1a,
-      crates/seikika-cli/src/causes.rs:61-73) to exactly
-      `maintainer-action-deps is bronze`, `maintainer-skill is bronze`,
-      `maintainer-dependency is bronze` and `maintainer-example is bronze`.
-      All 15 maintainer-action-deps entities are bronze in results.json.
+      against the cited sources. The rank-two predicate in
+      .seikika/standards/repository.yaml still treats a completed one-level
+      constituent as short of silver. The action dependency scorecard in
+      packages/github-actions/fragments/github-actions.yaml has only bronze.
   - criterion: complete
     verdict: pass
     reason: >-
-      All three fails are right. One is the one-level card counted as lagging
-      (lib.rs:1296-1305 against github-actions.yaml:552). Another is the
-      unguarded `repoRollup` (.seikika/seikika.yaml:30-43). The third is a fix
-      that concedes the cap without saying what to do
-      (repository.yaml:170-172). threshold-justified passes on D86 and
-      docs/design/repo-level.md:19-24. One phrase overstates: deleting the
-      card is "the only way to pass at all", though the measures-intent
-      suggestion itself names adding a silver rung. The verdict is the same
-      either way.
+      The assessment covers the structural cap, the behavior of the watch
+      list, actionable versus impossible advice and the minimum-rank policy in
+      docs/design/repo-level.md.
   - criterion: reproducible
     verdict: pass
     reason: >-
-      Every verdict rests on a ladder length, a rank function and the four
-      evidence lines in .seikika/results.json. A second assessor reading
-      github-actions.yaml:552 and repository.yaml:168-172 reaches the same
-      fails.
+      Compare the silver predicate in .seikika/standards/repository.yaml to
+      the counted summaries in crates/seikika-derive/src/lib.rs and the
+      one-level action dependency card. The missing-name case is now tested in
+      .seikika/tests/standards.test.yaml.
   - criterion: actionable
     verdict: pass
     reason: >-
-      Comparing with each card's own top (`c.rank >= 2 || c.rank == c.top`)
-      would remove the false lag that measures-intent and fix-leads-to-pass
-      cite. Making a rollup removal a ratchet regression removes the cheap
-      route hard-to-game names. The interim fix text, naming the two options,
-      would make the fix followable for maintainer-action-deps.
-summary: >-
-  An accurate assessment. Its three fails rest on a one-level card that
-  rank comparison can't satisfy (github-actions.yaml:552,
-  lib.rs:1296-1305) and on a fix that admits the cap. The live evidence
-  hashes match the four cards it names. The only overstatement, "the only
-  way to pass", is contradicted by its own suggestion but changes no
-  verdict.
+      The proposed capped-rank comparison would address the level-cap finding
+      and would change the minimum-rank interpretation documented in
+      docs/design/repo-level.md.

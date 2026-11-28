@@ -1,44 +1,39 @@
 apiVersion: seikika.com/assessment/v1
 entity: assessment:rule-quality/rule:seikika/maintainer-skill/has-example
 rubric: assessment-quality
-subjectHash: 43529361f10a
-assessor: {kind: agent, name: cursor-reviewer-31, model: claude-opus-5.5}
-at: 2026-11-25
+subjectHash: 52be88fefb41
+rubricHash: e30700fc6322cf9f05a301bb4638d6708e9f5eb5aea0281911229ce75bd37bf7
+assessor: {kind: agent, name: Codex, model: GPT-6}
+at: 2026-11-28
 verdicts:
   - criterion: supported
     verdict: pass
     reason: >-
-      The check is entity.codeFences > 0 (.seikika/standards/skills.yaml:145)
-      and the fix asks for a concrete command (skills.yaml:147-149).
-      code_fences increments on every opening fence
-      (crates/seikika-connector-workspace/src/skills.rs:309-320), so an empty
-      pair counts. The evidence string is
-      .seikika/tests/standards.test.yaml:354-355. Silver is skills.yaml:52-53
-      and docs/design/skill-standards.md:92. .seikika/results.json fails
-      has-example on add-permission, add-scorecard, assess-entity, review-plan
-      and seikika-authoring, five skills, and no others.
+      I checked the claims in
+      .seikika/assessments/rule-quality/rule/seikika/maintainer-skill/has-example.yaml
+      against the cited sources.
+      crates/seikika-connector-workspace/src/skills.rs:309-321 counts opening
+      fences without inspecting their contents. .seikika/standards/skills.yaml
+      asks for a concrete command, input, or output, which supports the
+      measured-intent failure.
   - criterion: complete
     verdict: pass
     reason: >-
-      measures-intent and hard-to-game should fail: the fix asks for a
-      command, input or output, and two backtick lines pass the comparison.
-      fix-leads-to-pass is right because any fence clears codeFences > 0.
-      There is no threshold beyond "at least one", and silver is the
-      followable rung. No pass should have been a fail.
+      The assessment covers empty and prose-only blocks, alternate ways to
+      present examples, the explicit repair, and the silver rung defined by
+      docs/design/skill-standards.md:92.
   - criterion: reproducible
     verdict: pass
     reason: >-
-      skills.rs:309-320 counts opening fences with no look at the body. A
-      second assessor fails the same two criteria from that loop and the fix
-      text.
+      crates/seikika-connector-workspace/src/skills.rs:309-321 lets a second
+      assessor trace empty and nonempty fenced inputs, and
+      .seikika/tests/standards.test.yaml pins the missing-fence diagnostic.
   - criterion: actionable
-    verdict: pass
+    verdict: unsure
     reason: >-
-      Requiring a non-blank line, or a command or info string, would make the
-      empty fence fail measures-intent and hard-to-game, which is the
-      suggestion on both. The other two verdicts already pass.
-summary: >-
-  Trustworthy. The fact counts fences, the five live failures are the
-  skills results.json names, and an empty fence is enough to pass. The two
-  fails and the suggestion that a fence must hold a line match the code
-  and the fix.
+      The nonblank-line proposal in the assessment closes the empty case, but
+      the language-marker option can still accept fenced prose.
+      .seikika/standards/skills.yaml asks for concrete content.
+    suggestion: >-
+      Clarify which content test is required and add a prose-only case
+      alongside the empty-fence case.

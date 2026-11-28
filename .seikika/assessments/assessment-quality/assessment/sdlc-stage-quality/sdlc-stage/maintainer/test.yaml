@@ -1,53 +1,45 @@
 apiVersion: seikika.com/assessment/v1
 entity: assessment:sdlc-stage-quality/sdlc-stage:maintainer/test
 rubric: assessment-quality
-subjectHash: 443b5b6e95e6
-assessor: {kind: agent, name: cursor-reviewer-21, model: claude-opus-5.5}
-at: 2026-11-25
+subjectHash: 5620c9c990f1
+rubricHash: e30700fc6322cf9f05a301bb4638d6708e9f5eb5aea0281911229ce75bd37bf7
+assessor: {kind: agent, name: Codex, model: GPT-6}
+at: 2026-11-28
 verdicts:
   - criterion: supported
-    verdict: pass
+    verdict: fail
     reason: >-
-      The citations in
+      I checked the claims in
       .seikika/assessments/sdlc-stage-quality/sdlc-stage/maintainer/test.yaml
-      hold. In .github/workflows/ci.yml, fmt, clippy and test are at 22-24,
-      SEIKIKA_REQUIRE_OPENFGA at 47-52, parity at 38-39, the `cmp` loop at
-      53-60 and `seikika test .seikika` within 61-71.
-      docs/design/maintainer-sdlc.md §5 is a table at lines 81-88, with `go
-      install …openfga@v1.22.1` at line 85. scripts/ci-tools.sh:17-18 is the
-      SHA-256-pinned OpenFGA fetch. crates/seikika-authz/tests/fga.rs:65-67 is
-      the assert message and the `eprintln!("skipping…")`, with the `return`
-      at line 68.
+      against the cited sources. The original assessment says the local
+      prerequisites call for compiling OpenFGA and contain no measured local
+      test time. docs/design/maintainer-sdlc.md now documents the mise-managed
+      binary pinned in mise.toml and records a measured cargo test time. The
+      current stage command still permits skipping authorization integration
+      tests when run without the documented environment flag.
+    suggestion: >-
+      Reassess artifact reuse and fast feedback using the current
+      prerequisites and timing, and distinguish the unguarded stage command
+      from the strict invocation documented for local testing.
   - criterion: complete
     verdict: pass
     reason: >-
-      Each clause of the exit criterion
-      (.seikika/sdlc/stages/maintainer.yaml:32-34) maps to a CI step, so
-      executable-exit passes. The reuses-artifacts fail is right. The stage
-      lists maintainer-sdlc.md (maintainer.yaml:41), and its line 85 has
-      agents compile OpenFGA. The rubric fails a stage when tools are
-      installed by hand (.seikika/standards/sdlc.yaml:417-418). The skip trap
-      is real in three places: fga.rs:61-68,
-      crates/seikika-api/tests/authz.rs:21-26 and
-      crates/seikika-authz/src/openfga.rs:543-546. The assessment names it.
+      The assessment addresses all six stage criteria, including both
+      reference and package fixtures in .github/workflows/ci.yml. Its coverage
+      of the criteria is complete even though two of its conclusions need
+      refreshing.
   - criterion: reproducible
     verdict: pass
     reason: >-
-      The fail rests on one quoted line (maintainer-sdlc.md:85) set against
-      the pinned script CI uses (ci-tools.sh:17-18, ci.yml:44). The passes
-      rest on named CI steps. A second assessor would reach the same verdicts.
+      The stage command can be compared directly with the guarded test step in
+      .github/workflows/ci.yml. crates/seikika-authz/tests/fga.rs documents
+      the missing-binary branch, and docs/design/maintainer-sdlc.md records
+      the local prerequisites and timing.
   - criterion: actionable
     verdict: pass
     reason: >-
-      The reuses-artifacts suggestion in
-      .seikika/assessments/sdlc-stage-quality/sdlc-stage/maintainer/test.yaml
-      replaces the `go install` line with `scripts/ci-tools.sh <dir> openfga`.
-      That removes the from-source build, so the verdict would turn to pass.
-      One caveat: ci-tools.sh is Linux x86_64 only (ci-tools.sh:3), so the doc
-      would also need a release-download line for macOS so that the fix
-      doesn't leave those maintainers without a route.
-summary: >-
-  A trustworthy assessment. The CI line numbers, the skip trap and the `go
-  install` line all check out, and the single reuses-artifacts fail is
-  correct. Its suggestion would flip the verdict, though ci-tools.sh is
-  Linux-only, so the doc change should also cover other platforms.
+      The proposed environment flag directly addresses the skipped-test
+      finding in crates/seikika-authz/tests/fga.rs. The current
+      docs/design/maintainer-sdlc.md already supplies the strict local command
+      and pinned tool setup, so the remaining step is to align the stage
+      command with it.

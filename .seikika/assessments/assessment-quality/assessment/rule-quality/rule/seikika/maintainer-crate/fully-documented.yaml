@@ -1,51 +1,38 @@
 apiVersion: seikika.com/assessment/v1
 entity: assessment:rule-quality/rule:seikika/maintainer-crate/fully-documented
 rubric: assessment-quality
-subjectHash: 30f5ae33ca06
-assessor: {kind: agent, name: cursor-reviewer-07, model: claude-opus-5.5}
-at: 2026-11-25
+subjectHash: 1c30f936b736
+rubricHash: e30700fc6322cf9f05a301bb4638d6708e9f5eb5aea0281911229ce75bd37bf7
+assessor: {kind: agent, name: Codex, model: GPT-6}
+at: 2026-11-28
 verdicts:
   - criterion: supported
     verdict: pass
     reason: >-
-      The citations in
+      I checked the claims in
       .seikika/assessments/rule-quality/rule/seikika/maintainer-crate/fully-documented.yaml
-      hold. `Walker::visit_item` counts only struct, enum, trait, type, const,
-      static and fn items
-      (crates/seikika-connector-workspace/src/rust.rs:293-304), and inherent
-      methods come in at rust.rs:342-347. Nothing visits fields, variants,
-      `pub mod`, trait item fns or macros. `has_doc` accepts `#[doc(hidden)]`
-      (rust.rs:40-42). The evidence format is rust.rs:119-123, and the fixture
-      entry `FieldChange (src/plan.rs:11)` is in
-      .seikika/fixtures/workspace.ndjson. The fix, rationale and links are
-      .seikika/standards/crates.yaml:296, 297-299 and 300-302, and docCoverage
-      is crates.yaml:93-97. In results.json, 8 of 17 crates pass and
-      seikika-connect has 18 undocumented items (45 public, 27 documented in a
-      connector rerun).
+      against the cited sources. The scanner still collects selected item
+      forms in crates/seikika-connector-workspace/src/rust.rs. Blank and
+      hidden-only attributes no longer count after the change made during this
+      review.
   - criterion: complete
     verdict: pass
     reason: >-
-      Both fails are the rubric's named case, an empty doc comment
-      (.seikika/standards/meta.yaml:1165). The measure also overcounts: `pub`
-      items in private modules count (rust.rs:114-118 checks only the
-      keyword). The public-api-documented assessment covers that, and
-      fully-documented's measures-intent is already a fail. 100% is "all", so
-      threshold-justified passes as the rubric's no-number case.
+      The assessment addresses what is missing from the item set, the
+      attribute loophole, the repair, and why the gold target is all counted
+      items. The field and threshold are defined in
+      .seikika/standards/crates.yaml.
   - criterion: reproducible
     verdict: pass
     reason: >-
-      Each verdict follows from rust.rs:40-42, 293-304 and 342-347, which a
-      second assessor can read, with a one-file crate to confirm.
+      Compare the scanner visitor in
+      crates/seikika-connector-workspace/src/rust.rs with the fixture evidence
+      in .seikika/tests/standards.test.yaml. The new scanner test checks both
+      empty text and the hidden directive.
   - criterion: actionable
     verdict: pass
     reason: >-
-      Counting fields, variants, trait items and modules, ignoring
-      `#[doc(hidden)]`, or switching to rustc's `missing_docs` would make the
-      count match "every item". Requiring a non-empty first doc line, with a
-      fixture, closes the empty-`///` route. Each suggestion targets the
-      verdict it is attached to.
-summary: >-
-  A correct assessment. The connector does skip fields, variants, modules
-  and trait items, accepts `#[doc(hidden)]` and an empty `///`, and the
-  live counts (8 of 17 at gold, 18 gaps in seikika-connect) match
-  results.json. The suggestions would fix both fails.
+      The proposed content check was implemented locally. The assessment also
+      names rustc missing_docs as a concrete way to address the public item
+      and reachability gaps left by
+      crates/seikika-connector-workspace/src/rust.rs.

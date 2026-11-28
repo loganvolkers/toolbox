@@ -1,47 +1,35 @@
 apiVersion: seikika.com/assessment/v1
 entity: assessment:rule-quality/rule:seikika/meta-rubric/in-use
 rubric: assessment-quality
-subjectHash: 75eacc71eae8
-assessor: {kind: agent, name: cursor-reviewer-35, model: claude-opus-5.5}
-at: 2026-11-25
+subjectHash: 1ca735db8e44
+rubricHash: e30700fc6322cf9f05a301bb4638d6708e9f5eb5aea0281911229ce75bd37bf7
+assessor: {kind: agent, name: Codex, model: GPT-6}
+at: 2026-11-28
 verdicts:
   - criterion: supported
     verdict: pass
     reason: >-
-      assessments() reads assessment files at
-      crates/seikika-cli/src/model.rs:240-248, and rubric_record keeps those
-      whose rubric field matches at 252-256. The rationale at
-      .seikika/standards/meta.yaml:1114-1116 is that an unused rubric is
-      untried. The file walk does not filter freshness, and
-      docs/design/scorecards-for-scorecards.md:241-246 describes file storage
-      and seikika assess submit into Postgres. assess check is 236-240.
-      thresholds.md:63-67 says assessor identity is a statement in a committed
-      file. The vague rubric's in-use fail is
-      .seikika/tests/standards.test.yaml:986, and rule-quality's in-use pass
-      is 1000-1001. The ratchet comment at meta.yaml:1095 and the bronze row
-      at scorecards-for-scorecards.md:295 say a rubric must be used.
-      target/debug/seikika assess brief --help lists --rubric.
+      I checked the claims in
+      .seikika/assessments/rule-quality/rule/seikika/meta-rubric/in-use.yaml
+      against the cited sources. crates/seikika-cli/src/model.rs counts valid,
+      unambiguous files on the rubric and screens explicit rubric hashes. The
+      assessment correctly describes file-backed usage and distinguishes
+      assessments pushed to a server.
   - criterion: complete
     verdict: pass
     reason: >-
-      Passing measures-intent while naming the stale-file and server-submit
-      gaps is consistent with the rationale, which asks whether a rubric has
-      been used once. The described portals in scorecards-for-scorecards.md:4
-      are file portals. hard-to-game, the fix and the bronze bar match the
-      check and the pins.
+      packages/meta-scoring/fragments/catalog.yaml asks whether a rubric has
+      been tried, and the assessment covers counting, documented limits, the
+      brief’s remediation and the bronze threshold.
   - criterion: reproducible
     verdict: pass
     reason: >-
-      The four passes follow from the file counter, the test pins and the
-      design's storage section. The latent gaps are stated as latent, with the
-      code that makes them so, so a second assessor is not left to guess.
+      crates/seikika-cli/src/model.rs defines the file collection and count,
+      while .seikika/tests/standards.test.yaml demonstrates a rubric with no
+      assessments and one in use.
   - criterion: actionable
     verdict: pass
     reason: >-
-      The assessment has no fail or unsure verdict, so there is no suggestion
-      to apply. That is the actionable case, and it is this file.
-summary: >-
-  The in-use assessment is trustworthy. The counter reads assessment
-  files, the fail and pass pins are the lines it names, and --rubric is a
-  real flag. The stale-file and server-submit limits are in the code and
-  are labeled as latent. All four review criteria pass.
+      Creating a genuine assessment with the target rubric would change the
+      count in crates/seikika-cli/src/model.rs. The original four verdicts
+      pass and contain no attached repair suggestions.

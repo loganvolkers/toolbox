@@ -1,50 +1,37 @@
 apiVersion: seikika.com/assessment/v1
 entity: assessment:rule-quality/rule:seikika/vs-backstage-agent-surface/get-entity-size
 rubric: assessment-quality
-subjectHash: 7d0405d92c2f
-assessor: {kind: agent, name: cursor-reviewer-15, model: claude-opus-5.5}
-at: 2026-11-25
+subjectHash: 97c08581202b
+rubricHash: e30700fc6322cf9f05a301bb4638d6708e9f5eb5aea0281911229ce75bd37bf7
+assessor: {kind: agent, name: Codex, model: GPT-6}
+at: 2026-11-28
 verdicts:
   - criterion: supported
     verdict: pass
     reason: >-
-      Every citation in
+      I checked the claims in
       .seikika/assessments/rule-quality/rule/seikika/vs-backstage-agent-surface/get-entity-size.yaml
-      holds. experiments/backstage-compare/surface.py:175 joins the reply's
-      text and :192 counts its bytes. :191 is the only check on the reply
-      (`mcpGetEntityOk`), and snapshot.py:29-30 leaves it out of SURFACE.
-      gen.py:29-35 gives a component five fields. The rationale is
-      backstage-comparison.yaml:852-854. The `get` arm of `markdown()` is
-      crates/seikika-api/src/mcp.rs:651-665. The 4 KB bar is README.md:52 and
-      ADJUDICATION.md:113. results/r3 and portal/comparisons hold 253 B and
-      580 B.
+      against the cited sources.
+      experiments/backstage-compare/surface.py:173-192 measures text bytes and
+      records a separate nonempty-success flag.
+      experiments/backstage-compare/snapshot.py:30-31 imports the byte count
+      and omits the flag.
   - criterion: complete
     verdict: pass
     reason: >-
-      hard-to-game fails correctly: nothing carried into the record checks
-      that the smaller reply still carries the entity's fields
-      (snapshot.py:29-30). The other three verdicts match the sources. One
-      caveat goes unmentioned. Seikika also returns `structuredContent`
-      (mcp.rs:1037), and surface.py:175 does not count it. The figure is
-      therefore the text block only, which is fair to clients that forward
-      only `content`. That does not change a verdict.
+      .seikika/standards/backstage-comparison.yaml expresses a size-only
+      check, so the assessment correctly identifies payload correctness as the
+      missing guard and grounds the 4 KB bar in
+      experiments/backstage-compare/README.md:52.
   - criterion: reproducible
     verdict: pass
     reason: >-
-      Each verdict rests on code that a second assessor can read: surface.py,
-      snapshot.py, the mcp.rs renderer and the pre-registered README row. The
-      stripped-reply route follows directly from surface.py:191 and
-      snapshot.py:29-30.
+      experiments/backstage-compare/surface.py:173-192 allows a reviewer to
+      reproduce the difference between a response that is small and a response
+      containing the requested fields.
   - criterion: actionable
     verdict: pass
     reason: >-
-      The hard-to-game suggestion asserts owner, system and lifecycle in the
-      reply. It carries `mcpGetEntityOk` into the record and puts it in the
-      check, so a stripped get would fail. That closes the route the reason
-      names.
-summary: >-
-  A trustworthy assessment. Its citations land on the lines it names, and
-  the one fail, size rewarded without content, is what surface.py and
-  snapshot.py show. The suggestion closes that route. It does not mention
-  that the byte count leaves out Seikika's structuredContent, but that
-  caveat changes no verdict.
+      Verifying owner, system and lifecycle and feeding the result through
+      experiments/backstage-compare/snapshot.py would make the suggested
+      size-plus-content condition meaningful.

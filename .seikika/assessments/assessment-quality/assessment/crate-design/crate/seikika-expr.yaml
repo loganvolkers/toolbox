@@ -1,73 +1,36 @@
 apiVersion: seikika.com/assessment/v1
 entity: assessment:crate-design/crate:seikika-expr
 rubric: assessment-quality
-subjectHash: 7d64a9447fd6
-assessor: {kind: agent, name: cursor-cloud-agent, model: claude-opus-5.5}
-at: 2026-11-24
+subjectHash: 2a259585f83f
+rubricHash: e30700fc6322cf9f05a301bb4638d6708e9f5eb5aea0281911229ce75bd37bf7
+assessor: {kind: agent, name: Codex, model: GPT-6}
+at: 2026-11-28
 verdicts:
   - criterion: supported
     verdict: pass
     reason: >-
-      The cited lines say what the reasons claim:
-      crates/seikika-expr/src/lib.rs:1-17, 43-44, 63, 168-197 and 199-215;
-      eval.rs:13, 107, 111, 203 and the test ranges 249-282, 284-291, 293-312,
-      314-336 and 338-360; analysis.rs:13-30, 153 and 190-212;
-      docs/v1-spec.md:89; Cargo.toml:22; the callers at seikika-model
-      validate.rs:13, 779-783 and 812-816, seikika-derive lib.rs:15 and
-      testing.rs:10, seikika-exec check.rs:8, 96-117, 108-116 and 193-200,
-      seikika-api routes.rs:17 and 218, and seikika-cli meta.rs:183 and
-      model.rs:28, 160. The reference portal's emit is at seikika.yaml:237 and
-      its `candidate.` lookups at 273 and 301. The uncited "error mapping in
-      seikika-derive" is at crates/seikika-derive/src/lib.rs:832. Three
-      details are off but change no verdict. The String error is at
-      eval.rs:235, not 234. "No other Cargo.toml names `cel`" is false as
-      written, because three experiments (for example
-      experiments/full-recompute/Cargo.toml:8) do; they are outside the
-      workspace (Cargo.toml:5), so the conclusion holds. And analysis::analyse
-      and required_equalities are reached through `pub mod analysis`
-      (lib.rs:19), not through a re-export.
+      I checked the claims in
+      .seikika/assessments/crate-design/crate/seikika-expr.yaml against the
+      cited sources. crates/seikika-expr/src/lib.rs describes expression
+      checking and evaluation and tests that outputs are available at the
+      postcondition site. crates/seikika-expr/src/eval.rs keeps engine types
+      behind wrappers, consistent with the assessment.
   - criterion: complete
     verdict: pass
     reason: >-
-      I found no failure the sources show that the assessment missed. Every
-      crate that depends on seikika-expr (the Cargo.toml of api, exec, derive,
-      model and cli) is covered by small-contract. No public signature names a
-      cel type: the only pub(crate) cel fields are eval.rs:13 and 111. The
-      per-site table has direct tests for Scorecard, Action, Postcondition,
-      Computed, Options and RefreshScope (lib.rs:153-220). Map has a negative
-      case in crates/seikika-model/tests/cases.json:21. Tuples shares its list
-      with Options (lib.rs:61), so coverage isn't "only indirect" and pass on
-      tests-match-risk is right. Smaller untested paths remain, but they are
-      documented, low-risk branches: Env's refusal to shadow a standard
-      function (eval.rs:154) and the lazy `in`, which is unsupported
-      (lazy.rs:5-7).
+      The assessment covers the crate purpose, caller-facing API, dependency
+      boundary, conversion, lazy lists and caller-specific variable checks.
+      crates/seikika-expr/src/analysis.rs tests the conservative extraction
+      used by list filtering.
   - criterion: reproducible
     verdict: pass
     reason: >-
-      Each verdict rests on lines a second assessor can open, and the counts
-      reproduce: `cargo test -q -p seikika-expr` gives "14 passed; 0 failed".
-      Running `rg seikika_expr crates` finds exactly the imports the
-      assessment lists. One step names no pattern, "a search for cel error
-      strings outside the crate finds none". I searched outside
-      crates/seikika-expr, and in examples/, for cel-rust messages ("no such
-      key", "undeclared reference", "no such overload", ExecutionError) and
-      also found none. Calling the Tuples and ContextLookup gaps "minor" is a
-      judgement, but the rubric's unsure trigger is coverage that is only
-      indirect, and the table's mechanism is tested directly.
+      A second reviewer can trace site-specific bindings in
+      crates/seikika-expr/src/lib.rs and value conversion tests in
+      crates/seikika-expr/src/eval.rs. The recorded test count is historical.
   - criterion: actionable
     verdict: pass
     reason: >-
-      Every verdict is pass, so no suggestion has a fail or unsure to turn.
-      The one suggestion, on tests-match-risk, targets the gaps that reason
-      names. A table-driven negative test per Site closes the Tuples and
-      ContextLookup gap (lib.rs:61, 64). A cel-spec slice recorded in
-      docs/research-log.md measures Q10 (docs/questions.md:18). Both are
-      concrete, and neither moves work onto another entity.
-summary: >-
-  A trustworthy assessment. Its citations hold at the current tree, the
-  test count (14, all passing) reproduces, and its verdicts follow from
-  the crate docs, the callers' imports and the tests. Three details are
-  off: eval.rs:234 should be 235; "no other Cargo.toml names `cel`"
-  ignores the experiments that Cargo.toml:5 excludes from the workspace;
-  and the analysis:: items are public through the module, not re-exported.
-  None of them changes a verdict.
+      The additional cross-site tests and CEL conformance work tie to the
+      explicitly named residual gaps in crates/seikika-expr/src/lib.rs and
+      docs/questions.md.

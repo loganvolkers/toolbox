@@ -1,51 +1,40 @@
 apiVersion: seikika.com/assessment/v1
 entity: assessment:rule-quality/rule:seikika/meta-rubric/described
 rubric: assessment-quality
-subjectHash: d67ceeddab0e
-assessor: {kind: agent, name: cursor-reviewer-33, model: claude-opus-5.5}
-at: 2026-11-25
+subjectHash: 4416cde9f9b5
+rubricHash: e30700fc6322cf9f05a301bb4638d6708e9f5eb5aea0281911229ce75bd37bf7
+assessor: {kind: agent, name: Codex, model: GPT-6}
+at: 2026-11-28
 verdicts:
   - criterion: supported
-    verdict: pass
+    verdict: fail
     reason: >-
-      The citations in
+      I checked the claims in
       .seikika/assessments/rule-quality/rule/seikika/meta-rubric/described.yaml
-      hold. `described` is filled() (crates/seikika-cli/src/model.rs:274,
-      defined at 281-285), which is any non-empty text. The fix asks for what
-      to judge and which sources to read
-      (.seikika/standards/meta.yaml:1101-1102), and the rationale is
-      1104-1106. The five live descriptions say "Read" and name a path or
-      command (meta.yaml:1150-1153 and 1184-1187,
-      .seikika/standards/crates.yaml:459-461,
-      .seikika/standards/sdlc.yaml:397-399,
-      .seikika/standards/assessments.yaml:316-318). Bronze is
-      docs/design/scorecards-for-scorecards.md:295 and the ratchet is
-      meta.yaml:1095. rubric:demo/vague fails described at
-      .seikika/tests/standards.test.yaml:984-985.
+      against the cited sources. The assessment points to
+      .seikika/standards/meta.yaml, which no longer holds this rule.
+      packages/meta-scoring/fragments/catalog.yaml contains the description
+      rule, while crates/seikika-cli/src/model.rs still confirms the nonblank
+      predicate.
+    suggestion: >-
+      Update the rule citations and verify the catalog-wide description claim
+      against the current rubrics.
   - criterion: complete
     verdict: pass
     reason: >-
-      Both fails are right. filled() accepts `description: Judge it.`, and the
-      rationale says the description exists so the assessor knows which
-      sources to read (meta.yaml:1104-1106). The fix names what the
-      description must contain, so following it passes. Bronze "described and
-      used" is scorecards-for-scorecards.md:295. Nothing else should have
-      failed.
+      The assessment correctly separates the text-presence check from the
+      rule’s promise to direct assessors to sources in
+      packages/meta-scoring/fragments/catalog.yaml.
   - criterion: reproducible
     verdict: pass
     reason: >-
-      `Judge it.` passing is filled() at model.rs:281-285. A second assessor
-      fails measures-intent and hard-to-game from that and the fix text.
+      The filled predicate in crates/seikika-cli/src/model.rs can be compared
+      with the missing-description fixture in
+      .seikika/tests/standards.test.yaml. Text presence alone is reproducible
+      independently of source guidance.
   - criterion: actionable
     verdict: pass
     reason: >-
-      Requiring a repository path, a seikika command or a "Read" clause, as
-      the suggestion in
-      .seikika/assessments/rule-quality/rule/seikika/meta-rubric/described.yaml
-      says, makes `Judge it.` fail. That changes both fails. The two passes
-      need no suggestion.
-summary: >-
-  The fails match the code. filled() only checks that some text exists,
-  while the fix and rationale say the description must point the assessor
-  at sources. The bronze level, the vague fixture and the five live "Read"
-  descriptions are cited correctly.
+      Detecting a source pointer would address part of the documented gap in
+      packages/meta-scoring/fragments/catalog.yaml. The proposed generic read
+      clause would still need evidence that it points somewhere useful.

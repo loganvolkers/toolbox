@@ -579,7 +579,6 @@ fn decide(o: &Options, portal: &Path, id: &str) -> ExitCode {
         run.set("awaiting_approval", None, Some(note));
         return finish(o, &run, 3);
     }
-    run.state = "approved".into();
     match approved_again(portal, &m, &d, &run) {
         Ok((p, grant)) => execute(o, portal, &m, &p, run, grant),
         Err(e) => {
@@ -753,7 +752,9 @@ fn approved(o: &Options, m: &Manifest, p: &Prepared, requested_by: &str, run: &m
     if let Some(g) = o.grant.as_deref().filter(|g| !g.is_empty()) {
         match granted(o, m, p, requested_by, g) {
             Ok(approvals) => {
-                run.state = "awaiting_approval".into();
+                if run.state != "awaiting_approval" && !approvals.is_empty() {
+                    run.set("awaiting_approval", None, None);
+                }
                 for a in &approvals {
                     let (which, who) = a.split_once('=').unwrap_or((a, a));
                     let _ = run.approve(who, |g| g == which);

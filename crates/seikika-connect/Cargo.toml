@@ -14,7 +14,7 @@ github-app = ["dep:jsonwebtoken"]
 
 [dependencies]
 jsonwebtoken = { workspace = true, optional = true }
-regex = "1"
+regex.workspace = true
 sha2.workspace = true
 walkdir.workspace = true
 serde.workspace = true

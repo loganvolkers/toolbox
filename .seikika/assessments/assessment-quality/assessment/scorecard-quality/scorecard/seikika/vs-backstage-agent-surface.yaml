@@ -1,46 +1,43 @@
 apiVersion: seikika.com/assessment/v1
 entity: assessment:scorecard-quality/scorecard:seikika/vs-backstage-agent-surface
 rubric: assessment-quality
-subjectHash: 86d7ec265a06
-assessor: {kind: agent, name: cursor-reviewer-15, model: claude-opus-5.5}
-at: 2026-11-25
+subjectHash: b38763c4a4cd
+rubricHash: e30700fc6322cf9f05a301bb4638d6708e9f5eb5aea0281911229ce75bd37bf7
+assessor: {kind: agent, name: Codex, model: GPT-6}
+at: 2026-11-28
 verdicts:
   - criterion: supported
-    verdict: pass
+    verdict: fail
     reason: >-
-      The citations in
+      I checked the claims in
       .seikika/assessments/scorecard-quality/scorecard/seikika/vs-backstage-agent-surface.yaml
-      hold: - backstage-comparison.yaml:796-855 is the card. -
-      docs/design/backstage-comparison.md:58 is F13. - README.md:52 is the
-      bar. - RESEARCH.md:275-282 lists F13(a)-(f). - RESULTS.md:295 lists the
-      20-question call count as unmeasured. - surface.py:186-187 computes
-      `mcpReadOnlyTools`. - mcp.rs:20-98 and 651-665 are the two fix targets.
-      - .seikika/results.json puts product:seikika at bronze. One citation is
-      loose. D01M857ZB468ZM2YS6GNSEG6YB9 defines the standing, but it does not
-      say that a comparative card has one level. That is merely true of every
-      vs-backstage card.
+      against the cited sources. .seikika/standards/backstage-comparison.yaml
+      names the MCP implementation, but both byte facts are published through
+      experiments/backstage-compare/snapshot.py:79-89 and the boolean comes
+      from experiments/backstage-compare/facts.yaml. The assessment passes
+      actionable while acknowledging the missing regeneration path.
+    suggestion: >-
+      Rejudge actionable against the steps needed to change the scored
+      snapshot.
   - criterion: complete
-    verdict: pass
+    verdict: fail
     reason: >-
-      no-obvious-gap fails correctly: F13(b) and F13(c) are in the brief
-      (RESEARCH.md:277-279) and missing from the card. one-concern,
-      levels-are-a-ladder and actionable match the sources. The three rules
-      are F13 alone, bronze is reached, and each fix names mcp.rs or the
-      serving commands.
+      experiments/backstage-compare/RESEARCH.md:275-282 lists schema and
+      annotation coverage, cross-surface equality and the scripted answers.
+      The assessment notes the main omissions but needs to account for the
+      broken fact-update path when judging actionable.
+    suggestion: >-
+      Add the fact-to-snapshot check to the actionable analysis.
   - criterion: reproducible
     verdict: pass
     reason: >-
-      The gap is read off the brief's F13 list and RESULTS.md's "Not measured
-      yet". The single-level pass applies the standing mechanism every
-      comparative card uses. A second assessor would agree.
+      experiments/backstage-compare/surface.py:164-192 and
+      experiments/backstage-compare/RESEARCH.md:275-282 let another reviewer
+      reproduce the scope of the three existing measures and the gaps in the
+      benchmark plan.
   - criterion: actionable
     verdict: pass
     reason: >-
-      `calls-per-answer`, fed by a 20-question oracle, and `annotated-tools`,
-      from the readOnlyHint share at surface.py:186-187, add the two missing
-      F13 measures. Together they close the gap the no-obvious-gap fail names.
-summary: >-
-  An accurate assessment. Its one fail, the unmeasured calls-per-question
-  and annotation coverage, comes straight from the brief's F13 list. One
-  citation leans on D01M857ZB468ZM2YS6GNSEG6YB9 for more than it says, but
-  no verdict depends on it.
+      Feeding an answer-count probe and the recorded annotation share into
+      experiments/backstage-compare/snapshot.py would address the named
+      coverage finding.

@@ -1,7 +1,7 @@
 apiVersion: seikika.com/assessment/v1
 entity: assessment:scorecard-quality/scorecard:seikika/review-assessment
 rubric: assessment-quality
-subjectHash: fed84ec7b9ab
+subjectHash: ef70195e388e
 rubricHash: e30700fc6322cf9f05a301bb4638d6708e9f5eb5aea0281911229ce75bd37bf7
 assessor: {kind: agent, name: codex-astra-package, model: gpt-6.2-astra}
 at: 2026-11-27

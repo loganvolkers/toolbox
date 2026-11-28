@@ -1,60 +1,38 @@
 apiVersion: seikika.com/assessment/v1
 entity: assessment:scorecard-quality/scorecard:seikika/vs-backstage-extensibility
 rubric: assessment-quality
-subjectHash: 9f713569fde1
-assessor: {kind: agent, name: cursor-reviewer-38, model: claude-opus-5.5}
-at: 2026-11-25
+subjectHash: 0b3ff84d3d1d
+rubricHash: e30700fc6322cf9f05a301bb4638d6708e9f5eb5aea0281911229ce75bd37bf7
+assessor: {kind: agent, name: Codex, model: GPT-6}
+at: 2026-11-28
 verdicts:
   - criterion: supported
     verdict: pass
     reason: >-
-      The citations in
+      I checked the claims in
       .seikika/assessments/scorecard-quality/scorecard/seikika/vs-backstage-extensibility.yaml
-      hold. The card is .seikika/standards/backstage-comparison.yaml:857-869,
-      the two rules and their fixes are :879-896, and both facts are true in
-      .seikika/comparisons/seikika.yaml:43-44. F11 is
-      docs/design/backstage-comparison.md:56, the unmeasured lines of code are
-      :118, and experiments/backstage-compare/RESEARCH.md:67 lists LOC, files
-      touched, rebuild, symbols and languages. The not-pre-registered note is
-      .seikika/standards/backstage-comparison.yaml:867-868 and
-      experiments/backstage-compare/RESULTS.md:269-270. The booleans are
-      hand-written at experiments/backstage-compare/facts.yaml:60-69.
-      experiments/backstage-compare/measure.py:158-163 posts catalog.ndjson to
-      /v1/ingest; :146 is the serve environment that turns in-image connectors
-      off and sets the connector token.
+      against the cited sources. .seikika/standards/backstage-comparison.yaml
+      has two bronze booleans about extension cost.
+      experiments/backstage-compare/RESEARCH.md:67 specifies extension size,
+      files outside the extension and imported symbols, none of which the card
+      scores.
   - criterion: complete
     verdict: pass
     reason: >-
-      one-concern passes: both rules are the cost of adding an integration
-      (.seikika/standards/backstage-comparison.yaml:860-866), and isolation
-      stays on the security card. levels-are-a-ladder passes because there is
-      one level and both facts are true. no-obvious-gap fails because F11's
-      sized measures are absent and the design doc lists the reference
-      extension's lines as not measured
-      (docs/design/backstage-comparison.md:118). actionable fails because the
-      fixes name the schema and a design doc
-      (.seikika/standards/backstage-comparison.yaml:883-896) and not
-      experiments/backstage-compare/facts.yaml, where the booleans are set. No
-      pass should have failed.
+      The assessment covers the shared concern, the single level, missing
+      quantitative evidence and the incomplete fixes.
+      experiments/backstage-compare/facts.yaml supplies both booleans
+      directly.
   - criterion: reproducible
     verdict: pass
     reason: >-
-      The dropped measures are a list in
-      experiments/backstage-compare/RESEARCH.md:67 against two booleans in the
-      scorecard. A second assessor fails no-obvious-gap and actionable from
-      that list and experiments/backstage-compare/facts.yaml:60-69, without
-      judging how large an extension ought to be.
+      experiments/backstage-compare/measure.py:145-163 shows the integration
+      evidence, while experiments/backstage-compare/snapshot.py:79-89 shows
+      that the card reads declared facts instead.
   - criterion: actionable
     verdict: pass
     reason: >-
-      Adding extension-lines and files-outside-extension on one reference
-      extension would close the gap named against
-      experiments/backstage-compare/RESEARCH.md:67. Setting the two booleans
-      from the harness run, and naming the routes and the schema as the
-      places, would make the evidence change when the property changes, which
-      is the actionable fail.
-summary: >-
-  The assessment is a fair reading of a two-rule card. It keeps F11's
-  yes/no facts, drops the reference extension's size, and the facts are
-  written in experiments/backstage-compare/facts.yaml even though
-  experiments/backstage-compare/measure.py already pushes to /v1/ingest.
+      Implementing the proposed reference extension measures would fill part
+      of the gap in experiments/backstage-compare/RESEARCH.md:67. Sourcing the
+      two booleans from the harness and documenting the code and rerun path
+      would address the remediation failure.

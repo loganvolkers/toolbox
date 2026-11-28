@@ -22,18 +22,31 @@ assert:
       && score('repo-hygiene',
       'repository:acme/payments-api').evidence['owners-are-teams'] ==
       ['@alice'] && score('repo-hygiene',
-      'repository:acme/payments-api').rules['has-license'] == 'fail'
-  - name: a short README and no CODEOWNERS fail bronze
+      'repository:acme/payments-api').evidence['has-license'] == ['LICENSE has
+      no readable licence text']
+  - name: a short README and empty CODEOWNERS fail bronze
     expect: >-
       score('repo-hygiene', 'repository:acme/legacy-tool').level == 'none' &&
       score('repo-hygiene', 'repository:acme/legacy-tool').rules['has-readme']
       == 'fail' && score('repo-hygiene',
-      'repository:acme/legacy-tool').rules['has-codeowners'] == 'fail'
+      'repository:acme/legacy-tool').evidence['has-codeowners'] ==
+      ['.github/CODEOWNERS names no owner']
   - name: owners are collected across CODEOWNERS rules
     expect: >-
       entity('repository:acme/payments-api').owners == ['@acme/payments',
       '@alice']
+  - name: a catch-all must lead the file and name an owner
+    expect: >-
+      score('repo-hygiene',
+      'repository:acme/platform-infra').rules['codeowners-catch-all'] ==
+      'pass' && score('repo-hygiene',
+      'repository:acme/payments-api').evidence['codeowners-catch-all'] ==
+      ['*', '/migrations/', '*']
   - name: broken relative links fail the docs scorecard
     expect: >-
       score('docs', 'doc:README.md').evidence['links-resolve'] ==
       ['docs/runbook.md']
+  - name: a document with resolving links reaches bronze
+    expect: >-
+      score('docs', 'doc:docs/overview.md').level == 'bronze' && score('docs',
+      'doc:docs/overview.md').rules['links-resolve'] == 'pass'
