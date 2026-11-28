@@ -1,58 +1,43 @@
 apiVersion: seikika.com/assessment/v1
 entity: assessment:rule-quality/rule:seikika/maintainer-ci-reliability/fail-rate-under-5
 rubric: assessment-quality
-subjectHash: 868e9f44a8cf
-assessor: {kind: agent, name: cursor-reviewer-09, model: claude-opus-5.5}
-at: 2026-11-25
+subjectHash: af03587b206f
+rubricHash: e30700fc6322cf9f05a301bb4638d6708e9f5eb5aea0281911229ce75bd37bf7
+assessor: {kind: agent, name: Codex, model: GPT-6}
+at: 2026-11-28
 verdicts:
   - criterion: supported
-    verdict: pass
+    verdict: fail
     reason: >-
-      The citations in
+      I checked the claims in
       portal/assessments/rule-quality/rule/seikika/maintainer-ci-reliability/fail-rate-under-5.yaml
-      land:
-      - packages/github-actions/fragments/github-actions.yaml:473-475
-        (rationale), 349 (`appliesTo`), 52 (`runs: 50`) and 390-396 vs
-        463-468 (evidence with and without the cancelled count);
-      - crates/seikika-connector-github/src/runs.rs:82 and 9-10, and main.rs:242;
-      - portal/tests/standards.test.yaml:193;
-      - docs/design/thresholds.md:31.
-      The rounding helper is at runs.rs:72, not 73. Its arithmetic
-      `(n*100 + of/2)/of` does give 1/18 → 6% and 1/19 → 5%, as the reason
-      says. Two claims are overstated without changing a verdict: image.yml
-      can get main runs through `workflow_dispatch`, and the repository has 7
-      workflows, of which release.yml is the clear case.
+      against the cited sources.
+      crates/seikika-connector-github/src/main.rs:242 confirms branch-scoped
+      history, but .github/workflows/release.yml declares pull_request in
+      addition to tag pushes, and .github/workflows/image.yml permits dispatch
+      on a selected ref. The trigger definitions do not prove that either
+      workflow can never accumulate runs on the scored branch.
+    suggestion: >-
+      Qualify the trigger claims and cite actual branch-filtered history, or
+      leave workflow-specific applicability uncertain.
   - criterion: complete
     verdict: pass
     reason: >-
-      The four fails are the ones the sources show. Two are shared with
-      silver: the per-branch fetch, and the cancelled count missing from the
-      evidence. Two are gold's own. The fix at github-actions.yaml:470-472
-      restates the goal and has no few-runs step. The 10-run minimum is
-      justified in thresholds.md:31 only by "one failure is 10%, the silver
-      bound", so the fail on threshold-justified is grounded in the doc's own
-      argument rather than taste.
+      The assessment covers branch applicability, missing cancellation
+      context, sample-size and rolling-window fixes, and the mismatch between
+      gold’s sample floor and the resolution argument in
+      docs/design/thresholds.md:31.
   - criterion: reproducible
     verdict: pass
     reason: >-
-      The threshold-justified fail rests on arithmetic over runs.rs:72 and the
-      wording of thresholds.md:31, which a second assessor can redo. The other
-      verdicts rest on the same code and rule text as silver's. So the
-      verdicts in
-      portal/assessments/rule-quality/rule/seikika/maintainer-ci-reliability/fail-rate-under-5.yaml
-      would repeat.
+      crates/seikika-connector-github/src/runs.rs:59-82 defines the
+      denominator and rounding, and
+      packages/github-actions/fragments/github-actions.yaml:457-475 exposes
+      the minimum and evidence used for gold.
   - criterion: actionable
     verdict: pass
     reason: >-
-      Each suggestion targets its own verdict:
-      - Scoring only workflows that run on the branch fixes measures-intent.
-      - Counting cancelled-after-failure runs fixes hard-to-game (runs.rs:9-10).
-      - Adding window and few-runs steps fixes fix-leads-to-pass.
-      - A gold-only minimum of 20 runs, where one failure is 5% (runs.rs:72),
-        fixes threshold-justified.
-summary: >-
-  A careful assessment that carries silver's findings up to gold and adds
-  a real one: at 10 to 18 runs, one failure already fails gold, so the
-  shared minimum is justified only for silver. Citations land apart from
-  an off-by-one (runs.rs:72, not 73) and the image.yml overstatement it
-  shares with silver.
+      Separate sample policies for gold and silver, and concrete guidance for
+      waiting on a rolling sample in
+      packages/github-actions/fragments/github-actions.yaml, address the
+      threshold and remediation findings.

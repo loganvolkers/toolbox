@@ -1,5 +1,28 @@
 //! Assert the Prometheus scrape text includes every v1 catalog name.
 
+use seikika_telemetry::catalog::names::{REQUIRED, SNAPSHOT_AGE_SECONDS};
+
+#[test]
+fn markdown_catalog_matches_the_required_metric_names() {
+    let catalog = include_str!("../METRIC_CATALOG.md");
+    let mut documented: Vec<_> = catalog
+        .lines()
+        .filter_map(|line| {
+            line.strip_prefix("| `")?
+                .split_once("` |")
+                .map(|(name, _)| name)
+        })
+        .collect();
+    let mut expected: Vec<_> = REQUIRED
+        .iter()
+        .copied()
+        .chain([SNAPSHOT_AGE_SECONDS])
+        .collect();
+    documented.sort_unstable();
+    expected.sort_unstable();
+    assert_eq!(documented, expected);
+}
+
 #[test]
 fn metrics_text_lists_required_catalog_names() {
     let _g = seikika_telemetry::init(seikika_telemetry::TelemetryOptions {
@@ -18,7 +41,7 @@ fn metrics_text_lists_required_catalog_names() {
     seikika_telemetry::catalog::record_command("ok", 0.01);
 
     let text = seikika_telemetry::metrics_text();
-    for name in seikika_telemetry::catalog::names::REQUIRED {
+    for name in REQUIRED {
         assert!(
             text.contains(name),
             "scrape missing required metric {name}:\n{text}"

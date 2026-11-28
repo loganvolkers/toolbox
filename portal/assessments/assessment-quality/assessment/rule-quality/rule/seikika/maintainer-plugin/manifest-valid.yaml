@@ -1,55 +1,41 @@
 apiVersion: seikika.com/assessment/v1
 entity: assessment:rule-quality/rule:seikika/maintainer-plugin/manifest-valid
 rubric: assessment-quality
-subjectHash: 43708e3e5df0
-assessor: {kind: agent, name: cursor-reviewer-06, model: claude-opus-5.5}
-at: 2026-11-25
+subjectHash: 4e27c617f3cb
+rubricHash: e30700fc6322cf9f05a301bb4638d6708e9f5eb5aea0281911229ce75bd37bf7
+assessor: {kind: agent, name: Codex, model: GPT-6}
+at: 2026-11-28
 verdicts:
   - criterion: supported
     verdict: pass
     reason: >-
-      Every citation in
+      I checked the claims in
       portal/assessments/rule-quality/rule/seikika/maintainer-plugin/manifest-valid.yaml
-      checks out. In crates/seikika-connector-workspace/src/plugins.rs, line
-      41 compares only the `$schema` string, lines 23 and 40 count the
-      description untrimmed (npm.rs:22 trims), and 52-70 is `name_ok` with its
-      alphanumeric ends and no `--` or `..`. The fix at
-      portal/standards/plugins.yaml:96-98 states only the character set and
-      length. portal/fixtures/workspace.ndjson:55 has name "Bad--name". The
-      1.0.0 spec
-      (https://github.com/agentplugins/agent-plugins-spec/blob/main/spec/1.0.0.md)
-      says this. §5.2 makes the manifest closed. §5.4 says another `author`
-      field "makes the manifest invalid" and types `version` as a string. §5.3
-      requires only `$schema` and `name`. §5.5 is the name grammar.
-      docs/design/agent-plugins.md:19, docs/design/plugin-standards.md:44 and
-      D81's quote are right.
+      against the cited sources. The schema reference comparison and raw
+      description length in
+      crates/seikika-connector-workspace/src/plugins.rs support the cited
+      gap between the manifest schema and the bronze check in
+      portal/standards/plugins.yaml.
   - criterion: complete
     verdict: pass
     reason: >-
-      The three fails are right. measures-intent: `schemaOk` never validates
-      the manifest (plugins.rs:41). hard-to-game: a single space counts
-      (plugins.rs:40). fix-leads-to-pass: "bad--name" meets the fix's stated
-      grammar but fails `name_ok` (plugins.rs:57). The "three rounds" point is
-      weaker, because the fix lists all three remedies at once, but the
-      verdict rests on the grammar. threshold-justified passes on the spec's
-      1-64 and D81's bronze.
+      The assessment covers the schema, name, and description predicates in
+      portal/standards/plugins.yaml, including the first-failure evidence
+      and the bronze placement in docs/design/plugin-standards.md.
   - criterion: reproducible
-    verdict: pass
+    verdict: fail
     reason: >-
-      Each verdict is a reading of plugins.rs:23-70 against spec §5.2-5.5. A
-      second assessor reading the same lines would reach the same fail, fail,
-      fail, pass.
+      The scratch manifest is described through fragments but there is no
+      complete fixture or invocation. The checked-in Rust tests in
+      crates/seikika-connector-workspace/src/plugins.rs do not exercise an
+      invalid author object or whitespace-only description.
+    suggestion: >-
+      Provide a complete scratch plugin.json and a connector command with
+      the expected schemaOk and descriptionChars facts.
   - criterion: actionable
     verdict: pass
     reason: >-
-      Each suggestion flips its verdict. Validating against the 1.0.0 plugin
-      schema catches the invalid `author` and the numeric `version` behind
-      measures-intent. Trimming and a floor reject the one-space description
-      behind hard-to-game. Stating the full name grammar in the fix lets
-      "Bad--name" be fixed from the text behind fix-leads-to-pass.
-summary: >-
-  A careful, correct assessment. Every citation, including the spec
-  sections, says what it claims. The three fails are genuine: the schema
-  is checked only by its `$schema` string, a space is a description, and
-  the fix omits half the name grammar, so the fixture's own name still
-  fails. Each suggestion would flip its verdict.
+      The proposed schema error facts, trimming, and name grammar guidance
+      target the relevant connector and rule in
+      crates/seikika-connector-workspace/src/plugins.rs and
+      portal/standards/plugins.yaml.

@@ -151,7 +151,7 @@ fn field_record(
         .map(|(ids, f)| (ids.len() as u64, f.get(name).copied().unwrap_or(0)))
         .unwrap_or((0, 0));
     json!({
-        "portal": portal, "kind": kind, "name": name, "type": f.ty, "described": filled(&f.description),
+        "portal": portal, "kind": kind, "name": name, "type": f.ty, "described": model_description(name, &f.description),
         "computed": f.computed.is_some(), "sources": if f.computed.is_some() { vec![] } else { sources },
         "opaque": f.ty == "object" || (f.ty == "list" && f.items.as_deref() == Some("object")),
         "readBy": read, "fixture": {"entities": entities, "withValue": with}, "hash": hash(f),
@@ -199,8 +199,8 @@ fn kind_record(
         })
         .collect();
     json!({
-        "portal": portal, "name": k.name, "described": filled(&k.description),
-        "fields": k.fields.len(), "fieldsDescribed": k.fields.values().filter(|f| filled(&f.description)).count(),
+        "portal": portal, "name": k.name, "described": model_description(&k.name, &k.description),
+        "fields": k.fields.len(), "fieldsDescribed": k.fields.iter().filter(|(name, f)| model_description(name, &f.description)).count(),
         "identityFrom": k.identity_from, "scorecards": scorecards, "relationsOut": k.relations.keys().collect::<Vec<_>>(),
         "relationsIn": related_in, "fixtureEntities": ids.len(), "tested": tested, "hash": hash(k),
     })
@@ -321,6 +321,17 @@ pub(crate) fn filled(text: &Option<String>) -> bool {
     text.as_deref().is_some_and(|t| !t.trim().is_empty())
 }
 
+fn model_description(name: &str, description: &Option<String>) -> bool {
+    description.as_deref().is_some_and(|text| {
+        let text = text.trim().trim_end_matches(['.', ':', '!']).trim_end();
+        !text.is_empty()
+            && !text.eq_ignore_ascii_case(name)
+            && !["todo", "tbd"]
+                .iter()
+                .any(|placeholder| text.eq_ignore_ascii_case(placeholder))
+    })
+}
+
 /// Guidance that tells assessors when to give a verdict: at least ten words, an outcome as a word
 /// (fail, pass or unsure, not "failure"), and a condition (`when`, `if`, `unless`, or "and name"),
 /// so a blank line, a restated question or "Fail when the answer is no." doesn't count as guided.
@@ -388,6 +399,20 @@ mod tests {
         assert!(!super::filled(&Some(String::new())));
         assert!(!super::filled(&Some("  \n".into())));
         assert!(!super::filled(&None));
+    }
+
+    #[test]
+    fn model_descriptions_reject_placeholders_and_repeated_names() {
+        for text in [" ", "TBD.", "TODO:", "  Name. "] {
+            assert!(
+                !super::model_description("name", &Some(text.into())),
+                "{text:?}"
+            );
+        }
+        assert!(super::model_description(
+            "name",
+            &Some("Display name.".into())
+        ));
     }
 
     #[test]

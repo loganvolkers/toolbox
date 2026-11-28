@@ -1,65 +1,40 @@
 apiVersion: seikika.com/assessment/v1
 entity: assessment:rule-quality/rule:seikika/operator-cli/exercised
 rubric: assessment-quality
-subjectHash: 69349c42dd53
-assessor: {kind: agent, name: cursor-reviewer-14, model: claude-opus-5.5}
-at: 2026-11-25
+subjectHash: c2b3394834a1
+rubricHash: e30700fc6322cf9f05a301bb4638d6708e9f5eb5aea0281911229ce75bd37bf7
+assessor: {kind: agent, name: Codex, model: GPT-6}
+at: 2026-11-28
 verdicts:
   - criterion: supported
-    verdict: pass
+    verdict: fail
     reason: >-
-      The claims in
+      I checked the claims in
       portal/assessments/rule-quality/rule/seikika/operator-cli/exercised.yaml
-      hold.
-      - `exercisedBy` is portal/standards/cli.yaml:23-26, fed by
-        portal/standards/docs.yaml:74. The `commands` capture
-        (portal/seikika.yaml:111-114) has no comment filter, unlike `tools`
-        (115-117).
-      - Running the regex over the `files` globs, `describe portal` and
-        `assess submit` match only in the `//!` lines of
-        crates/seikika-cli/tests/assess.rs:2-4. `install` matches only at
-        install.rs:1, `tools find` and `tools config` only at tools.rs:2-3,
-        and `derive` only at .github/workflows/ci.yml:57.
-      - The test calls are `seikika(&["assess", "check", …])` (assess.rs:177),
-        the helper is assess.rs:68, and the binary call is ratchet.rs:54-55.
-      - portal/results.json fails `plan` and `push` on exercised. The trace
-        job is portal/seikika.yaml:282-291, and F9 and its fix are
-        docs/design/seikika-for-seikika.md:213 and :189.
+      against the cited sources. portal/standards/cli.yaml now describes the
+      evidence as a missing mention in a script, integration test or workflow
+      record. The assessment attributes the older script-and-test-only message
+      to the current rule.
+    suggestion: >-
+      Update the quoted evidence while preserving the finding that a static
+      mention alone does not prove execution.
   - criterion: complete
     verdict: pass
     reason: >-
-      The three fails are what the sources show. The check reads mentions
-      (cli.yaml:132), so five commands pass on prose, and a `#` line would
-      pass `plan`. The fix's integration-test route can't register, because no
-      test under crates/seikika-cli/tests matches `seikika <cmd>` outside a
-      comment. threshold-justified passes as a rule with no number. The
-      evidence text "scripts/ and crates/*/tests" (cli.yaml:133-135) also
-      omits the reference-portal `tools/*.py` glob (portal/seikika.yaml:106).
-      That is the same mismatch the reason already names for workflows.
+      portal/seikika.yaml configures a text capture, and
+      portal/standards/cli.yaml maps its incoming relationships onto
+      exercisedBy. The assessment identifies the gap for Rust argument arrays,
+      which is independent of the wording change.
   - criterion: reproducible
     verdict: pass
     reason: >-
-      Anyone can reproduce each verdict by running the capture regex over the
-      `files` globs (portal/seikika.yaml:103-107): every claimed match and
-      miss comes out the same. A second assessor might note that every
-      existing CLI test opens with a `//!` header naming its commands, so
-      following convention happens to pass. But the fix doesn't ask for that
-      header, so fix-leads-to-pass still fails on the rubric's "needs data the
-      fix doesn't mention"
-      (https://github.com/seikika/seikika/blob/05510a57fafd8707979370858b578b78b935cf0e/portal/standards/meta.yaml#L1172-L1173).
+      crates/seikika-cli/src/main.rs describes the commands and
+      portal/tests/standards.test.yaml demonstrates the static missing-mention
+      result. Existing test invocation shapes can be inspected in
+      crates/seikika-cli/tests/assess.rs.
   - criterion: actionable
     verdict: pass
     reason: >-
-      Excluding comment lines would remove the five prose-only passes and the
-      cheap `# seikika plan` route, which settles measures-intent and
-      hard-to-game. Capturing the argument arrays, or tracing invocations as
-      SEIKIKA_MCP_TRACE does (portal/seikika.yaml:282-291), would make the
-      fix's test route register, which settles fix-leads-to-pass. The interim
-      suggestion, saying the literal must appear outside a comment, does the
-      same in text.
-summary: >-
-  An accurate, well-evidenced assessment. I reran its capture claims
-  against the regex, and the five commands that pass only on a test file's
-  module comment and the invisible `seikika(&[...])` calls reproduce
-  exactly. All three fails are right, and each suggestion would change its
-  verdict.
+      Collecting evidence from actual test runs would address the substantive
+      distinction in portal/standards/cli.yaml. The diagnostic now states
+      which sources and type of evidence the rule uses.

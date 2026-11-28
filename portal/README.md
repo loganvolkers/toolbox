@@ -12,6 +12,7 @@ no Postgres, no OpenFGA, no network.
 | `maintainer-crate` | 1. Maintainer | Crate | Crate docs, tests that pass, clippy, public-API docs, function size and complexity, unwraps |
 | `maintainer-sdk-docs` | 1. Maintainer | SdkDocs | Public entry points, item and prop comments, links, and package references. New SDKs must reach gold |
 | `maintainer-docs` | 1. Maintainer | Doc | Links resolve, the SDLC layer is named, design docs have a status banner and sources |
+| `maintainer-benchmark` | 1. Maintainer | Benchmark | A declared question and readable artifacts, a registered comparison method, and published results with follow-up |
 | `operator-cli` | 2. Operator | Command | Operator commands have help, are documented and are run by a script or test |
 | `user-cli` | 3. User | Command | Read commands have help, structured output (`-o json`) and are exercised |
 | `user-mcp` | 3. User | McpTool | Tools are described and annotated, inputs described, documented, and contract-tested over MCP |
@@ -26,6 +27,7 @@ no Postgres, no OpenFGA, no network.
 | `meta-kind`, `meta-field`, `meta-connector` (`PortalConnector`) | all (our model) | Kind, Field, PortalConnector | In fixtures and tested, described, fields described; populated, described, has a shape; records mapped, fixtures, freshness, refreshable (D79) |
 | `meta-assessment`, `meta-rubric` | all (our judgement) | Assessment, Rubric | Suggestions and a named assessor, then cited findings, then cited reasons; rubrics described, used, guided, discriminating (D80) |
 | `review-rule`, `review-scorecard`, `review-crate`, `review-assessment` | advisory | Rule, Scorecard, Crate, Assessment | Coding agents' assessments against the rubrics in the meta package and `standards/`, stored in `assessments/`: fresh, no failing criterion, no doubts. Never gate (D79, D80) |
+| `review-sdlc-stage` | advisory | SdlcStage | Independent of the stage's declared status, reviews whether an agent can complete the stage and verify its exit |
 | `maintainer-skill` | 1. Maintainer | Skill | Spec-valid frontmatter; description says when, in third person; then a short procedure with an example and a body budget; then limits, eval cases, and no hidden text or hardcoded secrets. New skills must reach bronze |
 | `maintainer-connector` | 1. Maintainer | Connector | Described, config documented, speaks stdio or remote; then named kinds, snapshot and not-found (push-only exempt), a unit test; then CI runs it and no hardcoded secrets. New connectors must reach bronze |
 | `maintainer-dependency` | 1. Maintainer | Dependency | Bounded registry requirement; then one version in the lockfile; then a shared dependency is declared in the workspace. New dependencies must reach bronze |

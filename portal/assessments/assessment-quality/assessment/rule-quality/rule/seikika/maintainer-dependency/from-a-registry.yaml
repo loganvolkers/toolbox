@@ -1,44 +1,43 @@
 apiVersion: seikika.com/assessment/v1
 entity: assessment:rule-quality/rule:seikika/maintainer-dependency/from-a-registry
 rubric: assessment-quality
-subjectHash: e374aa5c7abf
-assessor: {kind: agent, name: cursor-reviewer-33, model: claude-opus-5.5}
-at: 2026-11-25
+subjectHash: d0a9c44d2206
+rubricHash: e30700fc6322cf9f05a301bb4638d6708e9f5eb5aea0281911229ce75bd37bf7
+assessor: {kind: agent, name: Codex, model: GPT-6}
+at: 2026-11-28
 verdicts:
   - criterion: supported
-    verdict: pass
+    verdict: fail
     reason: >-
-      Every citation in
+      I checked the claims in
       portal/assessments/rule-quality/rule/seikika/maintainer-dependency/from-a-registry.yaml
-      holds. The check is `!entity.git` and the fix names crates.io
-      (portal/standards/dependencies.yaml:74-83). `git` is a lockfile source
-      starting `git+` (crates/seikika-connector-workspace/src/deps.rs:57,
-      collected at 90-114), and the workspace test asserts none (deps.rs:230).
-      The fixture pin is portal/tests/standards.test.yaml:452-453, inside the
-      cited 446-456. Bronze is docs/design/dependency-standards.md:18,
-      cargo-deny `[sources]` is dependency-standards.md:99-100, and the floor
-      principle is docs/design/thresholds.md:19-21.
+      against the cited sources.
+      crates/seikika-connector-workspace/src/deps.rs:53-60 and :90-114 support
+      the Git-source check, but do not establish that a path dependency is
+      vendored in the repository. An external path is not necessarily part of
+      the checkout.
+    suggestion: >-
+      Qualify the reproducibility claim and distinguish repository-local
+      vendoring from an external path.
   - criterion: complete
-    verdict: pass
+    verdict: fail
     reason: >-
-      The four passes are right. A path dependency has no `source` line, so it
-      is not `git+` (deps.rs:100-102), and the rationale's harm is an
-      unreproducible git fetch (dependencies.yaml:80-83), which the assessment
-      says. Following the crates.io fix clears `git`. There is no numeric
-      threshold, and bronze is the design doc's floor.
+      portal/standards/dependencies.yaml:73-83 checks only the Git marker. The
+      assessment’s claim that a registry or a vendored copy are the only
+      passing cases leaves out unverified paths and missing lockfile evidence.
+    suggestion: >-
+      Describe the rule as rejecting known Git sources and explain which other
+      checks are needed to establish reproducibility.
   - criterion: reproducible
     verdict: pass
     reason: >-
-      The path-dependency and alternative-registry readings follow from
-      deps.rs:57 and the rationale at dependencies.yaml:80-83. A second
-      assessor reaches the same four passes from those lines.
+      The source classification in
+      crates/seikika-connector-workspace/src/deps.rs:90-114 and recorded Git
+      source in portal/tests/standards.test.yaml make the Git case
+      reproducible, independent of the broader path assumption.
   - criterion: actionable
     verdict: pass
     reason: >-
-      portal/assessments/rule-quality/rule/seikika/maintainer-dependency/from-a-registry.yaml
-      has no fail or unsure verdict, so there is no suggestion to apply.
-summary: >-
-  A trustworthy pass. The lockfile `git+` check, the crates.io fix, the
-  fixture pin and the bronze placement all match the files the assessment
-  cites, including the path-dependency case it argues still meets the
-  rationale.
+      The fix in portal/standards/dependencies.yaml names the registry release
+      that clears a reported Git source. The assessment records four passes
+      and gives no separate suggestions.

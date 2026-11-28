@@ -449,7 +449,7 @@ scorecards:
       level: bronze
       check: entity.fixWords >= 5
       evidence: "['fix has ' + string(entity.fixWords) + ' words']"
-      fix: "Write a fix an agent can act on: what to change, and where."
+      fix: Write at least five words naming what to change and where to change it.
       rationale: >-
         A failing rule without a usable fix leaves the reader to
         reverse-engineer the check. A fresh agent raised a scorecard to gold
@@ -494,7 +494,11 @@ scorecards:
       evidence: >-
         [string(entity.fixture.unknown) + ' unknown, no pass or fail on the
         fixtures']
-      fix: Add fixture records the rule applies to, so it evaluates in tests.
+      fix: >-
+        In fixtures/<connector>.ndjson, add a record that maps to an entity the
+        rule applies to, or fill in the inputs the check reads on existing
+        fixtures. Run `seikika test` and verify that the rule returns pass or
+        fail for at least one fixture entity.
       rationale: >-
         A rule that is unknown on every fixture never runs its check in tests,
         so an error in its CEL first shows on real data, as `join` and `flatten`
@@ -821,8 +825,10 @@ scorecards:
         ['none of ' + string(entity.fixtureEntities) + ' fixture ' + entity.kind
         + ' entities has a value']
       fix: >-
-        Give at least one fixture record a value for the field, so its mapping
-        (or computation) is exercised.
+        In the kind's map, find the connector, record kind and source keys used
+        by this field. Set those keys on a matching record in
+        fixtures/<connector>.ndjson. For a computed field, populate the fields
+        or relations its expression reads.
       rationale: >-
         A field no fixture sets has a mapping or computation that no test runs,
         so it can be empty or wrong on every entity without anyone noticing.
@@ -916,8 +922,9 @@ scorecards:
       check: entity.withoutFreshness.size() == 0
       evidence: entity.withoutFreshness
       fix: >-
-        Declare `freshness:` for each listed record kind, so stale data shows as
-        stale rather than current.
+        Declare a `freshness:` bound for each listed record kind in the portal
+        manifest. For automatic resync, the connector must also register resync
+        support for that kind.
       rationale: >-
         With no freshness bound, data from a connector that stopped syncing
         reads as current, and rules pass or fail on stale facts.
@@ -926,8 +933,9 @@ scorecards:
       check: entity.records.all(r, r in entity.refreshable)
       evidence: entity.records.filter(r, !(r in entity.refreshable))
       fix: >-
-        Support refresh by external id for each listed record kind, so an agent
-        can see its fix land.
+        Declare `external_ids` in the connector's `refresh:` scopes in the
+        portal manifest for each listed record kind. Run `seikika connector
+        test` to check that the package registers and supports that scope.
       rationale: >-
         An agent that fixes something needs to refresh that one entity to see
         the rule pass; without refresh by id it waits for a full sync, or can't
@@ -1015,8 +1023,10 @@ scorecards:
         entity.reviewState == 'fresh' ? entity.reviewUnsure : ['no current
         assessment']
       fix: >-
-        Resolve what the assessor was unsure of: usually a missing source for a
-        threshold or an unstated intent.
+        Read the unsure criteria and suggestions in the rule's assessment file.
+        Add the missing threshold source or clarify the rule's rationale in its
+        scorecard. Then run `seikika assess brief <rule id> --portal <manifest>`
+        and reassess using the updated evidence.
       rationale: >-
         An unsure verdict usually marks a threshold with no source or an intent
         nobody wrote down, which is where a rule drifts into a proxy (lesson

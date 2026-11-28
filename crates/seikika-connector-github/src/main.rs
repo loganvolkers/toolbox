@@ -87,7 +87,7 @@ impl GitHub {
             &key,
         )
         .map_err(|e| e.to_string())?;
-        let r: Value = self
+        let response = self
             .http
             .post(format!(
                 "{}/app/installations/{inst}/access_tokens",
@@ -98,11 +98,22 @@ impl GitHub {
             .header("user-agent", "seikika-connector-github")
             .send()
             .await
-            .map_err(|e| e.to_string())?
+            .map_err(|e| format!("request installation token: {e}"))?;
+        if !response.status().is_success() {
+            return Err(format!(
+                "request installation token: HTTP {}",
+                response.status().as_u16()
+            ));
+        }
+        let r: Value = response
             .json()
             .await
-            .map_err(|e| e.to_string())?;
-        Ok(r["token"].as_str().map(str::to_owned))
+            .map_err(|e| format!("decode installation token response: {e}"))?;
+        let token = r["token"]
+            .as_str()
+            .filter(|token| !token.is_empty())
+            .ok_or("installation token response did not contain a token")?;
+        Ok(Some(token.to_owned()))
     }
 
     /// GET a path; `Ok(None)` on 404.

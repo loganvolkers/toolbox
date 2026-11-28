@@ -1,70 +1,37 @@
 apiVersion: seikika.com/assessment/v1
 entity: assessment:rule-quality/rule:seikika/maintainer-crate/has-tests
 rubric: assessment-quality
-subjectHash: e92240f72c74
-assessor: {kind: agent, name: cursor-review-agent-2, model: claude-opus-5.5}
-at: 2026-11-24
+subjectHash: 6e50db09b960
+rubricHash: e30700fc6322cf9f05a301bb4638d6708e9f5eb5aea0281911229ce75bd37bf7
+assessor: {kind: agent, name: Codex, model: GPT-6}
+at: 2026-11-28
 verdicts:
   - criterion: supported
     verdict: pass
     reason: >-
-      Every citation in
+      I checked the claims in
       portal/assessments/rule-quality/rule/seikika/maintainer-crate/has-tests.yaml
-      lands where it says. In portal/standards/crates.yaml, has-tests is
-      178-193, its evidence 183-185, its fix 186-189 and tests-scale-with-code
-      194-210. In crates/seikika-connector-workspace/src/rust.rs, the per-file
-      helper sets are 433 and 453, the macro list 214-223, unwrap/expect
-      225-235, trivial 184-211, helpers 255-290, name matching 230 and
-      237-246, and the listing 145-151. docs/design/thresholds.md:36-37 are
-      the has-tests and tests-scale-with-code rows. A scratch crate run
-      through target/debug/seikika-connector-workspace reproduced each route
-      the reasons name. A lone `"1".parse::<i32>().unwrap()` test on a broken
-      `add` gave unitTests 1 and testsWithoutAsserts [], and `cargo test`
-      passed. `assert!(1 == 1)` counted. `Vec::new()` counted while an
-      unrelated `Cfg::new` unwrapped and was listed once it didn't.
-      `prop_assert_eq!` and a tests/common helper were listed. The "15 live
-      crates" claim holds: 17 members, seikika-durable and seikika-exec
-      skipped (portal/results.json), and rg finds no proptest, `ensure!` or
-      tests/common under crates/. `git diff origin/main` shows that only
-      rationales and links changed in crates.yaml, and that rust.rs and
-      thresholds.md are unchanged, as the summary says.
+      against the cited sources. The visitor in
+      crates/seikika-connector-workspace/src/rust.rs still treats certain
+      method calls and bare-name helpers as checks. The rule in
+      portal/standards/crates.yaml checks the test count and that no test was
+      reported without an assertion.
   - criterion: complete
     verdict: pass
     reason: >-
-      The rubric names these routes, so measures-intent and hard-to-game fail
-      correctly: "could pass while missing the intent" and "a trivial test"
-      (portal/standards/meta.yaml:1151-1152, 1156-1157). fix-leads-to-pass is
-      right too. A direct non-trivial assert sets `found` (rust.rs:218-219),
-      so the test leaves the listing (rust.rs:145) whatever caused it.
-      threshold-justified is right, because thresholds.md:36 states the bar as
-      a bronze principle with a dated measurement. Rationale is not a
-      rule-quality criterion (meta.yaml:1146-1171), and the new rationale
-      (crates.yaml:190-193) claims nothing the check doesn't see.
+      The assessment covers scanner limitations, what counts as a check, the
+      repair path and the documented floor. docs/design/thresholds.md
+      distinguishes this check from the separate test density threshold.
   - criterion: reproducible
     verdict: pass
     reason: >-
-      Each verdict rests on code or text a second assessor can read, and both
-      fails reproduce on a scratch crate in seconds. The one judgement is
-      failing measures-intent when no live crate misfires. The rubric's own
-      wording settles it: it asks whether an entity "could pass" wrongly
-      (meta.yaml:1151), and the reason labels the misfires latent.
+      The test sources in crates/seikika-connector-workspace/src/rust.rs and
+      the rule outcomes in portal/tests/standards.test.yaml reproduce the
+      distinctions the assessment describes. The bare-name behavior is
+      explicit in the visitor.
   - criterion: actionable
     verdict: pass
     reason: >-
-      Each suggestion would change its own verdict. measures-intent's
-      suggestion replaces the per-file helper sets (rust.rs:433, 453) and
-      name-only matching (rust.rs:230, 242). It adds `ensure!` and
-      `prop_assert*` to the macro list (rust.rs:217) and stops treating
-      unwrap-only production functions as helpers (rust.rs:255-290). That
-      removes each misfire the reason cites. hard-to-game's suggestion would
-      reject the parse-unwrap and `assert!(1 == 1)` routes. It requires a
-      crate item and treats identifier-free conditions as trivial, and
-      cargo-mutants would catch what remains, such as `assert!(add(1, 1) ==
-      add(1, 1))`.
-summary: >-
-  The corrected crates.yaml line numbers are right (has-tests 178-193,
-  evidence 183-185, fix 186-189, tests-scale-with-code 194-210). Every
-  rust.rs and thresholds.md citation also checks out. A scratch crate run
-  through the workspace connector reproduces every route the assessment
-  names. The two fails and two passes are the ones the sources support,
-  and each suggestion would change its verdict.
+      The suggestions identify helper resolution and the scanner code to
+      change. The current rule in portal/standards/crates.yaml gives enough
+      information to add a meaningful assertion to a named test.

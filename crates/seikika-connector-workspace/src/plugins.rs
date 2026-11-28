@@ -6,11 +6,9 @@
 //! portable path. Thresholds live in the manifest.
 
 use regex::Regex;
+use seikika_model::schema;
 use serde_json::{Value, json};
 use std::path::{Path, PathBuf};
-
-const PLUGIN_SCHEMA: &str = "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json";
-const MCP_SCHEMA: &str = "https://agent-plugins.org/schemas/1.0.0/mcp.schema.json";
 
 pub(crate) fn analyse(root: &Path, rel: &str) -> Value {
     let text = std::fs::read_to_string(root.join(rel)).unwrap_or_default();
@@ -20,7 +18,7 @@ pub(crate) fn analyse(root: &Path, rel: &str) -> Value {
         .map(|p| p.to_string_lossy().into_owned())
         .unwrap_or_default();
     let name = doc["name"].as_str().unwrap_or("").to_owned();
-    let description = doc["description"].as_str().unwrap_or("");
+    let description = doc["description"].as_str().unwrap_or("").trim();
     let mcp_path = format!("{dir}/mcp.json");
     let mcp_text = std::fs::read_to_string(root.join(&mcp_path)).unwrap_or_default();
     let mcp: Value = serde_json::from_str(&mcp_text).unwrap_or(Value::Null);
@@ -38,9 +36,9 @@ pub(crate) fn analyse(root: &Path, rel: &str) -> Value {
         "name": name,
         "nameOk": name_ok(&name),
         "descriptionChars": description.chars().count() as i64,
-        "schemaOk": doc["$schema"].as_str() == Some(PLUGIN_SCHEMA),
+        "schemaOk": schema::agent_plugin_manifest_valid(&doc),
         "hasMcp": has_mcp,
-        "mcpSchemaOk": has_mcp && mcp["$schema"].as_str() == Some(MCP_SCHEMA),
+        "mcpSchemaOk": has_mcp && schema::agent_plugin_mcp_valid(&mcp),
         "commandToken": command_token,
         "headerSecrets": header_secrets,
         "pathEscapes": path_escapes,
@@ -121,7 +119,9 @@ fn escapes(path: &str) -> bool {
 /// `SKILL.md` files that are not `skills/<name>/SKILL.md` under the plugin root.
 fn misplaced_skills(root: &Path, dir: &str) -> Vec<String> {
     let mut bad = Vec::new();
-    let mut stack = vec![root.join(dir)];
+    let plugin_root = root.join(dir);
+    let mut stack = vec![plugin_root.clone()];
+    let reverse_domain = compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*(?:\.[a-z0-9]+(?:-[a-z0-9]+)*)+$");
     while let Some(current) = stack.pop() {
         let Ok(entries) = std::fs::read_dir(&current) else {
             continue;
@@ -130,11 +130,16 @@ fn misplaced_skills(root: &Path, dir: &str) -> Vec<String> {
             let path = entry.path();
             let name = entry.file_name();
             let name = name.to_string_lossy();
-            if name == "node_modules" || name == "target" || name.starts_with('.') {
+            if matches!(name.as_ref(), "node_modules" | "target" | ".git") {
                 continue;
             }
-            if path.is_dir() {
-                stack.push(path);
+            let Ok(file_type) = entry.file_type() else {
+                continue;
+            };
+            if file_type.is_dir() {
+                if current != plugin_root || !reverse_domain.is_match(&name) {
+                    stack.push(path);
+                }
                 continue;
             }
             if name != "SKILL.md" {
@@ -211,6 +216,32 @@ mod tests {
     }
 
     #[test]
+    fn schema_urls_alone_do_not_make_plugin_files_valid() {
+        let plugin = r#"{
+            "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+            "name": "example",
+            "version": 1,
+            "description": "   "
+        }"#;
+        let mcp = r#"{
+            "$schema": "https://agent-plugins.org/schemas/1.0.0/mcp.schema.json"
+        }"#;
+        let tmp = scratch(
+            "invalid-schema",
+            &[
+                ("plugins/example/plugin.json", plugin),
+                ("plugins/example/mcp.json", mcp),
+            ],
+        );
+        let rec = analyse(&tmp.0, "plugins/example/plugin.json");
+        assert_eq!(rec["nameOk"], true);
+        assert_eq!(rec["descriptionChars"], 0);
+        assert_eq!(rec["schemaOk"], false);
+        assert_eq!(rec["hasMcp"], true);
+        assert_eq!(rec["mcpSchemaOk"], false);
+    }
+
+    #[test]
     fn a_spec_plugin_with_stdio_mcp_is_closed() {
         let plugin = r#"{
             "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
@@ -262,6 +293,14 @@ mod tests {
                 ("plugins/demo/unsafe/plugin.json", plugin),
                 ("plugins/demo/unsafe/mcp.json", mcp),
                 ("plugins/demo/unsafe/extra/SKILL.md", "# Nope\n"),
+                (
+                    "plugins/demo/unsafe/.claude/skills/example/SKILL.md",
+                    "# Vendor location\n",
+                ),
+                (
+                    "plugins/demo/unsafe/com.example.client/skills/example/SKILL.md",
+                    "# Client extension\n",
+                ),
             ],
         );
         let rec = analyse(&tmp.0, "plugins/demo/unsafe/plugin.json");
@@ -272,7 +311,10 @@ mod tests {
         assert_eq!(rec["headerSecrets"], json!(["dev header Authorization"]));
         assert_eq!(
             rec["misplacedSkills"],
-            json!(["plugins/demo/unsafe/extra/SKILL.md"])
+            json!([
+                "plugins/demo/unsafe/.claude/skills/example/SKILL.md",
+                "plugins/demo/unsafe/extra/SKILL.md",
+            ])
         );
         assert_eq!(rec["secretHits"], json!(["mcp.json:6 aws-access-key"]));
     }

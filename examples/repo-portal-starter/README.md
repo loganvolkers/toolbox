@@ -11,7 +11,7 @@ repository root or merge its entries into your existing mise config. Run `mise t
 
 | Scorecard | Kind | Bronze | Silver |
 |---|---|---|---|
-| `repo-hygiene` | Repository | README of 50+ words; a CODEOWNERS file | CODEOWNERS starts with a `*` rule; every owner is a team (`@org/team`) **or** only personal handles (`@user`); a LICENSE |
+| `repo-hygiene` | Repository | README of 50+ words; CODEOWNERS names an owner | CODEOWNERS starts with an owned catch-all; use team handles (`@org/team`) or personal handles (`@user`) consistently; readable terms in a root LICENSE, LICENCE or COPYING file |
 | `docs` | Doc (`*.md`, `docs/**/*.md`) | Relative links resolve | — |
 
 Failing rules carry their evidence: for example, individuals mixed into a team CODEOWNERS, or the

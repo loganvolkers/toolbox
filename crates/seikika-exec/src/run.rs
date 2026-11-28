@@ -258,6 +258,7 @@ impl Run {
         TERMINAL.contains(&self.state.as_str())
     }
 
+    /// Change the run state and append the corresponding event.
     pub fn set(&mut self, state: &str, by: Option<&str>, note: Option<String>) {
         self.state = state.into();
         self.events.push(Event {
@@ -291,7 +292,8 @@ impl Run {
     /// Record an approval; `true` once every approver has approved. Approvers are groups, users,
     /// or `a|b|…`, satisfied by any one of them; `member_of` says whether `who` is in a group.
     /// Each person approves once, so two approver entries take two people; principals compare
-    /// without regard to case. A refusal is recorded in the events.
+    /// without regard to case. A refusal is recorded in the events. The final approval moves
+    /// the run to `approved` using the same event that records the approver.
     pub fn approve(&mut self, who: &str, member_of: impl Fn(&str) -> bool) -> Result<bool, String> {
         if self.state != "awaiting_approval" {
             return Err(format!(
@@ -329,13 +331,18 @@ impl Run {
             approver: which.clone(),
             by: who.into(),
         });
-        self.events.push(Event {
-            at: rfc3339(now_secs()),
-            state: "approved".into(),
-            by: Some(who.into()),
-            note: Some(which),
-        });
-        Ok(self.pending_approvers().is_empty())
+        let done = self.pending_approvers().is_empty();
+        if done {
+            self.set("approved", Some(who), Some(which));
+        } else {
+            self.events.push(Event {
+                at: rfc3339(now_secs()),
+                state: "approved".into(),
+                by: Some(who.into()),
+                note: Some(which),
+            });
+        }
+        Ok(done)
     }
 
     pub fn pending_approvers(&self) -> Vec<String> {
@@ -444,7 +451,6 @@ pub fn verify(
 
 /// Dispatch a confirmed, approved run and carry it as far as it can go now: to a terminal state,
 /// or to `proposed` / `dispatched` when the effect lands later.
-#[allow(clippy::too_many_arguments)]
 pub fn execute(
     run: &mut Run,
     exec: &dyn Executor,
@@ -699,6 +705,66 @@ mod tests {
     }
 
     #[test]
+    fn verification_distinguishes_a_new_effect_from_an_existing_condition() {
+        struct Snapshot;
+        impl Observer for Snapshot {
+            fn observe(&mut self, _: &Run, _: &Expect) -> Result<(Value, String), String> {
+                Ok((json!({"ready": true}), "after".into()))
+            }
+        }
+
+        let policies = Map::new();
+        for (postcondition, held_before, state, error) in [
+            ("entity.ready", false, "succeeded", None),
+            ("entity.ready", true, "unverified", None),
+            (
+                "42",
+                false,
+                "failed",
+                Some("postcondition is not a boolean"),
+            ),
+            (
+                "false",
+                false,
+                "failed",
+                Some("postcondition not met within"),
+            ),
+        ] {
+            let mut run = run();
+            run.held_before = held_before;
+            run.deadline = Some(0);
+            let expect = Expect {
+                postcondition: postcondition.into(),
+                refresh: vec![],
+                within: "0s".into(),
+            };
+            verify(
+                &mut run,
+                &expect,
+                &policies,
+                &mut Snapshot,
+                Duration::ZERO,
+                true,
+            );
+
+            assert_eq!(
+                run.state, state,
+                "{postcondition}, held_before={held_before}"
+            );
+            match error {
+                Some(message) => assert!(run.error.as_deref().unwrap().contains(message)),
+                None => {
+                    assert!(run.error.is_none());
+                    let observed = run.verification.unwrap();
+                    assert_eq!(observed["snapshot"], "after");
+                    assert_eq!(observed["held"], true);
+                    assert_eq!(observed["held_before"], held_before);
+                }
+            }
+        }
+    }
+
+    #[test]
     fn tokens_confirm_only_the_preview_they_came_from() {
         let mut inputs = Map::new();
         inputs.insert("bump".into(), "minor".into());
@@ -777,12 +843,19 @@ mod tests {
         );
         assert_eq!(r.state, "awaiting_approval");
         assert_eq!(r.approve("user:eve", |g| g == "group:sre"), Ok(false));
+        assert_eq!(r.state, "awaiting_approval");
         assert_eq!(r.pending_approvers(), vec!["user:dan".to_string()]);
         assert!(
             r.approve("user:carol", |_| false).is_err(),
             "the entry is met"
         );
         assert_eq!(r.approve("user:dan", |_| false), Ok(true));
+        assert_eq!(r.state, "approved");
+        let event = r.events.last().unwrap();
+        assert_eq!(event.state, "approved");
+        assert_eq!(event.by.as_deref(), Some("user:dan"));
+        assert_eq!(event.note.as_deref(), Some("user:dan"));
+        assert_eq!(r.events.iter().filter(|e| e.state == "approved").count(), 2);
         assert_eq!(r.approval.approved_by, vec!["user:eve", "user:dan"]);
         assert_eq!(
             r.approval.satisfied[0],

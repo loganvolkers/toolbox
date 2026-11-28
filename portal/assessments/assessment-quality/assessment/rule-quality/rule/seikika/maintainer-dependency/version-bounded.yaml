@@ -1,47 +1,39 @@
 apiVersion: seikika.com/assessment/v1
 entity: assessment:rule-quality/rule:seikika/maintainer-dependency/version-bounded
 rubric: assessment-quality
-subjectHash: 31045eb96509
-assessor: {kind: agent, name: cursor-reviewer-37, model: claude-opus-5.5}
-at: 2026-11-25
+subjectHash: ae65f065c914
+rubricHash: e30700fc6322cf9f05a301bb4638d6708e9f5eb5aea0281911229ce75bd37bf7
+assessor: {kind: agent, name: Codex, model: GPT-6}
+at: 2026-11-28
 verdicts:
   - criterion: supported
     verdict: pass
     reason: >-
+      I checked the claims in
       portal/assessments/rule-quality/rule/seikika/maintainer-dependency/version-bounded.yaml
-      matches the sources. unbounded is empty, "*", or a leading ">" or "*"
-      (crates/seikika-connector-workspace/src/deps.rs:65-68), so ">=1, <2"
-      fails and "0" or "^0" does not. The rationale is a missing ceiling
-      (portal/standards/dependencies.yaml:66-69) and the fix names only "a
-      bare >=" (dependencies.yaml:63-65). Cargo's caret page, linked at
-      dependencies.yaml:70-72, gives ^0 as >=0.0.0, <1.0.0. The fixture
-      evidence is ['*'] at portal/tests/standards.test.yaml:446-456, and
-      inherited reqs are read at deps.rs:36-38. Bronze is
-      dependency-standards.md:16-18 and D74.
+      against the cited sources.
+      crates/seikika-connector-workspace/src/deps.rs:65-68 classifies
+      requirements by their initial characters.
+      portal/standards/dependencies.yaml:59-72 asks whether the requirement is
+      bounded, supporting the assessment’s mixed-comparator example and
+      conservative floor concern.
   - criterion: complete
     verdict: pass
     reason: >-
-      measures-intent is the right fail: the check rejects a bounded ">=1, <2"
-      and accepts "0", which the rationale's ceiling test would treat the
-      other way. hard-to-game passes because a caret is as cheap as "<99".
-      Following the fix's caret, tilde or exact requirement passes unbounded.
-      There is no numeric threshold.
+      The assessment covers the compound comparator case, Cargo’s pre-1.0
+      caret behavior, the displayed requirements, and the bronze placement in
+      docs/design/dependency-standards.md.
   - criterion: reproducible
     verdict: pass
     reason: >-
-      The prefix test is a few lines, and the caret semantics are the page the
-      rule already links. A second assessor does not have to choose between
-      the two misfires.
+      The initial-character match is visible in
+      crates/seikika-connector-workspace/src/deps.rs:65-68, and the rule’s
+      accepted forms and evidence can be checked in
+      portal/standards/dependencies.yaml:59-72 and
+      portal/tests/standards.test.yaml.
   - criterion: actionable
     verdict: pass
     reason: >-
-      Parsing the requirement and flagging a missing upper bound, or a ceiling
-      that crosses a breaking boundary, would make ">=1, <2" pass and "0"
-      fail, which is the measures-intent change asked for in
-      portal/assessments/rule-quality/rule/seikika/maintainer-dependency/version-bounded.yaml.
-      The three passes have no suggestion to apply.
-summary: >-
-  Trustworthy. The prefix test, the fix's "bare >=" wording, and Cargo's
-  ^0 range are where the assessment says they are. Failing measures-intent
-  and passing the other three is what those sources support, and parsing
-  the requirement would change the fail.
+      Parsing full Cargo requirements and testing both upper-bounded compound
+      forms and broad pre-1.0 ranges would address the measured-intent finding
+      in crates/seikika-connector-workspace/src/deps.rs.

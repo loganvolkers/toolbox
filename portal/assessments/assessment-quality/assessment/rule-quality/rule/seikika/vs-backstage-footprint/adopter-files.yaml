@@ -1,49 +1,36 @@
 apiVersion: seikika.com/assessment/v1
 entity: assessment:rule-quality/rule:seikika/vs-backstage-footprint/adopter-files
 rubric: assessment-quality
-subjectHash: 82638cfcdeb5
-assessor: {kind: agent, name: cursor-reviewer-17, model: claude-opus-5.5}
-at: 2026-11-25
+subjectHash: f1cfa0ac34bb
+rubricHash: e30700fc6322cf9f05a301bb4638d6708e9f5eb5aea0281911229ce75bd37bf7
+assessor: {kind: agent, name: Codex, model: GPT-6}
+at: 2026-11-28
 verdicts:
   - criterion: supported
     verdict: pass
     reason: >-
-      The citations in
+      I checked the claims in
       portal/assessments/rule-quality/rule/seikika/vs-backstage-footprint/adopter-files.yaml
-      land. footprint.py:154 calls `owned(STARTER, skip=("tests",
-      "fixtures"))`, and :47-48 skip a file if any path part matches.
-      Backstage is `owned(BS_SRC)` with only the default skips (:157). The
-      starter's README.md:4-5 asks the adopter to copy seikika.yaml and add
-      the report action. The adjudication's point is ADJUDICATION.md:224-229.
-      The pre-registration shows "—" at README.md:43, the post-hoc bar is at
-      RESULTS.md:261-265, and RESEARCH.md:58 is F2's comparative bar. The
-      field and fix are backstage-comparison.yaml:58-60 and 414-415. One
-      partial citation: the starter's README.md:20-22 mentions `.seikika/**`
-      and `tests/*.yaml`, but not fixtures/. Fixtures are implied, since
-      `seikika test` reads them.
+      against the cited sources.
+      experiments/backstage-compare/footprint.py:44-55 counts matching file
+      suffixes, and :153-157 excludes tests and fixtures from only the starter
+      count. examples/repo-portal-starter/README.md describes files the
+      adopter actually keeps.
   - criterion: complete
     verdict: pass
     reason: >-
-      measures-intent and hard-to-game fail on the counting code itself
-      (footprint.py:47-48, 154). threshold-justified is a fail, not unsure,
-      and that is grounded: RESULTS.md:261-265 positively records the bar as
-      post-hoc. fix-leads-to-pass passes because the fix names the counted
-      directory and a mechanism that exists today (D89 packages).
+      The assessment addresses the counted inputs, cheap path exclusions,
+      package reuse and the late 10-file bar.
+      experiments/backstage-compare/README.md:43 does not prescribe that bar.
   - criterion: reproducible
     verdict: pass
     reason: >-
-      Every verdict rests on footprint.py's code or the README and RESULTS
-      text. Running `owned()` on the starter reproduces the 2.
+      experiments/backstage-compare/footprint.py:44-55 and :153-157 expose the
+      two enumeration paths and show why a file under tests disappears from
+      one count.
   - criterion: actionable
     verdict: pass
     reason: >-
-      Counting what the starter's README tells the adopter to keep, measured
-      the same way for both arms, fixes measures-intent. Skipping only the
-      inputs `seikika test` reads, not any path named tests or fixtures,
-      closes the gaming route. Giving the 10 a source, or scoring only the
-      value, settles threshold-justified.
-summary: >-
-  Sound. The adopter count includes a README that nobody copies and skips
-  the tests, fixtures and workflow that adopters do keep. Directory-name
-  skips make it gameable, and the bar is post-hoc, all as footprint.py and
-  RESULTS.md show. One citation supports only half of its claim.
+      The proposed explicit adopter inventory would align the value with
+      portal/standards/backstage-comparison.yaml. A published rationale for
+      the absolute limit would address the threshold finding.

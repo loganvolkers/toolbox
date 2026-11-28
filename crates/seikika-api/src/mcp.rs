@@ -29,7 +29,7 @@ pub fn builtin_tools() -> Value {
              "kind": {"type": "string", "description": "Only entities of this kind, e.g. Repository"},
              "limit": {"type": "integer", "description": "Maximum number of results (default 20)"}}), &["query"])},
         {"name": "get", "description": "One entity with its fields and where each came from.", "annotations": {"readOnlyHint": true},
-         "inputSchema": s(json!({"id": id, "fields": {"type": "string", "description": "Comma-separated"}}), &["id"])},
+         "inputSchema": s(json!({"id": id, "fields": {"type": "string", "description": "Comma-separated fields to return (default: every visible field)"}}), &["id"])},
         {"name": "query", "description": "Entities of a kind matching a CEL filter over `entity`, e.g. entity.ownership.status != 'verified'.",
          "annotations": {"readOnlyHint": true},
          "inputSchema": s(json!({

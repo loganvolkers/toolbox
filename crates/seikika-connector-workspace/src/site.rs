@@ -168,7 +168,11 @@ fn in_sidebar(root: &Path, rel: &str, slug: &str, draft: bool, hidden: bool) -> 
     let Some(dir) = site_dir(rel) else {
         return false;
     };
-    let config = read_config(root, dir);
+    let config = read_config(root, dir)
+        .lines()
+        .filter(|line| !line.trim_start().starts_with("//"))
+        .collect::<Vec<_>>()
+        .join("\n");
     let dirs = compile(r#"directory\s*:\s*['"]([^'"]+)['"]"#);
     if dirs.captures_iter(&config).any(|c| {
         let dir = c.get(1).map(|m| m.as_str()).unwrap_or("");
@@ -479,6 +483,40 @@ mod tests {
         let page = analyse(&tmp.0, "site/src/content/docs/draft.md");
         assert_eq!(page["draft"], true);
         assert_eq!(page["inSidebar"], false);
+    }
+
+    #[test]
+    fn commented_sidebar_entries_do_not_make_pages_reachable() {
+        let tmp = scratch(
+            "commented-sidebar",
+            &[
+                (
+                    "site/astro.config.mjs",
+                    "sidebar: [\n  // { autogenerate: { directory: 'concepts' } },\n  // { slug: 'concepts/catalog' },\n]\n",
+                ),
+                (
+                    "site/src/content/docs/concepts/catalog.md",
+                    "---\ntitle: Catalog\n---\n",
+                ),
+            ],
+        );
+        let page = analyse(&tmp.0, "site/src/content/docs/concepts/catalog.md");
+        assert_eq!(page["inSidebar"], false);
+    }
+
+    #[test]
+    fn a_draft_with_the_same_title_is_reported_as_a_duplicate() {
+        let published = "site/src/content/docs/catalog.md";
+        let draft = "site/src/content/docs/draft.mdx";
+        let tmp = scratch(
+            "duplicate-title",
+            &[
+                (published, "---\ntitle: Catalog\n---\n"),
+                (draft, "---\ntitle: catalog\ndraft: true\n---\n"),
+            ],
+        );
+        assert_eq!(analyse(&tmp.0, published)["duplicateTitle"], true);
+        assert_eq!(analyse(&tmp.0, draft)["duplicateTitle"], true);
     }
 
     #[test]

@@ -1,61 +1,41 @@
 apiVersion: seikika.com/assessment/v1
 entity: assessment:scorecard-quality/scorecard:seikika/vs-backstage-org-fit
 rubric: assessment-quality
-subjectHash: 7e856b302131
-assessor: {kind: agent, name: cursor-reviewer-32, model: claude-opus-5.5}
-at: 2026-11-25
+subjectHash: fa12988f1720
+rubricHash: e30700fc6322cf9f05a301bb4638d6708e9f5eb5aea0281911229ce75bd37bf7
+assessor: {kind: agent, name: Codex, model: GPT-6}
+at: 2026-11-28
 verdicts:
   - criterion: supported
     verdict: fail
     reason: >-
-      The ladder and gap claims in
+      I checked the claims in
       portal/assessments/scorecard-quality/scorecard/seikika/vs-backstage-org-fit.yaml
-      hold. Both rules are bronze
-      (portal/standards/backstage-comparison.yaml:765 and :781). The
-      description at :745-747 says "one repository with no server first, then
-      many portals joined". F12 at docs/design/backstage-comparison.md:57 and
-      RESEARCH.md:68 measure repo scope as services, CI time and secrets, and
-      federation as propagation, staleness and skew. The scorecard's checks
-      are the two booleans. experiments/backstage-compare/facts.yaml:48-54
-      sets repoScopedWithoutServer true and federates false, and neither fix
-      names that file. The federation fix (backstage-comparison.yaml:784) is
-      the one sentence "Build federation as its design describes".
-      docs/design/federation.md is 201 lines, its banner says only actions up
-      and runs down are built, and D68
-      (docs/decisions/D01M7VWS4ZJ0000000000000000.md:9) says no implementation
-      until repo portals are used by a few teams. portal/results.json has
-      product:seikika at none, failing federation. The CI citation does not.
-      .github/workflows/ci.yml:87 is the words "the baseline)". The `seikika
-      report` command is ci.yml:89.
+      against the cited sources. docs/design/federation.md and
+      examples/github-org-federation/README.md describe a combined catalog and
+      published child scores. The untreated claim that catalogs cannot be
+      federated no longer holds at that breadth.
     suggestion: >-
-      Cite .github/workflows/ci.yml:89 for the report that scores the
-      repository with no server.
+      Update the evidence and specify whether the benchmark scores combined
+      publication or live data propagation.
   - criterion: complete
-    verdict: pass
+    verdict: fail
     reason: >-
-      one-concern passes: both rules are the org-shape question the
-      description orders as one path. levels-are-a-ladder fails because
-      federation, unbuilt by the design's own banner, shares bronze with repo
-      scope, and the card's only level is bronze, so Seikika stays at none.
-      no-obvious-gap fails because F12's measures are reduced to two booleans
-      and standards down (federation.md:31) is absent. actionable fails
-      because the federation fix names no section, flow or file.
+      The assessment discusses standards sharing, but omits the shipped
+      report-publication integration in
+      examples/github-org-federation/README.md when judging the federation
+      ladder.
+    suggestion: >-
+      Reassess the ladder against shipped federation and the measured
+      boolean’s precise scope.
   - criterion: reproducible
     verdict: pass
     reason: >-
-      The two bronze levels, the none score and the one-line fix are in the
-      files. A second assessor fails the same three criteria.
+      The scorecard and experiments/backstage-compare/facts.yaml:48-54 still
+      show why the historical scored result stayed at none.
   - criterion: actionable
     verdict: pass
     reason: >-
-      Moving federation above bronze would let repo scope carry bronze, which
-      is the ladder fail. Adding the F12 measures and a shared-standards rule
-      would be the gap the no-obvious-gap reason names. Naming the flow, the
-      design section and experiments/backstage-compare/facts.yaml in the
-      federation fix would give the actionable fail a place to edit. Each
-      suggestion is attached to its fail.
-summary: >-
-  The broken ladder, the boolean reduction of F12 and the one-line
-  federation fix all match the files, and Seikika is at none on the card.
-  The repo-scope citation is two lines off: the report command is
-  ci.yml:89, not :87.
+      The recommendation to define and measure specific federation flows
+      remains useful because portal/standards/backstage-comparison.yaml
+      currently checks a single boolean.

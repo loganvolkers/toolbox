@@ -1,47 +1,46 @@
 apiVersion: seikika.com/assessment/v1
 entity: assessment:rule-quality/rule:seikika/vs-backstage-agent-surface/mcp-by-default
 rubric: assessment-quality
-subjectHash: c9dcc2f48c64
-assessor: {kind: agent, name: cursor-reviewer-15, model: claude-opus-5.5}
-at: 2026-11-25
+subjectHash: 687bddb20ffc
+rubricHash: e30700fc6322cf9f05a301bb4638d6708e9f5eb5aea0281911229ce75bd37bf7
+assessor: {kind: agent, name: Codex, model: GPT-6}
+at: 2026-11-28
 verdicts:
   - criterion: supported
-    verdict: pass
+    verdict: fail
     reason: >-
-      The citations in
+      I checked the claims in
       portal/assessments/rule-quality/rule/seikika/vs-backstage-agent-surface/mcp-by-default.yaml
-      hold:
-      - The rationale is backstage-comparison.yaml:822-825.
-      - Seikika's fact is experiments/backstage-compare/facts.yaml:55-59, and
-        Backstage's create-app evidence is :147-149.
-      - snapshot.py:85 overlays experiments/backstage-compare/facts.yaml on the measured record.
-      - surface.py:164-165 asserts a 200 authenticated `tools/list` on each
-        arm, a result that never reaches `mcpByDefault`.
-      - `handle` is mcp.rs:999-1023.
-      - The bar is README.md:52 and ADJUDICATION.md:113.
+      against the cited sources.
+      experiments/backstage-compare/snapshot.py:79-89 copies mcpByDefault from
+      experiments/backstage-compare/facts.yaml. Restoring either endpoint
+      named in the fix does not update the evidence, contrary to the
+      assessment’s remediation pass.
+    suggestion: >-
+      Check fix-leads-to-pass against the snapshot input and distinguish the
+      HTTP benchmark from the stdio bridge.
   - criterion: complete
-    verdict: pass
+    verdict: fail
     reason: >-
-      hard-to-game fails for the right reason: the value is typed into
-      experiments/backstage-compare/facts.yaml:56. The other verdicts are
-      right. The fix names both endpoints, and the boolean bar was
-      pre-registered. The value is true today, so a "keep" fix that names the
-      serving code is enough for fix-leads-to-pass.
+      experiments/backstage-compare/surface.py:164-166 checks the configured
+      HTTP MCP endpoint only. The assessment already recognizes the declared
+      input but misses its consequence for fix-leads-to-pass.
+    suggestion: >-
+      Record the missing fact or measurement update in the remediation
+      verdict.
   - criterion: reproducible
-    verdict: pass
+    verdict: fail
     reason: >-
-      The hand-written boolean and the unused probe can both be read in
-      experiments/backstage-compare/facts.yaml:55-59 and surface.py:164-166. A
-      second assessor would reach the same fail and the same passes.
+      experiments/backstage-compare/surface.py:164-166 and
+      experiments/backstage-compare/snapshot.py:79-89 expose separate probe
+      and production inputs. Those sources do not reproduce the claimed
+      remediation pass.
+    suggestion: >-
+      Trace the exact input used by the scorecard when judging the fix.
   - criterion: actionable
     verdict: pass
     reason: >-
-      The suggestion would make the fact measured rather than typed, so
-      editing a file could no longer pass the rule. It derives `mcpByDefault`
-      from surface.py's `tools/list` probe and removes it from
-      experiments/backstage-compare/facts.yaml. That changes the hard-to-game
-      verdict it is attached to.
-summary: >-
-  A sound assessment with accurate citations. Its one fail correctly spots
-  that the field is asserted, not probed, while surface.py already makes
-  the probe that would prove it. Its suggestion wires that probe in.
+      Measuring the configured HTTP tool list and feeding it into
+      experiments/backstage-compare/snapshot.py would address the hand-written
+      fact finding, provided the benchmark documents which configuration
+      qualifies as shipped.

@@ -1,46 +1,37 @@
 apiVersion: seikika.com/assessment/v1
 entity: assessment:rule-quality/rule:seikika/maintainer-docs/names-sdlc-layer
 rubric: assessment-quality
-subjectHash: 1b2aa3c0ff93
-assessor: {kind: agent, name: cursor-reviewer-11, model: claude-opus-5.5}
-at: 2026-11-25
+subjectHash: 6479cccd21c6
+rubricHash: e30700fc6322cf9f05a301bb4638d6708e9f5eb5aea0281911229ce75bd37bf7
+assessor: {kind: agent, name: Codex, model: GPT-6}
+at: 2026-11-28
 verdicts:
   - criterion: supported
-    verdict: pass
+    verdict: fail
     reason: >-
-      The citations in
+      I checked the claims in
       portal/assessments/rule-quality/rule/seikika/maintainer-docs/names-sdlc-layer.yaml
-      hold. The counts are portal/seikika.yaml:119-124: `sdlc` is
-      case-sensitive, and `layeredSdlc` accepts agent, "SDLC has", "SDLC
-      stages?" and "SDLC in Seikika". docs/sdlc.md:10-15 lists four layers,
-      none of them agent, and :3-4 credits D87 with package author. D63 asks
-      documents to name the layer they mean. The fix, evidence and rationale
-      are docs.yaml:116-118, :113-115 and :119-121. Doc records carry no match
-      lines, while File records do (main.rs:462-477). I reran the scratch text
-      through target/debug/seikika-connector-workspace with the portal's
-      counts and got layeredSdlc 3 and sdlc 3, as claimed.
+      against the cited sources. portal/seikika.yaml still accepts generic
+      SDLC phrases. However, portal/standards/docs.yaml now names all four
+      layers, including package author, so the assessment’s claim that the
+      remediation lists only three is outdated.
+    suggestion: >-
+      Update the remediation evidence to reflect the four-layer wording and
+      retain the distinct regex coverage finding.
   - criterion: complete
     verdict: pass
     reason: >-
-      Both fails are right. fix-leads-to-pass passes correctly, and it also
-      notes that the fix lists three layers where D87 made four
-      (docs.yaml:117). That doesn't stop the rule passing, so pass is right
-      under the rubric's question. threshold-justified is right: D63 and
-      seikika-for-seikika.md:104 put it at bronze.
+      The assessment covers the counter’s vocabulary, the missing per-location
+      diagnostics and the layer distinction established by docs/sdlc.md.
   - criterion: reproducible
     verdict: pass
     reason: >-
-      The verdicts rest on a regex (portal/seikika.yaml:121-124) and a
-      one-line scratch doc, which I reproduced. Whether "agent SDLC" counts as
-      a layer is settled by docs/sdlc.md:10-15, not by taste.
+      portal/seikika.yaml makes the accepted forms and capitalization
+      reproducible. The rule in portal/standards/docs.yaml compares occurrence
+      counts without reporting individual lines.
   - criterion: actionable
     verdict: pass
     reason: >-
-      Dropping `agent`, `has` and `SDLC stages?` from the alternation makes
-      the scratch doc fail, which flips both fails. The suggestion also asks
-      for a fixture line per escape.
-summary: >-
-  Accurate and complete: the escapes in the layeredSdlc regex let a doc
-  pass without naming a layer, and the scratch case reproduces exactly.
-  The note that the fix lists three of four layers (D87) is a useful
-  finding beyond the verdicts.
+      Testing named and generic references separately in portal/seikika.yaml
+      would address the remaining coverage limitation. The wording repair in
+      portal/standards/docs.yaml has already been made.

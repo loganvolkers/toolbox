@@ -1,52 +1,38 @@
 apiVersion: seikika.com/assessment/v1
 entity: assessment:rule-quality/rule:seikika/user-cli/has-help
 rubric: assessment-quality
-subjectHash: 879744deb822
-assessor: {kind: agent, name: cursor-reviewer-14, model: claude-opus-5.5}
-at: 2026-11-25
+subjectHash: fe49e7d8049a
+rubricHash: e30700fc6322cf9f05a301bb4638d6708e9f5eb5aea0281911229ce75bd37bf7
+assessor: {kind: agent, name: Codex, model: GPT-6}
+at: 2026-11-28
 verdicts:
   - criterion: supported
-    verdict: pass
+    verdict: fail
     reason: >-
-      The citations in
+      I checked the claims in
       portal/assessments/rule-quality/rule/seikika/user-cli/has-help.yaml
-      hold.
-      - crates/seikika-cli/src/main.rs:1236 stores `sub.get_about()`.
-      - portal/standards/cli.yaml:175-178 is the rationale and 168 the floor.
-      - main.rs:401-413 is `CLI_MCP_TOOLS` with 11 reads, and `Mcp` is a
-        `Command` variant at main.rs:249, which makes 12.
-      - Live `seikika describe` gives `graph` the shortest about, "Neighbours
-        of an entity" at 23 characters.
-      - The bronze row is docs/design/seikika-for-seikika.md:106, and
-        docs/design/thresholds.md has no has-help row. cli.yaml:272 is
-        `described`'s 20.
-      - portal/fixtures/surfaces.ndjson has three user-layer commands
-        (`owner`, `mcp`, `search`), all over 10 characters.
+      against the cited sources. docs/design/thresholds.md now records ten
+      characters as a chosen floor for both operator and user commands. The
+      assessment says the threshold has no source there.
+    suggestion: >-
+      Update the rationale citation and distinguish the remaining question
+      about a different MCP threshold.
   - criterion: complete
     verdict: pass
     reason: >-
-      Every criterion is right. threshold-justified is correctly unsure: the
-      rubric says "unsure when no source states the number"
-      (portal/standards/meta.yaml:1179-1180). hard-to-game passes because the
-      floor rules out the empty help the rubric names (meta.yaml:1165).
-      measures-intent passes because the check reads what `--help` prints.
+      The assessment covers the clap help source, the remediation, the bronze
+      threshold and missing user-specific fail-path coverage.
+      portal/standards/cli.yaml uses the same help predicate on both CLI
+      cards.
   - criterion: reproducible
     verdict: pass
     reason: >-
-      The only judgement, that 10 characters of filler costs as much as a real
-      sentence, matches the rubric's examples, which are routes that skip the
-      work (meta.yaml:1165-1166). It also matches the operator twin's
-      assessment,
-      portal/assessments/rule-quality/rule/seikika/operator-cli/has-help.yaml.
-      Everything else is cited code.
+      crates/seikika-cli/src/main.rs shows the about lookup, and
+      portal/standards/cli.yaml shows the threshold without requiring any
+      judgement about the quality of a ten-character string.
   - criterion: actionable
     verdict: pass
     reason: >-
-      The unsure verdict's suggestion is to add a thresholds.md row stating
-      10, and to explain or align the gap with `described`'s 20. That supplies
-      the missing source, so it would turn threshold-justified to pass.
-summary: >-
-  A sound assessment. The cited lines, the 12-command count, the
-  23-character minimum and the fixture count all check out. The unsure for
-  the unexplained 10, against the MCP twin's 20, is the right call, and
-  its fix would settle it.
+      The threshold now has a rationale in docs/design/thresholds.md.
+      Comparing the CLI and MCP thresholds would require a separate argument
+      about the information expected from each surface.

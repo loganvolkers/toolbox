@@ -1,8 +1,10 @@
 {
   "name": "seikika-manifest-builder-prototype",
+  "description": "TypeScript prototype for building and validating Seikika portal manifests.",
   "license": "MIT",
   "private": true,
   "type": "module",
+  "engines": { "node": ">=22" },
   "scripts": {
     "typecheck": "tsc --noEmit",
     "print": "tsx portal/acme.ts",

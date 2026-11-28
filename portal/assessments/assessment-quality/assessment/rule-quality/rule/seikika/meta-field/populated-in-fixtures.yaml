@@ -1,54 +1,37 @@
 apiVersion: seikika.com/assessment/v1
 entity: assessment:rule-quality/rule:seikika/meta-field/populated-in-fixtures
 rubric: assessment-quality
-subjectHash: 6f66e15331c8
-assessor: {kind: agent, name: cursor-reviewer-36, model: claude-opus-5.5}
-at: 2026-11-25
+subjectHash: afa08460eaf0
+rubricHash: e30700fc6322cf9f05a301bb4638d6708e9f5eb5aea0281911229ce75bd37bf7
+assessor: {kind: agent, name: Codex, model: GPT-6}
+at: 2026-11-28
 verdicts:
   - criterion: supported
     verdict: pass
     reason: >-
-      The citations in
+      I checked the claims in
       portal/assessments/rule-quality/rule/seikika/meta-field/populated-in-fixtures.yaml
-      match. population counts every non-null value
-      (crates/seikika-cli/src/model.rs:115-118), so 0 counts. The Rule map
-      writes links as 0 when the record has no links key
-      (portal/standards/meta.yaml:197). None of the 8 rule records in
-      portal/fixtures/surfaces.ndjson has a links key, and
-      field:seikika/Rule.links is gold in portal/results.json. Scorecard
-      liveEntities falls back to null (meta.yaml:91) and fails
-      populated-in-fixtures. fieldType reads record.type and fixtureWithValue
-      reads record.fixture.withValue (meta.yaml:297-300); Kind.fieldCount
-      reads record.fields (:243). The fix and rationale are :786-791.
-      model.rs:27-45 extracts CEL field names. Bronze is
-      docs/design/scorecards-for-scorecards.md:208 and the ratchet comment at
-      meta.yaml:778.
+      against the cited sources. The population collector in
+      crates/seikika-cli/src/model.rs counts derived non-null values,
+      including a fallback. The Rule links default and the presence predicate
+      are still in packages/meta-scoring/fragments/catalog.yaml.
   - criterion: complete
     verdict: pass
     reason: >-
-      measures-intent and hard-to-game fail because a map fallback of 0 or
-      false is non-null (model.rs:116) and needs no fixture key.
-      fix-leads-to-pass fails because the fix says "a value for the field"
-      (meta.yaml:786-787) while the map renames the record key
-      (meta.yaml:297-300). threshold-justified passes: the bar is one entity,
-      stated as the floor at meta.yaml:767-769 and
-      scorecards-for-scorecards.md:208.
+      The assessment distinguishes derived presence, source-key coverage and
+      whether the fix names the real input. It explains the role of the bronze
+      floor in docs/design/scorecards-for-scorecards.md.
   - criterion: reproducible
     verdict: pass
     reason: >-
-      The non-null test, the links fallback of 0, and the renamed record keys
-      are all in model.rs and meta.yaml. A second assessor counting the eight
-      rule fixtures and the gold Rule.links row reaches the same three fails.
+      The source-key renames and fallback examples can be inspected in
+      packages/meta-scoring/fragments/catalog.yaml and compared with the count
+      from crates/seikika-cli/src/model.rs. The portal fixtures exercise zero
+      and positive population.
   - criterion: actionable
     verdict: pass
     reason: >-
-      The suggestions in
-      portal/assessments/rule-quality/rule/seikika/meta-field/populated-in-fixtures.yaml
-      count only values that come from a fixture key the map reads, and they
-      put that key in the evidence. That flips measures-intent, hard-to-game
-      and fix-leads-to-pass. threshold-justified already passes.
-summary: >-
-  The assessment is right. "Non-null" counts a map rule's own fallback, so
-  Rule.links is gold with no fixture record carrying links, and the fix
-  says "the field" where the map reads a different record key. Bronze as
-  "at least one value" is the floor the design doc states.
+      The suggestions identify record provenance and the fixture to update.
+      The current fix in packages/meta-scoring/fragments/catalog.yaml now
+      tells the reader to use mapped source keys and populate computed
+      dependencies.

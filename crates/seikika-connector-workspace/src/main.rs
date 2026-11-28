@@ -307,7 +307,7 @@ fn missing_decisions(text: &str, known: &BTreeSet<String>, rel: &str) -> Vec<Str
 /// above the document, possibly behind a base path (`/gh-aw/reference/auth/` for
 /// `docs/src/content/docs/reference/auth.mdx`).
 fn links_in(root: &Path, rel: &str, text: &str) -> (usize, BTreeSet<String>) {
-    let link = Regex::new(r"\]\(([^)\s#]+)(?:#[^)]*)?\)").unwrap();
+    let link = Regex::new(r"\]\(([^)\s]+)\)").unwrap();
     let dir = Path::new(rel).parent().unwrap_or(Path::new(""));
     let (mut links, mut broken) = (0, BTreeSet::new());
     // Code is an example, not a link: drop fenced blocks and inline code first.
@@ -316,17 +316,125 @@ fn links_in(root: &Path, rel: &str, text: &str) -> (usize, BTreeSet<String>) {
     let prose = inline
         .replace_all(&fenced.replace_all(text, ""), "")
         .into_owned();
-    for c in link.captures_iter(&prose) {
-        let target = &c[1];
+    let inline_targets = link.captures_iter(&prose).map(|capture| {
+        capture
+            .get(1)
+            .expect("link regex captures its target")
+            .as_str()
+            .to_owned()
+    });
+    for destination in inline_targets.chain(reference_targets(text)) {
+        let (target, fragment) = destination
+            .split_once('#')
+            .map_or((destination.as_str(), ""), |(path, fragment)| {
+                (path, fragment)
+            });
         if target.contains("://") || target.starts_with("mailto:") {
             continue;
         }
-        links += 1;
-        if !resolves(root, dir, target) {
+        if !target.is_empty() && !resolves(root, dir, target) {
+            links += 1;
             broken.insert(target.to_owned());
+            continue;
+        }
+        let anchor_result = link_anchor(root, rel, text, target, fragment);
+        links += usize::from(!target.is_empty() || anchor_result.is_some());
+        if anchor_result == Some(false) {
+            broken.insert(destination);
         }
     }
     (links, broken)
+}
+
+fn reference_targets(text: &str) -> impl Iterator<Item = String> + '_ {
+    use pulldown_cmark::{Event, LinkType, Parser, Tag};
+
+    Parser::new(text).filter_map(|event| match event {
+        Event::Start(
+            Tag::Link {
+                link_type,
+                dest_url,
+                ..
+            }
+            | Tag::Image {
+                link_type,
+                dest_url,
+                ..
+            },
+        ) if matches!(
+            link_type,
+            LinkType::Reference | LinkType::Collapsed | LinkType::Shortcut
+        ) =>
+        {
+            Some(dest_url.into_string())
+        }
+        _ => None,
+    })
+}
+
+fn link_anchor(root: &Path, rel: &str, text: &str, target: &str, fragment: &str) -> Option<bool> {
+    let dir = Path::new(rel).parent().unwrap_or(Path::new(""));
+    if fragment.is_empty() || fragment.contains('%') || target.starts_with('/') {
+        None
+    } else if target.is_empty() && rel.ends_with(".md") {
+        Some(markdown_has_anchor(text, fragment))
+    } else if target.ends_with(".md") {
+        root.canonicalize()
+            .ok()
+            .and_then(|root| {
+                let path = root.join(dir).join(target).canonicalize().ok()?;
+                path.starts_with(&root).then_some(path)
+            })
+            .and_then(|path| std::fs::read_to_string(path).ok())
+            .map(|target_text| markdown_has_anchor(&target_text, fragment))
+    } else {
+        None
+    }
+}
+
+/// Match generated heading IDs in plain Markdown, including repeated headings.
+fn markdown_has_anchor(text: &str, fragment: &str) -> bool {
+    use pulldown_cmark::{Event, Options, Parser, Tag, TagEnd};
+
+    let slug_chars = Regex::new(r"[^\p{L}\p{N}\p{M}_ -]").unwrap();
+    let mut used = BTreeSet::new();
+    let mut heading = None::<String>;
+    for event in Parser::new_ext(
+        text,
+        Options::ENABLE_HEADING_ATTRIBUTES | Options::ENABLE_YAML_STYLE_METADATA_BLOCKS,
+    ) {
+        match event {
+            Event::Start(Tag::Heading { id, .. }) => {
+                if id.as_deref() == Some(fragment) {
+                    return true;
+                }
+                heading = id.is_none().then(String::new);
+            }
+            Event::Text(value) | Event::Code(value) => {
+                if let Some(title) = heading.as_mut() {
+                    title.push_str(&value);
+                }
+            }
+            Event::End(TagEnd::Heading(_)) => {
+                if let Some(title) = heading.take() {
+                    let base = slug_chars
+                        .replace_all(&title.to_lowercase(), "")
+                        .replace(' ', "-");
+                    let mut slug = base.clone();
+                    let mut suffix = 0;
+                    while !used.insert(slug.clone()) {
+                        suffix += 1;
+                        slug = format!("{base}-{suffix}");
+                    }
+                    if slug == fragment {
+                        return true;
+                    }
+                }
+            }
+            _ => {}
+        }
+    }
+    false
 }
 
 /// Whether `target`, linked from a document in `dir`, names a file (see [`links_in`]).
@@ -1645,6 +1753,44 @@ mod decision_ids {
             ["./nope", "/app/reference/nope/"]
         );
         let _ = std::fs::remove_dir_all(&root);
+    }
+
+    #[test]
+    fn reference_links_resolve_their_used_definitions() {
+        let root = tempfile::tempdir().unwrap();
+        std::fs::write(root.path().join("present.md"), "# Heading\n").unwrap();
+        let text = concat!(
+            "[valid][ok] [missing][] [shortcut] ![image][img]\n\n",
+            "[ok]: present.md#heading\n",
+            "[missing]: absent.md\n",
+            "[shortcut]: present.md\n",
+            "[img]: absent.png\n",
+            "[unused]: ignored.md\n\n",
+            "`[unused]`\n",
+        );
+        let (links, broken) = crate::links_in(root.path(), "README.md", text);
+        assert_eq!(links, 4);
+        assert_eq!(
+            broken.into_iter().collect::<Vec<_>>(),
+            ["absent.md", "absent.png"]
+        );
+    }
+
+    #[test]
+    fn checks_heading_fragments_for_markdown_files() {
+        let root = tempfile::tempdir().unwrap();
+        std::fs::write(
+            root.path().join("guide.md"),
+            "## Run `jobs`\n\n## Run jobs\n",
+        )
+        .unwrap();
+        let text = "# Local heading\n\n[local](#local-heading) [typo](#missing) [guide](guide.md#run-jobs-1) [typo](guide.md#run-job)";
+        let (links, broken) = crate::links_in(root.path(), "README.md", text);
+        assert_eq!(links, 4);
+        assert_eq!(
+            broken.into_iter().collect::<Vec<_>>(),
+            ["#missing", "guide.md#run-job"]
+        );
     }
 
     #[test]

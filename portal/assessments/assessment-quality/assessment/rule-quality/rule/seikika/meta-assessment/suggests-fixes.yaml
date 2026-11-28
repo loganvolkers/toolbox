@@ -1,59 +1,40 @@
 apiVersion: seikika.com/assessment/v1
 entity: assessment:rule-quality/rule:seikika/meta-assessment/suggests-fixes
 rubric: assessment-quality
-subjectHash: 47cd33b2909b
-assessor: {kind: agent, name: cursor-reviewer-04, model: claude-opus-5.5}
-at: 2026-11-25
+subjectHash: fce25ff3048f
+rubricHash: e30700fc6322cf9f05a301bb4638d6708e9f5eb5aea0281911229ce75bd37bf7
+assessor: {kind: agent, name: Codex, model: GPT-6}
+at: 2026-11-28
 verdicts:
   - criterion: supported
-    verdict: pass
+    verdict: fail
     reason: >-
-      The load-bearing citations in
+      I checked the claims in
       portal/assessments/rule-quality/rule/seikika/meta-assessment/suggests-fixes.yaml
-      hold. crates/seikika-connect/src/assessment.rs:199-201 is the trimmed
-      blank test. portal/standards/assessments.yaml:167-175 is the rule, with
-      evidence at 170, fix at 171-173 and rationale at 174-175. 242 is the
-      advisory ratchet, 165 the bronze ratchet and 340-346 `actionable`.
-      docs/design/thresholds.md:44 is explains-fix's 5 words. Two details
-      overreach without changing a verdict. The unit test at assessment.rs:313
-      and portal/tests/standards.test.yaml:960-964 show the list being filled,
-      not emptied. And "3 of 48 files" can't be reproduced: git tracks 29
-      files under portal/assessments/, 3 of them assessment-quality reviews.
+      against the cited sources.
+      packages/meta-scoring/fragments/assessments.yaml contains the rule and
+      the actionable rubric criterion now, rather than
+      portal/standards/assessments.yaml. The assessment also presents a
+      historical three-review count as current. The nonblank behavior is still
+      visible in crates/seikika-connect/src/assessment.rs.
+    suggestion: >-
+      Update the rule citations and date or recompute the supporting coverage
+      count.
   - criterion: complete
     verdict: pass
     reason: >-
-      Any non-blank string clears `unsuggested` (assessment.rs:200), so
-      hard-to-game is a fail. The other three pass on the rule text at
-      assessments.yaml:165-175 and the split D80 makes. No other failure shows
-      in the sources.
+      The assessment differentiates a required text field from a useful fix,
+      covers the diagnostic, and explains the bronze rule in
+      packages/meta-scoring/fragments/assessments.yaml.
   - criterion: reproducible
     verdict: pass
     reason: >-
-      "`suggestion: TODO` passes" is a fact anyone can read from
-      assessment.rs:199-201, and the remaining verdicts rest on the rule text
-      and D80. A second assessor would reach the same four verdicts.
+      crates/seikika-connect/src/assessment.rs and
+      portal/tests/standards.test.yaml show the missing or blank input case
+      and the resulting evidence.
   - criterion: actionable
-    verdict: fail
+    verdict: pass
     reason: >-
-      The suggestion in
-      portal/assessments/rule-quality/rule/seikika/meta-assessment/suggests-fixes.yaml
-      is a 5-word floor, copied from explains-fix
-      (docs/design/thresholds.md:44). This portal's own review of that floor
-      fails it on hard-to-game because "Five filler words pass bronze"
-      (portal/assessments/rule-quality/rule/seikika/meta-rule/explains-fix.yaml).
-      "TODO: fix this later, please" would pass the new rule, so the cheapest
-      way to pass is still not a real suggestion, and the verdict would stay
-      fail.
-    suggestion: >-
-      Pair the word floor with a place. Count a suggestion as present only
-      when it has at least 5 words and names where to act: run `cites` from
-      crates/seikika-connect/src/assessment.rs:15 over the suggestion, or
-      match a backticked field or command, as meta-rule's fixNamesPlace does
-      (portal/standards/meta.yaml:143-154). Add fixtures for "TODO" and for
-      five filler words, both failing.
-summary: >-
-  Mostly sound: the "TODO" route is real and the passes are supported. Two
-  details are off, the unit test cited as showing a fix (it shows the
-  failure) and a file count nobody can reproduce, but neither changes a
-  verdict. The suggested 5-word floor is one the portal already judged
-  gameable for explains-fix, so it wouldn't turn hard-to-game to pass.
+      A minimum word count would reject the short placeholders named in the
+      assessment; usefulness still belongs to the separate actionable judgment
+      in packages/meta-scoring/fragments/assessments.yaml.

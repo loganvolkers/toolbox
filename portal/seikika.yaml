@@ -203,6 +203,7 @@ connectors:
           - alerts
           - monitorAssessment
           - otlpTestbed
+          ci: [otlpTestbed]
         - kind: testing-contract
           globs: [portal/testing/*.yaml]
           paths: [specification, implementation, tests, fixtures, ci]

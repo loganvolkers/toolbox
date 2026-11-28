@@ -53,10 +53,15 @@ seikika dev                      # watch → TS builder (if any) → validate �
 seikika check                    # changed definitions only: manifest, CEL types, authz model (≤ 300 ms target)
 seikika test --affected          # tests whose inputs changed, in parallel, with a content-addressed result cache
 seikika test --all               # everything, no cache (what CI runs on merge)
-seikika plan --local             # full plan sections against fixtures/synthetic data
+seikika plan --local --base ./seikika.base.yaml  # compare with the base manifest over local fixtures
 seikika plan --remote prod       # remote plan (§4) using *your* identity; details redacted to your permissions
 seikika preview up               # docker compose: the built image + Postgres + fixtures
 ```
+
+For a local plan, use a copy of the base revision's manifest and its referenced files.
+For a standalone manifest, `git show main:seikika.yaml > seikika.base.yaml` from the portal root
+creates the base file shown above. The plan prints a diff. Score drops in that diff do
+not change the command's exit status.
 
 That block is the authoring loop: fixtures in, a recompute, a local API. The deploy loop, which
 runs the image against a GitHub API and a SCIM feed instead of `--fixtures`, is

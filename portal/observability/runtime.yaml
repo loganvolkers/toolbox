@@ -14,4 +14,4 @@ records:
     structuredLogTest: crates/seikika-telemetry/tests/structured_logs.rs
     alerts: [ops/alerts/snapshot-lag.yaml, ops/alerts/index-freshness.yaml]
     monitorAssessment: portal/assessments/sdlc-stage-quality/sdlc-stage/operator/monitor.yaml
-    otlpTestbed: experiments/otel-testbed/README.md
+    otlpTestbed: experiments/otel-testbed/scripts/score.sh

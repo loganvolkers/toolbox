@@ -1,46 +1,38 @@
 apiVersion: seikika.com/assessment/v1
 entity: assessment:rule-quality/rule:seikika/maintainer-package/publish-intent
 rubric: assessment-quality
-subjectHash: 82be0ea5ca94
-assessor: {kind: agent, name: cursor-reviewer-06, model: claude-opus-5.5}
-at: 2026-11-25
+subjectHash: 2ab51a0a680f
+rubricHash: e30700fc6322cf9f05a301bb4638d6708e9f5eb5aea0281911229ce75bd37bf7
+assessor: {kind: agent, name: Codex, model: GPT-6}
+at: 2026-11-28
 verdicts:
   - criterion: supported
     verdict: fail
     reason: >-
-      Most citations in
+      I checked the claims in
       portal/assessments/rule-quality/rule/seikika/maintainer-package/publish-intent.yaml
-      hold. portal/standards/packages.yaml:73-86 is the rule and :76 its
-      evidence. crates/seikika-connector-workspace/src/npm.rs:20-21 reads
-      `version` trimmed and `private` with `as_bool`, so a string "true" is
-      false. portal/tests/standards.test.yaml:555-556 pins the unsafe fixture.
-      portal/results.json lists four manifests, and all four are private. The
-      D76 quote is verbatim. But docs/design/package-standards.md:33 is the
-      table's separator row. The npm row recording that `private: true` makes
-      npm refuse to publish is line 34 (also lines 15-16).
-    suggestion: Cite docs/design/package-standards.md:34 (or 15-16).
+      against the cited sources. The assessment describes all live manifests
+      as private. report-ui/package.json and ui-kit/package.json both declare
+      versions for public packages, so that inventory claim is outdated.
+    suggestion: >-
+      Date the historical observation or cite the current public package
+      manifests.
   - criterion: complete
     verdict: pass
     reason: >-
-      The four passes are right. The CEL check is the rationale's two cases
-      (packages.yaml:75, 80-83). Both cheap ways to pass state an intent, and
-      npm itself enforces one of them. The fix names both fields, and either
-      flips the two-field check. There is no threshold, and D76 sets bronze.
-      The string-"true" edge case is reported and fails safe.
+      portal/standards/packages.yaml checks private or nonempty version. The
+      assessment covers both repair paths and identifies the boolean handling
+      in crates/seikika-connector-workspace/src/npm.rs.
   - criterion: reproducible
     verdict: pass
     reason: >-
-      The verdicts rest on a two-field CEL check (packages.yaml:75) and two
-      connector lines (npm.rs:20-21). A second assessor would reach the same
-      four passes.
+      crates/seikika-connector-workspace/src/npm.rs and
+      portal/tests/standards.test.yaml show the read and the recorded
+      public-package failure, while the live public manifests demonstrate the
+      version path.
   - criterion: actionable
     verdict: pass
     reason: >-
-      The reviewed file
-      (portal/assessments/rule-quality/rule/seikika/maintainer-package/publish-intent.yaml)
-      has no fail or unsure verdict, so it needs no suggestion.
-summary: >-
-  An accurate all-pass assessment: the check is the rationale written as
-  CEL, and the one misread (a string "true") is named and fails safe. It
-  fails `supported` only because package-standards.md:33 should be line
-  34.
+      portal/standards/packages.yaml names the two field changes that satisfy
+      the rule. The assessment records four passes and has no attached
+      suggestions.

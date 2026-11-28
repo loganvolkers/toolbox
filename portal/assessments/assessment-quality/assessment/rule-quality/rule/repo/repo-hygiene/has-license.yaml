@@ -1,43 +1,40 @@
 apiVersion: seikika.com/assessment/v1
 entity: assessment:rule-quality/rule:repo/repo-hygiene/has-license
 rubric: assessment-quality
-subjectHash: bd96c10d1509
-assessor: {kind: agent, name: cursor-reviewer-18, model: claude-opus-5.5}
-at: 2026-11-25
+subjectHash: d48714286504
+rubricHash: e30700fc6322cf9f05a301bb4638d6708e9f5eb5aea0281911229ce75bd37bf7
+assessor: {kind: agent, name: Codex, model: GPT-6}
+at: 2026-11-28
 verdicts:
   - criterion: supported
     verdict: pass
     reason: >-
-      The citations in
+      I checked the claims in
       portal/assessments/rule-quality/rule/repo/repo-hygiene/has-license.yaml
-      hold. crates/seikika-connector-workspace/src/repo.rs:65 matches names
-      starting `license` or `copying`, so LICENCE fails and an empty LICENSE
-      passes. In examples/repo-portal-starter/seikika.yaml the README-note
-      alternative is at 145-146, the rationale using "licence" at 148-150 and
-      the link at 151-153. One description is inaccurate. The reason says root
-      "or .github/" files, but `first` tests the full lowercased path
-      (repo.rs:59-63), and `.github/license` doesn't start with `license`.
-      Only root files ever match. That doesn't change a verdict.
+      against the cited sources. The starter predicate still tests for a named
+      file and its README alternative still cannot satisfy it in
+      examples/repo-portal-starter/seikika.yaml. The scanner now records file
+      content separately and searches root license candidates in
+      crates/seikika-connector-workspace/src/repo.rs, so those implementation
+      details have changed.
   - criterion: complete
     verdict: pass
     reason: >-
-      The verdicts are right. A file-name check passes an empty file, rejects
-      the British spelling and can't see a README note. So measures-intent,
-      hard-to-game and fix-leads-to-pass fail (seikika.yaml:143-146,
-      repo.rs:65). There is no number.
+      The assessment covers intent, filename versus content, remediation and
+      silver placement. The gap between the available content fact and the
+      starter check is visible in
+      crates/seikika-connector-workspace/src/repo.rs and
+      examples/repo-portal-starter/seikika.yaml.
   - criterion: reproducible
     verdict: pass
     reason: >-
-      Each verdict follows from one line of code (repo.rs:65) and the fix text
-      (seikika.yaml:145-146), which a second assessor would read the same way.
+      Inspect license_paths and the emitted facts in
+      crates/seikika-connector-workspace/src/repo.rs, then compare the starter
+      mapping and predicate in examples/repo-portal-starter/seikika.yaml.
   - criterion: actionable
     verdict: pass
     reason: >-
-      Accepting `licence` and detecting an SPDX id flips measures-intent and
-      hard-to-game. Dropping the README branch, or adding a `licenseNote`
-      fact, flips fix-leads-to-pass.
-summary: >-
-  An accurate assessment. All three fails follow from a check that reads
-  only file names, and each suggestion targets its own fail. It describes
-  the search as covering .github/, but only root files can match, which
-  doesn't affect any verdict.
+      The assessment offers a concrete spelling addition and a content or
+      recognition requirement. Wiring the current content fact into
+      examples/repo-portal-starter/seikika.yaml would implement its minimum
+      condition.

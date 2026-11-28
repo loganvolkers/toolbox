@@ -1,45 +1,36 @@
 apiVersion: seikika.com/assessment/v1
 entity: assessment:rule-quality/rule:seikika/maintainer-schema/titled
 rubric: assessment-quality
-subjectHash: 0709d0f14da5
-assessor: {kind: agent, name: cursor-reviewer-10, model: claude-opus-5.5}
-at: 2026-11-25
+subjectHash: 4a1a343308e1
+rubricHash: e30700fc6322cf9f05a301bb4638d6708e9f5eb5aea0281911229ce75bd37bf7
+assessor: {kind: agent, name: Codex, model: GPT-6}
+at: 2026-11-28
 verdicts:
   - criterion: supported
-    verdict: fail
+    verdict: pass
     reason: >-
-      The hard-to-game reason cites docs/design/thresholds.md:38 for
-      maintainer-site's title floor. Line 38 is `tests-pass`
-      (maintainer-crate); the `titled` (maintainer-site) row is line 39, and
-      it says what the reason claims. The rest of
+      I checked the claims in
       portal/assessments/rule-quality/rule/seikika/maintainer-schema/titled.yaml
-      holds. specs.rs:30 trims the root `title`. schemas.yaml:95, 96, 97-102,
-      83-86 and 47 are the check, evidence, fix and rationale, described, and
-      "ties it to the code". standards.test.yaml:594-595 pins "no title".
-      schema-standards.md:21 states silver without a reason. A scratch schema
-      titled "x" gave titleChars 1.
-    suggestion: Cite docs/design/thresholds.md:39.
+      against the cited sources.
+      crates/seikika-connector-workspace/src/specs.rs reads the trimmed root
+      title, and portal/standards/schemas.yaml accepts any positive length.
+      This supports the assessment’s distinction between presence and
+      usefulness.
   - criterion: complete
     verdict: pass
     reason: >-
-      One character passes `titleChars > 0`, so hard-to-game fails. The silver
-      placement goes against the card's own rationale that silver "ties it to
-      the code" (schemas.yaml:47), and no doc gives a reason (thresholds.md
-      has no row). That supports the threshold-justified fail over a pass.
-      measures-intent and fix-leads-to-pass are right.
+      The assessment covers title scope, placeholder content, corrective
+      evidence and the mismatch between silver’s rationale and a metadata
+      field in docs/design/schema-standards.md.
   - criterion: reproducible
     verdict: pass
     reason: >-
-      The threshold-justified fail rests on a sentence in schemas.yaml:47, not
-      on taste. The other verdicts rest on a one-line check and a scratch run.
+      crates/seikika-connector-workspace/src/specs.rs and
+      portal/tests/standards.test.yaml let another reviewer reproduce the
+      distinction between an absent title and a short placeholder.
   - criterion: actionable
     verdict: pass
     reason: >-
-      A 3-character floor rejects "x", which changes hard-to-game. Moving
-      titled to bronze, or giving the silver reason in thresholds.md, gives
-      threshold-justified a source.
-summary: >-
-  The verdicts are right: one character passes, and the silver placement
-  goes against the card's own rationale. One citation is off by one:
-  thresholds.md:38 is `tests-pass`, and the maintainer-site title floor it
-  means is line 39.
+      A justified title floor and explicit tier rationale would address the
+      two findings about portal/standards/schemas.yaml, without needing to
+      change unrelated schema checks.

@@ -1,54 +1,37 @@
 apiVersion: seikika.com/assessment/v1
 entity: assessment:rule-quality/rule:seikika/operator-cli/has-help
 rubric: assessment-quality
-subjectHash: 842832faa771
-assessor: {kind: agent, name: cursor-reviewer-14, model: claude-opus-5.5}
-at: 2026-11-25
+subjectHash: f478a4d77b82
+rubricHash: e30700fc6322cf9f05a301bb4638d6708e9f5eb5aea0281911229ce75bd37bf7
+assessor: {kind: agent, name: Codex, model: GPT-6}
+at: 2026-11-28
 verdicts:
   - criterion: supported
-    verdict: pass
+    verdict: fail
     reason: >-
-      The citations in
+      I checked the claims in
       portal/assessments/rule-quality/rule/seikika/operator-cli/has-help.yaml
-      hold.
-      - crates/seikika-cli/src/main.rs:1206-1238 is the `describe` walk that
-        stores `get_about()`.
-      - portal/standards/cli.yaml:100 is the floor and 107-110 the rationale.
-      - `Report` and `Run` are the variants at main.rs:105 and 115, and
-        run.rs:22 is "`seikika run`'s flags.".
-      - docs/design/thresholds.md has no has-help row, and cli.yaml:272 is
-        `described`'s 20.
-      - Live `seikika describe` gives 22 operator commands, all with an
-        about. The shortest is `token create`'s at 78 characters and the
-        shortest overall is `graph`'s at 23, as the suggestion says.
-      - portal/fixtures/surfaces.ndjson has two operator commands
-        (`validate`, `push`), both over 10 characters, and no expectation in
-        portal/tests/standards.test.yaml names this rule.
+      against the cited sources. docs/design/thresholds.md now records ten
+      characters as a chosen floor, and portal/tests/standards.test.yaml now
+      pins both passing help and a short failure. The assessment calls both
+      pieces of evidence absent.
+    suggestion: >-
+      Update the threshold and fixture observations while retaining the limit
+      that length alone cannot establish useful help.
   - criterion: complete
     verdict: pass
     reason: >-
-      Every criterion is right. threshold-justified is correctly unsure: the
-      rubric says "unsure when no source states the number"
-      (portal/standards/meta.yaml:1179-1180), and none states 10. hard-to-game
-      passes because the floor rejects the empty or one-word help that the
-      rubric's example names (meta.yaml:1165).
+      The assessment covers where clap gets the summary, the level, the simple
+      repair and the previous fixture and threshold gaps.
+      portal/standards/cli.yaml still uses the same length predicate.
   - criterion: reproducible
     verdict: pass
     reason: >-
-      The one judgement is that 10 characters of filler is no cheaper than a
-      true sentence. The rubric's own examples (an empty doc comment, a
-      renamed item) are routes that skip the work, and a 10-character floor
-      closes the empty one. The other verdicts rest on main.rs and
-      thresholds.md as cited.
+      crates/seikika-cli/src/main.rs shows the get_about lookup, and
+      portal/tests/standards.test.yaml distinguishes the newly covered
+      short-help case from a substantive description.
   - criterion: actionable
     verdict: pass
     reason: >-
-      The unsure verdict's suggestion is to add a has-help row to
-      docs/design/thresholds.md stating 10 as chosen or measured. That
-      supplies the source the criterion asks for, so it would turn
-      threshold-justified to pass, and the suggestion gives the measured
-      shortest abouts to anchor the row.
-summary: >-
-  A careful assessment. The about text, line numbers, command count and
-  fixture claims all check out. The one unsure, for the unexplained number
-  10, is the right call and comes with a fix that would settle it.
+      The justification and negative fixture requested by the assessment are
+      now in docs/design/thresholds.md and portal/tests/standards.test.yaml.

@@ -1,50 +1,37 @@
 apiVersion: seikika.com/assessment/v1
 entity: assessment:rule-quality/rule:seikika/maintainer-observability/service-name-documented
 rubric: assessment-quality
-subjectHash: 8e13f36900ae
-assessor: {kind: agent, name: cursor-reviewer-09, model: claude-opus-5.5}
-at: 2026-11-25
+subjectHash: a9ab7b7ea00d
+rubricHash: e30700fc6322cf9f05a301bb4638d6708e9f5eb5aea0281911229ce75bd37bf7
+assessor: {kind: agent, name: Codex, model: GPT-6}
+at: 2026-11-28
 verdicts:
   - criterion: supported
     verdict: pass
     reason: >-
-      The citations in
+      I checked the claims in
       portal/assessments/rule-quality/rule/seikika/maintainer-observability/service-name-documented.yaml
-      land:
-      - portal/observability/runtime.yaml:12 (`serviceNameDoc`);
-      - portal/standards/observability.yaml:47-52 (the computed field reads
-        only `missingPaths`);
-      - crates/seikika-telemetry/README.md:12 and 23 (the
-        `OTEL_SERVICE_NAME` mentions);
-      - data.rs:222-268 (`not_naming` and its use) and 150;
-      - portal/fixtures/workspace.ndjson:83 (`docs/missing-service-name.md`);
-      - D01M81ADN8C10EA1Z1VNRY3A5JZ ("regress when the catalog or
-        `service.name` disappears").
+      against the cited sources. The declared path in
+      portal/observability/runtime.yaml points to the telemetry README, and
+      portal/standards/observability.yaml uses a missing-path field. The
+      README itself explains service.name in
+      crates/seikika-telemetry/README.md.
   - criterion: complete
     verdict: pass
     reason: >-
-      The rule never opens the document, so both fails stand. Deleting
-      README.md:23 keeps it green, which is the very regression the decision
-      says the ratchet should catch. The fix names the file and its contents,
-      so fix-leads-to-pass holds. There is no threshold, so
-      threshold-justified passes
-      (https://github.com/seikika/seikika/blob/05510a57fafd8707979370858b578b78b935cf0e/portal/standards/meta.yaml#L1178-L1180).
+      The assessment covers presence versus content, the remediation and the
+      bronze placement. The contract for grouping signals by service name is
+      also in docs/design/observability.md.
   - criterion: reproducible
     verdict: pass
     reason: >-
-      The verdicts follow from observability.yaml:47-52 and the decision's
-      wording. A second assessor would repeat them.
+      Compare the declared path and missing-path computation in
+      portal/standards/observability.yaml. The new test in
+      crates/seikika-telemetry/tests/structured_logs.rs verifies the content
+      of the actual README.
   - criterion: actionable
     verdict: pass
     reason: >-
-      A content check like the existing `naming` option (data.rs:222-233),
-      failing when the doc doesn't mention `OTEL_SERVICE_NAME`, would change
-      both fails. The hard-to-game suggestion's second route, an
-      `include_str!` test declared under `ci:`, is weaker. `ci:` is always
-      satisfied for crates/**/*.rs (data.rs:207-209), so that route rests on
-      the test merely existing. The first route carries the change.
-summary: >-
-  A trustworthy assessment. The rule names a document it never opens, and
-  removing the line the decision says the ratchet should guard leaves it
-  green. The cited lines all land. The content-check suggestion would fix
-  it; the `ci:` alternative wouldn't add much for a test under crates/.
+      The proposed content assertion was implemented in
+      crates/seikika-telemetry/tests/structured_logs.rs. Mapping that result
+      into the scorecard remains separate from running it in the crate suite.

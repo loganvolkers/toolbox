@@ -54,6 +54,12 @@ assert:
       score('maintainer-docs', 'doc:docs/design/dashboards.md').level ==
       'bronze' && score('maintainer-docs',
       'doc:docs/design/dashboards.md').rules['cites-sources'] == 'fail'
+  - name: design documents must state their status
+    expect: >-
+      score('maintainer-docs',
+      'doc:docs/design/demo-no-status.md').evidence['status-banner'] ==
+      ['design doc with no *Status:* line'] && score('maintainer-docs',
+      'doc:docs/design/dashboards.md').rules['status-banner'] == 'pass'
   - name: broken links and a bare SDLC fail bronze
     expect: >-
       score('maintainer-docs', 'doc:docs/v1-spec.md').rules['links-resolve']
@@ -73,6 +79,11 @@ assert:
       score('operator-cli', 'command:validate').level == 'bronze'
   - name: an undocumented, unexercised command fails bronze
     expect: score('operator-cli', 'command:push').level == 'none'
+  - name: short command help fails bronze
+    expect: >-
+      score('operator-cli', 'command:push').evidence['has-help'] == ['help
+      "Push." is under 10 characters'] && score('operator-cli',
+      'command:validate').rules['has-help'] == 'pass'
   - name: a command whose skill names the invocation reaches bronze
     expect: >-
       score('cli-skill', 'command:validate').rules['has-skill'] == 'pass' &&
@@ -102,11 +113,23 @@ assert:
       score('maintainer-crate',
       'crate:seikika-connector-git-files').evidence['clippy-clean'] ==
       ['src/main.rs:12 clippy::needless_return unneeded `return` statement']
+  - name: a Clippy run without compiler diagnostics reports its status
+    expect: >-
+      score('maintainer-crate',
+      'crate:fixture-undocumented').evidence['clippy-clean'] == ['clippy
+      status: error (no diagnostics captured)']
   - name: passing rules have no evidence
     expect: >-
       !('crate-docs' in score('maintainer-crate',
       'crate:seikika-derive').evidence) && !('tests-pass' in
       score('maintainer-crate', 'crate:seikika-expr').evidence)
+  - name: a blank crate doc fails the documentation check
+    expect: >-
+      score('maintainer-crate',
+      'crate:fixture-undocumented').evidence['crate-docs'] ==
+      ['crates/fixture-undocumented has no //! crate doc'] &&
+      score('maintainer-crate', 'crate:seikika-derive').rules['crate-docs'] ==
+      'pass'
   - name: evidence lists what fails
     expect: >-
       score('user-mcp', 'mcp-tool:search').evidence['inputs-described'] ==
@@ -116,7 +139,7 @@ assert:
     expect: >-
       score('operator-cli', 'command:validate').rules['exercised'] == 'fail'
       && score('operator-cli', 'command:validate').evidence['exercised'] ==
-      ['no script under scripts/ and no test under crates/*/tests runs seikika
+      ['no script, integration test, or workflow record mentions seikika
       validate']
   - name: >-
       without a runner run, contract-tested falls back to tools/call bodies
@@ -201,6 +224,15 @@ assert:
       'unknown' && score('maintainer-ci-reliability',
       'workflow:.github/workflows/release.yml').evidence['main-not-stuck-red']
       == ['no data from connector github-actions']
+  - name: first-attempt failure evidence links to the attempt before a retry
+    expect: >-
+      ['fail-rate-under-20', 'fail-rate-under-10', 'fail-rate-under-5'].all(r,
+      'https://github.com/seikika/seikika/actions/runs/20/attempts/1' in
+      score('maintainer-ci-reliability',
+      'workflow:.github/workflows/demo/slow.yml').evidence[r]) &&
+      score('maintainer-ci-reliability',
+      'workflow:.github/workflows/demo/slow.yml').rules['main-not-stuck-red']
+      == 'pass'
   - name: >-
       runs that passed only on a re-run count as failed, and a disabled
       workflow or too few runs can't claim a tier
@@ -226,6 +258,9 @@ assert:
       score('maintainer-ci-speed',
       'workflow:.github/workflows/demo/slow.yml').rules['fast-feedback'] ==
       'fail' && score('maintainer-ci-speed',
+      'workflow:.github/workflows/demo/slow.yml').evidence['fast-feedback'] ==
+      ['p90 run time on main: 959 s (limit 900 s)'] &&
+      score('maintainer-ci-speed',
       'workflow:.github/workflows/ci.yml').rules['fast-feedback'] == 'pass' &&
       score('maintainer-ci-speed', 'workflow:actions/report/action.yml').level
       == 'skipped'
@@ -273,6 +308,17 @@ assert:
       && score('meta-rule',
       'rule:demo/sprawling/everything').evidence['explains-fix'] == ['fix has
       2 words']
+  - name: a fix at the five-word floor passes
+    expect: >-
+      score('meta-rule', 'rule:demo/sprawling/present').rules['explains-fix']
+      == 'pass'
+  - name: one decisive outcome is enough for the fixture evaluation floor
+    expect: >-
+      score('meta-rule',
+      'rule:seikika/user-cli/has-help').rules['decided-on-fixtures'] == 'pass'
+      && score('meta-rule',
+      'rule:seikika/user-cli/has-help').rules['both-outcomes-on-fixtures'] ==
+      'fail'
   - name: >-
       a rule with a rationale explains why; one without fails bronze, naming
       itself
@@ -299,6 +345,10 @@ assert:
       'rule:demo/sprawling/everything').evidence['no-nested-loops'] == ['check
       loops 2'] && score('meta-rule',
       'rule:demo/sprawling/everything').rules['readable'] == 'fail'
+  - name: a simple check with no nested comprehensions passes
+    expect: >-
+      score('meta-rule',
+      'rule:demo/sprawling/present').rules['no-nested-loops'] == 'pass'
   - name: a check without evidence fails always-explains
     expect: >-
       score('meta-rule',
@@ -822,6 +872,12 @@ assert:
       score('maintainer-repo', 'repo:acme/unsafe').level == 'none' &&
       score('maintainer-repo',
       'repo:acme/unsafe').rules['constituents-at-least-bronze'] == 'fail'
+  - name: a missing watched scorecard fails the repository floor
+    expect: >-
+      score('maintainer-repo', 'repo:acme/unknown-constituent').level ==
+      'none' && score('maintainer-repo',
+      'repo:acme/unknown-constituent').evidence['constituents-at-least-bronze']
+      == ['renamed-card is not a declared constituent']
   # The rest of the model: kinds, fields, connectors (scorecards-for-scorecards.md §5)
   - name: >-
       a described, tested kind in the fixtures stops at silver while a field
@@ -920,11 +976,16 @@ assert:
       'skipped' && score('review-rule',
       'rule:seikika/maintainer-ci-security/no-medium-findings').rules['assessed']
       == 'pass'
-  - name: a user command without structured output is at none
+  - name: >-
+      user CLI structured output requires a format flag except for the stdio
+      bridge
     expect: >-
       score('user-cli', 'command:search').level == 'none' && score('user-cli',
-      'command:search').evidence['structured-output'] == ['seikika search has
-      no -o json output']
+      'command:search').evidence['structured-output'] == ['seikika search
+      declares neither --output nor --format'] && score('user-cli',
+      'command:owner').rules['structured-output'] == 'pass' &&
+      entity('command:mcp').structuredOutput == false && score('user-cli',
+      'command:mcp').rules['structured-output'] == 'pass'
   - name: scorecards are reviewed against scorecard-quality
     expect: >-
       score('review-scorecard',
@@ -945,6 +1006,13 @@ assert:
       'scorecard:seikika/user-cli').rules['no-doubts'] == 'fail' &&
       score('review-scorecard', 'scorecard:seikika/operator-cli').level ==
       'gold'
+  - name: a stale scorecard assessment keeps its finding open
+    expect: >-
+      entity('scorecard:seikika/maintainer-docs').reviewState == 'stale' &&
+      score('review-scorecard', 'scorecard:seikika/maintainer-docs').level ==
+      'none' && score('review-scorecard',
+      'scorecard:seikika/maintainer-docs').evidence['no-open-findings'] ==
+      ['no-obvious-gap (from a stale review: re-assess to close it)']
   - name: >-
       crates are reviewed against crate-design, and go stale when their
       sources change
@@ -1127,6 +1195,14 @@ assert:
       'sdlc-stage:demo-done/plan').rules['no-doubts'] == 'pass' &&
       score('review-sdlc-stage',
       'sdlc-stage:demo-gap/plan').rules['no-doubts'] == 'fail'
+  - name: a current assessment with an unsure criterion reaches silver
+    expect: >-
+      score('review-sdlc-stage', 'sdlc-stage:demo-partial/plan').level ==
+      'silver' && score('review-sdlc-stage',
+      'sdlc-stage:demo-partial/plan').rules['assessed'] == 'pass' &&
+      score('review-sdlc-stage',
+      'sdlc-stage:demo-partial/plan').evidence['no-doubts'] ==
+      ['agent-can-complete']
   # Python we maintain: ruff through the SARIF slot
   - name: a clean script passes ruff
     expect: >-
@@ -1186,7 +1262,14 @@ assert:
       && score('maintainer-observability',
       'observability:demo-partial').rules['assessed-monitor'] == 'fail' &&
       score('maintainer-observability',
-      'observability:demo-partial').rules['otlp-export-tested'] == 'fail'
+      'observability:demo-partial').evidence['otlp-export-tested'] ==
+      ['experiments/otel-testbed/scripts/score.sh is not run by CI']
+  - name: omitting both alert declarations stops the telemetry checklist at bronze
+    expect: >-
+      score('maintainer-observability', 'observability:demo-no-alerts').level
+      == 'bronze' && score('maintainer-observability',
+      'observability:demo-no-alerts').evidence['operator-monitor-alerts'] ==
+      ['ops/alerts/snapshot-lag.yaml', 'ops/alerts/index-freshness.yaml']
   - name: an empty observability checklist fails bronze
     expect: >-
       score('maintainer-observability', 'observability:demo-unsafe').level ==

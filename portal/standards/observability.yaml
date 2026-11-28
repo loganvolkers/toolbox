@@ -29,7 +29,11 @@ kinds:
         description: Assessment of operator/monitor.
       otlpTestbed:
         type: string
-        description: Local OTel collector testbed (step 5).
+        description: Script that tests export to a local OTel collector.
+      notInCi:
+        type: list
+        items: string
+        description: Declared test commands without a matching CI workflow step.
       missingPaths:
         type: list
         items: string
@@ -63,7 +67,11 @@ kinds:
       missingAlerts:
         type: list
         items: string
-        computed: entity.alerts.filter(a, a in entity.missingPaths)
+        description: Required alerts omitted from the checklist, plus missing declared files.
+        computed: >-
+          ['ops/alerts/snapshot-lag.yaml', 'ops/alerts/index-freshness.yaml']
+          .filter(a, !(a in entity.alerts)) + entity.alerts.filter(a, a in
+          entity.missingPaths)
       missingAssessment:
         type: list
         items: string
@@ -85,6 +93,7 @@ kinds:
          'promTest': record.promTest, 'structuredLogTest': record.structuredLogTest,
          'alerts': record.alerts, 'monitorAssessment': record.monitorAssessment,
          'otlpTestbed': record.otlpTestbed, 'missingPaths': record.missingPaths,
+         'notInCi': has(record.notInCi) ? record.notInCi : [record.otlpTestbed],
          'hash': record.hash}
 
 scorecards:
@@ -177,8 +186,9 @@ scorecards:
       check: entity.missingAlerts.size() == 0
       evidence: entity.missingAlerts
       fix: >-
-        Add alert rule stubs under ops/alerts/ for snapshot lag and index
-        freshness (Grafana pack may come later).
+        List both snapshot-lag.yaml and index-freshness.yaml under alerts in
+        portal/observability/runtime.yaml. Add any missing files under
+        ops/alerts/.
       rationale: >-
         Metrics nobody alerts on are noticed only after users notice; snapshot
         lag and index freshness are the signals that a portal is serving stale
@@ -196,11 +206,13 @@ scorecards:
         that.
     - name: otlp-export-tested
       level: gold
-      check: entity.missingOtlpTestbed.size() == 0
-      evidence: entity.missingOtlpTestbed
+      check: entity.missingOtlpTestbed.size() == 0 && entity.notInCi.size() == 0
+      evidence: >-
+        entity.missingOtlpTestbed + entity.notInCi.filter(p, !(p in
+        entity.missingOtlpTestbed)).map(p, p + ' is not run by CI')
       fix: >-
-        Add experiments/otel-testbed with otelcol-contrib and a scoring script
-        (implementation step 5).
+        Add the collector scoring script under experiments/otel-testbed and
+        invoke it from a workflow run step in .github/workflows/.
       rationale: >-
         Unit tests can pass while nothing reaches a collector; exporting to a
         pinned otelcol-contrib is what proves the OTLP contract that operators'

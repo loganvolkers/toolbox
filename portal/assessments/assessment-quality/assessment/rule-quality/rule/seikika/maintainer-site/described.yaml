@@ -1,52 +1,39 @@
 apiVersion: seikika.com/assessment/v1
 entity: assessment:rule-quality/rule:seikika/maintainer-site/described
 rubric: assessment-quality
-subjectHash: 3ded0d0c2c60
-assessor: {kind: agent, name: cursor-reviewer-13, model: claude-opus-5.5}
-at: 2026-11-25
+subjectHash: ed009e1b7638
+rubricHash: e30700fc6322cf9f05a301bb4638d6708e9f5eb5aea0281911229ce75bd37bf7
+assessor: {kind: agent, name: Codex, model: GPT-6}
+at: 2026-11-28
 verdicts:
   - criterion: supported
     verdict: fail
     reason: >-
-      One citation in
+      I checked the claims in
       portal/assessments/rule-quality/rule/seikika/maintainer-site/described.yaml
-      is off. crates/seikika-connector-workspace/src/site.rs:12 reads the
-      title; the description is read at site.rs:13. Lines 22 and 48-53 are
-      right: the count and the trimmed top-level string. The rest holds.
-      portal/standards/site.yaml:95-108 is the rule and :97 the check.
-      docs/design/meta-standards-review.md:84 is the "presence, not quality"
-      row, and docs/design/thresholds.md:39 is `titled`'s 3-character row.
-      docs/design/site-standards.md:47 says a zero-length description fails
-      bronze. The shortest live description is 59 characters, in
-      site/src/content/docs/start/run.md, measured over all 30 pages.
+      against the cited sources.
+      crates/seikika-connector-workspace/src/site.rs:13 reads the description
+      and :12 reads the title. The shortest description now differs from the
+      cited 59-character example, with a shorter one in
+      site/src/content/docs/concepts/glossary.md.
     suggestion: >-
-      Cite site.rs:13 for the description key, not :12.
+      Cite the description extraction and update or date the measured live
+      minimum.
   - criterion: complete
     verdict: pass
     reason: >-
-      The hard-to-game fail is right: `descriptionChars > 0` (site.yaml:97)
-      passes `description: .`, which is the hole `titled` closed
-      (meta-standards-review.md:84). measures-intent passing is defensible,
-      because a blank or nested key counts as none (site.rs:46-53).
-      fix-leads-to-pass and threshold-justified match site.yaml:98-101 and D91
-      (docs/decisions/D01M7X0RYD00000000000000000.md).
+      The assessment distinguishes a nonblank metadata field, useful preview
+      text, the diagnostic and the bronze placement in
+      portal/standards/site.yaml.
   - criterion: reproducible
     verdict: pass
     reason: >-
-      The fail rests on the check text (site.yaml:97) and the precedent of
-      `titled` (thresholds.md:39). A second assessor applying the rubric's "an
-      empty doc comment ... would pass" guidance
-      (portal/standards/meta.yaml:1164-1165) reaches the same verdict.
+      crates/seikika-connector-workspace/src/site.rs trims the top-level
+      string before counting and portal/tests/standards.test.yaml pins missing
+      frontmatter, so the rule’s presence floor is reproducible.
   - criterion: actionable
     verdict: pass
     reason: >-
-      A floor of 30 characters, set against the measured live minimum of 59,
-      plus a description-equals-title check removes the one-character and
-      title-copy routes that hard-to-game cites. A padded 30-character string
-      could still pass, but that is the same bar `titled` was accepted at
-      (thresholds.md:39).
-summary: >-
-  The verdicts are right, and the one fail, on a presence-only check,
-  matches the precedent set for `titled`. One line number is off by one
-  (site.rs:12 is the title; the description is read at :13). Everything
-  else checks out, including the 59-character live minimum.
+      A justified minimum would address the placeholder concern in
+      portal/standards/site.yaml. The claimed live minimum should be refreshed
+      before selecting a number.

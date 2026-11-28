@@ -64,19 +64,19 @@ this repository.
 | bronze | `publish-intent` | `private` is true, or `version` is set |
 | bronze | `version-bounded` | No `*`, `x`, `latest` or `>=` range |
 | bronze | `from-a-registry` | No git URL and no tarball URL |
+| bronze | `no-hardcoded-secrets` | No secret shape |
 | silver | `locked` | A lockfile sits beside the manifest or at a workspace root above it |
 | silver | `has-a-check` | At least one of `test`, `build`, `check`, `typecheck` |
 | gold | `described` | `description` is non-empty |
 | gold | `engines-declared` | `engines.node` is set |
 | gold | `ci-installs-from-the-lockfile` | CI does not run an unlocked install (`npm install`, or pnpm without `--frozen-lockfile`) for this package |
-| gold | `no-hardcoded-secrets` | No secret shape |
 
 ## 5. This repository
 
 | Package | Level | Notes |
 |---|---|---|
-| `ui/package.json` | silver | Private, `package-lock.json`, `build`. No description, no `engines.node`. The `ui` job runs `npm install` |
-| `experiments/typescript-builder/package.json` | silver | Private, `package-lock.json`, `check` and `typecheck`. The same gold gaps. The `typescript-builder` job runs `npm install` |
+| `ui/package.json` | gold | Describes the embedded frontend, declares Node support, and uses the frozen workspace lockfile in CI |
+| `experiments/typescript-builder/package.json` | gold | Describes the prototype, declares Node 22 or later, and uses `npm ci` |
 
 Fixtures: `package-json:packages/demo/focused/package.json` at gold,
 `package-json:packages/demo/partial/package.json` at bronze (no lockfile, no check script),

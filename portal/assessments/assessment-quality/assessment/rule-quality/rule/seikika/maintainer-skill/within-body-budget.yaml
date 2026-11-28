@@ -1,51 +1,39 @@
 apiVersion: seikika.com/assessment/v1
 entity: assessment:rule-quality/rule:seikika/maintainer-skill/within-body-budget
 rubric: assessment-quality
-subjectHash: 96a4c1bedfbe
-assessor: {kind: agent, name: cursor-reviewer-01, model: claude-opus-5.5}
-at: 2026-11-25
+subjectHash: 961339b6177c
+rubricHash: e30700fc6322cf9f05a301bb4638d6708e9f5eb5aea0281911229ce75bd37bf7
+assessor: {kind: agent, name: Codex, model: GPT-6}
+at: 2026-11-28
 verdicts:
   - criterion: supported
     verdict: fail
     reason: >-
-      One citation in
+      I checked the claims in
       portal/assessments/rule-quality/rule/seikika/maintainer-skill/within-body-budget.yaml
-      doesn't land. threshold-justified cites
-      docs/design/skill-standards.md:46 for the spec's 500 lines and 5000
-      tokens, but 46 is the table separator, and that guidance is on line 47.
-      Line 94 is right. The rest holds.
-      crates/seikika-connector-workspace/src/skills.rs:47-48 measure the body
-      that split_frontmatter (100-113) returns, and the description cap is
-      226-233. skill-standards.md:71 names the estimate. add-action's body is
-      206 lines and 2,464 characters/4, the largest of 43. In
-      portal/standards/skills.yaml, the rationale is 180-183, one-level-deep
-      266-281 and the silver comment 52. The evidence is
-      portal/tests/standards.test.yaml:358-359.
-    suggestion: Cite docs/design/skill-standards.md:47 and 94 for the bounds.
+      against the cited sources.
+      crates/seikika-connector-workspace/src/skills.rs:47-48 measures body
+      lines and a character-based token estimate. The assessment cites
+      docs/design/skill-standards.md:46 for the specification rationale, but
+      line 47 carries that guidance and line 94 states the portal limits.
+    suggestion: >-
+      Cite lines 47 and 94 for the guidance and the rule, respectively.
   - criterion: complete
     verdict: pass
     reason: >-
-      The passes are right: the rule measures what is loaded on selection. One
-      overstatement doesn't change a verdict. hard-to-game says one-level-deep
-      "caps how far references can sprawl", but that rule is gold and passes
-      when references are merged into one file, as the one-level-deep
-      assessment shows. Moving detail into references/ is still the spec's
-      intended route, so hard-to-game passes.
+      The assessment covers what is counted, the role of supporting
+      references, both reported quantities and why the estimate is appropriate
+      for silver in portal/standards/skills.yaml.
   - criterion: reproducible
     verdict: pass
     reason: >-
-      Both bounds are mechanical counts on the body (skills.rs:47-48), and the
-      live maximum can be recomputed. A second assessor would reach the same
-      verdicts.
+      crates/seikika-connector-workspace/src/skills.rs:47-48 and :100-113
+      define the measured body and estimate, and
+      portal/tests/standards.test.yaml gives an oversized fixture’s
+      diagnostic.
   - criterion: actionable
     verdict: pass
     reason: >-
-      There are no fail or unsure verdicts in
-      portal/assessments/rule-quality/rule/seikika/maintainer-skill/within-body-budget.yaml,
-      so no suggestion is needed.
-summary: >-
-  The four passes are right, and add-action's 206 lines and 2,464-token
-  estimate reproduce. One citation is wrong: skill-standards.md:46 is a
-  table separator, and the spec's bounds are line 47. The claim that
-  one-level-deep caps reference sprawl is overstated but changes no
-  verdict.
+      portal/standards/skills.yaml gives both limits and names where to move
+      supporting detail. The original four passing verdicts have no attached
+      suggestions.

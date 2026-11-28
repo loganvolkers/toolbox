@@ -16,7 +16,7 @@ pub fn scrub_value(key: &str, value: &str) -> String {
     // Keep operational values short so entity bodies / query text cannot leak by accident.
     const MAX: usize = 256;
     if value.len() > MAX {
-        format!("{}…", &value[..MAX])
+        format!("{}…", &value[..value.floor_char_boundary(MAX)])
     } else {
         value.to_owned()
     }
@@ -30,5 +30,14 @@ mod tests {
     fn redacts_token_keys() {
         assert_eq!(scrub_value("Bearer_Token", "abc"), "[redacted]");
         assert_eq!(scrub_value("path", "ok"), "ok");
+    }
+
+    #[test]
+    fn truncates_at_a_character_boundary() {
+        let prefix = "a".repeat(255);
+        assert_eq!(
+            scrub_value("path", &format!("{prefix}é")),
+            format!("{prefix}…")
+        );
     }
 }

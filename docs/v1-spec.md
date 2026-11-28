@@ -337,7 +337,7 @@ Errors use RFC 9457 problem details with `code`, and for authorization failures 
 | `action_options` | `action`, `input`, `id`, `q?` | Options with disabled reasons |
 | `preview_action` | `action`, `id`, `inputs` | Effects and `confirm_token` |
 | `run_action` | `action`, `id`, `inputs`, `confirm_token` | Run id; final state as an MCP task |
-| `get_run` | `run_id` | State and timeline |
+| `get_run` | `run` | State and timeline |
 | `list_runs` | `id?`, `state?` | Runs the caller may see. There is no approval tool: approvals need an interactive sign-in (D57) |
 | promoted tools | per `mcp.promote` | Same as preview + run, specialised |
 

@@ -338,7 +338,10 @@ fn drifted(confirmed: &[Value], wt: &Worktree, files: &[(String, String)]) -> Ve
 /// Make the change in a worktree from the base and commit it; then propose it on `branch`, or,
 /// without one (`land: push`), push it to the base. A change that differs from the confirmed
 /// preview (the base moved) fails before anything is committed.
-#[allow(clippy::too_many_arguments)]
+#[expect(
+    clippy::too_many_arguments,
+    reason = "The confirmed preview, execution inputs and Git destination are distinct inputs to this operation"
+)]
 fn change_run(
     run: &[String],
     ctx: &Context,

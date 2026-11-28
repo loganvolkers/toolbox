@@ -1,61 +1,42 @@
 apiVersion: seikika.com/assessment/v1
 entity: assessment:rule-quality/rule:seikika/maintainer-ci-reliability/fail-rate-under-10
 rubric: assessment-quality
-subjectHash: 9a0492a07ef1
-assessor: {kind: agent, name: cursor-reviewer-09, model: claude-opus-5.5}
-at: 2026-11-25
+subjectHash: 7e39fd1083b9
+rubricHash: e30700fc6322cf9f05a301bb4638d6708e9f5eb5aea0281911229ce75bd37bf7
+assessor: {kind: agent, name: Codex, model: GPT-6}
+at: 2026-11-28
 verdicts:
   - criterion: supported
-    verdict: pass
+    verdict: fail
     reason: >-
-      The citations in
+      I checked the claims in
       portal/assessments/rule-quality/rule/seikika/maintainer-ci-reliability/fail-rate-under-10.yaml
-      land:
-      - crates/seikika-connector-github/src/runs.rs:59-65 (re-runs counted as
-        failures), 82 (`firstTryFailRate`), 9-10 (cancelled runs are not
-        decided) and 78-80 (the cancellation warning);
-      - main.rs:242 (`?branch=`);
-      - packages/github-actions/fragments/github-actions.yaml:349
-        (`appliesTo`), 390-396 (bronze evidence with the cancelled count),
-        441-446 (silver evidence without it), 52 (`runs: 50`) and 399-400;
-      - portal/tests/standards.test.yaml:193 (the few-runs evidence);
-      - seikika-package.yaml:33-48 (`tighten`);
-      - docs/design/thresholds.md:31.
-      One overstatement doesn't change the verdict. image.yml has
-      `workflow_dispatch`, so a dispatch from main does produce main runs, and
-      "neither ever has decided runs on main" holds only for release.yml,
-      whose `on:` is tag pushes and pull_request.
+      against the cited sources.
+      crates/seikika-connector-github/src/main.rs:242 confirms branch-scoped
+      history, but .github/workflows/release.yml declares pull_request in
+      addition to tag pushes, and .github/workflows/image.yml permits dispatch
+      on a selected ref. The trigger definitions do not prove that either
+      workflow can never accumulate runs on the scored branch.
+    suggestion: >-
+      Qualify the trigger claims and cite actual branch-filtered history, or
+      leave workflow-specific applicability uncertain.
   - criterion: complete
     verdict: pass
     reason: >-
-      Each verdict is the one the sources support. release.yml alone shows the
-      measures-intent fail, because run history is fetched per branch
-      (main.rs:242) for a card on every workflow (github-actions.yaml:349).
-      hard-to-game is right that silver's evidence drops the cancelled count
-      (github-actions.yaml:441-446 vs 390-396). The fix (448-451) has no step
-      for the `decided < minDecidedRuns` branch, which is the "data the fix
-      doesn't mention" case in portal/standards/meta.yaml:1171-1173.
+      The assessment covers sample scope, omitted cancellation context, small
+      samples and the rolling-window behavior. docs/design/thresholds.md:31
+      documents the silver threshold and why a single run can decide it.
   - criterion: reproducible
     verdict: pass
     reason: >-
-      Every fail rests on code or rule text a second assessor can read:
-      runs.rs:9-10, main.rs:242, github-actions.yaml:441-451. The pass rests
-      on thresholds.md:31, which states both numbers and labels them chosen.
+      crates/seikika-connector-github/src/runs.rs:59-82 and
+      packages/github-actions/fragments/github-actions.yaml:435-456 allow a
+      reviewer to reproduce which conclusions are counted, the sample floor,
+      and the missing cancellation count in the evidence.
   - criterion: actionable
     verdict: pass
     reason: >-
-      Each suggestion would change its own verdict:
-      - Excluding workflows that never run on the scored branch removes the
-        release.yml misfire.
-      - Counting a cancelled run that already had a failed job as failed
-        closes the route at runs.rs:9-10. Restoring the evidence clause from
-        github-actions.yaml:390-396 only makes it visible again, as at
-        bronze.
-      - Adding the few-runs and rolling-window sentences gives the fix a step
-        for each failing branch of the check.
-summary: >-
-  A sound assessment whose code citations all land. Its three fails name
-  real gaps: workflows that never run on main, a hidden cancelled count at
-  silver, and a fix with no step for too few runs. The only flaw is saying
-  image.yml can never have main runs, which its workflow_dispatch trigger
-  contradicts. The release.yml example is enough to carry the verdict.
+      Distinguishing inapplicable triggers from insufficient samples, showing
+      cancellations, and explaining evidence turnover in
+      packages/github-actions/fragments/github-actions.yaml would address the
+      respective findings.

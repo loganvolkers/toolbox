@@ -1,54 +1,38 @@
 apiVersion: seikika.com/assessment/v1
 entity: assessment:scorecard-quality/scorecard:seikika/meta-assessment
 rubric: assessment-quality
-subjectHash: 03b3d36cf74d
-assessor: {kind: agent, name: cursor-reviewer-04, model: claude-opus-5.5}
-at: 2026-11-25
+subjectHash: a3d36af99abd
+rubricHash: e30700fc6322cf9f05a301bb4638d6708e9f5eb5aea0281911229ce75bd37bf7
+assessor: {kind: agent, name: Codex, model: GPT-6}
+at: 2026-11-28
 verdicts:
   - criterion: supported
     verdict: pass
     reason: >-
-      The citations in
+      I checked the claims in
       portal/assessments/scorecard-quality/scorecard/seikika/meta-assessment.yaml
-      hold. In portal/standards/assessments.yaml, the rules are 166-215 and
-      the levels fall at 165-187, 188-203 and 204-215. portal/README.md:24
-      reads "all (our judgement)". portal/tests/standards.test.yaml:951-981
-      reaches none (least-privilege-token and meta-rule/tested), bronze
-      (has-help), silver and gold. portal/results.json has 29 meta-assessment
-      entities, 28 at gold and operator/monitor at silver with two
-      cites-everything items. fix-names-a-place is
-      docs/design/scorecards-for-scorecards.md:109 with L1 and L2, and
-      docs/design/thresholds.md:46.
-      crates/seikika-model/schema/assessment.schema.json:37 types a suggestion
-      as a bare string, and crates/seikika-connect/src/assessment.rs:199-201
-      is `unsuggested`.
+      against the cited sources. The four rules and cumulative citation checks
+      moved to packages/meta-scoring/fragments/assessments.yaml. The
+      historical count has grown substantially in portal/results.json, but
+      gold remains reachable and most assessments reach it.
   - criterion: complete
     verdict: pass
     reason: >-
-      The verdicts match the sources. Gold's empty `uncited` implies silver's
-      filtered one (assessments.yaml:190-191, 206), so the ladder holds. The
-      fixes name `suggestion:`, `assessor.name` and portal/assessments/
-      (assessments.yaml:171-173, 181-182, 194-199, 208-211), so actionable
-      holds. Nothing checks where a suggestion acts, which is a real gap next
-      to meta-rule's fix-names-a-place, so no-obvious-gap is a fail.
+      The assessment covers the scope, cumulative citation ladder, missing
+      suggestion-location check and remediation. It compares the suggestion
+      contract to the rule-fix convention in
+      docs/design/scorecards-for-scorecards.md.
   - criterion: reproducible
     verdict: pass
     reason: >-
-      Whether a gap is "obvious" is a judgement, but this one is anchored. A
-      suggestion is an assessment's fix, and the portal already requires a fix
-      to name a place (docs/design/scorecards-for-scorecards.md:109). A second
-      assessor comparing the two cards would likely find it.
+      The current fixtures in portal/tests/standards.test.yaml exercise
+      citation and suggestion outcomes. The nonblank-text check and citation
+      collection can be verified directly in
+      crates/seikika-connect/src/assessment.rs.
   - criterion: actionable
     verdict: pass
     reason: >-
-      The suggestion in
-      portal/assessments/scorecard-quality/scorecard/seikika/meta-assessment.yaml
-      adds a `suggestion-names-a-place` rule fed by an `unlocated` field,
-      reusing `cites` in crates/seikika-connect/src/assessment.rs, with
-      fixtures on each side. That is the missing rule no-obvious-gap names, so
-      it would turn that verdict to pass.
-summary: >-
-  Trustworthy. Every line number and count checks out, including 28 of 29
-  assessments at gold in portal/results.json. The ladder and actionable
-  passes follow from the rule text. The missing "suggestion names a place"
-  rule is a well-anchored gap, and the suggestion would fill it.
+      The proposed path and command evidence for suggestions names the
+      connector and a negative fixture.
+      packages/meta-scoring/fragments/assessments.yaml already names the
+      reason or suggestion fields for its existing failures.

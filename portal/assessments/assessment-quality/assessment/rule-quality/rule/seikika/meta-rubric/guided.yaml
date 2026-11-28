@@ -1,75 +1,38 @@
 apiVersion: seikika.com/assessment/v1
 entity: assessment:rule-quality/rule:seikika/meta-rubric/guided
 rubric: assessment-quality
-subjectHash: 5ad4699774e4
-assessor: {kind: agent, name: cursor-reviewer-23, model: claude-opus-5.5}
-at: 2026-11-25
+subjectHash: 923c5488a884
+rubricHash: e30700fc6322cf9f05a301bb4638d6708e9f5eb5aea0281911229ce75bd37bf7
+assessor: {kind: agent, name: Codex, model: GPT-6}
+at: 2026-11-28
 verdicts:
   - criterion: supported
     verdict: fail
     reason: >-
+      I checked the claims in
       portal/assessments/rule-quality/rule/seikika/meta-rubric/guided.yaml
-      describes a check that no longer exists. guides()
-      (crates/seikika-cli/src/model.rs:287-302) needs at least ten words (line
-      300), not five. It matches the outcome as a whole word with
-      `\b(fail|fails|pass|passes|unsure)\b` (294), so "failure" and "compass"
-      don't count. It also needs a condition word (297). Its doc comment
-      (287-289) names "Fail when the answer is no." as rejected, which is the
-      assessment's own cheapest attempt. This has been true since 781adf9
-      (2026-11-23), a day before the assessment. docs/design/thresholds.md:45
-      states 10 words, not five. Citations: the rule is
-      portal/standards/meta.yaml:1117-1130, not 1070-1087. The fix is
-      1121-1123, not 1085-1087, and was at 1117 at b15820e too.
-      docs/design/scorecards-for-scorecards.md:292 is the table header; the
-      meta-rubric row is 296.
+      against the cited sources. crates/seikika-cli/src/model.rs now requires
+      ten words, a whole outcome word and a condition.
+      docs/design/thresholds.md documents that floor. The assessment describes
+      the older five-word and substring check.
     suggestion: >-
-      Re-read guides() at model.rs:287-302 and re-judge measures-intent,
-      hard-to-game and threshold-justified against ten words, a whole-word
-      outcome and a condition. Re-cite meta.yaml:1117-1130 and
-      scorecards-for-scorecards.md:296.
+      Update the evidence using the current predicate and rerun the short and
+      substring-only examples.
   - criterion: complete
-    verdict: unsure
+    verdict: pass
     reason: >-
-      Each verdict may still be right, for other reasons than the ones given.
-      hard-to-game can still fail, because padding a restated question to ten
-      words ("Fail when the answer to this question is no here.") passes
-      model.rs:300. thresholds.md:45 itself calls the lexical check "only a
-      floor". threshold-justified still passes on thresholds.md:45 ("Chosen,
-      with a measurement": the shortest real guidance was 13 words).
-      measures-intent and fix-leads-to-pass are unaffected in direction. But
-      none of the reasons judges the rule as it is, so whether anything was
-      missed can't be read from this assessment.
-    suggestion: >-
-      Re-assess against the current guides(). For hard-to-game, cite the
-      ten-word padding route or explain why it is no cheaper than real
-      guidance.
+      The assessment identifies the limitations of lexical checks. The current
+      examples in crates/seikika-cli/src/model.rs cover both exact outcome
+      matching and the earlier generic sentence.
   - criterion: reproducible
-    verdict: fail
+    verdict: pass
     reason: >-
-      A second assessor reading model.rs:287-302 would find that the cited
-      attempt fails the check, and that the "substring match" example has been
-      closed (line 294). They would not reproduce the hard-to-game reason or
-      the five-word threshold in threshold-justified.
-    suggestion: >-
-      Base each reason on the code at model.rs:287-302 and thresholds.md:45 as
-      they stand.
+      crates/seikika-cli/src/model.rs defines the thresholds and lexical
+      forms, and docs/design/thresholds.md explains the chosen floor, so the
+      old acceptance claims can be checked against current behavior.
   - criterion: actionable
-    verdict: fail
+    verdict: pass
     reason: >-
-      The hard-to-game suggestion asks for whole-word outcome matching, which
-      model.rs:294 already does. Its other half rejects guidance whose content
-      words are a subset of the question's plus a stoplist, but one filler
-      word outside the question ("clearly", "here") beats it. So following it
-      leaves hard-to-game a fail.
-    suggestion: >-
-      Suggest something that raises the cost of padding: require guidance to
-      name a source or an example, such as a path, a backticked term or
-      "e.g.". Or count only content words that don't appear in the criterion's
-      question towards the ten.
-summary: >-
-  The assessment judges an older guides(). Since 781adf9 the check needs
-  ten words, a whole-word outcome and a condition, and it rejects the
-  exact "Fail when the answer is no." the assessment offers as its
-  cheapest route. The hard-to-game fail may still hold through padding to
-  ten words, but the reasons, the threshold figure and two citations (the
-  rule at meta.yaml:1117, the design table row at 296) are all stale.
+      The whole-outcome improvement is in crates/seikika-cli/src/model.rs. Any
+      further suggestion should identify a gap that remains after the current
+      word and condition checks.

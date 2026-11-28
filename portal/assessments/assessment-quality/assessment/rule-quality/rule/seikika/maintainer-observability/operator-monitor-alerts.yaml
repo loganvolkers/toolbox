@@ -1,53 +1,37 @@
 apiVersion: seikika.com/assessment/v1
 entity: assessment:rule-quality/rule:seikika/maintainer-observability/operator-monitor-alerts
 rubric: assessment-quality
-subjectHash: 093892371d43
-assessor: {kind: agent, name: cursor-reviewer-09, model: claude-opus-5.5}
-at: 2026-11-25
+subjectHash: c65ff5c0a7f8
+rubricHash: e30700fc6322cf9f05a301bb4638d6708e9f5eb5aea0281911229ce75bd37bf7
+assessor: {kind: agent, name: Codex, model: GPT-6}
+at: 2026-11-28
 verdicts:
   - criterion: supported
     verdict: pass
     reason: >-
-      The citations in
+      I checked the claims in
       portal/assessments/rule-quality/rule/seikika/maintainer-observability/operator-monitor-alerts.yaml
-      land:
-      - portal/standards/observability.yaml:182-184 (rationale), 63-66
-        (`missingAlerts` filters `alerts`, so `[]` passes) and 102-103 (the
-        ladder);
-      - ops/alerts/index-freshness.yaml:6 (`> 300`), and the stub numbers 60s
-        for 5m and 300s for 10m in ops/alerts/*.yaml;
-      - crates/seikika-telemetry/src/metrics_prom.rs:152 (`with_label_values(&["default"])`);
-      - portal/fixtures/workspace.ndjson:82 (`ops/alerts/missing.yaml`).
-      A search for `index_freshness` finds it only in catalog.rs and
-      metrics_prom.rs, so no other crate sets the gauge. No workflow, action
-      or script mentions `promtool`.
+      against the cited sources. The alert check remains path-based in
+      portal/standards/observability.yaml. The index alert in
+      ops/alerts/index-freshness.yaml names the gauge initialized in
+      crates/seikika-telemetry/src/metrics_prom.rs, and no production call
+      updates that gauge.
   - criterion: complete
     verdict: pass
     reason: >-
-      The measures-intent fail is the strongest kind of finding: a live pass,
-      not a latent one. The gauge stays at 0 (metrics_prom.rs:152), so
-      SeikikaIndexStale can never fire. hard-to-game is right that an empty
-      list passes (observability.yaml:66). fix-leads-to-pass and
-      threshold-justified are right for a path rule with no number of its own.
+      The assessment covers list coverage, validity and the signal itself. It
+      distinguishes silver placement from the time constants in
+      ops/alerts/index-freshness.yaml and ops/alerts/snapshot-lag.yaml.
   - criterion: reproducible
     verdict: pass
     reason: >-
-      Each verdict rests on the computed field, a grep and a line of the alert
-      file. A second assessor following these would reach the verdicts in
-      portal/assessments/rule-quality/rule/seikika/maintainer-observability/operator-monitor-alerts.yaml.
+      Inspect the alert declarations in portal/observability/runtime.yaml and
+      the check in portal/standards/observability.yaml. The missing alert
+      assertion in portal/tests/standards.test.yaml reproduces what the rule
+      measures.
   - criterion: actionable
     verdict: pass
     reason: >-
-      Each suggestion would change its own verdict:
-      - Requiring each alert's metric to have a setter outside
-        seikika-telemetry fails today's index-freshness stub, or wiring the
-        gauge makes the alert real (measures-intent).
-      - Failing on an empty `alerts` list and running `promtool check rules`
-        in CI closes the empty-list route and the unvalidated files
-        (hard-to-game). ops/alerts/*.yaml is not under crates/, so `ci:`
-        isn't trivially satisfied (data.rs:203-209).
-summary: >-
-  A strong assessment. It found a live flaw, an alert on a gauge no code
-  updates (metrics_prom.rs:152), as well as the empty-list loophole
-  (observability.yaml:63-66), and it backs both with exact lines. Its
-  suggestions would turn both fails into passes.
+      The proposed nonempty list requirement, promtool check and signal wiring
+      point to concrete files and commands. The missing-path fix remains in
+      portal/standards/observability.yaml.

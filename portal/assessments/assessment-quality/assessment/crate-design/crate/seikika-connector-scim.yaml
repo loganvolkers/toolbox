@@ -1,52 +1,40 @@
 apiVersion: seikika.com/assessment/v1
 entity: assessment:crate-design/crate:seikika-connector-scim
 rubric: assessment-quality
-subjectHash: c124abd48a8d
-assessor: {kind: agent, name: cursor-reviewer-34, model: claude-opus-5.5}
-at: 2026-11-25
+subjectHash: ffea861cd50c
+rubricHash: e30700fc6322cf9f05a301bb4638d6708e9f5eb5aea0281911229ce75bd37bf7
+assessor: {kind: agent, name: Codex, model: GPT-6}
+at: 2026-11-28
 verdicts:
   - criterion: supported
     verdict: pass
     reason: >-
-      Every citation in
-      portal/assessments/crate-design/crate/seikika-connector-scim.yaml lands.
-      crates/seikika-connector-scim/src/main.rs:1-14 is the SCIM receiver
-      docs, :24 the SDK use of Out, Source, push and run_remote, :33-34 the
-      in-memory maps, :60-87 group_record (empty displayName yields slug ""),
-      :143-166 DELETE, :168-180 fetch with no authorized call, :234
-      .patch(upsert), and :259-301 the bearer and member-mapping tests.
-      docs/v1-spec.md:100 lists the scim binary and :357 calls it the
-      revocation fast path. crates/seikika-connector-scim/Cargo.toml:11-15 is
-      axum, serde_json, tokio and seikika-connect. scripts/m4-acceptance.sh:42
-      is the unauthenticated GET probe and :81-87 times a PUT revocation, run
-      from .github/workflows/ci.yml:177.
+      I checked the claims in
+      portal/assessments/crate-design/crate/seikika-connector-scim.yaml
+      against the cited sources. The protocol boundary and in-memory state
+      match crates/seikika-connector-scim/src/main.rs and
+      crates/seikika-connector-scim/Cargo.toml. The assessment correctly
+      identified a missing read authorization check, which was fixed during
+      this review. PATCH still shares the full-record update handler.
   - criterion: complete
     verdict: pass
     reason: >-
-      one-responsibility, small-contract and replaceable-defaults match the
-      crate docs, the SDK surface and the dependency list. tests-match-risk
-      fails for the paths the test module does not cover: PATCH is the same
-      upsert as PUT (main.rs:234), GET never checks the bearer
-      (main.rs:168-180), and DELETE (main.rs:143-166) has no test. No other
-      crate-design failure shows up in those sources.
+      All four criteria are covered. The assessment distinguishes local
+      mapping tests in crates/seikika-connector-scim/src/main.rs from the
+      end-to-end PUT update in scripts/m4-acceptance.sh, and calls out
+      remaining update and lifecycle coverage.
   - criterion: reproducible
     verdict: pass
     reason: >-
-      Each verdict follows from the router, the record builders and the three
-      unit tests. A second assessor reading main.rs and
-      scripts/m4-acceptance.sh gets the same split: token comparison and
-      member mapping are tested, PATCH, unauthenticated GET and DELETE are
-      not.
+      The route declarations, configured token check, and record mapping are
+      visible in crates/seikika-connector-scim/src/main.rs. Its new read test
+      verifies rejection and success with the configured token, while
+      scripts/m4-acceptance.sh shows which update verb the acceptance case
+      exercises.
   - criterion: actionable
     verdict: pass
     reason: >-
-      The tests-match-risk suggestion, implementing PatchOp or answering 501,
-      plus tests for PATCH, a 401 on GET and a DELETE message, would remove
-      the three untested paths that
-      portal/assessments/crate-design/crate/seikika-connector-scim.yaml names.
-      The other three verdicts are passes and need no suggestion.
-summary: >-
-  The SCIM crate assessment is trustworthy. Its line citations match the
-  receiver, the SDK use, the acceptance PUT and the three unit tests, and
-  the tests-match-risk fail is the one the sources support. The suggestion
-  would close that fail.
+      The assessment identifies concrete handler and test changes in
+      crates/seikika-connector-scim/src/main.rs. Read authorization now has a
+      regression assertion, and the remaining suggestions identify the needed
+      PATCH and delete coverage.

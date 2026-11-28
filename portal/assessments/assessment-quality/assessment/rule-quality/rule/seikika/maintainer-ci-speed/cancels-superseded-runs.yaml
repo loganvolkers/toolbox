@@ -1,56 +1,43 @@
 apiVersion: seikika.com/assessment/v1
 entity: assessment:rule-quality/rule:seikika/maintainer-ci-speed/cancels-superseded-runs
 rubric: assessment-quality
-subjectHash: 3b5f4d754ec1
-assessor: {kind: agent, name: cursor-reviewer-36, model: claude-opus-5.5}
-at: 2026-11-25
+subjectHash: 2cac84a73f16
+rubricHash: e30700fc6322cf9f05a301bb4638d6708e9f5eb5aea0281911229ce75bd37bf7
+assessor: {kind: agent, name: Codex, model: GPT-6}
+at: 2026-11-28
 verdicts:
   - criterion: supported
     verdict: pass
     reason: >-
-      The citations in
+      I checked the claims in
       portal/assessments/rule-quality/rule/seikika/maintainer-ci-speed/cancels-superseded-runs.yaml
-      match the code. cancels_superseded accepts any of five ref substrings
-      and treats a cancel-in-progress expression as true unless it is
-      literally false
-      (crates/seikika-connector-workspace/src/workflows.rs:76-87 and :91-104).
-      The rule exempts anything that is not pull_request
-      (packages/github-actions/fragments/github-actions.yaml:500). The fix
-      block is :505-511, and workflows.rs:415-420 pins a github.ref group with
-      that same expression as cancelling. codeql.yml and release.yml both fail
-      the rule in portal/results.json and both trigger pull_request with no
-      concurrency group. thresholds.md:34 places the rule at bronze as a speed
-      principle.
+      against the cited sources.
+      crates/seikika-connector-workspace/src/workflows.rs:73-103 checks for
+      recognized ref words and treats a nonempty cancellation expression as
+      potentially true. packages/github-actions/fragments/github-actions.yaml
+      scopes the rule to pull_request workflows.
   - criterion: complete
     verdict: pass
     reason: >-
-      measures-intent fails for the reasons the code shows: a group that also
-      contains github.run_id still matches github.ref (workflows.rs:77-86),
-      and any non-false expression counts (workflows.rs:91-101). hard-to-game
-      passing is right: the cheap path is the fix's concurrency block, and a
-      comment cannot satisfy a parsed group. The fix's group contains
-      github.ref and its expression is not false, so following it passes. No
-      number is involved; thresholds.md:34 states the level.
+      The assessment identifies static proxy limits, the repair example, and
+      the choice to score operational speed separately in
+      docs/design/thresholds.md. The source in
+      crates/seikika-connector-workspace/src/workflows.rs supports the
+      findings about grouping and expression semantics.
   - criterion: reproducible
-    verdict: pass
+    verdict: unsure
     reason: >-
-      A second assessor can replay the five ref strings and the truthiness
-      helper in workflows.rs:76-104 against the check at
-      github-actions.yaml:500. The pull_request_target exemption and the
-      run-id group follow from that text, not from taste.
+      crates/seikika-connector-workspace/src/workflows.rs establishes that the
+      parsing gaps exist. The assessment’s claim that they are merely mistakes
+      rather than ways to satisfy the check without cancellation is a judgment
+      without supporting evidence.
+    suggestion: >-
+      Judge the rule against the documented group and cancellation semantics,
+      and distinguish partial static evidence from actual cancellation.
   - criterion: actionable
     verdict: pass
     reason: >-
-      The measures-intent suggestion in
-      portal/assessments/rule-quality/rule/seikika/maintainer-ci-speed/cancels-superseded-runs.yaml
-      rejects a group that also varies by run id or sha, accepts a
-      cancel-in-progress expression only when it is true or mentions
-      pull_request, and extends the trigger test. Each of those closes a
-      misfire the reason names. The other three verdicts pass, so they need no
-      suggestion.
-summary: >-
-  The assessment holds. The checker is lexical, the copy-paste fix is
-  pinned by the unit test, and bronze is the speed principle in
-  thresholds.md. A group that also contains a run id, a cancel expression
-  that is never true on pull requests, and pull_request_target workflows
-  all pass while cancelling nothing.
+      Tightening the group check in
+      crates/seikika-connector-workspace/src/workflows.rs would address the
+      grouping examples. An expression evaluator or a narrower supported
+      pattern would still be needed to establish cancellation across events.

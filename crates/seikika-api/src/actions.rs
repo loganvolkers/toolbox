@@ -876,9 +876,6 @@ fn decide(
             None => n.clone(),
         });
     }
-    if done {
-        run.state = "approved".into();
-    }
     Ok(done)
 }
 

@@ -308,8 +308,8 @@ scorecards:
     kind: SdlcStage
     description: >-
       An agent reviews whether each SDLC stage does what it claims: an open
-      finding is none, a current review is silver, and a clean, cited one is
-      gold. The card advises rather than gates (D79,
+      finding is none, no open finding is bronze, a current review is silver,
+      and a clean, cited one is gold. The card advises rather than gates (D79,
       D01M831P5QWJQ4A2FT85N5MXJQF).
     rationale: >-
       The sdlc-stage card sees that a stage is declared and gated, not whether
@@ -383,8 +383,10 @@ scorecards:
         entity.reviewState == 'fresh' ? entity.reviewUnsure : ['no current
         assessment']
       fix: >-
-        Resolve what the assessor was unsure of, usually a missing measurement
-        or an unstated exit criterion.
+        Read the unsure criteria and their suggestions in portal/assessments/.
+        Update the stage in portal/sdlc/stages/<layer>.yaml or its cited
+        evidence. Then run `seikika assess brief sdlc-stage:<layer>/<stage>
+        --portal portal` and re-assess.
       rationale: >-
         An unsure verdict means the stage's own sources could not settle a
         criterion; a stage an agent is meant to carry out alone has to be clear

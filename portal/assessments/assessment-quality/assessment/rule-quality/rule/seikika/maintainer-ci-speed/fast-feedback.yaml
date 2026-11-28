@@ -1,53 +1,44 @@
 apiVersion: seikika.com/assessment/v1
 entity: assessment:rule-quality/rule:seikika/maintainer-ci-speed/fast-feedback
 rubric: assessment-quality
-subjectHash: 44f39b17c35f
-assessor: {kind: agent, name: cursor-reviewer-12, model: claude-opus-5.5}
-at: 2026-11-25
+subjectHash: 4f27a71fe6a9
+rubricHash: e30700fc6322cf9f05a301bb4638d6708e9f5eb5aea0281911229ce75bd37bf7
+assessor: {kind: agent, name: Codex, model: GPT-6}
+at: 2026-11-28
 verdicts:
   - criterion: supported
     verdict: fail
     reason: >-
-      One claim in the measures-intent reason of
+      I checked the claims in
       portal/assessments/rule-quality/rule/seikika/maintainer-ci-speed/fast-feedback.yaml
-      is wrong: "a re-run moves `updated_at`, so a run re-run hours later
-      counts as hours long". runs.rs:14 subtracts `run_started_at`, which
-      GitHub's REST description (github/rest-api-description, workflow-run
-      schema) defines as "The start time of the latest run. Resets on re-run."
-      So a re-run measures the latest attempt, not the gap. The rest lands:
-      runs.rs:12-15, 44, 70 and 96 (main only, no queue, cancelled runs
-      included), github-actions.yaml:49-52 and 523-529,
-      github-actions-standards.md:64 and 161, thresholds.md:34, and
-      seikika-package.yaml:49-53. The integer `p90Seconds / 60` reads 959 s as
-      "15 min".
+      against the cited sources.
+      packages/github-actions/fragments/github-actions.yaml now displays the
+      exact p90 and the configurable limit in seconds, as verified by
+      portal/tests/standards.test.yaml. It no longer recommends moving work
+      off pull requests to improve a default-branch measurement.
     suggestion: >-
-      Drop the re-run sentence, or replace it with what does hold: the
-      duration covers only the latest attempt, so a failed first attempt's
-      time is dropped.
+      Update the remediation evidence and reassess any remaining evidence
+      needed to identify slow jobs.
   - criterion: complete
     verdict: pass
     reason: >-
-      The verdicts stand without the wrong sentence. Main-only, queue-less
-      timing, with cancelled runs pulling the p90 down, supports
-      measures-intent. The `if: github.event_name == 'pull_request'` skip
-      passes failures-visible (workflows.rs:115-128), so hard-to-game fails.
-      Moving suites off the PR path, into this or another workflow, still
-      fails a rule that applies to every workflow, so fix-leads-to-pass fails.
-      The 15 minutes are labelled chosen in thresholds.md:34.
+      crates/seikika-connector-github/src/runs.rs still calculates elapsed
+      completed-run time from timestamps, and
+      packages/github-actions/fragments/github-actions.yaml reads the scored
+      branch’s p90. The assessment’s queue and workflow-scope findings are
+      distinct from the corrected evidence display.
   - criterion: reproducible
     verdict: pass
     reason: >-
-      Each verdict rests on the connector's arithmetic and the rule's text.
-      Reading "feedback" as the PR wait is backed by the fix's own "PR path"
-      wording (github-actions.yaml:524-526).
+      crates/seikika-connector-github/src/runs.rs and
+      packages/github-actions/fragments/github-actions.yaml specify the
+      measured run population and percentile. portal/tests/standards.test.yaml
+      pins a p90 that exceeds the limit without truncating its reported
+      elapsed time.
   - criterion: actionable
     verdict: pass
     reason: >-
-      Measuring pull request runs from `created_at` would flip measures-intent
-      and hard-to-game. Seconds in the evidence, the slowest jobs, and
-      dropping the PR-path advice would flip fix-leads-to-pass.
-summary: >-
-  The verdicts are right, but one supporting claim is false. GitHub resets
-  `run_started_at` on re-run, so a late re-run doesn't inflate the
-  duration. Every other citation lands, and the fails stand on main-only,
-  queue-less timing and a fix that can't lower the measured number.
+      The precision and remediation findings were addressed in
+      packages/github-actions/fragments/github-actions.yaml. Changing the
+      metric to pull-request response time would be a separate decision with
+      different sampling requirements.

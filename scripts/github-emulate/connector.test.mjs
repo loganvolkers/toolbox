@@ -192,6 +192,9 @@ test('GitHub App exchange grants access to the selected private repository', asy
   }
   assertFailedRefresh(await refresh(kind, [`github:codeowners/${archivedId}`], credentials),
     `GET /repositories/${archivedId}: HTTP 403`);
+  assertFailedRefresh(await refresh(kind, [active], {
+    ...credentials, installationId: String(installationId + 1),
+  }), 'request installation token: HTTP 404');
 });
 
 test('an invalid token fails the refresh with GitHub HTTP status', async () => {

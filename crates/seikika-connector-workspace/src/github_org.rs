@@ -769,7 +769,7 @@ mod tests {
         assert_eq!(claims["commit"], sha('a'));
         assert_eq!(claims["portalPresent"], true);
         assert_eq!(claims["visibility"], "public");
-        assert_eq!(claims["readmeWords"], 3);
+        assert_eq!(claims["readmeWords"], 2);
         assert_eq!(claims["license"], Value::Null);
         assert_eq!(claims["licenseHasContent"], false);
         assert_eq!(claims["readmeEntrypoint"], false);

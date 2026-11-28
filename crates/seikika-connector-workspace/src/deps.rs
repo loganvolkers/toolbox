@@ -225,7 +225,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
         let syn = recs.iter().find(|r| r["name"] == "syn").unwrap();
         assert!(syn["versions"].as_array().unwrap().len() > 1);
         let regex = recs.iter().find(|r| r["name"] == "regex").unwrap();
-        assert_eq!(regex["inherited"], false);
+        assert_eq!(regex["inherited"], true);
         assert!(regex["usedBy"].as_array().unwrap().len() > 1);
         assert!(recs.iter().all(|r| r["git"] == false));
     }

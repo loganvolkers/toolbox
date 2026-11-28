@@ -1,67 +1,43 @@
 apiVersion: seikika.com/assessment/v1
 entity: assessment:rule-quality/rule:seikika/maintainer-ci-reliability/main-not-stuck-red
 rubric: assessment-quality
-subjectHash: 9db0ab8e2f47
-assessor: {kind: agent, name: cursor-reviewer-09, model: claude-opus-5.5}
-at: 2026-11-25
+subjectHash: 81b7e2aae3b2
+rubricHash: e30700fc6322cf9f05a301bb4638d6708e9f5eb5aea0281911229ce75bd37bf7
+assessor: {kind: agent, name: Codex, model: GPT-6}
+at: 2026-11-28
 verdicts:
   - criterion: supported
     verdict: fail
     reason: >-
-      The threshold-justified reason in
+      I checked the claims in
       portal/assessments/rule-quality/rule/seikika/maintainer-ci-reliability/main-not-stuck-red.yaml
-      says "The only source for '3' is the rule's own rationale" and "Nothing
-      records whether 3 was chosen or measured". But
-      docs/design/github-actions-standards.md:88 states the number: thresholds
-      are "Seikika's proposal (20 / 10 / 5%, 3 failures in a row), not a
-      published standard". That labels 3 as chosen. The other citations
-      land:
-      - crates/seikika-connector-github/src/runs.rs:66-69, 91 (streak), 9-10
-        and 84-89 (failedRuns);
-      - packages/github-actions/fragments/github-actions.yaml:355-358 and
-        363-366;
-      - portal/tests/standards.test.yaml:155-166;
-      - thresholds.md:57 and github-actions-standards.md:121.
-      "Below 3 means the branch went green since its last two failures" is
-      loose wording. It means at least one of the newest three decided runs
-      didn't fail.
+      against the cited sources. docs/design/github-actions-standards.md:88
+      states the three-run threshold, contrary to the claim that it appears
+      only in the rule rationale. The threshold’s justification is a separate
+      question.
     suggestion: >-
-      Cite github-actions-standards.md:88 and judge threshold-justified
-      against it: a labelled proposal whose rationale gives the reason.
+      Cite the design’s stated cutoff and say which part of its justification
+      is still missing.
   - criterion: complete
     verdict: unsure
     reason: >-
-      The rubric says "unsure when no source states the number"
-      (portal/standards/meta.yaml:1178-1180). A source does state it
-      (github-actions-standards.md:88). The verdict should therefore be pass,
-      a labelled choice with its reason in the rule's rationale
-      (github-actions.yaml:363-366), or fail if a bare "proposal" is judged
-      unjustified. It should not be unsure. The other three verdicts are
-      right. Cancelled runs are not decided (runs.rs:9-10), and a decided run
-      that didn't fail is the only thing that resets the streak
-      (runs.rs:66-69).
+      The assessment recognizes that
+      crates/seikika-connector-github/src/runs.rs:66-69 uses final
+      conclusions. It should distinguish a streak that ends on a successful
+      retry from a branch that is consistently passing on the first attempt
+      under packages/github-actions/fragments/github-actions.yaml.
     suggestion: >-
-      Re-judge threshold-justified as pass, citing
-      github-actions-standards.md:88 and the rationale, or as fail with a
-      reason why a labelled proposal isn't justification. Adding a
-      thresholds.md row would settle it either way.
+      Define what the streak claims and explain whether the separately scored
+      first-attempt rate covers the retry case.
   - criterion: reproducible
     verdict: pass
     reason: >-
-      The measures-intent, hard-to-game and fix-leads-to-pass verdicts rest on
-      runs.rs and the rule's text, and would repeat. The threshold divergence
-      comes from a source the assessor missed, not from taste, and is recorded
-      under supported and complete.
+      crates/seikika-connector-github/src/runs.rs:66-91 and the historic
+      streak fixture in portal/tests/standards.test.yaml make the count and
+      ordering reproducible.
   - criterion: actionable
     verdict: pass
     reason: >-
-      Adding a main-not-stuck-red row to docs/design/thresholds.md that labels
-      3 as chosen, with its reason, would turn threshold-justified into a
-      pass. It is the one non-pass verdict in
-      portal/assessments/rule-quality/rule/seikika/maintainer-ci-reliability/main-not-stuck-red.yaml.
-summary: >-
-  Its code findings are right: the streak counts only decided runs and is
-  reset only by one that didn't fail. But its threshold reason claims no
-  source states or labels the 3.
-  docs/design/github-actions-standards.md:88 calls it Seikika's proposal,
-  so the unsure rests on a missed source and should be re-judged.
+      Documenting the reason for the existing cutoff in
+      docs/design/thresholds.md would address the threshold rationale gap
+      without changing the check.

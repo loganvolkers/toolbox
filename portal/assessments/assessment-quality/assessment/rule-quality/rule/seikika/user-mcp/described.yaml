@@ -1,55 +1,37 @@
 apiVersion: seikika.com/assessment/v1
 entity: assessment:rule-quality/rule:seikika/user-mcp/described
 rubric: assessment-quality
-subjectHash: 66d62ff1a761
-assessor: {kind: agent, name: cursor-reviewer-14, model: claude-opus-5.5}
-at: 2026-11-25
+subjectHash: 64c261a5bc51
+rubricHash: e30700fc6322cf9f05a301bb4638d6708e9f5eb5aea0281911229ce75bd37bf7
+assessor: {kind: agent, name: Codex, model: GPT-6}
+at: 2026-11-28
 verdicts:
   - criterion: supported
-    verdict: pass
+    verdict: fail
     reason: >-
-      The citations in
+      I checked the claims in
       portal/assessments/rule-quality/rule/seikika/user-mcp/described.yaml
-      hold.
-      - portal/standards/cli.yaml:272 is the `>= 20` check. The fix starts at
-        276-277, though its "and when an agent should call it" clause runs on
-        to 278. The rationale is 280-281.
-      - `search` "Find entities by name or title." (31) and `get` (52) are
-        crates/seikika-api/src/mcp.rs:26 and 31, and `builtin_tools` is
-        mcp.rs:20-97.
-      - inputs-described's fix names mcp.rs at cli.yaml:300-302, and
-        has-help's floor is cli.yaml:100.
-      - The bronze row is docs/design/seikika-for-seikika.md:108, and
-        docs/design/thresholds.md has no row for 20.
-      - Live descriptions run from 31 characters (`search`) to 289
-        (`assessment_brief`) over 17 tools, and the three fixture tools all
-        pass.
+      against the cited sources. docs/design/thresholds.md now gives a
+      rationale for the twenty-character floor and explains the distinction
+      from CLI help. The assessment reports that rationale as absent.
+    suggestion: >-
+      Update the threshold evidence while preserving the separate observation
+      that length alone cannot establish when a tool is appropriate.
   - criterion: complete
     verdict: pass
     reason: >-
-      measures-intent fails correctly. A length check can't see "when to call
-      it", and the reason's examples, plus graph, owner_of, explain and
-      list_actions (mcp.rs:39-71), describe what a tool returns without saying
-      when to prefer it. hard-to-game passes: 20 characters stops an empty or
-      one-word description, the rubric's example
-      (portal/standards/meta.yaml:1165). threshold-justified is correctly
-      unsure, since no source states 20 (meta.yaml:1179-1180).
+      The assessment distinguishes the tool’s length predicate from
+      description content and covers the evidence and remediation in
+      portal/standards/cli.yaml.
   - criterion: reproducible
     verdict: pass
     reason: >-
-      The verdicts rest on the check and fix text and on quoted descriptions.
-      The "most live tools" count is easy to recheck in mcp.rs:26-96, and a
-      second assessor would find the same split.
+      crates/seikika-api/src/mcp.rs provides concrete tool descriptions and
+      portal/standards/cli.yaml reads their length. A reviewer can check both
+      without inferring quality from the score.
   - criterion: actionable
     verdict: pass
     reason: >-
-      Either measures-intent suggestion makes the rule promise only what it
-      measures, so passing would mean what the fix says. One narrows the fix
-      to "what it returns", and the other moves "when to call it" into a
-      rubric. The threshold suggestion adds the thresholds.md row the unsure
-      verdict lacks, with the measured range.
-summary: >-
-  A trustworthy assessment. The descriptions, lengths and line numbers
-  check out, and the fail for a fix that promises "when to call it" to a
-  length check is well-founded. The unsure for the unsourced 20 is right,
-  and both suggestions would change their verdicts.
+      Documenting the rationale was actionable and is now addressed in
+      docs/design/thresholds.md. Testing routing guidance would require a
+      separate criterion.

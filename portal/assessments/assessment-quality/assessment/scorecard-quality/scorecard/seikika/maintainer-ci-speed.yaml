@@ -1,59 +1,42 @@
 apiVersion: seikika.com/assessment/v1
 entity: assessment:scorecard-quality/scorecard:seikika/maintainer-ci-speed
 rubric: assessment-quality
-subjectHash: c84c8eb39b16
-assessor: {kind: agent, name: cursor-reviewer-37, model: claude-opus-5.5}
-at: 2026-11-25
+subjectHash: 8381d0a74998
+rubricHash: e30700fc6322cf9f05a301bb4638d6708e9f5eb5aea0281911229ce75bd37bf7
+assessor: {kind: agent, name: Codex, model: GPT-6}
+at: 2026-11-28
 verdicts:
   - criterion: supported
-    verdict: pass
+    verdict: fail
     reason: >-
-      The citations in
+      I checked the claims in
       portal/assessments/scorecard-quality/scorecard/seikika/maintainer-ci-speed.yaml
-      match. The card is runner cost and feedback time
-      (packages/github-actions/fragments/github-actions.yaml:478-489;
-      docs/design/thresholds.md:34 and :58). portal/results.json has five of
-      seven workflows at bronze; codeql.yml and release.yml fail
-      cancels-superseded-runs, and every workflow has fast-feedback unknown.
-      Duration is updated_at minus run_started_at
-      (crates/seikika-connector-github/src/runs.rs:12-15). The branch
-      parameter defaults to main
-      (packages/github-actions/seikika-package.yaml:22-24;
-      github-actions.yaml:51). GitHub's metrics row is
-      github-actions-standards.md:64 and G5 is :161. Evidence is one number,
-      p90Seconds / 60 (github-actions.yaml:523). The concurrency form the fix
-      pastes is pinned true at
-      crates/seikika-connector-workspace/src/workflows.rs:416-420, and the
-      fixtures reach fast-feedback at
-      portal/tests/standards.test.yaml:201-208. thresholds.md:71-74 names
-      maintainer-ci-reliability for the same skipped run-history connector.
+      against the cited sources. The duration still begins at run_started_at
+      in crates/seikika-connector-github/src/runs.rs, but
+      packages/github-actions/fragments/github-actions.yaml now reports the
+      value and limit in seconds and gives advice scoped to the measured
+      branch.
+    suggestion: >-
+      Refresh the silver actionability verdict and keep any remaining findings
+      about timing scope and job detail.
   - criterion: complete
     verdict: pass
     reason: >-
-      one-concern and the ladder pass: bronze is a concurrency block, silver
-      is a p90 bound that the committed baseline never grants. The gap is
-      real: queue time and per-job time are in the design doc's model and not
-      in the rules. Bronze-to-silver evidence names no job, and moving suites
-      off the pull-request path adds them to the main-branch runs the rule
-      measures.
+      The assessment covers scope, level progression, missing timing data, and
+      use of the evidence. The bronze and fast-feedback checks are both named
+      in packages/github-actions/fragments/github-actions.yaml.
   - criterion: reproducible
     verdict: pass
     reason: >-
-      The seven workflow rows, the duration formula and the evidence
-      expression are fixed text. Whether queue time belongs on the card
-      follows from the card's own "answers quickly" sentence and the metrics
-      row it cites.
+      The timing source is inspectable in
+      crates/seikika-connector-github/src/runs.rs, and
+      portal/tests/standards.test.yaml covers both sides of the speed
+      threshold. The connector skip configuration explains unknown live
+      history in the checked-in baseline.
   - criterion: actionable
     verdict: pass
     reason: >-
-      Reporting pull-request p90 from created_at and listing the slowest jobs
-      would close the gap and give the silver evidence a place to act, which
-      changes both fails in
-      portal/assessments/scorecard-quality/scorecard/seikika/maintainer-ci-speed.yaml.
-      The two passes need no suggestion.
-summary: >-
-  Trustworthy. Five workflows are bronze, silver is unknown because run
-  history is skipped, and the measured duration starts at run_started_at,
-  so queue time is out. The gap and the unactionable silver evidence
-  follow, and naming the slow jobs on pull-request runs would change both
-  fails.
+      The suggestions specify PR timing from creation and slow-job details,
+      which address findings that remain. The seconds and branch wording
+      changes are already in
+      packages/github-actions/fragments/github-actions.yaml.

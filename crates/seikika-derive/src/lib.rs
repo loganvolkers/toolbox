@@ -925,6 +925,13 @@ impl<'m> Pipeline<'m> {
         if deferred.is_empty() {
             return;
         }
+        let constituents: BTreeSet<&str> = self
+            .m
+            .scorecards
+            .iter()
+            .filter(|sc| !reads_cards(sc))
+            .map(|sc| sc.name.as_str())
+            .collect();
         let summaries = constituent_summaries(self.m, &d.scores);
         let ids: Vec<String> = d
             .entities
@@ -946,6 +953,12 @@ impl<'m> Pipeline<'m> {
                 .iter()
                 .filter(|c| watch.iter().any(|w| Some(w.as_str()) == c["name"].as_str()))
                 .cloned()
+                .chain(
+                    watch
+                        .iter()
+                        .filter(|name| !constituents.contains(name.as_str()))
+                        .map(|name| json!({"name": name, "level": "not a declared constituent", "rank": 0})),
+                )
                 .collect();
             let entity = ExprValue::from_json(&d.entity_json(&id).unwrap());
             let cards = ExprValue::from_json(&Value::Array(selected));

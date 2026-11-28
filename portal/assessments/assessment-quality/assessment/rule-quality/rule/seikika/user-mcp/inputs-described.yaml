@@ -1,54 +1,40 @@
 apiVersion: seikika.com/assessment/v1
 entity: assessment:rule-quality/rule:seikika/user-mcp/inputs-described
 rubric: assessment-quality
-subjectHash: 25d10c7d765f
-assessor: {kind: agent, name: cursor-reviewer-14, model: claude-opus-5.5}
-at: 2026-11-25
+subjectHash: a2be46687723
+rubricHash: e30700fc6322cf9f05a301bb4638d6708e9f5eb5aea0281911229ce75bd37bf7
+assessor: {kind: agent, name: Codex, model: GPT-6}
+at: 2026-11-28
 verdicts:
   - criterion: supported
     verdict: fail
     reason: >-
-      Almost every citation in
+      I checked the claims in
       portal/assessments/rule-quality/rule/seikika/user-mcp/inputs-described.yaml
-      holds.
-      - crates/seikika-cli/src/main.rs:1248-1256 builds
-        `undescribedProperties`, with `p.get("description").is_none()` at
-        1254.
-      - docs/design/seikika-for-seikika.md:157-158 is the 15 inputs.
-      - `get`'s `fields` is "Comma-separated" at
-        crates/seikika-api/src/mcp.rs:32.
-      - portal/tests/standards.test.yaml:94-98 pins `['kind', 'limit',
-        'query']`, the fix names mcp.rs (portal/standards/cli.yaml:300-302),
-        and the rationale with "15 of them" is cli.yaml:303-306.
-      The exception is `query`'s `fields` text, cited as mcp.rs:37. That line
-      is `filter`, and the `fields` description "Comma-separated fields to
-      return (default: every visible field)" is mcp.rs:38.
+      against the cited sources. crates/seikika-cli/src/main.rs now classifies
+      missing, blank and non-string descriptions as undescribed.
+      crates/seikika-api/src/mcp.rs expands the get fields description. The
+      assessment still reports both earlier behaviors.
     suggestion: >-
-      Cite `query`'s `fields` as crates/seikika-api/src/mcp.rs:38.
+      Reassess the rule using the text validation test and the updated field
+      description.
   - criterion: complete
     verdict: pass
     reason: >-
-      hard-to-game fails correctly: `"description": ""` passes the `is_none()`
-      test at main.rs:1254. measures-intent passes: top-level properties are
-      what a client shows per input, and the open `inputs` object (mcp.rs:82,
-      88) has no fixed keys to describe. fix-leads-to-pass and
-      threshold-justified are right as cited.
+      The assessment checks root properties, open object inputs, useful
+      quantity of text, the failure evidence and the silver threshold in
+      portal/standards/cli.yaml. The corrected check handles blank values
+      without judging detail.
   - criterion: reproducible
     verdict: pass
     reason: >-
-      The fail rests on one line of code (main.rs:1254) and two quoted
-      descriptions (mcp.rs:32, 38). The passes rest on the pinned test and the
-      measured 15. A second assessor would agree.
+      crates/seikika-cli/src/main.rs includes a focused test of missing,
+      whitespace-only and non-string descriptions, while
+      portal/tests/standards.test.yaml checks the diagnostic shown for missing
+      properties.
   - criterion: actionable
     verdict: pass
     reason: >-
-      Treating an empty description, or one under 10 characters, as missing
-      would make `""` and one-word text fail. That closes the route
-      hard-to-game names and makes the cheapest pass a real phrase.
-      "Comma-separated" is 15 characters and would still pass, but the
-      suggestion fixes that entity directly in the same change.
-summary: >-
-  The judgement is right. The rule tests only that a `description` key
-  exists, so an empty string passes, and the code, the measurement and the
-  pinned evidence are cited accurately. One line number is off: `query`'s
-  `fields` text is mcp.rs:38, not 37.
+      The blank-description and get fields suggestions were addressed in
+      crates/seikika-cli/src/main.rs and crates/seikika-api/src/mcp.rs. A
+      threshold for descriptive detail would still need its own justification.

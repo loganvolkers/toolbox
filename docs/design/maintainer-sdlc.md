@@ -71,7 +71,7 @@ caching) comes back only when these numbers regress (D44, [developer-velocity.md
 | Build output | Hosted UI and offline report assets | CI builds both from source and checks that Git ignores them | CI `ui` job |
 | Types and freshness | Shared Vue kit, hosted UI, report and package catalog | Astro documents and embedded assets are current | `pnpm check`, `pnpm build` |
 | Story probe | Every UI story across both fixtures and viewports, in light and dark | No serious accessibility violation, sideways scroll, or script error | `pnpm storybook:build`, `pnpm storybook:probe` |
-| Standards | Seikika for Seikika scorecards over crates, docs, CLI and MCP (report, not yet a gate) | Docs, tests, clippy, size and complexity, interface contracts | `scripts/self-portal.sh report`; `seikika test portal` |
+| Standards | Seikika for Seikika scorecards over crates, docs, CLI and MCP, gated by the CI ratchet | Scorecard fixtures pass and improvements are recorded in the baseline | `seikika test portal`; [run the ratchet locally](../../portal/README.md#run-it) |
 
 Each row is recorded with its result in [research-log.md](../research-log.md) when a milestone
 closes.
@@ -156,6 +156,13 @@ that cargo-dist still plans the CLI and workspace connector archives for every r
 | Node and pnpm | Embedded UI, Astro builds, UI stories and probes | Run `mise exec -- pnpm install --frozen-lockfile` and `mise exec -- pnpm build` before compiling the CLI or server from source. For browser checks, run `mise exec -- pnpm --filter @seikika/astro-report exec playwright install chromium` |
 | cargo-dist | Release planning | Run `mise exec -- dist plan` |
 | Postgres 16 | M2–M4 acceptance | Install the system package separately. The scripts create a throwaway cluster |
+
+For the maintainer test stage, require the OpenFGA integration tests locally as CI does.
+With mise activated, run:
+
+```sh
+SEIKIKA_REQUIRE_OPENFGA=1 cargo test --locked -p seikika-authz -p seikika-api
+```
 
 The reference requirements have hashes for Linux x86-64 with Python 3.13. Install them in a virtual environment and use its Python for parity checks.
 
