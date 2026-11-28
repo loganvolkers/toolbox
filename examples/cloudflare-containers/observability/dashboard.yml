@@ -1,0 +1,7 @@
+apiVersion: 1
+providers:
+  - name: Seikika demo
+    type: file
+    disableDeletion: true
+    allowUiUpdates: false
+    options: {path: /otel-lgtm/seikika-runtime}

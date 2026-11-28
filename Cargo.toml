@@ -45,7 +45,7 @@ seikika-telemetry = { path = "crates/seikika-telemetry", version = "=0.2.1" }
 # Operational telemetry (D6, plan §6.3): OTel contract + Prometheus /metrics.
 opentelemetry = { version = "0.33.1", default-features = false, features = ["trace", "metrics", "logs"] }
 opentelemetry_sdk = { version = "0.33.1", default-features = false, features = ["trace", "metrics", "logs", "rt-tokio"] }
-opentelemetry-otlp = { version = "0.33.1", default-features = false, features = ["trace", "metrics", "logs", "grpc-tonic", "http-proto", "reqwest-rustls"] }
+opentelemetry-otlp = { version = "0.33.1", default-features = false, features = ["trace", "metrics", "logs", "grpc-tonic", "http-proto", "reqwest-blocking-client", "reqwest-rustls"] }
 opentelemetry-appender-tracing = { version = "0.33.1", default-features = false }
 prometheus = { version = "0.14", default-features = false }
 tracing = "0.1"

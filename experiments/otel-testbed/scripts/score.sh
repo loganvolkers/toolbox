@@ -14,7 +14,12 @@ SEIKIKA="${SEIKIKA:-$ROOT/target/debug/seikika}"
 PORT="${OTEL_TESTBED_PORT:-18180}"
 API="127.0.0.1:${PORT}"
 URL="http://${API}"
-OTLP="http://127.0.0.1:4317"
+PROTOCOL="${OTEL_TESTBED_PROTOCOL:-grpc}"
+case "$PROTOCOL" in
+  grpc) OTLP_PORT=4317 ;;
+  http/protobuf) OTLP_PORT=4318 ;;
+  *) echo "Use OTEL_TESTBED_PROTOCOL=grpc or http/protobuf" >&2; exit 2 ;;
+esac
 OUT="$BED/out"
 WORK="$(mktemp -d)"
 COL_PID=""
@@ -72,21 +77,38 @@ rm -rf "$OUT"
 mkdir -p "$OUT"
 
 # Render collector config (placeholders; avoids confmap env-syntax drift).
-sed -e "s|__SEIKIKA_SCRAPE_TARGET__|${API}|g" \
-    -e "s|__OTEL_OUT__|${OUT}|g" \
+sed -e "s|__OTEL_OUT__|${OUT}|g" \
     "$BED/otelcol.yaml" >"$WORK/otelcol.yaml"
+collector_config=(--config "$WORK/otelcol.yaml")
+export_check=("$OUT")
+if [[ "$PROTOCOL" == http/protobuf ]]; then
+  # The pinned Collector predates the otlp_http exporter spelling used by LGTM.
+  sed 's/otlp_http/otlphttp/g' "$ROOT/examples/cloudflare-containers/observability/collector.yaml" \
+    >"$WORK/collector-public.yaml"
+  collector_config=(--config "$WORK/collector-public.yaml" "${collector_config[@]}" --config "$BED/otelcol.public.yaml")
+  export_check+=(--public)
+fi
 
 echo "1. start otelcol-contrib ${OTELCOL_VERSION}"
-"$COL" --config "$WORK/otelcol.yaml" >"$OUT/otelcol.log" 2>&1 & COL_PID=$!
+"$COL" "${collector_config[@]}" >"$OUT/otelcol.log" 2>&1 & COL_PID=$!
 for _ in $(seq 50); do
-  # Collector binds 4317; a refused connect that later succeeds is enough.
-  if (echo >/dev/tcp/127.0.0.1/4317) >/dev/null 2>&1; then break; fi
+  if (echo >"/dev/tcp/127.0.0.1/$OTLP_PORT") >/dev/null 2>&1; then break; fi
   sleep 0.1
 done
 
-echo "2. serve reference portal with OTLP → collector"
-export OTEL_EXPORTER_OTLP_ENDPOINT="$OTLP"
-export OTEL_SERVICE_NAME=seikika
+echo "2. serve reference portal with OTLP ($PROTOCOL) → collector"
+unset OTEL_EXPORTER_OTLP_TRACES_ENDPOINT OTEL_EXPORTER_OTLP_LOGS_ENDPOINT OTEL_EXPORTER_OTLP_METRICS_ENDPOINT
+unset OTEL_EXPORTER_OTLP_TRACES_HEADERS OTEL_EXPORTER_OTLP_LOGS_HEADERS OTEL_EXPORTER_OTLP_METRICS_HEADERS
+export OTEL_EXPORTER_OTLP_ENDPOINT="http://127.0.0.1:$OTLP_PORT"
+export OTEL_EXPORTER_OTLP_PROTOCOL="$PROTOCOL"
+if [[ "$PROTOCOL" == http/protobuf ]]; then
+  export OTEL_EXPORTER_OTLP_HEADERS=authorization=Bearer%20seikika-testbed
+  export OTEL_SERVICE_NAME=seikika-demo
+else
+  unset OTEL_EXPORTER_OTLP_HEADERS
+  export OTEL_SERVICE_NAME=seikika
+fi
+export OTEL_TRACES_SAMPLER=always_on
 export OTEL_METRIC_EXPORT_INTERVAL=500
 export SEIKIKA_TELEMETRY=ci
 export SEIKIKA_LOG_FORMAT=json
@@ -109,9 +131,20 @@ curl -fs "$URL/readyz" >/dev/null
 echo "3. exercise HTTP + metrics scrape surface"
 curl -fs "$URL/healthz" >/dev/null
 curl -fs "$URL/v1/snapshot" -H 'x-seikika-user: dave' -o "$OUT/snapshot.json"
+# Native OTLP snapshot lag must arrive before anything scrapes /metrics.
+for _ in $(seq 60); do
+  if python3 "$BED/scripts/check_exports.py" "${export_check[@]}" 2>"$WORK/export-error"; then
+    break
+  fi
+  sleep 0.2
+done
+if [ -s "$WORK/export-error" ]; then
+  cat "$WORK/export-error" >&2
+  bad "OTLP export or correlation contract before metrics scrape"
+else
+  ok "OTLP traces, metrics and logs before metrics scrape"
+fi
 curl -fs "$URL/metrics" -o "$OUT/metrics.prom"
-# Wait for OTLP metric export interval + collector batch flush.
-sleep 3
 
 echo "4. stop seikika (flush OTLP batches) then collector"
 kill -TERM "$SRV_PID" 2>/dev/null || true
@@ -123,56 +156,6 @@ for _ in $(seq 50); do kill -0 "$COL_PID" 2>/dev/null || break; sleep 0.1; done
 COL_PID=""
 
 echo "5. score rubric"
-# --- service.name ---
-if grep -Rqs '"service.name"' "$OUT"/*.json 2>/dev/null \
-  || grep -Rqs 'service.name' "$OUT"/traces.json "$OUT"/logs.json 2>/dev/null; then
-  if grep -Rqs 'seikika' "$OUT"/traces.json "$OUT"/logs.json "$OUT"/metrics.json 2>/dev/null; then
-    ok "service.name present (seikika)"
-  else
-    bad "service.name resource missing seikika value"
-  fi
-else
-  bad "service.name not found in exported files"
-fi
-
-# --- HTTP span ---
-if grep -Rqs 'http.server.request' "$OUT"/traces.json 2>/dev/null; then
-  ok "http.server.request span exported"
-else
-  bad "no http.server.request span in traces.json (see $OUT/otelcol.log)"
-fi
-
-# --- catalog metrics in file exporter ---
-if grep -Rqs 'seikika_snapshot_lag_seconds' "$OUT"/metrics.json 2>/dev/null; then
-  ok "metrics file has seikika_snapshot_lag_seconds"
-else
-  bad "metrics file missing seikika_snapshot_lag_seconds"
-fi
-if grep -Rqs 'seikika_ingest_records_total' "$OUT"/metrics.json 2>/dev/null; then
-  ok "metrics file has seikika_ingest_records_total"
-else
-  bad "metrics file missing seikika_ingest_records_total"
-fi
-
-# --- log / trace_id correlation ---
-if grep -qs 'trace_id' "$OUT/server.log"; then
-  TRACE_ID="$(grep -oE '"trace_id":"[0-9a-f]{32}"' "$OUT/server.log" | head -1 | sed 's/.*"\([0-9a-f]\{32\}\)".*/\1/' || true)"
-  if [ -n "${TRACE_ID:-}" ] && grep -Rqs "$TRACE_ID" "$OUT"/traces.json 2>/dev/null; then
-    ok "server JSON log trace_id matches an exported span ($TRACE_ID)"
-  elif [ -n "${TRACE_ID:-}" ]; then
-    # OTel JSON may encode trace_id as bytes/base64; still require a non-empty correlated field.
-    if grep -Rqs 'traceId\|trace_id\|TraceId' "$OUT"/traces.json "$OUT"/logs.json 2>/dev/null; then
-      ok "server JSON log has trace_id and exports carry trace ids"
-    else
-      bad "trace_id in server.log but no trace id in exports"
-    fi
-  else
-    bad "trace_id key in server.log but could not parse hex id"
-  fi
-else
-  bad "server.log missing trace_id (expected JSON correlated http log)"
-fi
-
 # --- /metrics scrape catalog ---
 if grep -qs '# TYPE seikika_snapshot_lag_seconds' "$OUT/metrics.prom" \
   && grep -qs 'seikika_ingest_records_total' "$OUT/metrics.prom"; then

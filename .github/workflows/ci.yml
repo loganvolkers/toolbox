@@ -193,7 +193,9 @@ jobs:
       - uses: ./.github/actions/build-embedded-ui # zizmor: ignore[self-repository] actionlint 1.7.12 rejects $/
       - run: cargo build --locked -p seikika-cli -p seikika-connector-gitlab
       - name: OTel testbed rubric (experiments/otel-testbed/scripts/score.sh)
-        run: experiments/otel-testbed/scripts/score.sh
+        run: |
+          experiments/otel-testbed/scripts/score.sh
+          OTEL_TESTBED_PROTOCOL=http/protobuf experiments/otel-testbed/scripts/score.sh
   github-connector:
     runs-on: ubuntu-latest
     timeout-minutes: 15

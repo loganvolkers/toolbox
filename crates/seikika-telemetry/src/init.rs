@@ -125,7 +125,7 @@ pub fn init(opts: TelemetryOptions) -> Result<TelemetryGuard, TelemetryError> {
     let otlp = otlp_endpoint.is_some();
 
     let tracer_provider = match &otlp_endpoint {
-        Some(endpoint) => match build_tracer(mode, resource.clone(), endpoint) {
+        Some(_) => match build_tracer(mode, resource.clone()) {
             Ok(p) => {
                 global::set_tracer_provider(p.clone());
                 Some(p)
@@ -145,7 +145,7 @@ pub fn init(opts: TelemetryOptions) -> Result<TelemetryGuard, TelemetryError> {
 
     // OTLP metrics: catalog helpers dual-write to SDK meters; scrape stays Prom.
     let meter_provider = match &otlp_endpoint {
-        Some(endpoint) => match install_otlp_metrics(mode, resource.clone(), endpoint) {
+        Some(_) => match install_otlp_metrics(resource.clone()) {
             Ok(p) => {
                 crate::otlp_meters::install();
                 crate::otlp_meters::touch_required();
@@ -199,23 +199,18 @@ pub fn init(opts: TelemetryOptions) -> Result<TelemetryGuard, TelemetryError> {
 fn build_tracer(
     mode: TelemetryMode,
     resource: opentelemetry_sdk::Resource,
-    endpoint: &str,
 ) -> Result<SdkTracerProvider, TelemetryError> {
-    use opentelemetry_otlp::WithExportConfig;
-
     let protocol = std::env::var("OTEL_EXPORTER_OTLP_PROTOCOL").unwrap_or_default();
     let exporter = if protocol.eq_ignore_ascii_case("http/protobuf")
         || protocol.eq_ignore_ascii_case("http/json")
     {
         opentelemetry_otlp::SpanExporter::builder()
             .with_http()
-            .with_endpoint(endpoint)
             .build()
             .map_err(|e| TelemetryError::OpenTelemetry(e.to_string()))?
     } else {
         opentelemetry_otlp::SpanExporter::builder()
             .with_tonic()
-            .with_endpoint(endpoint)
             .build()
             .map_err(|e| TelemetryError::OpenTelemetry(e.to_string()))?
     };
@@ -266,11 +261,8 @@ fn default_sampler(mode: TelemetryMode) -> Sampler {
 }
 
 fn install_otlp_metrics(
-    _mode: TelemetryMode,
     resource: opentelemetry_sdk::Resource,
-    endpoint: &str,
 ) -> Result<opentelemetry_sdk::metrics::SdkMeterProvider, TelemetryError> {
-    use opentelemetry_otlp::WithExportConfig;
     use opentelemetry_sdk::metrics::SdkMeterProvider;
     use std::time::Duration;
 
@@ -280,13 +272,11 @@ fn install_otlp_metrics(
     {
         opentelemetry_otlp::MetricExporter::builder()
             .with_http()
-            .with_endpoint(endpoint)
             .build()
             .map_err(|e| TelemetryError::OpenTelemetry(e.to_string()))?
     } else {
         opentelemetry_otlp::MetricExporter::builder()
             .with_tonic()
-            .with_endpoint(endpoint)
             .build()
             .map_err(|e| TelemetryError::OpenTelemetry(e.to_string()))?
     };
@@ -311,24 +301,19 @@ fn install_otlp_metrics(
 fn build_logger_provider(
     resource: opentelemetry_sdk::Resource,
 ) -> Result<opentelemetry_sdk::logs::SdkLoggerProvider, TelemetryError> {
-    use opentelemetry_otlp::WithExportConfig;
     use opentelemetry_sdk::logs::SdkLoggerProvider;
 
-    let endpoint = std::env::var("OTEL_EXPORTER_OTLP_ENDPOINT")
-        .map_err(|_| TelemetryError::OpenTelemetry("OTEL_EXPORTER_OTLP_ENDPOINT unset".into()))?;
     let protocol = std::env::var("OTEL_EXPORTER_OTLP_PROTOCOL").unwrap_or_default();
     let exporter = if protocol.eq_ignore_ascii_case("http/protobuf")
         || protocol.eq_ignore_ascii_case("http/json")
     {
         opentelemetry_otlp::LogExporter::builder()
             .with_http()
-            .with_endpoint(endpoint)
             .build()
             .map_err(|e| TelemetryError::OpenTelemetry(e.to_string()))?
     } else {
         opentelemetry_otlp::LogExporter::builder()
             .with_tonic()
-            .with_endpoint(endpoint)
             .build()
             .map_err(|e| TelemetryError::OpenTelemetry(e.to_string()))?
     };

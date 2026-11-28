@@ -28,7 +28,7 @@ export default defineConfig({
               'start/versions', 'start/troubleshooting',
             ] },
             { label: 'Operators', collapsed: true, items: [
-              'operators', 'operators/portal', 'operators/ci', 'operators/deploy', 'operators/access',
+              'operators', 'operators/portal', 'operators/ci', 'operators/deploy', 'operators/observability', 'operators/access',
               'operators/secrets', 'operators/actions', 'operators/federate-actions',
               'operators/publish', 'operators/standards', 'operators/assessments',
             ] },

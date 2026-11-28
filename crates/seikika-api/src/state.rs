@@ -147,6 +147,16 @@ impl AppState {
         self.current.borrow().clone()
     }
 
+    pub(crate) fn snapshot_lag_seconds(&self) -> Option<f64> {
+        self.current.borrow().as_ref().map(|published| {
+            published
+                .published_at
+                .elapsed()
+                .unwrap_or_default()
+                .as_secs_f64()
+        })
+    }
+
     /// Wait until the published snapshot covers `version` (or `timeout` passes).
     pub async fn wait_for(&self, version: u64, timeout: Duration) -> Option<Arc<Published>> {
         let mut rx = self.current.subscribe();

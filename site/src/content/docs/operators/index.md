@@ -19,6 +19,7 @@ A portal gives developers and agents a place to find software, check ownership, 
 | Apply existing checks to a repository or service | [Choose a standards package](/packages/) |
 | Review a configuration change | [Change a portal](/operators/portal/) |
 | Run a shared service | [Deploy and operate a portal](/operators/deploy/) |
+| Diagnose runtime issues | [Monitor and troubleshoot a portal](/operators/observability/) |
 | Configure access for people and integrations | [Authentication and authorization](/operators/access/) |
 | Define a self-service action | [Define a self-service action](/operators/actions/) |
 | Offer actions from several repositories | [Federate repository actions](/operators/federate-actions/) |

@@ -22,8 +22,9 @@ standard `OTEL_*` env vars; does not override operator-set samplers.
 |---|---|
 | `OTEL_SERVICE_NAME` | `service.name` (required non-empty in CI/prod) |
 | `OTEL_RESOURCE_ATTRIBUTES` | Merged into the resource (operator keys win) |
-| `OTEL_EXPORTER_OTLP_ENDPOINT` | Enables OTLP traces/metrics/logs |
+| `OTEL_EXPORTER_OTLP_ENDPOINT` | Enables OTLP traces, metrics, and logs. For HTTP, use the base URL. The SDK appends the signal path. |
 | `OTEL_EXPORTER_OTLP_PROTOCOL` | `grpc` (default) or `http/protobuf` |
+| `OTEL_EXPORTER_OTLP_HEADERS` | Comma-separated exporter headers, such as `authorization=Bearer%20<TOKEN>` |
 | `OTEL_METRIC_EXPORT_INTERVAL` | Periodic OTLP metric flush, milliseconds (default 1000) |
 | `OTEL_TRACES_SAMPLER` (+ `_ARG`) | Honored when set |
 | `SEIKIKA_TELEMETRY` | `local` \| `ci` \| `prod` |

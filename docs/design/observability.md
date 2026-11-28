@@ -16,7 +16,7 @@ Operators own the Collector and backends (Grafana LGTM as the D6 reference).
 |---|---|
 | Traces | `tracing` spans (`http.server.request`); OTLP when `OTEL_EXPORTER_OTLP_ENDPOINT` is set |
 | Metrics | Catalog instruments; scrape via `/metrics`; OTLP meters dual-write catalog names |
-| Logs | JSON (CI/prod) or pretty (local); `trace_id` when a span is active |
+| Logs | JSON (CI/prod) or pretty (local); correlated trace and span IDs in OTLP records |
 
 `SEIKIKA_MCP_TRACE` NDJSON stays a contract-coverage artifact (F9), not distributed tracing.
 
@@ -31,6 +31,10 @@ deprecated alias while `TELEMETRY_PROM_ALIASES` is on (default).
 [`experiments/otel-testbed`](../../experiments/otel-testbed/) runs a pinned
 `otelcol-contrib` with a file exporter and [`scripts/score.sh`](../../experiments/otel-testbed/scripts/score.sh)
 applies the design §13 rubric. CI job `otel-testbed` must pass.
+
+The hosted demo uses the [Cloudflare observability example](../../examples/cloudflare-containers/observability/)
+to export over HTTPS and publish a guest Grafana dashboard. The Collector filters the dedicated demo
+data set before storage. See the [operator playbook](../../site/src/content/docs/operators/observability.md).
 
 ## S4S
 

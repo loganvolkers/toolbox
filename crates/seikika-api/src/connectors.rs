@@ -178,6 +178,9 @@ fn parse_duration(s: &str) -> Option<Duration> {
 pub async fn freshness_loop(s: Arc<AppState>) {
     loop {
         tokio::time::sleep(Duration::from_secs(5)).await;
+        if let Some(lag) = s.snapshot_lag_seconds() {
+            seikika_telemetry::catalog::set_snapshot_lag(lag);
+        }
         for c in &s.manifest.connectors {
             for (kind, policy) in &c.freshness {
                 let (Some(max), Some(last)) =
