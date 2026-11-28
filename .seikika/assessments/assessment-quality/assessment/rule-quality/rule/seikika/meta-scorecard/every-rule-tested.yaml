@@ -1,0 +1,55 @@
+apiVersion: seikika.com/assessment/v1
+entity: assessment:rule-quality/rule:seikika/meta-scorecard/every-rule-tested
+rubric: assessment-quality
+subjectHash: d443482128b2
+assessor: {kind: agent, name: cursor-reviewer-02, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: supported
+    verdict: pass
+    reason: >-
+      The citations in
+      .seikika/assessments/rule-quality/rule/seikika/meta-scorecard/every-rule-tested.yaml
+      hold. untestedRules is meta.yaml:23-26 and the regex meta.rs:28-35,
+      84-93. The roll-up test is standards.test.yaml:298-305. The fix is
+      meta.yaml:668 and the sibling fix 448-452. The test at
+      standards.test.yaml:306-311 does use `'always-explains' in
+      score(...).rules`, a bare mention that meta.rs:28-30 says pins nothing.
+      results.json lists exactly 6 maintainer-crate rules failing tested and
+      10 of 53 cards failing this rule. The only pin is the fail at 312-313.
+      The ladder (thresholds.md:60), the row
+      (scorecards-for-scorecards.md:114) and the rationale (meta.yaml:670-673)
+      are as cited.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      The verdicts are right. The check is a faithful roll-up, and the fix
+      gives no form or place. The repository's own test file shows the bare
+      mention that a reader of this fix would write, so fix-leads-to-pass
+      fails with evidence.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      The fix-leads-to-pass fail rests on a concrete bare mention in the test
+      file (standards.test.yaml:306-311) and the detector's refusal of it
+      (meta.rs:28-30). hard-to-game rests on the same regex as
+      meta-rule/tested.
+  - criterion: actionable
+    verdict: unsure
+    reason: >-
+      The fix-leads-to-pass suggestion, the sibling's wording with the form,
+      file glob and bare-mention warning, would flip that verdict. The
+      hard-to-game suggestion, top-level `&&` only, closes the `|| true` route
+      but not `!=`. A `!=` expectation marks a rule tested with no outcome
+      (meta.rs:58-59; unit test `r5` at meta.rs:324), so `rules['r'] !=
+      'unknown'` for each listed rule still empties untestedRules without
+      pinning anything.
+    suggestion: >-
+      Extend the hard-to-game suggestion: in meta-rule/tested's detector, also
+      refuse `!=` against `unknown` or `skipped`, so only an outcome pin
+      counts.
+summary: >-
+  Trustworthy, with a sharp fix-leads-to-pass finding: the repository's
+  own "pinned here too" test is a bare mention. The hard-to-game
+  suggestion would leave `!= 'unknown'` as a cheap route, so it might not
+  flip that verdict.

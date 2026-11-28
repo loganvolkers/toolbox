@@ -23,7 +23,7 @@ The questions worth separating:
 | Is it healthy in production? | Lag, error rate, a permission probe | **Not gated.** That is `connector-health` in [meta-catalog.md](./meta-catalog.md), and it needs a live portal |
 
 The workspace connector emits one `connector` record per `crates/seikika-connector-*/Cargo.toml`.
-It reports facts. `portal/standards/connectors.yaml` holds the thresholds. A connector added after this baseline
+It reports facts. `.seikika/standards/connectors.yaml` holds the thresholds. A connector added after this baseline
 must reach bronze.
 
 **What we did not adopt, and why:**
@@ -90,9 +90,9 @@ the authors of these connectors.
 | gold | `no-hardcoded-secrets` | No secret shape in the crate sources |
 
 A new connector below bronze is a ratchet regression. Add an operator landing page under
-`site/src/content/docs/connectors/`. Give the page a title and description. The directory and
+`npm/site/src/content/docs/connectors/`. Give the page a title and description. The directory and
 sidebar pick up published landing pages automatically. Put additional pages under the connector's
-path and link them from the landing page. Use the [documentation style guide](../../site/src/content/docs/maintainers/writing.md)
+path and link them from the landing page. Use the [documentation style guide](../../npm/site/src/content/docs/maintainers/writing.md)
 to review setup, record examples, verification, and recovery steps. The public guide rule checks
 presence and discoverability. A guide may link to more pages when the connector needs them.
 See [connector directory research](../audits/connector-directory.md) and
@@ -100,11 +100,11 @@ See [connector directory research](../audits/connector-directory.md) and
 
 ## 5. This repository
 
-On November 26, 2026, `seikika report portal --skip runner,github-actions` found that all six
+On November 26, 2026, `seikika report .seikika --skip runner,github-actions` found that all six
 first-party connectors passed `public-guide` and reached gold. The directory links to the guides
-for GitHub, GitLab, Git files, Workspace, Runner, and SCIM. [Connector directory](../../site/src/content/docs/connectors/index.mdx)
+for GitHub, GitLab, Git files, Workspace, Runner, and SCIM. [Connector directory](../../npm/site/src/content/docs/connectors/index.mdx)
 
-`seikika test portal` pins four fixture connectors: `crates/demo/focused` at gold,
+`seikika test .seikika` pins four fixture connectors: `crates/demo/focused` at gold,
 `crates/demo/partial` at bronze, `crates/demo/unsafe` and `crates/demo/unlisted` at none. The
 unlisted fixture has crate docs and fails the public guide rule. Every rule passes on one fixture and
 fails on another, so the new rules and the scorecard clear `meta-rule` / `meta-scorecard` from

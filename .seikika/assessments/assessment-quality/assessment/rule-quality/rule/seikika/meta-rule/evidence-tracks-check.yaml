@@ -1,0 +1,36 @@
+apiVersion: seikika.com/assessment/v1
+entity: assessment:rule-quality/rule:seikika/meta-rule/evidence-tracks-check
+rubric: assessment-quality
+subjectHash: c06cf14188cd
+rubricHash: e30700fc6322cf9f05a301bb4638d6708e9f5eb5aea0281911229ce75bd37bf7
+assessor: {kind: agent, name: Codex, model: GPT-6}
+at: 2026-11-28
+verdicts:
+  - criterion: supported
+    verdict: pass
+    reason: >-
+      I checked the claims in
+      .seikika/assessments/rule-quality/rule/seikika/meta-rule/evidence-tracks-check.yaml
+      against the cited sources. The selector in
+      packages/meta-scoring/fragments/catalog.yaml still accepts evidence that
+      reads any entity field. The cited distinction between a failing list and
+      an identity label follows directly from that predicate.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      The assessment covers the check scope, the lack of field overlap, the
+      repair and why the threshold exists. docs/design/thresholds.md records
+      the measurement and explains the constant-evidence allowance.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      The hidden-list fixture in .seikika/fixtures/meta-catalog.ndjson and the
+      assertions in .seikika/tests/standards.test.yaml pin the current
+      behavior. The evidence-field facts and final predicate are visible in
+      packages/meta-scoring/fragments/catalog.yaml.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      The suggested overlap check and negative fixture identify a specific
+      change and how to verify it. The definition of evidenceTracksCheck is in
+      packages/meta-scoring/fragments/catalog.yaml.

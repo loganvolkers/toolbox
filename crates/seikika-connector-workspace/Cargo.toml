@@ -19,7 +19,7 @@ sha2.workspace = true
 syn = { version = "3", default-features = false, features = ["full", "parsing", "visit", "printing"] }
 tempfile = "3"
 tokio.workspace = true
-seikika-connect.workspace = true
+seikika-connect = { workspace = true, features = ["github-app"] }
 seikika-model.workspace = true
 walkdir.workspace = true
 pulldown-cmark = { version = "0.13", default-features = false }

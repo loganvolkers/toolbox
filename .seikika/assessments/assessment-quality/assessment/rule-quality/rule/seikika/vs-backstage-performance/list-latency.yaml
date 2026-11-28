@@ -1,0 +1,43 @@
+apiVersion: seikika.com/assessment/v1
+entity: assessment:rule-quality/rule:seikika/vs-backstage-performance/list-latency
+rubric: assessment-quality
+subjectHash: f106aefd840a
+rubricHash: e30700fc6322cf9f05a301bb4638d6708e9f5eb5aea0281911229ce75bd37bf7
+assessor: {kind: agent, name: Codex, model: GPT-6}
+at: 2026-11-28
+verdicts:
+  - criterion: supported
+    verdict: fail
+    reason: >-
+      I checked the claims in
+      .seikika/assessments/rule-quality/rule/seikika/vs-backstage-performance/list-latency.yaml
+      against the cited sources.
+      experiments/backstage-compare/measure.py:123-132 applies HTTP 200
+      filtering to the rate calculation. It does not show that only 200
+      responses count toward the p95 being reviewed.
+    suggestion: >-
+      Remove the rate-based justification and check the source of the latency
+      histogram.
+  - criterion: complete
+    verdict: fail
+    reason: >-
+      The corpus gate in experiments/backstage-compare/measure.py:270-274
+      supports the query shape but runs before load. The hard-to-game
+      criterion needs to address faults during the timed reads.
+    suggestion: >-
+      Reassess hard-to-game with the pre-load oracle and timed-request checks
+      treated separately.
+  - criterion: reproducible
+    verdict: fail
+    reason: >-
+      .seikika/standards/backstage-comparison.yaml evaluates listP95Ms on its
+      own, so a reviewer cannot reproduce a latency guarantee from the
+      successful-throughput calculation.
+    suggestion: >-
+      State what would reject an error-contaminated latency sample.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      The proposed explanation for the 500 ms threshold would answer the
+      uncertainty against the stricter read objective in docs/plan.md without
+      rewriting the historical result.

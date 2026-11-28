@@ -1,0 +1,48 @@
+apiVersion: seikika.com/assessment/v1
+entity: rule:seikika/vs-backstage-performance/get-throughput
+rubric: rule-quality
+subjectHash: 242591df380b
+assessor: {kind: agent, name: cursor-assessor-16, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: measures-intent
+    verdict: pass
+    reason: >-
+      The rationale itself calls the figure "a ceiling, not a capacity"
+      (.seikika/standards/backstage-comparison.yaml:283-286), and that is what
+      oha at 16 connections in a closed loop gives (measure.py:30-31,
+      111-131). The bar is 1,000/s. Both the recorded 56,546.9/s and the
+      adjudicator's uncached 36-37k/s over all 10,000 ids
+      (ADJUDICATION.md:197) clear it by more than 30 times. So passing
+      honestly means one instance serves many readers. The brief's stricter
+      capacity measure, the maximum rate with p99 under 200 ms
+      (RESEARCH.md:60), is not used, and the README discloses this
+      (README.md:120-122).
+  - criterion: hard-to-game
+    verdict: pass
+    reason: >-
+      Only 200s count toward requests per second (measure.py:128-130), so
+      rate-limiting or erroring fast lowers the value rather than raising it.
+      The ids are spread over 1,000 seeded components, so one cached entry
+      cannot carry the run (measure.py:32, 92-94).
+  - criterion: fix-leads-to-pass
+    verdict: pass
+    reason: >-
+      Like get-latency, it names `get_entity` in
+      crates/seikika-api/src/routes.rs (line 412) and the harness. Throughput
+      on that path is bound by authentication, visibility and shaping, which
+      are all reached from that handler. run.sh:4 points to snapshot.py for
+      the record.
+  - criterion: threshold-justified
+    verdict: pass
+    reason: >-
+      The 1,000/s bar was pre-registered (README.md:38; ADJUDICATION.md §3.1).
+      The product's SLO is 500 RPS across 3 replicas at under 200 ms p99
+      (docs/plan.md:920), about 170/s per replica, so a bar of 1,000 per
+      instance is stricter than the plan. Single bronze level per
+      D01M857ZB468ZM2YS6GNSEG6YB9.
+summary: >-
+  An honest throughput rule: its rationale admits the figure is a
+  contended ceiling, and its bar is stricter than the plan's per-replica
+  rate. Fast errors cannot inflate it, because only 200s count. Seikika
+  clears it by a wide margin even without the decision cache.

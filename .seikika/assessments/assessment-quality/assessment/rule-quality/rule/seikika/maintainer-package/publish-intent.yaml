@@ -1,0 +1,38 @@
+apiVersion: seikika.com/assessment/v1
+entity: assessment:rule-quality/rule:seikika/maintainer-package/publish-intent
+rubric: assessment-quality
+subjectHash: 2ab51a0a680f
+rubricHash: e30700fc6322cf9f05a301bb4638d6708e9f5eb5aea0281911229ce75bd37bf7
+assessor: {kind: agent, name: Codex, model: GPT-6}
+at: 2026-11-28
+verdicts:
+  - criterion: supported
+    verdict: fail
+    reason: >-
+      I checked the claims in
+      .seikika/assessments/rule-quality/rule/seikika/maintainer-package/publish-intent.yaml
+      against the cited sources. The assessment describes all live manifests
+      as private. report-ui/package.json and ui-kit/package.json both declare
+      versions for public packages, so that inventory claim is outdated.
+    suggestion: >-
+      Date the historical observation or cite the current public package
+      manifests.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      .seikika/standards/packages.yaml checks private or nonempty version. The
+      assessment covers both repair paths and identifies the boolean handling
+      in crates/seikika-connector-workspace/src/npm.rs.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      crates/seikika-connector-workspace/src/npm.rs and
+      .seikika/tests/standards.test.yaml show the read and the recorded
+      public-package failure, while the live public manifests demonstrate the
+      version path.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      .seikika/standards/packages.yaml names the two field changes that
+      satisfy the rule. The assessment records four passes and has no attached
+      suggestions.

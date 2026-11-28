@@ -1,0 +1,43 @@
+apiVersion: seikika.com/assessment/v1
+entity: assessment:rule-quality/rule:seikika/maintainer-plugin/portable-components
+rubric: assessment-quality
+subjectHash: d86e7fa12493
+rubricHash: e30700fc6322cf9f05a301bb4638d6708e9f5eb5aea0281911229ce75bd37bf7
+assessor: {kind: agent, name: Codex, model: GPT-6}
+at: 2026-11-28
+verdicts:
+  - criterion: supported
+    verdict: pass
+    reason: >-
+      I checked the claims in
+      .seikika/assessments/rule-quality/rule/seikika/maintainer-plugin/portable-components.yaml
+      against the cited sources. The original walker in
+      crates/seikika-connector-workspace/src/plugins.rs traversed
+      reverse-domain directories and skipped hidden directories. The current
+      implementation addresses both observations, and
+      docs/design/agent-plugins.md records the extension layout.
+  - criterion: complete
+    verdict: fail
+    reason: >-
+      The hard-to-game verdict relies on a separate skill card and assumes
+      that vendor harnesses cannot load skills in their own directories.
+      Neither follows from the plugin check in
+      .seikika/standards/plugins.yaml.
+    suggestion: >-
+      Judge the original hard-to-game criterion using what the plugin card
+      measures and distinguish compliant harness discovery from vendor harness
+      discovery.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      Both reported paths can be reproduced with minimal SKILL.md files, and
+      the regression assertions in
+      crates/seikika-connector-workspace/src/plugins.rs now verify the
+      corrected classification.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      The suggestions identify the exact walker and rule guidance in
+      crates/seikika-connector-workspace/src/plugins.rs and
+      .seikika/standards/plugins.yaml, with concrete expected treatment for
+      both layouts.

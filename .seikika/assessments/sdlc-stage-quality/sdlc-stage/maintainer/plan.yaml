@@ -1,0 +1,67 @@
+apiVersion: seikika.com/assessment/v1
+entity: sdlc-stage:maintainer/plan
+rubric: sdlc-stage-quality
+subjectHash: 2eed59615bde
+assessor: {kind: agent, name: cursor-assessor-21, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: executable-exit
+    verdict: fail
+    reason: >-
+      The stage lists `checks: []`
+      (.seikika/sdlc/stages/maintainer.yaml:3-12). CI only self-tests the ULID
+      encoding of decision ids (.github/workflows/ci.yml:30-31). The
+      maintainer-docs rule `cited-decisions-exist`
+      (.seikika/standards/docs.yaml:125-128) catches a cited id that has no
+      file. Neither one fails when a change lands without a decision file or
+      without an update to the owning design doc.
+    suggestion: >-
+      Narrow the exit criterion to what can be checked, for example "every
+      decision id a doc cites is a file, and every new decision file is cited
+      by a design doc". List `python3 scripts/decision-id.py --self-test` and
+      the maintainer-docs ratchet under `checks:`, and add a rule that fails
+      on a decision file no doc in docs/design/ cites.
+  - criterion: agent-can-complete
+    verdict: pass
+    reason: >-
+      The procedure is written down and needs no person or secret. Mint an id
+      with `python3 scripts/decision-id.py`, add docs/decisions/<id>.md, and
+      never edit an existing one (docs/decisions/README.md:5; AGENTS.md "When
+      you change a decision"). The stage lists no commands, though, even
+      though decision-id.py is the one it uses.
+  - criterion: reuses-artifacts
+    verdict: pass
+    reason: >-
+      The stage builds and installs nothing. scripts/decision-id.py is a
+      stdlib-only Python script (imports argparse, secrets, sys and time,
+      lines 10-15), and the outputs are Markdown files.
+  - criterion: decoupled-from-core
+    verdict: pass
+    reason: >-
+      Planning produces Markdown in docs/decisions/ and docs/design/, plus a
+      milestone row in docs/v1-spec.md §3. No crate, builtin or schema changes
+      until the build stage.
+# Codex evaluated the two added criteria. Earlier verdicts retain their original attribution.
+  - criterion: fast-feedback
+    verdict: fail
+    reason: >-
+      .seikika/sdlc/stages/maintainer.yaml defines the stage exit but declares
+      no runnable local check for it. docs/decisions/README.md documents the
+      intended workflow.
+    suggestion: >-
+      Add a runnable local check for this exit and record its measured time in
+      docs/decisions/README.md.
+  - criterion: beyond-one-reference
+    verdict: fail
+    reason: >-
+      .seikika/sdlc/stages/maintainer.yaml declares no executable reference
+      for the exit, and docs/decisions/README.md describes the workflow
+      without supplying a second exercised reference.
+    suggestion: >-
+      Exercise this exit on a second reference and cite the result in
+      .seikika/sdlc/stages/maintainer.yaml.
+summary: >-
+  An agent can easily follow the planning procedure, but nothing executes
+  its exit criterion: with no checks listed, a change without a decision
+  passes CI. Listing decision-id.py as the command and adding a "new
+  decision is cited" rule would make the stage measurable.

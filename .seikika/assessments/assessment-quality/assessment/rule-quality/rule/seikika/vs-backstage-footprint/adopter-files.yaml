@@ -1,0 +1,36 @@
+apiVersion: seikika.com/assessment/v1
+entity: assessment:rule-quality/rule:seikika/vs-backstage-footprint/adopter-files
+rubric: assessment-quality
+subjectHash: 2971b8a277c1
+rubricHash: e30700fc6322cf9f05a301bb4638d6708e9f5eb5aea0281911229ce75bd37bf7
+assessor: {kind: agent, name: Codex, model: GPT-6}
+at: 2026-11-28
+verdicts:
+  - criterion: supported
+    verdict: pass
+    reason: >-
+      I checked the claims in
+      .seikika/assessments/rule-quality/rule/seikika/vs-backstage-footprint/adopter-files.yaml
+      against the cited sources.
+      experiments/backstage-compare/footprint.py:44-55 counts matching file
+      suffixes, and :153-157 excludes tests and fixtures from only the starter
+      count. examples/repo-portal-starter/README.md describes files the
+      adopter actually keeps.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      The assessment addresses the counted inputs, cheap path exclusions,
+      package reuse and the late 10-file bar.
+      experiments/backstage-compare/README.md:43 does not prescribe that bar.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      experiments/backstage-compare/footprint.py:44-55 and :153-157 expose the
+      two enumeration paths and show why a file under tests disappears from
+      one count.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      The proposed explicit adopter inventory would align the value with
+      .seikika/standards/backstage-comparison.yaml. A published rationale for
+      the absolute limit would address the threshold finding.

@@ -1,0 +1,66 @@
+apiVersion: seikika.com/assessment/v1
+entity: scorecard:seikika/vs-backstage-change-safety
+rubric: scorecard-quality
+subjectHash: eff3c24b08b8
+assessor: {kind: agent, name: cursor-assessor-17, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: one-concern
+    verdict: pass
+    reason: >-
+      All four rules are about an operator changing a portal: validate it
+      offline, preview the change, upgrade it, roll it back
+      (.seikika/standards/backstage-comparison.yaml:656-668). They cover F9,
+      F10 and the rollback half of F14
+      (docs/design/backstage-comparison.md:54-55, 59), which is the operator
+      SDLC's validate → plan → deploy → recover loop (AGENTS.md charter goal
+      2). One audience, one meaning for bronze.
+  - criterion: levels-are-a-ladder
+    verdict: pass
+    reason: >-
+      There is one level, and Seikika reaches it: offline-validate and
+      change-preview true, 0 upgrade lines, 0 rollback steps
+      (.seikika/comparisons/seikika.yaml). No level mixes rules from another
+      concern, and no harder rule sits below an easier one. As a pass bar for
+      a comparison (D01M857ZB468ZM2YS6GNSEG6YB9), a single level fits. Whether
+      the probes behind upgrade-lines and rollback-steps are strong enough is
+      a rule question (see those assessments).
+  - criterion: no-obvious-gap
+    verdict: fail
+    reason: >-
+      RESEARCH.md F10, which this scorecard covers, lists four measures:
+      offline validate, previews supported out of 10, byte-identical rebuilds,
+      and config-like database rows not in git
+      (experiments/backstage-compare/RESEARCH.md:66). The scorecard has the
+      first, a yes/no version of the second, and nothing for determinism or
+      config in git. Seikika would likely win both: CI already rebuilds the
+      reference portal and compares it byte for byte
+      (.github/workflows/ci.yml:57-59), while Backstage keeps locations and
+      other config in its database. The ten scripted changes F10 asks for
+      (RESEARCH.md:244) aren't run either.
+    suggestion: >-
+      Add a `deterministic-rebuild` rule (derive twice from git and compare
+      canonical JSON, RESEARCH.md:246) and a `config-in-git` rule (database
+      tables that hold configuration rather than derived data). Score
+      change-preview as "previews out of 10 scripted changes", not a boolean.
+  - criterion: actionable
+    verdict: fail
+    reason: >-
+      Two of the four rules read hand-written booleans in
+      experiments/backstage-compare/facts.yaml:39-47, and their fixes ("Keep
+      `seikika validate`…", "Keep `seikika plan`…",
+      backstage-comparison.yaml:681-694) name neither that file nor
+      snapshot.py. With the evidence `... is false`, an agent who fixed the
+      product would still see the rule fail. The other two fixes are
+      actionable: the starter plus upgrade.py, and the store's migrations,
+      though rerunning upgrade.py needs `gh release download` and Postgres
+      (upgrade.py:81-104).
+    suggestion: >-
+      Measure offlineValidate and changePreview in the harness (run
+      `validate`, `test` and `plan --local` under `unshare -n`), or at least
+      name facts.yaml and snapshot.py in those two fixes.
+summary: >-
+  A well-scoped operator scorecard where Seikika leads, reachable at
+  bronze. It leaves out F10's determinism and config-in-git measures,
+  which the research brief names and Seikika would probably win. Half its
+  rules rest on hand-written facts their fixes don't point to.

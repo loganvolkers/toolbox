@@ -1,0 +1,42 @@
+apiVersion: seikika.com/assessment/v1
+entity: assessment:rule-quality/rule:seikika/vs-backstage-performance/get-throughput
+rubric: assessment-quality
+subjectHash: 515f1da0c6bd
+rubricHash: e30700fc6322cf9f05a301bb4638d6708e9f5eb5aea0281911229ce75bd37bf7
+assessor: {kind: agent, name: Codex, model: GPT-6}
+at: 2026-11-28
+verdicts:
+  - criterion: supported
+    verdict: fail
+    reason: >-
+      I checked the claims in
+      .seikika/assessments/rule-quality/rule/seikika/vs-backstage-performance/get-throughput.yaml
+      against the cited sources.
+      experiments/backstage-compare/ADJUDICATION.md:198 distinguishes the
+      36–37k/s spread from the earlier uncached result of about 1,300/s. The
+      assessment describes the larger number as uncached.
+    suggestion: >-
+      Correct the citation and identify which result used cached decisions.
+  - criterion: complete
+    verdict: unsure
+    reason: >-
+      experiments/backstage-compare/ADJUDICATION.md:198 leaves many users and
+      snapshot churn untested. .seikika/standards/backstage-comparison.yaml
+      describes a contended ceiling and the assessment’s measures-intent pass
+      leans on an uncached result that the cited source does not show.
+    suggestion: >-
+      Judge the ceiling on its stated workload, or use a many-user or
+      post-publish run to support the broader claim.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      experiments/backstage-compare/measure.py:92-94 and :123-132 and
+      experiments/backstage-compare/README.md:38 let a reviewer trace the
+      seeded reads, rate calculation and threshold. The plan’s per-replica
+      comparison is rate-only.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      .seikika/standards/backstage-comparison.yaml points to the entity GET
+      handler and rerunning the benchmark. The assessment contains four passes
+      and no attached suggestions.

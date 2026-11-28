@@ -191,7 +191,7 @@ at GitHub Pages. See the [GitHub Pages custom-domain instructions](https://docs.
 
 ## Public frontend packages
 
-The [npm package catalog](../site/src/content/docs/authors/npm.mdx) lists the two packages
+The [npm package catalog](../npm/site/src/content/docs/authors/npm.mdx) lists the two packages
 distributed from the PNPM workspace. Their versions live in their package manifests.
 The frontend CI job checks the catalog and packs the same files a registry release ships.
 
@@ -232,7 +232,7 @@ version and provenance in the npm registry. [npm trusted publishing documentatio
 
 Mise installs each app from the platform-specific cargo-dist archive. An operator installs the
 CLI and the `seikika-connector-<name>` binaries named by the portal's `builtin:<name>` packages.
-The [install guide](../site/src/content/docs/start/install.md) shows the CLI and optional connector
+The [install guide](../npm/site/src/content/docs/start/install.md) shows the CLI and optional connector
 entries. The [starter config](../examples/repo-portal-starter/mise.example.toml) pins the CLI and workspace
 connector together.
 
@@ -298,7 +298,7 @@ in CI. Then review missing independent assessments for the change with the relea
 pnpm install --frozen-lockfile
 pnpm build
 cargo build --locked
-target/debug/seikika assess check portal --skip runner,github-actions --require-fresh
+target/debug/seikika assess check .seikika --skip runner,github-actions --require-fresh
 ```
 
 Resolve stale assessments and have a different reviewer review the refreshed judgments before

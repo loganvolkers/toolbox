@@ -1,0 +1,51 @@
+apiVersion: seikika.com/assessment/v1
+entity: assessment:rule-quality/rule:seikika/meta-scorecard/explains-why
+rubric: assessment-quality
+subjectHash: a4bbdee6a1dd
+assessor: {kind: agent, name: cursor-reviewer-02, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: supported
+    verdict: pass
+    reason: >-
+      The citations in
+      .seikika/assessments/rule-quality/rule/seikika/meta-scorecard/explains-why.yaml
+      hold. D01M868BY0KJNEYE9WBFZYEYFYH lines 8-10 say S4S "requires both"
+      through explains-why on meta-scorecard. The fix is meta.yaml:636-639.
+      meta.rs:242-243 sets `explained` and `links`, and Scorecard.links is
+      meta.yaml:40-42. `rg 'entity\.links'` over portal/, examples/ and
+      packages/ finds no rule reading it. `seikika describe portal` over the
+      three portals gives 53 scorecards, none with zero links, so "latent" is
+      right. scorecard-quality (meta.yaml:1182-1216) has no rationale
+      criterion. The tests (standards.test.yaml:264-272), the ladder cell
+      (thresholds.md:60) and the card rationale (meta.yaml:584-585) are as
+      cited.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      The verdicts are right. A linkless card passes, against the decision's
+      "requires both", so measures-intent fails. A placeholder rationale
+      passes, so hard-to-game fails. No source gives the reason for silver, so
+      threshold-justified is unsure. thresholds.md has no explains-why row,
+      and the ladder omits it. Unlike the rule-level twin, a scorecard has no
+      links fallback (D01M868BY0KJNEYE9WBFZYEYFYH line 20), so failing here
+      while that twin passes is consistent.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      The fails rest on a literal decision sentence and on code
+      (meta.rs:242-243). The unsure rests on a source that is missing. No
+      verdict depends on taste.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      Each suggestion targets its verdict. `entity.explained && entity.links >
+      0` with a linkless fixture flips measures-intent. A word floor or a
+      rubric criterion catches placeholders. A thresholds.md row plus the
+      ladder cell gives silver a written source.
+summary: >-
+  Trustworthy. It is the strongest of the explains-why pair: the "requires
+  both" gap is real, and links are collected but read by no rule. I
+  confirmed that every one of the 53 live cards has links, so the gap is
+  latent as stated. The suggestions are concrete and each would change its
+  verdict.

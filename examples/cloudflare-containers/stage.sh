@@ -14,7 +14,7 @@ cp -- "$example_dir"/{Dockerfile,worker.mjs,wrangler.toml,.dockerignore,package.
 cp -R -T -- "$portal_dir" "$destination/portal"
 for binary in seikika seikika-connector-workspace seikika-connector-github \
   seikika-connector-git-files seikika-connector-gitlab seikika-connector-runner \
-  seikika-connector-scim; do
+  seikika-connector-scim seikika-connector-cloudflare seikika-connector-grafana; do
   install -D -m 0755 "$binaries_dir/$binary" "$destination/bin/$binary"
 done
 bash "$repo_dir/scripts/ci-tools.sh" "$destination/bin" openfga
@@ -23,9 +23,9 @@ if [[ "$portal_dir" -ef "$example_dir/seikika-forks" ]]; then
   organization="$destination/portal/examples/github-org-federation"
   source="$repo_dir/examples/github-org-federation"
   mkdir -p "$organization" "$destination/portal/packages"
-  cp -- "$source"/{public,public-connector,repositories,standards,workflows,meta,standards.test}.yaml "$organization/"
+  cp -- "$source"/{public,public-connector,self-publication,repositories,standards,workflows,meta,standards.test}.yaml "$organization/"
   cp -R -- "$source"/{assessments,fixtures} "$organization/"
-  cp -R -- "$repo_dir/packages/meta-scoring" "$destination/portal/packages/"
+  cp -R -- "$repo_dir/packages/"{meta-scoring,service-catalog} "$destination/portal/packages/"
   bundle=$(cd -- "$destination/portal" && pwd)
   # The assessment connector verifies citations against these original files.
   (
@@ -37,4 +37,21 @@ if [[ "$portal_dir" -ef "$example_dir/seikika-forks" ]]; then
   sed -i 's|../../github-org-federation/|examples/github-org-federation/|g; s|../../../packages/|packages/|g' \
     "$destination/portal/seikika.yaml"
   bash "$repo_dir/scripts/ci-tools.sh" "$destination/bin" zizmor
+  destination=$(cd -- "$destination" && pwd)
+  if [[ -n "${SEIKIKA_SELF_REPORT:-}" ]]; then
+    install -D -m 0644 -- "$SEIKIKA_SELF_REPORT" "$destination/portal/publications/seikika.json"
+  else
+    report_dir=$(mktemp -d)
+    trap 'rm -rf -- "$report_dir"' EXIT
+    (
+      cd -- "$repo_dir"
+      bash scripts/ci-tools.sh "$report_dir/tools" actionlint shellcheck shfmt bats scorecard osv-scanner rustsec-osv
+      python3 -m venv "$report_dir/python"
+      export PATH="$report_dir/tools:$report_dir/python/bin:$destination/bin:$PATH"
+      export OSV_SCANNER_LOCAL_DB_CACHE_DIRECTORY="$report_dir/tools"
+      seikika tools install .seikika --via pip
+      seikika report .seikika --skip runner,github-actions --baseline .seikika/results.json -o web --out "$report_dir"
+    )
+    install -D -m 0644 -- "$report_dir/report.json" "$destination/portal/publications/seikika.json"
+  fi
 fi

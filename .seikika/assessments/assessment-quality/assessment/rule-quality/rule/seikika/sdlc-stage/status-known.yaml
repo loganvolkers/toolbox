@@ -1,0 +1,36 @@
+apiVersion: seikika.com/assessment/v1
+entity: assessment:rule-quality/rule:seikika/sdlc-stage/status-known
+rubric: assessment-quality
+subjectHash: 04dde219670c
+rubricHash: e30700fc6322cf9f05a301bb4638d6708e9f5eb5aea0281911229ce75bd37bf7
+assessor: {kind: agent, name: Codex, model: GPT-6}
+at: 2026-11-28
+verdicts:
+  - criterion: supported
+    verdict: pass
+    reason: >-
+      I checked the claims in
+      .seikika/assessments/rule-quality/rule/seikika/sdlc-stage/status-known.yaml
+      against the cited sources. The four values, evidence text, and file
+      named by the fix match .seikika/standards/sdlc.yaml. Its layer
+      computation treats missing as a literal status and separately checks
+      documentation.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      The assessment evaluates validity, resistance to evasion, remediation
+      and bronze placement. The truth of a valid status is outside the
+      membership test in .seikika/standards/sdlc.yaml.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      The demo-gap and demo-done assertions in
+      .seikika/tests/standards.test.yaml verify the unknown-status evidence
+      and an allowed status. The full membership list is in
+      .seikika/standards/sdlc.yaml.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      The existing fix in .seikika/standards/sdlc.yaml names the field and
+      every accepted value. An assessment with four passing criteria needs no
+      corrective suggestion.

@@ -1,0 +1,43 @@
+apiVersion: seikika.com/assessment/v1
+entity: assessment:scorecard-quality/scorecard:seikika/vs-backstage-agent-surface
+rubric: assessment-quality
+subjectHash: b38763c4a4cd
+rubricHash: e30700fc6322cf9f05a301bb4638d6708e9f5eb5aea0281911229ce75bd37bf7
+assessor: {kind: agent, name: Codex, model: GPT-6}
+at: 2026-11-28
+verdicts:
+  - criterion: supported
+    verdict: fail
+    reason: >-
+      I checked the claims in
+      .seikika/assessments/scorecard-quality/scorecard/seikika/vs-backstage-agent-surface.yaml
+      against the cited sources. .seikika/standards/backstage-comparison.yaml
+      names the MCP implementation, but both byte facts are published through
+      experiments/backstage-compare/snapshot.py:79-89 and the boolean comes
+      from experiments/backstage-compare/facts.yaml. The assessment passes
+      actionable while acknowledging the missing regeneration path.
+    suggestion: >-
+      Rejudge actionable against the steps needed to change the scored
+      snapshot.
+  - criterion: complete
+    verdict: fail
+    reason: >-
+      experiments/backstage-compare/RESEARCH.md:275-282 lists schema and
+      annotation coverage, cross-surface equality and the scripted answers.
+      The assessment notes the main omissions but needs to account for the
+      broken fact-update path when judging actionable.
+    suggestion: >-
+      Add the fact-to-snapshot check to the actionable analysis.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      experiments/backstage-compare/surface.py:164-192 and
+      experiments/backstage-compare/RESEARCH.md:275-282 let another reviewer
+      reproduce the scope of the three existing measures and the gaps in the
+      benchmark plan.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      Feeding an answer-count probe and the recorded annotation share into
+      experiments/backstage-compare/snapshot.py would address the named
+      coverage finding.

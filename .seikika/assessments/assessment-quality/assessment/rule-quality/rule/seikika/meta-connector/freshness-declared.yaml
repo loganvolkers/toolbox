@@ -1,0 +1,38 @@
+apiVersion: seikika.com/assessment/v1
+entity: assessment:rule-quality/rule:seikika/meta-connector/freshness-declared
+rubric: assessment-quality
+subjectHash: 8109afae17ec
+rubricHash: e30700fc6322cf9f05a301bb4638d6708e9f5eb5aea0281911229ce75bd37bf7
+assessor: {kind: agent, name: Codex, model: GPT-6}
+at: 2026-11-28
+verdicts:
+  - criterion: supported
+    verdict: pass
+    reason: >-
+      I checked the claims in
+      .seikika/assessments/rule-quality/rule/seikika/meta-connector/freshness-declared.yaml
+      against the cited sources. The declarations are collected by key in
+      crates/seikika-cli/src/model.rs. The automatic refresh loop checks
+      registered resync capability separately in
+      crates/seikika-api/src/connectors.rs. The original misleading fix was
+      corrected during this review.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      The assessment covers declarations, runtime behavior, the missing
+      duration ceiling and the silver placement cited by
+      docs/design/scorecards-for-scorecards.md.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      The rule in packages/meta-scoring/fragments/catalog.yaml and the
+      manifest validation in crates/seikika-model/src/validate.rs identify
+      which inputs govern the result. The portal fixture verifies missing
+      freshness evidence.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      The assessment proposes separating the declaration from observed
+      semantics. The revised fix in
+      packages/meta-scoring/fragments/catalog.yaml now names the bound and the
+      connector-side prerequisite.

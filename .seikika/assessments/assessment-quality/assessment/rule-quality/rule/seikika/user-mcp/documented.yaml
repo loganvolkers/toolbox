@@ -1,0 +1,38 @@
+apiVersion: seikika.com/assessment/v1
+entity: assessment:rule-quality/rule:seikika/user-mcp/documented
+rubric: assessment-quality
+subjectHash: 979bcec8e3c3
+rubricHash: e30700fc6322cf9f05a301bb4638d6708e9f5eb5aea0281911229ce75bd37bf7
+assessor: {kind: agent, name: Codex, model: GPT-6}
+at: 2026-11-28
+verdicts:
+  - criterion: supported
+    verdict: fail
+    reason: >-
+      I checked the claims in
+      .seikika/assessments/rule-quality/rule/seikika/user-mcp/documented.yaml
+      against the cited sources. docs/v1-spec.md now lists the get_run
+      argument as run, matching crates/seikika-api/src/mcp.rs. The
+      assessment’s summary still describes the older mismatch.
+    suggestion: >-
+      Update the example to reflect the corrected contract while retaining the
+      presence-versus-accuracy distinction.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      The assessment covers the authoritative file, exact backticked names,
+      fixture evidence and the rationale for restricting the source in
+      .seikika/standards/cli.yaml.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      .seikika/standards/cli.yaml and .seikika/standards/docs.yaml show how
+      code spans become documentation relationships.
+      .seikika/tests/standards.test.yaml covers a missing documentation
+      pointer.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      Adding a tool’s code span to docs/v1-spec.md satisfies
+      .seikika/standards/cli.yaml. The original four criteria pass and contain
+      no attached repair suggestions.

@@ -8,7 +8,7 @@ safety, fit to the organisation, the agent surface and capabilities. This is abo
 [RESEARCH.md](./RESEARCH.md).
 
 No agent is in the scored path: every measure is a script. The comparative scorecards in
-[portal/standards/backstage-comparison.yaml](../../portal/standards/backstage-comparison.yaml)
+[.seikika/standards/backstage-comparison.yaml](../../.seikika/standards/backstage-comparison.yaml)
 apply the parity rule below (D01M857ZB468ZM2YS6GNSEG6YB9), and the Seikika for Seikika report shows
 them under *Compare*.
 
@@ -27,7 +27,7 @@ then `yarn workspaces focus --all --production` in the unpacked bundle.
 
 ## Measures and bars
 
-Each fact is one field of a `product` record in [portal/comparisons/](../../portal/comparisons).
+Each fact is one field of a `product` record in [.seikika/comparisons/](../../.seikika/comparisons).
 A rule passes or fails a product on an absolute bar, and compares the two on a value where there is
 one.
 
@@ -95,7 +95,7 @@ narrowing applies only when `kind` names exactly one kind, and never on `id` (`5
 ```bash
 python3 gen.py 1000 /tmp/bc/n1000 && python3 gen.py 10000 /tmp/bc/n10000
 OHA=/path/to/oha SEIKIKA_OPENFGA_BIN=/path/to/openfga ./run.sh   # raw results in /tmp/bc/r
-python3 snapshot.py /tmp/bc/r                                    # writes portal/comparisons/*.yaml
+python3 snapshot.py /tmp/bc/r                                    # writes .seikika/comparisons/*.yaml
 ```
 
 `BENCH_PG`, `BS_APP`, `BS_SRC`, `NODE_BIN`, `TOOLS` and `BS_REPO` (a `backstage/backstage` clone,

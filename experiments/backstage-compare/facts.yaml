@@ -3,7 +3,7 @@
 # default install, a first-party package or a community add-on does it (RESEARCH.md §1.2: an
 # add-on is recorded with its source). Each product is judged as it ships to production: the
 # container image for Seikika, the create-app Dockerfile's configuration for Backstage.
-# snapshot.py merges these with the measured facts into portal/comparisons/.
+# snapshot.py merges these with the measured facts into .seikika/comparisons/.
 seikika:
   loopbackByDefault:
     value: false

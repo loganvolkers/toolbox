@@ -12,7 +12,7 @@ description: >-
    `--require-fresh` for the release preflight or an explicitly high-risk change.
 
 ```
-seikika assess check portal --skip runner,github-actions
+seikika assess check .seikika --skip runner,github-actions
 ```
 
 Do not delete an assessment to turn stale into missing. Invalid files always fail, including assessments missing a verdict for a rubric criterion.

@@ -1,0 +1,41 @@
+apiVersion: seikika.com/assessment/v1
+entity: assessment:rule-quality/rule:seikika/maintainer-crate/crate-docs
+rubric: assessment-quality
+subjectHash: 3656f3287f9e
+rubricHash: e30700fc6322cf9f05a301bb4638d6708e9f5eb5aea0281911229ce75bd37bf7
+assessor: {kind: agent, name: Codex, model: GPT-6}
+at: 2026-11-28
+verdicts:
+  - criterion: supported
+    verdict: fail
+    reason: >-
+      I checked the claims in
+      .seikika/assessments/rule-quality/rule/seikika/maintainer-crate/crate-docs.yaml
+      against the cited sources. The original correctly identified acceptance
+      of blank doc attributes in
+      crates/seikika-connector-workspace/src/rust.rs. Its claim that the
+      evidence named the crate was unsupported because
+      .seikika/standards/crates.yaml accessed entity.name, which its Crate
+      mapping does not supply. Both issues were fixed during review.
+    suggestion: >-
+      Reassess the check with the blank-doc fixture and separately evaluate
+      whether entrypoint and documentation content coverage are sufficient.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      The assessment covers doc content, target selection, the cheap empty
+      form, the fix and bronze placement. The entrypoint selection is visible
+      in crates/seikika-connector-workspace/src/main.rs.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      The scanner tests in crates/seikika-connector-workspace/src/rust.rs now
+      distinguish blank text, rustdoc options and actual docs.
+      .seikika/tests/standards.test.yaml checks both the pass and the
+      missing-doc evidence.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      The proposed scanner and fixture work is concrete. The first part was
+      implemented, while a spec-link requirement would need to be stated in
+      the check and supported by evidence in .seikika/standards/crates.yaml.

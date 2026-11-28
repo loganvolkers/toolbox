@@ -1,0 +1,42 @@
+apiVersion: seikika.com/assessment/v1
+entity: assessment:rule-quality/rule:seikika/review-rule/passes-review
+rubric: assessment-quality
+subjectHash: 5c27084d3486
+rubricHash: e30700fc6322cf9f05a301bb4638d6708e9f5eb5aea0281911229ce75bd37bf7
+assessor: {kind: agent, name: Codex, model: GPT-6}
+at: 2026-11-28
+verdicts:
+  - criterion: supported
+    verdict: fail
+    reason: >-
+      I checked the claims in
+      .seikika/assessments/rule-quality/rule/seikika/review-rule/passes-review.yaml
+      against the cited sources. The replaced predicate and fix are in
+      packages/meta-scoring/fragments/catalog.yaml. Gold now requires
+      reviewVerified, and the fix explicitly tells the reader to add resolving
+      citations. Two primary findings in the older assessment no longer
+      describe the check.
+    suggestion: >-
+      Reevaluate the current verified-review requirement and test the fix
+      against each evidence item.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      The assessment evaluates the threshold, evidence, remediation and
+      grounding rather than treating a citation as proof by itself.
+      packages/meta-scoring/fragments/catalog.yaml retains separate checks for
+      passage and doubts.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      The live predicate and its evidence can be compared in
+      packages/meta-scoring/fragments/catalog.yaml. The current rule and
+      independent-review cases in .seikika/tests/standards.test.yaml provide
+      executable examples.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      The assessment proposes grounding and a concrete citation repair. The
+      current fix in packages/meta-scoring/fragments/catalog.yaml now supplies
+      both a citation instruction and an independent assessment-quality review
+      step.

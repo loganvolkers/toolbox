@@ -47,7 +47,7 @@ At this catalog size, the public site's existing search and the directory cover 
 
 ## Sources
 
-- [Public directory and adoption workflow](../../site/src/content/docs/packages/index.mdx)
-- [Standards package scorecard](../../portal/standards/standard-packages.yaml)
-- [Documentation style guide](../../site/src/content/docs/maintainers/writing.md)
+- [Public directory and adoption workflow](../../npm/site/src/content/docs/packages/index.mdx)
+- [Standards package scorecard](../../.seikika/standards/standard-packages.yaml)
+- [Documentation style guide](../../npm/site/src/content/docs/maintainers/writing.md)
 - [Decision](../decisions/D01M8CRS50G5086P5DCFQN636BA.md)

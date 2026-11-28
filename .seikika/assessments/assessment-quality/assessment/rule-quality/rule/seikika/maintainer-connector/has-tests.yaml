@@ -1,0 +1,36 @@
+apiVersion: seikika.com/assessment/v1
+entity: assessment:rule-quality/rule:seikika/maintainer-connector/has-tests
+rubric: assessment-quality
+subjectHash: 3f53a294ba1c
+rubricHash: e30700fc6322cf9f05a301bb4638d6708e9f5eb5aea0281911229ce75bd37bf7
+assessor: {kind: agent, name: Codex, model: GPT-6}
+at: 2026-11-28
+verdicts:
+  - criterion: supported
+    verdict: pass
+    reason: >-
+      I checked the claims in
+      .seikika/assessments/rule-quality/rule/seikika/maintainer-connector/has-tests.yaml
+      against the cited sources.
+      crates/seikika-connector-workspace/src/connectors.rs:178-180 counts
+      attribute-shaped text without parsing a Rust function. The stronger
+      crate rule in .seikika/standards/crates.yaml separately considers tests
+      that assert.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      The assessment checks the counted input, an attribute with no test
+      behavior, the reported count and the minimum in
+      docs/design/connector-standards.md.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      crates/seikika-connector-workspace/src/connectors.rs:178-180 lets a
+      second reviewer predict how comments and source text are counted, while
+      .seikika/tests/standards.test.yaml checks the zero-test evidence.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      Using the crate parser’s actual test functions and assertion evidence
+      would address the gap in the counted source text in
+      crates/seikika-connector-workspace/src/connectors.rs.

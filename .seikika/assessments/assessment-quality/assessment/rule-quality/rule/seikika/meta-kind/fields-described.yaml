@@ -1,0 +1,36 @@
+apiVersion: seikika.com/assessment/v1
+entity: assessment:rule-quality/rule:seikika/meta-kind/fields-described
+rubric: assessment-quality
+subjectHash: dac3e2d827b6
+rubricHash: e30700fc6322cf9f05a301bb4638d6708e9f5eb5aea0281911229ce75bd37bf7
+assessor: {kind: agent, name: Codex, model: GPT-6}
+at: 2026-11-28
+verdicts:
+  - criterion: supported
+    verdict: pass
+    reason: >-
+      I checked the claims in
+      .seikika/assessments/rule-quality/rule/seikika/meta-kind/fields-described.yaml
+      against the cited sources. The kind rule aggregates the field
+      description facts in packages/meta-scoring/fragments/catalog.yaml. Those
+      facts originally used trimmed nonblank text in
+      crates/seikika-cli/src/model.rs, which now rejects repeated names and
+      placeholders.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      The assessment covers the aggregate, how weak descriptions accumulate,
+      the per-field fix and the gold rationale. The requirement for every
+      field is explicit in packages/meta-scoring/fragments/catalog.yaml.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      Trace Field records from crates/seikika-cli/src/model.rs through the
+      fieldOf aggregation in packages/meta-scoring/fragments/catalog.yaml. The
+      Crate test in .seikika/tests/standards.test.yaml pins a missing field
+      description.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      The proposed change was applied to both the per-field description fact
+      and the described count for the kind in crates/seikika-cli/src/model.rs.

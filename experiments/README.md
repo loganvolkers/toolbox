@@ -3,7 +3,7 @@
 Small, reproducible experiments cited by the design docs. Each one records its result in
 [docs/research-log.md](../docs/research-log.md).
 
-**DX Benchmarks.** The agent A/Bs below are DX Benchmarks ([docs/design/dx-benchmarks.md](../docs/design/dx-benchmarks.md)): pre-registered, on open-source forks, with Seikika against its strongest alternative. Each is catalogued in [portal/benchmarks/](../portal/benchmarks), with its status (complete, blocked or archived) and what it changed.
+**DX Benchmarks.** The agent A/Bs below are DX Benchmarks ([docs/design/dx-benchmarks.md](../docs/design/dx-benchmarks.md)): pre-registered, on open-source forks, with Seikika against its strongest alternative. Each is catalogued in [.seikika/benchmarks/](../.seikika/benchmarks), with its status (complete, blocked or archived) and what it changed.
 
 **CI gates.** Two experiments outgrew their question and are now checks that must pass:
 [otel-testbed](./otel-testbed) (CI job `otel-testbed`) and [typescript-builder](./typescript-builder)

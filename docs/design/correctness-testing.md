@@ -14,7 +14,7 @@ and the acceptance scripts execute the tests directly.
 
 | Failure mode | Test and oracle | Seikika example |
 | --- | --- | --- |
-| Wrong branch, boundary value or error | Use a focused table of representative inputs, including empty, boundary and invalid values. Assert the result or typed error and any relevant state change. | CEL rules and scorecard levels in [portal fixtures](../../portal/tests/standards.test.yaml). |
+| Wrong branch, boundary value or error | Use a focused table of representative inputs, including empty, boundary and invalid values. Assert the result or typed error and any relevant state change. | CEL rules and scorecard levels in [portal fixtures](../../.seikika/tests/standards.test.yaml). |
 | State changes under replay, reorder or retries | State the invariant and exercise multiple histories. Use deterministic inputs or record failing seeds and preserve minimized cases as regressions. | Compare outputs across record arrival orders in [reference.rs](../../crates/seikika-derive/tests/reference.rs). |
 | Implementations or formats drift | Compare against a separately maintained oracle or a reviewed fixture. Check the complete set of expected outputs and review any update to golden files. | Compare Rust outputs with the [reference model](../../examples/reference-portal/README.md). |
 | Callers see the wrong result | Exercise public CLI, API or MCP entry points and assert observable responses, error semantics and postconditions. Where a real boundary matters, use a real compatible service or run shared contract tests against the real service and its fake. | CLI exit status and evidence in [ratchet.rs](../../crates/seikika-cli/tests/ratchet.rs). |
@@ -52,7 +52,7 @@ checks a process exit code may miss a wrong output or partial write.
 Crates remain the execution unit for Cargo, with structural and runner
 evidence on `maintainer-crate`. CLI and MCP remain the interface inventory.
 `TestingContract` covers behavior that can span multiple crates, tools and
-interfaces. The [initial contracts](../../portal/testing/contracts.yaml)
+interfaces. The [initial contracts](../../.seikika/testing/contracts.yaml)
 cover derivation and plan, the scorecard gate, and action postconditions.
 Add contracts by consequence and identify the workflow files that exercise them.
 
@@ -65,8 +65,8 @@ uncertain, missing and stale evidence. Changes to the declaration or its
 listed files invalidate a review. List critical fixtures and dependencies in
 the contract when a change to those files would invalidate the conclusions.
 
-Use `seikika assess brief testing-contract:<id> --portal portal` and
-`seikika assess check portal` for review. Run the cited suite, record
+Use `seikika assess brief testing-contract:<id> --portal .seikika` and
+`seikika assess check .seikika` for review. Run the cited suite, record
 before-and-after evidence, and use the report ratchet after the improvement.
 
 ## Sources

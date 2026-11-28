@@ -1,0 +1,40 @@
+apiVersion: seikika.com/assessment/v1
+entity: assessment:rule-quality/rule:seikika/maintainer-schema/local-refs
+rubric: assessment-quality
+subjectHash: 93e88c8529b3
+rubricHash: e30700fc6322cf9f05a301bb4638d6708e9f5eb5aea0281911229ce75bd37bf7
+assessor: {kind: agent, name: Codex, model: GPT-6}
+at: 2026-11-28
+verdicts:
+  - criterion: supported
+    verdict: fail
+    reason: >-
+      I checked the claims in
+      .seikika/assessments/rule-quality/rule/seikika/maintainer-schema/local-refs.yaml
+      against the cited sources.
+      crates/seikika-connector-workspace/src/specs.rs supports the finding
+      about literal references. The cited jsonschema 0.61.2 implementation is
+      older than the dependency pinned by Cargo.toml, so the compiler argument
+      needs current evidence.
+    suggestion: >-
+      Use the actual pinned version and a test that exercises the current
+      validator rather than relying on the older implementation.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      crates/seikika-connector-workspace/src/specs.rs and
+      .seikika/standards/schemas.yaml explain the distinction between a
+      fragment predicate, resource resolution and the gold requirement. The
+      assessment’s negative intent finding follows from the literal scan.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      crates/seikika-connector-workspace/src/specs.rs makes the static result
+      reproducible, while crates/seikika-model/src/schema.rs shows where
+      validator behavior would need to be verified separately.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      Resolving resource identity would address the static finding under
+      .seikika/standards/schemas.yaml. The threshold recommendation also
+      requires support for the current compiler behavior.

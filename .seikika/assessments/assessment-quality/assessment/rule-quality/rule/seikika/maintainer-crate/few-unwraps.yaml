@@ -1,0 +1,37 @@
+apiVersion: seikika.com/assessment/v1
+entity: assessment:rule-quality/rule:seikika/maintainer-crate/few-unwraps
+rubric: assessment-quality
+subjectHash: 9fbd83bd8e66
+rubricHash: e30700fc6322cf9f05a301bb4638d6708e9f5eb5aea0281911229ce75bd37bf7
+assessor: {kind: agent, name: Codex, model: GPT-6}
+at: 2026-11-28
+verdicts:
+  - criterion: supported
+    verdict: pass
+    reason: >-
+      I checked the claims in
+      .seikika/assessments/rule-quality/rule/seikika/maintainer-crate/few-unwraps.yaml
+      against the cited sources. The method visitor and source-line counters
+      in crates/seikika-connector-workspace/src/rust.rs support the cited
+      limits. The density bound and the replacement advice in
+      .seikika/standards/crates.yaml were clarified during this review.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      The assessment covers counted method calls, omissions in macros, the
+      denominator, actionability and the local threshold. The formula is
+      visible in .seikika/standards/crates.yaml, and its rationale now has a
+      corresponding row in docs/design/thresholds.md.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      Inspect the syntax visitor and source lines in
+      crates/seikika-connector-workspace/src/rust.rs, then compare the
+      displayed count with the evidence pinned by
+      .seikika/tests/standards.test.yaml.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      The proposed call-site locations and handling advice identify concrete
+      gaps. The fix in .seikika/standards/crates.yaml now recommends changes
+      that actually lower the counted density.

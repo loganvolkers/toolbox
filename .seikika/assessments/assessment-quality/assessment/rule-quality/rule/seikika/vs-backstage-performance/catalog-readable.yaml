@@ -1,0 +1,48 @@
+apiVersion: seikika.com/assessment/v1
+entity: assessment:rule-quality/rule:seikika/vs-backstage-performance/catalog-readable
+rubric: assessment-quality
+subjectHash: 0f6d84da1089
+rubricHash: e30700fc6322cf9f05a301bb4638d6708e9f5eb5aea0281911229ce75bd37bf7
+assessor: {kind: agent, name: Codex, model: GPT-6}
+at: 2026-11-28
+verdicts:
+  - criterion: supported
+    verdict: fail
+    reason: >-
+      I checked the claims in
+      .seikika/assessments/rule-quality/rule/seikika/vs-backstage-performance/catalog-readable.yaml
+      against the cited sources.
+      experiments/backstage-compare/measure.py:265-273 records loaded_s when
+      the last component responds. The corpus digest is checked after the
+      timer stops, so the cited gate cannot establish that all components were
+      readable at the recorded instant.
+    suggestion: >-
+      Correct the time-bound claim and distinguish the last-ID probe from the
+      later corpus check.
+  - criterion: complete
+    verdict: fail
+    reason: >-
+      .seikika/standards/backstage-comparison.yaml reports the time until
+      every component is readable. The mismatch between that wording and what
+      experiments/backstage-compare/measure.py:265-273 times warrants
+      revisiting both measures-intent and hard-to-game.
+    suggestion: >-
+      Reassess both criteria against the timer boundary and the scope of the
+      later digest check.
+  - criterion: reproducible
+    verdict: fail
+    reason: >-
+      A second reviewer following
+      experiments/backstage-compare/measure.py:165-166 and :265-273 can
+      reproduce the two observations but cannot infer a complete catalog at
+      the earlier timestamp.
+    suggestion: >-
+      State what each probe establishes and what additional evidence a
+      full-readability timing would need.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      The original assessment contains no finding suggestions. Its passing fix
+      verdict refers to the profiling and rerun directions in
+      .seikika/standards/backstage-comparison.yaml, which identify the
+      measured path.

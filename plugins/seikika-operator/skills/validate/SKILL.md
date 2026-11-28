@@ -11,8 +11,8 @@ description: >-
 3. Fix the manifest and run the command again. Do not continue to test while exit code 1 remains.
 
 ```
-seikika validate portal
-seikika validate portal --format json
+seikika validate .seikika
+seikika validate .seikika --format json
 ```
 
 Do not treat a text summary as success. If it fails, the exit code is 1 or 2.

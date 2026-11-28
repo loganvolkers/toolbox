@@ -1,0 +1,43 @@
+apiVersion: seikika.com/assessment/v1
+entity: assessment:rule-quality/rule:seikika/vs-backstage-change-safety/rollback-steps
+rubric: assessment-quality
+subjectHash: 08b55e94296e
+rubricHash: e30700fc6322cf9f05a301bb4638d6708e9f5eb5aea0281911229ce75bd37bf7
+assessor: {kind: agent, name: Codex, model: GPT-6}
+at: 2026-11-28
+verdicts:
+  - criterion: supported
+    verdict: unsure
+    reason: >-
+      I checked the claims in
+      .seikika/assessments/rule-quality/rule/seikika/vs-backstage-change-safety/rollback-steps.yaml
+      against the cited sources.
+      experiments/backstage-compare/upgrade.py:92-123 confirms the three-stage
+      probe, but this checkout lacks the v0.1.1 tag and the historical
+      migration inventory needed to verify the assessment’s same-schema claim.
+    suggestion: >-
+      Cite immutable migration trees or release artifact inventories for both
+      binaries.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      experiments/backstage-compare/upgrade.py:92-123 supports the
+      assessment’s distinction between a failed serve step and a manual
+      database migration step. experiments/backstage-compare/README.md:49
+      supplies the zero-step bar.
+  - criterion: reproducible
+    verdict: unsure
+    reason: >-
+      The probe can be traced in
+      experiments/backstage-compare/upgrade.py:92-123. Reproducing the
+      historical schema comparison requires the two migration directories,
+      including the v0.1.1 history that is absent from this checkout.
+    suggestion: >-
+      Record the migration filenames and immutable sources for each tested
+      binary.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      Requiring a schema-changing pair and testing another operation after
+      rollback in experiments/backstage-compare/upgrade.py would strengthen
+      the specific gap described by the finding.

@@ -1,0 +1,40 @@
+apiVersion: seikika.com/assessment/v1
+entity: assessment:rule-quality/rule:seikika/vs-backstage-footprint/adopter-lines
+rubric: assessment-quality
+subjectHash: 57c0fb3cf73c
+rubricHash: e30700fc6322cf9f05a301bb4638d6708e9f5eb5aea0281911229ce75bd37bf7
+assessor: {kind: agent, name: Codex, model: GPT-6}
+at: 2026-11-28
+verdicts:
+  - criterion: supported
+    verdict: fail
+    reason: >-
+      I checked the claims in
+      .seikika/assessments/rule-quality/rule/seikika/vs-backstage-footprint/adopter-lines.yaml
+      against the cited sources.
+      experiments/backstage-compare/footprint.py:44-55 filters Backstage files
+      by suffix and skips selected paths. It does not count every line in the
+      tree. examples/repo-portal-starter/README.md also calls for adding the
+      report action alongside the manifest.
+    suggestion: >-
+      Describe each filtered inventory using its actual exclusions, cite
+      experiments/backstage-compare/RESULTS.md:187 for 1,357, and include the
+      documented report workflow.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      The assessment explains the documentation counted, the missing test
+      inputs, formatting sensitivity and the unregistered absolute limit in
+      .seikika/standards/backstage-comparison.yaml.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      The file walker in experiments/backstage-compare/footprint.py:44-55
+      exposes both the directory and formatting sensitivities. The assessment
+      expressly leaves the formatter’s exact behavior unverified.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      Counting kept files consistently and choosing a canonical formatting or
+      node measure would address the identified shortcuts in
+      experiments/backstage-compare/footprint.py.

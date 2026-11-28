@@ -1,0 +1,48 @@
+apiVersion: seikika.com/assessment/v1
+entity: assessment:rule-quality/rule:seikika/maintainer-package/engines-declared
+rubric: assessment-quality
+subjectHash: 988d1e2e4f48
+assessor: {kind: agent, name: cursor-reviewer-33, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: supported
+    verdict: fail
+    reason: >-
+      The check, fix and fixture citations in
+      .seikika/assessments/rule-quality/rule/seikika/maintainer-package/engines-declared.yaml
+      hold: engines is any non-empty engines.node
+      (crates/seikika-connector-workspace/src/npm.rs:23), the rule is
+      .seikika/standards/packages.yaml:147-151, the pin is
+      .seikika/tests/standards.test.yaml:546-547, and pages.yml:45 is
+      `node-version: 22`. The CI lines are wrong. .github/workflows/ci.yml:299
+      and :310 are `with: {persist-credentials: false}` on checkout.
+      `node-version: "22"` is ci.yml:301 and :312.
+    suggestion: >-
+      Cite .github/workflows/ci.yml:301 and :312 for the setup-node
+      `node-version: "22"` lines.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      Both fails and both passes are right even with the line slip. npm.rs:23
+      is true for `"*"` and for `"18"`, and nothing reads the workflow's node
+      version. Setting engines.node, as npm/site/package.json:8 and
+      scripts/playwright-ci/package.json:6 do, makes entity.engines true. Gold
+      is D76 (docs/decisions/D01M7W56B7R0000000000000000.md:9) and engines
+      being advisory is docs/design/package-standards.md:34.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      `"*"` passing is npm.rs:23, not a judgement. A second assessor fails
+      measures-intent and hard-to-game from that line and packages.yaml:147.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      Rejecting `*`/`x` with is_wildcard (npm.rs:72) and comparing the range
+      to the setup-node version would make `"*"` and a mismatched `"18"` fail.
+      That changes both fails in
+      .seikika/assessments/rule-quality/rule/seikika/maintainer-package/engines-declared.yaml.
+summary: >-
+  The fails are right: any non-empty engines.node passes, including `"*"`.
+  The CI citation is two lines early. ci.yml:299 and :310 are checkout
+  flags; the Node 22 lines are ci.yml:301 and :312. pages.yml:45 is
+  correct.

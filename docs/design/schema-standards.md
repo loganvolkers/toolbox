@@ -35,7 +35,9 @@ every property would fail all three documents for a standard the dialect does no
 
 ## 3. The catalog
 
-`schemas` glob: `crates/seikika-model/schema/*.json`. Id `json-schema:<path>`.
+The Seikika-for-Seikika portal sets `schemas` to `crates/seikika-model/schema/*.json`
+and supplies `schemaSources` for the compiler and reference validator. The workspace
+connector reads those paths from configuration. Record IDs use `json-schema:<path>`.
 
 | Fact | What it is |
 |---|---|

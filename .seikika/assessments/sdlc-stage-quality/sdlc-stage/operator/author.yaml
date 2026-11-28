@@ -1,0 +1,66 @@
+apiVersion: seikika.com/assessment/v1
+entity: sdlc-stage:operator/author
+rubric: sdlc-stage-quality
+subjectHash: e50e936450ae
+assessor: {kind: agent, name: cursor-assessor-21, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: executable-exit
+    verdict: pass
+    reason: >-
+      The exit criterion is that the manifest validates, and `seikika
+      validate` exits 1 on errors. I checked this on a scratch copy of
+      examples/repo-portal-starter: renaming `owner` gave schema errors and
+      exit 1, and the pristine copy reported 0 errors. CI validates that
+      starter, the stage's listed check (.github/workflows/ci.yml:65).
+  - criterion: agent-can-complete
+    verdict: pass
+    reason: >-
+      On the YAML route, an agent copies the starter, splits it with `include`
+      (docs/v1-spec.md:122) and loops on the validate skill
+      (plugins/seikika-operator/skills/validate/SKILL.md). Diagnostics name
+      the file and JSON path, for example `seikika.yaml /portal: "owner" is a
+      required property`. The TypeScript route the intent mentions isn't
+      usable: the builder is a private prototype and `seikika build` doesn't
+      exist (docs/design/typescript-builder.md:5). The seikika-authoring skill
+      also points agents at a `seikika-dev` MCP server whose launcher execs
+      `seikika mcp --dev` (plugins/seikika-operator/bin/seikika-mcp), a flag
+      the CLI does not have.
+  - criterion: reuses-artifacts
+    verdict: pass
+    reason: >-
+      Operators install the released CLI with the release installer or
+      scripts/install-release.sh (lines 6-12, tags v0.1.0 and v0.1.1). The
+      manifest schema is compiled into the binary, so authoring installs
+      nothing else.
+  - criterion: decoupled-from-core
+    verdict: pass
+    reason: >-
+      A portal is YAML in the operator's own repository. The starter
+      (examples/repo-portal-starter/README.md:3-6) and the packages it
+      includes (pattern-count, sarif and others) add kinds and scorecards
+      without touching this repository's crates or schemas.
+# Codex evaluated the two added criteria. Earlier verdicts retain their original attribution.
+  - criterion: fast-feedback
+    verdict: fail
+    reason: >-
+      .seikika/sdlc/stages/operator.yaml lists seikika validate.
+      docs/design/typescript-builder.md gives no measured local time to the
+      stage exit.
+    suggestion: >-
+      Measure and record the fastest local check that demonstrates this stage
+      exit in docs/design/typescript-builder.md.
+  - criterion: beyond-one-reference
+    verdict: fail
+    reason: >-
+      .seikika/sdlc/stages/operator.yaml lists examples/repo-portal-
+      starter/seikika.yaml as evidence. The declared checks name no second
+      exercised reference for this stage exit.
+    suggestion: >-
+      Exercise this exit on a second reference and cite the result in
+      .seikika/sdlc/stages/operator.yaml.
+summary: >-
+  Authoring in YAML works end to end with a released binary and a clear,
+  executable exit; I verified that validate fails a broken manifest with
+  exit 1. The TypeScript half of the intent is still a prototype, and the
+  authoring skill's MCP server calls a `--dev` flag that doesn't exist.

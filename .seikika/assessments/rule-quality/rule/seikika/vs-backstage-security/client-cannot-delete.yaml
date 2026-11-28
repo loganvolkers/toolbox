@@ -1,0 +1,52 @@
+apiVersion: seikika.com/assessment/v1
+entity: rule:seikika/vs-backstage-security/client-cannot-delete
+rubric: rule-quality
+subjectHash: 4e9b09e4e100
+assessor: {kind: agent, name: cursor-assessor-16, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: measures-intent
+    verdict: fail
+    reason: >-
+      The rationale is that a leaked token from scripts and agent configs must
+      not destroy data (.seikika/standards/backstage-comparison.yaml:502-505).
+      The probe tries one credential, the one the harness gives the REST
+      client (experiments/backstage-compare/surface.py:161-162). For Backstage
+      that is a read-only token, while the token an agent needs for MCP cannot
+      be read-only, and it deletes an entity with a 204
+      (ADJUDICATION.md:482-490). So Backstage passes while the token in an
+      agent's config can delete, which is the harm the rationale names. The
+      rationale itself admits this. Seikika passes for the right reason: one
+      PAT, and no DELETE route (crates/seikika-api/src/routes.rs:25-80).
+    suggestion: >-
+      Probe every client credential that an arm needs for its documented
+      surfaces (REST and MCP), and pass only if none of them can delete.
+      Record the per-token results in surface.py's output.
+  - criterion: hard-to-game
+    verdict: pass
+    reason: >-
+      The check needs both a non-2xx DELETE and the entity still readable
+      afterwards (surface.py:183-184). A server that answers 4xx but deletes
+      anyway still fails. For Seikika, entity writes need a connector token
+      (routes.rs:674-681), so a PAT cannot remove entities through ingest
+      either.
+  - criterion: fix-leads-to-pass
+    verdict: pass
+    reason: >-
+      "Keep entity writes to connectors' ingest; offer no DELETE in
+      crates/seikika-api/src/routes.rs" describes the current router
+      (routes.rs:25-80 mounts no delete) and the ingest gate
+      (routes.rs:674-681). Restoring both would restore the pass.
+  - criterion: threshold-justified
+    verdict: pass
+    reason: >-
+      The rule is boolean. It is RESEARCH.md F6 probe P4, a non-owner deleting
+      an entity (RESEARCH.md:184). Its link points at the two-token
+      adjudication (ADJUDICATION.md R3.5). Single bronze level per
+      D01M857ZB468ZM2YS6GNSEG6YB9.
+summary: >-
+  The probe is robust: it checks that the entity is still there, not just
+  the status code, and Seikika passes structurally. But scoring only the
+  token the harness chose lets Backstage pass while its MCP-capable token
+  deletes, so the rule's parity understates the gap its own rationale
+  describes.

@@ -11,7 +11,7 @@ description: >-
 3. Read which checks failed. Do not skip a failing check by changing the kit.
 
 ```
-seikika connector test --name workspace --portal portal -- target/debug/seikika-connector-workspace
+seikika connector test --name workspace --portal .seikika -- target/debug/seikika-connector-workspace
 ```
 
 Do not omit the -- before the program. If it fails, the binary is missing or a conformance check failed.

@@ -1,0 +1,63 @@
+apiVersion: seikika.com/assessment/v1
+entity: sdlc-stage:user/discover
+rubric: sdlc-stage-quality
+subjectHash: 5dfc4c2a3105
+assessor: {kind: agent, name: cursor-assessor-22, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: executable-exit
+    verdict: pass
+    reason: >-
+      scripts/m4-acceptance.sh:66-77 runs `owner` and `score` through the CLI
+      (which calls MCP) as alice, erin and bob, and asserts that erin's
+      details are redacted. Its A5 step checks a REST filter's exact ids, and
+      line 80 drives the UI in Playwright. CI runs it
+      (.github/workflows/ci.yml:177). crates/seikika-api/tests/mcp.rs:124-240
+      covers search, query, owner_of and scorecard_status over tools/call. The
+      UI step checks refresh, not redaction (scripts/ui-a11.cjs:14-30), so the
+      UI's share of "same authorization" rests on the REST path it calls.
+  - criterion: agent-can-complete
+    verdict: pass
+    reason: >-
+      Each listed command has a skill (plugins/seikika-operator/skills/search,
+      get, owner, mcp). Against `seikika serve examples/reference-portal
+      --fixtures`, `seikika search ledger`, `owner repository:ledger` and `get
+      repository:ledger` answered with evidence and a snapshot id. The
+      authorization half needs SEIKIKA_OPENFGA_BIN: without it the server
+      warns "running WITHOUT authorization" and erin saw full rule details.
+  - criterion: reuses-artifacts
+    verdict: pass
+    reason: >-
+      A user only needs the released `seikika` (installer at v0.1.1,
+      scripts/install-release.sh:6-8) pointed at a portal with --url or
+      SEIKIKA_URL, or `seikika mcp` as a stdio bridge to /mcp. Nothing is
+      compiled.
+  - criterion: decoupled-from-core
+    verdict: pass
+    reason: >-
+      Discovery runs over a portal's own kinds and scorecards through built-in
+      reads (docs/design/user-sdlc.md:46, marked built). A user changes
+      nothing in this repository to search, read or ask for owners.
+# Codex evaluated the two added criteria. Earlier verdicts retain their original attribution.
+  - criterion: fast-feedback
+    verdict: fail
+    reason: >-
+      .seikika/sdlc/stages/user.yaml lists seikika search. docs/design/user-
+      sdlc.md gives no measured local time to the stage exit.
+    suggestion: >-
+      Measure and record the fastest local check that demonstrates this stage
+      exit in docs/design/user-sdlc.md.
+  - criterion: beyond-one-reference
+    verdict: fail
+    reason: >-
+      .seikika/sdlc/stages/user.yaml lists crates/seikika-api/tests/mcp.rs as
+      evidence. The declared checks name no second exercised reference for
+      this stage exit.
+    suggestion: >-
+      Exercise this exit on a second reference and cite the result in
+      .seikika/sdlc/stages/user.yaml.
+summary: >-
+  Built and well proven. CLI, MCP and REST reads are exercised per user in
+  m3 and m4 acceptance on the production authorization path, and an agent
+  can use the commands directly. The one soft spot is that no browser test
+  asserts redaction in the UI itself.

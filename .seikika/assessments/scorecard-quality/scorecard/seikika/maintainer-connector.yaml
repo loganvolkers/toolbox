@@ -1,0 +1,74 @@
+apiVersion: seikika.com/assessment/v1
+entity: scorecard:seikika/maintainer-connector
+rubric: scorecard-quality
+subjectHash: bca97114aa9c
+assessor: {kind: agent, name: cursor-assessor-10, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: one-concern
+    verdict: pass
+    reason: >-
+      Every rule asks whether a first-party connector is fit to ship: it can
+      be identified and configured, it is shaped like the control-channel
+      protocol, it is tested and run, and it carries no credential
+      (.seikika/standards/connectors.yaml:51-75). The card is on the
+      maintainer track (:73, .seikika/README.md:27), because we author these
+      crates. Runtime health, the operator's concern, is explicitly left to
+      the meta-catalog (docs/design/connector-standards.md:23,
+      connectors.yaml:64). no-hardcoded-secrets is the shared killer item
+      every catalogued kind carries (docs/design/thresholds.md:35), not a
+      second audience.
+  - criterion: levels-are-a-ladder
+    verdict: pass
+    reason: >-
+      Bronze is identity, config, a transport and no secret
+      (connectors.yaml:77-113, 174-187). Silver adds the per-command shapes on
+      top of that transport, plus a unit test (:114-158). Gold proves those
+      shapes by running the conformance kit in CI (:159-173). That isn't
+      implied by silver's static inference, which meets
+      docs/design/thresholds.md:24. Bronze is reachable (crates/demo/partial
+      and crates/roll/partial, .seikika/fixtures/workspace.ndjson:23, 57), and
+      all six live connectors are gold (.seikika/results.json). The one weak
+      step: no fixture sits at silver (the brief's fixtureLevels are bronze,
+      gold and none), so the silver-without-gold state is untested.
+  - criterion: no-obvious-gap
+    verdict: fail
+    reason: >-
+      Nothing asks a connector to say which credential it reads and the least
+      scope that credential needs. The meta-catalog this card defers to models
+      a connector's `uses → credential scope` and puts "not over-privileged"
+      at silver (docs/design/meta-catalog.md:94, 173), and the research the
+      design doc cites marks secret config fields (Airbyte's `airbyte_secret`,
+      Ocean's `sensitive`, connector-standards.md:46, 48). That part is
+      static: gitlab's doc says its token "needs `read_api`"
+      (crates/seikika-connector-gitlab/src/main.rs:6), but github's names only
+      `token` or app credentials, with no scopes or permissions
+      (crates/seikika-connector-github/src/main.rs:3), and the card can't tell
+      them apart.
+    suggestion: >-
+      Add a silver rule, e.g. `documents-credentials`: when the source reads a
+      token (a `token` config key or a `*_TOKEN` env var), the crate doc names
+      the scopes or permissions it needs. The workspace connector would report
+      the fact, with a fixture on each side.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      Raising crates/demo/partial from bronze to silver by the card alone
+      works. The evidence names each gap ("crate docs and source name no
+      record kind", "resync never sends snapshot_complete", "refresh never
+      sends not_found", "0 #[test] functions",
+      .seikika/tests/standards.test.yaml:398-409), and each fix names the call
+      or test to add (connectors.yaml:118-154). Gold then needs a CI line, and
+      the evidence gives both counts (:164-166). The one misleading fix is
+      names-its-kinds for a generic runner: the phrase it suggests doesn't
+      match the check
+      (crates/seikika-connector-workspace/src/connectors.rs:173-175).
+summary: >-
+  A coherent, well-motivated card for connectors we ship. The ladder runs
+  from configurable to protocol-shaped to proven in CI, and agents can
+  climb it from the evidence. It leaves out the credential-scope
+  documentation that its own research and the meta-catalog point to, and
+  no fixture sits at silver. Several of its rules are substring checks
+  that comments can satisfy (see the rule assessments).
+  docs/design/connector-standards.md:88 and :98-105 are stale: secrets are
+  at bronze now, and git-files and scim have tests and are gold.

@@ -1,0 +1,13 @@
+name: service-identities
+assert:
+  - name: >-
+      A mismatched provider identity does not overwrite the declared
+      environment
+    expect: >-
+      entity('service-environment:checkout@staging').worker ==
+      'checkout-staging' &&
+      entity('service-environment:checkout@staging').serviceName == 'checkout'
+      && entity('service-environment:checkout@staging').deployments == null &&
+      entity('service-environment:checkout@staging').metrics == null
+  - name: An unrelated provider observation cannot create an environment
+    expect: "'service-environment:undeclared@production' in orphans()"

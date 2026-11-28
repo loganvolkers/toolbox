@@ -1,0 +1,40 @@
+apiVersion: seikika.com/assessment/v1
+entity: assessment:rule-quality/rule:seikika/maintainer-dependency/one-version
+rubric: assessment-quality
+subjectHash: 3f9560d903e4
+rubricHash: e30700fc6322cf9f05a301bb4638d6708e9f5eb5aea0281911229ce75bd37bf7
+assessor: {kind: agent, name: Codex, model: GPT-6}
+at: 2026-11-28
+verdicts:
+  - criterion: supported
+    verdict: fail
+    reason: >-
+      I checked the claims in
+      .seikika/assessments/rule-quality/rule/seikika/maintainer-dependency/one-version.yaml
+      against the cited sources. .seikika/standards/dependencies.yaml:98-109
+      shows the version count and repair, while Cargo.lock contains the
+      specific syn versions and their dependency edges. The source attributed
+      for those values in the assessment, .seikika/results.json, stores the
+      outcome and evidence fingerprints.
+    suggestion: >-
+      Cite Cargo.lock for exact versions and reverse dependencies, and the
+      report for the scored outcome.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      The assessment covers count semantics, how versions enter the evidence,
+      and why this direct dependency cannot consolidate both transitive
+      versions alone. docs/design/dependency-standards.md provides the silver
+      rationale.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      crates/seikika-connector-workspace/src/deps.rs:90-114 and
+      crates/seikika-connector-workspace/Cargo.toml let a reviewer reproduce
+      what is counted and verify that the direct dependency already selects
+      syn 3.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      Showing each version’s dependents and giving an inverse dependency query
+      would address the repair gap in .seikika/standards/dependencies.yaml.

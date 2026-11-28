@@ -1,0 +1,61 @@
+apiVersion: seikika.com/assessment/v1
+entity: rule:seikika/user-cli/structured-output
+rubric: rule-quality
+subjectHash: b6bb4ebd9f17
+assessor: {kind: agent, name: cursor-assessor-14, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: measures-intent
+    verdict: fail
+    reason: >-
+      `structuredOutput` is true when the command has any argument whose long
+      name is `output` or `format` (crates/seikika-cli/src/main.rs:1228-1230),
+      not when JSON is one of its values. Every user command gets
+      `-o/--output` from the flattened `Remote` struct, a free `String`
+      (main.rs:426-428), so a new read command passes by taking `remote:
+      Remote` whether or not its handler honours it. `mcp` shows the gap: it
+      has the same `--output` "md (default), json or yaml" flag although it is
+      a stdio bridge, which is why it needs the name exemption
+      (.seikika/standards/cli.yaml:181).
+    suggestion: >-
+      Make `Remote.output` a `ValueEnum` (md, json, yaml) and have `seikika
+      describe` set `structuredOutput` only when an `output`/`format`
+      argument's possible values include `json`. Drop `Remote` from `mcp` (or
+      give it a struct without `output`), then remove the exemption.
+  - criterion: hard-to-game
+    verdict: fail
+    reason: >-
+      Adding `#[arg(long)] output: Option<String>` that nothing reads passes
+      the rule, and that is cheaper than serialising the result, since only
+      the long name is read (crates/seikika-cli/src/main.rs:1228-1230). For a
+      command not built on `read_call`
+      (crates/seikika-cli/src/main.rs:583-640), nothing ties the flag to JSON
+      output.
+    suggestion: >-
+      Besides checking possible values, pin JSON per command: one test that
+      runs each read with `-o json` and parses stdout (assess.rs:120 already
+      does it for `get`).
+  - criterion: fix-leads-to-pass
+    verdict: pass
+    reason: >-
+      The evidence names the command and the fix says to support `-o json` or
+      `--format json` (.seikika/standards/cli.yaml:182-185); either argument
+      name makes the check true (crates/seikika-cli/src/main.rs:1228-1230).
+      The fix names no file, but read commands are `Command` variants in that
+      main.rs and adding `remote: Remote` (main.rs:426-428) is the established
+      way.
+  - criterion: threshold-justified
+    verdict: pass
+    reason: >-
+      No number. Bronze is set in docs/design/seikika-for-seikika.md:106 ("Has
+      help; `-o json`"), and the rationale (cli.yaml:186-189) explains why
+      parsing is a floor for the user SDLC: the proposed stability contract
+      (docs/design/user-sdlc.md:61-72) is only checkable on output a script
+      can parse.
+summary: >-
+  The bar is right for the user layer, but the check reads a flag's name,
+  not whether JSON comes out, so all 12 user commands pass structurally
+  through `Remote`, including `mcp`, which then needs an exemption.
+  Checking possible values and pinning `-o json` with a test would make
+  the rule mean what it says. Its fixtures pin only the fail case
+  (`search`, .seikika/tests/standards.test.yaml:891-895).

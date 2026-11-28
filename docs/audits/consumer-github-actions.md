@@ -52,4 +52,4 @@ baseline checksum stays the same. The job is part of merge-readiness.
 New actions are discoverable through the release registry and the existing workflow inventory.
 The maintainer ratchet also checks the workflow timeout rule and the new documentation.
 
-[Consumer pilot](../../.github/workflows/ci.yml) · [Action references](../../site/src/content/docs/reference/contracts.md#github-actions) · [Decision](../decisions/D01M8DGVXNG05GF6W3996FEFT6C.md)
+[Consumer pilot](../../.github/workflows/ci.yml) · [Action references](../../npm/site/src/content/docs/reference/contracts.md#github-actions) · [Decision](../decisions/D01M8DGVXNG05GF6W3996FEFT6C.md)

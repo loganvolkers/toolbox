@@ -1,0 +1,48 @@
+apiVersion: seikika.com/assessment/v1
+entity: assessment:rule-quality/rule:repo/docs/links-resolve
+rubric: assessment-quality
+subjectHash: 419ef570f03e
+assessor: {kind: agent, name: cursor-reviewer-18, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: supported
+    verdict: pass
+    reason: >-
+      The citations in
+      .seikika/assessments/rule-quality/rule/repo/docs/links-resolve.yaml
+      hold. `links_in` is
+      crates/seikika-connector-workspace/src/main.rs:297-318. Its regex at 298
+      matches only inline `](target)` and drops `#...`, and 309-311 skip `://`
+      targets. In examples/repo-portal-starter/seikika.yaml the evidence is at
+      174, the fix at 175 and the rationale at 176-178.
+      tests/standards.test.yaml:36-39 shows `docs/runbook.md`. The README
+      table and docs/design/repo-portals.md:140 describe the starter's single
+      bronze level.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      The verdicts are right. The parser has more misfires, which add weight
+      to the measures-intent fail without changing it. A titled link `](a.md
+      "Title")` doesn't match the regex at main.rs:298, because a space
+      follows the target, so it is never checked. `resolves` accepts `x` when
+      `x.md` exists (main.rs:321-330), so an extension-less link passes
+      although it 404s on GitHub. hard-to-game, fix-leads-to-pass and the
+      no-number threshold are correct.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      The fail rests on a regex a second assessor can read and test. The
+      passes rest on the fix text (seikika.yaml:175) and the evidence
+      expression (:174).
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      Collecting reference definitions and resolving fragments would close the
+      routes the measures-intent reason names, and a fixture would pin them.
+      To flip the verdict fully, it should also cover titled links and the
+      extension-less fallback above.
+summary: >-
+  An accurate assessment. Every citation holds, and the reference-style
+  and fragment gaps are real. The same regex also skips titled links, and
+  the page fallback passes links that 404 on GitHub. Both strengthen the
+  fail without changing any verdict.

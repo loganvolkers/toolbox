@@ -42,6 +42,8 @@ walked.
 | `workflows` | `[]` | Globs: `workflow` records for GitHub Actions workflows, and `action-ref` records for the actions they use |
 | `betterer` | `[]` | Globs: one `betterer` record per test in each Betterer results file |
 | `skills`, `connectors`, `agentDocs`, `plugins`, `packages`, `schemas`, `examples`, `pages`, `assessments` | `[]` | Globs for Seikika's own standards (`skill`, `connector`, `agent-doc`, `plugin`, `package-json`, `json-schema`, `example`, `site-page`, `assessment` records) |
+| `schemaSources` | `[crates/seikika-model/src/schema.rs]` | Paths relative to `root` supplied as evidence for whether an analyzer or compiler names a schema file |
+| `siteDir` | `site` | Starlight project directory relative to `root`, used to find public connector and package guides |
 | `assessmentManifest` | absent | Portal path relative to `root`. Validates assessment files and checks whether each one covers the current rubric and records its hash. |
 | `standardPackages` | `[]` | Globs for Seikika package manifests, usually `packages/*/seikika-package.yaml` |
 | `dependencies` | `false` | One `dependency` record per direct external Cargo dependency |
@@ -68,7 +70,7 @@ The external id is `<kind>:<path>` for per-file records.
 | `file` | `path`, `extension`, `lines`, `counts`, `matchLines`, `captures`, `lastChange` |
 | `doc` | `path`, `title`, `words`, `links`, `brokenLinks`, `codeSpans`, `hasStatus`, `hasSources`, `missingDecisions`, `counts`, `captures`, `lastChange` |
 | `repo` | README, LICENSE, CODEOWNERS and `.github` facts ([repo-portals.md](../design/repo-portals.md)) |
-| `federated-repo` | GitHub slug and visibility, default branch and commit, child manifest presence, README, LICENSE and CODEOWNERS facts, and any acquisition error. With `reports`, includes `report` or `reportError`. The external ID is `federated-repo:<owner>/<name>`. [Organization federation example](../../examples/github-org-federation/README.md) |
+| `federated-repo` | GitHub slug, provider ID and visibility, default branch and commit, child manifest presence, README, LICENSE and CODEOWNERS facts, and any acquisition error. With `reports`, includes `report` or `reportError`. The external ID is `federated-repo:<owner>/<name>`. [Organization federation example](../../examples/github-org-federation/README.md) |
 | `federated-workflow` | `repository`, `visibility`, `path`, `commit`, `sourceUrl`, `audited`, `findings`, and `auditError`. The external ID is `federated-workflow:<owner>/<name>/<path>` |
 | `portal` | `key`, `name`, `title`, `owner`, `path`, `dir`, `file`, `actions`, `runner`, `acceptApprovalsFrom`, `scorecards`, `packages`, `packageError`, `error`; `report` or `reportError` for a child publication; `git` for a cloned child; `warning` when two share a name ([federated-actions.md](../design/federated-actions.md) §5.2) |
 | `workflow`, `action-ref` | Triggers, permissions, timeouts, `uses:` and how each is pinned ([github-actions-standards.md](../design/github-actions-standards.md)) |

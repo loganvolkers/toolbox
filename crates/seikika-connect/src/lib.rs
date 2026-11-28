@@ -13,6 +13,8 @@
 pub mod assessment;
 pub mod conformance;
 pub mod files;
+#[cfg(feature = "github-app")]
+pub mod github_app;
 pub mod hub;
 pub mod sarif;
 pub mod sdk;

@@ -1,0 +1,39 @@
+apiVersion: seikika.com/assessment/v1
+entity: assessment:rule-quality/rule:seikika/maintainer-package/has-a-check
+rubric: assessment-quality
+subjectHash: 6f9d9ca09b4c
+rubricHash: e30700fc6322cf9f05a301bb4638d6708e9f5eb5aea0281911229ce75bd37bf7
+assessor: {kind: agent, name: Codex, model: GPT-6}
+at: 2026-11-28
+verdicts:
+  - criterion: supported
+    verdict: fail
+    reason: >-
+      I checked the claims in
+      .seikika/assessments/rule-quality/rule/seikika/maintainer-package/has-a-check.yaml
+      against the cited sources. crates/seikika-connector-workspace/src/npm.rs
+      confirms that only named script keys count. The npm developer guidance
+      is in docs/design/package-standards.md:35, and
+      .seikika/standards/packages.yaml motivates a runnable script but does
+      not establish CI reachability.
+    suggestion: >-
+      Correct the citation and distinguish having a check script from whether
+      CI actually invokes it.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      The assessment identifies scripts whose bodies are unusable, CI
+      reachability, the prescribed keys and the silver threshold.
+      crates/seikika-connector-workspace/src/npm.rs supports the findings
+      about key presence.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      crates/seikika-connector-workspace/src/npm.rs makes the script-selection
+      logic reproducible, and .seikika/tests/standards.test.yaml checks how
+      the zero count is presented.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      Checking meaningful bodies and CI invocations separately would address
+      the two issues identified against .seikika/standards/packages.yaml.

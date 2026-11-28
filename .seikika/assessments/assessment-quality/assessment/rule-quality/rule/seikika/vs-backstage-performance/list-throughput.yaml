@@ -1,0 +1,39 @@
+apiVersion: seikika.com/assessment/v1
+entity: assessment:rule-quality/rule:seikika/vs-backstage-performance/list-throughput
+rubric: assessment-quality
+subjectHash: c3cf8b3b82db
+rubricHash: e30700fc6322cf9f05a301bb4638d6708e9f5eb5aea0281911229ce75bd37bf7
+assessor: {kind: agent, name: Codex, model: GPT-6}
+at: 2026-11-28
+verdicts:
+  - criterion: supported
+    verdict: pass
+    reason: >-
+      I checked the claims in
+      .seikika/assessments/rule-quality/rule/seikika/vs-backstage-performance/list-throughput.yaml
+      against the cited sources.
+      experiments/backstage-compare/measure.py:168-183 uses an owner-equality
+      filter, and experiments/backstage-compare/ADJUDICATION.md describes the
+      indexed equality case. .seikika/standards/backstage-comparison.yaml
+      frames the rule in terms of scans and sets it at 20/s.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      The assessment checks the mismatch between measured and stated filter
+      shapes, HTTP success counting, a concrete handler and the rationale for
+      the bar. experiments/backstage-compare/README.md:39 records the bar
+      without deriving it.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      experiments/backstage-compare/measure.py:123-132 and :168-175 expose the
+      inputs and rate field. The assessment’s uncertainty about the threshold
+      is reproducible from experiments/backstage-compare/README.md:39 and
+      docs/plan.md.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      The proposed narrower rationale would match the indexed probe.
+      Documenting the 20/s floor would answer the threshold uncertainty in the
+      assessment and preserve the historical bar in
+      experiments/backstage-compare/README.md.

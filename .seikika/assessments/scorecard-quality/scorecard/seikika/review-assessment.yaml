@@ -1,0 +1,38 @@
+apiVersion: seikika.com/assessment/v1
+entity: scorecard:seikika/review-assessment
+rubric: scorecard-quality
+subjectHash: 93ac8903ce51
+rubricHash: 1d01a2d06d609948839eb0695b1bba667b2ebe2c4b50224dbd8ac05d5b3cb334
+assessor: {kind: agent, name: codex}
+at: 2026-11-27
+verdicts:
+  - criterion: one-concern
+    verdict: pass
+    reason: >-
+      packages/meta-scoring/fragments/assessments.yaml measures the evidence
+      that another reviewer checked an authored assessment. Reviews written
+      against assessment-quality are excluded at the card boundary.
+  - criterion: levels-are-a-ladder
+    verdict: pass
+    reason: >-
+      packages/meta-scoring/fragments/assessments.yaml puts open findings
+      below bronze, absence of a fresh assessment at bronze, and uncertainty
+      or failure to verify a review at silver.
+      .seikika/tests/standards.test.yaml exercises distinct stale,
+      self-reviewed and grounded cases.
+  - criterion: no-obvious-gap
+    verdict: pass
+    reason: >-
+      packages/meta-scoring/fragments/assessments.yaml and
+      crates/seikika-connect/src/assessment.rs require a fresh subject hash,
+      the current assessment-quality rubric, named independent attribution, a
+      citation in each reason and at least one shared repository file. The
+      connector recognizes HTTP(S) citations by shape, and reviewer
+      attribution is declared in the file.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      packages/meta-scoring/fragments/assessments.yaml directs authors to
+      obtain a review and tells them whether to address a finding or improve
+      the review's citations. .seikika/tests/standards.test.yaml pins evidence
+      for a review with no shared source.

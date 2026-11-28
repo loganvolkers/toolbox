@@ -1,0 +1,39 @@
+apiVersion: seikika.com/assessment/v1
+entity: assessment:rule-quality/rule:seikika/maintainer-dependency/version-bounded
+rubric: assessment-quality
+subjectHash: 1202570c8221
+rubricHash: e30700fc6322cf9f05a301bb4638d6708e9f5eb5aea0281911229ce75bd37bf7
+assessor: {kind: agent, name: Codex, model: GPT-6}
+at: 2026-11-28
+verdicts:
+  - criterion: supported
+    verdict: pass
+    reason: >-
+      I checked the claims in
+      .seikika/assessments/rule-quality/rule/seikika/maintainer-dependency/version-bounded.yaml
+      against the cited sources.
+      crates/seikika-connector-workspace/src/deps.rs:65-68 classifies
+      requirements by their initial characters.
+      .seikika/standards/dependencies.yaml:59-72 asks whether the requirement
+      is bounded, supporting the assessment’s mixed-comparator example and
+      conservative floor concern.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      The assessment covers the compound comparator case, Cargo’s pre-1.0
+      caret behavior, the displayed requirements, and the bronze placement in
+      docs/design/dependency-standards.md.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      The initial-character match is visible in
+      crates/seikika-connector-workspace/src/deps.rs:65-68, and the rule’s
+      accepted forms and evidence can be checked in
+      .seikika/standards/dependencies.yaml:59-72 and
+      .seikika/tests/standards.test.yaml.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      Parsing full Cargo requirements and testing both upper-bounded compound
+      forms and broad pre-1.0 ranges would address the measured-intent finding
+      in crates/seikika-connector-workspace/src/deps.rs.

@@ -1,0 +1,36 @@
+apiVersion: seikika.com/assessment/v1
+entity: assessment:rule-quality/rule:seikika/maintainer-repo/constituents-at-least-gold
+rubric: assessment-quality
+subjectHash: 5ad59362b45a
+rubricHash: e30700fc6322cf9f05a301bb4638d6708e9f5eb5aea0281911229ce75bd37bf7
+assessor: {kind: agent, name: Codex, model: GPT-6}
+at: 2026-11-28
+verdicts:
+  - criterion: supported
+    verdict: pass
+    reason: >-
+      I checked the claims in
+      .seikika/assessments/rule-quality/rule/seikika/maintainer-repo/constituents-at-least-gold.yaml
+      against the cited sources. The gold predicate still requires rank three
+      in .seikika/standards/repository.yaml, while
+      .seikika/standards/docs.yaml and
+      packages/github-actions/fragments/github-actions.yaml define shorter
+      ladders for counted constituents.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      The assessment covers the unattainable rank, why removing a constituent
+      affects the minimum, the mismatch with the fix and the declared rule
+      definition in docs/design/repo-level.md.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      Compare levels and the watch list in .seikika/seikika.yaml with the gold
+      predicate in .seikika/standards/repository.yaml. The focused portal
+      fixture demonstrates gold for a constituent that has that rank.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      The top-rank proposal identifies the summary field and comparison that
+      would be needed. The separate missing-name proposal was addressed in
+      crates/seikika-derive/src/lib.rs.

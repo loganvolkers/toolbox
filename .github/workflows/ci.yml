@@ -71,8 +71,8 @@ jobs:
           done
       - name: Seikika for Seikika (D65) — the standards' own tests
         run: |
-          target/debug/seikika validate portal
-          target/debug/seikika test portal
+          target/debug/seikika validate .seikika
+          target/debug/seikika test .seikika
           target/debug/seikika validate examples/repo-portal-starter
           target/debug/seikika test examples/repo-portal-starter
           for t in examples/github-org-federation examples/github-org-federation/children/*; do
@@ -85,27 +85,29 @@ jobs:
             target/debug/seikika test "$t"
           done
       # The ratchet, through the same action pilot repos use (D66, D69), with the binaries built above.
-      # Fails on any regression, and when portal/results.json is out of date (update it with
-      # `seikika report portal --skip runner --baseline portal/results.json --update`).
+      # Fails on any regression, and when .seikika/results.json is out of date (update it with
+      # `seikika report .seikika --skip runner --baseline .seikika/results.json --update`).
       - name: >-
           CI linters for the ratchet, at the versions the committed baseline was
           made with
         run: |
           # The pins live in the portal's tools: (one place); pip installs the PyPI ones (D01M800DHD0Z1RTPH7CM46GZS3B)
-          target/debug/seikika tools install portal --via pip
+          target/debug/seikika tools install .seikika --via pip
           actionlint -version   # installed with OpenFGA above
-          target/debug/seikika doctor portal   # every connector resolves, every tool at its pinned version (D90)
+          target/debug/seikika doctor .seikika   # every connector resolves, every tool at its pinned version (D90)
       - name: >-
           The portal's STANDARD.md is current (generated from the manifest, like
           the baseline)
         run: |
-          target/debug/seikika report portal --skip runner,github-actions -o standard > /tmp/STANDARD.md
-          diff -u portal/STANDARD.md /tmp/STANDARD.md
+          target/debug/seikika report .seikika --skip runner,github-actions -o standard > /tmp/STANDARD.md
+          diff -u .seikika/STANDARD.md /tmp/STANDARD.md
+      - name: Replay the repository report in the federation example
+        run: node npm/report-ui/scripts/federation-parity.mjs
       - name: >-
           Take-it-out (docs/design/seikika-and-tools.md, B1) — the tools in the
           box give the same findings alone
         run: >-
-          SEIKIKA=target/debug/seikika python3 scripts/take-it-out.py portal
+          SEIKIKA=target/debug/seikika python3 scripts/take-it-out.py .seikika
           ci-lint maintainer-python maintainer-openssf maintainer-advisories
       - name: Seikika for Seikika — agent assessments are valid and briefs build (D79)
         env:
@@ -115,8 +117,8 @@ jobs:
           if [[ "$REQUIRE_FRESH_ASSESSMENTS" == "true" ]]; then
             args+=(--require-fresh)
           fi
-          target/debug/seikika assess check portal --skip runner,github-actions "${args[@]}"
-          target/debug/seikika assess brief rule:seikika/meta-rule/tested --portal portal --fixtures -o json > /dev/null
+          target/debug/seikika assess check .seikika --skip runner,github-actions "${args[@]}"
+          target/debug/seikika assess brief rule:seikika/meta-rule/tested --portal .seikika --fixtures -o json > /dev/null
       - name: Plan PR assessments and run selected repository probes
         if: ${{ github.event_name == 'pull_request' }}
         env:
@@ -137,14 +139,14 @@ jobs:
           Seikika for Seikika — connector conformance (the protocol checks every
           connector must pass)
         run: |
-          target/debug/seikika connector test --name workspace --portal portal -- target/debug/seikika-connector-workspace
-          target/debug/seikika connector test --name surfaces --portal portal -- target/debug/seikika-connector-runner
-          target/debug/seikika connector test --name ci-lint --portal portal -- target/debug/seikika-connector-runner
+          target/debug/seikika connector test --name workspace --portal .seikika -- target/debug/seikika-connector-workspace
+          target/debug/seikika connector test --name surfaces --portal .seikika -- target/debug/seikika-connector-runner
+          target/debug/seikika connector test --name ci-lint --portal .seikika -- target/debug/seikika-connector-runner
       # The Pages workflow generates the report snapshot. The ratchet verdict below is the gate.
-      - name: Seikika for Seikika — ratchet against portal/results.json
+      - name: Seikika for Seikika — ratchet against .seikika/results.json
         uses: ./actions/report # zizmor: ignore[self-repository] actionlint 1.7.12 rejects $/
         with:
-          portal: portal
+          portal: .seikika
           skip: runner,github-actions
           seikika-dir: target/debug
           artifact-name: seikika-for-seikika-report
@@ -193,7 +195,9 @@ jobs:
       - uses: ./.github/actions/build-embedded-ui # zizmor: ignore[self-repository] actionlint 1.7.12 rejects $/
       - run: cargo build --locked -p seikika-cli -p seikika-connector-gitlab
       - name: OTel testbed rubric (experiments/otel-testbed/scripts/score.sh)
-        run: experiments/otel-testbed/scripts/score.sh
+        run: |
+          experiments/otel-testbed/scripts/score.sh
+          OTEL_TESTBED_PROTOCOL=http/protobuf experiments/otel-testbed/scripts/score.sh
   github-connector:
     runs-on: ubuntu-latest
     timeout-minutes: 15
@@ -261,6 +265,10 @@ jobs:
           M4 acceptance (real connectors only, A1–A5, A11 in a browser, SCIM
           revocation, conformance kit)
         run: PGDIR=$RUNNER_TEMP/pg4 scripts/m4-acceptance.sh
+      - name: >-
+          Service catalog (Grafana container, Cloudflare/GitHub emulators, and
+          browser)
+        run: scripts/service-catalog-acceptance.sh
   gitlab-acceptance:
     # Federated actions on a real GitLab: GitLab CE and a GitLab Runner in Docker on the runner
     # (scripts/gitlab/harness.sh, docs/design/forges.md §6). Its own job, because GitLab's first
@@ -495,6 +503,8 @@ jobs:
       - run: corepack enable pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm check
+      - run: pnpm check:coupling
+      - run: node scripts/check-coupling.test.mjs
       - run: pnpm build
       - name: Embedded assets stay out of Git
         run: |
@@ -519,7 +529,8 @@ jobs:
           ASSESSMENT_BASE: ${{ github.event.pull_request.base.sha }}
         run: >-
           python3 scripts/assessment-pr.py check --base "$ASSESSMENT_BASE"
-          --evidence-dir "$RUNNER_TEMP/assessment-ui" --only report-states
+          --evidence-dir "$RUNNER_TEMP/assessment-ui" --only report-states --only
+          module-coupling
       - name: Archive report state evidence
         if: ${{ !cancelled() && github.event_name == 'pull_request' }}
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2

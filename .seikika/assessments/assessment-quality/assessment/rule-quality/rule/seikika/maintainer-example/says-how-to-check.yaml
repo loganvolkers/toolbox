@@ -1,0 +1,36 @@
+apiVersion: seikika.com/assessment/v1
+entity: assessment:rule-quality/rule:seikika/maintainer-example/says-how-to-check
+rubric: assessment-quality
+subjectHash: 535d52fdd0e2
+rubricHash: e30700fc6322cf9f05a301bb4638d6708e9f5eb5aea0281911229ce75bd37bf7
+assessor: {kind: agent, name: Codex, model: GPT-6}
+at: 2026-11-28
+verdicts:
+  - criterion: supported
+    verdict: pass
+    reason: >-
+      I checked the claims in
+      .seikika/assessments/rule-quality/rule/seikika/maintainer-example/says-how-to-check.yaml
+      against the cited sources.
+      crates/seikika-connector-workspace/src/examples.rs:31-35 counts ordinary
+      prose matching tool names and recognizes only the listed Seikika
+      subcommands. .seikika/standards/examples.yaml asks for a reproducible
+      check command.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      The assessment covers false positives from prose, omitted commands, a
+      repair that can leave the failure in place and the silver threshold in
+      docs/design/example-standards.md:60.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      The regex in crates/seikika-connector-workspace/src/examples.rs:33 can
+      be checked against the prose in experiments/actions-ab/README.md and
+      against the named command examples.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      Checking command-shaped code and aligning accepted invocations with the
+      fix in .seikika/standards/examples.yaml would address the findings. The
+      suggested CI lookup would be an additional check.

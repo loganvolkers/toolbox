@@ -51,7 +51,7 @@ tools:
 fn repo(name: &str) -> std::path::PathBuf {
     let root = std::env::temp_dir().join(format!("seikika-tools-{name}-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&root);
-    write(&root, "portal/seikika.yaml", PORTAL);
+    write(&root, ".seikika/seikika.yaml", PORTAL);
     write(&root, "ruff.toml", "line-length = 100\n");
     write(
         &root,
@@ -104,7 +104,7 @@ fn find_lists_tools_in_and_out_of_the_box() {
 #[test]
 fn config_and_install_take_the_one_pin() {
     let root = repo("pin");
-    let portal = root.join("portal");
+    let portal = root.join(".seikika");
     let p = portal.to_str().unwrap();
     let (ok, mise) = seikika(&["tools", "config", p, "--for", "mise"]);
     assert!(ok, "{mise}");

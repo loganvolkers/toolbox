@@ -23,12 +23,12 @@ I compared the published guide and reference entry points, how each reference ma
 
 | Surface | Existing authority | Reference entry |
 |---|---|---|
-| HTTP catalog and action APIs | Axum router and integration tests. The public page documents common reads, actions, version waits, and errors. | [HTTP API reference](../../site/src/content/docs/users/api.md). Keep its existing route and headings. Per-portal OpenAPI and client generation are on the [user SDK roadmap](../design/user-sdlc.md#5-gaps-to-close-proposed-order). |
-| Built-in MCP tools | The server's `builtin_tools()` array. The running portal advertises its own actions. | [MCP tool reference](../../site/src/content/docs/reference/mcp.mdx). Generate tables at build time using `seikika describe`. The CLI and MCP fingerprint detects source changes in CI. |
-| CLI commands | `seikika describe` and commands' own `--help`. | [CLI reference](../../site/src/content/docs/start/cli.mdx). Keep its command deep links and link to the MCP lookup. |
-| Rust connector SDK | Crate source and published Rustdoc. | [SDK reference](../../site/src/content/docs/reference/sdks.md) links to docs.rs for the installed version. |
-| Vue and Astro packages | Published READMEs, comments on shipped types, and Storybook. | SDK reference links to both npm packages, the existing [npm directory](../../site/src/content/docs/authors/npm.mdx), and rendered examples. |
-| Portal configuration, protocols, and integration inputs | The four checked-in JSON Schemas, manifest guide, connector field references, and action README. | [Contracts and schemas](../../site/src/content/docs/reference/contracts.md) links to those sources and gives release selection guidance. |
+| HTTP catalog and action APIs | Axum router and integration tests. The public page documents common reads, actions, version waits, and errors. | [HTTP API reference](../../npm/site/src/content/docs/users/api.md). Keep its existing route and headings. Per-portal OpenAPI and client generation are on the [user SDK roadmap](../design/user-sdlc.md#5-gaps-to-close-proposed-order). |
+| Built-in MCP tools | The server's `builtin_tools()` array. The running portal advertises its own actions. | [MCP tool reference](../../npm/site/src/content/docs/reference/mcp.mdx). Generate tables at build time using `seikika describe`. The CLI and MCP fingerprint detects source changes in CI. |
+| CLI commands | `seikika describe` and commands' own `--help`. | [CLI reference](../../npm/site/src/content/docs/start/cli.mdx). Keep its command deep links and link to the MCP lookup. |
+| Rust connector SDK | Crate source and published Rustdoc. | [SDK reference](../../npm/site/src/content/docs/reference/sdks.md) links to docs.rs for the installed version. |
+| Vue and Astro packages | Published READMEs, comments on shipped types, and Storybook. | SDK reference links to both npm packages, the existing [npm directory](../../npm/site/src/content/docs/authors/npm.mdx), and rendered examples. |
+| Portal configuration, protocols, and integration inputs | The four checked-in JSON Schemas, manifest guide, connector field references, and action README. | [Contracts and schemas](../../npm/site/src/content/docs/reference/contracts.md) links to those sources and gives release selection guidance. |
 
 ## Navigation and styling
 
@@ -36,4 +36,4 @@ I compared the published guide and reference entry points, how each reference ma
 
 Use Starlight's default components, search, and semantic markup for the content hosted here. Keep generated Rustdoc's presentation on docs.rs. A bespoke theme or renderer makes sense when it solves a concrete lookup problem, such as version selection or deep links to operations. Evaluate it against link stability, keyboard and narrow-screen use, and source-to-reference drift before adopting it.
 
-The [writing guide](../../site/src/content/docs/maintainers/writing.md) records the editorial policy. The [navigation decision](../decisions/D01M8DDGT9KEVE4PSJ3WV7C44NE.md) records the publishing boundary.
+The [writing guide](../../npm/site/src/content/docs/maintainers/writing.md) records the editorial policy. The [navigation decision](../decisions/D01M8DDGT9KEVE4PSJ3WV7C44NE.md) records the publishing boundary.

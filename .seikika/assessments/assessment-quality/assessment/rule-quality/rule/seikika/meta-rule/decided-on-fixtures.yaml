@@ -1,0 +1,36 @@
+apiVersion: seikika.com/assessment/v1
+entity: assessment:rule-quality/rule:seikika/meta-rule/decided-on-fixtures
+rubric: assessment-quality
+subjectHash: 4d338d8e3737
+rubricHash: e30700fc6322cf9f05a301bb4638d6708e9f5eb5aea0281911229ce75bd37bf7
+assessor: {kind: agent, name: Codex, model: GPT-6}
+at: 2026-11-28
+verdicts:
+  - criterion: supported
+    verdict: pass
+    reason: >-
+      I checked the claims in
+      .seikika/assessments/rule-quality/rule/seikika/meta-rule/decided-on-fixtures.yaml
+      against the cited sources. The bronze predicate still sums pass and
+      fail, and the old fix omitted missing inputs on existing records. The
+      current fix in packages/meta-scoring/fragments/catalog.yaml now covers
+      both changing a fixture and adding one.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      The assessment covers suitability, meaningful outcomes, the
+      unknown-input repair and bronze placement. It distinguishes evaluation
+      from proving both outcomes, which are separate rules in
+      packages/meta-scoring/fragments/catalog.yaml.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      Compare the unknown outcome on the demo rule with the pass-only outcome
+      on user-cli has-help in .seikika/tests/standards.test.yaml. The fixture
+      counts come from crates/seikika-cli/src/meta.rs.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      The proposed fixture location and checked inputs were added to the fix
+      in packages/meta-scoring/fragments/catalog.yaml. The evidence continues
+      to report how many results were unknown.

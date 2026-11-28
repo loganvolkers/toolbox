@@ -1,0 +1,37 @@
+apiVersion: seikika.com/assessment/v1
+entity: assessment:rule-quality/rule:seikika/operator-cli/args-described
+rubric: assessment-quality
+subjectHash: 29979dcea509
+rubricHash: e30700fc6322cf9f05a301bb4638d6708e9f5eb5aea0281911229ce75bd37bf7
+assessor: {kind: agent, name: Codex, model: GPT-6}
+at: 2026-11-28
+verdicts:
+  - criterion: supported
+    verdict: pass
+    reason: >-
+      I checked the claims in
+      .seikika/assessments/rule-quality/rule/seikika/operator-cli/args-described.yaml
+      against the cited sources. crates/seikika-cli/src/main.rs builds each
+      leaf command’s argument inventory from clap, including positional
+      arguments and excluding implicit help and version.
+      .seikika/standards/cli.yaml scores the resulting list of arguments
+      without help.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      The assessment covers source and scope, the limits of checking presence,
+      the distinction between internal IDs and public flags and the silver
+      prerequisite in docs/design/thresholds.md.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      The argument traversal and help lookup in crates/seikika-cli/src/main.rs
+      make it possible to reproduce what the connector emits. The rule fixture
+      in .seikika/tests/standards.test.yaml covers commands with undocumented
+      arguments.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      Adding a meaningfulness check to the argument descriptions would address
+      the documented gap in .seikika/standards/cli.yaml; the proposal
+      distinguishes that from the existing missing-help evidence.

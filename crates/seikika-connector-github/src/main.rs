@@ -1,6 +1,6 @@
 //! The `github` connector (in-image, stdio). Configuration arrives as JSON in
 //! `SEIKIKA_CONNECTOR_CONFIG` (secrets already resolved by the server):
-//! `{"org", "apiVersion"?, "token"? | "appId"+"privateKey"+"installationId", "apiUrl"?}`.
+//! `{"org", "apiVersion"?, "token"? | "appId"+"privateKey"+"installationId"?, "apiUrl"?}`.
 //!
 //! Record kinds (shapes match examples/reference-portal/fixtures/github.ndjson):
 //! - `repository` `github:repo/<id>`: id, name, archived, default_branch_protected, admins
@@ -16,6 +16,7 @@
 
 mod runs;
 
+use seikika_connect::github_app::Installation;
 use seikika_connect::sdk::{Out, Source, run_stdio};
 use serde_json::{Value, json};
 
@@ -25,7 +26,7 @@ struct GitHub {
     org: String,
     version: String,
     token: Option<String>,
-    app: Option<(String, String, String)>, // (app id, private key PEM, installation id)
+    app: Installation,
     /// `actions`: repositories whose workflow runs to summarise, the branch, and how many runs.
     actions: Option<(Vec<String>, String, u64)>,
 }
@@ -60,8 +61,8 @@ impl GitHub {
                 )
             }),
             app: match (s("appId"), s("privateKey"), s("installationId")) {
-                (Some(a), Some(k), Some(i)) => Some((a, k, i)),
-                _ => None,
+                (Some(a), Some(k), id) => Installation::with_optional_installation_id(a, k, id),
+                _ => Installation::default(),
             },
         })
     }
@@ -71,49 +72,9 @@ impl GitHub {
         if let Some(t) = &self.token {
             return Ok(Some(t.clone()));
         }
-        let Some((app_id, pem, inst)) = &self.app else {
-            return Ok(None);
-        };
-        let now = std::time::SystemTime::now()
-            .duration_since(std::time::UNIX_EPOCH)
-            .unwrap_or_default()
-            .as_secs();
-        let claims = json!({"iat": now - 60, "exp": now + 540, "iss": app_id});
-        let key = jsonwebtoken::EncodingKey::from_rsa_pem(pem.as_bytes())
-            .map_err(|e| format!("privateKey: {e}"))?;
-        let jwt = jsonwebtoken::encode(
-            &jsonwebtoken::Header::new(jsonwebtoken::Algorithm::RS256),
-            &claims,
-            &key,
-        )
-        .map_err(|e| e.to_string())?;
-        let response = self
-            .http
-            .post(format!(
-                "{}/app/installations/{inst}/access_tokens",
-                self.api
-            ))
-            .bearer_auth(jwt)
-            .header("accept", "application/vnd.github+json")
-            .header("user-agent", "seikika-connector-github")
-            .send()
+        self.app
+            .token_for_org(&self.http, &self.api, &self.version, &self.org)
             .await
-            .map_err(|e| format!("request installation token: {e}"))?;
-        if !response.status().is_success() {
-            return Err(format!(
-                "request installation token: HTTP {}",
-                response.status().as_u16()
-            ));
-        }
-        let r: Value = response
-            .json()
-            .await
-            .map_err(|e| format!("decode installation token response: {e}"))?;
-        let token = r["token"]
-            .as_str()
-            .filter(|token| !token.is_empty())
-            .ok_or("installation token response did not contain a token")?;
-        Ok(Some(token.to_owned()))
     }
 
     /// GET a path; `Ok(None)` on 404.

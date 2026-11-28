@@ -1,0 +1,43 @@
+apiVersion: seikika.com/assessment/v1
+entity: assessment:rule-quality/rule:seikika/maintainer-ci-reliability/still-running
+rubric: assessment-quality
+subjectHash: d4f046405a43
+rubricHash: e30700fc6322cf9f05a301bb4638d6708e9f5eb5aea0281911229ce75bd37bf7
+assessor: {kind: agent, name: Codex, model: GPT-6}
+at: 2026-11-28
+verdicts:
+  - criterion: supported
+    verdict: fail
+    reason: >-
+      I checked the claims in
+      .seikika/assessments/rule-quality/rule/seikika/maintainer-ci-reliability/still-running.yaml
+      against the cited sources. The assessment says anything other than
+      active fails. packages/github-actions/fragments/github-actions.yaml:370
+      explicitly passes when state is absent as well as when it is active.
+    suggestion: >-
+      Describe the missing-state branch alongside the active and disabled
+      cases.
+  - criterion: complete
+    verdict: fail
+    reason: >-
+      crates/seikika-connector-github/src/main.rs:234-252 copies state from
+      the API, while
+      packages/github-actions/fragments/github-actions.yaml:367-382 accepts
+      absent state. The assessment’s hard-to-game verdict needs to account for
+      missing evidence as well as known disabled workflows.
+    suggestion: >-
+      Reassess what the rule guarantees when state is missing and distinguish
+      that policy from the disabled-workflow check.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      packages/github-actions/fragments/github-actions.yaml:367-382 and the
+      disabled fixture in .seikika/tests/standards.test.yaml:187-190 give a
+      reproducible prediction for a recorded disabled state.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      The rule’s fix to enable or retire an explicitly disabled workflow in
+      packages/github-actions/fragments/github-actions.yaml addresses the
+      failure that the test exercises. The assessment contains no attached
+      findings.

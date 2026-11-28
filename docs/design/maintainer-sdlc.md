@@ -71,7 +71,7 @@ caching) comes back only when these numbers regress (D44, [developer-velocity.md
 | Build output | Hosted UI and offline report assets | CI builds both from source and checks that Git ignores them | CI `ui` job |
 | Types and freshness | Shared Vue kit, hosted UI, report and package catalog | Astro documents and embedded assets are current | `pnpm check`, `pnpm build` |
 | Story probe | Every UI story across both fixtures and viewports, in light and dark | No serious accessibility violation, sideways scroll, or script error | `pnpm storybook:build`, `pnpm storybook:probe` |
-| Standards | Seikika for Seikika scorecards over crates, docs, CLI and MCP, gated by the CI ratchet | Scorecard fixtures pass and improvements are recorded in the baseline | `seikika test portal`; [run the ratchet locally](../../portal/README.md#run-it) |
+| Standards | Seikika for Seikika scorecards over crates, docs, CLI and MCP, gated by the CI ratchet | Scorecard fixtures pass and improvements are recorded in the baseline | `seikika test .seikika`; [run the ratchet locally](../../.seikika/README.md#run-it) |
 
 Each row is recorded with its result in [research-log.md](../research-log.md) when a milestone
 closes.
@@ -82,7 +82,7 @@ asks whether that specification helps the agents that use it. Fresh agents do li
 open-source forks, with Seikika and with its strongest alternative, against a bar set before the
 run. They aren't run on every change: they cost 0.5M–1.3M tokens each, so run one when a claim
 needs proving or a release changes what a benchmark measured. Each benchmark measures one or more
-of the four SDLC layers, and the catalog in `portal/benchmarks/` is scored by
+of the four SDLC layers, and the catalog in `.seikika/benchmarks/` is scored by
 `maintainer-benchmark`. They are the most effective way we have found to smooth Seikika's rough
 edges: every one so far has produced fixes.
 

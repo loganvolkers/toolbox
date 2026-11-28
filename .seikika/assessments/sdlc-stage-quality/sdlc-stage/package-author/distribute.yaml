@@ -1,0 +1,79 @@
+apiVersion: seikika.com/assessment/v1
+entity: sdlc-stage:package-author/distribute
+rubric: sdlc-stage-quality
+subjectHash: 80311bf34ef0
+assessor: {kind: agent, name: cursor-cloud-agent, model: claude-opus-5.5}
+at: 2026-11-24
+verdicts:
+  - criterion: executable-exit
+    verdict: fail
+    reason: >-
+      The stage lists no checks (.seikika/sdlc/stages/package-author.yaml), so
+      nothing fails when a tag does not publish attested artifacts or an OCI
+      mirror. Consumer pinning by git ref and content hash is tested in
+      crates/seikika-cli/tests/install.rs
+      (install_git_package_tag_branch_and_commit), but the stage does not list
+      it. Its gap "registry undecided (Q15)" is out of date: Q15 is resolved
+      by D89 (docs/questions.md).
+    suggestion: >-
+      List crates/seikika-cli/tests/install.rs as a check for the consumer
+      half, and add a package release workflow whose run fails without an
+      attested archive and a digest-matching OCI push.
+  - criterion: agent-can-complete
+    verdict: fail
+    reason: >-
+      An agent can tag a repository that holds a package, and consumers can
+      pin it as `github:owner/repo/path@tag`
+      (npm/site/src/content/docs/authors/index.md, lines 43-52). No command or
+      workflow builds an archive, attests it or pushes it to OCI; that page's
+      own table (line 78) says "Specified. No release archive is produced".
+    suggestion: >-
+      Ship a reusable package release workflow (archive, actions/attest, OCI
+      push) and a `seikika package publish --dry-run` the stage can list.
+  - criterion: reuses-artifacts
+    verdict: pass
+    reason: >-
+      Consumers compile nothing: packages are cloned at a ref and pinned by
+      content hash in seikika.lock, connector binaries come from
+      checksum-verified release assets (crates/seikika-api/src/artifacts.rs),
+      and tools are pinned in the package's tools: section
+      (packages/github-actions/fragments/github-actions.yaml line 59) and
+      installed with `seikika tools install` or `seikika doctor --mise`.
+  - criterion: decoupled-from-core
+    verdict: fail
+    reason: >-
+      The git half needs no core change, but the exit criterion does: fetching
+      from an OCI mirror by digest and verifying attestations need resolver
+      code that crates/seikika-cli/src/install.rs does not have
+      (docs/design/packages.md §4.4, "We write a small resolver"; PQ3 open in
+      §9).
+    suggestion: >-
+      Add OCI fetch by digest and attestation verification to the resolver
+      once, so authors can then publish from their own repositories with no
+      further change to Seikika.
+  - criterion: fast-feedback
+    verdict: fail
+    reason: >-
+      There is no gate to time: the stage lists no commands or checks
+      (.seikika/sdlc/stages/package-author.yaml), and no doc measures a
+      publish step.
+    suggestion: >-
+      With the release workflow, add a local dry run (archive digest and
+      attestation subject) and record its time in
+      docs/design/package-author-sdlc.md.
+  - criterion: beyond-one-reference
+    verdict: fail
+    reason: >-
+      Nothing proves distribution on any real package: the one test of
+      resolution is a synthetic host, acme/pkg/packages/demo, in
+      crates/seikika-cli/tests/install.rs, and the packages under packages/
+      are included by path in portal/, not pinned from a tag by another
+      repository.
+    suggestion: >-
+      Once the release workflow exists, publish two packages from packages/
+      (e.g. github-actions and pnpm-expo) and have a pilot repository or CI
+      job resolve both by digest from git and from the OCI mirror.
+summary: >-
+  Git-first pinning works for consumers and needs no compile, but there is
+  no attested archive, no OCI mirror, and no check, command or timing for
+  publishing.

@@ -1,0 +1,35 @@
+apiVersion: seikika.com/v1alpha1
+portal:
+  name: service-catalog-test
+  title: Service catalog test
+  owner: group:platform
+  seikika: "0.1"
+
+include:
+  - package: ../../packages/service-catalog
+    with: {root: ../cloudflare-containers/seikika-forks}
+
+connectors:
+  - name: github
+    package: builtin:github
+    runtime: in-image
+    config: {org: seikika}
+    records: [repository]
+    refresh: {repository: [external_ids]}
+
+kinds:
+  - name: Repository
+    description: Repositories read by the GitHub connector.
+    identityFrom: [connector:github]
+    fields:
+      title: {type: string}
+      githubId: {type: integer}
+      visibility: {type: string}
+    sources: {default: [connector:github]}
+    map:
+    - from: github/repository
+      id: "'repository:' + record.name"
+      set: "{'title': record.name, 'githubId': record.id, 'visibility': 'public'}"
+
+policies:
+  publicReportSources: [service-inventory, github, cloudflare, grafana]

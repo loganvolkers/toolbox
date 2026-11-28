@@ -1,0 +1,44 @@
+apiVersion: seikika.com/assessment/v1
+entity: assessment:rule-quality/rule:seikika/vs-backstage-org-fit/federation
+rubric: assessment-quality
+subjectHash: df6a23794178
+rubricHash: e30700fc6322cf9f05a301bb4638d6708e9f5eb5aea0281911229ce75bd37bf7
+assessor: {kind: agent, name: Codex, model: GPT-6}
+at: 2026-11-28
+verdicts:
+  - criterion: supported
+    verdict: fail
+    reason: >-
+      I checked the claims in
+      .seikika/assessments/rule-quality/rule/seikika/vs-backstage-org-fit/federation.yaml
+      against the cited sources. docs/design/federation.md now documents
+      combined catalogs from child report publications, and
+      examples/github-org-federation/README.md describes the setup. The
+      assessment’s suggestion still treats results up as design only.
+    suggestion: >-
+      Distinguish the shipped org report roll-up from live cross-portal
+      aggregation and cite both surfaces.
+  - criterion: complete
+    verdict: fail
+    reason: >-
+      The stale fact and missing test are real findings, but the assessment
+      overlooks the report-publication path described by
+      examples/github-org-federation/README.md.
+    suggestion: >-
+      Reassess the rule’s scope against the shipped example before proposing
+      the deciding probe.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      .seikika/standards/backstage-comparison.yaml and
+      experiments/backstage-compare/facts.yaml:54 support the finding that the
+      rule and snapshot use a broad label and an outdated explanation.
+  - criterion: actionable
+    verdict: fail
+    reason: >-
+      The remediation assumes a missing result flow where
+      docs/design/federation.md documents an implemented publication-based
+      version.
+    suggestion: >-
+      Specify which user-observable aggregation should count and cover it in
+      the comparison harness.

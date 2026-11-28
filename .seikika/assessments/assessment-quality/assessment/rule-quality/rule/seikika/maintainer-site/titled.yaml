@@ -1,0 +1,38 @@
+apiVersion: seikika.com/assessment/v1
+entity: assessment:rule-quality/rule:seikika/maintainer-site/titled
+rubric: assessment-quality
+subjectHash: 906d1afb65b5
+rubricHash: e30700fc6322cf9f05a301bb4638d6708e9f5eb5aea0281911229ce75bd37bf7
+assessor: {kind: agent, name: Codex, model: GPT-6}
+at: 2026-11-28
+verdicts:
+  - criterion: supported
+    verdict: fail
+    reason: >-
+      I checked the claims in
+      .seikika/assessments/rule-quality/rule/seikika/maintainer-site/titled.yaml
+      against the cited sources.
+      crates/seikika-connector-workspace/src/site.rs has a test that
+      explicitly accepts a folded YAML title. The assessment groups folded
+      text with blank and nested values that no longer count.
+    suggestion: >-
+      Separate valid folded text from the blank and nested cases and cite the
+      extractor test.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      The assessment covers frontmatter scope, placeholder text, the repair
+      and the chosen minimum. docs/design/thresholds.md records why the title
+      rule uses three characters.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      crates/seikika-connector-workspace/src/site.rs tests ordinary, folded,
+      nested and blank titles, while .seikika/standards/site.yaml supplies the
+      separate length condition.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      .seikika/standards/site.yaml names the top-level key and the minimum.
+      The assessment records four passing verdicts with no suggestions
+      attached.

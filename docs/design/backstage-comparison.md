@@ -16,8 +16,8 @@ connectors as separate processes; the other secure defaults are at parity, and n
 extension from the server's credentials), supply chain, change safety, repo
 scope, the agent surface and extensibility. It is at parity on federation (neither has it), and
 behind on capabilities and community.** Each claim is a rule in a comparative scorecard
-(`portal/standards/backstage-comparison.yaml`), scored on a product record written by a script
-from a measured run (`portal/comparisons/`). The Seikika for Seikika report shows it under
+(`.seikika/standards/backstage-comparison.yaml`), scored on a product record written by a script
+from a measured run (`.seikika/comparisons/`). The Seikika for Seikika report shows it under
 *Compare*.
 
 The DX Benchmarks ([dx-benchmarks.md](./dx-benchmarks.md)) prove the agent claims; this proves the
@@ -87,7 +87,7 @@ A comparison is a scorecard that names a subject and its peers (D01M857ZB468ZM2Y
   (D01M87WF2QZVPTD8CGDZKY133CD). This comparison keeps the default.
 - Peers are left out of the ratchet: a rival scoring worse is not this portal's improvement.
 
-The products are `Product` records in `portal/comparisons/`, written by
+The products are `Product` records in `.seikika/comparisons/`, written by
 `experiments/backstage-compare/snapshot.py` from the raw results, with the harness commit, the
 corpus and the run count. A comparison is re-run, not hand-edited. The meta standards hold these
 scorecards to the same bar as any other: each rule is tested on fixtures that pass and fail it,

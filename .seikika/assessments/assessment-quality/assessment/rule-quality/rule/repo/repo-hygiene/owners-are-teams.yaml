@@ -1,0 +1,61 @@
+apiVersion: seikika.com/assessment/v1
+entity: assessment:rule-quality/rule:repo/repo-hygiene/owners-are-teams
+rubric: assessment-quality
+subjectHash: 91f81a77cf67
+assessor: {kind: agent, name: cursor-reviewer-18, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: supported
+    verdict: pass
+    reason: >-
+      The citations in
+      .seikika/assessments/rule-quality/rule/repo/repo-hygiene/owners-are-teams.yaml
+      land. `owners_ok` is
+      crates/seikika-connector-workspace/src/repo.rs:108-116, and repo.rs:243
+      asserts `@alice @bob` passes. In
+      examples/repo-portal-starter/seikika.yaml the evidence is at 125-128,
+      the fix at 130-132, the rationale at 133-137 and the decision link at
+      138-140. The payments-api fixture and test name `@alice`. "The decision
+      says the same" holds only for its motivation. The rule
+      docs/decisions/D01M7Y57FVX0XYNGMX0A0XJ4GK9.md actually decides (point 1)
+      is "every owner is a personal handle", with no count, which is exactly
+      what `owners_ok` does.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      The measures-intent fail is defensible. The rule's name and its fix
+      ("for a single-maintainer repository only personal handles",
+      seikika.yaml:130-131) both promise less than the check accepts. The
+      rubric judges against "the rule's name and fix"
+      (https://github.com/seikika/seikika/blob/05510a57fafd8707979370858b578b78b935cf0e/portal/standards/meta.yaml#L1157-L1158).
+      hard-to-game, fix-leads-to-pass and threshold-justified are right. No
+      failure the sources show was missed.
+  - criterion: reproducible
+    verdict: unsure
+    reason: >-
+      A second assessor could pass measures-intent. The check implements the
+      decision's rule word for word (D01M7Y57FVX0XYNGMX0A0XJ4GK9 point 1;
+      repo.rs:108-116). The decision's headline goal is that silver "must work
+      for a personal GitHub repository", and personal accounts have no teams.
+      A two-maintainer personal repository therefore can't satisfy "teams".
+      Which text sets the intent, the fix or the decision, is a judgement the
+      assessment doesn't acknowledge.
+    suggestion: >-
+      Say in the reason that the check matches D01M7Y57FVX0XYNGMX0A0XJ4GK9's
+      rule, and fail on the name and fix wording (seikika.yaml:122, 130-131)
+      rather than on the check being "broader than the decision".
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      The rename alternative (e.g. owners-consistent, with the trade-off in
+      the fix) would flip measures-intent and keeps the decision. The
+      one-handle limit would also flip it, but it would reject a personal
+      repository with two maintainers. That contradicts the decision's goal,
+      so it needs a new decision rather than a manifest edit.
+summary: >-
+  The citations hold and the fail is defensible on the rule's name and
+  fix. The assessment presents the check as broader than D01M7Y57's
+  intent, although the check is exactly the rule that decision made. Its
+  one-handle suggestion would also break two-maintainer personal
+  repositories, which can't have teams. The rename alternative is the safe
+  fix.

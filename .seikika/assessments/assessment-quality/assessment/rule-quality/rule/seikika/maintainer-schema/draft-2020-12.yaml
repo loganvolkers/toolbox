@@ -1,0 +1,38 @@
+apiVersion: seikika.com/assessment/v1
+entity: assessment:rule-quality/rule:seikika/maintainer-schema/draft-2020-12
+rubric: assessment-quality
+subjectHash: 17765c7e2025
+rubricHash: e30700fc6322cf9f05a301bb4638d6708e9f5eb5aea0281911229ce75bd37bf7
+assessor: {kind: agent, name: Codex, model: GPT-6}
+at: 2026-11-28
+verdicts:
+  - criterion: supported
+    verdict: fail
+    reason: >-
+      I checked the claims in
+      .seikika/assessments/rule-quality/rule/seikika/maintainer-schema/draft-2020-12.yaml
+      against the cited sources. crates/seikika-model/src/schema.rs still
+      explicitly selects Draft202012, but Cargo.toml now pins jsonschema 0.63.
+      The assessment uses older 0.61.2 internals to justify detailed library
+      behavior.
+    suggestion: >-
+      Verify the behavior against the pinned package or cite the explicit
+      compiler option and a current wrong-dialect test.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      The assessment covers author declaration, compiler dialect, the
+      corrective URI and the bronze choice explained by
+      docs/design/schema-standards.md.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      crates/seikika-connector-workspace/src/specs.rs and
+      .seikika/standards/schemas.yaml let a second reviewer reproduce the
+      static declaration check. The explicit compiler dialect is separately
+      observable in crates/seikika-model/src/schema.rs.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      The rule gives the exact URI in .seikika/standards/schemas.yaml. The
+      original four verdicts pass and contain no attached suggestions.

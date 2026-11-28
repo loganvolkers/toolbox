@@ -1,0 +1,37 @@
+apiVersion: seikika.com/assessment/v1
+entity: assessment:rule-quality/rule:seikika/operator-cli/has-help
+rubric: assessment-quality
+subjectHash: f478a4d77b82
+rubricHash: e30700fc6322cf9f05a301bb4638d6708e9f5eb5aea0281911229ce75bd37bf7
+assessor: {kind: agent, name: Codex, model: GPT-6}
+at: 2026-11-28
+verdicts:
+  - criterion: supported
+    verdict: fail
+    reason: >-
+      I checked the claims in
+      .seikika/assessments/rule-quality/rule/seikika/operator-cli/has-help.yaml
+      against the cited sources. docs/design/thresholds.md now records ten
+      characters as a chosen floor, and .seikika/tests/standards.test.yaml now
+      pins both passing help and a short failure. The assessment calls both
+      pieces of evidence absent.
+    suggestion: >-
+      Update the threshold and fixture observations while retaining the limit
+      that length alone cannot establish useful help.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      The assessment covers where clap gets the summary, the level, the simple
+      repair and the previous fixture and threshold gaps.
+      .seikika/standards/cli.yaml still uses the same length predicate.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      crates/seikika-cli/src/main.rs shows the get_about lookup, and
+      .seikika/tests/standards.test.yaml distinguishes the newly covered
+      short-help case from a substantive description.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      The justification and negative fixture requested by the assessment are
+      now in docs/design/thresholds.md and .seikika/tests/standards.test.yaml.

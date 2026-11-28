@@ -1,0 +1,37 @@
+apiVersion: seikika.com/assessment/v1
+entity: assessment:rule-quality/rule:seikika/meta-rule/no-nested-loops
+rubric: assessment-quality
+subjectHash: 99b9fb2522c7
+rubricHash: e30700fc6322cf9f05a301bb4638d6708e9f5eb5aea0281911229ce75bd37bf7
+assessor: {kind: agent, name: Codex, model: GPT-6}
+at: 2026-11-28
+verdicts:
+  - criterion: supported
+    verdict: pass
+    reason: >-
+      I checked the claims in
+      .seikika/assessments/rule-quality/rule/seikika/meta-rule/no-nested-loops.yaml
+      against the cited sources. The analyzer in
+      crates/seikika-expr/src/analysis.rs measures comprehension depth. The
+      silver predicate in packages/meta-scoring/fragments/catalog.yaml bounds
+      that depth for both the check and evidence.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      The assessment addresses syntax, evaluation cost, an alternative source
+      of nested work and the cost rationale in
+      docs/design/scorecards-for-scorecards.md. Those are distinct concerns
+      even though the rule checks just the syntax.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      The analyzer tests in crates/seikika-expr/src/analysis.rs distinguish
+      chained and nested comprehensions. .seikika/tests/standards.test.yaml
+      now explicitly pins both accepted and rejected outcomes.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      The suggested analysis of list membership identifies a concrete
+      remaining complexity gap in crates/seikika-expr/src/analysis.rs. The
+      current fix in packages/meta-scoring/fragments/catalog.yaml provides a
+      path for explicit nesting findings.

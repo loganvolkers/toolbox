@@ -231,7 +231,7 @@ fn describe_portal(
 }
 
 /// Print `scorecard` and `rule` records for each portal; `results` pairs a portal path with its
-/// results file (`portal=portal/results.json`).
+/// results file (`.seikika=.seikika/results.json`).
 pub fn describe(portals: &[PathBuf], results: &[String]) -> Result<(), String> {
     let files: BTreeMap<String, PathBuf> = results
         .iter()

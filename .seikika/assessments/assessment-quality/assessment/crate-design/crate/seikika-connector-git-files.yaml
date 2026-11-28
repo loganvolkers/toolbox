@@ -1,0 +1,83 @@
+apiVersion: seikika.com/assessment/v1
+entity: assessment:crate-design/crate:seikika-connector-git-files
+rubric: assessment-quality
+subjectHash: dc14ec44f703
+assessor: {kind: agent, name: cursor-reviewer-19, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: supported
+    verdict: pass
+    reason: >-
+      The citations in
+      .seikika/assessments/crate-design/crate/seikika-connector-git-files.yaml
+      hold. The crate docs are
+      crates/seikika-connector-git-files/src/main.rs:1-10. The `---` mismatch
+      is real: the doc comment is at main.rs:31-32, and main.rs:35 splits on
+      "\n---". The SDK import is main.rs:14 and the capabilities are
+      main.rs:300-310. The base64 decoder (main.rs:274-289) matches
+      seikika-connector-github/src/main.rs:368-383, `refresh_one` is
+      main.rs:230-271, and repository paging and contents reads are
+      main.rs:127-170. The three unit tests are main.rs:389-432 (cited
+      393-432). scripts/m4-acceptance.sh:34 runs the kit with only `root`.
+      examples/acme-live/seikika.yaml:29 is the only splitKinds manifest, and
+      no script or workflow names acme-live. The mock serves catalog-info.yaml
+      at examples/reference-portal/tools/mock_github.py:87-88.
+  - criterion: complete
+    verdict: unsure
+    reason: >-
+      The code shows two things the assessment missed. First, `files` is
+      silently ignored unless `splitKinds` is true. `kinds()` returns only
+      `catalog-info` when `!self.split` (main.rs:94-96), and resync emits file
+      records only in the split branch (main.rs:328-348). The crate docs
+      present `files` as independent (main.rs:9), and the summary calls them
+      "accurate". That is a larger doc mismatch than the `---` one the
+      one-responsibility reason notes, and it bears on the guidance's "stale"
+      test (.seikika/standards/crates.yaml:467-468). Second, a split refresh
+      emits every document of the requested kind in the file, not only the
+      requested id (main.rs:242-265). With two components in one
+      catalog-info.yaml, a refresh of one id returns both. That breaks the
+      kit's check 4, "returns exactly those ids"
+      (crates/seikika-connect/src/conformance.rs:8). It supports the
+      tests-match-risk fail, but the reason doesn't name it.
+    suggestion: >-
+      Weigh the `files`-needs-`splitKinds` mismatch (main.rs:9 against 94-96)
+      in one-responsibility, and say whether it keeps the pass. Name the split
+      refresh's extra records (main.rs:242-265) as a defect that the missing
+      test lets through.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      Each verdict rests on code or scripts a second assessor can read the
+      same way. The dependency list, the SDK imports, the kit invocation at
+      scripts/m4-acceptance.sh:34 and the unrun acme-live manifest are facts,
+      not taste. The open question about one-responsibility is a coverage gap,
+      recorded under complete.
+  - criterion: actionable
+    verdict: unsure
+    reason: >-
+      The `refresh_one` unit test (hit, miss, foreign org) would cover one
+      gap. The kit run, as written in
+      .seikika/assessments/crate-design/crate/seikika-connector-git-files.yaml:56-60,
+      would fail rather than pass. With `splitKinds` the capabilities list
+      component, api, system, domain, resource and file (main.rs:93-108). The
+      reference portal declares only `records: [catalog-info]`
+      (examples/reference-portal/seikika.yaml:49-53), so "capabilities only
+      name declared record kinds" fails (conformance.rs:141-146). Each resync
+      also needs at least one record of its kind (conformance.rs:182-185). The
+      mock serves only catalog-info.yaml and CODEOWNERS, with no README.md and
+      no api/system/domain/resource documents (mock_github.py:82-89). A test
+      like this would also not catch the sibling-record refresh unless a
+      fixture file holds two documents of one kind.
+    suggestion: >-
+      Spell out what the kit run needs: a test .seikika (or packages/*/tests)
+      whose git-files connector declares the six split kinds, and a mock or
+      `root` fixture with a README.md and a catalog-info.yaml that holds every
+      kind, including two components. Assert that refreshing one component
+      returns only that id.
+summary: >-
+  The citations check out and the tests-match-risk fail is right. The
+  assessment misses that `files` silently requires `splitKinds`, which
+  contradicts the crate docs it calls accurate, and that a split refresh
+  returns sibling documents, which breaks the kit's exact-ids check. Its
+  suggested kit run would fail against the reference portal and mock as
+  they stand, because neither declares nor serves the split kinds.

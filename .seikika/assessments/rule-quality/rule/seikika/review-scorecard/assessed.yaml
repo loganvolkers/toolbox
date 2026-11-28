@@ -1,0 +1,58 @@
+apiVersion: seikika.com/assessment/v1
+entity: rule:seikika/review-scorecard/assessed
+rubric: rule-quality
+subjectHash: caf17c349a0a
+assessor: {kind: agent, name: cursor-assessor-05, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: measures-intent
+    verdict: pass
+    reason: >-
+      reviewState compares the scorecard-quality assessment's subjectHash with
+      the scorecard's hash (.seikika/standards/meta.yaml:50-56). That hash is
+      computed over the whole scorecard definition: levels, rules, description
+      and rationale (crates/seikika-cli/src/meta.rs:236-249). Any edit to a
+      rule, a level or the stated purpose therefore makes the review stale,
+      which is the rationale's claim (meta.yaml:1040-1042). The fixture shows
+      both states: user-cli has no review and fails, meta-rule passes
+      (.seikika/tests/standards.test.yaml:907-909).
+  - criterion: hard-to-game
+    verdict: fail
+    reason: >-
+      Silver accepts any schema-valid file: one verdict for each of the four
+      scorecard-quality criteria, with reasons of at least 10 characters
+      (crates/seikika-model/schema/assessment.schema.json:32-36,
+      crates/seikika-api/src/assess.rs:157-166). Four `pass` verdicts saying
+      "Looked at it, fine." pass, with no sign that the scorecard's YAML or
+      its design doc was opened. The fixture shows citations matter only at
+      gold: maintainer-ci-security sits at silver with an uncited `actionable`
+      (standards.test.yaml:897-902).
+    suggestion: >-
+      Have silver require that the review cites the file that defines the
+      scorecard: a .seikika/standards/<topic>.yaml, or a package fragment such
+      as packages/github-actions/fragments/github-actions.yaml. The connector
+      already records `cited`
+      (crates/seikika-connect/src/assessment.rs:220-228); give the Scorecard
+      record its defining file and add a `reviewCitesSource` field to this
+      check.
+  - criterion: fix-leads-to-pass
+    verdict: pass
+    reason: >-
+      The fix runs `seikika assess brief <scorecard id> --portal .seikika`,
+      has the agent write the file the brief names, then runs `seikika assess
+      check portal` (.seikika/standards/meta.yaml:1036-1039). The brief
+      carries the subjectHash that makes the review fresh. This file was
+      written exactly that way for scorecard:seikika/review-scorecard, and CI
+      validates it (.github/workflows/ci.yml:95-98).
+  - criterion: threshold-justified
+    verdict: pass
+    reason: >-
+      No number. Silver for a current review is the review-* row in
+      docs/design/thresholds.md:55 and change C1 in
+      docs/design/meta-standards-review.md:136. The card is advisory
+      (meta.yaml:1013), per D79.
+summary: >-
+  Fails on hard-to-game. Freshness is measured well, because the
+  scorecard's hash covers its rules and stated purpose. But silver accepts
+  a review that cites nothing about the scorecard, so a lazy review earns
+  the same level as a careful one until gold.

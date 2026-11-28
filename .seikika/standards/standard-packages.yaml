@@ -1,0 +1,54 @@
+kinds:
+  - name: StandardPackage
+    title: Standards package
+    description: A first-party package declared by a Seikika package manifest.
+    identityFrom: [connector:workspace]
+    fields:
+      path: {type: string, description: Path to the package manifest.}
+      name: {type: string, description: Name declared in the package manifest.}
+      version:
+        type: string
+        description: Version declared in the package manifest.
+      publicGuide:
+        type: string
+        description: Public guide route or an empty string when the guide is missing.
+    sources: {default: [connector:workspace]}
+    map:
+    - from: workspace/standard-package
+      id: "'standard-package:' + record.path"
+      set: >-
+        {'path': record.path, 'name': record.name, 'version': record.version,
+         'publicGuide': record.publicGuide == null ? '' : record.publicGuide}
+
+scorecards:
+  - name: maintainer-standard-package
+    title: First-party standards packages
+    kind: StandardPackage
+    description: Every first-party standards package has a published operator guide.
+    rationale: >-
+      Publishing a package creates an adoption path for operators. Require a
+      discoverable guide at bronze so they can choose an appropriate package,
+      configure it and verify its results.
+    links:
+    - title: Standards package directory decision
+      url: https://github.com/seikika/seikika/blob/main/docs/decisions/D01M8CRS50G5086P5DCFQN636BA.md
+    owner: group:maintainers
+    track: maintainer
+    levels: [bronze]
+    ratchet: {newEntitiesAtLeast: bronze}
+    rules:
+    - name: public-guide
+      level: bronze
+      check: entity.publicGuide != ''
+      evidence: "[entity.path + ' needs a published guide in the package directory']"
+      fix: >-
+        Publish a titled and described guide at
+        `npm/site/src/content/docs/packages/<directory-name>.md`. The package
+        directory and sidebar pick it up automatically.
+      rationale: >-
+        Operators need to find the package's expected inputs, configuration and
+        results before adding checks to a portal.
+      links:
+      - title: Standards package directory decision
+        url: https://github.com/seikika/seikika/blob/main/docs/decisions/D01M8CRS50G5086P5DCFQN636BA.md
+    facets: {summary: public, details: public}

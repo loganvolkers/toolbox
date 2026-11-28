@@ -1,5 +1,15 @@
 name: organization standards
 assert:
+  - name: Repository identity requires both a matching URL and a provider ID
+    expect: >-
+      score('repository-identity', 'repository:seikika/seikika').level ==
+      'silver' && score('repository-identity',
+      'repository:seikika/ready').level == 'bronze' &&
+      score('repository-identity', 'repository:seikika/bad-location').level ==
+      'none' && score('repository-identity',
+      'repository:seikika/bad-location').rules['has-qualified-location'] ==
+      'fail' && score('repository-identity',
+      'repository:seikika/bad-location').rules['has-provider-id'] == 'fail'
   - name: a readable README and a leading catch-all reach silver
     expect: score('repo-hygiene', 'repository:seikika/ready').level == 'silver'
   - name: downstream scores and rule definitions cannot raise a score

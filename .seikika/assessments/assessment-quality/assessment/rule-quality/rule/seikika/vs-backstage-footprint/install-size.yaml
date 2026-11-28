@@ -1,0 +1,40 @@
+apiVersion: seikika.com/assessment/v1
+entity: assessment:rule-quality/rule:seikika/vs-backstage-footprint/install-size
+rubric: assessment-quality
+subjectHash: fd8c70b9cd07
+rubricHash: e30700fc6322cf9f05a301bb4638d6708e9f5eb5aea0281911229ce75bd37bf7
+assessor: {kind: agent, name: Codex, model: GPT-6}
+at: 2026-11-28
+verdicts:
+  - criterion: supported
+    verdict: fail
+    reason: >-
+      I checked the claims in
+      .seikika/assessments/rule-quality/rule/seikika/vs-backstage-footprint/install-size.yaml
+      against the cited sources.
+      experiments/backstage-compare/footprint.py:57-81 supports the
+      executable-only count, but AGENTS.md states the charter as one container
+      image plus Postgres. It does not establish the offline-single-binary
+      promise used to dismiss moving runtime bytes outside the measured
+      install.
+    suggestion: >-
+      Use the actual release installation contract as evidence or qualify
+      hard-to-game for runtime downloads.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      The assessment checks matched runtime scope, dependence on released
+      artifacts, ineffective archive-extra remediation and the 1,000 MB floor
+      in experiments/backstage-compare/README.md:42.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      experiments/backstage-compare/footprint.py:57-81 identifies the counted
+      members, so removing ordinary nonexecutables from an archive would leave
+      the measured install size alone.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      Changing binary size or count and then measuring a tagged release
+      addresses the counted inputs in
+      experiments/backstage-compare/footprint.py.

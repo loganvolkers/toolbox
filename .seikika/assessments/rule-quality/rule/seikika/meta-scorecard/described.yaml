@@ -1,0 +1,46 @@
+apiVersion: seikika.com/assessment/v1
+entity: rule:seikika/meta-scorecard/described
+rubric: rule-quality
+subjectHash: 890d18e03c43
+assessor: {kind: agent, name: cursor-assessor-02, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: measures-intent
+    verdict: pass
+    reason: >-
+      `described` is a non-blank `description:`
+      (crates/seikika-cli/src/meta.rs:241, model.rs:283-285), the field the
+      fix names (.seikika/standards/meta.yaml:621-627). Blank descriptions
+      stop counting per D01M831P5QWJQ4A2FT85N5MXJQF point 3. Passing means an
+      agent has a statement of the standard to read first, which is the
+      rationale's point (meta.yaml:628-631).
+  - criterion: hard-to-game
+    verdict: fail
+    reason: >-
+      `description: TBD` passes, because filled() only trims whitespace. The
+      scorecard-quality rubric doesn't ask whether the description says what
+      the standard covers either (meta.yaml:1182-1216), so a placeholder is
+      never flagged, deterministically or by an assessor.
+    suggestion: >-
+      Require a minimum (e.g. 10 words, as meta-rubric's `guided` does,
+      model.rs:287-289), or add a scorecard-quality criterion asking whether
+      the description states the concern and audience.
+  - criterion: fix-leads-to-pass
+    verdict: pass
+    reason: >-
+      The evidence names the card (`scorecard maintainer-ci-security has no
+      description`, .seikika/tests/standards.test.yaml:1295-1298), and the fix
+      names the key to add.
+  - criterion: threshold-justified
+    verdict: pass
+    reason: >-
+      docs/design/thresholds.md:47 explains silver. Agents read the
+      description first, but bronze would have forced an edit to the reference
+      portal's byte-exact oracle. The reason is expedience, not value, but it
+      is written down.
+summary: >-
+  A simple, correct presence check with a working fix, pinned both ways
+  (.seikika/tests/standards.test.yaml:1292-1308). Placeholder text passes
+  and no rubric looks at it. Live it fails only the three acme cards from
+  the reference portal (.seikika/results.json), consistent with why it
+  sits at silver.

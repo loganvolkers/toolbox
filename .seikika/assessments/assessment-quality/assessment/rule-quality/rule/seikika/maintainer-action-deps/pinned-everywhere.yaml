@@ -1,0 +1,53 @@
+apiVersion: seikika.com/assessment/v1
+entity: assessment:rule-quality/rule:seikika/maintainer-action-deps/pinned-everywhere
+rubric: assessment-quality
+subjectHash: a09c6b44ce4e
+assessor: {kind: agent, name: cursor-reviewer-12, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: supported
+    verdict: pass
+    reason: >-
+      Every citation in
+      .seikika/assessments/rule-quality/rule/seikika/maintainer-action-deps/pinned-everywhere.yaml
+      lands. action_refs is workflows.rs:339-363 and pin_for 314-333; with a
+      single SHA pin on the same path, max_by_key has one candidate, so the
+      v4.2.0 SHA is hinted for `@v5`, and the unit test at 495-513 hints
+      `actions/cache@main` with the v4.2.0 pin. The globs are
+      .seikika/seikika.yaml:126, and the zizmor files glob is
+      packages/github-actions/fragments/github-actions.yaml:25. The package
+      test glob is packages/github-actions/tests/seikika.yaml:16, the evidence
+      test is .seikika/tests/standards.test.yaml:214-223, and the card
+      rationale is github-actions.yaml:540-544.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      Both fails hold. The glob gap is latent, since this repository has no
+      .github/actions, but the rubric asks whether an entity "could pass"
+      while missing the intent (.seikika/standards/meta.yaml:1159-1160). The
+      hint downgrade is in the decided design itself:
+      D01M84EPMMR9740K4N25G7A6FAY §4 shows `actions/checkout@v6` hinted
+      `pinned elsewhere as … # v4`. fix-leads-to-pass is right, because a SHA
+      on every listed ref makes `pins` all `sha` (github-actions.yaml:556).
+      threshold-justified is right too: D70 sets the card's one level.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      Both fails rest on code a second assessor can run: pin_for's fallback
+      (workflows.rs:321-328) and the hard-coded `actions/*` globs. The hint
+      does print the other version's comment, so the downgrade is visible, not
+      silent as the summary says. But pasting it is still the cheapest pass
+      that does the wrong thing.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      Widening the globs to `.github/actions/**/action.y*ml` puts those uses
+      into `pins`, which closes the measures-intent route. Emitting a hint
+      only when the comment is within the ref's tag removes the downgrade
+      paste, so hard-to-game would pass, as cited in
+      .seikika/assessments/rule-quality/rule/seikika/maintainer-action-deps/pinned-everywhere.yaml.
+summary: >-
+  A sound assessment. Every code, test and manifest citation checks out,
+  and both fails are real. The hint downgrade even appears in
+  D01M84EPMMR9740K4N25G7A6FAY's own example. Only "silent" overstates it,
+  because the hint shows the other version's comment.

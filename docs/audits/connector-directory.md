@@ -49,7 +49,7 @@ With six entries, the site's existing search and the directory cover discovery. 
 
 ## Sources
 
-- [Public directory source](../../site/src/content/docs/connectors/index.mdx)
+- [Public directory source](../../npm/site/src/content/docs/connectors/index.mdx)
 - [Connector scorecard design](../design/connector-standards.md)
-- [Documentation style guide](../../site/src/content/docs/maintainers/writing.md)
+- [Documentation style guide](../../npm/site/src/content/docs/maintainers/writing.md)
 - [Decision](../decisions/D01M8CHMD6TH2AXRWT9E49G4V6V.md)

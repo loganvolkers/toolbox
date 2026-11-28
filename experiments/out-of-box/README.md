@@ -16,7 +16,7 @@ Two portals, the setup a pilot copies:
 
 | Portal | Includes | For |
 |---|---|---|
-| [portal/](portal/seikika.yaml) | The starter's `repo-hygiene` and `docs`, and [packages/github-actions](../../packages/github-actions/README.md) | Any repository |
+| [the repository portal](../../.seikika/seikika.yaml) | The starter's `repo-hygiene` and `docs`, and [packages/github-actions](../../packages/github-actions/README.md) | Any repository |
 | [portal-pnpm/](portal-pnpm/seikika.yaml) | The same, plus [packages/pnpm-expo](../../packages/pnpm-expo/README.md) | pnpm workspaces |
 
 Run history (`github-actions`) is skipped: it needs a token and changes over time.

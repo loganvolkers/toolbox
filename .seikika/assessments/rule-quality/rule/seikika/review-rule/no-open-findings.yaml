@@ -1,0 +1,52 @@
+apiVersion: seikika.com/assessment/v1
+entity: rule:seikika/review-rule/no-open-findings
+rubric: rule-quality
+subjectHash: e11b2093ee3c
+assessor: {kind: agent, name: cursor-assessor-04, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: measures-intent
+    verdict: pass
+    reason: >-
+      `reviewFailing` on a Rule is the failing criteria of its rule-quality
+      assessment, current or stale (.seikika/standards/meta.yaml:166-170). The
+      check requires it to be empty (meta.yaml:928-941), so a stale finding
+      stays open until it is re-assessed. Fixtures pin a current finding, a
+      stale one and a clean rule (.seikika/tests/standards.test.yaml:856-869).
+  - criterion: hard-to-game
+    verdict: fail
+    reason: >-
+      The assessment is one overwritable file per rule
+      (crates/seikika-connect/src/assessment.rs:162-169). The cheapest way to
+      close a finding is to re-run the brief and answer `pass`, with the rule
+      unchanged and the same subjectHash. Nothing checks that the dispute is
+      "by another assessor", as the fix asks (meta.yaml:934-937), or even that
+      the assessor changed. Disagreement between assessors is not built
+      (docs/design/scorecards-for-scorecards.md:327-328).
+    suggestion: >-
+      When a new rule-quality assessment at an unchanged subjectHash turns a
+      failed criterion into a pass, keep the criterion in `reviewFailing`
+      unless the new assessment is by a different assessor than the one that
+      failed it. The workspace connector can read the previous version from
+      git history. Add a fixture of a same-assessor flip that stays at none.
+  - criterion: fix-leads-to-pass
+    verdict: pass
+    reason: >-
+      The evidence lists the failing criteria and marks stale ones "(from a
+      stale review: re-assess to close it)" (meta.yaml:931-933, pinned at
+      .seikika/tests/standards.test.yaml:865-867). The fix says to act on the
+      assessment's suggestions in .seikika/assessments/ and re-assess
+      (meta.yaml:934-937). A re-assessment with no failing criterion passes.
+  - criterion: threshold-justified
+    verdict: pass
+    reason: >-
+      There is no number. Putting an open finding at none is decision 1 of
+      D01M831P5QWJQ4A2FT85N5MXJQF. The rationale gives the measurement: two
+      findings sat unacted for three days (meta.yaml:938-941). It matches the
+      bronze cell of docs/design/thresholds.md:55.
+summary: >-
+  The check, evidence and fix are sound and well tested, stale findings
+  included. A finding can be closed by overwriting the assessment with a
+  pass at the same subjectHash, by anyone, including the assessor who
+  failed it. The fix's "by another assessor" is a request the data doesn't
+  enforce.

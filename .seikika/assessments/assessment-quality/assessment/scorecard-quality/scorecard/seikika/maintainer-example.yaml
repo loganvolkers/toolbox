@@ -1,0 +1,41 @@
+apiVersion: seikika.com/assessment/v1
+entity: assessment:scorecard-quality/scorecard:seikika/maintainer-example
+rubric: assessment-quality
+subjectHash: 9dbda6629743
+rubricHash: e30700fc6322cf9f05a301bb4638d6708e9f5eb5aea0281911229ce75bd37bf7
+assessor: {kind: agent, name: Codex, model: GPT-6}
+at: 2026-11-28
+verdicts:
+  - criterion: supported
+    verdict: fail
+    reason: >-
+      I checked the claims in
+      .seikika/assessments/scorecard-quality/scorecard/seikika/maintainer-example.yaml
+      against the cited sources. The assessment cites
+      docs/design/thresholds.md:34 for the move of the credentials rule to
+      bronze, but line 35 covers that move. Also, the claimed repair for the
+      r8 write-up changes its only failing rule in .seikika/results.json,
+      which would make it gold.
+    suggestion: >-
+      Cite the bronze threshold at line 35 and report gold as the result of
+      repairing the r8 command check.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      The assessment covers the mixed scope of the example globs, the level
+      progression and the gap between mentioning and running a check. Both the
+      globs and the five scoring rules are visible in .seikika/seikika.yaml
+      and .seikika/standards/examples.yaml.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      crates/seikika-connector-workspace/src/examples.rs:31-42 makes both
+      command and design-credit behavior reproducible. .seikika/results.json
+      shows the r8 rule outcome and enables checking the proposed repair.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      Changing the scope of the example globs in .seikika/seikika.yaml would
+      remove the cited run records. Cross-checking named commands against CI
+      would address the missing verification identified against
+      docs/design/example-standards.md.

@@ -1,0 +1,40 @@
+apiVersion: seikika.com/assessment/v1
+entity: assessment:rule-quality/rule:seikika/maintainer-schema/has-id
+rubric: assessment-quality
+subjectHash: 2ee2f83a48d6
+rubricHash: e30700fc6322cf9f05a301bb4638d6708e9f5eb5aea0281911229ce75bd37bf7
+assessor: {kind: agent, name: Codex, model: GPT-6}
+at: 2026-11-28
+verdicts:
+  - criterion: supported
+    verdict: pass
+    reason: >-
+      I checked the claims in
+      .seikika/assessments/rule-quality/rule/seikika/maintainer-schema/has-id.yaml
+      against the cited sources.
+      crates/seikika-connector-workspace/src/specs.rs trims the root
+      identifier before .seikika/standards/schemas.yaml tests the HTTPS
+      prefix. The assessment identifies that exact check and discusses what
+      still passes.
+  - criterion: complete
+    verdict: fail
+    reason: >-
+      .seikika/standards/schemas.yaml only tests a prefix. The assessment
+      passes measures-intent on the basis that it tests exactly for an
+      absolute HTTPS URI, while even a missing host is not validated.
+    suggestion: >-
+      Distinguish prefix matching from URI validation and assess the
+      missing-host case.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      The predicate in .seikika/standards/schemas.yaml and root extraction in
+      crates/seikika-connector-workspace/src/specs.rs show that neither full
+      URI syntax nor uniqueness is tested.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      URI validation and uniqueness checks under
+      .seikika/standards/schemas.yaml would address the identifier gap. A
+      project convention needs to reflect the identifiers the project
+      intentionally supports.

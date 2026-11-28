@@ -82,7 +82,7 @@ a gaming attempt that failed first. **All 16 failed: 33 of 64 criteria, and 1 un
 | Finding | Entities | Checked here |
 |---|---|---|
 | Presence, not quality: an empty or whitespace value passes | `maintainer-site/titled`, `meta-rubric/guided`, `meta-connector/records-mapped` (a map with `set: "{}"`) | `guided` read in code (`model.rs`, `guidance.is_none()`); fixed (§4) |
-| Self-declared facts are trusted | `sdlc-layer/nothing-missing` and `sdlc-stage` gold read the author's own `status:` | Read in `portal/standards/sdlc.yaml` |
+| Self-declared facts are trusted | `sdlc-layer/nothing-missing` and `sdlc-stage` gold read the author's own `status:` | Read in `.seikika/standards/sdlc.yaml` |
 | Self-review is possible | `review-assessment`, `review-crate` | Confirmed in data: `crate-design/crate:seikika-expr` was assessed and reviewed by `cursor-grok`; fixed for assessments (§4) |
 | A fixture ladder of `none` and `skipped` passes silver | `meta-scorecard/fixtures-show-the-ladder` | Read in `meta.rs` (`fixture_outcomes` counts every level string); fixed |
 | Tests are paired loosely | `meta-rule/tested` pairs every scorecard and rule in one expectation | Read in `meta.rs`; no rule is affected today, but the route is closed (§4) |
@@ -101,7 +101,7 @@ a gaming attempt that failed first. **All 16 failed: 33 of 64 criteria, and 1 un
 
 The four entities these changes touched were re-assessed at their new versions by the same fresh
 reviewer (not by the author of the changes). All four still fail, and the results are in
-`portal/assessments/`:
+`.seikika/assessments/`:
 
 | Entity | Fixed | Still holds, or new |
 |---|---|---|
@@ -138,8 +138,8 @@ escaped by touching the subject. Both are open items (M7, M8 in §5).
 | C3 | `fixtures-show-the-ladder` needs at least one real level reached (`fixtureRealLevels`) | `none` with `skipped` was passing silver | `meta.yaml` |
 | C4 | Blank `description:` and `guidance:` don't count, for kinds, fields and rubrics | The cheapest gaming route for `described` and `guided` | `crates/seikika-cli/src/model.rs`, a unit test |
 | C5 | A rule is tested only by an expectation on its own scorecard (`score_segments`) | One expectation naming two cards used to test every rule named in it | `crates/seikika-cli/src/meta.rs`, a unit test |
-| C6 | Campaign `close-review-findings` (review-rule and review-scorecard at bronze) | Findings are worked off against a date, not just listed | `portal/campaigns.yaml` |
-| C7 | 16 adversarial assessments committed | Judgement is data (D79), and the findings are now open items on the campaign | `portal/assessments/` |
+| C6 | Campaign `close-review-findings` (review-rule and review-scorecard at bronze) | Findings are worked off against a date, not just listed | `.seikika/campaigns.yaml` |
+| C7 | 16 adversarial assessments committed | Judgement is data (D79), and the findings are now open items on the campaign | `.seikika/assessments/` |
 
 **Deliberately not changed:**
 - **No regex for "the fix names a place".** Half of our fixes rightly say "in the evidence", and the
@@ -182,4 +182,4 @@ the rubric on five samples.
 - Sharma et al., "Towards Understanding Sycophancy in Language Models" (2023), arXiv 2310.13548 (abstract)
 - Grace, Hadfield, Olivares, De Jonghe, "Demystifying evals for AI agents" (Anthropic, 2026), read in full
 - Cortex documentation, scorecards and initiatives (vendor)
-- This repository: `portal/results.json`, `portal/assessments/`, `seikika assess check portal`, `seikika describe scorecards portal`
+- This repository: `.seikika/results.json`, `.seikika/assessments/`, `seikika assess check .seikika`, `seikika describe scorecards portal`

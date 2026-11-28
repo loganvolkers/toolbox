@@ -4,7 +4,7 @@
 checklist added 2026-11-21 (§6). Adds a fourth SDLC layer, the **package author SDLC**, to the
 maintainer, operator and user SDLCs ([sdlc.md](../sdlc.md)). It revises
 [packages.md](./packages.md), which treated a package as data alone. Every layer's stages are now
-catalogued and scored in Seikika for Seikika (`portal/sdlc/`, scorecards `sdlc-stage`, `sdlc-layer`
+catalogued and scored in Seikika for Seikika (`.seikika/sdlc/`, scorecards `sdlc-stage`, `sdlc-layer`
 and `review-sdlc-stage`).*
 
 ---
@@ -48,7 +48,7 @@ Three couplings make the gap structural:
    installer, and `seikika tools install --via mise|uv|pipx|pip`). Seikika never downloads zizmor
    itself. It checks versions and reports missing ones (`seikika doctor`). A package emits a
    `mise.toml` fragment with pinned, checksummed tools, and CI uses the same file.
-5. **Score the SDLCs** (§4). `portal/sdlc/` declares each layer's stages, with their exit criteria,
+5. **Score the SDLCs** (§4). `.seikika/sdlc/` declares each layer's stages, with their exit criteria,
    commands, checks, status and gaps. The first run confirms the critique: `maintainer/release`,
    `package-author/package` and `package-author/distribute` are **missing**, and every
    `build-connector` stage is **partial** for the reason above.
@@ -154,7 +154,7 @@ conda-forge and a GHCR image.
 
 ## 4. The SDLCs in Seikika for Seikika
 
-`portal/sdlc/layers.yaml` and `portal/sdlc/stages/<layer>.yaml` declare each stage. A stage has:
+`.seikika/sdlc/layers.yaml` and `.seikika/sdlc/stages/<layer>.yaml` declare each stage. A stage has:
 - intent and exit criterion;
 - the commands that carry it out;
 - the checks (CI, scripts, tests) that verify it;

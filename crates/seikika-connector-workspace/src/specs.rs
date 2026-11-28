@@ -10,11 +10,10 @@ use syn::visit::Visit;
 
 const DRAFT_2020_12: &str = "https://json-schema.org/draft/2020-12/schema";
 
-const RUST_LOADER: &str = "crates/seikika-model/src/schema.rs";
 const REFERENCE_VALIDATOR: &str = "examples/reference-portal/tools/validate.py";
 const SCHEMA_DIR: &str = "crates/seikika-model/schema";
 
-pub(crate) fn analyse(root: &Path, rel: &str) -> Value {
+pub(crate) fn analyse(root: &Path, rel: &str, sources: &[String]) -> Value {
     let text = std::fs::read_to_string(root.join(rel)).unwrap_or_default();
     let doc: Value = serde_json::from_str(&text).unwrap_or(Value::Null);
     let filename = Path::new(rel)
@@ -29,7 +28,7 @@ pub(crate) fn analyse(root: &Path, rel: &str) -> Value {
         "titleChars": doc["title"].as_str().unwrap_or("").trim().chars().count() as i64,
         "descriptionChars": doc["description"].as_str().unwrap_or("").trim().chars().count() as i64,
         "externalRefs": external_refs(&doc),
-        "wired": wired(root, rel),
+        "wired": wired(root, rel, sources),
         "draft202012": doc["$schema"].as_str().unwrap_or("").trim() == DRAFT_2020_12,
         "secretHits": secrets(rel, &text),
     })
@@ -64,34 +63,48 @@ fn collect_refs(node: &Value, out: &mut Vec<String>) {
     }
 }
 
-fn wired(root: &Path, rel: &str) -> bool {
+fn wired(root: &Path, rel: &str, sources: &[String]) -> bool {
     let Ok(target) = root.join(rel).canonicalize() else {
         return false;
     };
-    let loader = root.join(RUST_LOADER);
-    let mut includes = SchemaIncludes(Vec::new());
-    if let Ok(source) = std::fs::read_to_string(&loader)
-        && let Ok(file) = syn::parse_file(&source)
-    {
-        includes.visit_file(&file);
-    }
-    let loader_dir = root.join("crates/seikika-model/src");
-    if includes.0.iter().any(|include| {
-        loader_dir
-            .join(include)
-            .canonicalize()
-            .is_ok_and(|p| p == target)
-    }) {
-        return true;
-    }
+    sources.iter().any(|rel_source| {
+        let source = root.join(rel_source);
+        let Ok(text) = std::fs::read_to_string(&source) else {
+            return false;
+        };
+        if source.extension().is_some_and(|ext| ext == "rs") {
+            let Ok(file) = syn::parse_file(&text) else {
+                return false;
+            };
+            let Some(dir) = source.parent() else {
+                return false;
+            };
+            let mut includes = SchemaIncludes(Vec::new());
+            includes.visit_file(&file);
+            return includes.0.iter().any(|include| {
+                dir.join(include)
+                    .canonicalize()
+                    .is_ok_and(|path| path == target)
+            });
+        }
+        if rel_source == REFERENCE_VALIDATOR {
+            return reference_validator_uses(rel, &text);
+        }
+        Path::new(rel)
+            .file_name()
+            .and_then(|name| name.to_str())
+            .is_some_and(|name| text.contains(name))
+    })
+}
+
+fn reference_validator_uses(rel: &str, text: &str) -> bool {
     let Ok(name) = Path::new(rel).strip_prefix(SCHEMA_DIR) else {
         return false;
     };
     let name = name.to_string_lossy();
     let double_quoted_call = format!("schema(\"{name}\")");
     let single_quoted_call = format!("schema('{name}')");
-    let validator = std::fs::read_to_string(root.join(REFERENCE_VALIDATOR)).unwrap_or_default();
-    validator.lines().any(|line| {
+    text.lines().any(|line| {
         !line.trim_start().starts_with('#')
             && (line.contains(&double_quoted_call) || line.contains(&single_quoted_call))
     })
@@ -158,13 +171,25 @@ mod tests {
                 ),
             ],
         );
-        let rec = analyse(&tmp.0, "crates/seikika-model/schema/demo.schema.json");
+        let sources = ["crates/seikika-model/src/schema.rs".to_owned()];
+        let rec = analyse(
+            &tmp.0,
+            "crates/seikika-model/schema/demo.schema.json",
+            &sources,
+        );
         assert_eq!(rec["draft202012"], true);
+        assert_eq!(
+            analyse(&tmp.0, "crates/seikika-model/schema/demo.schema.json", &[])["wired"],
+            false
+        );
         assert_eq!(rec["externalRefs"], json!([]));
         assert_eq!(rec["wired"], true);
-        assert_eq!(analyse(&tmp.0, "schema/demo.schema.json")["wired"], false);
         assert_eq!(
-            analyse(&tmp.0, "schema/commented.schema.json")["wired"],
+            analyse(&tmp.0, "schema/demo.schema.json", &sources)["wired"],
+            false
+        );
+        assert_eq!(
+            analyse(&tmp.0, "schema/commented.schema.json", &sources)["wired"],
             false
         );
         assert!(rec["descriptionChars"].as_i64().unwrap() > 0);
@@ -175,7 +200,7 @@ mod tests {
     fn an_external_ref_and_an_old_draft_are_named() {
         let schema = "{\n  \"$schema\": \"https://json-schema.org/draft-07/schema#\",\n  \"$ref\": \"https://example.invalid/other.json\",\n  \"note\": \"AKIAIOSFODNN7EXAMPLE\"\n}\n";
         let tmp = scratch("bad", &[("schema/unsafe.schema.json", schema)]);
-        let rec = analyse(&tmp.0, "schema/unsafe.schema.json");
+        let rec = analyse(&tmp.0, "schema/unsafe.schema.json", &[]);
         assert_eq!(rec["draft202012"], false);
         assert_eq!(rec["schemaId"], "");
         assert_eq!(
@@ -203,15 +228,18 @@ mod tests {
                 ),
             ],
         );
+        let sources = [REFERENCE_VALIDATOR.to_owned()];
         assert!(wired(
             &tmp.0,
-            "crates/seikika-model/schema/demo.schema.json"
+            "crates/seikika-model/schema/demo.schema.json",
+            &sources
         ));
         assert!(!wired(
             &tmp.0,
-            "crates/seikika-model/schema/commented.schema.json"
+            "crates/seikika-model/schema/commented.schema.json",
+            &sources
         ));
-        assert!(!wired(&tmp.0, "schema/demo.schema.json"));
+        assert!(!wired(&tmp.0, "schema/demo.schema.json", &sources));
     }
 
     #[test]
@@ -223,7 +251,11 @@ mod tests {
             "crates/seikika-model/schema/executor-messages.schema.json",
             "crates/seikika-model/schema/assessment.schema.json",
         ] {
-            let rec = analyse(&root, rel);
+            let rec = analyse(
+                &root,
+                rel,
+                &["crates/seikika-model/src/schema.rs".to_owned()],
+            );
             assert_eq!(rec["draft202012"], true, "{rel}");
             assert!(
                 rec["schemaId"].as_str().unwrap().starts_with("https://"),

@@ -1,0 +1,37 @@
+apiVersion: seikika.com/assessment/v1
+entity: assessment:rule-quality/rule:seikika/maintainer-crate/simple-functions
+rubric: assessment-quality
+subjectHash: d179706b9e5a
+rubricHash: e30700fc6322cf9f05a301bb4638d6708e9f5eb5aea0281911229ce75bd37bf7
+assessor: {kind: agent, name: Codex, model: GPT-6}
+at: 2026-11-28
+verdicts:
+  - criterion: supported
+    verdict: pass
+    reason: >-
+      I checked the claims in
+      .seikika/assessments/rule-quality/rule/seikika/maintainer-crate/simple-functions.yaml
+      against the cited sources. The explicit branches visited in
+      crates/seikika-connector-workspace/src/rust.rs exclude try expressions
+      and let-else paths. The gold limit of 15 is explicit in
+      .seikika/standards/crates.yaml.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      The assessment addresses scope, incentives to extract helpers, location
+      evidence and the basis for the limit. docs/design/thresholds.md now
+      identifies the limit as chosen.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      The visitor match in crates/seikika-connector-workspace/src/rust.rs
+      lists every recognized expression form. The related crate fixture rules
+      in .seikika/tests/standards.test.yaml verify evidence and outcomes for
+      the reported complexity.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      The suggested visitor additions and boundary fixture would exercise the
+      omitted paths in crates/seikika-connector-workspace/src/rust.rs. The
+      alternative of documenting the chosen threshold was applied in
+      docs/design/thresholds.md.

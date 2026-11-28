@@ -48,7 +48,7 @@ function rustDocs() {
 }
 
 function npmDocs() {
-  const requireFromUi = createRequire(new URL("../ui-kit/package.json", import.meta.url));
+  const requireFromUi = createRequire(new URL("../npm/ui-kit/package.json", import.meta.url));
   const ts = requireFromUi("typescript");
   const { parse } = requireFromUi("vue/compiler-sfc");
   const workspaces = JSON.parse(run("pnpm", ["-r", "list", "--depth", "-1", "--json"]));

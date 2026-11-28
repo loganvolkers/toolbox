@@ -2332,7 +2332,9 @@ checksum = "16a1cfa75cc186dd73d5818e510e042e40927bccc9c236b061cea97e1eb08029"
 dependencies = [
  "base64 0.23.1",
  "bytes",
+ "futures-channel",
  "futures-core",
+ "futures-util",
  "http",
  "http-body",
  "http-body-util",
@@ -2613,6 +2615,7 @@ dependencies = [
 name = "seikika-connect"
 version = "0.2.1"
 dependencies = [
+ "jsonwebtoken",
  "regex",
  "reqwest",
  "seikika-model",
@@ -2621,6 +2624,17 @@ dependencies = [
  "sha2",
  "tokio",
  "walkdir",
+]
+
+[[package]]
+name = "seikika-connector-cloudflare"
+version = "0.2.1"
+dependencies = [
+ "reqwest",
+ "seikika-connect",
+ "serde",
+ "serde_json",
+ "tokio",
 ]
 
 [[package]]
@@ -2638,7 +2652,6 @@ dependencies = [
 name = "seikika-connector-github"
 version = "0.2.1"
 dependencies = [
- "jsonwebtoken",
  "reqwest",
  "seikika-connect",
  "serde_json",
@@ -2651,6 +2664,17 @@ version = "0.2.1"
 dependencies = [
  "reqwest",
  "seikika-connect",
+ "serde_json",
+ "tokio",
+]
+
+[[package]]
+name = "seikika-connector-grafana"
+version = "0.2.1"
+dependencies = [
+ "reqwest",
+ "seikika-connect",
+ "serde",
  "serde_json",
  "tokio",
 ]

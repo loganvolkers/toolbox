@@ -1,0 +1,43 @@
+apiVersion: seikika.com/assessment/v1
+entity: assessment:rule-quality/rule:seikika/maintainer-dependency/from-a-registry
+rubric: assessment-quality
+subjectHash: d0a9c44d2206
+rubricHash: e30700fc6322cf9f05a301bb4638d6708e9f5eb5aea0281911229ce75bd37bf7
+assessor: {kind: agent, name: Codex, model: GPT-6}
+at: 2026-11-28
+verdicts:
+  - criterion: supported
+    verdict: fail
+    reason: >-
+      I checked the claims in
+      .seikika/assessments/rule-quality/rule/seikika/maintainer-dependency/from-a-registry.yaml
+      against the cited sources.
+      crates/seikika-connector-workspace/src/deps.rs:53-60 and :90-114 support
+      the Git-source check, but do not establish that a path dependency is
+      vendored in the repository. An external path is not necessarily part of
+      the checkout.
+    suggestion: >-
+      Qualify the reproducibility claim and distinguish repository-local
+      vendoring from an external path.
+  - criterion: complete
+    verdict: fail
+    reason: >-
+      .seikika/standards/dependencies.yaml:73-83 checks only the Git marker.
+      The assessment’s claim that a registry or a vendored copy are the only
+      passing cases leaves out unverified paths and missing lockfile evidence.
+    suggestion: >-
+      Describe the rule as rejecting known Git sources and explain which other
+      checks are needed to establish reproducibility.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      The source classification in
+      crates/seikika-connector-workspace/src/deps.rs:90-114 and recorded Git
+      source in .seikika/tests/standards.test.yaml make the Git case
+      reproducible, independent of the broader path assumption.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      The fix in .seikika/standards/dependencies.yaml names the registry
+      release that clears a reported Git source. The assessment records four
+      passes and gives no separate suggestions.

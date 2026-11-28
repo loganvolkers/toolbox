@@ -1,0 +1,37 @@
+apiVersion: seikika.com/assessment/v1
+entity: assessment:rule-quality/rule:seikika/user-cli/exercised
+rubric: assessment-quality
+subjectHash: a4c096bac180
+rubricHash: e30700fc6322cf9f05a301bb4638d6708e9f5eb5aea0281911229ce75bd37bf7
+assessor: {kind: agent, name: Codex, model: GPT-6}
+at: 2026-11-28
+verdicts:
+  - criterion: supported
+    verdict: pass
+    reason: >-
+      I checked the claims in
+      .seikika/assessments/rule-quality/rule/seikika/user-cli/exercised.yaml
+      against the cited sources. .seikika/seikika.yaml captures command
+      mentions, and .seikika/standards/cli.yaml counts the related records
+      rather than invocations. crates/seikika-cli/tests/assess.rs uses a
+      command helper with argument arrays.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      The assessment identifies a missed invocation shape, comment-only
+      evidence, a mismatch in the integration-test repair route and the silver
+      rationale. The command fixture config is visible in
+      .seikika/tests/standards.test.yaml.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      Comparing the capture in .seikika/seikika.yaml with the integration test
+      and scripts/self-portal.sh reproduces the difference between mentions
+      and invocations.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      Observing commands or explicitly recognizing the integration-test
+      invocation shape would address the reported evidence gap in
+      .seikika/standards/cli.yaml. The current diagnostic now describes the
+      underlying mention check.

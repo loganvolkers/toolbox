@@ -1,0 +1,43 @@
+apiVersion: seikika.com/assessment/v1
+entity: assessment:scorecard-quality/scorecard:seikika/review-rule
+rubric: assessment-quality
+subjectHash: ce3b5dde19f1
+rubricHash: e30700fc6322cf9f05a301bb4638d6708e9f5eb5aea0281911229ce75bd37bf7
+assessor: {kind: agent, name: codex-astra-package, model: gpt-6.2-astra}
+at: 2026-11-27
+verdicts:
+  - criterion: supported
+    verdict: pass
+    reason: >-
+      .seikika/assessments/scorecard-quality/scorecard/seikika/review-rule.yaml
+      distinguishes current criterion coverage at silver from versioned
+      independent judgment at gold.
+      packages/meta-scoring/fragments/catalog.yaml:183 checks the rule hash
+      and rubric validity. crates/seikika-connect/src/assessment.rs filters
+      the second review by rubric, hash, grounding and assessor.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      .seikika/assessments/scorecard-quality/scorecard/seikika/review-rule.yaml
+      covers scope, level progression, review integrity and remediation.
+      crates/seikika-connector-workspace/src/main.rs retains schema-valid
+      historical failing criteria while withholding current status, and
+      packages/meta-scoring/fragments/catalog.yaml uses those criteria at
+      bronze.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      An operator can trace the level boundaries described in
+      .seikika/assessments/scorecard-quality/scorecard/seikika/review-rule.yaml
+      to packages/meta-scoring/tests/tests/reviews.yaml and the review-rule
+      assertions in .seikika/tests/standards.test.yaml. The independent-review
+      predicate in crates/seikika-connect/src/assessment.rs explains how the
+      connector produces the review evidence.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      .seikika/assessments/scorecard-quality/scorecard/seikika/review-rule.yaml
+      records no failing or uncertain criteria that call for suggestions. The
+      cited fixes in packages/meta-scoring/fragments/catalog.yaml give the
+      operator a specific assessment file, brief command and independent
+      review to obtain.

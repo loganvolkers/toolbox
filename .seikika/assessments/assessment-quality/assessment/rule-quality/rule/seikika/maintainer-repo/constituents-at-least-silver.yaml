@@ -1,0 +1,36 @@
+apiVersion: seikika.com/assessment/v1
+entity: assessment:rule-quality/rule:seikika/maintainer-repo/constituents-at-least-silver
+rubric: assessment-quality
+subjectHash: 32023fcc26e4
+rubricHash: e30700fc6322cf9f05a301bb4638d6708e9f5eb5aea0281911229ce75bd37bf7
+assessor: {kind: agent, name: Codex, model: GPT-6}
+at: 2026-11-28
+verdicts:
+  - criterion: supported
+    verdict: pass
+    reason: >-
+      I checked the claims in
+      .seikika/assessments/rule-quality/rule/seikika/maintainer-repo/constituents-at-least-silver.yaml
+      against the cited sources. The rank-two predicate in
+      .seikika/standards/repository.yaml still treats a completed one-level
+      constituent as short of silver. The action dependency scorecard in
+      packages/github-actions/fragments/github-actions.yaml has only bronze.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      The assessment covers the structural cap, the behavior of the watch
+      list, actionable versus impossible advice and the minimum-rank policy in
+      docs/design/repo-level.md.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      Compare the silver predicate in .seikika/standards/repository.yaml to
+      the counted summaries in crates/seikika-derive/src/lib.rs and the
+      one-level action dependency card. The missing-name case is now tested in
+      .seikika/tests/standards.test.yaml.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      The proposed capped-rank comparison would address the level-cap finding
+      and would change the minimum-rank interpretation documented in
+      docs/design/repo-level.md.

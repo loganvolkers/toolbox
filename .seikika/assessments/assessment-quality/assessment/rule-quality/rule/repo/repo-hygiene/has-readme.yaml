@@ -1,0 +1,37 @@
+apiVersion: seikika.com/assessment/v1
+entity: assessment:rule-quality/rule:repo/repo-hygiene/has-readme
+rubric: assessment-quality
+subjectHash: bf230253d33f
+rubricHash: e30700fc6322cf9f05a301bb4638d6708e9f5eb5aea0281911229ce75bd37bf7
+assessor: {kind: agent, name: Codex, model: GPT-6}
+at: 2026-11-28
+verdicts:
+  - criterion: supported
+    verdict: pass
+    reason: >-
+      I checked the claims in
+      .seikika/assessments/rule-quality/rule/repo/repo-hygiene/has-readme.yaml
+      against the cited sources. The starter still uses a 50-word minimum, and
+      crates/seikika-connector-workspace/src/repo.rs counts whitespace tokens
+      and prefers root-level entrypoints. The precise search differs from the
+      historical description, but the missing docs directory and weak content
+      signal remain.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      The assessment addresses the proxy, incentive, evidence and lack of a
+      stated threshold source. The starter rationale and fixed floor remain
+      visible in examples/repo-portal-starter/seikika.yaml.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      The legacy fixture and assertion in
+      examples/repo-portal-starter/tests/standards.test.yaml reproduce the
+      short README failure. The word counting and entrypoint search are
+      visible in crates/seikika-connector-workspace/src/repo.rs.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      The proposed prose count and docs path change name real scanner
+      behavior. Documenting the chosen floor in docs/design/thresholds.md
+      would address the unresolved justification criterion.

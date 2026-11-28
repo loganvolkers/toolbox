@@ -1,0 +1,47 @@
+apiVersion: seikika.com/assessment/v1
+entity: assessment:scorecard-quality/scorecard:seikika/vs-backstage-performance
+rubric: assessment-quality
+subjectHash: 57f70fa8d45f
+rubricHash: e30700fc6322cf9f05a301bb4638d6708e9f5eb5aea0281911229ce75bd37bf7
+assessor: {kind: agent, name: Codex, model: GPT-6}
+at: 2026-11-28
+verdicts:
+  - criterion: supported
+    verdict: fail
+    reason: >-
+      I checked the claims in
+      .seikika/assessments/scorecard-quality/scorecard/seikika/vs-backstage-performance.yaml
+      against the cited sources. experiments/backstage-compare/ADJUDICATION.md
+      distinguishes absolute bars from relative standing. A single bronze
+      floor can be valid even when both products clear it, so that fact alone
+      does not support the ladder failure.
+    suggestion: >-
+      Rejudge the single-level design using the comparative decision and
+      distinguish floor coverage from relative results.
+  - criterion: complete
+    verdict: fail
+    reason: >-
+      experiments/backstage-compare/measure.py:265-273 stops the
+      catalog-readable clock before comparing the corpus digest. The
+      assessment lists omitted probes but misses the mismatch between the
+      existing first-ingest metric and its reported scope in
+      experiments/backstage-compare/README.md:37.
+    suggestion: >-
+      Add this oracle limitation to the coverage analysis.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      .seikika/standards/backstage-comparison.yaml and
+      experiments/backstage-compare/RESEARCH.md:59-70 provide the seven scored
+      metrics and the intended factors. A second reviewer can trace the
+      distinction between floor and relative standings.
+  - criterion: actionable
+    verdict: fail
+    reason: >-
+      The proposed new leading-value bars would change a pre-registered
+      benchmark after the run. experiments/backstage-compare/README.md:28-39
+      explicitly establishes the absolute bars, and :62 defines the
+      comparison.
+    suggestion: >-
+      Keep historical bars intact and frame any new thresholds as a separately
+      registered future round.

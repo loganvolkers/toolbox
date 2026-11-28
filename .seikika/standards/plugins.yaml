@@ -1,0 +1,174 @@
+# Agent plugins (docs/design/plugin-standards.md).
+# Included by .seikika/seikika.yaml; see .seikika/README.md for the layout.
+
+kinds:
+  # Agent plugin packages (docs/design/plugin-standards.md). Skills inside them stay Skill entities.
+  - name: Plugin
+    description: >-
+      An Agent Plugins 1.0.0 package: plugin.json, mcp.json, and skills at the
+      spec path.
+    identityFrom: [connector:workspace]
+    fields:
+      path: {type: string, description: Path of plugin.json.}
+      dir:
+        type: string
+        description: Plugin directory. The entity id uses this path.
+      name: {type: string, description: The name field.}
+      nameOk:
+        type: boolean
+        description: >-
+          Name matches the 1.0.0 rule: 1-64 chars, a-z, digits, dot and hyphen,
+          alphanumeric ends, no double hyphen or double dot.
+      descriptionChars: {type: integer, description: Length of the description.}
+      schemaOk:
+        type: boolean
+        description: $schema is the Agent Plugins 1.0.0 plugin schema.
+      hasMcp: {type: boolean, description: mcp.json sits beside plugin.json.}
+      mcpSchemaOk:
+        type: boolean
+        description: $schema is the Agent Plugins 1.0.0 mcp schema.
+      commandToken:
+        type: boolean
+        description: >-
+          Every stdio command is one token (bare, ./, or a plugin variable). True
+          when there is no stdio server.
+      headerSecrets:
+        type: list
+        items: string
+        description: MCP headers whose values match a high-precision secret shape.
+      pathEscapes:
+        type: list
+        items: string
+        description: Commands or args that contain a parent-directory segment.
+      misplacedSkills:
+        type: list
+        items: string
+        description: SKILL.md files that are not skills/<name>/SKILL.md.
+      secretHits:
+        type: list
+        items: string
+        description: Secret shapes in plugin.json or mcp.json.
+    sources: {default: [connector:workspace]}
+    map:
+    - from: workspace/plugin
+      id: "'plugin:' + record.dir"
+      set: >-
+        {'path': record.path, 'dir': record.dir, 'name': record.name, 'nameOk': record.nameOk,
+         'descriptionChars': record.descriptionChars, 'schemaOk': record.schemaOk,
+         'hasMcp': record.hasMcp, 'mcpSchemaOk': record.mcpSchemaOk, 'commandToken': record.commandToken,
+         'headerSecrets': record.headerSecrets, 'pathEscapes': record.pathEscapes,
+         'misplacedSkills': record.misplacedSkills, 'secretHits': record.secretHits}
+
+scorecards:
+  # The marketplace installs the package. Skills inside it are scored by maintainer-skill.
+  - name: maintainer-plugin
+    title: Agent plugin packages
+    kind: Plugin
+    description: >-
+      Each agent plugin package we ship: a valid Agent Plugins 1.0.0 manifest
+      an agent harness can install, with its skills scored by maintainer-skill
+      (docs/design/plugin-standards.md).
+    rationale: >-
+      The package is what a plugin manager installs into an agent harness: a
+      manifest that breaks Agent Plugins 1.0.0 is not installed at all, and a
+      credential pasted into it ships to every machine that installs it.
+      Bronze is installable, silver declares the MCP server portably, and gold
+      keeps credentials and paths inside the package. Loading it in each
+      harness is not gated.
+    links:
+    - title: Plugin standards
+      url: https://github.com/seikika/seikika/blob/main/docs/design/plugin-standards.md
+    - title: 'Decision: a plugin scorecard'
+      url: https://github.com/seikika/seikika/blob/main/docs/decisions/D01M7WMSMS00000000000000000.md
+    - title: Agent Plugins specification
+      url: https://github.com/agentplugins/agent-plugins-spec
+    owner: group:maintainers
+    track: operator
+    levels: [bronze, silver, gold]
+    ratchet: {newEntitiesAtLeast: bronze}
+    rules:
+    - name: manifest-valid
+      level: bronze
+      check: entity.schemaOk && entity.nameOk && entity.descriptionChars > 0
+      evidence: >-
+        [!entity.schemaOk ? 'schema is not Agent Plugins 1.0.0' :
+        (!entity.nameOk ? 'name ' + entity.name : 'description is empty')]
+      fix: >-
+        Point $schema at the 1.0.0 plugin schema, use a name of 1–64 lowercase
+        letters, digits, dots and hyphens, and write a description.
+      rationale: >-
+        The 1.0.0 manifest schema is closed and the name has a fixed grammar, so
+        a plugin manager that validates the manifest rejects the whole package,
+        skills included, when either is off.
+    - name: portable-components
+      level: bronze
+      check: entity.misplacedSkills.size() == 0
+      evidence: entity.misplacedSkills
+      fix: >-
+        Move each skill to skills/<name>/SKILL.md. Client-specific files go
+        under a reverse-domain directory, not beside the manifest.
+      rationale: >-
+        Agent Plugins 1.0.0 has exactly two portable component types at fixed
+        locations; a skill anywhere else is not part of the package for a
+        compliant harness.
+      links:
+      - title: Agent plugins design
+        url: https://github.com/seikika/seikika/blob/main/docs/design/agent-plugins.md
+    - name: mcp-declared
+      level: silver
+      check: entity.hasMcp && entity.mcpSchemaOk
+      evidence: >-
+        [!entity.hasMcp ? 'no mcp.json' : 'mcp.json schema is not Agent Plugins
+        1.0.0']
+      fix: >-
+        Add mcp.json next to plugin.json with the 1.0.0 mcp schema. A tool that
+        exists only in a vendor config is a harness lock-in.
+      rationale: >-
+        An MCP server declared only in one vendor's config works in that harness
+        alone; mcp.json is the place every compliant harness reads.
+    - name: stdio-command
+      level: silver
+      check: entity.commandToken
+      evidence: "['stdio command is not a single token']"
+      fix: >-
+        Set command to one token (./bin/seikika-mcp or ${PLUGIN_ROOT}/bin/tool).
+        Do not use a shell string.
+      rationale: >-
+        The spec requires one token so the harness can start the server without
+        a shell; a shell string depends on which shell runs it and lets one
+        field chain extra commands.
+    - name: no-secret-headers
+      level: gold
+      check: entity.headerSecrets.size() == 0
+      evidence: entity.headerSecrets
+      fix: >-
+        Remove the secret in the evidence. MCP authorization is client-managed.
+        Headers must not carry credentials.
+      rationale: >-
+        The spec forbids credentials in headers because MCP authorization is
+        client-managed; a token there ships to everyone who installs the
+        package.
+    - name: paths-stay-inside
+      level: gold
+      check: entity.pathEscapes.size() == 0
+      evidence: entity.pathEscapes
+      fix: >-
+        Drop the .. segments in the evidence. Plugin paths stay inside the
+        plugin root.
+      rationale: >-
+        A `..` path reaches files the package does not contain, so it breaks
+        once installed elsewhere and can run or read whatever sits beside the
+        install.
+    - name: no-hardcoded-secrets
+      level: bronze
+      check: entity.secretHits.size() == 0
+      evidence: entity.secretHits
+      fix: Remove the credential in the evidence from plugin.json or mcp.json.
+      rationale: >-
+        plugin.json and mcp.json are published with the package, so a credential
+        in either reaches every install. It sits at bronze so such a package
+        cannot pass the ratchet.
+      links:
+      - title: Thresholds
+        url: https://github.com/seikika/seikika/blob/main/docs/design/thresholds.md
+    facets: {summary: public, details: public}

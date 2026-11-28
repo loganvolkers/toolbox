@@ -82,20 +82,34 @@ of public GitHub `owner/repo` names. For an isolated preview, set the
 `SEIKIKA_PUBLIC_REPOSITORIES` runtime variable on that preview.
 
 The demo uses the same organization connector and meta-scoring package as the public organization
-report. Set the Worker secret `SEIKIKA_ORG_GITHUB_TOKEN` to a GitHub credential with read access to
-the public organization repositories. The scan can exceed GitHub’s unauthenticated API limit.
+report. Install a GitHub App on the organization repositories the demo should scan. Give the app
+read access to repository Contents. The production `seikika` build sets `GITHUB_APP_ID` in the
+staged Wrangler configuration. For a separate deployment, set the numeric `GITHUB_APP_ID` from
+the App settings under Wrangler `[vars]`. Store the original RSA PEM as the Worker secret
+`SEIKIKA_SECRET_GITHUB_APP_PRIVATE_KEY`. The connector looks up the App installation for the
+configured organization and mints a short-lived token for each scan.
+Roll the container after configuring or rotating the key so it loads the new Worker bindings.
+[Authenticate as a GitHub App installation](https://docs.github.com/en/apps/creating-github-apps/authenticating-with-a-github-app/authenticating-as-a-github-app-installation)
 
 The shared report accepts a signed-out audience on the public catalog route. The host manifest’s
 `policies.publicReportSources` lists the connectors whose records, public fields, and score evidence
 guests can browse. Include only sources approved for publication. A GitHub organization source
 with `publicOnly: true` and `reports: true` also includes child reports committed to its public
-repositories. The direct public repository endpoints use the configured repository list.
+repositories. The direct public repository endpoints use the configured repository list. Service and environment deep links use the same source policy as the report.
 `policies.reportNamespace` gives report catalog links and rubrics the same IDs as the organization
 report while the demo keeps its own portal identity for authorization and storage.
+
+The demo build stages the checkout's Seikika for Seikika report as a public publication and
+aliases its repository observation to the organization inventory. To stage a previously generated
+artifact, set `SEIKIKA_SELF_REPORT` to the absolute path of its reviewed public `report.json`.
+Run the [local federation replay](../github-org-federation/README.md#replay-federation-locally)
+before building a hosted preview.
 
 On the public hostname's destination in the existing Cloudflare Access application, add public path overrides for `/`, `/search`, `/c/*`, `/e/*`, `/assets/*`, `/v1/views/home`, `/v1/entities`, and `/v1/views/entity/*`. Keep the full-host sign-in policy so Operations, action and run APIs, writes, and the live report still require authentication. Use the same application audience for protected paths. Apply the overrides after deploying the guest routes, then verify that a signed-out visitor can open a repository and gets an Access login for Operations and direct action API requests. [Access destination overrides](https://developers.cloudflare.com/api/resources/zero_trust/subresources/access/subresources/applications/methods/update/)
 
 Use Node 24 and Corepack to build the locked UI workspace before compiling Rust. In Workers Builds, set `NODE_VERSION=24` in production and the Preview base settings. Deploy the [private production monitor](production-monitor/README.md) to track readiness, authorization failures, and connection utilization.
+
+The [demo observability stack](observability/README.md) can receive OTLP from the public portal and share a filtered runtime dashboard with guests.
 
 ### Preview a trusted branch
 
@@ -128,11 +142,11 @@ printf '%s\n' "$SEIKIKA_SIGNING_KEY" | npm exec -- wrangler secret put SEIKIKA_S
 npm exec -- wrangler deploy
 ```
 
-The defaults serve the Worker on `workers.dev` and use Seikika personal access tokens for API clients. For an interactive portal, provision a custom domain and a Cloudflare Access application for it. Set `workers_dev = false` and `preview_urls = false` if you want to use only the custom-domain hostname. Configure Access for any Preview hostnames you enable. Add the domain as a Wrangler custom-domain route, set `SEIKIKA_AUTH_MODE` to `cloudflare-access`, and add `SEIKIKA_CF_TEAM_DOMAIN` (the HTTPS issuer URL without a trailing slash) and `SEIKIKA_AUDIENCE` (the Access application audience) under `[vars]`. Seikika validates the signed Access assertion. [Configure Seikika access](../../site/src/content/docs/operators/access.md) · [Cloudflare Worker custom domains](https://developers.cloudflare.com/workers/configuration/routing/custom-domains/)
+The defaults serve the Worker on `workers.dev` and use Seikika personal access tokens for API clients. For an interactive portal, provision a custom domain and a Cloudflare Access application for it. Set `workers_dev = false` and `preview_urls = false` if you want to use only the custom-domain hostname. Configure Access for any Preview hostnames you enable. Add the domain as a Wrangler custom-domain route, set `SEIKIKA_AUTH_MODE` to `cloudflare-access`, and add `SEIKIKA_CF_TEAM_DOMAIN` (the HTTPS issuer URL without a trailing slash) and `SEIKIKA_AUDIENCE` (the Access application audience) under `[vars]`. Seikika validates the signed Access assertion. [Configure Seikika access](../../npm/site/src/content/docs/operators/access.md) · [Cloudflare Worker custom domains](https://developers.cloudflare.com/workers/configuration/routing/custom-domains/)
 
 ## Verify a rollout
 
-Check `/readyz` at the deployed hostname. On a cold start, the Worker can return `503` with `Retry-After` while the HTTP server starts. The portal serves the homepage as soon as it is listening, and `/readyz` waits for the first snapshot that includes its child portals. To detect a child clone or manifest error, check the authenticated `/v1/actions` response and require an empty `unreadable` array and each expected action. In token mode, issue a token in a trusted shell using the same `DATABASE_URL`. Store the token in your secret manager and pass it to the CLI via `SEIKIKA_TOKEN`. [Token creation](../../site/src/content/docs/operators/access.md#issue-a-personal-access-token)
+Check `/readyz` at the deployed hostname. On a cold start, the Worker can return `503` with `Retry-After` while the HTTP server starts. The portal serves the homepage as soon as it is listening, and `/readyz` waits for the first snapshot that includes its child portals. To detect a child clone or manifest error, check the authenticated `/v1/actions` response and require an empty `unreadable` array and each expected action. In token mode, issue a token in a trusted shell using the same `DATABASE_URL`. Store the token in your secret manager and pass it to the CLI via `SEIKIKA_TOKEN`. [Token creation](../../npm/site/src/content/docs/operators/access.md#issue-a-personal-access-token)
 
 ```sh
 curl -fsS --retry 12 "$SEIKIKA_URL/readyz"
@@ -142,3 +156,7 @@ seikika run --url "$SEIKIKA_URL" -o json
 Use a second identity to confirm it cannot preview an action granted only to the operator. For actions with approval requirements, add the `approval_key` returned by the parent to each child under `federation.acceptApprovalsFrom` and verify a test run. [Federate repository actions](../federated-actions/README.md)
 
 Use the same Durable Object name and a single container instance. The container's checkout cache is rebuilt after an idle shutdown or replacement. Size its disk for full clones of the configured children. PostgreSQL and the signing secret survive replacement. If you change the portal image or a secret passed at process startup, roll the container and recheck readiness and discovery. Keep snapshot refresh and long actions in mind when tuning the idle timeout in `worker.mjs`. [Container operation](https://developers.cloudflare.com/containers/) · [Container inactivity](https://developers.cloudflare.com/containers/api/durable-object-container/#setinactivitytimeout)
+
+## Publish the demo service
+
+The bundled seven-fork portal includes the [Seikika demo service](seikika-forks/seikika.yaml). Add the optional Worker secret `SEIKIKA_CLOUDFLARE_CATALOG_TOKEN` using an account-owned token with Metadata Read-Only access to the `seikika` Worker. It gives the catalog rollout history for the declared production Worker. The Grafana connector uses the already public demo endpoint. After a rollout, open `/e/service%3Aseikika-demo` as a guest, match the latest Worker version and traffic shares with Cloudflare, and compare recent metric values with the linked dashboard.

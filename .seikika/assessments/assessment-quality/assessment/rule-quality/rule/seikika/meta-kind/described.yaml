@@ -1,0 +1,37 @@
+apiVersion: seikika.com/assessment/v1
+entity: assessment:rule-quality/rule:seikika/meta-kind/described
+rubric: assessment-quality
+subjectHash: a3771309c593
+rubricHash: e30700fc6322cf9f05a301bb4638d6708e9f5eb5aea0281911229ce75bd37bf7
+assessor: {kind: agent, name: Codex, model: GPT-6}
+at: 2026-11-28
+verdicts:
+  - criterion: supported
+    verdict: pass
+    reason: >-
+      I checked the claims in
+      .seikika/assessments/rule-quality/rule/seikika/meta-kind/described.yaml
+      against the cited sources. The described rule in
+      packages/meta-scoring/fragments/catalog.yaml originally relied on
+      trimmed nonblank text from crates/seikika-cli/src/model.rs. The
+      placeholder and repeated-name cases were addressed during this review.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      The assessment addresses the kind name in the evidence, the concrete
+      description fix, the placeholder weakness and why description quality
+      belongs above fixture coverage in
+      docs/design/scorecards-for-scorecards.md.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      The kind fact producer in crates/seikika-cli/src/model.rs can be
+      compared with the described predicate and the Bare fixture in
+      .seikika/tests/standards.test.yaml. The new unit test reproduces the
+      placeholder cases.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      The proposed placeholder guard identifies exactly which model fact to
+      change. It was applied in crates/seikika-cli/src/model.rs without
+      imposing a word minimum whose proposed cutoff lacks current evidence.

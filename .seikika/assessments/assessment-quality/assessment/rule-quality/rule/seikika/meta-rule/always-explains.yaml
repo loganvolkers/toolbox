@@ -1,0 +1,35 @@
+apiVersion: seikika.com/assessment/v1
+entity: assessment:rule-quality/rule:seikika/meta-rule/always-explains
+rubric: assessment-quality
+subjectHash: 340fcc2f0b3d
+rubricHash: e30700fc6322cf9f05a301bb4638d6708e9f5eb5aea0281911229ce75bd37bf7
+assessor: {kind: agent, name: Codex, model: GPT-6}
+at: 2026-11-28
+verdicts:
+  - criterion: supported
+    verdict: pass
+    reason: >-
+      I checked the claims in
+      .seikika/assessments/rule-quality/rule/seikika/meta-rule/always-explains.yaml
+      against the cited sources. The current rule checks the presence fact
+      from crates/seikika-cli/src/meta.rs. The rule and separate evidence
+      quality check now live in packages/meta-scoring/fragments/catalog.yaml,
+      and the distinction in the assessment remains accurate.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      The assessment separately addresses presence, trivial evidence, how to
+      satisfy the check, and why silver precedes gold. The lesson on usable
+      evidence is documented in docs/design/scorecards-for-scorecards.md.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      Compare hasEvidence in crates/seikika-cli/src/meta.rs with the predicate
+      and fallback in packages/meta-scoring/fragments/catalog.yaml.
+      .seikika/tests/standards.test.yaml asserts the missing evidence outcome.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      The proposal identifies specific evidence facts and a cutoff for scope,
+      while preserving simple yes-or-no evidence described in
+      docs/design/thresholds.md.

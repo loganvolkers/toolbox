@@ -1,0 +1,40 @@
+apiVersion: seikika.com/assessment/v1
+entity: assessment:rule-quality/rule:seikika/vs-backstage-extensibility/without-rebuild
+rubric: assessment-quality
+subjectHash: 991657424da9
+rubricHash: e30700fc6322cf9f05a301bb4638d6708e9f5eb5aea0281911229ce75bd37bf7
+assessor: {kind: agent, name: Codex, model: GPT-6}
+at: 2026-11-28
+verdicts:
+  - criterion: supported
+    verdict: pass
+    reason: >-
+      I checked the claims in
+      .seikika/assessments/rule-quality/rule/seikika/vs-backstage-extensibility/without-rebuild.yaml
+      against the cited sources.
+      experiments/backstage-compare/portal/seikika.yaml declares the remote
+      connector, experiments/backstage-compare/measure.py:145-163 runs it
+      against the existing binary, and
+      experiments/backstage-compare/facts.yaml:66-70 supplies the recorded
+      boolean.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      The assessment covers the deployment property, the hand-entered override
+      and the missing regeneration step.
+      .seikika/standards/backstage-comparison.yaml leaves that step out, and
+      experiments/backstage-compare/RESEARCH.md:67 supplies the rebuild
+      measure.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      experiments/backstage-compare/snapshot.py:79-89 shows the distinction
+      between copying a fact and importing a measured field. The source of the
+      scored value is traceable.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      Using an observed remote ingest and refusing manual overrides in
+      experiments/backstage-compare/snapshot.py would address the cheap pass.
+      Naming the ingest path and the record step would correct the
+      remediation.

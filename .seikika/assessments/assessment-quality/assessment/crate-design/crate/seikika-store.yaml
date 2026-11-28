@@ -1,0 +1,39 @@
+apiVersion: seikika.com/assessment/v1
+entity: assessment:crate-design/crate:seikika-store
+rubric: assessment-quality
+subjectHash: 00e154e2720f
+rubricHash: e30700fc6322cf9f05a301bb4638d6708e9f5eb5aea0281911229ce75bd37bf7
+assessor: {kind: agent, name: Codex, model: GPT-6}
+at: 2026-11-28
+verdicts:
+  - criterion: supported
+    verdict: pass
+    reason: >-
+      I checked the claims in
+      .seikika/assessments/crate-design/crate/seikika-store.yaml against the
+      cited sources. The public pool and leader return type are visible in
+      crates/seikika-store/src/pg.rs. The in-memory revision test in
+      crates/seikika-store/src/lib.rs retains the highest revision, while the
+      PostgreSQL write path enforces the next revision. The crate
+      documentation was corrected during this review.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      The assessment covers scope, callers, driver coupling and tests.
+      crates/seikika-authz/src/openfga.rs and crates/seikika-cli/src/server.rs
+      confirm the cross-crate PostgreSQL coupling, and
+      scripts/m2-acceptance.sh covers part of the backend behavior.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      Compare the trait and memory implementation in
+      crates/seikika-store/src/lib.rs with the PostgreSQL implementation in
+      crates/seikika-store/src/pg.rs, and compare the existing in-process
+      tests with scripts/m2-acceptance.sh and scripts/m3-acceptance.sh to
+      verify the coverage claims.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      The proposed opaque leader guard, narrower dependency boundary and
+      shared revision test point to the relevant types and write paths in
+      crates/seikika-store/src/pg.rs and crates/seikika-store/src/lib.rs.

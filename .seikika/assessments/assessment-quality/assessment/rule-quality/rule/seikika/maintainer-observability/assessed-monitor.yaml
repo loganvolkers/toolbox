@@ -1,0 +1,36 @@
+apiVersion: seikika.com/assessment/v1
+entity: assessment:rule-quality/rule:seikika/maintainer-observability/assessed-monitor
+rubric: assessment-quality
+subjectHash: 9961260c4c7e
+rubricHash: e30700fc6322cf9f05a301bb4638d6708e9f5eb5aea0281911229ce75bd37bf7
+assessor: {kind: agent, name: Codex, model: GPT-6}
+at: 2026-11-28
+verdicts:
+  - criterion: supported
+    verdict: pass
+    reason: >-
+      I checked the claims in
+      .seikika/assessments/rule-quality/rule/seikika/maintainer-observability/assessed-monitor.yaml
+      against the cited sources. The check still consumes missingAssessment in
+      .seikika/standards/observability.yaml. A current, passing assessment
+      requires additional facts that the other stage review card already
+      exposes in .seikika/standards/sdlc.yaml.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      The assessment covers current versus stale results, malformed files,
+      evidence and the reason for silver. The stage assessment path is
+      explicit in .seikika/observability/runtime.yaml.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      Compare the missing-path and stage review predicates in
+      .seikika/standards/observability.yaml and .seikika/standards/sdlc.yaml.
+      The missing assessment fixture is exercised by
+      .seikika/tests/standards.test.yaml.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      The proposed use of review state and current verdicts names facts
+      already collected by .seikika/standards/sdlc.yaml and identifies the
+      monitor entity to join.

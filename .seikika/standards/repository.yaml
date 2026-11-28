@@ -1,0 +1,188 @@
+# The repository: supply chain config and the repository level (docs/design/supply-chain-standards.md, repo-level.md).
+# Included by .seikika/seikika.yaml; see .seikika/README.md for the layout.
+
+kinds:
+  # The checkout (docs/design/supply-chain-standards.md, docs/design/repo-level.md).
+  - name: Repository
+    description: >-
+      This checkout: the files that turn on supply-chain tools, and the
+      scorecards it rolls up.
+    identityFrom: [connector:workspace]
+    fields:
+      name:
+        type: string
+        description: owner/name from the origin remote, or the directory name.
+      dependabotGaps:
+        type: list
+        items: string
+        description: >-
+          Of cargo, npm and github-actions, the ecosystems dependabot.yml does not
+          update.
+      codeScanning:
+        type: boolean
+        description: A workflow uses github/codeql-action.
+      codeScanningPinned:
+        type: boolean
+        description: That use is pinned to a 40-character commit.
+      securityPolicy:
+        type: boolean
+        description: SECURITY.md exists at the root, under .github, or under docs.
+      workflowOwners:
+        type: boolean
+        description: A CODEOWNERS rule covers .github/workflows/ci.yml.
+      watchOverride:
+        type: list
+        items: string
+        description: >-
+          Constituents a fixture watches. Empty on a live checkout, which then
+          uses policy.repoRollup.
+      watch:
+        type: list
+        items: string
+        description: Constituent scorecards whose lowest level is this repository's level.
+        computed: >-
+          entity.watchOverride.size() > 0 ? entity.watchOverride :
+          policy.repoRollup
+    sources: {default: [connector:workspace]}
+    map:
+    - from: workspace/repo
+      id: "'repo:' + record.name"
+      set: >-
+        {'name': record.name, 'dependabotGaps': record.dependabotGaps,
+         'codeScanning': record.codeScanning, 'codeScanningPinned': record.codeScanningPinned,
+         'securityPolicy': record.securityPolicy, 'workflowOwners': record.workflowOwners,
+         'watchOverride': has(record.watchOverride) ? record.watchOverride : []}
+
+scorecards:
+  # The files that turn GitHub Advanced Security on. Alert counts need the API and are not gated.
+  # This repository has none of the three bronze files, so the live entity is none until they exist.
+  - name: maintainer-supply-chain
+    title: Supply-chain security settings
+    kind: Repository
+    description: >-
+      The repository files that turn on GitHub Advanced Security and
+      dependency updates, beside what OpenSSF Scorecard carries (D85,
+      D01M82E93XAPNE0WFXEPJZ59WG4).
+    rationale: >-
+      Dependency updates, owned workflows and pinned code scanning are
+      switched on by files in the checkout, so they can be scored without the
+      GitHub API, beside the checks OpenSSF Scorecard already carries. Bronze
+      keeps every ecosystem updated, silver puts an owner on workflow changes,
+      and gold pins the code-scanning action like any other.
+    links:
+    - title: 'Decision: supply-chain settings'
+      url: https://github.com/seikika/seikika/blob/main/docs/decisions/D01M7WMSMS40000000000000000.md
+    - title: Supply-chain standards design
+      url: https://github.com/seikika/seikika/blob/main/docs/design/supply-chain-standards.md
+    - title: Carry OpenSSF Scorecard decision
+      url: https://github.com/seikika/seikika/blob/main/docs/decisions/D01M82E93XAPNE0WFXEPJZ59WG4.md
+    owner: group:maintainers
+    track: delivery
+    levels: [bronze, silver, gold]
+    ratchet: {newEntitiesAtLeast: bronze}
+    rules:
+    - name: dependabot
+      level: bronze
+      check: entity.dependabotGaps.size() == 0
+      evidence: entity.dependabotGaps
+      fix: >-
+        Add .github/dependabot.yml updates for the ecosystems in the evidence
+        (cargo, npm, github-actions).
+      rationale: >-
+        An ecosystem Dependabot doesn't cover gets no pull requests for new
+        releases or security fixes, so its dependencies age unnoticed.
+        Scorecard's Dependency-Update-Tool only asks that a tool exists, not
+        that it covers each ecosystem.
+      links:
+      - title: Dependabot options reference
+        url: https://docs.github.com/en/code-security/dependabot/working-with-dependabot/dependabot-options-reference
+    # Code scanning and the security policy are OpenSSF Scorecard's SAST and Security-Policy checks,
+    # which this portal carries (maintainer-openssf) instead of its own versions
+    # (D01M82E93XAPNE0WFXEPJZ59WG4). Pinned code scanning stays until Scorecard's
+    # Pinned-Dependencies reaches 10 here.
+    - name: workflows-have-owners
+      level: silver
+      check: entity.workflowOwners
+      evidence: "['no CODEOWNERS rule covers .github/workflows/ci.yml']"
+      fix: >-
+        Add a CODEOWNERS rule that covers .github/workflows (a catch-all *
+        does). Workflow changes should have an owner.
+      rationale: >-
+        A workflow change can alter what runs with the repository's token and
+        secrets, so it should reach a named owner for review; CODEOWNERS is how
+        GitHub requests that review.
+      links:
+      - title: GitHub on CODEOWNERS for workflows
+        url: https://docs.github.com/en/actions/reference/security/secure-use#using-codeowners-to-monitor-changes
+    - name: code-scanning-pinned
+      level: gold
+      check: entity.codeScanningPinned
+      evidence: "['code scanning action is missing or not pinned to a commit']"
+      fix: >-
+        Pin github/codeql-action to a 40-character commit, the same way other
+        actions are pinned.
+      rationale: >-
+        The code-scanning action runs with the repository's token like any other
+        action, so an unpinned one can be swapped under its tag. It stays until
+        Scorecard's Pinned-Dependencies reaches 10 here and covers it.
+    facets: {summary: public, details: public}
+
+  # The level is the lowest constituent. A weighted 0–10 is not the gate. `cards` is bound on a
+  # second pass; fixture samples under /demo/ are not constituents, so the ladder fixtures do
+  # not drag this score to none.
+  - name: maintainer-repo
+    title: Repository level
+    kind: Repository
+    description: >-
+      The repository's level: the lowest level among its constituent
+      scorecards, so one weak area holds the whole repository back (D86,
+      docs/design/repo-level.md).
+    rationale: >-
+      An average hides the weakest area, which is where the trouble is, so
+      each level requires every counted scorecard to reach it, and the lowest
+      names the one to raise next. Scorecards that need the CI runner are left
+      out, so that a tool skipped on a laptop doesn't drop the repository to
+      none.
+    links:
+    - title: 'Decision: the repository level'
+      url: https://github.com/seikika/seikika/blob/main/docs/decisions/D01M7WMSMS50000000000000000.md
+    - title: Repository level design
+      url: https://github.com/seikika/seikika/blob/main/docs/design/repo-level.md
+    owner: group:maintainers
+    track: maintainer
+    levels: [bronze, silver, gold]
+    ratchet: {newEntitiesAtLeast: bronze}
+    rules:
+    - name: constituents-at-least-bronze
+      level: bronze
+      check: cards.all(c, c.rank >= 1)
+      evidence: cards.filter(c, c.rank < 1).map(c, c.name + ' is ' + c.level)
+      fix: >-
+        Correct unresolved names in policy.repoRollup, then use each named
+        constituent's findings to raise it to bronze.
+      rationale: >-
+        One area below its floor is a weakness an average would hide, so the
+        repository can't claim bronze until every counted scorecard reaches it.
+    - name: constituents-at-least-silver
+      level: silver
+      check: cards.all(c, c.rank >= 2)
+      evidence: cards.filter(c, c.rank < 2).map(c, c.name + ' is ' + c.level)
+      fix: >-
+        Raise each listed constituent that defines silver to that level. For a
+        shorter ladder, review the constituent's levels and inclusion in
+        policy.repoRollup against the repository level design.
+      rationale: >-
+        A repository called silver should be silver in every counted area, not
+        on average; a lagging scorecard is exactly what the level exposes.
+    - name: constituents-at-least-gold
+      level: gold
+      check: cards.all(c, c.rank >= 3)
+      evidence: cards.filter(c, c.rank < 3).map(c, c.name + ' is ' + c.level)
+      fix: >-
+        Raise each listed constituent that defines gold to that level. For a
+        shorter ladder, review the constituent's levels and inclusion in
+        policy.repoRollup against the repository level design.
+      rationale: >-
+        Gold claims rank three in every counted area, so a single scorecard
+        short of gold holds the repository back and is named as the next step.
+    facets: {summary: public, details: public}

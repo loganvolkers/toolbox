@@ -1,0 +1,40 @@
+apiVersion: seikika.com/assessment/v1
+entity: assessment:rule-quality/rule:seikika/meta-assessment/suggests-fixes
+rubric: assessment-quality
+subjectHash: fce25ff3048f
+rubricHash: e30700fc6322cf9f05a301bb4638d6708e9f5eb5aea0281911229ce75bd37bf7
+assessor: {kind: agent, name: Codex, model: GPT-6}
+at: 2026-11-28
+verdicts:
+  - criterion: supported
+    verdict: fail
+    reason: >-
+      I checked the claims in
+      .seikika/assessments/rule-quality/rule/seikika/meta-assessment/suggests-fixes.yaml
+      against the cited sources.
+      packages/meta-scoring/fragments/assessments.yaml contains the rule and
+      the actionable rubric criterion now, rather than
+      .seikika/standards/assessments.yaml. The assessment also presents a
+      historical three-review count as current. The nonblank behavior is still
+      visible in crates/seikika-connect/src/assessment.rs.
+    suggestion: >-
+      Update the rule citations and date or recompute the supporting coverage
+      count.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      The assessment differentiates a required text field from a useful fix,
+      covers the diagnostic, and explains the bronze rule in
+      packages/meta-scoring/fragments/assessments.yaml.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      crates/seikika-connect/src/assessment.rs and
+      .seikika/tests/standards.test.yaml show the missing or blank input case
+      and the resulting evidence.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      A minimum word count would reject the short placeholders named in the
+      assessment; usefulness still belongs to the separate actionable judgment
+      in packages/meta-scoring/fragments/assessments.yaml.

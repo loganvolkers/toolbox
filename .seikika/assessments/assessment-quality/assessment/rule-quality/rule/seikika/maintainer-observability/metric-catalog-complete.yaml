@@ -1,0 +1,37 @@
+apiVersion: seikika.com/assessment/v1
+entity: assessment:rule-quality/rule:seikika/maintainer-observability/metric-catalog-complete
+rubric: assessment-quality
+subjectHash: f4cfde5e2eed
+rubricHash: e30700fc6322cf9f05a301bb4638d6708e9f5eb5aea0281911229ce75bd37bf7
+assessor: {kind: agent, name: Codex, model: GPT-6}
+at: 2026-11-28
+verdicts:
+  - criterion: supported
+    verdict: pass
+    reason: >-
+      I checked the claims in
+      .seikika/assessments/rule-quality/rule/seikika/maintainer-observability/metric-catalog-complete.yaml
+      against the cited sources. The portal score remains a path check in
+      .seikika/standards/observability.yaml. The required metric names and
+      deprecated alias in crates/seikika-telemetry/src/catalog.rs match
+      crates/seikika-telemetry/METRIC_CATALOG.md and are now compared by a
+      crate test.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      The assessment covers presence, drift, concrete remediation and the
+      SemVer rationale. The declared catalog and scrape test paths are in
+      .seikika/observability/runtime.yaml.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      The fixture in .seikika/tests/standards.test.yaml verifies missing
+      catalog evidence. The new comparison in
+      crates/seikika-telemetry/tests/prom_catalog.rs separately detects
+      missing, extra and duplicate metric names.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      The explicit catalog comparison was implemented in
+      crates/seikika-telemetry/tests/prom_catalog.rs. Reporting that
+      comparison as the scorecard outcome remains open.

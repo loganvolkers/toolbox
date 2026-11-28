@@ -11,7 +11,7 @@ description: >-
 3. Write the assessment to the path the brief names, with subjectHash copied exactly and assessor.name set to the harness. Then check the file.
 
 ```
-seikika assess brief rule:seikika/maintainer-crate/has-tests --portal portal --skip runner,github-actions
+seikika assess brief rule:seikika/maintainer-crate/has-tests --portal .seikika --skip runner,github-actions
 ```
 
 Do not edit subjectHash to match a new entity. If the brief's hash differs from the file, the assessment is stale and must be judged again. Do not copy another assessor's verdicts.

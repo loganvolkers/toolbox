@@ -1,0 +1,38 @@
+apiVersion: seikika.com/assessment/v1
+entity: assessment:rule-quality/rule:seikika/maintainer-docs/cited-decisions-exist
+rubric: assessment-quality
+subjectHash: a65aa02e1860
+rubricHash: e30700fc6322cf9f05a301bb4638d6708e9f5eb5aea0281911229ce75bd37bf7
+assessor: {kind: agent, name: Codex, model: GPT-6}
+at: 2026-11-28
+verdicts:
+  - criterion: supported
+    verdict: pass
+    reason: >-
+      I checked the claims in
+      .seikika/assessments/rule-quality/rule/seikika/maintainer-docs/cited-decisions-exist.yaml
+      against the cited sources.
+      crates/seikika-connector-workspace/src/main.rs extracts the id and
+      legacy fields from decision frontmatter and compares the canonicalized
+      matches against them. .seikika/standards/docs.yaml scores the resulting
+      missing IDs.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      The assessment covers the ID syntax, existence-only nature of the check,
+      the diagnostic, and the bronze placement documented in
+      docs/design/decision-citations.md.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      The frontmatter parser in crates/seikika-connector-workspace/src/main.rs
+      does not inspect the decision body. The fixture in
+      .seikika/tests/standards.test.yaml demonstrates a missing ID, so the
+      assessment’s boundary is reproducible.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      Requiring a substantive decision record, or checking decision record
+      quality separately, would address the documented gap in
+      crates/seikika-connector-workspace/src/main.rs while preserving the
+      resolver.

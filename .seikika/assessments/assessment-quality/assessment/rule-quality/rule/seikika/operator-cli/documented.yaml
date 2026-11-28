@@ -1,0 +1,35 @@
+apiVersion: seikika.com/assessment/v1
+entity: assessment:rule-quality/rule:seikika/operator-cli/documented
+rubric: assessment-quality
+subjectHash: b17fb80b3f19
+rubricHash: e30700fc6322cf9f05a301bb4638d6708e9f5eb5aea0281911229ce75bd37bf7
+assessor: {kind: agent, name: Codex, model: GPT-6}
+at: 2026-11-28
+verdicts:
+  - criterion: supported
+    verdict: pass
+    reason: >-
+      I checked the claims in
+      .seikika/assessments/rule-quality/rule/seikika/operator-cli/documented.yaml
+      against the cited sources. .seikika/standards/cli.yaml derives
+      documentedIn from incoming mentions and tests the number of paths.
+      .seikika/seikika.yaml includes skills and general Markdown in the source
+      globs.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      The assessment checks what a document mention means, the overly broad
+      authoritative-source scope, the expected repair and the bronze rationale
+      in .seikika/standards/cli.yaml.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      .seikika/seikika.yaml exposes the command capture needed to reproduce
+      when an invocation matches and when piped shorthand only names one
+      command.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      Matching the authoritative documentation paths and adding a real
+      invocation for each affected command would address both findings under
+      .seikika/standards/cli.yaml.

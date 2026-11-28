@@ -1,0 +1,55 @@
+apiVersion: seikika.com/assessment/v1
+entity: assessment:scorecard-quality/scorecard:seikika/vs-backstage-security
+rubric: assessment-quality
+subjectHash: 1660fbf33c97
+assessor: {kind: agent, name: cursor-reviewer-34, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: supported
+    verdict: pass
+    reason: >-
+      The citations in
+      .seikika/assessments/scorecard-quality/scorecard/seikika/vs-backstage-security.yaml
+      match. .seikika/standards/backstage-comparison.yaml:438-562 is eight
+      bronze booleans, and the rationale at :447-449 cites OWASP ASVS V13.
+      docs/design/backstage-comparison.md:51-52 is F6 and F7.
+      .seikika/results.json has Seikika at none, failing
+      extension-credential-isolated and loopback-by-default.
+      image/Dockerfile:24 sets PORT=8080, and
+      crates/seikika-cli/src/server.rs:8-16 binds 0.0.0.0 when PORT is set and
+      127.0.0.1 otherwise. The loopback fix names main.rs (:513-515).
+      connectors.rs:318 already calls env_clear.
+      experiments/backstage-compare/RESEARCH.md:180-187 is P1-P7 and :204 is
+      the write-outside-directory attempt. RESULTS.md:243-244 leaves that
+      unverified, and :250-257 is the Landlock canary still open.
+      ADJUDICATION.md:426-452 is the same-user canary.
+      experiments/backstage-compare/facts.yaml holds both failing values by
+      hand.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      one-concern should pass: the eight rules are what an attacker gets from
+      the shipped product. levels-are-a-ladder should fail: one bronze level
+      mixes the anonymous-GET probe with credential isolation, and the image
+      cannot pass loopback while PORT=8080. no-obvious-gap should fail: P6 and
+      P7 have no rule, nor does F7 attempt 6. actionable should fail: both
+      open fixes point at code that already does what they say, and neither
+      mentions experiments/backstage-compare/facts.yaml.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      The missing probes are a numbered list, and the two fixes name files
+      whose current behaviour is the opposite of the remaining work. A second
+      assessor fails the same three criteria.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      Splitting the eight booleans onto bronze, silver and gold would change
+      the ladder fail. Adding the P7 and write-confinement rules would change
+      the gap fail. Rewriting the two fixes to name the Dockerfile,
+      confine.rs, the canary and experiments/backstage-compare/facts.yaml
+      would change the actionable fail.
+summary: >-
+  The security-card assessment is trustworthy. The flat bronze level, the
+  two missing pre-registered probes, and the two fixes that point at work
+  already done are all in the sources it cites.

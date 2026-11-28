@@ -1,0 +1,75 @@
+apiVersion: seikika.com/assessment/v1
+entity: scorecard:seikika/maintainer-ci-security
+rubric: scorecard-quality
+subjectHash: 3b14e222cc14
+assessor: {kind: agent, name: cursor-assessor-12, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: one-concern
+    verdict: fail
+    reason: >-
+      Six rules ask what an attacker could do through a workflow
+      (packages/github-actions/fragments/github-actions.yaml:176-186). The
+      seventh, actionlint-clean, is mostly about correctness: its rationale
+      leads with syntax errors, mistyped expressions and wrong action inputs
+      that "only show up when the workflow runs" (:206-209), and only then
+      script injection, which zizmor's template-injection already covers in
+      no-high-findings (docs/design/github-actions-standards.md:84). So a typo
+      in an expression drops a workflow below security bronze, and the
+      security level also means "it parses". That correctness question is
+      maintainer-ci-reliability's, whose bronze is about a run you can
+      believe.
+    suggestion: >-
+      Move actionlint-clean to maintainer-ci-reliability bronze. If
+      actionlint's injection check should stay here, keep a narrower rule that
+      counts only its expression/injection findings.
+  - criterion: levels-are-a-ladder
+    verdict: pass
+    reason: >-
+      Bronze holds the direct routes (pinning, high findings, a token without
+      scopes), silver the medium findings and writes on risky triggers, gold
+      the rest of zizmor (github-actions.yaml:181-186, D70). zizmor-clean
+      includes the lower zizmor rules and adds low and informational findings,
+      so gold isn't implied. Every live workflow is gold, release.yml through
+      waivers (.seikika/results.json), and fixtures reach bronze and silver
+      (.seikika/tests/standards.test.yaml:119-154). One rung is arguable:
+      no-write-tokens-on-risky-triggers sits at silver though
+      docs/design/thresholds.md:19-21 would put a credential exposure in the
+      floor; its rule assessment covers that.
+  - criterion: no-obvious-gap
+    verdict: fail
+    reason: >-
+      No rule catches a known-vulnerable or impostor action. zizmor runs
+      `--offline` (github-actions.yaml:17-22), and with -v zizmor 1.32.0 logs
+      skipping impostor-commit, ref-confusion, known-vulnerable-actions,
+      stale-action-refs and ref-version-mismatch. A scratch workflow pinning
+      tj-actions/changed-files by SHA, the CVE-2025-30066 action the design
+      doc cites (github-actions-standards.md:145-146), produced no findings
+      and would pass all seven rules. Two more misses: job `container:` and
+      service images aren't pinned-checked (only `uses:` is read,
+      crates/seikika-connector-workspace/src/workflows.rs:243-251), and a
+      top-level `permissions: write-all` passes least-privilege-token.
+    suggestion: >-
+      Add a `dataFrom` rule fed by a zizmor run with GH_TOKEN, as its own
+      connector skipped in the ratchet like `github-actions`, failing on
+      known-vulnerable-actions and impostor-commit findings. Extend
+      pinned-to-sha to container and service images, and least-privilege-token
+      to top-level write scopes.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      Raising the fixture ci.yml to bronze works from the card alone:
+      pinned-to-sha's evidence lists four refs with lines
+      (.seikika/tests/standards.test.yaml:124-131), and the fix gives `git
+      ls-remote`. Silver's artipacked finding comes with the fix's
+      `persist-credentials: false` (:149-154). Every rule has evidence and a
+      fix that names a place. The weakest is zizmor-clean, whose fix lacks the
+      command and the ignore syntax, but its evidence names each finding's
+      line.
+summary: >-
+  A well-tested security ladder whose fixtures and evidence let an agent
+  climb it. Two structural issues: actionlint-clean makes correctness part
+  of the security level, and offline zizmor skips the audits for known-
+  vulnerable and impostor actions, so the incident the design doc cites
+  would pass every rule. Pins on container images and top-level write
+  tokens also slip through.

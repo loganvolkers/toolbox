@@ -1,0 +1,42 @@
+apiVersion: seikika.com/assessment/v1
+entity: assessment:rule-quality/rule:seikika/cli-skill/has-skill
+rubric: assessment-quality
+subjectHash: 582ada86faef
+rubricHash: e30700fc6322cf9f05a301bb4638d6708e9f5eb5aea0281911229ce75bd37bf7
+assessor: {kind: agent, name: Codex, model: GPT-6}
+at: 2026-11-28
+verdicts:
+  - criterion: supported
+    verdict: pass
+    reason: >-
+      I checked the claims in
+      .seikika/assessments/rule-quality/rule/seikika/cli-skill/has-skill.yaml
+      against the cited sources. .seikika/standards/cli.yaml maps and filters
+      incoming documentation references by filename. .seikika/seikika.yaml
+      supplies the command capture used to produce those references.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      The assessment covers cross-skill mentions, the limitations of the
+      capture and the stated rationale in docs/design/cli-skills.md. It also
+      identifies the difference between finding a command and documenting its
+      usage.
+  - criterion: reproducible
+    verdict: unsure
+    reason: >-
+      docs/design/cli-skills.md permits one skill to cover more than one
+      command. A cross-reference therefore needs to be distinguished from
+      deliberate shared coverage before the own-skill criterion can be
+      reproduced.
+    suggestion: >-
+      Describe what counts as a substantive shared skill and contrast that
+      with an incidental mention.
+  - criterion: actionable
+    verdict: unsure
+    reason: >-
+      The suggested slug or metadata match would improve ownership, but
+      .seikika/standards/cli.yaml asks for flags and exit codes and the
+      proposal checks only flags.
+    suggestion: >-
+      Limit the finding to routing, or explain how to verify the promised
+      usage details as well.

@@ -1,0 +1,77 @@
+apiVersion: seikika.com/assessment/v1
+entity: assessment:scorecard-quality/scorecard:seikika/maintainer-ci-reliability
+rubric: assessment-quality
+subjectHash: a7eb4fbbbb71
+assessor: {kind: agent, name: cursor-review-agent-2, model: claude-opus-5.5}
+at: 2026-11-24
+verdicts:
+  - criterion: supported
+    verdict: pass
+    reason: >-
+      Every citation in
+      .seikika/assessments/scorecard-quality/scorecard/seikika/maintainer-ci-reliability.yaml
+      lands where it says. In
+      packages/github-actions/fragments/github-actions.yaml, the speed card is
+      478-530, the description 330-334, the rationale 335-340 and the track
+      347. Bronze is 351-434, silver and gold 435-475, still-running 367-385
+      with its rationale at 377-382, and lastRunAt is read only in
+      main-not-stuck-red's evidence (357). The fixes are at 397-404, 447-450
+      and 469-472. In crates/seikika-connector-github/src/runs.rs,
+      passed_on_retry is 59-65, failedRuns (failed runs only) 84-89 and
+      lastRunAt 93. The other citations match: thresholds.md:22-23, :34 and
+      :57, packages/github-actions/seikika-package.yaml:43-46 and
+      .seikika/tests/standards.test.yaml:197-200. So do
+      docs/design/github-actions-standards.md:64, :89 and :161, and
+      .seikika/fixtures/github-actions.ndjson:2, where slow.yml has
+      firstTryFailRate 40 and failedRuns []. `seikika report .seikika
+      --fixtures` scores steady.yml gold and fails slow.yml on all three
+      fail-rate rules. github/docs
+      data/reusables/actions/scheduled-workflows-disabled.md says that in a
+      public repository only scheduled workflows are disabled automatically
+      after 60 days.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      no-obvious-gap now fails, as the sources require. A push workflow whose
+      triggers stop matching stays active, so it passes still-running
+      (github-actions.yaml:370), and no rule checks lastRunAt. The fail on
+      actionable holds on the fixture: the three fixes send an agent to
+      failedRuns, which is empty for slow.yml at 40%. one-concern and
+      levels-are-a-ladder pass on stated sources: speed has its own card, and
+      the rates halve 20, 10, 5 above a 10-run floor. Not a verdict change:
+      thresholds.md:33, which the no-obvious-gap reason cites, still says
+      "GitHub disables a workflow after 60 days without activity". That is the
+      overstatement the rule's rationale dropped
+      (github-actions.yaml:379-382), and the assessment doesn't flag it.
+    suggestion: >-
+      Optionally note in no-obvious-gap that thresholds.md:33 should say
+      scheduled workflows in public repositories, as the rationale now does.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      Each verdict rests on something a second assessor can check. A reader of
+      GitHub's page reaches the no-obvious-gap fail, and a reader of
+      runs.rs:84-89 against the slow.yml fixture reaches the actionable fail.
+      The two passes rest on the card's own text and thresholds.md. The most
+      arguable call is failing actionable even though every fix names a place.
+      The reason grounds it in the rubric's "try raising one entity yourself"
+      and the fixture's empty list, not in taste.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      Both suggestions would turn their criteria to pass. A bronze rule on a
+      recent lastRunAt, which runs.rs:93 already collects, or still-running
+      reading it, with fixtures on both sides, closes the stopped-workflow gap
+      no-obvious-gap names. Listing the runs that passed only on a re-run is
+      cheap, because runs.rs:61-65 already finds them. Putting them beside
+      failedRuns in the three fail-rate rules' evidence gives slow.yml runs to
+      open. Saying in the silver and gold fixes how a workflow under 10
+      decided runs rises closes the second case the actionable reason names.
+summary: >-
+  The correction holds. no-obvious-gap now fails on the stopped-workflow
+  gap. GitHub's docs confirm that only scheduled workflows in public
+  repositories are disabled automatically, so a push workflow that stops
+  firing stays active and keeps its green history. still-running's
+  rationale says so (github-actions.yaml:379-382), and every updated line
+  number checks out. One nit changes no verdict: thresholds.md:33 still
+  states the broader auto-disable claim.

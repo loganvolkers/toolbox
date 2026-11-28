@@ -1,0 +1,37 @@
+apiVersion: seikika.com/assessment/v1
+entity: assessment:rule-quality/rule:seikika/maintainer-example/has-a-heading
+rubric: assessment-quality
+subjectHash: 30fcb413a3e8
+rubricHash: e30700fc6322cf9f05a301bb4638d6708e9f5eb5aea0281911229ce75bd37bf7
+assessor: {kind: agent, name: Codex, model: GPT-6}
+at: 2026-11-28
+verdicts:
+  - criterion: supported
+    verdict: pass
+    reason: >-
+      I checked the claims in
+      .seikika/assessments/rule-quality/rule/seikika/maintainer-example/has-a-heading.yaml
+      against the cited sources.
+      crates/seikika-connector-workspace/src/examples.rs:14-19 returns the
+      first matching prefix anywhere, including a fenced comment.
+      .seikika/standards/examples.yaml and docs/design/example-standards.md:58
+      ask authors to start their write-up with the heading.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      The assessment covers positional errors, missed Setext headings, the
+      empty-title case and the floor.
+      .seikika/tests/standards.test.yaml:674-675 pins the missing-heading
+      evidence.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      crates/seikika-connector-workspace/src/examples.rs:14-19 exposes the
+      false-positive and false-negative cases directly. A normal first-line
+      heading is covered by the connector test in the same file.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      Examining the opening Markdown heading and rejecting fenced text would
+      address the measured-intent finding against
+      docs/design/example-standards.md:58.

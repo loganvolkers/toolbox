@@ -1,0 +1,49 @@
+apiVersion: seikika.com/assessment/v1
+entity: rule:seikika/maintainer-agent-doc/names-the-decision-log
+rubric: rule-quality
+subjectHash: 2042afa69696
+assessor: {kind: agent, name: cursor-assessor-11, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: measures-intent
+    verdict: pass
+    reason: >-
+      The intent is that an agent learns the log exists and records decisions
+      there (.seikika/standards/agent-docs.yaml:124-127). The check reads
+      `text.contains("docs/decisions")`
+      (crates/seikika-connector-workspace/src/agentsmd.rs:27), so any mention
+      of the path tells the agent where it is. The evidence says "does not
+      link" (agent-docs.yaml:120), while the check accepts a bare mention; a
+      scratch file with "docs/decisionsXYZ" in prose also passed. Neither gap
+      changes what an agent learns in practice. This AGENTS.md links the
+      directory (AGENTS.md:37) and says how to add a decision
+      (AGENTS.md:129-131).
+  - criterion: hard-to-game
+    verdict: pass
+    reason: >-
+      The cheapest pass is to write the path, which is the behaviour asked
+      for. The card is used only by this repo's portal, where docs/decisions/
+      exists with a README (AGENTS.md:37). So a mention points somewhere real,
+      and an empty mention can't hide a missing log. A link to a missing file
+      would also fail links-resolve (agent-docs.yaml:84-87).
+  - criterion: fix-leads-to-pass
+    verdict: pass
+    reason: >-
+      The fix says to link the canonical AGENTS.md at the decision log
+      (agent-docs.yaml:121-123). Any link to docs/decisions/... contains the
+      substring, so it passes. The partial fixture pins the failing evidence
+      (.seikika/tests/standards.test.yaml:478-489), and the focused one pins
+      the pass (:457-477).
+  - criterion: threshold-justified
+    verdict: pass
+    reason: >-
+      There is no number. Gold follows D75 ("gold is a link to the decision
+      log", docs/decisions/D01M7W4Y2K00000000000000000.md).
+      docs/design/agents-md-standards.md:37 gives the reason: the file is not
+      the decision log. That fits the principle that gold asks for what lower
+      levels don't imply (docs/design/thresholds.md:24-25).
+summary: >-
+  A sound gold rule. Its check is a substring rather than a link, and its
+  evidence says "link", but in this repo a mention of docs/decisions
+  points at a real, indexed log. The fix and the level are grounded in
+  D75.

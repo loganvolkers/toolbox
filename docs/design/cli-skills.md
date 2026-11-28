@@ -49,7 +49,7 @@ command with spaces replaced by hyphens, which is also the skill's `name`. The e
 `assess-entity` skill remains the judgement procedure; `assess-brief`, `assess-check` and
 `assess-submit` are the commands that produce and check the file.
 
-`seikika test portal` pins the rule both ways: the fixture skill for `validate` passes, and
+`seikika test .seikika` pins the rule both ways: the fixture skill for `validate` passes, and
 `push`, which no skill names, fails with the missing invocation in the evidence.
 
 ## Sources
@@ -58,4 +58,4 @@ command with spaces replaced by hyphens, which is also the skill's `name`. The e
   asks that the command has one.
 - `crates/seikika-cli/src/main.rs`, the command list `seikika describe` walks.
 - The workspace connector's `commands` capture, which links a doc that mentions an invocation to
-  the command entity (`portal/seikika.yaml`).
+  the command entity (`.seikika/seikika.yaml`).

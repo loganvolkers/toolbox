@@ -1,0 +1,50 @@
+apiVersion: seikika.com/assessment/v1
+entity: rule:seikika/vs-backstage-footprint/loaded-memory
+rubric: rule-quality
+subjectHash: febf172a72b6
+assessor: {kind: agent, name: cursor-assessor-17, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: measures-intent
+    verdict: pass
+    reason: >-
+      `rssLoadedMb` is the process tree's RSS 2 s after the last of 10,000
+      components became readable
+      (experiments/backstage-compare/measure.py:264-269). For Backstage,
+      "readable" means `totalItems ≥ n` (:221-224). That is "resident with the
+      catalog loaded" (.seikika/standards/backstage-comparison.yaml:54-56).
+      The 166.4 MB in the record is the round 3 median
+      (results/r3/perf-seikika-10000-*.json). It is not peak memory: the RSS
+      after the read load (`rssAfterLoadMb`, measure.py:274) is recorded but
+      unused. The rationale asks how memory grows with the catalog (:387-390),
+      and the record has only the 10k point, with 1k published in RESULTS.md
+      beside it.
+  - criterion: hard-to-game
+    verdict: pass
+    reason: >-
+      The sample is taken after the equivalence gate's inputs are loaded and
+      readable (measure.py:265-269). Keeping less of the catalog resident
+      would make reads slower, and the performance rules would catch that. The
+      cheapest pass is to hold fewer copies of the derived state, which is the
+      intent.
+  - criterion: fix-leads-to-pass
+    verdict: pass
+    reason: >-
+      The fix names the measuring script and the code to change, "shrink the
+      derived state's copies in crates/seikika-api/src/state.rs"
+      (backstage-comparison.yaml:384-385). That file holds the in-memory
+      snapshot the server serves from. With the evidence ("N MB resident with
+      the catalog loaded"), an agent knows where to cut and how to re-measure.
+  - criterion: threshold-justified
+    verdict: pass
+    reason: >-
+      The 1,024 MB bar was registered before the run
+      (experiments/backstage-compare/README.md:41) and confirmed by the
+      adjudication (ADJUDICATION.md:108). The same caveat as idle-memory
+      applies: no document derives the number, and RESEARCH.md:59 sets only a
+      comparative bar.
+summary: >-
+  The best of the footprint rules: the measure matches the name, the fix
+  names the file that holds the copies, and the bar was pre-registered.
+  Peak RSS under load is measured but unused, and the bar is stated
+  without being derived.

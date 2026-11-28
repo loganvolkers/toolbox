@@ -1,0 +1,40 @@
+apiVersion: seikika.com/assessment/v1
+entity: assessment:scorecard-quality/scorecard:seikika/maintainer-package
+rubric: assessment-quality
+subjectHash: 9e9f3db12616
+rubricHash: e30700fc6322cf9f05a301bb4638d6708e9f5eb5aea0281911229ce75bd37bf7
+assessor: {kind: agent, name: Codex, model: GPT-6}
+at: 2026-11-28
+verdicts:
+  - criterion: supported
+    verdict: fail
+    reason: >-
+      I checked the claims in
+      .seikika/assessments/scorecard-quality/scorecard/seikika/maintainer-package.yaml
+      against the cited sources. The lockfile ordering findings still match
+      .seikika/standards/packages.yaml, but the worked example no longer
+      matches npm/ui/package.json or .github/workflows/ci.yml. The frontend
+      has a description, Node engines and a frozen install.
+    suggestion: >-
+      Re-run the current package scorecard and use an example that still
+      exercises an actionable gap.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      The assessment addresses the maintainer audience, the ladder, uncovered
+      install paths and remediation. The three levels and the source of each
+      check are visible in .seikika/standards/packages.yaml.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      The level ordering and evidence are explicit in
+      .seikika/standards/packages.yaml. Compare the installation detector in
+      crates/seikika-connector-workspace/src/npm.rs with the package jobs in
+      .github/workflows/ci.yml.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      The proposed lockfile install placement and manifest metadata changes
+      name the exact rules and locations. The safety rule level has been
+      corrected in docs/design/package-standards.md, and the prototype now
+      declares its description and Node version.

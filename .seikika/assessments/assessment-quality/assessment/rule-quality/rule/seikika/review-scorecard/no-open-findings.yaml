@@ -1,0 +1,42 @@
+apiVersion: seikika.com/assessment/v1
+entity: assessment:rule-quality/rule:seikika/review-scorecard/no-open-findings
+rubric: assessment-quality
+subjectHash: 6b864ae6391e
+rubricHash: e30700fc6322cf9f05a301bb4638d6708e9f5eb5aea0281911229ce75bd37bf7
+assessor: {kind: agent, name: Codex, model: GPT-6}
+at: 2026-11-28
+verdicts:
+  - criterion: supported
+    verdict: fail
+    reason: >-
+      I checked the claims in
+      .seikika/assessments/rule-quality/rule/seikika/review-scorecard/no-open-findings.yaml
+      against the cited sources. The bronze predicate and stale evidence in
+      packages/meta-scoring/fragments/catalog.yaml support the main finding.
+      The original says CI demands a fresh review after an edit, but
+      .github/workflows/ci.yml only requires freshness when the designated
+      pull request label is present.
+    suggestion: >-
+      Distinguish CI validation, optionally enforced freshness, and the
+      separate bronze failing-list rule.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      The assessment evaluates scope, resistance to overwriting a finding,
+      remediation and the rationale for the floor.
+      packages/meta-scoring/fragments/catalog.yaml places the open-finding
+      rule below the freshness rule.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      Compare the failing-list predicate with assessment loading in
+      crates/seikika-connect/src/assessment.rs. The fixture in
+      .seikika/tests/standards.test.yaml verifies that a failing scorecard
+      review stays below bronze.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      The suggested history comparison and assessor condition name the state
+      needed to verify the dispute. docs/design/thresholds.md records the
+      current rule semantics, which would also need updating if the gate
+      changes.

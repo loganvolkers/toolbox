@@ -1,0 +1,501 @@
+# Rust crates: maintainer SDLC (docs/design/maintainer-sdlc.md).
+# Included by .seikika/seikika.yaml; see .seikika/README.md for the layout.
+
+kinds:
+  - name: Crate
+    description: >-
+      A Rust crate in the Cargo workspace: its docs, size, functions, tests
+      and lint results.
+    identityFrom: [connector:workspace]
+    fields:
+      path: {type: string}
+      description: {type: string}
+      targets: {type: list, items: string}
+      externalDeps: {type: integer}
+      readme: {type: boolean}
+      lastChange: {type: string}
+      crateDoc: {type: boolean}
+      codeLines: {type: integer}
+      testCodeLines: {type: integer}
+      pubItems: {type: integer}
+      pubDocumented: {type: integer}
+      undocumented: {type: list, items: string}
+      functions: {type: list, items: object}
+      maxFnLines: {type: integer}
+      maxComplexity: {type: integer}
+      unitTests: {type: integer}
+      integrationTests: {type: integer}
+      testsWithoutAsserts:
+        type: list
+        items: string
+        description: >-
+          Tests that check nothing: no assert or panic macro other than a trivial
+          one (assert!(true), assert_eq!(x, x)), no unwrap, expect or ?, no call
+          to an asserting helper in the same file, and no #[should_panic].
+      disabledTests:
+        type: list
+        items: string
+        description: >-
+          Tests compiled out by an always-false #[cfg(any())] or
+          #[cfg(not(all()))] on the test or its module: cargo neither runs nor
+          reports them.
+      testsPerKloc:
+        type: integer
+        description: Tests (unit and integration) per 1,000 code lines, rounded down.
+        computed: >-
+          entity.codeLines == 0 ? 0 : (entity.unitTests + entity.integrationTests)
+          * 1000 / entity.codeLines
+      unwraps: {type: integer}
+      tests: {type: object} # from the runner: status, passed, failed, output
+      clippy: {type: object} # from the runner: status, warnings, messages
+      hash:
+        type: string
+        description: >-
+          SHA-256 (12 hex) of the crate's src/ and tests/ files and Cargo.toml: an
+          assessment is stale when any of them changes.
+      reviewState:
+        type: string
+        description: "crate-design assessment: fresh, stale or missing."
+        computed: >-
+          inbound.assessesCrate.size() == 0 ? 'missing' :
+          (inbound.assessesCrate[0].subjectHash == entity.hash ? 'fresh' :
+          'stale')
+      reviewFailing:
+        type: list
+        items: string
+        description: Criteria the crate-design assessment failed.
+        computed: >-
+          inbound.assessesCrate.size() == 0 ? [] :
+          inbound.assessesCrate[0].failing
+      reviewUnsure:
+        type: list
+        items: string
+        description: Criteria the assessor was unsure of.
+        computed: "inbound.assessesCrate.size() == 0 ? [] : inbound.assessesCrate[0].unsure"
+      reviewUncited:
+        type: list
+        items: string
+        description: >-
+          Criteria whose reasons in the current review cite nothing that resolves
+          in the repository: a review that can't be checked.
+        computed: >-
+          inbound.assessesCrate.size() == 0 ? [] :
+          inbound.assessesCrate[0].uncited
+      reviewIndependent:
+        type: string
+        description: >-
+          Verdict of a current, grounded assessment-quality review of the
+          crate-design assessment by another assessor: pass, fail, unsure, or
+          empty when there is none.
+        computed: >-
+          inbound.assessesCrate.size() == 0 ? '' :
+          inbound.assessesCrate[0].independentReview
+      docCoverage:
+        type: integer
+        computed: >-
+          entity.pubItems == 0 ? 100 : entity.pubDocumented * 100 /
+          entity.pubItems
+      longFunctions:
+        type: list
+        items: string
+        computed: >-
+          entity.functions.filter(f, f.lines > 80).map(f, f.name + ' at ' + f.at +
+          ': ' + string(f.lines) + ' lines')
+      complexFunctions:
+        type: list
+        items: string
+        computed: >-
+          entity.functions.filter(f, f.complexity > 15).map(f, f.name + ' at ' +
+          f.at + ': complexity ' + string(f.complexity))
+      dependents:
+        type: list
+        items: string
+        computed: inbound.dependsOn.map(c, c.path)
+    relations: {dependsOn: {to: Crate, many: true}}
+    sources:
+      default: [connector:workspace]
+      fields: {tests: [connector:runner], clippy: [connector:runner]}
+    map:
+    - from: workspace/crate
+      id: "'crate:' + record.name"
+      set: >-
+        {'path': record.path, 'description': record.description, 'targets': record.targets,
+         'externalDeps': record.externalDeps, 'readme': record.readme, 'lastChange': record.lastChange,
+         'crateDoc': record.crateDoc, 'codeLines': record.codeLines, 'testCodeLines': record.testCodeLines,
+         'pubItems': record.pubItems, 'pubDocumented': record.pubDocumented,
+         'undocumented': record.undocumented, 'functions': record.functions,
+         'maxFnLines': record.maxFnLines, 'maxComplexity': record.maxComplexity,
+         'unitTests': record.unitTests, 'integrationTests': record.integrationTests,
+         'testsWithoutAsserts': record.testsWithoutAsserts,
+         'disabledTests': has(record.disabledTests) ? record.disabledTests : [],
+         'unwraps': record.unwraps, 'hash': has(record.hash) ? record.hash : null}
+      relations: {dependsOn: "record.dependsOn.map(d, 'crate:' + d)"}
+    - from: runner/test
+      id: "'crate:' + record.crate"
+      set: "{'tests': record}"
+    - from: runner/clippy
+      id: "'crate:' + record.crate"
+      set: "{'clippy': record}"
+
+scorecards:
+  - name: maintainer-crate
+    title: Rust crates
+    kind: Crate
+    description: >-
+      Each Rust crate: documented, tested with assertions and enough tests for
+      its size, passing, clippy-clean, and kept small and simple (D65,
+      docs/design/seikika-for-seikika.md).
+    rationale: >-
+      Crates are the code Seikika ships, and a person or an agent can only
+      change one safely if it says what it is, has tests that can fail, passes
+      them, and is made of functions small enough to read. Bronze is what
+      makes a change checkable at all; silver and gold tighten documentation,
+      size and complexity in steps, with the numbers in the manifest so
+      raising them is a reviewed change.
+    links:
+    - title: Seikika for Seikika design
+      url: https://github.com/seikika/seikika/blob/main/docs/design/seikika-for-seikika.md
+    - title: Thresholds and levels
+      url: https://github.com/seikika/seikika/blob/main/docs/design/thresholds.md
+    - title: 'Decision: Seikika for Seikika'
+      url: https://github.com/seikika/seikika/blob/main/docs/decisions/D01M7VTP0HH0000000000000000.md
+    owner: group:maintainers
+    track: maintainer
+    levels: [bronze, silver, gold]
+    appliesTo: entity.codeLines >= 50
+    rules:
+    - name: crate-docs
+      level: bronze
+      check: entity.crateDoc
+      evidence: "[entity.path + ' has no //! crate doc']"
+      fix: >-
+        Start the crate's `src/lib.rs` or `src/main.rs` with `//!` docs: what it
+        is and which spec section it implements.
+      rationale: >-
+        The crate doc is what a reader or an agent sees first when deciding
+        whether to touch a crate; without it, the crate's purpose and the spec
+        section it implements have to be worked out from the code.
+    - name: has-tests
+      level: bronze
+      check: >-
+        entity.unitTests + entity.integrationTests > 0 &&
+        entity.testsWithoutAsserts.size() == 0
+      evidence: >-
+        entity.unitTests + entity.integrationTests == 0 ? ['no #[test] in src/
+        or tests/'] : entity.testsWithoutAsserts.map(t, t + ' asserts nothing')
+      fix: >-
+        Add a #[test] for the crate's main behaviour (or an integration test in
+        tests/), and give each listed test an assert: a test that checks nothing
+        passes whatever the code does.
+      rationale: >-
+        A crate without tests can change behaviour with nothing failing, and a
+        test that asserts nothing gives the same false confidence while looking
+        like coverage.
+    - name: tests-scale-with-code
+      level: silver
+      check: entity.testsPerKloc >= 2
+      evidence: >-
+        [string(entity.testsPerKloc) + ' tests per 1,000 lines (' +
+        string(entity.unitTests + entity.integrationTests) + ' tests, ' +
+        string(entity.codeLines) + ' lines)']
+      fix: >-
+        Add tests for the crate's untested behaviour until it has at least 2 per
+        1,000 code lines (docs/design/thresholds.md says why 2).
+      rationale: >-
+        One test meets bronze however large a crate grows; a floor per thousand
+        lines, set from the spread across this workspace, flags crates that are
+        untested or nearly so. It is a floor, not a coverage target.
+      links:
+      - title: Thresholds and levels
+        url: https://github.com/seikika/seikika/blob/main/docs/design/thresholds.md
+    - name: tests-pass
+      level: bronze
+      dataFrom: runner
+      check: >-
+        entity.tests.status == 'pass' && entity.tests.passed > 0 &&
+        entity.tests.failed == 0 && entity.tests.ignored == 0 &&
+        entity.disabledTests.size() == 0
+      evidence: >-
+        (has(entity.tests) ? [entity.tests.status + ': ' +
+        string(entity.tests.passed) + ' passed, ' + string(entity.tests.failed)
+        + ' failed, ' + string(entity.tests.ignored) + ' ignored'] +
+        (has(entity.tests.output) ? [entity.tests.output] : []) : ['no test run
+        yet (refresh the crate)']) + entity.disabledTests.map(t, t + ' is
+        compiled out')
+      fix: >-
+        Run `cargo test -p <crate>` and fix the failures in the evidence. If no
+        tests passed, verify Cargo discovers the intended targets. Remove
+        `#[ignore]` from ignored tests, and the always-false `#[cfg(...)]` from
+        listed tests, and make them pass: a test that doesn't run checks
+        nothing. Tests that need OpenFGA run with SEIKIKA_REQUIRE_OPENFGA set,
+        so install it (SEIKIKA_OPENFGA_BIN) rather than letting them skip.
+      rationale: >-
+        An empty run checks nothing even if Cargo exits successfully. Ignored or
+        compiled-out tests leave gaps; an authorization test that quietly skips
+        without OpenFGA would let authorization changes through untested.
+    - name: clippy-clean
+      level: bronze
+      dataFrom: runner
+      check: entity.clippy.status == 'pass'
+      evidence: >-
+        !has(entity.clippy) ? ['no clippy run yet (refresh the crate)'] :
+        entity.clippy.messages.size() > 0 ? entity.clippy.messages : ['clippy
+        status: ' + entity.clippy.status + ' (no diagnostics captured)']
+      fix: >-
+        Run `cargo clippy -p <crate> --all-targets`. Fix the reported warnings
+        or errors. If no diagnostics were captured, check the command output for
+        the cause before refreshing the crate.
+      rationale: >-
+        Clippy's lints catch common bugs and unidiomatic code before review, and
+        CI runs it with `-D warnings`, so a warning here would fail the build
+        anyway.
+      links:
+      - title: Clippy documentation
+        url: https://doc.rust-lang.org/clippy/
+    - name: public-api-documented
+      level: silver
+      check: entity.docCoverage >= 80
+      evidence: entity.undocumented
+      fix: Add /// docs to the public items in the evidence.
+      rationale: >-
+        Other crates and agents use a crate through its public items; an
+        undocumented one makes them read the implementation, which a public API
+        is meant to spare them.
+      links:
+      - title: 'Rust API Guidelines: documentation'
+        url: https://rust-lang.github.io/api-guidelines/documentation.html
+    - name: no-huge-functions
+      level: silver
+      check: entity.maxFnLines <= 150
+      evidence: >-
+        entity.functions.filter(f, f.lines > 150).map(f, f.name + ' at ' + f.at
+        + ': ' + string(f.lines) + ' lines')
+      fix: Split the functions in the evidence into named steps.
+      rationale: >-
+        A very long function is hard to review and can't be tested in parts, so
+        a change inside it risks effects far from the edit. Silver catches the
+        outliers; gold's short-functions tightens the limit.
+      links:
+      - title: Clippy lints (too_many_lines)
+        url: https://rust-lang.github.io/rust-clippy/master/index.html
+    - name: bounded-complexity
+      level: silver
+      check: entity.maxComplexity <= 30
+      evidence: >-
+        entity.functions.filter(f, f.complexity > 30).map(f, f.name + ' at ' +
+        f.at + ': complexity ' + string(f.complexity))
+      fix: >-
+        Simplify the functions in the evidence (extract match arms, early
+        returns).
+      rationale: >-
+        Cyclomatic complexity counts the independent paths through a function,
+        and each needs a test of its own; past the bound a function has more
+        paths than its tests are likely to cover.
+      links:
+      - title: NIST SP 500-235, Structured Testing (cyclomatic complexity)
+        url: https://www.nist.gov/publications/structured-testing-testing-methodology-using-cyclomatic-complexity-metric
+    - name: fully-documented
+      level: gold
+      check: entity.docCoverage == 100
+      evidence: entity.undocumented
+      fix: Document every item in the evidence.
+      rationale: >-
+        At gold no public item has to be read in source to be used, so an agent
+        can work with the crate through its API without loading its internals.
+      links:
+      - title: 'Rust API Guidelines: documentation'
+        url: https://rust-lang.github.io/api-guidelines/documentation.html
+    - name: short-functions
+      level: gold
+      check: entity.longFunctions.size() == 0
+      evidence: entity.longFunctions
+      fix: Keep functions at 80 lines or fewer; split those in the evidence.
+      rationale: >-
+        A function short enough to read in one sitting can be reviewed, tested
+        and replaced as a unit; longer ones usually mix several steps that
+        deserve names of their own.
+      links:
+      - title: Clippy lints (too_many_lines)
+        url: https://rust-lang.github.io/rust-clippy/master/index.html
+    - name: simple-functions
+      level: gold
+      check: entity.complexFunctions.size() == 0
+      evidence: entity.complexFunctions
+      fix: >-
+        Keep cyclomatic complexity at 15 or lower; simplify those in the
+        evidence.
+      rationale: >-
+        At the gold bound a function has few enough paths that each can be
+        tested and reasoned about; more branching than that is usually clearer
+        as named helpers.
+      links:
+      - title: NIST SP 500-235, Structured Testing (cyclomatic complexity)
+        url: https://www.nist.gov/publications/structured-testing-testing-methodology-using-cyclomatic-complexity-metric
+    - name: few-unwraps
+      level: gold
+      check: entity.unwraps * 100 <= entity.codeLines
+      evidence: >-
+        [string(entity.unwraps) + ' unwrap/expect calls in ' +
+        string(entity.codeLines) + ' lines']
+      fix: >-
+        To reach one counted unwrap or expect per 100 source lines, replace
+        panic-on-error calls outside tests with error propagation or explicit
+        handling of the failure.
+      rationale: >-
+        Each unwrap or expect outside tests panics if its assumption fails,
+        crashing the process instead of returning an error the caller can
+        handle; keeping them rare makes each one a deliberate invariant.
+      links:
+      - title: 'The Rust Book: to panic! or not to panic!'
+        url: https://doc.rust-lang.org/book/ch09-03-to-panic-or-not-to-panic.html
+    facets: {summary: public, details: public}
+
+  - name: review-crate
+    title: Crates, reviewed by agents
+    kind: Crate
+    description: >-
+      An agent reviews each crate's design: no open finding is bronze, a
+      current review is silver, and a clean review that a second agent checked
+      is gold. Any change to the crate's code makes its review stale, and the
+      card advises rather than gates (D79, D01M831P5QWJQ4A2FT85N5MXJQF).
+    rationale: >-
+      Deterministic rules measure a crate's form; whether it is well designed
+      for its place takes judgement, so agents assess it against crate-design.
+      Open findings come first at bronze, silver needs a review of the current
+      sources, and gold a passing, grounded review checked by a second
+      assessor. It is advisory, because a review that goes stale on every
+      change must not gate the ratchet.
+    links:
+    - title: D79 judgement is pushed
+      url: https://github.com/seikika/seikika/blob/main/docs/decisions/D01M7WHQA9G0000000000000000.md
+    - title: Independent reviews decision
+      url: https://github.com/seikika/seikika/blob/main/docs/decisions/D01M831P5QWJQ4A2FT85N5MXJQF.md
+    - title: Meta-standards review
+      url: https://github.com/seikika/seikika/blob/main/docs/design/meta-standards-review.md
+    owner: group:maintainers
+    track: maintainer
+    levels: [bronze, silver, gold]
+    ratchet: {advisory: true}
+    appliesTo: entity.codeLines >= 50
+    rules:
+    - name: no-open-findings
+      level: bronze
+      check: entity.reviewFailing.size() == 0
+      evidence: >-
+        entity.reviewState == 'stale' ? entity.reviewFailing.map(c, c + ' (from
+        a stale review: re-assess to close it)') : entity.reviewFailing
+      fix: >-
+        A current crate-design assessment failed the listed criteria: act on its
+        suggestions (.seikika/assessments/), then re-assess. If the finding is
+        wrong, say why in a new assessment by another assessor.
+      rationale: >-
+        A failing criterion is a design problem someone has already found, and
+        findings left unacted make review a formality. A stale review's findings
+        still count until a new assessment closes them.
+    - name: assessed
+      level: silver
+      check: entity.reviewState == 'fresh'
+      evidence: |-
+        [entity.reviewState == 'stale' ? 'the crate\'s sources changed since it was assessed' : 'not assessed against crate-design']
+      fix: >-
+        Have an agent review the crate's current sources: `seikika assess brief
+        crate:<name> --portal .seikika` names the assessment file to write, and
+        `seikika assess check .seikika` checks it.
+      rationale: >-
+        A review's verdict holds for the sources it read; once src/, tests/ or
+        Cargo.toml change it may no longer be true, so only a review of the
+        current hash counts.
+    - name: passes-review
+      level: gold
+      check: >-
+        entity.reviewState == 'fresh' && entity.reviewFailing.size() == 0 &&
+        entity.reviewUncited.size() == 0
+      evidence: >-
+        entity.reviewState != 'fresh' ? ['no current assessment'] :
+        entity.reviewFailing + entity.reviewUncited.map(c, c + ' cites nothing
+        that resolves')
+      fix: >-
+        Act on the failing criteria's suggestions in the assessment
+        (.seikika/assessments/), then re-assess.
+      rationale: >-
+        Gold claims the design holds up under review, so the current review must
+        pass every criterion with reasons that cite something real: a reason
+        that cites nothing can't be checked by anyone else.
+    - name: no-doubts
+      level: gold
+      check: entity.reviewState == 'fresh' && entity.reviewUnsure.size() == 0
+      evidence: >-
+        entity.reviewState == 'fresh' ? entity.reviewUnsure : ['no current
+        assessment']
+      fix: >-
+        Resolve what the assessor was unsure of (cite the source the verdict
+        needs, in .seikika/assessments/), then re-assess with `seikika assess
+        brief crate:<name> --portal .seikika`. An open question in
+        docs/questions.md doesn't pass this rule by itself.
+      rationale: >-
+        An unsure verdict is an unanswered question about the design; at gold it
+        must be settled with a source, not left as a doubt that reads like a
+        pass.
+    - name: independently-reviewed
+      level: gold
+      check: entity.reviewState == 'fresh' && entity.reviewIndependent == 'pass'
+      evidence: >-
+        [entity.reviewIndependent == '' ? 'no current assessment-quality review
+        of the crate-design assessment by another assessor that cites it or its
+        sources' : 'the review of the crate-design assessment found it ' +
+        entity.reviewIndependent]
+      fix: >-
+        Have another agent or person review the crate-design assessment:
+        `seikika assess brief assessment:crate-design/crate:<name> --portal
+        portal`, with reasons that cite the assessment file or the sources it
+        cites; act on what that review fails.
+      rationale: >-
+        An assessor reviewing its own assessment tends to confirm it, and when
+        this rule was added one of three assessment reviews was self-review. A
+        second assessor's grounded review makes the verdict more than one
+        agent's opinion.
+      links:
+      - title: Independent reviews decision
+        url: https://github.com/seikika/seikika/blob/main/docs/decisions/D01M831P5QWJQ4A2FT85N5MXJQF.md
+    facets: {summary: public, details: public}
+
+rubrics:
+  - name: crate-design
+    kind: Crate
+    description: >-
+      Is this crate well designed for its place in Seikika? Read its crate
+      docs, public API and tests, and docs/v1-spec.md §4.
+    links:
+    - title: Seikika workspace and crate boundaries
+      url: https://github.com/seikika/seikika/blob/main/docs/v1-spec.md#4-architecture-and-crates
+    criteria:
+    - name: one-responsibility
+      question: >-
+        Does the crate do one thing, stated in its crate docs, that matches its
+        role in docs/v1-spec.md §4?
+      guidance: >-
+        Fail when the crate docs are missing, stale, or describe several
+        unrelated jobs.
+    - name: small-contract
+      question: >-
+        Do other crates use it through a small, documented public API rather
+        than its internals?
+      guidance: >-
+        Search other crates for `use <crate>::`; fail when they reach internals
+        or receive third-party types.
+    - name: replaceable-defaults
+      question: >-
+        If it wraps a default (cel-rust, OpenFGA, DBOS, Postgres, React), could
+        that default be swapped behind a Seikika-owned contract (charter goal
+        3)?
+      guidance: >-
+        Pass when it wraps no third-party default. Fail when a public signature
+        names the default's types, or a caller depends on the default directly
+        (its Cargo.toml), so swapping it would change other crates.
+    - name: tests-match-risk
+      question: >-
+        Are its riskiest paths (parsing, authorization, persistence, protocol
+        handling) tested, not only the easy ones?
+      guidance: >-
+        List the riskiest paths first, then find a test for each; unsure when
+        coverage is only indirect.

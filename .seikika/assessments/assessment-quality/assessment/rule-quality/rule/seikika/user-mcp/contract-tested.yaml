@@ -1,0 +1,35 @@
+apiVersion: seikika.com/assessment/v1
+entity: assessment:rule-quality/rule:seikika/user-mcp/contract-tested
+rubric: assessment-quality
+subjectHash: f0f5879462b7
+rubricHash: e30700fc6322cf9f05a301bb4638d6708e9f5eb5aea0281911229ce75bd37bf7
+assessor: {kind: agent, name: Codex, model: GPT-6}
+at: 2026-11-28
+verdicts:
+  - criterion: supported
+    verdict: pass
+    reason: >-
+      I checked the claims in
+      .seikika/assessments/rule-quality/rule/seikika/user-mcp/contract-tested.yaml
+      against the cited sources. .seikika/standards/cli.yaml distinguishes
+      successful observed calls from the static fallback and
+      .seikika/seikika.yaml configures the capture. The assessment limits the
+      latter to recognition of a tool-call-shaped body.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      The assessment addresses trace evidence, static literals, the scope of
+      CI and the gold requirement. crates/seikika-api/tests/mcp.rs provides
+      the direct call helper and response assertions.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      .seikika/seikika.yaml and .seikika/tests/standards.test.yaml make it
+      possible to check the two scoring modes separately from actual test
+      execution.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      Running the relevant contract tests and scoring the resulting trace
+      would address the static reach gap identified in
+      .seikika/standards/cli.yaml.

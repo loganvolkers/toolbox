@@ -1,0 +1,42 @@
+apiVersion: seikika.com/assessment/v1
+entity: assessment:scorecard-quality/scorecard:seikika/maintainer-docs
+rubric: assessment-quality
+subjectHash: 92aa7efe7dab
+rubricHash: e30700fc6322cf9f05a301bb4638d6708e9f5eb5aea0281911229ce75bd37bf7
+assessor: {kind: agent, name: Codex, model: GPT-6}
+at: 2026-11-28
+verdicts:
+  - criterion: supported
+    verdict: fail
+    reason: >-
+      I checked the claims in
+      .seikika/assessments/scorecard-quality/scorecard/seikika/maintainer-docs.yaml
+      against the cited sources. The silver checks remain design-specific in
+      .seikika/standards/docs.yaml. However,
+      .seikika/tests/standards.test.yaml now includes a failing status-banner
+      fixture, and the current scored-doc count in .seikika/results.json
+      differs from the original count.
+    suggestion: >-
+      Refresh the fixture and document-count claims and retain the
+      independently observable level-discrimination issue.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      The assessment covers all four criteria and distinguishes rules for
+      design docs from the rest of the set. The bronze fixes and two
+      location-specific silver predicates are explicit in
+      .seikika/standards/docs.yaml.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      The silver guards and scope can be inspected in
+      .seikika/standards/docs.yaml. Count live levels in .seikika/results.json
+      and run the banner fixture in .seikika/tests/standards.test.yaml to
+      verify the current state.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      The proposed ladder alternatives address the scope issue, and the
+      assessment identifies a concrete banner check tied to
+      docs/design/seikika-and-tools.md. The missing-status fixture has already
+      been added.

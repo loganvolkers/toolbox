@@ -1,0 +1,2 @@
+{"type":"record","kind":"service","externalId":"service:checkout","data":{"id":"checkout","title":"Checkout","description":"Checkout API","owner":"group:example","lifecycle":"experimental","code":"example/checkout"}}
+{"type":"record","kind":"service-environment","externalId":"service-environment:checkout@staging","data":{"id":"checkout@staging","service":"checkout","environment":"staging","title":"Staging","worker":"checkout-staging","serviceName":"checkout","dashboardUid":"checkout-staging"}}

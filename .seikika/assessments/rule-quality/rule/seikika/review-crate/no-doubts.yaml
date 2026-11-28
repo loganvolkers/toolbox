@@ -1,0 +1,55 @@
+apiVersion: seikika.com/assessment/v1
+entity: rule:seikika/review-crate/no-doubts
+rubric: rule-quality
+subjectHash: 0e1cdc4a9860
+assessor: {kind: agent, name: cursor-assessor-05, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: measures-intent
+    verdict: pass
+    reason: >-
+      `reviewUnsure` is the `unsure` list of the crate's crate-design
+      assessment (.seikika/standards/crates.yaml:70-74), and that list is
+      every criterion with the verdict `unsure`
+      (crates/seikika-connect/src/assessment.rs:181-190). Combined with
+      `fresh` (crates.yaml:420), passing means the current review settled
+      every criterion, which is what "no doubts" and the rationale
+      (crates.yaml:429-432) say. The fixture separates the cases: seikika-expr
+      has `tests-match-risk` unsure and fails, seikika-derive passes
+      (.seikika/tests/standards.test.yaml:920-928).
+  - criterion: hard-to-game
+    verdict: pass
+    reason: >-
+      The cheap route is to re-assess and write `pass` where the assessor was
+      unsure. On this card, gold also needs `independently-reviewed`
+      (crates.yaml:433-436): a passing review by a different assessor against
+      assessment-quality. Its `complete` criterion asks that reviewer to name
+      any criterion "that should have failed or been unsure"
+      (.seikika/standards/assessments.yaml:326-332). A guessed pass therefore
+      needs a second assessor's sign-off to reach gold. The only way around
+      that is to forge the second name, a separate gap filed against
+      independently-reviewed (docs/design/thresholds.md:62-70).
+  - criterion: fix-leads-to-pass
+    verdict: pass
+    reason: >-
+      The fix says where to act: cite the missing source in
+      .seikika/assessments/, then re-assess with `seikika assess brief
+      crate:<name> --portal .seikika`. It also rules out the route that
+      docs/design/meta-standards-review.md:111 flagged, pointing at
+      docs/questions.md, as not enough on its own (crates.yaml:424-428). The
+      evidence lists the unsure criteria by name, so the agent knows which
+      verdicts to settle.
+  - criterion: threshold-justified
+    verdict: pass
+    reason: >-
+      No number. Gold for "no doubts" is in docs/design/thresholds.md:55 and
+      change C1 (docs/design/meta-standards-review.md:136). Sitting at the
+      same level as `independently-reviewed` is what makes the doubt hard to
+      hide, as the hard-to-game verdict explains.
+summary: >-
+  Passes. Taken alone, the check is only as honest as the assessor. On
+  review-crate it shares gold with a second assessor's review, whose
+  `complete` criterion is designed to catch an unsure written as a pass.
+  Its fix is the most specific of the three review-* no-doubts fixes and
+  closes the docs/questions.md route that the meta-standards review
+  flagged.

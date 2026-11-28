@@ -1,0 +1,67 @@
+apiVersion: seikika.com/assessment/v1
+entity: rule:seikika/sdlc-stage/has-exit-criterion
+rubric: rule-quality
+subjectHash: f2dd4a5c08a6
+assessor: {kind: agent, name: cursor-assessor-13, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: measures-intent
+    verdict: fail
+    reason: >-
+      The check is length only, `entity.exitCriterion.size() >= 20`
+      (.seikika/standards/sdlc.yaml:180). The fix and rationale ask for
+      something checkable, "the command that passes, or the artifact that
+      exists", that can be "proved without someone checking by eye"
+      (sdlc.yaml:182-187). "To be decided later on." (24 characters) passes.
+      operator/test's "seikika test passes." passes with exactly 20 characters
+      (.seikika/sdlc/stages/operator.yaml:50), while "cargo test passes" (17)
+      would fail despite being as checkable as any.
+    suggestion: >-
+      Check what the fix asks for: the criterion names a command from the
+      stage's `commands:` or a path from its `checks:`, or contains a known
+      program word (the connector's PROGRAMS list, crates/
+      seikika-connector-workspace/src/data.rs:108-129). Emit that as a field,
+      for example `exitNamesGate`, and drop the length floor to a small
+      non-empty minimum.
+  - criterion: hard-to-game
+    verdict: fail
+    reason: >-
+      Padding any vague sentence to 20 characters passes the length check
+      (.seikika/standards/sdlc.yaml:180). That is cheaper than writing a
+      checkable criterion, and no other rule in sdlc-stage reads the exit
+      criterion (sdlc.yaml:167-244), so the padding isn't caught.
+    suggestion: >-
+      Same as above: require the criterion to reference a listed command or
+      check, which padding can't fake.
+  - criterion: fix-leads-to-pass
+    verdict: fail
+    reason: >-
+      The fix doesn't name the file or the 20-character floor
+      (sdlc.yaml:182-184), and the evidence echoes the current text
+      (sdlc.yaml:181) without saying it is too short. An agent who follows the
+      fix exactly and writes "cargo test passes" still fails, with no hint
+      why.
+    suggestion: >-
+      Say "Set `exitCriterion:` in .seikika/sdlc/stages/<layer>.yaml" and, as
+      long as the length check stays, put the length in the evidence, for
+      example `'exit criterion (' + string(size(entity.exitCriterion)) + '
+      chars, needs 20): ' + entity.exitCriterion`.
+  - criterion: threshold-justified
+    verdict: unsure
+    reason: >-
+      docs/design/thresholds.md:56 lists "an exit criterion" at bronze, but no
+      row gives a source for 20 characters, and
+      docs/design/package-author-sdlc.md:170 says "a checkable exit criterion"
+      without a number. I found no measurement or decision behind the figure.
+      The shortest live criterion is exactly 20 (operator.yaml:50), which
+      suggests the floor was fitted to it.
+    suggestion: >-
+      Add a thresholds.md row saying where 20 comes from (measured or chosen),
+      or replace the number with the structural check above.
+summary: >-
+  The rule asks for a checkable exit criterion but measures character
+  count. Padded vagueness passes, and short, exact criteria like "cargo
+  test passes" fail without a hint. The 20 has no recorded source and sits
+  exactly at the shortest live criterion. Checking that the criterion
+  names one of the stage's commands or checks would match the rule's
+  intent.

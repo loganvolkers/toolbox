@@ -1,0 +1,40 @@
+apiVersion: seikika.com/assessment/v1
+entity: assessment:rule-quality/rule:seikika/meta-rubric/described
+rubric: assessment-quality
+subjectHash: 4416cde9f9b5
+rubricHash: e30700fc6322cf9f05a301bb4638d6708e9f5eb5aea0281911229ce75bd37bf7
+assessor: {kind: agent, name: Codex, model: GPT-6}
+at: 2026-11-28
+verdicts:
+  - criterion: supported
+    verdict: fail
+    reason: >-
+      I checked the claims in
+      .seikika/assessments/rule-quality/rule/seikika/meta-rubric/described.yaml
+      against the cited sources. The assessment points to
+      .seikika/standards/meta.yaml, which no longer holds this rule.
+      packages/meta-scoring/fragments/catalog.yaml contains the description
+      rule, while crates/seikika-cli/src/model.rs still confirms the nonblank
+      predicate.
+    suggestion: >-
+      Update the rule citations and verify the catalog-wide description claim
+      against the current rubrics.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      The assessment correctly separates the text-presence check from the
+      rule’s promise to direct assessors to sources in
+      packages/meta-scoring/fragments/catalog.yaml.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      The filled predicate in crates/seikika-cli/src/model.rs can be compared
+      with the missing-description fixture in
+      .seikika/tests/standards.test.yaml. Text presence alone is reproducible
+      independently of source guidance.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      Detecting a source pointer would address part of the documented gap in
+      packages/meta-scoring/fragments/catalog.yaml. The proposed generic read
+      clause would still need evidence that it points somewhere useful.

@@ -1,0 +1,36 @@
+apiVersion: seikika.com/assessment/v1
+entity: assessment:rule-quality/rule:seikika/maintainer-package/version-bounded
+rubric: assessment-quality
+subjectHash: e17640ee5af7
+rubricHash: e30700fc6322cf9f05a301bb4638d6708e9f5eb5aea0281911229ce75bd37bf7
+assessor: {kind: agent, name: Codex, model: GPT-6}
+at: 2026-11-28
+verdicts:
+  - criterion: supported
+    verdict: pass
+    reason: >-
+      I checked the claims in
+      .seikika/assessments/rule-quality/rule/seikika/maintainer-package/version-bounded.yaml
+      against the cited sources.
+      crates/seikika-connector-workspace/src/npm.rs:73-93 checks special
+      values and patterns without parsing a complete npm range. It does not
+      inspect every comparison in an alternative range or parse alias targets.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      The assessment covers unsupported range forms, the named evidence and
+      repair, and the bronze scope in .seikika/standards/packages.yaml.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      The string predicates in
+      crates/seikika-connector-workspace/src/npm.rs:73-93 and the wildcard
+      fixture in .seikika/tests/standards.test.yaml expose what is and is not
+      counted.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      Parsing range alternatives and alias targets would address the
+      documented coverage gaps in
+      crates/seikika-connector-workspace/src/npm.rs. The proposed regression
+      cases correspond to the identified omissions.

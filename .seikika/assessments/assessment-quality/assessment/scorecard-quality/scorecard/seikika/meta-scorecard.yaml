@@ -1,0 +1,65 @@
+apiVersion: seikika.com/assessment/v1
+entity: assessment:scorecard-quality/scorecard:seikika/meta-scorecard
+rubric: assessment-quality
+subjectHash: b88b0e549809
+assessor: {kind: agent, name: cursor-reviewer-36, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: supported
+    verdict: fail
+    reason: >-
+      Several line ranges in
+      .seikika/assessments/scorecard-quality/scorecard/seikika/meta-scorecard.yaml
+      are the neighbouring block, not the text named. "Gold means well-formed,
+      not good" is .seikika/standards/meta.yaml:577-580, not :570-573, which
+      is the previous rule's rationale. explained, the rationale flag, is
+      crates/seikika-cli/src/meta.rs:242, not :241 (that line is described).
+      The explains-why fix is meta.yaml:636-639, not :629-632. untestedRules
+      is :668, not :658-662 (that is the ladder fix). fast-feedback is
+      packages/github-actions/fragments/github-actions.yaml:519-521, not
+      :455-473, which is fail-rate-under-5. The report has 54 scorecards, 11
+      bronze, 22 silver and 21 gold, not 53 with 20 gold
+      (.seikika/results.json). What does hold: seven rules span
+      meta.yaml:599-682, none of them fails explains-why, L12 is
+      docs/design/scorecards-for-scorecards.md:92 and ratchetable is :142, an
+      all-unknown level stops the climb
+      (crates/seikika-derive/src/lib.rs:1261-1269), and the explains-why
+      fixture is .seikika/tests/standards.test.yaml:264-272. The decision
+      D01M831P5QWJQ4A2FT85N5MXJQF does say gold means well-formed, not good.
+    suggestion: >-
+      Recite meta.yaml:577-580, meta.rs:242, the explains-why fix at :636-639,
+      untestedRules at :668, and fast-feedback at github-actions.yaml:519-521.
+      Count the report as 54 cards, 21 of them gold.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      The verdicts survive the wrong lines. one-concern passes: the seven
+      rules are about form, and the decision keeps gold as well-formed.
+      levels-are-a-ladder passes as thresholds.md:47-48 and :60 set it, with
+      explains-why at silver beside described (meta.yaml:632-634).
+      no-obvious-gap fails: L12 still has no rule, and a level whose only
+      rules are dataFrom github-actions is not granted where that connector is
+      skipped (lib.rs:1261-1269). actionable passes: the explains-why fix
+      names the field, and untestedRules names the rules to pin.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      The missing ratchetable row and the all-unknown stop are written in
+      scorecards-for-scorecards.md:142 and lib.rs:1261-1269. A second assessor
+      does not need the off-by-a-few line numbers to reach the same
+      no-obvious-gap fail.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      The no-obvious-gap suggestion in
+      .seikika/assessments/scorecard-quality/scorecard/seikika/meta-scorecard.yaml
+      adds a silver levels-decidable rule that fails a level whose rules all
+      read a skipped connector unless the card says where it is decided. That
+      is the L12 gap, so the fail would flip. The three passes need no
+      suggestion.
+summary: >-
+  The ladder and the missing "achievable in context" check are right, and
+  no card fails explains-why. The write-up cites the neighbouring lines
+  for the description, the rationale flag, the explains-why fix,
+  untestedRules and fast-feedback, and the report is 54 cards with 21
+  gold, not 53 with 20.

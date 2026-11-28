@@ -1,0 +1,21 @@
+{
+  "name": "seikika-portal-ui",
+  "description": "Astro and Vue frontend embedded by the Seikika server.",
+  "license": "MIT",
+  "private": true,
+  "type": "module",
+  "engines": { "node": ">=22" },
+  "scripts": {
+    "build": "astro build && node scripts/assets.mjs",
+    "check": "vue-tsc --noEmit",
+    "dev": "astro dev"
+  },
+  "dependencies": {
+    "@astrojs/vue": "7.1.6",
+    "@seikika/astro-report": "workspace:^",
+    "@seikika/ui": "workspace:^",
+    "astro": "7.4.13",
+    "vue": "^3.5.0"
+  },
+  "devDependencies": { "typescript": "5.9.3", "vue-tsc": "^3.0.0" }
+}

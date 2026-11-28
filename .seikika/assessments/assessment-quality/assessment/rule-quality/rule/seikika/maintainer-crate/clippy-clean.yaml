@@ -1,0 +1,38 @@
+apiVersion: seikika.com/assessment/v1
+entity: assessment:rule-quality/rule:seikika/maintainer-crate/clippy-clean
+rubric: assessment-quality
+subjectHash: c5bd2c0d06dc
+rubricHash: e30700fc6322cf9f05a301bb4638d6708e9f5eb5aea0281911229ce75bd37bf7
+assessor: {kind: agent, name: Codex, model: GPT-6}
+at: 2026-11-28
+verdicts:
+  - criterion: supported
+    verdict: pass
+    reason: >-
+      I checked the claims in
+      .seikika/assessments/rule-quality/rule/seikika/maintainer-crate/clippy-clean.yaml
+      against the cited sources. The runner command in .seikika/seikika.yaml
+      and parser in crates/seikika-connector-runner/src/main.rs support the
+      link between the reported status and crate diagnostics. The ratchet
+      skips runner and CI runs Clippy separately in .github/workflows/ci.yml.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      The assessment covers the warning gate, suppressions, diagnostic limits
+      and bronze placement. The orphaned error status was addressed in
+      .seikika/standards/crates.yaml while the original warning evidence
+      remains in place.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      Compare the runner parser in crates/seikika-connector-runner/src/main.rs
+      with the crate rule and fixtures in .seikika/tests/standards.test.yaml.
+      A diagnostic-producing warning and an error without diagnostics now have
+      explicit assertions.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      The suggestion points to a specific Clippy lint and the current
+      suppressions. The evidence gap was addressed in
+      .seikika/standards/crates.yaml with a safe status fallback and an exact
+      rerun command.

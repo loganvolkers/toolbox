@@ -63,6 +63,12 @@ pub struct Federation {
     /// A parent's child portals by git repository, kept at their branch (`crate::federation`).
     #[serde(default)]
     pub children: Vec<GitChild>,
+    /// Parent-staged report artifacts, keyed by their namespace in the report.
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+    pub report_sources: BTreeMap<String, ReportSource>,
+    /// Parent-approved equivalences between a child catalog record and a parent record.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub catalog_aliases: Vec<CatalogAlias>,
     /// The relation a caller needs on a child portal entity (default `can_run_actions`).
     pub permission: Option<String>,
     /// How a parent may dispatch this portal's actions: `{type: local}` or `{type: github-workflow, …}`.
@@ -75,6 +81,32 @@ pub struct Federation {
     /// Parent portals whose signed approvals this portal accepts on a dispatched run.
     #[serde(default)]
     pub accept_approvals_from: Vec<TrustedParent>,
+}
+
+/// A snapshot artifact selected and staged by the receiving portal.
+#[derive(Debug, Clone, Deserialize, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ReportSource {
+    /// Artifact path relative to the parent manifest directory.
+    pub path: String,
+    /// Source label shown in the report.
+    pub title: String,
+    /// Permit inclusion in the guest report and offline publications.
+    #[serde(default)]
+    pub public: bool,
+}
+
+/// An approved mapping from a child observation to an existing parent entity.
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct CatalogAlias {
+    /// Source key path, from the parent to the child that owns `from`.
+    pub source: Vec<String>,
+    /// Kind shared by the child and parent catalog records.
+    pub kind: String,
+    /// Source-local child entity ID.
+    pub from: String,
+    /// Canonical parent entity ID.
+    pub to: String,
 }
 
 /// One entry of `forges:`. Unset fields take the forge type's defaults (`crate::forge`).

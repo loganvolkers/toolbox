@@ -1,0 +1,38 @@
+apiVersion: seikika.com/assessment/v1
+entity: assessment:rule-quality/rule:seikika/maintainer-package/locked
+rubric: assessment-quality
+subjectHash: a6d810e00617
+rubricHash: e30700fc6322cf9f05a301bb4638d6708e9f5eb5aea0281911229ce75bd37bf7
+assessor: {kind: agent, name: Codex, model: GPT-6}
+at: 2026-11-28
+verdicts:
+  - criterion: supported
+    verdict: fail
+    reason: >-
+      I checked the claims in
+      .seikika/assessments/rule-quality/rule/seikika/maintainer-package/locked.yaml
+      against the cited sources. crates/seikika-connector-workspace/src/npm.rs
+      confirms the existence-only ancestor scan.
+      docs/design/package-standards.md:95 is a table separator, and the
+      lockfile row discusses the limits of other workspace-hygiene checks
+      rather than asserting insufficient package coverage.
+    suggestion: >-
+      Use the actual lockfile scan and its fixtures to support the coverage
+      finding.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      The assessment distinguishes discovery, workspace membership, lockfile
+      contents, the repair, and the silver placement in
+      .seikika/standards/packages.yaml.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      crates/seikika-connector-workspace/src/npm.rs scans ancestor paths by
+      filename, and its package fixture uses a minimal lockfile. This is
+      enough to reproduce why mere discovery passes.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      Checking workspace membership and parsed coverage would address the two
+      failures identified against .seikika/standards/packages.yaml.

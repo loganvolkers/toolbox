@@ -1,0 +1,59 @@
+apiVersion: seikika.com/assessment/v1
+entity: rule:seikika/maintainer-package/version-bounded
+rubric: rule-quality
+subjectHash: 33b3cb3ea232
+assessor: {kind: agent, name: cursor-assessor-06, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: measures-intent
+    verdict: fail
+    reason: >-
+      `is_wildcard` (crates/seikika-connector-workspace/src/npm.rs:72-92)
+      flags empty, `*`, `x`, `latest`, a range starting with `>`, and parts
+      ending in `.x`/`.*`. It misses ranges that move just as freely: any
+      dist-tag other than `latest` (`next`, `beta`, `canary`); a `>=` inside
+      an OR, because the `>` test only looks at the start of the whole string
+      (npm.rs:80) and the per-part test does not cover `>`; and an npm alias
+      such as `npm:left@*`. A scratch manifest with `"a": "next"`, `"b":
+      "^1.0.0 || >=2"` and `"d": "npm:left@*"` run through
+      target/debug/seikika-connector-workspace reported `wildcardRanges: []`.
+    suggestion: >-
+      Parse each range with a semver range grammar: treat any non-semver,
+      non-local, non-URL spec as a dist-tag (wildcard), check every `||` part
+      for a missing upper bound, and recurse into `npm:<name>@<range>`
+      aliases. Add those three cases to npm.rs tests.
+  - criterion: hard-to-game
+    verdict: fail
+    reason: >-
+      With `leftpad@latest` in the evidence, changing it to `leftpad@next`
+      clears the evidence while the dependency still follows whatever the
+      registry tags: `is_wildcard` only names `latest`
+      (crates/seikika-connector-workspace/src/npm.rs:77). Appending `|| >=0`
+      to a caret range also passes, since `>` is tested only at the start of
+      the spec and the per-part test ignores it (npm.rs:80-91). Both are
+      one-word edits, cheaper than picking a real bound.
+    suggestion: >-
+      The parser change above closes both. The fix text could also say "pick a
+      caret or tilde range on the version you test with" so the cheapest edit
+      is the bounded one.
+  - criterion: fix-leads-to-pass
+    verdict: pass
+    reason: >-
+      The evidence lists each offending `name@spec` (packages.yaml:90, e.g.
+      ['leftpad@*'] in .seikika/tests/standards.test.yaml:557-558), and the
+      fix says to replace them and which forms stay bounded (caret, tilde).
+      Rewriting each listed spec as `^x.y.z` passes.
+  - criterion: threshold-justified
+    verdict: pass
+    reason: >-
+      No numeric threshold; the boundary (caret and tilde bounded; `*`, `x`,
+      `latest`, `>=` not) is stated in docs/design/package-standards.md:26-28
+      and D76 (docs/decisions/D01M7W56B7R0000000000000000.md). Bronze matches
+      the card rationale "Bronze bounds what can be installed"
+      (packages.yaml:50) and OpenSSF's guidance to bound major ranges
+      (https://github.com/ossf/package-manager-best-practices/blob/main/published/npm.md).
+summary: >-
+  Right intent, leaky detector. The string matcher catches the forms named
+  in the design doc but not other dist-tags, `>=` inside an OR, or npm
+  aliases, so one-word edits clear the evidence while the range still
+  floats. A semver-range parse in npm.rs would fix both failing criteria.

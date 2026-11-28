@@ -1,0 +1,46 @@
+apiVersion: seikika.com/assessment/v1
+entity: assessment:rule-quality/rule:seikika/vs-backstage-performance/ready
+rubric: assessment-quality
+subjectHash: 9761206030df
+rubricHash: e30700fc6322cf9f05a301bb4638d6708e9f5eb5aea0281911229ce75bd37bf7
+assessor: {kind: agent, name: Codex, model: GPT-6}
+at: 2026-11-28
+verdicts:
+  - criterion: supported
+    verdict: fail
+    reason: >-
+      I checked the claims in
+      .seikika/assessments/rule-quality/rule/seikika/vs-backstage-performance/ready.yaml
+      against the cited sources.
+      experiments/backstage-compare/measure.py:141-156 and :257-267 support
+      the empty-start finding. The assessment attributes the one-level ladder
+      to D01M857ZB468ZM2YS6GNSEG6YB9, which defines relative standings. The
+      configured bronze level is in
+      .seikika/standards/backstage-comparison.yaml:222.
+    suggestion: >-
+      Attribute the checked level to the scorecard and cite the decision for
+      relative standing.
+  - criterion: complete
+    verdict: unsure
+    reason: >-
+      experiments/backstage-compare/measure.py:155-156 and :257-262 stop the
+      timer at the product’s own readiness response. The assessment says that
+      only faster startup can improve the value, but never weighs an earlier
+      readiness signal.
+    suggestion: >-
+      Assess what prevents declaring readiness prematurely, or require a
+      representative read at the timing boundary.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      experiments/backstage-compare/measure.py:257-283 marks first readiness
+      and recovery separately. A reviewer can reproduce which stage produces
+      each clock value.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      The suggestion to narrow the rationale to first start and refer to
+      recovery would align the rule with
+      experiments/backstage-compare/measure.py:257-283. Measuring ready after
+      a populated restart would instead align the probe with
+      experiments/backstage-compare/RESEARCH.md.

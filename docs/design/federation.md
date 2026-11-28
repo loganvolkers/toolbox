@@ -13,6 +13,11 @@
 > combined catalog, scores, campaigns, tracks, and action forms with source labels. See the
 > [organization federation example](../../examples/github-org-federation/README.md).
 
+> **Report composition and catalog identity (D01M8FRFDEKE0F5XHG7ZSNEJ9S8):** the parent can
+> also stage complete report artifacts at build time. Source paths qualify the data, and the
+> parent can explicitly alias a child observation to one canonical catalog entity. See the
+> [inventory research and implementation](./federation-inventory.md).
+
 The remaining design covers standards distribution, catalog and score roll-up, and graduation of
 standards. It builds on
 [repo-portals.md](./repo-portals.md) (what exists today), [ratchets.md](./ratchets.md),
@@ -32,7 +37,7 @@ A Seikika deployment becomes a tree (or DAG) of portals:
 | Flow | What moves | How (proposed) |
 |---|---|---|
 | **Standards down** | Kinds, fields, scorecards, policies and checks published by a parent | Versioned **standard packages** a child `include`s by name and digest. The parent's rules arrive read-only, so a child can add and tighten but never weaken them |
-| **Results up** | Each child's scorecard results, evidence counts and its own entities | The parent **reads children's committed report files** (or their ingest pushes, later) as ordinary connector records. No portal calls another at runtime |
+| **Results up** | Each child's catalog, definitions, score results, assessments, comparisons, and evidence | The parent reads published Git snapshots or build-staged artifacts and composes the report from local data |
 | **Graduation** | A standard moves from one team to the company | Each move is the same rule changing home: team package → org package → company package. A stage tag (`experimental → advisory → mandatory`) controls enforcement, and `seikika plan` shows the fleet impact first |
 
 Why this shape:
@@ -95,7 +100,7 @@ and pinning packages from a registry: an OCI artifact, a git ref, or npm, alongs
 
 | Option | Mechanism | Pros | Cons |
 |---|---|---|---|
-| **A. Pull committed reports** (recommended first) | Children commit `seikika report` baselines (`seikika-report/v1`, already built). The parent's `git-files` connector reads them across the org's repos | No new protocol; works with leaf CI only; history is git history; the parent can't be "down" for children | Coarse: levels and evidence counts, not entity details; as fresh as the default branch |
+| **A. Compose report artifacts** (built) | Children publish `seikika report -o web` JSON in Git or the parent stages the artifact with its build | Full report data can be rendered locally. Git and build artifacts supply reproducible inputs | Refresh follows the source commit or parent build |
 | **B. Push to the parent's ingest API** | Child CI runs `seikika report -o json` and posts records to the parent as connector `child:<repo>` | Fresher; richer (child entities and fields) | Needs credentials per child; the parent must be up; the trust boundary is subtle (a child asserting facts about itself) |
 | **C. Parent runs the child's checks** | The parent clones repos and runs their `seikika report` itself (Scorecard-style fleet scan) | Uniform; doesn't trust child CI | Compute cost; needs build environments for every ecosystem |
 
@@ -117,11 +122,9 @@ repository report.
 - This mirrors CODEOWNERS-verified ownership (D17).
 
 **Identity.**
-- Entity ids are global (`repository:acme/payments-api`), so a child's report merges onto the
-  parent's entity.
-- In the report, child entities and definition names are qualified by their source. A child and the
-  parent can both show their own score for the same repository. The parent standard only uses the
-  facts it acquired itself.
+- Entities and definitions are qualified by source path. The parent can declare same-kind aliases
+  for equivalent records. The canonical row retains the parent fields, and each observation and
+  score keeps its prior source. [Composition rules](./federation-inventory.md#composition-and-access)
 
 ## 5. Multi-layer hierarchies
 

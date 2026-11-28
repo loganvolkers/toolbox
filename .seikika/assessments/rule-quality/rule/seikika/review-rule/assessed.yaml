@@ -1,0 +1,66 @@
+apiVersion: seikika.com/assessment/v1
+entity: rule:seikika/review-rule/assessed
+rubric: rule-quality
+subjectHash: fa175a11ee0d
+assessor: {kind: agent, name: cursor-assessor-04, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: measures-intent
+    verdict: fail
+    reason: >-
+      The rationale says a current review judged "the rule as it now stands"
+      (.seikika/standards/meta.yaml:951-954). But fresh means only that the
+      assessment's subjectHash equals the rule's hash (meta.yaml:160-165), and
+      that hash covers just the rule's own YAML
+      (crates/seikika-cli/src/meta.rs:272,
+      crates/seikika-cli/src/model.rs:14-18). The connector code and computed
+      fields the check reads are not in it. A change to how
+      crates/seikika-connector-workspace/src/rust.rs counts asserts changes
+      what has-tests means, yet its review stays fresh; that assessment had to
+      confirm by hand that "the code the reasons cite" was unchanged
+      (.seikika/assessments/rule-quality/rule/seikika/maintainer-crate/has-tests.yaml).
+    suggestion: >-
+      Add to the rule's hash the definitions of the fields its check and
+      evidence read (`check.fields` and `evidence.fields`, including their
+      computed CEL), plus the source hash of the connector that produces them,
+      as the crate hash does for src/ (.seikika/standards/crates.yaml:51-54).
+  - criterion: hard-to-game
+    verdict: fail
+    reason: >-
+      Any file with the right subjectHash passes, whatever it says. `seikika
+      assess check` asks only for every criterion and 10-character reasons
+      (crates/seikika-model/schema/assessment.schema.json:36), and the ratchet
+      asks for a name and suggestions
+      (.seikika/standards/assessments.yaml:165). An all-pass file with one
+      stock citation per reason is the cheapest way to pass, and it also
+      passes gold. Unlike review-crate's gold
+      (.seikika/standards/crates.yaml:433-450), nothing on this card asks for
+      a second look.
+    suggestion: >-
+      At gold, add an `independently-reviewed` rule like review-crate's,
+      reading `independentReview` (already computed by link_reviews in
+      crates/seikika-connect/src/assessment.rs:284-295) through an
+      `inbound.assessesRule[0].independentReview` field. A hollow assessment
+      then caps at silver until a second assessor checks it.
+  - criterion: fix-leads-to-pass
+    verdict: pass
+    reason: >-
+      The evidence separates "changed since it was assessed" from "not
+      assessed" (meta.yaml:945-947, pinned at
+      .seikika/tests/standards.test.yaml:878-884). The fix gives the brief
+      command, the file to write and `seikika assess check .seikika`
+      (meta.yaml:948-950). Writing the file the brief names, with its
+      subjectHash, makes `reviewState` fresh.
+  - criterion: threshold-justified
+    verdict: pass
+    reason: >-
+      There is no number. Silver as "a current review" is the silver cell of
+      docs/design/thresholds.md:55. It is advisory so that staleness never
+      blocks an edit (D01M831P5QWJQ4A2FT85N5MXJQF, meta.yaml:900-901).
+summary: >-
+  The fix works and the level is right, but "current" is narrower than the
+  rationale claims. The rule's hash covers its YAML, not the computed
+  fields or connector code its check depends on, so a review stays fresh
+  when the rule's meaning changes underneath it. A hollow assessment with
+  the right hash also passes, and this card, unlike review-crate, never
+  asks for a second assessor.

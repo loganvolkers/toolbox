@@ -1,0 +1,62 @@
+apiVersion: seikika.com/assessment/v1
+entity: rule:seikika/meta-field/computed-readable
+rubric: rule-quality
+subjectHash: 1535c5de5a6e
+assessor: {kind: agent, name: cursor-assessor-03, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: measures-intent
+    verdict: pass
+    reason: >-
+      `computedNodes` and `computedLoops` come from the seikika_expr analysis
+      of the field's `computed:` CEL
+      (crates/seikika-cli/src/model.rs:158-161), the same analysis meta-rule's
+      `readable` applies to checks. Fields that aren't computed read 0
+      (.seikika/standards/meta.yaml:301-302). Node count and comprehension
+      nesting are what "reads at a glance" can mean for a deterministic check,
+      and the evidence states both numbers with the bound (meta.yaml:818-821).
+  - criterion: hard-to-game
+    verdict: fail
+    reason: >-
+      The comment at model.rs:158-159 says the measure exists so that moving
+      logic out of a rule into a computed field doesn't hide it. A kind's map
+      `set:` is the next hiding place, and nothing measures it: field records
+      carry only `computedCel` (model.rs:158-161), rule records carry their
+      check and evidence analysis (crates/seikika-cli/src/meta.rs:257-258),
+      and no record carries the size of a map rule's `set:`. Logic over one
+      record can move verbatim from `computed:` into the map rule and pass.
+      S4S's own Field map `set:` (meta.yaml:295-302) is a 13-key expression
+      that no rule sizes.
+    suggestion: >-
+      Emit nodes and loops for each map rule's `set:` (and relation
+      expressions) on the Kind record, and score them against the same
+      60-node, one-loop bound, or attribute each key's expression to the field
+      it sets.
+  - criterion: fix-leads-to-pass
+    verdict: pass
+    reason: >-
+      The evidence gives the node count, the loop depth and the bound, for
+      example "80 CEL nodes, loop depth 2" for demo/Tiny.size
+      (.seikika/tests/standards.test.yaml:1330-1336). Both moves in the fix,
+      splitting into simpler fields or moving logic into the connector, lower
+      both numbers for the field that failed.
+  - criterion: threshold-justified
+    verdict: unsure
+    reason: >-
+      The number is measured: 60 nodes and no nested loops, against a median
+      of 12 and a 90th percentile of 36 over 59 computed fields, with the one
+      at 65 split (docs/design/thresholds.md:43). The level isn't argued.
+      meta-rule's `readable` applies the same kind of bound to checks and sits
+      at silver because every rule meets it (thresholds.md:41). Every computed
+      field meets this one too, yet it sits at gold, and the design doc's
+      ladder (docs/design/scorecards-for-scorecards.md:208) doesn't list it at
+      all.
+    suggestion: >-
+      State the level's reason in the thresholds.md:43 row (why gold, not
+      silver beside `readable`), or move it to silver for the reason
+      `readable` gives.
+summary: >-
+  The measure is the right one and its number is measured on this
+  repository. Moving logic into a map rule's `set:`, which no rule sizes,
+  still escapes it. Its gold level is unexplained next to the silver
+  `readable`.

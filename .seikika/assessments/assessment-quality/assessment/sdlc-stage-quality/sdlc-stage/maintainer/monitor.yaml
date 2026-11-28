@@ -1,0 +1,39 @@
+apiVersion: seikika.com/assessment/v1
+entity: assessment:sdlc-stage-quality/sdlc-stage:maintainer/monitor
+rubric: assessment-quality
+subjectHash: d62e5c5fa2ac
+rubricHash: e30700fc6322cf9f05a301bb4638d6708e9f5eb5aea0281911229ce75bd37bf7
+assessor: {kind: agent, name: Codex, model: GPT-6}
+at: 2026-11-28
+verdicts:
+  - criterion: supported
+    verdict: pass
+    reason: >-
+      I checked the claims in
+      .seikika/assessments/sdlc-stage-quality/sdlc-stage/maintainer/monitor.yaml
+      against the cited sources. The rust job in .github/workflows/ci.yml
+      invokes actions/report/action.yml with the already built binaries. Its
+      default CI mode rejects regressions and stale or missing baselines.
+      .seikika/README.md documents local reproduction. The stale wording in
+      docs/design/maintainer-sdlc.md was corrected during this review.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      The assessment covers all six criteria, including the declared evidence
+      in .seikika/sdlc/stages/maintainer.yaml and the reusable pins in
+      scripts/ci-tools.sh. It distinguishes a functioning CI gate from
+      documentation and timing gaps.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      The ratchet and baseline update commands are listed in
+      .seikika/README.md, and the CI action mode is in
+      actions/report/action.yml. The generated .seikika/results.json is the
+      artifact the CI run compares.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      The timing and second reference suggestions name exact destinations. The
+      released consumer pilot in .github/workflows/mise.yml already runs a
+      second ratchet and is concrete evidence to cite in
+      .seikika/sdlc/stages/maintainer.yaml.

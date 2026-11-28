@@ -1,0 +1,47 @@
+apiVersion: seikika.com/assessment/v1
+entity: assessment:crate-design/crate:seikika-telemetry
+rubric: assessment-quality
+subjectHash: 069724138222
+rubricHash: e30700fc6322cf9f05a301bb4638d6708e9f5eb5aea0281911229ce75bd37bf7
+assessor: {kind: agent, name: Codex, model: GPT-6}
+at: 2026-11-28
+verdicts:
+  - criterion: supported
+    verdict: fail
+    reason: >-
+      I checked the claims in
+      .seikika/assessments/crate-design/crate/seikika-telemetry.yaml against
+      the cited sources. crates/seikika-telemetry/src/scrub.rs now truncates
+      at a UTF-8 character boundary and has a regression test. The assessment
+      describes that case as unhandled and untested.
+    suggestion: >-
+      Update the test-risk verdict to reflect the new truncation test and
+      separately check the remaining initialization branches.
+  - criterion: complete
+    verdict: unsure
+    reason: >-
+      .seikika/standards/crates.yaml frames replaceable defaults around the
+      charter’s named defaults. The assessment treats the public Prometheus
+      types in crates/seikika-telemetry/src/catalog.rs as sufficient for that
+      criterion, while they also bear on the small-contract criterion.
+    suggestion: >-
+      Explain which criterion the exposed telemetry types affect and reassess
+      both against the current rubric.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      The runtime wiring and scraper test are visible in
+      .github/workflows/ci.yml and
+      crates/seikika-telemetry/tests/prom_catalog.rs.
+      crates/seikika-telemetry/src/scrub.rs documents the changed local
+      behavior.
+  - criterion: actionable
+    verdict: fail
+    reason: >-
+      crates/seikika-telemetry/src/resource.rs applies the service-name
+      requirement to an absent gathered value in CI mode. The proposed
+      explicitly empty value does not as written establish that branch
+      independently of other resource configuration.
+    suggestion: >-
+      Use a controlled resource input that cannot supply a service name and
+      assert the missing-name result.

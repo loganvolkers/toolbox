@@ -1,0 +1,45 @@
+apiVersion: seikika.com/assessment/v1
+entity: assessment:rule-quality/rule:seikika/maintainer-ci-reliability/failures-visible
+rubric: assessment-quality
+subjectHash: 61a6c1995630
+rubricHash: e30700fc6322cf9f05a301bb4638d6708e9f5eb5aea0281911229ce75bd37bf7
+assessor: {kind: agent, name: Codex, model: GPT-6}
+at: 2026-11-28
+verdicts:
+  - criterion: supported
+    verdict: pass
+    reason: >-
+      I checked the claims in
+      .seikika/assessments/rule-quality/rule/seikika/maintainer-ci-reliability/failures-visible.yaml
+      against the cited sources.
+      crates/seikika-connector-workspace/src/workflows.rs:106-167 uses
+      pattern-based checks for known failure-handling forms. The assessment
+      accurately identifies limitations of the parser and the job and step
+      evidence those checks emit.
+  - criterion: complete
+    verdict: fail
+    reason: >-
+      The assessment passes measures-intent even though the later analysis
+      describes substantial coverage gaps.
+      packages/github-actions/fragments/github-actions.yaml:410-423 promises
+      visibility, while
+      crates/seikika-connector-workspace/src/workflows.rs:106-167 implements a
+      narrower static proxy.
+    suggestion: >-
+      Reassess measures-intent against the full stated property, and
+      distinguish supported static cases from results that need runtime
+      evidence.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      The rule input and emitted job or step locations can be traced in
+      crates/seikika-connector-workspace/src/workflows.rs:136-164.
+      .seikika/tests/standards.test.yaml checks a reported job.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      The proposal to require a meaningful outcome assertion addresses a
+      concrete limitation of
+      crates/seikika-connector-workspace/src/workflows.rs:157-161. Broader
+      expression coverage would need tests for intentional and accidental
+      failures.

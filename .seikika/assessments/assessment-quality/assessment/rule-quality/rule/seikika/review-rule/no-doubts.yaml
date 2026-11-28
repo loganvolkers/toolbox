@@ -1,0 +1,38 @@
+apiVersion: seikika.com/assessment/v1
+entity: assessment:rule-quality/rule:seikika/review-rule/no-doubts
+rubric: assessment-quality
+subjectHash: 7dcedeec20d5
+rubricHash: e30700fc6322cf9f05a301bb4638d6708e9f5eb5aea0281911229ce75bd37bf7
+assessor: {kind: agent, name: Codex, model: GPT-6}
+at: 2026-11-28
+verdicts:
+  - criterion: supported
+    verdict: fail
+    reason: >-
+      I checked the claims in
+      .seikika/assessments/rule-quality/rule/seikika/review-rule/no-doubts.yaml
+      against the cited sources. The individual rule still requires a fresh
+      assessment with no unsure criteria, but
+      packages/meta-scoring/fragments/catalog.yaml now requires independent
+      verification in the sibling gold rule. The original claim about the
+      entire card is obsolete, and the fix was clarified during this review.
+    suggestion: >-
+      Reassess resistance to unsupported agreement for the individual
+      predicate while acknowledging the separate gold requirement.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      The assessment distinguishes the meaning of an unsure criterion from
+      remediation and explains gold placement using docs/design/thresholds.md.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      The doubts predicate and no-current-assessment evidence are in
+      packages/meta-scoring/fragments/catalog.yaml.
+      .seikika/tests/standards.test.yaml includes explicit doubts and
+      freshness cases.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      The proposed fix names the evidence to update and the reassessment
+      command, now reflected in packages/meta-scoring/fragments/catalog.yaml.

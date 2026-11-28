@@ -3,6 +3,27 @@ import { DurableObject } from "cloudflare:workers";
 const PORT = 8080;
 const IDLE_TIMEOUT_MS = 30 * 60 * 1000;
 const STARTUP_TIMEOUT_MS = 25_000;
+const GITHUB_APP_BINDINGS = ["GITHUB_APP_ID", "SEIKIKA_SECRET_GITHUB_APP_PRIVATE_KEY"];
+
+function telemetryEnvironment(env) {
+  const { SEIKIKA_OTLP_ENDPOINT, SEIKIKA_OTLP_TOKEN } = env;
+  if (!SEIKIKA_OTLP_ENDPOINT && !SEIKIKA_OTLP_TOKEN) return {};
+  if (!/^https:\/\/[a-z0-9.-]+\/?$/i.test(SEIKIKA_OTLP_ENDPOINT ?? "") ||
+      !/^[a-f0-9]{64}$/.test(SEIKIKA_OTLP_TOKEN ?? "")) {
+    console.error("OTLP disabled: set an HTTPS SEIKIKA_OTLP_ENDPOINT and a hex SEIKIKA_OTLP_TOKEN");
+    return {};
+  }
+  return {
+    SEIKIKA_TELEMETRY: "prod",
+    RUST_LOG: "info",
+    OTEL_SERVICE_NAME: "seikika-demo",
+    OTEL_EXPORTER_OTLP_ENDPOINT: SEIKIKA_OTLP_ENDPOINT,
+    OTEL_EXPORTER_OTLP_PROTOCOL: "http/protobuf",
+    OTEL_EXPORTER_OTLP_HEADERS: `authorization=Bearer%20${SEIKIKA_OTLP_TOKEN}`,
+    OTEL_TRACES_SAMPLER: "always_on",
+    OTEL_METRIC_EXPORT_INTERVAL: "15000",
+  };
+}
 
 function containerEnvironment(env) {
   const { DATABASE_URL, SEIKIKA_SIGNING_KEY, SEIKIKA_AUTH_MODE } = env;
@@ -13,7 +34,9 @@ function containerEnvironment(env) {
   const publicCatalog = env.SEIKIKA_PUBLIC_REPOSITORIES
     ? { SEIKIKA_PUBLIC_REPOSITORIES: env.SEIKIKA_PUBLIC_REPOSITORIES }
     : {};
-  const organization = env.SEIKIKA_ORG_GITHUB_TOKEN ? { GH_TOKEN: env.SEIKIKA_ORG_GITHUB_TOKEN } : {};
+  const organization = Object.fromEntries(
+    GITHUB_APP_BINDINGS.filter(name => env[name]).map(name => [name, env[name]]),
+  );
   if (SEIKIKA_PREVIEW_ACCESS_ISSUER || SEIKIKA_PREVIEW_ACCESS_AUDIENCE || SEIKIKA_PREVIEW_ACCESS_ADMIN) {
     if (!SEIKIKA_PREVIEW_ACCESS_ISSUER || !SEIKIKA_PREVIEW_ACCESS_AUDIENCE || !SEIKIKA_PREVIEW_ACCESS_ADMIN) {
       throw new Error("Set all three managed Preview Access bindings");
@@ -29,7 +52,10 @@ function containerEnvironment(env) {
       SEIKIKA_SEED_ADMIN: SEIKIKA_PREVIEW_ACCESS_ADMIN,
     };
   }
-  const values = { ...organization, DATABASE_URL, SEIKIKA_SIGNING_KEY, SEIKIKA_AUTH_MODE };
+  const catalog = env.SEIKIKA_CLOUDFLARE_CATALOG_TOKEN
+    ? { SEIKIKA_CLOUDFLARE_CATALOG_TOKEN: env.SEIKIKA_CLOUDFLARE_CATALOG_TOKEN }
+    : {};
+  const values = { ...organization, ...catalog, DATABASE_URL, SEIKIKA_SIGNING_KEY, SEIKIKA_AUTH_MODE };
   if (SEIKIKA_AUTH_MODE === "cloudflare-access") {
     const { SEIKIKA_CF_TEAM_DOMAIN, SEIKIKA_AUDIENCE } = env;
     if (!SEIKIKA_CF_TEAM_DOMAIN || !SEIKIKA_AUDIENCE) {
@@ -49,7 +75,8 @@ export class SeikikaContainer extends DurableObject {
 
   async #start(container) {
     if (!container.running) {
-      container.start({ env: containerEnvironment(this.env), enableInternet: true });
+      const env = { ...containerEnvironment(this.env), ...telemetryEnvironment(this.env) };
+      container.start({ env, enableInternet: true });
     }
     await container.setInactivityTimeout(IDLE_TIMEOUT_MS);
     const port = container.getTcpPort(PORT);

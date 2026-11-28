@@ -1,0 +1,38 @@
+apiVersion: seikika.com/assessment/v1
+entity: assessment:rule-quality/rule:seikika/maintainer-connector/described
+rubric: assessment-quality
+subjectHash: 350ffc345717
+rubricHash: e30700fc6322cf9f05a301bb4638d6708e9f5eb5aea0281911229ce75bd37bf7
+assessor: {kind: agent, name: Codex, model: GPT-6}
+at: 2026-11-28
+verdicts:
+  - criterion: supported
+    verdict: pass
+    reason: >-
+      I checked the claims in
+      .seikika/assessments/rule-quality/rule/seikika/maintainer-connector/described.yaml
+      against the cited sources.
+      crates/seikika-connector-workspace/src/connectors.rs:96-117 selects the
+      main source ahead of the library and joins leading crate documentation.
+      .seikika/standards/connectors.yaml checks that and a nonempty Cargo
+      description.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      The assessment distinguishes minimum presence, usefulness, the two
+      separate diagnostics, and the bronze requirement in
+      docs/design/connector-standards.md.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      crates/seikika-connector-workspace/src/connectors.rs:96-117 and
+      .seikika/standards/connectors.yaml allow a reviewer to trace a thin
+      binary wrapper and a short description.
+      .seikika/tests/standards.test.yaml checks the missing-description
+      result.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      Reading documentation from a thin wrapper’s library and requiring
+      description content tied to record kinds would address the two gaps
+      described against .seikika/standards/connectors.yaml.

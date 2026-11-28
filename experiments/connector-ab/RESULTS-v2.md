@@ -40,7 +40,7 @@ Learning tax closed without changing the bar:
 
 ## Rematch note (C2)
 
-First pass tied C at 15. Product fix: skill + RUN tip that a dump-only resync uses `--config` and does not need a portal edit. Rematch reset arms to tenant-A trees, then re-ran phase 4. Arm A left `portal/seikika.yaml` on tenant A and only rewrote `OUT/entities.ndjson`. Bar unchanged.
+First pass tied C at 15. Product fix: skill + RUN tip that a dump-only resync uses `--config` and does not need a portal edit. Rematch reset arms to tenant-A trees, then re-ran phase 4. Arm A left `.seikika/seikika.yaml` on tenant A and only rewrote `OUT/entities.ndjson`. Bar unchanged.
 
 ## Friction still open (not scored)
 

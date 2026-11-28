@@ -1,0 +1,37 @@
+apiVersion: seikika.com/assessment/v1
+entity: assessment:rule-quality/rule:seikika/sdlc-stage/built
+rubric: assessment-quality
+subjectHash: 8895b525635c
+rubricHash: e30700fc6322cf9f05a301bb4638d6708e9f5eb5aea0281911229ce75bd37bf7
+assessor: {kind: agent, name: Codex, model: GPT-6}
+at: 2026-11-28
+verdicts:
+  - criterion: supported
+    verdict: pass
+    reason: >-
+      I checked the claims in
+      .seikika/assessments/rule-quality/rule/seikika/sdlc-stage/built.yaml
+      against the cited sources. The declared status and empty gaps in
+      .seikika/sdlc/stages/maintainer.yaml satisfy the gold rule in
+      .seikika/standards/sdlc.yaml while the two silver checks fail. The cited
+      numerator remains seven in .seikika/results.json, whose current
+      denominator is 27.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      The assessment covers the distinction between the rule outcome and the
+      cumulative level, the insufficient evidence for the claim, how the fix
+      changes the predicate, and the gold threshold recorded in
+      docs/design/thresholds.md.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      Compare maintainer/plan in .seikika/sdlc/stages/maintainer.yaml with the
+      built predicate in .seikika/standards/sdlc.yaml, then check the stage
+      results in .seikika/results.json to reproduce the central finding.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      The suggested runnable-command and CI-check predicates already have
+      corresponding entity fields in .seikika/standards/sdlc.yaml. The second
+      suggestion makes a known gap independently observable.

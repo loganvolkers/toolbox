@@ -1,0 +1,54 @@
+apiVersion: seikika.com/assessment/v1
+entity: assessment:rule-quality/rule:seikika/maintainer-agent-doc/has-commands
+rubric: assessment-quality
+subjectHash: 7605007e515f
+assessor: {kind: agent, name: cursor-reviewer-11, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: supported
+    verdict: fail
+    reason: >-
+      Most citations in
+      .seikika/assessments/rule-quality/rule/seikika/maintainer-agent-doc/has-commands.yaml
+      hold. The command_lines regex is agentsmd.rs:69-72. A scratch file with
+      "# Seikika", "We never use npm here." and one more Seikika line gave
+      commandLines 3, and a file whose only commands were `go test ./...` and
+      `make test` gave 0. AGENTS.md has 16 lines containing "Seikika". D75
+      says "a test or build command". However, the hard-to-game reason claims
+      the partial fixture fails "because its text has none of the six words"
+      (.seikika/fixtures/workspace.ndjson:29). That record is hand-written and
+      has no text, and the same record carries ciMissingCommands ['cargo
+      nope']. That value could only come from a backtick `cargo nope`, which
+      command_lines would count. The cited source contradicts the claim. Also,
+      the has-commands row is agents-md-standards.md:68; line 67 is
+      links-resolve.
+    suggestion: >-
+      Drop the fixture sentence, or say instead that the partial record is
+      internally inconsistent (commandLines 0 alongside ['cargo nope']). Cite
+      agents-md-standards.md:22,68.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      Both fails are right in both directions, as the scratch runs show
+      (agentsmd.rs:69-72). fix-leads-to-pass and threshold-justified are right
+      too: the fix names the six tools (agent-docs.yaml:96-98), and "at least
+      one" is D75's silver item. The inconsistent fixture is a test problem
+      for meta-rule. It does not hide a rule-quality failure.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      The verdicts rest on a one-line regex (agentsmd.rs:70) and two scratch
+      files that a second assessor can repeat, as I did.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      Counting only backtick or fenced invocations through the ci_missing
+      regex (agentsmd.rs:40-42) stops prose mentions from counting, which
+      flips hard-to-game. Adding make, go and similar runners stops the false
+      fail, which, together with the first change, flips measures-intent.
+summary: >-
+  The verdicts are right and reproduce: words count as commands, and Go or
+  Make projects fail. But the reason misreads the partial fixture: it is a
+  hand-written record whose `cargo nope` evidence contradicts its
+  commandLines 0, so it shows nothing about "text with none of the six
+  words". One design-doc line number is also off by one.

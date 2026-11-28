@@ -1,0 +1,83 @@
+{
+  "format": "seikika-pr-policy/v1",
+  "owner": "group:maintainers",
+  "checks": {
+    "acceptance-diagnostics": ["python3", "scripts/assessment-probes.py", "acceptance"],
+    "onboarding": ["python3", "scripts/assessment-probes.py", "onboarding"],
+    "module-coupling": ["node", "scripts/check-coupling.test.mjs"],
+    "report-states": ["pnpm", "storybook:probe", "--", "--contracts-only"],
+    "sdk-docs": ["python3", "scripts/assessment-probes.py", "sdk"]
+  },
+  "routes": [
+    {
+      "id": "module-coupling",
+      "subject": "Module boundaries and deployment independence",
+      "paths": ["Cargo.toml", "crates/*", "npm/*", "pnpm-workspace.yaml", "scripts/check-coupling*", ".seikika/standards/module-coupling.yaml", "docs/design/module-coupling.md"],
+      "owner": "group:maintainers",
+      "risk": "high",
+      "checks": ["module-coupling", "report-states"],
+      "criteria": {
+        "dependency-direction": "Does each production dependency enter through a public contract without crossing into deployment data or creating a cycle?",
+        "deployment-variance": "Would the automated assertions fail if an implementation copied a demo URL, entity, scorecard or rendered state instead of using the active portal data?"
+      }
+    },
+    {
+      "id": "onboarding",
+      "subject": "Published onboarding and first repository result",
+      "paths": [
+        "npm/site/src/content/docs/start/*",
+        "crates/seikika-cli/src/main.rs",
+        "crates/seikika-cli/src/init.rs",
+        "crates/seikika-cli/src/init-catalog.yaml",
+        "crates/seikika-connector-workspace/*",
+        "examples/repo-portal-starter/*",
+        "docs/RELEASING.md",
+        "scripts/assessment-probes.py",
+        "scripts/install-release.sh",
+        "scripts/check-mise.py",
+        "mise.toml"
+      ],
+      "owner": "group:maintainers",
+      "risk": "high",
+      "checks": ["onboarding"],
+      "criteria": {
+        "supported-install": "Do the documented installation and fallback match the release and binary they name?",
+        "first-success": "Can the intended reader follow the documented prerequisites, expected output and recovery?"
+      }
+    },
+    {
+      "id": "sdk",
+      "subject": "Published Rust, Vue and Astro SDK contracts",
+      "paths": ["crates/seikika-connect/*", "npm/ui-kit/*", "npm/report-ui/integration.*", "npm/report-ui/package.json", "npm/report-ui/src/layouts/*", "npm/site/src/content/docs/authors/*", "scripts/sdk-docs.mjs", "Cargo.lock", "pnpm-lock.yaml", ".github/workflows/publish-*.yml"],
+      "owner": "group:maintainers",
+      "risk": "high",
+      "checks": ["sdk-docs"],
+      "criteria": {
+        "consumer-contract": "Are behavior, errors, runtime requirements and compatibility described accurately for changed public entry points?"
+      }
+    },
+    {
+      "id": "acceptance",
+      "subject": "CLI acceptance and CI failure diagnostics",
+      "paths": ["scripts/m[234]-acceptance.sh", "scripts/assessment-probes.py", ".github/workflows/ci.yml", "crates/seikika-cli/src/assess.rs", "crates/seikika-api/src/assess.rs", "crates/seikika-model/schema/assessment.schema.json", ".seikika/assessment-pr.json", "scripts/assessment-pr.py"],
+      "owner": "group:maintainers",
+      "risk": "high",
+      "checks": ["acceptance-diagnostics"],
+      "criteria": {
+        "failure-path": "Do changed checks preserve a failing exit status and show the reader the evidence needed to recover?"
+      }
+    },
+    {
+      "id": "report-design",
+      "subject": "Published scorecard report, design system and reader tasks",
+      "paths": ["npm/report-ui/src/*", "npm/report-ui/stories/*", "npm/report-ui/fixtures/*", "npm/report-ui/scripts/probe.mjs", "npm/ui/src/*", "npm/ui-kit/src/*", "npm/site/src/components/*", "npm/site/src/styles/*", "docs/design/design-audit.md"],
+      "owner": "group:maintainers",
+      "risk": "advisory",
+      "design": true,
+      "checks": ["report-states"],
+      "criteria": {
+        "reader-task": "Can a reader understand and act on the changed report state without inferring facts absent from the evidence?"
+      }
+    }
+  ]
+}

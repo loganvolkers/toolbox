@@ -1,0 +1,11 @@
+federation:
+  reportSources:
+    seikika/seikika:
+      title: Seikika for Seikika
+      path: publications/seikika.json
+      public: true
+  catalogAliases:
+    - source: [seikika/seikika]
+      kind: Repository
+      from: repo:seikika/seikika
+      to: repository:seikika/seikika

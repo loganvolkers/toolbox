@@ -1,0 +1,67 @@
+apiVersion: seikika.com/assessment/v1
+entity: scorecard:seikika/meta-assessment
+rubric: scorecard-quality
+subjectHash: 01b5fc4af09f
+assessor: {kind: agent, name: cursor-assessor-04, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: one-concern
+    verdict: pass
+    reason: >-
+      All four rules (.seikika/standards/assessments.yaml:166-215) check one
+      thing: whether an assessment file is well-formed enough to act on and
+      check (a named assessor, suggestions, citations). The audience is
+      whoever writes or reads assessments, which .seikika/README.md:24 lists
+      as "all (our judgement)". Whether the content is right is left to
+      review-assessment, as D80 splits it. No rule mixes in speed, security or
+      freshness.
+  - criterion: levels-are-a-ladder
+    verdict: pass
+    reason: >-
+      Bronze is the cheap, ratcheted floor: a suggestion for each finding and
+      a name (assessments.yaml:165-187). Silver asks findings to cite
+      something (:188-203), and gold asks every reason to (:204-215). Gold's
+      `uncited` is a superset of silver's, so each level contains the one
+      below. Fixtures reach none, bronze, silver and gold
+      (.seikika/tests/standards.test.yaml:951-981). Live, 28 of 29 assessments
+      are gold and one is silver (.seikika/results.json), so gold is reachable
+      without being free.
+  - criterion: no-obvious-gap
+    verdict: fail
+    reason: >-
+      The card checks that a reason cites a source, but not that a suggestion
+      names where to act. meta-rule asks that of a rule's fix
+      (`fix-names-a-place`, lessons L1 and L2 in
+      docs/design/scorecards-for-scorecards.md:104-109 and
+      docs/design/thresholds.md:46), and a suggestion is an assessment's fix.
+      The schema requires only that a suggestion is a string
+      (crates/seikika-model/schema/assessment.schema.json:37), and
+      `unsuggested` accepts any non-blank text
+      (crates/seikika-connect/src/assessment.rs:199-201), so "Make it better."
+      satisfies the card.
+    suggestion: >-
+      Add a silver rule `suggestion-names-a-place`. Have the connector record
+      `unlocated`: fail or unsure criteria whose suggestion contains no path,
+      unique file name, command (backticked `seikika …` or `cargo …`) or field
+      name, reusing the citation detector in
+      crates/seikika-connect/src/assessment.rs. Check `entity.unlocated.size()
+      == 0`, with a fixture on each side.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      Each fix names the field or file to change: `suggestion:`,
+      `assessor.name`, or the reasons in .seikika/assessments/
+      (assessments.yaml:171-173, 181-182, 194-199, 208-211). Each has evidence
+      listing the criteria. I checked the one live entity below gold,
+      operator/monitor, which .seikika/results.json lists with two uncited
+      criteria. Its file is
+      .seikika/assessments/sdlc-stage-quality/sdlc-stage/operator/monitor.yaml,
+      and following cites-everything's fix (a repository path in those two
+      reasons) is all it needs.
+summary: >-
+  A focused, well-tested ladder from named and suggested, to cited
+  findings, to cited reasons, with fixtures at every level and nearly
+  every live assessment at gold. The obvious missing rule is the
+  counterpart of meta-rule's fix-names-a-place: nothing checks that a
+  suggestion says where to act, so the bronze rule is met by any non-blank
+  text.

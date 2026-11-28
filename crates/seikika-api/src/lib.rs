@@ -48,6 +48,12 @@ pub fn app_state_with(
     authz: Option<Arc<dyn seikika_authz::Authorizer>>,
 ) -> Arc<AppState> {
     let (current, _) = tokio::sync::watch::channel(None);
+    let report_publications = config
+        .report_root
+        .as_deref()
+        .map_or_else(report::ReportPublications::default, |root| {
+            report::ReportPublications::load(root, &manifest)
+        });
     Arc::new(AppState {
         hub: seikika_connect::Hub::new(),
         authn,
@@ -59,6 +65,7 @@ pub fn app_state_with(
         current,
         changed: tokio::sync::Notify::new(),
         config,
+        report_publications,
         runs: Default::default(),
         confinement: Default::default(),
     })

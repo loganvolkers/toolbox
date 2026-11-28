@@ -28,7 +28,7 @@ are how we find Seikika's rough edges and prove its claims.** In each, fresh cod
 lifecycle work on open-source forks, once with Seikika and once with its strongest alternative. The
 bar is set before the run and the losses are published. Each benchmark measures one or more of the
 four SDLC layers. A claim that Seikika makes something easier for agents needs one. They are
-catalogued in `portal/benchmarks/` and scored by `maintainer-benchmark`. Close known friction
+catalogued in `.seikika/benchmarks/` and scored by `maintainer-benchmark`. Close known friction
 before running one.
 
 ## Read first
@@ -50,7 +50,7 @@ MCP, CLI, data model, properties) and test against
 [local prerequisites](./docs/design/maintainer-sdlc.md#5-local-prerequisites)). Run the checks in
 an activated mise shell or prefix them with `mise exec --`. On a fresh checkout, run
 `pnpm install --frozen-lockfile` and `pnpm build` to generate the Rust-embedded UI and offline report.
-Rebuild the assets after frontend edits. Then run `cargo build`, `cargo test`, `cargo clippy
+Rebuild the assets after frontend edits. Run `pnpm check:coupling` for the Rust and npm module boundaries ([module-coupling.md](./docs/design/module-coupling.md)). Then run `cargo build`, `cargo test`, `cargo clippy
 --all-targets -- -D warnings`, then `target/debug/seikika validate examples/reference-portal`.
 `python scripts/validate-parity.py` checks `seikika validate` against `examples/reference-portal/tools/validate.py`.
 `yamark format --check` (yamark 0.6.1, D97, pinned in `scripts/requirements-yamark.txt`) checks every tracked `.yaml` and `.yml` except the generated `pnpm-lock.yaml` and `.github/workflows/release.yml`, which `dist plan` owns (D98). `python3 scripts/decision-id.py --self-test` checks the ULID encoding for decision ids (D01M7XKEXQH4HG5371629M50E2G).
@@ -60,7 +60,7 @@ Rebuild the assets after frontend edits. Then run `cargo build`, `cargo test`, `
 bridge), `connector test`, `describe`, `report` (repo portals and the ratchet, D66) and `run` (self-service actions, federated). The server also hosts `/mcp` and the UI at `/`, and supervises the
 `seikika-connector-{github,git-files}` binaries; `seikika-connector-scim` runs remotely. The
 acceptance scripts `scripts/m2…m4-acceptance.sh` need Postgres 16; M3 and M4 also need
-`SEIKIKA_OPENFGA_BIN`, and M4 needs Node with Playwright. **M5 (actions) is built with federation (D01M86BY3YQX3SA1W99QXF1QA1H)**: the `run` command lists, previews, runs and verifies actions in a checkout, through a parent portal or against a served one (`--url`), and `scripts/m5-acceptance.sh` (no network, no Postgres) is its exit check; durable runs, the UI pages and the `github-apps` executor remain. Meanwhile [`portal/`](./portal/README.md) is Seikika for Seikika: `seikika report portal --skip runner,github-actions --baseline portal/results.json` (with zizmor 1.32.0, actionlint 1.7.12 and ruff 0.14.0 installed; `seikika doctor portal` checks) scores this repo against the three SDLC layers' standards (D65), including the agent skills in `plugins/` (`maintainer-skill`, D72) and one skill per CLI command (`cli-skill`, D94) and the first-party connectors (`maintainer-connector`, D73) and direct Cargo dependencies (`maintainer-dependency`, D74) and agent instruction files (`maintainer-agent-doc`, D75) and npm manifests (`maintainer-package`, D76) and the JSON Schemas it compiles (`maintainer-schema`, D77) and the example write-ups agents copy (`maintainer-example`, D78) and the agent plugin packages it ships (`maintainer-plugin`, D81) and harness aliases plus the check commands named in `AGENTS.md` (`maintainer-agent-doc`, D82, D83) and cited decision ids (`maintainer-docs`, D84) and GitHub Advanced Security config (`maintainer-supply-chain`, D85) and the repository level, which is the lowest of those scorecards (`maintainer-repo`, D86) and the public docs pages (`maintainer-site`, D91) and the Python it maintains, through ruff in the SARIF slot (`maintainer-python`) and the HTML report the site publishes (`seikika report`, D92; host slots, D93), and CI fails on regressions (D66); if you improve something, rerun with `--update` and commit `portal/results.json`. Pilot repos adopt this with one step, the `actions/report` GitHub Action and `examples/repo-portal-starter` (D69). Scorecards are scored too (`meta-rule`, `meta-scorecard`, D71): a new rule must be tested, explained and decided on fixtures from its first commit. Judgement is pushed, not pulled: brief yourself with `seikika assess brief`, write the assessment to `portal/assessments/`, and run `seikika assess check portal` (D79, D80; skill `assess-entity`). Every layer's stages are catalogued in `portal/sdlc/` and scored (`sdlc-stage`, `sdlc-layer`, D87). Federation's actions up and runs down are built (D01M86BY3YQX3SA1W99QXF1QA1H); the rest is design (D68); packages are git-first with an OCI mirror (D89; `packages/` holds ours, included by S4S and tested in their own `tests/` portals), and Seikika, connectors and tools are distributed per D90.
+`SEIKIKA_OPENFGA_BIN`, and M4 needs Node with Playwright. **M5 (actions) is built with federation (D01M86BY3YQX3SA1W99QXF1QA1H)**: the `run` command lists, previews, runs and verifies actions in a checkout, through a parent portal or against a served one (`--url`), and `scripts/m5-acceptance.sh` (no network, no Postgres) is its exit check; durable runs, the UI pages and the `github-apps` executor remain. Meanwhile [`portal/`](.seikika/README.md) is Seikika for Seikika: `seikika report .seikika --skip runner,github-actions --baseline .seikika/results.json` (with zizmor 1.32.0, actionlint 1.7.12 and ruff 0.14.0 installed; `seikika doctor .seikika` checks) scores this repo against the three SDLC layers' standards (D65), including the agent skills in `plugins/` (`maintainer-skill`, D72) and one skill per CLI command (`cli-skill`, D94) and the first-party connectors (`maintainer-connector`, D73) and direct Cargo dependencies (`maintainer-dependency`, D74) and agent instruction files (`maintainer-agent-doc`, D75) and npm manifests (`maintainer-package`, D76) and the JSON Schemas it compiles (`maintainer-schema`, D77) and the example write-ups agents copy (`maintainer-example`, D78) and the agent plugin packages it ships (`maintainer-plugin`, D81) and harness aliases plus the check commands named in `AGENTS.md` (`maintainer-agent-doc`, D82, D83) and cited decision ids (`maintainer-docs`, D84) and GitHub Advanced Security config (`maintainer-supply-chain`, D85) and the repository level, which is the lowest of those scorecards (`maintainer-repo`, D86) and the public docs pages (`maintainer-site`, D91) and the Python it maintains, through ruff in the SARIF slot (`maintainer-python`) and the HTML report the site publishes (`seikika report`, D92; host slots, D93), and CI fails on regressions (D66); if you improve something, rerun with `--update` and commit `.seikika/results.json`. Pilot repos adopt this with one step, the `actions/report` GitHub Action and `examples/repo-portal-starter` (D69). Scorecards are scored too (`meta-rule`, `meta-scorecard`, D71): a new rule must be tested, explained and decided on fixtures from its first commit. Judgement is pushed, not pulled: brief yourself with `seikika assess brief`, write the assessment to `.seikika/assessments/`, and run `seikika assess check .seikika` (D79, D80; skill `assess-entity`). Every layer's stages are catalogued in `.seikika/sdlc/` and scored (`sdlc-stage`, `sdlc-layer`, D87). Federation's actions up and runs down are built (D01M86BY3YQX3SA1W99QXF1QA1H); the rest is design (D68); packages are git-first with an OCI mirror (D89; `packages/` holds ours, included by S4S and tested in their own `tests/` portals), and Seikika, connectors and tools are distributed per D90.
 
 Shell script checks use [the shell standards package](./packages/shell/README.md). Run
 `shfmt -i 2 -ci -d tests/shell/*.bats` and `bats tests/shell` for the isolated regression suite.
@@ -70,7 +70,7 @@ Shell script checks use [the shell standards package](./packages/shell/README.md
 The cloud harness does not inject `plugins/seikika-operator`. Before a Seikika command, read
 `plugins/seikika-operator/skills/<command>/SKILL.md`. Those skills are the operator loop for this
 repo: validate, test, report, assess. A score change follows the `report` skill.
-`site/.generated/report.json` is generated by the pages workflow and is not committed; preview it with
+`npm/site/.generated/report.json` is generated by the pages workflow and is not committed; preview it with
 `scripts/regen-site-report.sh`. The ratchet verdict is the gate (D01M7Y5VWKW5TDS0VQWZFPRQ27N).
 
 ## Repository layout
@@ -87,7 +87,7 @@ docs/principal-review.md     principal-engineer review (with resolutions)
 docs/adversarial-critique.md whether to build at all: hypotheses, alternatives, kill criteria
 docs/technology-critique.md  sprawl and replaceability review; proposed minimal architecture
 docs/sdlc.md                 the four SDLC layers: maintainer, package author, operator, user (D63, D87)
-portal/                      Seikika for Seikika: this repo's own portal and standards (D65); portal/benchmarks/ catalogs the DX Benchmarks
+.seikika/                    Seikika for Seikika: this repo's own portal and standards (D65); .seikika/benchmarks/ catalogs the DX Benchmarks
 docs/design/*.md             one detailed design per capability (maintainer-, user-sdlc.md and sdlc.md = operator)
 docs/examples/*.md           worked examples (e.g. approved GitHub Apps)
 docs/glossary.md, docs/research-log.md
@@ -96,7 +96,8 @@ Cargo.toml, crates/          Rust workspace (v1-spec §4); `seikika-cli` builds 
 yamark.toml                  YAML formatting (Yamark 0.6.1, D97)
 crates/seikika-model/schema/ JSON Schemas compiled into the binary (manifest, protocols, assessments)
 scripts/                     repo checks and acceptance scripts (validate-parity.py, m2–m4-acceptance.sh)
-ui/                          the minimal UI (Astro + Vue; dist/ is embedded in the binary)
+npm/ui/                      the minimal UI (Astro + Vue; dist/ is embedded in the binary)
+npm/                         pnpm workspace for the embedded UI, Vue kit, report integration and site
 examples/reference-portal/   reference implementation anchor: manifest, schemas, fixtures, oracle, authz tests
 experiments/                 reproducible experiments and the DX Benchmarks' harnesses (dx-benchmarks.md)
 plugins/seikika-operator/    Agent Plugins 1.0.0 package (pre-release skeleton)
@@ -117,18 +118,18 @@ The full loop, check pyramid and measured timings are in
   - run on open-source forks at pinned commits;
   - publish the result as written;
   - triage the friction into fixes;
-  - add or update the entry in `portal/benchmarks/`. Archive it, with `servedValue`, once it has
+  - add or update the entry in `.seikika/benchmarks/`. Archive it, with `servedValue`, once it has
     served its value.
-- **Generated files:** never hand-merge `portal/results.json`. On a conflict, take upstream's copy
-  and rerun `--update` ([portal/README.md](./portal/README.md#layout), D95). After OpenSSF greening
+- **Generated files:** never hand-merge `.seikika/results.json`. On a conflict, take upstream's copy
+  and rerun `--update` ([.seikika/README.md](.seikika/README.md#layout), D95). After OpenSSF greening
   (or any change that improves `maintainer-openssf`), commit the same baseline CI uses:
-  `seikika report portal --skip runner,github-actions --baseline portal/results.json --update`
+  `seikika report .seikika --skip runner,github-actions --baseline .seikika/results.json --update`
   (refresh OpenSSF scores first **with** the runner / Scorecard, then rewrite under `--skip` so crate
   facts are not left `unknown`). The site's copy of the report is generated by the pages workflow,
   not committed (D01M7YAXH89ZJQ7Q4HP77NMHBX8); preview it with `scripts/regen-site-report.sh`
   (installs the same zizmor 1.32.0, actionlint 1.7.12 and ruff 0.14.0 pins as pages CI) — a bare
   `report … -o web` without those tools writes `unknown` for ci-lint rules. New S4S standards go in
-  `portal/standards/<topic>.yaml`.
+  `.seikika/standards/<topic>.yaml`.
 - **YAML format:** before you push workflow or manifest edits, run `yamark format` on the files you
   touched (yamark 0.6.1, D97). CI’s `yamark format --check` covers every tracked `.yaml`/`.yml`
   except `.github/workflows/release.yml` (cargo-dist / D98); whitespace-only CI edits still fail
@@ -151,7 +152,7 @@ The full loop, check pyramid and measured timings are in
 - **Plugin changes:** validate `plugin.json`/`mcp.json` against the official 1.0.0 schemas, and every
   skill with `skills-ref validate`. Use `"license": "MIT"` (D88).
 - **Writing style:** state conclusions first, then evidence. Prefer tables for comparisons. Keep docs
-  self-contained, with relative links that resolve. Use the [SDK documentation comments guide](./site/src/content/docs/maintainers/sdk-docs.md)
+  self-contained, with relative links that resolve. Use the [SDK documentation comments guide](npm/site/src/content/docs/maintainers/sdk-docs.md)
   for public Rust and npm declarations.
 - **The box and the tools** ([seikika-and-tools.md](./docs/design/seikika-and-tools.md),
   D01M7ZRAJT47W11X5X3FEJ6QTX8). Seikika is a box for tools, not a wrapper or a factory:
@@ -197,6 +198,6 @@ docs put their current v1 design first and keep deferred material in a labelled 
 | Config | Canonical manifest, `include`, `seikika validate`; the `@seikika/manifest` builder from the prototype in `experiments/typescript-builder` | typescript-builder, v1-spec §5 |
 | Frontend | Minimal UI pages and view endpoints; UI extension contract; shared Vue kit (`@seikika/ui`, Storybook 10); one non-React bundle through the same contract | minimal-ui, frontend |
 | Verification | Differential tests (Rust vs SQL, OpenFGA vs SQL); property catalogue | verification |
-| DX Benchmarks | Pre-registered agent A/Bs on open-source forks against the strongest alternative; a shared harness; blinded adjudication; the catalog in `portal/benchmarks/` | dx-benchmarks, repo-value |
+| DX Benchmarks | Pre-registered agent A/Bs on open-source forks against the strongest alternative; a shared harness; blinded adjudication; the catalog in `.seikika/benchmarks/` | dx-benchmarks, repo-value |
 | Backstage parity audit | D47: Phase 1 features vs Backstage 1.57 + plugins | technology-critique §4 |
 | GitHub Apps example | Verify Q8 against the GitHub API | examples/approved-github-apps |

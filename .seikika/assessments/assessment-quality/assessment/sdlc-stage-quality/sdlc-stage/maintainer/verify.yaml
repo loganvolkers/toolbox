@@ -1,0 +1,71 @@
+apiVersion: seikika.com/assessment/v1
+entity: assessment:sdlc-stage-quality/sdlc-stage:maintainer/verify
+rubric: assessment-quality
+subjectHash: 5b36f2d4e027
+assessor: {kind: agent, name: cursor-reviewer-21, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: supported
+    verdict: pass
+    reason: >-
+      The line numbers in
+      .seikika/assessments/sdlc-stage-quality/sdlc-stage/maintainer/verify.yaml
+      land. .github/workflows/ci.yml:128-177 is the acceptance job: OpenFGA at
+      144-147, PGDG Postgres at 148-158, Playwright at 167-173 and `cargo
+      build` at 139. scripts/m4-acceptance.sh:2-6,
+      scripts/m5-acceptance.sh:3-4, the no-initdb message at
+      m2-acceptance.sh:11 and `${SEIKIKA_OPENFGA_BIN:?…}` at
+      m3-acceptance.sh:14 are all where the assessment puts them, as is
+      maintainer-sdlc.md:60. The one loose claim, that the Playwright setup is
+      in "maintainer-sdlc.md §5", is taken up under complete.
+  - criterion: complete
+    verdict: fail
+    reason: >-
+      agent-can-complete should not pass. Outside CI, step 8 of
+      scripts/m4-acceptance.sh:79-80 runs `node scripts/ui-a11.cjs`, which
+      does `require("playwright")` (ui-a11.cjs:4). The only local guidance is
+      maintainer-sdlc.md:88, "Node 22 + Playwright | `npm install` in `ui/`".
+      But npm/ui/package.json and ui/package-lock.json have no playwright, and
+      there is no root package.json. Playwright lives only in
+      scripts/playwright-ci, and the NODE_PATH it needs is set only in
+      ci.yml:170-173. So an agent following the docs fails M4's A11 check
+      unless it reverse-engineers the CI step. reuses-artifacts is also
+      inconsistent with the same assessor's test-stage fail. The setup doc
+      this assessment points to has agents `go install` OpenFGA for "M3–M4
+      acceptance" (maintainer-sdlc.md:85), and the acceptance job compiles
+      Seikika a second time (ci.yml:139).
+    suggestion: >-
+      Fail agent-can-complete and name the Playwright step. Set
+      reuses-artifacts to fail or unsure because of maintainer-sdlc.md:85.
+      Suggest a fix to the stage: list maintainer-sdlc.md under `docs:`,
+      change its Node/Playwright row to `npm ci --prefix
+      scripts/playwright-ci` plus
+      `NODE_PATH=scripts/playwright-ci/node_modules`, and replace `go install`
+      with the pinned release.
+  - criterion: reproducible
+    verdict: unsure
+    reason: >-
+      A second assessor who tried the stage's commands, as the rubric asks
+      (.seikika/standards/sdlc.yaml:398-399), would hit the Playwright gap and
+      fail agent-can-complete. The reuses-artifacts pass also rests on a
+      judgement call. It notes the recompile at ci.yml:139 and still passes,
+      while the test-stage assessment by the same assessor
+      (.seikika/assessments/sdlc-stage-quality/sdlc-stage/maintainer/test.yaml)
+      failed reuses-artifacts on the same `go install` line.
+    suggestion: >-
+      Run m4-acceptance.sh's A11 step locally from the documented setup, and
+      apply the test stage's reuses-artifacts standard to this stage as well.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      There are no fail or unsure verdicts in
+      .seikika/assessments/sdlc-stage-quality/sdlc-stage/maintainer/verify.yaml,
+      so it has no suggestions to judge.
+summary: >-
+  The citations are accurate, but the assessment misses a failure. The
+  local M4 route breaks at the A11 browser step, because the only
+  documented Playwright install (`npm install` in ui/,
+  maintainer-sdlc.md:88) doesn't install Playwright, and NODE_PATH appears
+  only in ci.yml:173. agent-can-complete should fail. reuses-artifacts is
+  graded more leniently than the same assessor graded the test stage on
+  the identical `go install` line.

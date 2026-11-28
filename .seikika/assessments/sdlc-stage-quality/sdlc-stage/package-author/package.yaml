@@ -1,0 +1,74 @@
+apiVersion: seikika.com/assessment/v1
+entity: sdlc-stage:package-author/package
+rubric: sdlc-stage-quality
+subjectHash: 4f3352a84b34
+assessor: {kind: agent, name: cursor-assessor-22, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: executable-exit
+    verdict: fail
+    reason: >-
+      `checks: []` (.seikika/sdlc/stages/package-author.yaml:81). The nearest
+      thing is crates/seikika-model/src/package.rs:105-106 `content_hash`, a
+      SHA-256 over a directory tree that is pinned in seikika.lock. It is not
+      an archive, and nothing builds a package twice and compares digests.
+    suggestion: >-
+      Add `seikika package build` (tar with sorted entries, zeroed mtimes and
+      owners), and a CI step that builds packages/github-actions twice and
+      diffs the SHA-256.
+  - criterion: agent-can-complete
+    verdict: fail
+    reason: >-
+      There are no commands (`commands: []`, line 80), and `seikika --help`
+      has no package subcommand. The deterministic archive and OCI mirror are
+      a proposal in docs/design/packages.md §4.4 (lines 206-213). Package tool
+      pins carry a version and installer ids but no checksum
+      (packages/github-actions/fragments/github-actions.yaml:59-66).
+    suggestion: >-
+      Build the archive command first, then let `tools:` carry checksums (or
+      emit a mise.lock fragment) so the exit criterion has something to run.
+  - criterion: reuses-artifacts
+    verdict: fail
+    reason: >-
+      With no archive, consumers clone the package source at a tag
+      (crates/seikika-model/src/package.rs:85-91), and its tools are pinned by
+      version only (`zizmor: {version: 1.32.0, install: …}`,
+      packages/github-actions/fragments/github-actions.yaml:60-62). Checksums
+      come only if each consumer's mise or aqua adds them.
+    suggestion: >-
+      Attach the archive to the release with its digest, and pin tool
+      requirements with checksums in the package.
+  - criterion: decoupled-from-core
+    verdict: fail
+    reason: >-
+      An author could tar a package themselves, but the resolver pins
+      directory content hashes (crates/seikika-model/src/load.rs:344-351) and
+      cannot fetch or verify an archive. Producing a consumable archive
+      therefore needs a change in seikika-model and seikika-cli.
+    suggestion: >-
+      Specify the archive format and digest in the package schema, so third
+      parties can produce it with standard tools and the resolver accepts it.
+# Codex evaluated the two added criteria. Earlier verdicts retain their original attribution.
+  - criterion: fast-feedback
+    verdict: fail
+    reason: >-
+      .seikika/sdlc/stages/package-author.yaml defines the stage exit but
+      declares no runnable local check for it. docs/design/packages.md
+      documents the intended workflow.
+    suggestion: >-
+      Add a runnable local check for this exit and record its measured time in
+      docs/design/packages.md.
+  - criterion: beyond-one-reference
+    verdict: fail
+    reason: >-
+      .seikika/sdlc/stages/package-author.yaml declares no executable
+      reference for the exit, and docs/design/packages.md describes the
+      workflow without supplying a second exercised reference.
+    suggestion: >-
+      Exercise this exit on a second reference and cite the result in
+      .seikika/sdlc/stages/package-author.yaml.
+summary: >-
+  Missing. Git packages are pinned by directory content hash, but there is
+  no deterministic archive, no command, no check and no checksummed tool
+  pins. Every criterion fails until `seikika package build` and an archive
+  resolver exist.

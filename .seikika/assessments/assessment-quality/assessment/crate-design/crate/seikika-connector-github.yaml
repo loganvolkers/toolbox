@@ -1,0 +1,42 @@
+apiVersion: seikika.com/assessment/v1
+entity: assessment:crate-design/crate:seikika-connector-github
+rubric: assessment-quality
+subjectHash: 7ecc5fae1b74
+rubricHash: e30700fc6322cf9f05a301bb4638d6708e9f5eb5aea0281911229ce75bd37bf7
+assessor: {kind: agent, name: Codex, model: GPT-6}
+at: 2026-11-28
+verdicts:
+  - criterion: supported
+    verdict: fail
+    reason: >-
+      I checked the claims in
+      .seikika/assessments/crate-design/crate/seikika-connector-github.yaml
+      against the cited sources. The single-source boundary and SDK usage are
+      visible in crates/seikika-connector-github/src/main.rs. The claim that
+      App authentication has no test at any level is now contradicted by
+      scripts/github-emulate/connector.test.mjs and its CI job in
+      .github/workflows/ci.yml.
+    suggestion: >-
+      Reassess tests-match-risk using the current Emulate coverage and retain
+      only gaps that remain, including multipage refresh and token reuse.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      The assessment evaluates purpose, public protocol, dependencies and
+      tests. It connects the protocol options in
+      crates/seikika-connector-github/src/main.rs to the workflow-run tests in
+      crates/seikika-connector-github/src/runs.rs.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      The connector token request and subsequent GET are explicit in
+      crates/seikika-connector-github/src/main.rs. The local synthetic App and
+      its assertions are in scripts/github-emulate/connector.test.mjs, so no
+      external GitHub credentials are required to check the updated behavior.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      The proposed status validation was implemented in
+      crates/seikika-connector-github/src/main.rs. The original proposal also
+      identifies the token expiry field and where to add follow-up selector
+      and pagination coverage.

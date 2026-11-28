@@ -1,0 +1,40 @@
+apiVersion: seikika.com/assessment/v1
+entity: assessment:rule-quality/rule:seikika/meta-connector/refreshable
+rubric: assessment-quality
+subjectHash: 5f7c9f142dda
+rubricHash: e30700fc6322cf9f05a301bb4638d6708e9f5eb5aea0281911229ce75bd37bf7
+assessor: {kind: agent, name: Codex, model: GPT-6}
+at: 2026-11-28
+verdicts:
+  - criterion: supported
+    verdict: fail
+    reason: >-
+      I checked the claims in
+      .seikika/assessments/rule-quality/rule/seikika/meta-connector/refreshable.yaml
+      against the cited sources. The older assessment says any scope list
+      satisfies the check. crates/seikika-cli/src/model.rs now includes a kind
+      only when its declared modes contain external_ids. The remaining
+      declaration-versus-runtime distinction is still visible in
+      crates/seikika-api/src/connectors.rs.
+    suggestion: >-
+      Reassess the narrower declaration check and retain the finding about
+      comparing it to registered capabilities.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      The assessment covers intent, the declaration boundary, the fix and gold
+      placement. The relevant rule is now in
+      packages/meta-scoring/fragments/catalog.yaml.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      Compare connector_record in crates/seikika-cli/src/model.rs with the
+      refreshable predicate and fixture outcomes in
+      .seikika/tests/standards.test.yaml. Runtime capability lookup is
+      separate in crates/seikika-connect/src/hub.rs.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      The fix now names the manifest scope and connector test command in
+      packages/meta-scoring/fragments/catalog.yaml. The assessment also points
+      to the remaining registered-capability check.

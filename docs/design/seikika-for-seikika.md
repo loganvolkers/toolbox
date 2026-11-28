@@ -14,7 +14,7 @@ are too (D82, D83, [agents-md-standards.md](./agents-md-standards.md)), cited de
 (D85, [supply-chain-standards.md](./supply-chain-standards.md)), and the repository's level is the
 lowest of those scorecards (D86, [repo-level.md](./repo-level.md)). Public docs pages are too
 (D91, [site-standards.md](./site-standards.md)), and the site publishes this repo's HTML report
-(D92). The portal is [`portal/`](../../portal/README.md); run
+(D92). The portal is [`portal/`](../../.seikika/README.md); run
 it with `scripts/self-portal.sh`. It applies Seikika to the [four SDLC layers](../sdlc.md) of
 Seikika itself. Related: [meta-catalog.md](./meta-catalog.md) (a portal cataloguing its own
 configuration), [maintainer-sdlc.md](./maintainer-sdlc.md), [user-sdlc.md](./user-sdlc.md).*
@@ -70,7 +70,7 @@ is a layer-4 (user) use of Seikika: developers building on its context.
 
 ```
 scripts/self-portal.sh serve|report|snapshot
-  └─ seikika serve portal/      (in-memory store, dev auth, no OpenFGA)
+  └─ seikika serve .seikika/      (in-memory store, dev auth, no OpenFGA)
        ├─ workspace connector   cargo metadata + syn → crate; markdown → doc; scripts/tests → file
        └─ runner connector      cargo test -p / cargo clippy -p → test, clippy;  seikika describe → command, mcp-tool
 ```
@@ -80,8 +80,8 @@ scripts/self-portal.sh serve|report|snapshot
 | [`seikika-connector-workspace`](../../crates/seikika-connector-workspace) | `crate` records: `cargo metadata` plus a `syn` parse of each crate. Reports every function (lines, cyclomatic complexity), every undocumented public item, unit and integration test counts, unwraps outside tests, and in-workspace dependencies. `doc` records: title, status banner, sources section, broken relative links, inline code spans. `file` records: lines. `skill` records: one per `SKILL.md` (D72, [skill-standards.md](./skill-standards.md)). `connector` records: one per `seikika-connector-*` crate (D73, [connector-standards.md](./connector-standards.md)). `dependency` records: one per direct Cargo dependency (D74, [dependency-standards.md](./dependency-standards.md)). `agent-doc` records: one per `AGENTS.md` and its aliases (D75, [agents-md-standards.md](./agents-md-standards.md)). `package-json` records: one per npm manifest (D76, [package-standards.md](./package-standards.md)). `json-schema` records: one per document in `crates/seikika-model/schema/` (D77, [schema-standards.md](./schema-standards.md)). `example` records: one per example or experiment write-up (D78, [example-standards.md](./example-standards.md)). `plugin` records: one per `plugins/*/plugin.json` (D81, [plugin-standards.md](./plugin-standards.md)). `site-page` records: one per Starlight content page (D91, [site-standards.md](./site-standards.md)). `repo` records: one per checkout, with Dependabot, code scanning, a security policy and CODEOWNERS (D85, [supply-chain-standards.md](./supply-chain-standards.md)). Docs and files also get **configurable regex `captures` and `counts`** | Any Rust workspace, markdown docs, Agent Skills directories, connector crates, agent instruction files, npm manifests, JSON Schemas, example write-ups, agent plugin packages, and a Starlight docs site |
 | [`seikika-connector-runner`](../../crates/seikika-connector-runner) | Runs configured jobs, per crate or once, and parses `cargo test`, clippy JSON, or passes through NDJSON records from any command. Supports refresh by external id | Any local command |
 | `seikika describe` | Prints Seikika's CLI commands (from clap) and built-in MCP tools as connector records: help, undocumented arguments, structured output, the MCP tool each read command calls | Seikika-specific, and doubles as a contract snapshot for the user SDLC |
-| [`portal/seikika.yaml`](../../portal/seikika.yaml) | Kinds `Crate`, `Doc`, `File`, `Command`, `McpTool`. Relations from docs and files to commands, tools and crates come from captures. Five scorecards; one policy (append-only docs exempt from wording rules) | — |
-| [`portal/tests`](../../portal/tests/standards.test.yaml) + fixtures | 16 expectations that pin what each rule means, over a trimmed snapshot of the repo | — |
+| [`.seikika/seikika.yaml`](../../.seikika/seikika.yaml) | Kinds `Crate`, `Doc`, `File`, `Command`, `McpTool`. Relations from docs and files to commands, tools and crates come from captures. Five scorecards; one policy (append-only docs exempt from wording rules) | — |
+| [`portal/tests`](../../.seikika/tests/standards.test.yaml) + fixtures | 16 expectations that pin what each rule means, over a trimmed snapshot of the repo | — |
 
 **Design choices**
 
@@ -182,7 +182,7 @@ were applied at once:
 
 | Finding | Built |
 |---|---|
-| F1, F4 | `seikika report` (connectors once, recompute, md/json/html) with a Betterer-style ratchet (`--baseline`, `--update`, `--ci`). CI gates this repo on `portal/results.json` ([ratchets.md](./ratchets.md), [repo-portals.md](./repo-portals.md)) |
+| F1, F4 | `seikika report` (connectors once, recompute, md/json/html) with a Betterer-style ratchet (`--baseline`, `--update`, `--ci`). CI gates this repo on `.seikika/results.json` ([ratchets.md](./ratchets.md), [repo-portals.md](./repo-portals.md)) |
 | F2, F11 | Rule `evidence:` CEL, shown by `scorecard_status`, `explain`, `scorecard_report` and `report`, and counted by the ratchet |
 | F5 | `relation.dropped` diagnostics per relation; `unresolved: ignore` for candidate relations |
 | F7 | `--fields` on `get` and `query`; every CLI argument has help |
@@ -220,7 +220,7 @@ The original findings follow.
 ## 8. Next steps (proposed)
 
 1. ~~Decide on F1, F2/F11, F10 and F9~~: built (D66), see §7.
-2. ~~Add a ratchet baseline for the self portal in CI (F4)~~: built and gating (`portal/results.json`).
+2. ~~Add a ratchet baseline for the self portal in CI (F4)~~: built and gating (`.seikika/results.json`).
 3. Extend the catalogue:
    - acceptance scenarios (A1–A12) as entities, with status from the scripts;
    - decisions and open questions as entities, so an agent can ask "which decisions have no owning
@@ -231,7 +231,7 @@ The original findings follow.
 
 ## Sources
 
-- The portal, connectors and script: [`portal/`](../../portal/README.md),
+- The portal, connectors and script: [`portal/`](../../.seikika/README.md),
   [`crates/seikika-connector-workspace`](../../crates/seikika-connector-workspace),
   [`crates/seikika-connector-runner`](../../crates/seikika-connector-runner),
   [`scripts/self-portal.sh`](../../scripts/self-portal.sh).

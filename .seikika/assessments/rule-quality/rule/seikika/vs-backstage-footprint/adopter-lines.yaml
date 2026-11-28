@@ -1,0 +1,61 @@
+apiVersion: seikika.com/assessment/v1
+entity: rule:seikika/vs-backstage-footprint/adopter-lines
+rubric: rule-quality
+subjectHash: a644a87ce1d4
+assessor: {kind: agent, name: cursor-assessor-17, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: measures-intent
+    verdict: fail
+    reason: >-
+      The lines come from the same `owned()` walk as adopter-files
+      (footprint.py:44-54, 154). Of the starter's lines today, the 95 in
+      README.md are prose the adopter never copies
+      (examples/repo-portal-starter/README.md:4-5 asks only for seikika.yaml).
+      The 44 lines of tests/standards.test.yaml and fixtures/workspace.ndjson,
+      which the adopter keeps and must update when a rule changes, are
+      excluded. So the number isn't "lines someone must read, review and carry
+      through every upgrade"
+      (.seikika/standards/backstage-comparison.yaml:432-435). Backstage's
+      1,357 counts every line of its tree (footprint.py:157).
+    suggestion: >-
+      Count the lines of the files the starter's README tells the adopter to
+      keep (seikika.yaml, tests, fixtures, the report workflow), not the
+      starter directory minus `tests` and `fixtures`.
+  - criterion: hard-to-game
+    verdict: fail
+    reason: >-
+      Two cheap routes lower the count without lowering what the adopter owns.
+      Content under any `tests` or `fixtures` path is skipped
+      (footprint.py:47-48). And YAML can be folded into flow style, since
+      lines are counted raw (:53). I didn't check whether yamark 0.6.1 (D97)
+      would reflow the latter. Moving rules into included packages, the fix's
+      route, is legitimate but harder than either.
+    suggestion: >-
+      Count non-blank lines of the kept files, after `yamark format`, or count
+      YAML nodes instead of lines, and stop skipping by directory name.
+  - criterion: fix-leads-to-pass
+    verdict: pass
+    reason: >-
+      The fix, "Move what examples/repo-portal-starter asks an adopter to keep
+      into packages they include" (backstage-comparison.yaml:430-431), names
+      the counted directory and the mechanism (git-first packages, D89; the
+      starter's README already shows `include: - package:` for pattern-count).
+      Replacing seikika.yaml's inline scorecards with an include lowers the
+      count on the next footprint.py run.
+  - criterion: threshold-justified
+    verdict: fail
+    reason: >-
+      The bar of 500 lines has no source. The pre-registered README gives "—"
+      (experiments/backstage-compare/README.md:43), RESULTS.md:261-265 lists
+      it among the bars written after the smoke rounds, and RESEARCH.md F2's
+      bar is comparative (RESEARCH.md:58).
+    suggestion: >-
+      Justify 500 in backstage-comparison.md or docs/design/thresholds.md (for
+      example from the size of a first portal agents could write in one
+      session in a DX benchmark), or score only the comparative value.
+summary: >-
+  The fix points at the right lever, but the line count measures the wrong
+  set of files: README prose is counted and the kept tests and fixtures
+  are not. Directory-name skips and raw line counts make it cheap to game,
+  and the bar of 500 was set after the smoke rounds.

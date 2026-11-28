@@ -95,6 +95,7 @@ pub struct AppState {
     pub current: watch::Sender<Option<Arc<Published>>>,
     pub changed: Notify,
     pub config: Config,
+    pub(crate) report_publications: crate::report::ReportPublications,
     pub runs: crate::actions::Runs,
     /// In-image connector → how its last start went (Landlock, unconfined or refused).
     pub confinement: std::sync::Mutex<std::collections::BTreeMap<String, crate::confine::Started>>,
@@ -107,6 +108,8 @@ pub struct Config {
     pub auth_mode: String,
     /// Explicitly published GitHub repositories, keyed by their public catalog id.
     pub public_repositories: std::collections::BTreeMap<String, String>,
+    /// Portal directory for parent-staged report artifacts.
+    pub report_root: Option<std::path::PathBuf>,
     /// connector name → bearer token
     pub connector_tokens: Vec<(String, String)>,
     pub debounce: Duration,
@@ -121,6 +124,7 @@ impl Default for Config {
         Config {
             auth_mode: "dev".into(),
             public_repositories: Default::default(),
+            report_root: None,
             connector_tokens: Vec::new(),
             debounce: Duration::from_millis(500),
             max_lag: Duration::from_secs(5),
@@ -145,6 +149,16 @@ impl AppState {
     /// The snapshot published last, if any.
     pub fn snapshot(&self) -> Option<Arc<Published>> {
         self.current.borrow().clone()
+    }
+
+    pub(crate) fn snapshot_lag_seconds(&self) -> Option<f64> {
+        self.current.borrow().as_ref().map(|published| {
+            published
+                .published_at
+                .elapsed()
+                .unwrap_or_default()
+                .as_secs_f64()
+        })
     }
 
     /// Wait until the published snapshot covers `version` (or `timeout` passes).
