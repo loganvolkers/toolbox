@@ -142,7 +142,11 @@ impl Config {
         client: Client,
         base: &str,
     ) -> Result<BTreeMap<String, Value>, String> {
-        let token = match self.app.token(&client, base, API_VERSION).await? {
+        let token = match self
+            .app
+            .token_for_org(&client, base, API_VERSION, &self.organization)
+            .await?
+        {
             Some(token) => Some(token),
             None => match self
                 .token
@@ -636,8 +640,11 @@ mod tests {
                             .then_some(value)
                     })
                     .unwrap();
-                if path == "/app/installations/456/access_tokens" {
-                    assert_eq!(method, "POST");
+                let is_exchange =
+                    path.starts_with("/app/installations/") && path.ends_with("/access_tokens");
+                let is_discovery = path.starts_with("/orgs/") && path.ends_with("/installation");
+                if is_exchange || is_discovery {
+                    assert_eq!(method, if is_exchange { "POST" } else { "GET" });
                     assert_eq!(
                         authorization
                             .strip_prefix("Bearer ")
@@ -648,7 +655,12 @@ mod tests {
                     );
                 } else {
                     assert_eq!(method, "GET");
-                    assert_eq!(authorization, "Bearer fixture");
+                    let expected = if path.starts_with("/orgs/umbrella/repos?") {
+                        "Bearer umbrella-fixture"
+                    } else {
+                        "Bearer fixture"
+                    };
+                    assert_eq!(authorization, expected);
                 }
                 observed.lock().unwrap().push(path.to_owned());
                 let unknown = Reply {
@@ -898,6 +910,85 @@ mod tests {
                 .is_empty()
         );
         assert_eq!(*requests.lock().unwrap(), [exchange, inventory, inventory]);
+        server.abort();
+    }
+
+    #[tokio::test]
+    async fn discovers_each_organizations_installation_with_shared_app_credentials() {
+        let acme_lookup = "/orgs/acme/installation";
+        let acme_exchange = "/app/installations/456/access_tokens";
+        let acme_inventory = "/orgs/acme/repos?type=public&per_page=100&page=1";
+        let umbrella_lookup = "/orgs/umbrella/installation";
+        let umbrella_exchange = "/app/installations/789/access_tokens";
+        let umbrella_inventory = "/orgs/umbrella/repos?type=public&per_page=100&page=1";
+        let (api, requests, server) = fixture(BTreeMap::from([
+            (acme_lookup.into(), Reply::json(json!({"id": 456}))),
+            (
+                acme_exchange.into(),
+                Reply::json(json!({"token": "fixture"})),
+            ),
+            (acme_inventory.into(), Reply::json(json!([]))),
+            (umbrella_lookup.into(), Reply::json(json!({"id": 789}))),
+            (
+                umbrella_exchange.into(),
+                Reply::json(json!({"token": "umbrella-fixture"})),
+            ),
+            (umbrella_inventory.into(), Reply::json(json!([]))),
+        ]))
+        .await;
+        let mut config = Config::from_value(&json!({
+            "organization": "acme", "publicOnly": true,
+            "app": {"appId": "123",
+                "privateKey": include_str!("../../seikika-authz/tests/fixtures/test-rsa.pem")}
+        }))
+        .unwrap()
+        .unwrap();
+        config
+            .scan_with(api.client.clone(), &api.base)
+            .await
+            .unwrap();
+        config.organization = "umbrella".into();
+        config.scan_with(api.client, &api.base).await.unwrap();
+        assert_eq!(
+            *requests.lock().unwrap(),
+            [
+                acme_lookup,
+                acme_exchange,
+                acme_inventory,
+                acme_inventory,
+                umbrella_lookup,
+                umbrella_exchange,
+                umbrella_inventory,
+                umbrella_inventory
+            ]
+        );
+        server.abort();
+    }
+
+    #[tokio::test]
+    async fn missing_app_installation_stops_before_repository_inventory() {
+        let lookup = "/orgs/acme/installation";
+        let (api, requests, server) = fixture(BTreeMap::from([(
+            lookup.into(),
+            Reply {
+                status: "404 Not Found",
+                ..Reply::text("")
+            },
+        )]))
+        .await;
+        let config = Config::from_value(&json!({
+            "organization": "acme", "publicOnly": true, "token": "legacy",
+            "app": {"appId": "123",
+                "privateKey": include_str!("../../seikika-authz/tests/fixtures/test-rsa.pem")}
+        }))
+        .unwrap()
+        .unwrap();
+        let result = config.scan_with(api.client, &api.base).await;
+        assert_eq!(
+            result.unwrap_err(),
+            "GitHub App organization installation lookup: HTTP 404"
+        );
+        assert_eq!(*requests.lock().unwrap(), [lookup]);
         server.abort();
     }
 

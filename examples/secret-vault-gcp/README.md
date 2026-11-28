@@ -43,9 +43,10 @@ echo "$JIRA_TOKEN" > .secrets/jira-app-token
 cp ~/sa.json .secrets/gcp-sa-key
 export SEIKIKA_SECRETS_DIR=$PWD/.secrets
 export GITHUB_APP_ID=…
-export GITHUB_INSTALLATION_ID=…
 # same seikika.yaml — file backend satisfies ${secret:…}
 ```
+
+Install the GitHub App on the configured organization. The connector looks up its installation when it runs.
 
 Or: `export SEIKIKA_SECRET_GITHUB_APP_PRIVATE_KEY="$(cat …)"` (env backend).
 
