@@ -26,8 +26,9 @@ verdicts:
     reason: >-
       On a scratch crate run through target/debug/seikika-connector-workspace,
       a comment mentioning `not_found` set reportsNotFound true. Separately, a
-      crate doc containing "push-only" sets pushOnly (connectors.rs:134-136),
-      which skips the rule. The scratch doc said "is not push-only" and was
+      crate doc containing "push-only" sets pushOnly
+      (crates/seikika-connector-workspace/src/connectors.rs:135-137), which
+      skips the rule. The scratch doc said "is not push-only" and was
       exempted.
     suggestion: >-
       Ignore comments, and derive pushOnly from the code (run_remote without

@@ -182,7 +182,10 @@ fn file_names(
                 .into_iter()
                 .filter_entry(|e| {
                     let n = e.file_name().to_string_lossy();
-                    !matches!(n.as_ref(), "target" | "node_modules" | ".git" | "dist")
+                    !matches!(
+                        n.as_ref(),
+                        "target" | "node_modules" | ".git" | "dist" | ".build"
+                    ) && !n.starts_with(".build.")
                 })
                 .flatten()
                 .filter(|e| e.file_type().is_file())
@@ -463,6 +466,11 @@ mod tests {
         let root = std::env::temp_dir().join(format!("seikika-cites-{}", std::process::id()));
         std::fs::create_dir_all(root.join("docs/decisions")).unwrap();
         std::fs::write(root.join("docs/plan.md"), "").unwrap();
+        for output in [".build", ".build.staging"] {
+            let dir = root.join("examples").join(output);
+            std::fs::create_dir_all(&dir).unwrap();
+            std::fs::write(dir.join("plan.md"), "").unwrap();
+        }
         std::fs::write(
             root.join("docs/decisions/D01M7VZ2DPS0000000000000000.md"),
             "---\nid: D01M7VZ2DPS0000000000000000\nlegacy: D71\n---\n",

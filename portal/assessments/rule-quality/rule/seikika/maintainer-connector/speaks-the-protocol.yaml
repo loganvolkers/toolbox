@@ -27,8 +27,9 @@ verdicts:
     reason: >-
       A scratch connector whose main.rs is `fn main() {}` plus the comment `//
       TODO: call run_stdio ...` reported transport `stdio` through
-      target/debug/seikika-connector-workspace, so the rule passed. A comment
-      is cheaper than wiring up the control channel.
+      target/debug/seikika-connector-workspace
+      (crates/seikika-connector-workspace/src/connectors.rs:126-133), so the
+      rule passed. A comment is cheaper than wiring up the control channel.
     suggestion: >-
       Ignore comment lines and string literals when looking for the entry
       point, or take transport from the conformance kit's `registers first`

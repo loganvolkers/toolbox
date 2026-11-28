@@ -27,7 +27,8 @@ verdicts:
     reason: >-
       Two cheap passes add no documentation. Marking an item `#[doc(hidden)]`
       both hides it from rustdoc and counts it as documented, and an empty
-      `///` counts too; both were confirmed on a scratch crate through
+      `///` counts too (crates/seikika-connector-workspace/src/rust.rs:40-42).
+      Both were confirmed on a scratch crate through
       target/debug/seikika-connector-workspace. seikika-telemetry, at 24 of 54
       (44%), could reach 80% this way. Narrowing an item to `pub(crate)` also
       removes it from the count, but that genuinely shrinks the API, so it is
