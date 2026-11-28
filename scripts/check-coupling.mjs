@@ -11,6 +11,8 @@ const root = resolve(rootArg ? rootArg.slice("--root=".length) : checkout);
 const requireFromUi = createRequire(new URL("../npm/ui/package.json", import.meta.url));
 const ts = requireFromUi("typescript");
 const { parse: parseVue } = requireFromUi("vue/compiler-sfc");
+const requireFromAstro = createRequire(requireFromUi.resolve("astro/package.json"));
+const { parse: parseAstro } = requireFromAstro("@astrojs/compiler-rs");
 const read = path => readFileSync(resolve(root, path), "utf8");
 const execute = promisify(execFile);
 const command = async (name, args) => JSON.parse((await execute(name, args, { cwd: checkout, encoding: "utf8" })).stdout);
@@ -91,10 +93,28 @@ function imports(file, text) {
       [...(block.src ? [block.src] : []), ...(descriptor.styles.includes(block) ? styles(block.content) : script(block.content))]);
   }
   if (file.endsWith(".astro")) {
-    const frontmatter = text.match(/^---\r?\n([\s\S]*?)^---\s*$/m)?.[1] ?? "";
-    return [...script(frontmatter), ...[...text.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/g)].flatMap(([, attrs, code]) => [
-      ...script(code), ...[...attrs.matchAll(/\bsrc=["']([^"']+)["']/g)].map(match => match[1]),
-    ])];
+    const { ast, diagnostics } = parseAstro(text);
+    const errors = diagnostics.filter(item => item.severity === "error");
+    if (errors.length) throw new Error(`Cannot parse ${file}: ${errors.map(item => item.text).join("; ")}`);
+    const program = ast.frontmatter.program;
+    const dependencies = script(text.slice(program.start, program.end));
+    function visit(node) {
+      if (!node || typeof node !== "object") return;
+      const opening = node.openingElement;
+      if (node.type === "JSXElement" && opening.name.type === "JSXIdentifier" && opening.name.name.toLowerCase() === "script") {
+        if (node.closingElement) dependencies.push(...script(text.slice(opening.end, node.closingElement.start)));
+        for (const attr of opening.attributes) {
+          const value = attr.value?.expression ?? attr.value;
+          if (attr.name?.name === "src" && value?.type === "Literal" && typeof value.value === "string") {
+            dependencies.push(value.value);
+          }
+        }
+        return;
+      }
+      for (const child of Object.values(node)) visit(child);
+    }
+    visit(ast.body);
+    return dependencies;
   }
   if (file.endsWith(".mdx")) {
     return script(text.replace(/^```[^\n]*\n[\s\S]*?^```\s*$/gm, ""));

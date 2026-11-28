@@ -73,6 +73,7 @@ test("coupling evidence and blocking mode agree on clean and forbidden dependenc
       '<a href="https://demo.seikika.com/">Demo</a>',
     ].join("\n"));
     await write("examples/catalog.json", {});
+    await write("examples/script.js", "export default 42;");
     await write("npm/b/tsconfig.json", {
       extends: "./tsconfig.base.json",
       compilerOptions: { paths: {
@@ -85,8 +86,10 @@ test("coupling evidence and blocking mode agree on clean and forbidden dependenc
       "---",
       'import catalog from "~deployment/catalog.json";',
       'import privateValue from "~private/index";',
-      'import missing from "~private/missing";',
       "---",
+      "<!-- A comment with a script-like tag has no dependency. <script>import '~private/ignored-comment';</script> -->",
+      '🍕<script>import missing from "~private/missing";</script>',
+      '<script src="~deployment/script.js"></script>',
     ].join("\n"));
     await write("npm/b/astro.config.mjs", 'export default { vite: { resolve: { alias: { sneaky: "../../examples" } } } };');
     const result = await records();
@@ -99,6 +102,7 @@ test("coupling evidence and blocking mode agree on clean and forbidden dependenc
     assert.ok(checked.entrypoints.some(finding => finding.includes("bypasses the package exports: ~private/index")));
     assert.ok(checked.entrypoints.some(finding => finding.includes("unresolved path alias: ~private/missing")));
     assert.ok(checked.boundaries.some(finding => finding.includes("imports deployment data: ~deployment/catalog.json")));
+    assert.ok(checked.boundaries.some(finding => finding.includes("imports deployment data: ~deployment/script.js")));
     assert.ok(checked.boundaries.some(finding => finding.includes("imports deployment data: ../../../examples/catalog.json")));
     assert.deepEqual(checked.deploymentData.map(finding => finding.split("link: ")[1]), [
       "#scorecard/s4s-only", "https://demo.seikika.com/", "https://seikika.com/demo/organization/",

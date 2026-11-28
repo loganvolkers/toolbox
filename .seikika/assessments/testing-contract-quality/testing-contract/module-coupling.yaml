@@ -1,7 +1,7 @@
 apiVersion: seikika.com/assessment/v1
 entity: testing-contract:module-coupling
 rubric: testing-contract-quality
-subjectHash: 0c6f5455f762
+subjectHash: 7bb4c020ed1d
 rubricHash: 8fc4906aea03cad1a6948469884ba31acc9d4a0259296c9a643f6d7b612e198e
 assessor: {kind: agent, name: Codex, model: GPT-6}
 at: 2026-11-28
@@ -13,7 +13,9 @@ verdicts:
       deployment and private imports, and fixed links. Its Astro fixture also
       accepts an inherited alias to a local Vue component and rejects an alias
       to example data, an alias to a sibling package's private source, and an
-      unresolved alias.
+      unresolved alias. It checks Astro script bodies and src attributes,
+      ignores markup inside comments, and rejects custom inline Vite alias
+      maps.
   - criterion: meaningful-oracles
     verdict: pass
     reason: >-

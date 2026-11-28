@@ -87,8 +87,8 @@ import PageHeader from "@seikika/ui/components/PageHeader.vue";
 <PageHeader title="Seikika npm consumer" description={Object.keys(entity).length + " entity helpers"} />
 `);
   execFileSync(process.execPath, ["node_modules/astro/bin/astro.mjs", "build"], { ...options, stdio: "inherit" });
-  const page = readFileSync(join(work, "dist/index.html"), "utf8").replace(/<!--[\s\S]*?-->/g, "");
-  assert.match(page, /<h1>Seikika npm consumer<\/h1>/);
+  const page = readFileSync(join(work, "dist/index.html"), "utf8");
+  assert.match(page, /<h1>(?:<!--(?:\[|\])?-->)*Seikika npm consumer(?:<!--(?:\[|\])?-->)*<\/h1>/);
   assert.match(page, /[1-9][0-9]* entity helpers/);
   const report = readFileSync(join(work, "dist/standards/index.html"), "utf8");
   assert.match(report, /id="seikika-report-data"/);
