@@ -28,7 +28,7 @@ connectors:
 
 GitHub.com uses `https://api.github.com` by default. For GitHub Enterprise Server, set `apiUrl` to your instance's REST API root, such as `https://github.example.com/api/v3`. Set `apiVersion` if your API requires a version other than the default `2022-11-28`.
 
-As an alternative to a supplied token, configure a GitHub App installation with `appId`, `installationId`, and `privateKey`. Set the first two as strings and supply the key through a [secret reference](/operators/secrets/). Remove the `token` entry and leave `GITHUB_TOKEN` unset in that environment so the connector uses the installation. The connector exchanges the app credentials for an installation access token. [GitHub App installation authentication](https://docs.github.com/en/apps/creating-github-apps/authenticating-with-a-github-app/authenticating-as-a-github-app-installation)
+To authenticate as a GitHub App, set `appId` as a string and supply `privateKey` through a secret reference. Remove `token` and leave `GITHUB_TOKEN` unset. The connector looks up the App installation on `org` and requests an installation access token. An explicit `installationId` overrides discovery. [Secret references](/operators/secrets/) · [GitHub App installation authentication](https://docs.github.com/en/apps/creating-github-apps/authenticating-with-a-github-app/authenticating-as-a-github-app-installation)
 
 ## Check the records
 

@@ -1,6 +1,6 @@
 //! The `github` connector (in-image, stdio). Configuration arrives as JSON in
 //! `SEIKIKA_CONNECTOR_CONFIG` (secrets already resolved by the server):
-//! `{"org", "apiVersion"?, "token"? | "appId"+"privateKey"+"installationId", "apiUrl"?}`.
+//! `{"org", "apiVersion"?, "token"? | "appId"+"privateKey"+"installationId"?, "apiUrl"?}`.
 //!
 //! Record kinds (shapes match examples/reference-portal/fixtures/github.ndjson):
 //! - `repository` `github:repo/<id>`: id, name, archived, default_branch_protected, admins
@@ -61,7 +61,7 @@ impl GitHub {
                 )
             }),
             app: match (s("appId"), s("privateKey"), s("installationId")) {
-                (Some(a), Some(k), Some(i)) => Installation::new(a, k, i),
+                (Some(a), Some(k), id) => Installation::with_optional_installation_id(a, k, id),
                 _ => Installation::default(),
             },
         })
@@ -72,7 +72,9 @@ impl GitHub {
         if let Some(t) = &self.token {
             return Ok(Some(t.clone()));
         }
-        self.app.token(&self.http, &self.api, &self.version).await
+        self.app
+            .token_for_org(&self.http, &self.api, &self.version, &self.org)
+            .await
     }
 
     /// GET a path; `Ok(None)` on 404.
