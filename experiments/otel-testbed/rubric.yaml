@@ -22,13 +22,16 @@ checks:
     require: [{traces_contain: http.server.request}]
   - id: catalog_metrics_in_file
     points: 15
-    description: File metrics include catalog lag + ingest counters.
+    description: Native OTLP data points include catalog lag and ingest counters.
     require:
     - metrics_contain: seikika_snapshot_lag_seconds
     - metrics_contain: seikika_ingest_records_total
+    - metrics_contain: seikika_ingest_batches_total
   - id: log_trace_correlation
     points: 15
-    description: Log record or stdout JSON line contains a matching trace_id.
+    description: >-
+      OTLP request log and span share both IDs and stderr carries the trace
+      ID.
     require:
     - server_log_contains: trace_id
     - server_log_trace_id_matches_span: true

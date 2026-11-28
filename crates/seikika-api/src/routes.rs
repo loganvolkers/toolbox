@@ -171,15 +171,7 @@ async fn readyz(State(s): S) -> Response {
 }
 
 async fn metrics(State(s): S) -> impl IntoResponse {
-    let lag = match s.snapshot() {
-        Some(p) => p
-            .published_at
-            .elapsed()
-            .map(|d| d.as_secs_f64())
-            .unwrap_or(0.0),
-        None => 0.0,
-    };
-    seikika_telemetry::catalog::set_snapshot_lag(lag);
+    seikika_telemetry::catalog::set_snapshot_lag(s.snapshot_lag_seconds().unwrap_or_default());
     let text = seikika_telemetry::metrics_text();
     ([(header::CONTENT_TYPE, "text/plain; version=0.0.4")], text)
 }

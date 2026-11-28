@@ -1,0 +1,8 @@
+# Apply the deployment's public policy to the testbed's file exporters.
+service:
+  pipelines:
+    traces:
+      processors: [memory_limiter, filter/public, transform/public, batch]
+    metrics:
+      processors: [memory_limiter, filter/public, transform/public, batch]
+    logs: {processors: [memory_limiter, filter/public, transform/public, batch]}

@@ -1,0 +1,89 @@
+# Only these operational signals are eligible for the anonymous Grafana instance.
+receivers:
+  otlp:
+    protocols: {http: {endpoint: 0.0.0.0:4318, max_request_body_size: 2097152}}
+
+extensions: {health_check: {endpoint: 0.0.0.0:13133, path: /ready}}
+
+processors:
+  memory_limiter: {check_interval: 1s, limit_mib: 256, spike_limit_mib: 64}
+  filter/public:
+    error_mode: propagate
+    traces:
+      span:
+        - >-
+          resource.attributes["service.name"] != "seikika-demo" or name !=
+          "http.server.request"
+        - >-
+          attributes["http.request.method"] != "GET" and
+          attributes["http.request.method"] != "HEAD"
+        - >-
+          not IsMatch(attributes["url.path"],
+          "^/(healthz|readyz|search|v1/views/home|v1/entities)?$")
+      spanevent: ['true']
+    logs:
+      log_record:
+        - >-
+          resource.attributes["service.name"] != "seikika-demo" or scope.name !=
+          "seikika_api::http_trace" or body != "http request completed"
+        - >-
+          attributes["http.request.method"] != "GET" and
+          attributes["http.request.method"] != "HEAD"
+        - >-
+          not IsMatch(attributes["url.path"],
+          "^/(healthz|readyz|search|v1/views/home|v1/entities)?$")
+        - not IsMatch(attributes["status"], "^[1-5][0-9][0-9]$")
+    metrics:
+      metric:
+        - resource.attributes["service.name"] != "seikika-demo"
+        - >-
+          name != "seikika_snapshot_lag_seconds" and name !=
+          "seikika_ingest_records_total" and name !=
+          "seikika_ingest_batches_total"
+      datapoint: ['attributes["seikika.touch"] != nil']
+  transform/public:
+    error_mode: propagate
+    trace_statements:
+      - context: resource
+        statements: ['keep_keys(attributes, ["service.name"])']
+      - {context: scope, statements: ['keep_keys(attributes, [])']}
+      - context: span
+        statements:
+        - >-
+          keep_keys(attributes, ["http.request.method", "url.path",
+          "http.response.status_code"])
+        - set(status.message, "")
+    log_statements:
+      - context: resource
+        statements: ['keep_keys(attributes, ["service.name"])']
+      - {context: scope, statements: ['keep_keys(attributes, [])']}
+      - context: log
+        statements:
+        - keep_keys(attributes, ["http.request.method", "url.path", "status"])
+    metric_statements:
+      - context: resource
+        statements: ['keep_keys(attributes, ["service.name"])']
+      - {context: scope, statements: ['keep_keys(attributes, [])']}
+      - {context: datapoint, statements: ['keep_keys(attributes, [])']}
+  batch: {timeout: 1s}
+
+exporters:
+  otlp_http/metrics: {endpoint: http://127.0.0.1:9090/api/v1/otlp}
+  otlp_http/traces: {endpoint: http://127.0.0.1:4418}
+  otlp_http/logs: {endpoint: http://127.0.0.1:3100/otlp}
+
+service:
+  extensions: [health_check]
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [memory_limiter, filter/public, transform/public, batch]
+      exporters: [otlp_http/traces]
+    metrics:
+      receivers: [otlp]
+      processors: [memory_limiter, filter/public, transform/public, batch]
+      exporters: [otlp_http/metrics]
+    logs:
+      receivers: [otlp]
+      processors: [memory_limiter, filter/public, transform/public, batch]
+      exporters: [otlp_http/logs]

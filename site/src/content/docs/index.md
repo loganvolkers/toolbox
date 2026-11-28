@@ -29,6 +29,7 @@ A running portal serves a **catalog** of software, teams, and their relationship
 ## Explore further
 
 - [Browse the hosted demo](https://demo.seikika.com/) or [view the public organization scorecards](/demo/organization/). Operations requires sign-in.
+- [Follow a live request in Grafana](/demo/observability/) using the demo's OpenTelemetry metrics, logs, and traces.
 - [Browse Reference](/reference/) for APIs, CLI commands, SDKs, and schemas.
 - [Install Seikika](/start/install/) or check [what Seikika supports](/concepts/capabilities/).
 - [Browse this repository's report](/demo/report/) to see scores, evidence, and fixes.

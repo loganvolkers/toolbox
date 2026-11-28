@@ -11,6 +11,8 @@ sidebar:
 
 Anyone can [browse the public organization scorecards](/demo/organization/). Open the Workflow security track to see which checks passed and what needs attention.
 
+Follow a request from the demo in its [live runtime dashboard](/demo/observability/).
+
 ## Run a local portal
 
 Run a portal with practice data and find out why a repository has no verified owner. You need a Bash terminal, a [Seikika source checkout and CLI](/start/install/#build-from-source), and the [OpenFGA server binary](https://github.com/openfga/openfga/releases/tag/v1.22.1). The example uses OpenFGA to show the same permission checks a deployed portal can apply.
