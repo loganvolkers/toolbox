@@ -1,6 +1,6 @@
 apiVersion: seikika.com/package/v0
 name: meta-scoring
-version: 0.1.0
+version: 0.3.0
 description: >-
   Score a portal's catalog definitions, rule fixtures and assessment
   evidence.

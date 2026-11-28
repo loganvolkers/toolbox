@@ -1,6 +1,6 @@
 apiVersion: seikika.com/package/v0
 name: shell
-version: 0.1.0
+version: 0.3.0
 description: >-
   Check maintained shell scripts with ShellCheck and shfmt, and run
   behavior tests with Bats.

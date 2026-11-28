@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+## 0.3.0 — 2026-11-28
+
+- Compose independent GitHub Actions for CLI setup, baseline enforcement, and static repo-portal builds.
+- Add `seikika init` to choose first-party connectors and standards packages and write a starter portal manifest. Use `seikika init --yes` to set up the Workspace connector and a Markdown link check in scripts.
+
 ## 0.2.1 — 2026-11-26
 
 - First GitHub release under the Seikika name. Toolbox users should update the CLI and connector names, manifest headers, environment variables, and report-action references together. The release includes the portal and report UI, public SDK and package guides, and a mise starter that pins the CLI and workspace connector to the same version.

@@ -1,6 +1,6 @@
 apiVersion: seikika.com/package/v0
 name: sre
-version: 0.2.1
+version: 0.3.0
 description: >-
   Evidence-based production readiness and incident context for one
   critical service journey.
