@@ -2,6 +2,7 @@
 
 use serde::Deserialize;
 use serde_json::json;
+use std::error::Error;
 use std::time::{SystemTime, UNIX_EPOCH};
 
 /// Optional GitHub App credentials. A configured installation requires all three fields.
@@ -72,7 +73,9 @@ impl Installation {
             .header("user-agent", "seikika-github-app")
             .send()
             .await
-            .map_err(|_| "GitHub App installation token request failed")?;
+            .map_err(|error| {
+                format!("GitHub App installation token: {}", request_failure(&error))
+            })?;
         if !response.status().is_success() {
             return Err(format!(
                 "GitHub App installation token: HTTP {}",
@@ -88,5 +91,32 @@ impl Installation {
             .filter(|token| !token.is_empty())
             .map(|token| Some(token.to_owned()))
             .ok_or_else(|| "GitHub App installation response is missing an access token".to_owned())
+    }
+}
+
+/// Classify a failed GitHub request without returning its URL, headers, or error text.
+pub fn request_failure(error: &reqwest::Error) -> &'static str {
+    if error.is_timeout() {
+        return "timed out";
+    }
+    let mut tls = false;
+    let mut cause = error.source();
+    while let Some(current) = cause {
+        let message = current.to_string().to_ascii_lowercase();
+        if message.contains("certificate") || message.contains("unknownissuer") {
+            return "TLS certificate verification failed";
+        }
+        if message.contains("dns error") || message.contains("failed to resolve") {
+            return "DNS lookup failed";
+        }
+        tls |= message.contains("tls");
+        cause = current.source();
+    }
+    if tls {
+        "TLS connection failed"
+    } else if error.is_connect() {
+        "connection failed"
+    } else {
+        "request failed"
     }
 }
