@@ -1,0 +1,49 @@
+apiVersion: seikika.com/assessment/v1
+entity: assessment:rule-quality/rule:seikika/meta-rule/always-explains
+rubric: assessment-quality
+subjectHash: 84b38220d5dc
+assessor: {kind: agent, name: cursor-reviewer-02, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: supported
+    verdict: pass
+    reason: >-
+      Every citation in
+      .seikika/assessments/rule-quality/rule/seikika/meta-rule/always-explains.yaml
+      holds. hasEvidence is `r.evidence.is_some()`
+      (crates/seikika-cli/src/meta.rs:256). The rule is meta.yaml:512-521,
+      evidence-tracks-check starts at 524, and evidenceTracksCheck is 131-142
+      with `entity.hasEvidence` at 139. `entity.name` counts as an evidence
+      field because analysis.rs:80-84 records every `entity.<field>` select.
+      thresholds.md:22-23 and :46, and scorecards-for-scorecards.md:82 and
+      :104, say what is claimed. has-help and only-approved-apps have
+      hasEvidence false (.seikika/fixtures/surfaces.ndjson lines 14 and 16).
+      The test block is standards.test.yaml:279-284, one line off from the
+      cited 278-284. results.json shows exactly the six acme rules failing.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      The four verdicts match the sources. The check is presence only
+      (meta.yaml:514), so measures-intent passes against a fix that asks only
+      for `evidence:` (meta.yaml:516). A constant `['failed']` is the "empty
+      doc comment" route the rubric names (meta.yaml:1164-1165), so
+      hard-to-game is a correct fail. No number is involved, so
+      threshold-justified rests on the prerequisite principle.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      Each verdict rests on code (meta.rs:256, meta.yaml:139-142) and on a
+      gaming route anyone can write in one line. No verdict depends on taste.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      The only fail is hard-to-game. Its suggestion (require evidence that
+      reads a checked field, or loops, for checks over 8 nodes) would make the
+      constant-string route fail silver on any non-trivial check. That leaves
+      a fixed sentence only where thresholds.md:46 says it is the whole
+      answer, so the verdict would change.
+summary: >-
+  A trustworthy assessment. Every cited line says what the reason claims,
+  apart from a one-line offset on the test range. The gaming route through
+  a constant evidence string is real, and so is the `entity.name` escape
+  through evidenceTracksCheck. The suggestion would close both.

@@ -1,0 +1,34 @@
+apiVersion: seikika.com/assessment/v1
+entity: rule:seikika/meta-scorecard/tested
+rubric: rule-quality
+subjectHash: c5402658d9c9
+rubricHash: 696a7d3fef1c024786016ca0a353e402b5c1a7aaf7644da6825b20e218dc4a96
+assessor: {kind: agent, name: codex}
+at: 2026-11-27
+verdicts:
+  - criterion: measures-intent
+    verdict: pass
+    reason: >-
+      crates/seikika-expr/src/analysis.rs recognizes only required comparisons
+      of a fixture score level, rule outcome or rule evidence.
+      crates/seikika-derive/src/testing.rs evaluates the whole fixture
+      assertion before recording coverage.
+  - criterion: hard-to-game
+    verdict: pass
+    reason: >-
+      crates/seikika-expr/src/analysis.rs rejects unrequired and
+      self-comparing expressions. crates/seikika-derive/src/testing.rs
+      excludes skipped scores and only records a diagnostic comparison when
+      the corresponding rule fails.
+  - criterion: fix-leads-to-pass
+    verdict: pass
+    reason: >-
+      packages/meta-scoring/fragments/catalog.yaml names the tests list and
+      the required observation on an in-scope fixture.
+      .seikika/tests/standards.test.yaml has examples that pin a level.
+  - criterion: threshold-justified
+    verdict: pass
+    reason: >-
+      packages/meta-scoring/fragments/catalog.yaml makes a tested fixture
+      score the bronze admission requirement and adds assertions on every rule
+      at silver.

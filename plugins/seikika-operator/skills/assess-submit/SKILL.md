@@ -11,7 +11,7 @@ description: >-
 3. Confirm the server accepted them. Do not submit a file that was not judged in this session.
 
 ```
-seikika assess submit portal/assessments/rule-quality/rule/seikika/maintainer-crate/has-tests.yaml --portal portal --url http://127.0.0.1:8080
+seikika assess submit .seikika/assessments/rule-quality/rule/seikika/maintainer-crate/has-tests.yaml --portal .seikika --url http://127.0.0.1:8080
 ```
 
 Do not put the connector token on the command line of a shared log. If it fails, the file is invalid or the token was rejected.

@@ -46,7 +46,7 @@ registry; repository metadata from the GitHub search API, 2026-11-20.*
 |---|---|---|
 | Commit the results; review changes like a snapshot | `seikika report --baseline FILE` writes `seikika-report/v1` JSON: per scorecard and entity, the level and the failing rules with evidence counts. Sorted keys, one entity per block, so diffs are reviewable | ✅ (D66) |
 | `better / same / worse`, not pass/fail | A rule that starts failing is *worse*; a failing rule whose evidence list shrinks is *better*, and one whose list grows is *worse*. So "43 undocumented items, and no more" is enforceable before the rule passes | ✅ |
-| `ci` mode: the file must match | `--ci` fails on regressions **and** when the file is out of date, so improvements must be committed too. This repo's CI runs it on `portal/results.json` | ✅ |
+| `ci` mode: the file must match | `--ci` fails on regressions **and** when the file is out of date, so improvements must be committed too. This repo's CI runs it on `.seikika/results.json` | ✅ |
 | Machine-readable results for any pipeline | `--verdict FILE` writes `seikika-verdict/v1`: the result, the exit code, and each regression, improvement and change as `{scorecard, entity, message}`. The GitHub Action reads it for its outputs and annotations; other CI systems read the same file ([actions/report/README.md](../../actions/report/README.md#other-ci-systems)). Tested end to end in `crates/seikika-cli/tests/ratchet.rs` and in CI's `report-action` job | ✅ (D96) |
 | `start` mode writes improvements | `--update` writes the file when nothing regressed (and creates it) | ✅ |
 | Merge tool for conflicts | Not needed: the file is a pure function of the code, so a conflict is resolved by rerunning `--update` on the merged tree | ✅ by design |

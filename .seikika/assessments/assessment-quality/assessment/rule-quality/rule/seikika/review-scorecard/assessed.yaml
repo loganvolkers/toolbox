@@ -1,0 +1,55 @@
+apiVersion: seikika.com/assessment/v1
+entity: assessment:rule-quality/rule:seikika/review-scorecard/assessed
+rubric: assessment-quality
+subjectHash: 283e00a58e58
+assessor: {kind: agent, name: cursor-reviewer-05, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: supported
+    verdict: pass
+    reason: >-
+      Every citation in
+      .seikika/assessments/rule-quality/rule/seikika/review-scorecard/assessed.yaml
+      holds. .seikika/standards/meta.yaml has reviewState at 50-56, the
+      advisory ratchet at 1013, the fix at 1036-1039 and the rationale at
+      1040-1042. crates/seikika-cli/src/meta.rs:236-249 sets `hash` from
+      `crate::model::hash(sc)`, the whole scorecard, at line 249.
+      .seikika/tests/standards.test.yaml:907-909 has user-cli `assessed` fail
+      and meta-rule pass, and user-cli has no fixture review. Lines 897-902
+      show maintainer-ci-security at silver with an uncited `actionable`.
+      crates/seikika-model/schema/assessment.schema.json:32-36,
+      crates/seikika-api/src/assess.rs:157-166, ci.yml:95-98 and
+      docs/design/thresholds.md:55 say what is claimed.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      measures-intent passes correctly, because the hash covers every field of
+      the scorecard (meta.rs:249), so the claim in meta.yaml:1040-1042 holds.
+      hard-to-game fails correctly: nothing below gold reads citations
+      (meta.yaml:1032, 1045-1047). fix-leads-to-pass and threshold-justified
+      are right.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      Each verdict follows from the check and the schema (meta.yaml:1032,
+      crates/seikika-model/schema/assessment.schema.json:36). Nothing rests on
+      taste.
+  - criterion: actionable
+    verdict: unsure
+    reason: >-
+      The suggestion requires the review to cite the scorecard's defining
+      file. The route the reason names ("Looked at it, fine.") then fails, but
+      "Looked at .seikika/standards/meta.yaml, fine." passes, with no more
+      reading. The same assessor argues that a citation that resolves "doesn't
+      show that the reason is true"
+      (.seikika/assessments/rule-quality/rule/seikika/review-scorecard/passes-review.yaml:28-29).
+      A single cited path is that kind of citation.
+    suggestion: >-
+      Make the suggestion require engagement per criterion: each verdict's
+      reason must cite the defining file or a link the scorecard lists. Or
+      argue why one citation of the defining file is enough for silver.
+summary: >-
+  Trustworthy. The citations hold, freshness is measured over the whole
+  scorecard, and silver does accept an uncited all-pass file. The
+  hard-to-game suggestion may not flip the verdict, because one cited path
+  is the bar the same assessor calls cheap on passes-review.

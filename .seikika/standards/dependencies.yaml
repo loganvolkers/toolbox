@@ -1,0 +1,124 @@
+# Direct library dependencies (docs/design/dependency-standards.md).
+# Included by .seikika/seikika.yaml; see .seikika/README.md for the layout.
+
+kinds:
+  # Direct Cargo dependencies (docs/design/dependency-standards.md).
+  - name: Dependency
+    description: >-
+      A direct Cargo library dependency, across every crate that declares it:
+      its version requirements, source and resolved versions.
+    identityFrom: [connector:workspace]
+    fields:
+      name: {type: string}
+      ecosystem: {type: string}
+      requirements: {type: list, items: string}
+      usedBy: {type: list, items: string}
+      versions: {type: list, items: string}
+      sources: {type: list, items: string}
+      git: {type: boolean}
+      wildcard: {type: boolean}
+      inherited: {type: boolean}
+    sources: {default: [connector:workspace]}
+    map:
+    - from: workspace/dependency
+      id: "'dependency:' + record.ecosystem + ':' + record.name"
+      set: >-
+        {'name': record.name, 'ecosystem': record.ecosystem,
+         'requirements': record.requirements, 'usedBy': record.usedBy,
+         'versions': record.versions, 'sources': record.sources,
+         'git': record.git, 'wildcard': record.wildcard, 'inherited': record.inherited}
+
+scorecards:
+  # Bronze is "the requirement is bounded and the source is a registry". Silver is "Cargo.lock
+  # resolves it to one version". Gold is "a dependency used by more than one crate is declared
+  # once, in [workspace.dependencies]". Advisories and licence allow-lists need a database and
+  # a policy; they are not gated.
+  - name: maintainer-dependency
+    title: Cargo dependencies
+    kind: Dependency
+    description: >-
+      Each direct Cargo dependency: a bounded requirement from a registry,
+      locked to one version across the workspace, and shared ones inherited
+      from the workspace (D74).
+    rationale: >-
+      Every direct dependency is code the binary runs, so it should come from
+      a known source and resolve the same way on every build. Bronze bounds
+      the requirement and the source, silver locks one version, and gold
+      declares a shared dependency once so its users can't drift; advisories
+      and licences need a database and a policy, so they don't gate.
+    links:
+    - title: 'Decision: Cargo dependencies are scored'
+      url: https://github.com/seikika/seikika/blob/main/docs/decisions/D01M7W4P0S00000000000000000.md
+    - title: Dependency standards design
+      url: https://github.com/seikika/seikika/blob/main/docs/design/dependency-standards.md
+    owner: group:maintainers
+    track: maintainer
+    levels: [bronze, silver, gold]
+    ratchet: {newEntitiesAtLeast: bronze}
+    rules:
+    - name: version-bounded
+      level: bronze
+      check: "!entity.wildcard && entity.requirements.size() > 0"
+      evidence: entity.requirements
+      fix: >-
+        Replace the requirement in the evidence with a caret, tilde or exact
+        version. An empty requirement, *, or a bare >= has no ceiling.
+      rationale: >-
+        A requirement without a ceiling accepts any future major release, so a
+        `cargo update` or a fresh resolve can pull in breaking changes nobody
+        chose.
+      links:
+      - title: Cargo version requirements
+        url: https://doc.rust-lang.org/cargo/reference/specifying-dependencies.html#caret-requirements
+    - name: from-a-registry
+      level: bronze
+      check: "!entity.git"
+      evidence: entity.sources
+      fix: >-
+        Depend on a crates.io release. A git dependency is not reproducible from
+        the registry and is not reviewed here.
+      rationale: >-
+        A git source is code from a repository rather than a published release,
+        so the build can't be reproduced from the registry alone; cargo-deny's
+        `[sources]` check flags it for the same reason.
+    - name: locked
+      level: silver
+      check: entity.versions.size() > 0
+      evidence: "['not in Cargo.lock']"
+      fix: >-
+        Run `cargo generate-lockfile` so `Cargo.lock` records this dependency.
+        The lockfile is what makes the build reproducible.
+      rationale: >-
+        `Cargo.lock` is Rust's pin: without it every build resolves versions
+        afresh, and two builds of one commit can differ. OpenSSF Scorecard
+        accepts the lockfile as the pin for Rust.
+      links:
+      - title: Scorecard Pinned-Dependencies
+        url: https://github.com/ossf/scorecard/blob/main/docs/checks.md#pinned-dependencies
+    - name: one-version
+      level: silver
+      check: entity.versions.size() == 1
+      evidence: entity.versions
+      fix: >-
+        The lockfile resolves this crate to more than one version. Move the
+        direct requirement onto the newer release, or drop the dependency that
+        pulls the other one in.
+      rationale: >-
+        Two versions of one crate are both compiled into the binary, which
+        lengthens the build, and their types don't match across the copies;
+        cargo-deny bans duplicate versions for the same reason.
+    - name: shared-is-inherited
+      level: gold
+      check: entity.usedBy.size() <= 1 || entity.inherited
+      evidence: entity.usedBy
+      fix: >-
+        Declare this dependency once in [workspace.dependencies] and inherit it.
+        It is used by more than one crate, so two requirements can drift.
+      rationale: >-
+        When each crate writes its own requirement for a shared dependency, the
+        requirements drift apart and the lockfile can end up with two versions;
+        one entry in `[workspace.dependencies]` keeps them together.
+      links:
+      - title: Cargo workspace inheritance
+        url: https://doc.rust-lang.org/cargo/reference/specifying-dependencies.html#inheriting-a-dependency-from-a-workspace
+    facets: {summary: public, details: public}

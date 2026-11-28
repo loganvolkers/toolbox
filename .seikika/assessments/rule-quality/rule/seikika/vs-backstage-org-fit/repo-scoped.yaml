@@ -1,0 +1,57 @@
+apiVersion: seikika.com/assessment/v1
+entity: rule:seikika/vs-backstage-org-fit/repo-scoped
+rubric: rule-quality
+subjectHash: ac61bb5dd9a9
+assessor: {kind: agent, name: cursor-assessor-17, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: measures-intent
+    verdict: pass
+    reason: >-
+      The field is "one repository can be scored with no server"
+      (.seikika/standards/backstage-comparison.yaml:108-110). Seikika's `true`
+      (experiments/backstage-compare/facts.yaml:48-53) is exercised on every
+      push. CI runs `seikika report .seikika` in a job with no database
+      service (.github/workflows/ci.yml:87), and actions/report/run.sh:21 is
+      that same call for pilot repositories (D69). Backstage's `false` cites
+      the architecture overview: everything runs inside a backend
+      (experiments/backstage-compare/facts.yaml:134-139). A pass means what
+      the name says.
+  - criterion: hard-to-game
+    verdict: fail
+    reason: >-
+      As with every experiments/backstage-compare/facts.yaml rule, the value
+      is typed into experiments/backstage-compare/facts.yaml:48-53 and copied
+      by snapshot.py:85. Nothing in the harness runs `seikika report`. Editing
+      the value and rerunning snapshot.py on the committed results would pass
+      the rule even if `report` came to need a server.
+    suggestion: >-
+      Have the harness run `seikika report examples/repo-portal-starter` under
+      `unshare -n` with no DATABASE_URL, and set the fact from its exit code.
+      Have snapshot.py refuse a experiments/backstage-compare/facts.yaml value
+      for it.
+  - criterion: fix-leads-to-pass
+    verdict: fail
+    reason: >-
+      "Keep `seikika report` scoring a repository with no server, as
+      actions/report does" (backstage-comparison.yaml:769-770) names the
+      command and the action. But if the evidence read
+      `repoScopedWithoutServer is false`, restoring serverless reporting
+      wouldn't change the record until
+      experiments/backstage-compare/facts.yaml was edited and snapshot.py
+      rerun, and the fix doesn't say so.
+    suggestion: >-
+      Name crates/seikika-cli/src/report.rs as the place, and add the record
+      step, or measure the fact so that rerunning the harness is enough.
+  - criterion: threshold-justified
+    verdict: pass
+    reason: >-
+      The rule is boolean and has no number. "Repo-scoped true" at bronze was
+      registered before the run (experiments/backstage-compare/README.md:51)
+      and confirmed by the adjudication (ADJUDICATION.md:112). RESEARCH.md F12
+      grounds it in DORA's loosely coupled teams (RESEARCH.md:68).
+summary: >-
+  A true, CI-guarded claim with a clear definition (ci.yml:87). Like the
+  other experiments/backstage-compare/facts.yaml rules, its input is
+  hand-written and the fix doesn't name the file. Of the two org-fit
+  rules, this one is in better shape.

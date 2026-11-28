@@ -35,7 +35,7 @@ self-service actions are implemented. Durable action runs and action pages in th
 portal UI are planned. See the [implementation contract](docs/v1-spec.md) for details.
 
 Seikika [scores this repository](https://seikika.com/report/) using its own standards.
-The [developer experience benchmarks](portal/benchmarks/) record how agents fare
+The [developer experience benchmarks](.seikika/benchmarks/) record how agents fare
 on open-source tasks with Seikika and other tools.
 
 ## Help and license

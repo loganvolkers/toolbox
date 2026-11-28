@@ -17,7 +17,7 @@ snapshot (*Findings still open*).
 
 | Item | Value |
 |---|---|
-| Surface | `<seikika-report>` as rendered by `seikika report portal --skip runner,github-actions -o web` for this repo's own portal |
+| Surface | `<seikika-report>` as rendered by `seikika report .seikika --skip runner,github-actions -o web` for this repo's own portal |
 | Content | Audits 1 and 2: 1,440 entities, 39 scorecards, 5 campaigns. Audits 3 and 4 ran after a rebase onto `main`, which had grown to 1,566 entities and 48 scorecards and added a Compare tab |
 | Audit 1 (before) | `0dcdaae`, `main` at the branch point |
 | Audit 2 (cycle 1) | `8ff6862` scorecard titles in report JSON, `5e3e5af` titles for every scorecard, `806a896` element redesign |

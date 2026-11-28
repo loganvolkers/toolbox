@@ -11,7 +11,7 @@ use serde_json::{Value, json};
 use std::collections::BTreeSet;
 use std::path::Path;
 
-pub(crate) fn analyse(root: &Path, rel: &str) -> Value {
+pub(crate) fn analyse(root: &Path, rel: &str, site: &str) -> Value {
     let toml = read(root, rel);
     let dir = parent(rel);
     let name = package_field(&toml, "name");
@@ -33,7 +33,7 @@ pub(crate) fn analyse(root: &Path, rel: &str) -> Value {
         "descriptionChars": description.chars().count() as i64,
         "crateDoc": !doc.is_empty(),
         "configDocumented": config_documented(&doc),
-        "publicGuide": crate::site::connector_guide(root, &name),
+        "publicGuide": crate::site::connector_guide(root, site, &name),
         "transport": transport,
         "pushOnly": push_only(&source, &doc),
         "documentedKinds": documented_kinds(&source, &doc),
@@ -352,7 +352,7 @@ mod tests {
                 ),
             ],
         );
-        let rec = analyse(&tmp.0, "crates/demo/widget/Cargo.toml");
+        let rec = analyse(&tmp.0, "crates/demo/widget/Cargo.toml", "site");
         assert_eq!(rec["name"], "seikika-connector-widget");
         assert_eq!(rec["transport"], "stdio");
         assert_eq!(rec["pushOnly"], false);
@@ -382,7 +382,7 @@ mod tests {
                 ),
             ],
         );
-        let rec = analyse(&tmp.0, "crates/idp/Cargo.toml");
+        let rec = analyse(&tmp.0, "crates/idp/Cargo.toml", "site");
         assert_eq!(rec["transport"], "remote");
         assert_eq!(rec["pushOnly"], true);
         assert_eq!(rec["documentedKinds"], json!(["user"]));
@@ -406,7 +406,7 @@ mod tests {
                 ("crates/bare/src/main.rs", src),
             ],
         );
-        let rec = analyse(&tmp.0, "crates/bare/Cargo.toml");
+        let rec = analyse(&tmp.0, "crates/bare/Cargo.toml", "site");
         assert_eq!(rec["descriptionChars"], 0);
         assert_eq!(rec["crateDoc"], false);
         assert_eq!(rec["transport"], "none");
@@ -431,14 +431,14 @@ mod tests {
                 ("crates/demo/src/main.rs", src),
             ],
         );
-        let rec = analyse(&tmp.0, "crates/demo/Cargo.toml");
+        let rec = analyse(&tmp.0, "crates/demo/Cargo.toml", "site");
         assert_eq!(rec["secretHits"], json!([]));
     }
 
     #[test]
     fn the_connectors_we_ship_match_the_scorecard_facts() {
         let root = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../..");
-        let github = analyse(&root, "crates/seikika-connector-github/Cargo.toml");
+        let github = analyse(&root, "crates/seikika-connector-github/Cargo.toml", "site");
         assert_eq!(github["transport"], "stdio");
         assert!(github["tests"].as_i64().unwrap() >= 1);
         assert!(github["conformanceMentions"].as_i64().unwrap() >= 1);
@@ -450,23 +450,31 @@ mod tests {
                 .any(|k| k == "repository")
         );
 
-        let scim = analyse(&root, "crates/seikika-connector-scim/Cargo.toml");
+        let scim = analyse(&root, "crates/seikika-connector-scim/Cargo.toml", "site");
         assert_eq!(scim["pushOnly"], true);
         assert_eq!(scim["transport"], "remote");
         assert!(scim["tests"].as_i64().unwrap() >= 3);
         assert!(scim["ciMentions"].as_i64().unwrap() >= 1);
         assert_eq!(scim["conformanceMentions"], 0);
 
-        let files = analyse(&root, "crates/seikika-connector-git-files/Cargo.toml");
+        let files = analyse(
+            &root,
+            "crates/seikika-connector-git-files/Cargo.toml",
+            "site",
+        );
         assert!(files["tests"].as_i64().unwrap() >= 1);
         assert!(files["conformanceMentions"].as_i64().unwrap() >= 1);
         assert!(files["snapshotComplete"].as_bool().unwrap());
 
-        let runner = analyse(&root, "crates/seikika-connector-runner/Cargo.toml");
+        let runner = analyse(&root, "crates/seikika-connector-runner/Cargo.toml", "site");
         assert_eq!(runner["genericKinds"], true);
         assert!(runner["tests"].as_i64().unwrap() >= 1);
 
-        let workspace = analyse(&root, "crates/seikika-connector-workspace/Cargo.toml");
+        let workspace = analyse(
+            &root,
+            "crates/seikika-connector-workspace/Cargo.toml",
+            "site",
+        );
         assert!(workspace["descriptionChars"].as_i64().unwrap() > 0);
         assert_eq!(workspace["crateDoc"], true);
         assert_eq!(workspace["configDocumented"], true);

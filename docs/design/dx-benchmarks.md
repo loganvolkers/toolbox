@@ -4,7 +4,7 @@
 ([seikika-and-tools.md](./seikika-and-tools.md)): how we measure whether the box helps the agents
 that use it. Maintainer SDLC ([maintainer-sdlc.md](./maintainer-sdlc.md)); each benchmark measures
 one or more of the four SDLC layers ([../sdlc.md](../sdlc.md)). The catalog is in
-[portal/benchmarks/](../../portal/benchmarks), scored by `maintainer-benchmark`. Runs follow
+[.seikika/benchmarks/](../../.seikika/benchmarks), scored by `maintainer-benchmark`. Runs follow
 protocol 2 (§4.1, D01M83RDWQ5EVKY5SFHDWAD5HFH; its cost rule amended by
 D01M85G2YXV2VRTZWQJ33MHXCKN, in effect from D01M87QHJWYKGNH0182XQ5NKHMB).*
 
@@ -63,7 +63,7 @@ standard: a claim that Seikika makes something easier needs a benchmark behind i
 | Part | Requirement | Why |
 |---|---|---|
 | **A question tied to a hypothesis** | One sentence, linked to a hypothesis with a bar (R1–R7 in [repo-value.md](./repo-value.md), or new) | A benchmark without a decision behind it is a demo |
-| **The SDLC layers and stages** | The layers it measures (maintainer, package author, operator, user) and the stages within them, from [portal/sdlc/](../../portal/sdlc) | The benchmarks are how we know each layer's stages work for agents |
+| **The SDLC layers and stages** | The layers it measures (maintainer, package author, operator, user) and the stages within them, from [.seikika/sdlc/](../../.seikika/sdlc) | The benchmarks are how we know each layer's stages work for agents |
 | **A rival arm** | The strongest alternative a team would really use: an agent from scratch, a written checklist, hand-written CI glue, an existing standard (OpenSSF Scorecard), or another platform (Backstage) | Beating a straw man proves nothing |
 | **Open-source repositories at pinned commits** | Forks we didn't write (OpenFGA, Codex, gh-aw, PostHog so far), exported at a commit | Real code, reproducible, and not tuned to Seikika |
 | **A bar set before running** | The README states the hypotheses, what "holds" and "fails" mean, and the known limits, and is not edited after the run except for its status line. The bar uses a measure a dry run showed the runtime reports (P6) | It stops us explaining away a loss |
@@ -81,7 +81,7 @@ Benchmark measures the work of agents.
 
 ## 3. What we have learned
 
-The catalog ([portal/benchmarks/](../../portal/benchmarks)) holds each benchmark's details. The
+The catalog ([.seikika/benchmarks/](../../.seikika/benchmarks)) holds each benchmark's details. The
 lessons that cut across them:
 
 | # | Lesson | From |
@@ -200,7 +200,7 @@ fill (our survey, 2026-11-23).
 
 ## 6. Lifecycle and the catalog
 
-Every benchmark has an entry in [portal/benchmarks/](../../portal/benchmarks), one YAML file per
+Every benchmark has an entry in [.seikika/benchmarks/](../../.seikika/benchmarks), one YAML file per
 benchmark, scored by `maintainer-benchmark` in Seikika for Seikika.
 
 | Status | Meaning |

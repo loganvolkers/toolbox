@@ -13,4 +13,4 @@ Install other connector binaries and tools separately when your manifest require
 portal has a lockfile, run `seikika install .seikika --frozen` before standalone CLI commands
 that need its packages.
 
-[Choose the steps for your CI job](../../site/src/content/docs/operators/ci.md)
+[Choose the steps for your CI job](../../npm/site/src/content/docs/operators/ci.md)

@@ -1,0 +1,54 @@
+apiVersion: seikika.com/assessment/v1
+entity: assessment:rule-quality/rule:seikika/maintainer-site/links-resolve
+rubric: assessment-quality
+subjectHash: e96f47201b0d
+assessor: {kind: agent, name: cursor-reviewer-13, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: supported
+    verdict: pass
+    reason: >-
+      The citations in
+      .seikika/assessments/rule-quality/rule/seikika/maintainer-site/links-resolve.yaml
+      resolve, all in crates/seikika-connector-workspace/src/site.rs.
+      site.rs:165-191 resolves root-relative links under the base. :213-220
+      joins a relative target to the source file's directory on disk. :136 is
+      the inline-only regex that strips `#fragment`. :142-147 skips http(s)
+      and mailto links, and :181-190 matches content, public and Astro pages.
+      site/astro.config.mjs:8-27 has no remark or rehype plugin that would
+      rewrite `.md` links. .seikika/standards/site.yaml:112-116 are the
+      evidence and fix. .seikika/tests/standards.test.yaml:778-779 pins
+      `/missing/`, and docs/design/site-standards.md:27-29 states the base
+      rule. "No live page uses a relative link" holds: rg finds no `](` target
+      under npm/site/src/content/docs that isn't root-relative or external.
+      All 30 pages are gold in .seikika/results.json.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      The measures-intent fail is right in both directions. A relative link is
+      checked on disk, so `catalog.md` passes though it 404s, while
+      `../catalog/` works in the browser but fails (site.rs:213-220).
+      hard-to-game passing is defensible: the fix allows correcting or
+      deleting the link (site.yaml:113-116). The regex also reads links inside
+      fenced code blocks (site.rs:136), which could fail a page that only
+      shows a link. That is another misfire, but measures-intent fails
+      already. fix-leads-to-pass and threshold-justified match site.yaml and
+      D91.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      The fail follows from file_exists (site.rs:213-220) and the served base
+      `/seikika` (site/astro.config.mjs:7). A second assessor can reproduce
+      both misfires on a scratch page without judgement.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      Two changes would remove both misfires measures-intent cites: resolving
+      a relative target against the served slug, as site_link_exists does for
+      root-relative ones (site.rs:165-191), and checking fragments,
+      reference-style links and `href=` values.
+summary: >-
+  Accurate. The one fail, relative links resolved on disk rather than as
+  the browser does, is shown by site.rs:213-220, and the latent-only
+  framing matches the 30 live pages. Links inside code fences are a
+  further misfire it doesn't mention, but that doesn't change a verdict.

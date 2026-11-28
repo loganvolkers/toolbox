@@ -1,0 +1,59 @@
+apiVersion: seikika.com/assessment/v1
+entity: rule:seikika/vs-backstage-performance/ready
+rubric: rule-quality
+subjectHash: da4b0b414176
+assessor: {kind: agent, name: cursor-assessor-16, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: measures-intent
+    verdict: fail
+    reason: >-
+      The rationale (.seikika/standards/backstage-comparison.yaml:235-238) is
+      about a crashed or rescheduled instance serving again, which restarts on
+      a populated database, and the brief defines cold start "with a populated
+      database" (experiments/backstage-compare/RESEARCH.md:150). But
+      measure.py drops and recreates the database (measure.py:141-144) and
+      times exec to /readyz before any catalog is loaded (measure.py:258-264).
+      Seikika's /readyz answers once the first snapshot exists
+      (crates/seikika-api/src/routes.rs:144-160), which on an empty store is
+      nearly free. So the 0.9 s in .seikika/comparisons/seikika.yaml is an
+      empty-catalog start. The populated restart is only measured by recovery.
+    suggestion: >-
+      Time readyS on a restart against the populated database, as RESEARCH.md
+      F3 prescribes. Or reword the rationale to cover an empty first start
+      only, and point at the recovery rule for rescheduled instances.
+  - criterion: hard-to-game
+    verdict: pass
+    reason: >-
+      The value is wall time from exec to an HTTP 200 on each product's own
+      readiness endpoint, taken by measure.py over 5 alternating runs. The raw
+      files are committed in experiments/backstage-compare/results/r3/, and
+      the adjudicator recomputed every median from them (ADJUDICATION.md R3.2,
+      lines 384-386). To pass, a release has to start faster. Nothing in the
+      manifest or the code can be changed to make it pass without that.
+  - criterion: fix-leads-to-pass
+    verdict: pass
+    reason: >-
+      The fix names a concrete profiling command (`RUST_LOG=debug seikika
+      serve`) and the harness to rerun. run.sh:4 says snapshot.py turns the
+      raw results into .seikika/comparisons/*.yaml, so an agent following it
+      reaches the record the rule reads. Readiness gates on the first snapshot
+      and the OpenFGA start (docs/v1-spec.md:515). The debug log shows both,
+      so it points at the right place to look.
+  - criterion: threshold-justified
+    verdict: pass
+    reason: >-
+      The 10 s bar was pre-registered before the run
+      (experiments/backstage-compare/README.md:36), and ADJUDICATION.md §3.1
+      (lines 103-107) confirms that the scorecard implements it as written. It
+      is stricter than the product's own budgets: plan §6.6 asks for under 60
+      s (docs/plan.md:923), and v1-spec §10.4 asks for at most 15 s
+      (docs/v1-spec.md:526). Bronze is the comparative scorecard's only level,
+      and the subject's standing comes from the values
+      (D01M857ZB468ZM2YS6GNSEG6YB9).
+summary: >-
+  The rule is a sound and hard-to-fake timing, with a pre-registered bar
+  that is tighter than the plan's. Its weakness is what it times: an
+  empty-database start, while its rationale argues about rescheduled
+  instances, which start on a populated database. Seikika passes with
+  about 11 times headroom, so the gap changes no outcome today.

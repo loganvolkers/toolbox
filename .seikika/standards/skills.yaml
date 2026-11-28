@@ -1,0 +1,282 @@
+# Agent skills we ship (docs/design/skill-standards.md).
+# Included by .seikika/seikika.yaml; see .seikika/README.md for the layout.
+
+kinds:
+  # Agent skills we ship (docs/design/skill-standards.md). The connector reports facts; the
+  # scorecard below holds the thresholds.
+  - name: Skill
+    description: >-
+      An agent skill we ship in a plugin: its SKILL.md frontmatter, trigger
+      cues, size, steps, evals and the files it links.
+    identityFrom: [connector:workspace]
+    fields:
+      path: {type: string}
+      dir: {type: string}
+      name: {type: string}
+      plugin: {type: string}
+      description: {type: string}
+      descriptionChars: {type: integer}
+      triggerCues: {type: list, items: string} # when / whenever / before / after in the description
+      pronouns: {type: list, items: string} # you / I / we … in the description
+      frontmatterErrors: {type: list, items: string}
+      bodyLines: {type: integer}
+      estimatedTokens: {type: integer} # body characters / 4, not a tokenizer count
+      numberedSteps: {type: integer}
+      codeFences: {type: integer}
+      missingFiles: {type: list, items: string}
+      windowsPaths: {type: list, items: string}
+      boundaryCues: {type: list, items: string}
+      evalCases: {type: integer} # cases in evals/evals.json
+      hiddenChars: {type: integer}
+      secretHits: {type: list, items: string}
+      linkDepth: {type: integer}
+      supportFiles: {type: integer}
+      lastChange: {type: string}
+    sources: {default: [connector:workspace]}
+    map:
+    - from: workspace/skill
+      id: "'skill:' + record.dir"
+      set: >-
+        {'path': record.path, 'dir': record.dir, 'name': record.name, 'plugin': record.plugin,
+         'description': record.description, 'descriptionChars': record.descriptionChars,
+         'triggerCues': record.triggerCues, 'pronouns': record.pronouns,
+         'frontmatterErrors': record.frontmatterErrors, 'bodyLines': record.bodyLines,
+         'estimatedTokens': record.estimatedTokens, 'numberedSteps': record.numberedSteps,
+         'codeFences': record.codeFences, 'missingFiles': record.missingFiles,
+         'windowsPaths': record.windowsPaths, 'boundaryCues': record.boundaryCues,
+         'evalCases': record.evalCases, 'hiddenChars': record.hiddenChars,
+         'secretHits': record.secretHits, 'linkDepth': record.linkDepth,
+         'supportFiles': record.supportFiles, 'lastChange': record.lastChange}
+
+scorecards:
+  # Bronze is "a harness can load it and route to it". Silver is "an agent can follow it".
+  # Gold is "it states its limits, has eval cases, and nothing hostile is hiding in the files".
+  # Live with/without-skill runs are not a rule: they need a model and they vary (D71).
+  - name: maintainer-skill
+    title: Agent skills
+    kind: Skill
+    description: >-
+      Each agent skill we ship: loadable, followable, honest about its limits
+      and free of hidden instructions or credentials (D72,
+      docs/design/skill-standards.md).
+    rationale: >-
+      Skills are loaded into the prompts of operators' agents: an invalid or
+      vague one is never used, and one carrying hidden text or a credential
+      spreads it to every install. Bronze is what a harness needs to load and
+      route a skill, plus those two safety items; silver is what an agent
+      needs to follow it; gold adds stated limits, eval cases and a small
+      bundle. Whether a skill raises task success needs paired model runs and
+      is not gated.
+    links:
+    - title: Skill standards
+      url: https://github.com/seikika/seikika/blob/main/docs/design/skill-standards.md
+    - title: 'Decision: a skill scorecard'
+      url: https://github.com/seikika/seikika/blob/main/docs/decisions/D01M7W3PWP00000000000000000.md
+    - title: Agent Skills specification
+      url: https://agentskills.io/specification
+    owner: group:maintainers
+    track: operator
+    levels: [bronze, silver, gold]
+    ratchet: {newEntitiesAtLeast: bronze}
+    rules:
+    - name: valid-frontmatter
+      level: bronze
+      check: entity.frontmatterErrors.size() == 0
+      evidence: entity.frontmatterErrors
+      fix: >-
+        Fix the Agent Skills frontmatter errors in the evidence (name,
+        description, directory match, allowed fields).
+      rationale: >-
+        A harness that cannot parse the frontmatter, or finds a name that does
+        not match the directory, does not load the skill, so every later rule is
+        moot.
+      links:
+      - title: Agent Skills specification
+        url: https://agentskills.io/specification
+    - name: description-says-when
+      level: bronze
+      check: >-
+        entity.descriptionChars >= 20 && entity.descriptionChars <= 1024 &&
+        entity.triggerCues.size() > 0
+      evidence: entity.triggerCues + [string(entity.descriptionChars) + ' characters']
+      fix: >-
+        Say what the skill does and when to use it in the description (20 to
+        1024 characters), including when, whenever, before, or after.
+      rationale: >-
+        Only the name and description are loaded at startup, so the description
+        alone decides whether a router picks the skill. Below 20 characters it
+        cannot say when; above 1024 the spec rejects it.
+      links:
+      - title: Agent Skills specification
+        url: https://agentskills.io/specification
+      - title: Anthropic skill best practices (writing effective descriptions)
+        url: https://docs.anthropic.com/en/docs/agents-and-tools/agent-skills/best-practices
+    - name: third-person
+      level: bronze
+      check: entity.descriptionChars > 0 && entity.pronouns.size() == 0
+      evidence: >-
+        entity.pronouns.size() == 0 ? ['description is empty'] :
+        entity.pronouns.map(p, 'pronoun: ' + p)
+      fix: >-
+        Rewrite the description in third person. Drop you, your, I, we, my, and
+        our; the description is loaded into the agent's prompt.
+      rationale: >-
+        The description is injected into the agent's system prompt beside every
+        other skill's, and a first- or second-person voice there blurs who is
+        speaking and can hurt discovery.
+      links:
+      - title: Anthropic skill best practices
+        url: https://docs.anthropic.com/en/docs/agents-and-tools/agent-skills/best-practices
+    - name: has-procedure
+      level: silver
+      check: entity.numberedSteps >= 3
+      evidence: "[string(entity.numberedSteps) + ' numbered step(s); want at least 3']"
+      fix: >-
+        Write at least three numbered steps in SKILL.md so an agent can follow
+        the procedure.
+      rationale: >-
+        Prose without numbered steps leaves the order of work to the model,
+        which can skip or reorder a step without noticing.
+      links:
+      - title: Anthropic skill best practices (use workflows for complex tasks)
+        url: https://docs.anthropic.com/en/docs/agents-and-tools/agent-skills/best-practices
+    - name: has-example
+      level: silver
+      check: entity.codeFences > 0
+      evidence: "['no fenced code block in SKILL.md']"
+      fix: >-
+        Add a fenced code block in SKILL.md with a concrete command, input, or
+        output.
+      rationale: >-
+        A concrete command or output shows the agent exactly what to run and
+        what success looks like; a description alone invites a plausible but
+        wrong invocation.
+      links:
+      - title: Anthropic skill best practices (examples pattern)
+        url: https://docs.anthropic.com/en/docs/agents-and-tools/agent-skills/best-practices
+    - name: links-resolve
+      level: silver
+      check: entity.missingFiles.size() == 0
+      evidence: entity.missingFiles
+      fix: >-
+        Fix or remove the relative links in the evidence. Paths are relative to
+        the file that contains them.
+      rationale: >-
+        An agent follows a skill's links mid-task; a broken one sends it to a
+        file that is not there, and it carries on without the detail the author
+        moved out.
+      links:
+      - title: Agent Skills specification (file references)
+        url: https://agentskills.io/specification#file-references
+    - name: within-body-budget
+      level: silver
+      check: entity.bodyLines <= 500 && entity.estimatedTokens <= 5000
+      evidence: >-
+        [string(entity.bodyLines) + ' lines, ~' + string(entity.estimatedTokens)
+        + ' tokens (characters/4)']
+      fix: >-
+        Keep the SKILL.md body under 500 lines and about 5000 tokens (characters
+        divided by 4). Move detail into references/.
+      rationale: >-
+        The whole body enters the context window when the skill is selected,
+        crowding out the task. The spec's guidance is under 500 lines and about
+        5000 tokens; tokens here are estimated as characters divided by 4.
+      links:
+      - title: Agent Skills specification (progressive disclosure)
+        url: https://agentskills.io/specification#progressive-disclosure
+    - name: portable-paths
+      level: silver
+      check: entity.windowsPaths.size() == 0
+      evidence: entity.windowsPaths
+      fix: >-
+        Replace the Windows paths in the evidence with forward-slash paths
+        relative to the skill directory.
+      rationale: >-
+        Skills are installed on macOS and Linux as well as Windows; a backslash
+        path does not resolve there, so the agent cannot open the file it was
+        told to read.
+      links:
+      - title: Anthropic skill best practices (avoid Windows-style paths)
+        url: https://docs.anthropic.com/en/docs/agents-and-tools/agent-skills/best-practices
+    - name: states-boundaries
+      level: gold
+      check: entity.boundaryCues.size() > 0
+      evidence: "['no error, limit, or prerequisite cue in the body']"
+      fix: >-
+        Name a limit, an error path, or a prerequisite in the body of `SKILL.md`
+        (never, do not, limitation, prerequisite, troubleshooting, or on error).
+      rationale: >-
+        A skill that names no limit, prerequisite or error path leaves the agent
+        to push on when a step fails, or to use the skill where it does not
+        apply.
+      links:
+      - title: Anthropic skill best practices (error handling)
+        url: https://docs.anthropic.com/en/docs/agents-and-tools/agent-skills/best-practices
+    - name: has-evals
+      level: gold
+      check: entity.evalCases >= 3
+      evidence: >-
+        [string(entity.evalCases) + ' cases in evals/evals.json (want at least
+        3)']
+      fix: >-
+        Add at least three eval cases to evals/evals.json (a JSON array, or an
+        object with an evals array). One element is one prompt. Running them is
+        a separate, non-gating step.
+      rationale: >-
+        Without eval cases nobody can measure whether the skill helps or notice
+        when an edit makes it worse. Three is Anthropic's bar for sharing; the
+        cases are the contract a later paired-run job will execute.
+      links:
+      - title: Anthropic skill best practices
+        url: https://docs.anthropic.com/en/docs/agents-and-tools/agent-skills/best-practices
+    - name: no-hidden-instructions
+      level: bronze
+      check: entity.hiddenChars == 0
+      evidence: >-
+        [string(entity.hiddenChars) + ' hidden characters, Markdown comments or
+        unreadable text files']
+      fix: >-
+        Remove from the skill's files what a reader can't see and a model can:
+        zero-width and other default-ignorable characters, bidi controls,
+        variation selectors outside emoji, Unicode tags, HTML comments (`<!--
+        -->`) and Markdown link-reference comments (`[//]: # (...)`); save any
+        non-UTF-8 text file as UTF-8 or remove it. Images, fonts and archives
+        are not scanned.
+      rationale: >-
+        A model reads characters and comments that a reviewer cannot see, so
+        hidden text is a way to slip instructions past review. It sits at
+        bronze, the lowest level, so such a skill cannot pass the ratchet.
+      links:
+      - title: 'Thresholds: why hidden text sits at bronze'
+        url: https://github.com/seikika/seikika/blob/main/docs/design/thresholds.md
+    - name: no-hardcoded-secrets
+      level: bronze
+      check: entity.secretHits.size() == 0
+      evidence: entity.secretHits
+      fix: >-
+        Remove the hardcoded credentials in the evidence. Refer to a secret by
+        name instead of pasting it into the skill.
+      rationale: >-
+        A skill is published with its plugin and pasted into model prompts, so a
+        credential in it reaches every install and every transcript. It sits at
+        bronze so such a skill cannot pass the ratchet.
+      links:
+      - title: Thresholds
+        url: https://github.com/seikika/seikika/blob/main/docs/design/thresholds.md
+    - name: one-level-deep
+      level: gold
+      check: entity.linkDepth <= 1 && entity.supportFiles <= 3
+      evidence: >-
+        [string(entity.linkDepth) + ' link hops, ' + string(entity.supportFiles)
+        + ' supporting files']
+      fix: >-
+        Keep references one hop from SKILL.md and the skill to at most three
+        supporting files. Focused skills outperform large bundles.
+      rationale: >-
+        Agents read deeply nested references only in part, so detail two hops
+        away is easily missed. SkillsBench found focused skills with at most
+        three modules beat larger bundles.
+      links:
+      - title: Anthropic skill best practices
+        url: https://docs.anthropic.com/en/docs/agents-and-tools/agent-skills/best-practices
+    facets: {summary: public, details: public}

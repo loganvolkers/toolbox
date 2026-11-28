@@ -25,10 +25,10 @@ description: >-
    `SEIKIKA_CONNECTOR_CONFINEMENT=required` to refuse to start them instead.
 
 ```
-seikika serve portal --fixtures
+seikika serve .seikika --fixtures
 seikika serve org --listen 127.0.0.1:8080 --detach
 seikika serve org --stop
-seikika serve portal --database-url "$DATABASE_URL" --listen 127.0.0.1:8080
+seikika serve .seikika --database-url "$DATABASE_URL" --listen 127.0.0.1:8080
 ```
 
 Do not point this at a production database from a laptop without meaning to. If it fails to bind, another process holds the port.

@@ -75,7 +75,7 @@ this repository.
 
 | Package | Level | Notes |
 |---|---|---|
-| `ui/package.json` | silver | Private, `package-lock.json`, `build`. No description, no `engines.node`. The `ui` job runs `npm install` |
+| `npm/ui/package.json` | silver | Private, `package-lock.json`, `build`. No description, no `engines.node`. The `ui` job runs `npm install` |
 | `experiments/typescript-builder/package.json` | silver | Private, `package-lock.json`, `check` and `typecheck`. The same gold gaps. The `typescript-builder` job runs `npm install` |
 
 Fixtures: `package-json:packages/demo/focused/package.json` at gold,
@@ -110,5 +110,5 @@ pnpm/Expo **workspace** standards must not copy it as the whole story
   https://docs.npmjs.com/cli/v12/using-npm/developers/
 - OpenSSF, package-manager best practices for npm (lockfile integrity hashes; application projects
   run `npm ci` in CI): https://github.com/ossf/package-manager-best-practices/blob/main/published/npm.md
-- This repository's `ui/package.json`, `experiments/typescript-builder/package.json`, and the `ui`
+- This repository's `npm/ui/package.json`, `experiments/typescript-builder/package.json`, and the `ui`
   and `typescript-builder` jobs in `.github/workflows/ci.yml`.

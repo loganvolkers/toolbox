@@ -1,0 +1,36 @@
+apiVersion: seikika.com/assessment/v1
+entity: assessment:rule-quality/rule:seikika/meta-assessment/assessor-named
+rubric: assessment-quality
+subjectHash: 74e3ee316ea1
+rubricHash: e30700fc6322cf9f05a301bb4638d6708e9f5eb5aea0281911229ce75bd37bf7
+assessor: {kind: agent, name: codex-astra-self, model: gpt-6.2-astra}
+at: 2026-11-27
+verdicts:
+  - criterion: supported
+    verdict: pass
+    reason: >-
+      packages/meta-scoring/fragments/assessments.yaml requires an
+      alphanumeric character and rejects common placeholders.
+      crates/seikika-connect/src/assessment.rs trims names and compares
+      normalized declarations for independent reviews, matching the
+      attribution scope stated by the author.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      The four verdicts cover declared attribution, trivial placeholder
+      values, the person-or-harness remedy in
+      packages/meta-scoring/fragments/assessments.yaml and the bronze
+      attribution requirement in docs/design/scorecards-for-scorecards.md.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      .seikika/tests/standards.test.yaml checks a placeholder alongside
+      missing, blank and named assessors. The case-insensitive placeholder
+      exclusions in packages/meta-scoring/fragments/assessments.yaml and
+      crates/seikika-connect/src/assessment.rs both reject TBD.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      .seikika/assessments/rule-quality/rule/seikika/meta-assessment/assessor-named.yaml
+      records four passes and gives no suggestions that could direct work
+      toward an unrelated rule.

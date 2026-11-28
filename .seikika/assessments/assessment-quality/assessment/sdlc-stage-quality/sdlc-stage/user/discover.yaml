@@ -1,0 +1,64 @@
+apiVersion: seikika.com/assessment/v1
+entity: assessment:sdlc-stage-quality/sdlc-stage:user/discover
+rubric: assessment-quality
+subjectHash: 9401a9eccbcd
+assessor: {kind: agent, name: cursor-reviewer-22, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: supported
+    verdict: fail
+    reason: >-
+      Two claims in
+      .seikika/assessments/sdlc-stage-quality/sdlc-stage/user/discover.yaml do
+      not hold. executable-exit says scripts/m4-acceptance.sh:66-77 "asserts
+      that erin's details are redacted". Line 69 only runs `grep -E
+      'ownership|rule details'`, which matches the ownership line whether or
+      not details are hidden. The script's only redaction assertion is step 9
+      (lines 84-86): alice's 'rule details: 🔒' after SCIM revocation. Second,
+      decoupled-from-core cites docs/design/user-sdlc.md:46 as "marked built".
+      Line 46 is the table separator, and the built Discover row is line 47.
+      The rest holds: m4:77 asserts exact ids, m4:80 runs ui-a11.cjs,
+      ci.yml:177 runs m4, mcp.rs:124-240 calls search, query, owner_of and
+      scorecard_status, and ui-a11.cjs:14-30 is a refresh check as alice.
+    suggestion: >-
+      Cite m4-acceptance.sh:84-86 as the redaction assertion, and say that
+      step A3 (line 69) prints erin's view without asserting it. Cite
+      user-sdlc.md:47 for the built Discover row.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      Read against the guidance, the verdicts hold
+      (.seikika/standards/sdlc.yaml:403-405). Some listed check fails when the
+      criterion breaks: mcp.rs fails if a read breaks over MCP, and m4:84-86
+      fails if CLI/MCP authorization stops redacting. The UI authorization gap
+      is named in the reason. I reproduced agent-can-complete with
+      target/debug/seikika serve examples/reference-portal --fixtures. `search
+      ledger`, `owner repository:ledger` and `get repository:ledger` answered
+      with `--as alice`. Without OpenFGA, the server warned "running WITHOUT
+      authorization" and erin saw rule details.
+  - criterion: reproducible
+    verdict: unsure
+    reason: >-
+      Three verdicts are mechanical. executable-exit is a judgement about
+      partial coverage. No check asserts that the UI, or erin's reads, redact,
+      and the stated basis (an erin assertion at m4:66-77) is not in the
+      script. A second assessor could call it unsure. Also, the hands-on reads
+      need `--as alice` on loopback: without it, `seikika search ledger`
+      returned 401 in my run, and the reason doesn't say so.
+    suggestion: >-
+      Rest the executable-exit pass on m4:84-86 and mcp.rs, or mark it unsure
+      until a browser step asserts redaction for erin. Quote the exact
+      commands, with `--as alice`.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      There are no fail or unsure verdicts in
+      .seikika/assessments/sdlc-stage-quality/sdlc-stage/user/discover.yaml,
+      so no suggestions are needed. The summary names the soft spot: no
+      browser test asserts UI redaction.
+summary: >-
+  The four passes are plausible and the hands-on reads reproduce. But the
+  key evidence for executable-exit is wrong: m4-acceptance.sh:69 does not
+  assert erin's redaction (the real assertion is lines 84-86, for alice),
+  and user-sdlc.md:46 is a table separator. With the UI's authorization
+  untested, the executable-exit pass rests on judgement.

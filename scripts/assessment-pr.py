@@ -17,7 +17,7 @@ import tempfile
 import time
 
 
-POLICY = "portal/assessment-pr.json"
+POLICY = ".seikika/assessment-pr.json"
 PACKET_BYTES = 48_000
 OUTPUT_BYTES = 1_048_576
 DEADLINE = 300
@@ -51,12 +51,16 @@ def commit(repo, ref):
 
 
 def policy_at(repo, base):
-    entry = git(repo, "ls-tree", base, "--", POLICY)
+    path = POLICY
+    entry = git(repo, "ls-tree", base, "--", path)
+    if not entry:
+        path = "portal/assessment-pr.json"
+        entry = git(repo, "ls-tree", base, "--", path)
     if not entry:
         return {"routes": [], "checks": {}}, None
     if not entry.startswith((b"100644 blob ", b"100755 blob ")):
         raise ValueError("assessment policy must be a regular file")
-    raw = git(repo, "show", f"{base}:{POLICY}")
+    raw = git(repo, "show", f"{base}:{path}")
     policy = json.loads(raw)
     if policy.get("format") != "seikika-pr-policy/v1":
         raise ValueError("unsupported assessment policy version")

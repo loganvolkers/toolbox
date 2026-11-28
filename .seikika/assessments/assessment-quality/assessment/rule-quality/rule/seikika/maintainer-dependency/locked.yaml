@@ -1,0 +1,50 @@
+apiVersion: seikika.com/assessment/v1
+entity: assessment:rule-quality/rule:seikika/maintainer-dependency/locked
+rubric: assessment-quality
+subjectHash: 5349a8263307
+assessor: {kind: agent, name: cursor-reviewer-34, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: supported
+    verdict: pass
+    reason: >-
+      The citations in
+      .seikika/assessments/rule-quality/rule/seikika/maintainer-dependency/locked.yaml
+      match. .seikika/standards/dependencies.yaml:86-97 is the check
+      entity.versions.size() > 0, the fixed evidence, cargo generate-lockfile
+      and the lockfile rationale.
+      crates/seikika-connector-workspace/src/deps.rs:41-42 reads Cargo.lock
+      from the working tree and :90-114 parses [[package]] blocks.
+      .github/workflows/ci.yml:23-24 and :39 pass --locked.
+      .seikika/fixtures/workspace.ndjson has dependency:cargo:unsafe with
+      versions [], and .seikika/tests/standards.test.yaml:446-456 pins
+      evidence ['not in Cargo.lock']. docs/design/dependency-standards.md:19
+      and :32 place the lockfile at silver.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      measures-intent should fail: the rationale is a committed lockfile
+      (dependencies.yaml:91-94) and the connector only sees the file on disk
+      (deps.rs:41-42). hard-to-game, fix-leads-to-pass and threshold-justified
+      are right. Versions come from the lockfile's package blocks, the fix
+      names cargo generate-lockfile, and silver is the design's row. No other
+      rule-quality failure is in those sources.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      The working-tree read is the code, not a judgement. A second assessor
+      splits "generate the lockfile" (the fix, so hard-to-game passes) from
+      "the file is committed" (the rationale, so measures-intent fails) the
+      same way.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      Reporting whether Cargo.lock is tracked and whether cargo metadata
+      --locked succeeds would make the check mean the committed pin the
+      rationale states, which is what would flip measures-intent. The other
+      three verdicts in the assessment are passes.
+summary: >-
+  The locked-rule assessment is trustworthy. It correctly fails
+  measures-intent because the connector reads Cargo.lock from the working
+  tree, and the evidence, fix and silver level are cited at the lines that
+  state them.

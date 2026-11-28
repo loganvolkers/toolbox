@@ -1,0 +1,67 @@
+apiVersion: seikika.com/assessment/v1
+entity: assessment:scorecard-quality/scorecard:seikika/maintainer-example
+rubric: assessment-quality
+subjectHash: c993acdcd113
+assessor: {kind: agent, name: cursor-reviewer-32, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: supported
+    verdict: fail
+    reason: >-
+      The catalog counts in
+      .seikika/assessments/scorecard-quality/scorecard/seikika/maintainer-example.yaml
+      match the tree and .seikika/results.json. The globs at
+      .seikika/seikika.yaml:154-157 match 47 READMEs. Twelve are per-round
+      records under experiments/actions-ab/results and
+      experiments/actions-gitlab/results, three are examples/acme-live/seed,
+      and one is experiments/deploy-ab/prompts/README.md. Of the 11 entities
+      below gold, 10 are in that set of 16, and the eleventh is
+      examples/reference-portal/executors/github-apps/README.md, which
+      docs/design/example-standards.md:71 expects at bronze. All 47 are bronze
+      or gold, and 36 are gold. The ladder text matches D78 at
+      docs/decisions/D01M7W5G0T00000000000000000.md:9. The secret-rule move is
+      thresholds.md:35, which names D01M83G9F4EEGN1GTP14HEYB8B6. The
+      assessment cites thresholds.md:34, which is the CI-speed row and does
+      not mention secrets. examples.rs:33 matches seikika only for validate,
+      test, report, plan, build and derive, and examples.rs:38-42 is a
+      substring. "Python 3.12" at experiments/actions-ab/README.md:30 matches
+      the python alternative. The trial's resulting level does not.
+      .seikika/results.json fails r8 only on says-how-to-check, and
+      experiments/actions-ab/results/r8/README.md:82 already cites a decision
+      id, so cites-the-design already passes. Adding `python3
+      harness/count.py` would reach gold, not silver.
+    suggestion: >-
+      Say the r8 write-up would reach gold, because says-how-to-check is its
+      only failing rule, and cite thresholds.md:35 for the secret-rule move.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      one-concern fails because 16 of 47 catalogued files are run records,
+      seed READMEs or a prompts index, and 10 of the 11 live failures are
+      among them, so the level mixes copiers with benchmark readers.
+      levels-are-a-ladder passes: bronze, silver and gold are the D78
+      sequence, and every live entry is at least bronze. no-obvious-gap fails
+      because silver is commandLines > 0 (examples.yaml:77) with no rule that
+      the named command runs, while data.rs:150-171 already computes notInCi
+      for stages. The fixes name what to add (examples.yaml:80-81 and the
+      other rules), so actionable passes even though the r8 trial stops one
+      level short of what the score would be.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      The 47, 16, 11 and 36 counts are in the tree and .seikika/results.json.
+      A second assessor fails one-concern and no-obvious-gap on those counts
+      and the commandLines check.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      Excluding results, prompts and seed globs would stop the card scoring
+      run records, which is the one-concern fail. A checked-in-ci rule using
+      the notInCi detector would be the missing standard the no-obvious-gap
+      reason names. Both suggestions are attached to those fails.
+summary: >-
+  The entity counts and both fails match the tree, .seikika/results.json
+  and the command detector. The paper trial undershoots: r8 fails only
+  says-how-to-check and already cites a decision, so the added command
+  would reach gold, not silver. The secret-rule move is thresholds.md:35,
+  not the CI-speed row at :34.

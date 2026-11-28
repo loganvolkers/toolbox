@@ -1,0 +1,46 @@
+apiVersion: seikika.com/assessment/v1
+entity: rule:seikika/maintainer-schema/described
+rubric: rule-quality
+subjectHash: d67363ebed99
+assessor: {kind: agent, name: cursor-assessor-10, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: measures-intent
+    verdict: pass
+    reason: >-
+      The check reads the root `description` only
+      (crates/seikika-connector-workspace/src/specs.rs:31), which is the field
+      the fix names and the one editors and agents show first
+      (.seikika/standards/schemas.yaml:87-92). Property descriptions are
+      deliberately not gated (docs/design/schema-standards.md:24-26). The four
+      live roots each say which contract they are, for example
+      crates/seikika-model/schema/executor-messages.schema.json at 414
+      characters.
+  - criterion: hard-to-game
+    verdict: fail
+    reason: >-
+      Any non-whitespace character passes (`descriptionChars > 0`,
+      schemas.yaml:85). A scratch schema with `"description": "x"`, run
+      through target/debug/seikika-connector-workspace, reported
+      descriptionChars 1 and passed.
+    suggestion: >-
+      Set a chosen floor, as maintainer-site's titled does with its reason in
+      docs/design/thresholds.md:38 (e.g. at least 20 characters), or require
+      the description to differ from the title.
+  - criterion: fix-leads-to-pass
+    verdict: pass
+    reason: >-
+      The evidence says "no description" (schemas.yaml:86, pinned for
+      schema/demo/unsafe in .seikika/tests/standards.test.yaml:608-609), and
+      the fix names the root `description`. Adding one passes.
+  - criterion: threshold-justified
+    verdict: pass
+    reason: >-
+      Non-empty, with no further number. Bronze is D77's "a root description"
+      (docs/decisions/D01M7W5BEAG0000000000000000.md), and
+      schema-standards.md:20 groups it with dialect and id as identification.
+summary: >-
+  A sensible bronze rule that reads the right field. The four live schemas
+  describe themselves well. Its only weakness is that a single character
+  passes; a chosen length floor, like the site card's, would close that.
+  Fix and level are clear.

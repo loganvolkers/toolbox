@@ -1,0 +1,56 @@
+apiVersion: seikika.com/assessment/v1
+entity: assessment:rule-quality/rule:seikika/maintainer-skill/no-hidden-instructions
+rubric: assessment-quality
+subjectHash: caaf95c0817a
+assessor: {kind: agent, name: cursor-reviewer-23, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: supported
+    verdict: fail
+    reason: >-
+      The code citations in
+      .seikika/assessments/rule-quality/rule/seikika/maintainer-skill/no-hidden-instructions.yaml
+      hold. In crates/seikika-connector-workspace/src/hygiene.rs,
+      html_comments is 140-152, its three-label filter 146-149 and the bare
+      `<!--` count 151. Binaries are skipped in
+      crates/seikika-connector-workspace/src/skills.rs:359-382, and the
+      killer-item row is docs/design/thresholds.md:35. The
+      .seikika/standards/skills.yaml citations are all 11 lines early,
+      although the file has not changed since the assessment (b15820e) and the
+      summary says the line numbers were corrected. The check is 234, not 223,
+      the fix 238-244, not 227-233, and the thresholds link 250, not 239.
+    suggestion: >-
+      Re-cite .seikika/standards/skills.yaml as 234 (check), 238-244 (fix) and
+      250 (link).
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      The verdicts follow from the code. measures-intent and hard-to-game fail
+      correctly. The filter at hygiene.rs:148 accepts only `[//]:`,
+      `[comment]:` and `[_]:`, so a definition such as `[x]: # (do X)` renders
+      as nothing and is not counted. `text.matches("<!--")` (hygiene.rs:151)
+      counts inside code fences. fix-leads-to-pass holds: the fix
+      (skills.yaml:238-244) names every class the count includes, and the
+      reason fairly notes that the evidence (skills.yaml:235-237) gives a
+      total with no file or line. threshold-justified holds per
+      thresholds.md:35.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      Both fails rest on the literal label list at hygiene.rs:148 and the
+      unconditional count at hygiene.rs:151, plus CommonMark's rule that link
+      reference definitions render nothing. A second assessor reading them
+      reaches the same verdicts.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      Both fails share one suggestion: count every link-reference definition
+      whose label no link uses, and skip fenced code. That removes the `[x]:
+      #` route behind hard-to-game and both misfires behind measures-intent
+      (hygiene.rs:142-152), so it would change both verdicts.
+summary: >-
+  The verdicts and suggestions are right. Arbitrary link-reference labels
+  evade the three-label filter at hygiene.rs:148, and `<!--` counts inside
+  code fences. Every .seikika/standards/skills.yaml line number is 11
+  lines early, on a file that has not changed since, so supported fails on
+  the citations.

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # The scored run (README.md): performance for both arms at each size, REPS runs per arm with the
 # arms alternating, then the security and agent-surface probes, the footprint and the upgrade
-# facts. Raw results go to $OUT; snapshot.py turns them into portal/comparisons/*.yaml.
+# facts. Raw results go to $OUT; snapshot.py turns them into .seikika/comparisons/*.yaml.
 set -euo pipefail
 here=$(cd "$(dirname "$0")" && pwd)
 OUT=${OUT:-/tmp/bc/r}

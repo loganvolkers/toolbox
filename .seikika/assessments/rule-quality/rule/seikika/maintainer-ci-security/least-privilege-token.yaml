@@ -1,0 +1,62 @@
+apiVersion: seikika.com/assessment/v1
+entity: rule:seikika/maintainer-ci-security/least-privilege-token
+rubric: rule-quality
+subjectHash: 8e6436e3d60c
+assessor: {kind: agent, name: cursor-assessor-12, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: measures-intent
+    verdict: fail
+    reason: >-
+      `topPermissions` is whether a top-level `permissions:` key exists
+      (crates/seikika-connector-workspace/src/workflows.rs:271, 282), not
+      whether it is read-only, and it also empties `jobsWithoutPermissions`
+      (workflows.rs:285). A scratch workflow with `permissions: write-all` at
+      the top, run through target/debug/seikika-connector-workspace, gave
+      topPermissions true and jobsWithoutPermissions [], so it passes. The
+      connector already computes `topWriteScopes` (workflows.rs:283), but the
+      kind doesn't map it
+      (packages/github-actions/fragments/github-actions.yaml:114-123). zizmor
+      1.32.0 --offline reported nothing for that file on `on: push`, so no
+      other rule on the card catches it.
+    suggestion: >-
+      Map `topWriteScopes` into the Workflow kind and check `entity.type ==
+      'action' || (entity.topPermissions && entity.topWriteScopes.size() == 0)
+      || entity.jobsWithoutPermissions.size() == 0`, with the evidence naming
+      the top-level write scopes, plus a fixture with top-level write-all that
+      fails.
+  - criterion: hard-to-game
+    verdict: fail
+    reason: >-
+      The cheapest way to pass is the line `permissions: write-all` at the top
+      of the workflow: it never breaks a job, it needs no thought about
+      scopes, and it grants more than the default the rationale warns about
+      (github-actions.yaml:240-243). Working out per-job scopes, as the fix
+      asks, costs more.
+    suggestion: >-
+      The check above closes it. Also pin the outcome with a fixture in
+      .seikika/fixtures/workspace.ndjson and an expectation in
+      .seikika/tests/standards.test.yaml, which the rule lacks (its brief
+      shows tested false).
+  - criterion: fix-leads-to-pass
+    verdict: pass
+    reason: >-
+      The evidence names the jobs without `permissions:`
+      (github-actions.yaml:236), and the fix says to declare a read-only block
+      at the top and grant writes per job (:237-239). Doing that sets
+      topPermissions and passes; it is also what this repository's workflows
+      do (each has a top-level `permissions:`, e.g.
+      .github/workflows/release.yml:20-21).
+  - criterion: threshold-justified
+    verdict: pass
+    reason: >-
+      No number. D70 places a least-privilege token in bronze, and
+      docs/design/github-actions-standards.md:82 ties it to Scorecard's
+      Token-Permissions and zizmor's excessive-permissions; a token any step
+      can write with is a floor item by docs/design/thresholds.md:19-21.
+summary: >-
+  Right level and a clear fix, but the check reads only that a top-level
+  `permissions:` key exists, so `permissions: write-all` passes it, and
+  zizmor offline doesn't flag that either. The write scopes are already
+  computed by the connector and just need mapping and checking. The rule
+  is also untested: no fixture makes it fail.

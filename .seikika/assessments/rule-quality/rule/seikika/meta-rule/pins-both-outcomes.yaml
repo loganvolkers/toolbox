@@ -1,0 +1,34 @@
+apiVersion: seikika.com/assessment/v1
+entity: rule:seikika/meta-rule/pins-both-outcomes
+rubric: rule-quality
+subjectHash: 483bdf35c191
+rubricHash: 696a7d3fef1c024786016ca0a353e402b5c1a7aaf7644da6825b20e218dc4a96
+assessor: {kind: agent, name: codex}
+at: 2026-11-27
+verdicts:
+  - criterion: measures-intent
+    verdict: pass
+    reason: >-
+      packages/meta-scoring/fragments/catalog.yaml checks that both pass and
+      fail occur among the pinned outcomes.
+      crates/seikika-derive/src/testing.rs only includes passing fixture
+      assertions.
+  - criterion: hard-to-game
+    verdict: pass
+    reason: >-
+      crates/seikika-expr/src/analysis.rs recognizes required literal
+      comparisons in the CEL tree. crates/seikika-derive/src/testing.rs
+      confirms that a literal diagnostic assertion pins failure only if the
+      fixture rule actually failed.
+  - criterion: fix-leads-to-pass
+    verdict: pass
+    reason: >-
+      packages/meta-scoring/fragments/catalog.yaml gives the passing and
+      failing score expressions. .seikika/tests/standards.test.yaml includes
+      direct rule comparisons that keep this requirement satisfied.
+  - criterion: threshold-justified
+    verdict: pass
+    reason: >-
+      docs/design/scorecards-for-scorecards.md describes the one-sided fixture
+      gaps. Gold adds a required assertion for each outcome after silver
+      establishes that both outcomes occur.

@@ -1,0 +1,70 @@
+apiVersion: seikika.com/assessment/v1
+entity: rule:seikika/vs-backstage-supply-chain/known-vulnerabilities
+rubric: rule-quality
+subjectHash: 87906019b81c
+assessor: {kind: agent, name: cursor-assessor-17, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: measures-intent
+    verdict: pass
+    reason: >-
+      footprint.py:111-138 counts every osv-scanner advisory group across
+      Cargo.lock, the OpenFGA binary (`--experimental-plugins go/binary`) and
+      ui/package-lock.json. That includes RustSec's unmaintained notices for
+      chrono and chrono-tz, which aren't code vulnerabilities
+      (RESULTS.md:195-199). The rationale defines the intent as exactly that,
+      "a finding the adopter's scanner raises and someone must triage, even
+      when ... not exploitable"
+      (.seikika/standards/backstage-comparison.yaml:613-616), so counting them
+      matches what the rule says it measures.
+  - criterion: hard-to-game
+    verdict: fail
+    reason: >-
+      footprint.py runs `osv-scanner scan source` with no `--config` flag
+      (:128-129). osv-scanner reads an osv-scanner.toml placed beside the
+      scanned lockfile, whose `[[IgnoredVulns]]` entries drop advisories
+      (osv-scanner's documented behaviour; I didn't try it here, and the repo
+      has no such file today). A two-entry file at the repo root ignoring
+      RUSTSEC-2026-0543 and RUSTSEC-2026-0555 would cut today's 5 to 3 with no
+      change to what ships. The adopter's scanner, without that file, would
+      still raise both.
+    suggestion: >-
+      Run osv-scanner with an explicit empty config (`--config /dev/null` or a
+      harness-owned file) so repository ignores don't apply, and record any
+      ignore file as evidence.
+  - criterion: fix-leads-to-pass
+    verdict: fail
+    reason: >-
+      The fix says to run `osv-scanner scan source --lockfile Cargo.lock` and
+      update or replace the listed packages
+      (backstage-comparison.yaml:611-612). Three of today's five advisories
+      are in the OpenFGA 1.22.1 binary (GO-2026-6859, GO-2026-6860,
+      GO-2026-6866; RESULTS.md:200-202), which that command doesn't scan. The
+      other two, chrono and chrono-tz, can't be replaced without dropping
+      CEL's `timestamp()` and `duration()` (RESULTS.md:195-199). Following the
+      fix alone can't reach zero.
+    suggestion: >-
+      Scan what footprint.py scans, the OpenFGA binary and
+      ui/package-lock.json as well, and name the known ways out: upgrade
+      OpenFGA to 1.23.0 at image/Dockerfile:8-10 (RESULTS.md:200-202), and
+      move `cel` off its default `chrono` feature. If that isn't possible, let
+      the rule allow unmaintained notices that have a documented reason.
+  - criterion: threshold-justified
+    verdict: fail
+    reason: >-
+      `knownVulns == 0` wasn't pre-registered. The README's supply-chain bar
+      is "high = 0" (experiments/backstage-compare/README.md:46), and
+      RESULTS.md:261-265 lists `knownVulns == 0` among the bars written after
+      the smoke rounds. A zero bar on every advisory, unmaintained notices
+      included, puts at bronze a level Seikika can't reach without dropping a
+      CEL feature, and no document argues for that.
+    suggestion: >-
+      Move this rule to silver, keeping high-vulnerabilities as the bronze
+      floor, and state the reason in backstage-comparison.md. Or allow
+      advisories marked informational (unmaintained) at bronze.
+summary: >-
+  The measure matches its stated intent, but the rule is blocked and
+  gameable. Zero advisories isn't reachable by following the fix: three
+  advisories are in the OpenFGA binary the fix doesn't scan, and two are
+  tied to CEL. A repo-level osv-scanner.toml could silence some of them,
+  and the zero bar was set after the smoke rounds.

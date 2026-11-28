@@ -542,7 +542,7 @@ enum ToolsCommand {
         /// The repository root.
         #[arg(default_value = ".")]
         path: PathBuf,
-        /// The portal to compare with (default: the root's seikika.yaml, else portal/seikika.yaml).
+        /// The portal to compare with (default: the root's seikika.yaml, .seikika/seikika.yaml, or portal/seikika.yaml).
         #[arg(long)]
         portal: Option<PathBuf>,
         /// Output format.

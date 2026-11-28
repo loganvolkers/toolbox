@@ -1,0 +1,60 @@
+apiVersion: seikika.com/assessment/v1
+entity: rule:seikika/maintainer-agent-doc/checks-run-in-ci
+rubric: rule-quality
+subjectHash: a703a684d518
+assessor: {kind: agent, name: cursor-assessor-11, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: measures-intent
+    verdict: fail
+    reason: >-
+      Each command is reduced to its tool and first word, then searched as a
+      substring of all workflow text
+      (crates/seikika-connector-workspace/src/agentsmd.rs:40-61). For a
+      script, the first word is the directory, so `python3 scripts/x.py`
+      becomes "python3 scripts". On a scratch checkout whose workflow ran only
+      `python3 scripts/other.py`, an AGENTS.md naming `python3
+      scripts/never-run.py` reported ciMissingCommands []. Any script that CI
+      runs vouches for every other script. Commands of tools outside the eight
+      (agentsmd.rs:41), such as `yamark format --check` or
+      `scripts/regen-site-report.sh` in AGENTS.md, are never checked. A match
+      in a workflow comment or step name also counts.
+    suggestion: >-
+      Match the full invocation up to its first flag: the script path for
+      python and bash, and subcommand chains for seikika. Read only `run:`
+      values and composite-action steps, not all workflow text. Also report
+      backtick commands whose tool is outside the list as unchecked, so a
+      maintainer can see them. Add a fixture where one script runs in CI and
+      another doesn't.
+  - criterion: hard-to-game
+    verdict: fail
+    reason: >-
+      Two cheap passes don't make the check run. Moving the procedure into a
+      markdown table excludes it, because table rows are skipped
+      (agentsmd.rs:49-51) and the fix itself says table commands are not
+      required (.seikika/standards/agent-docs.yaml:131-134). Running any one
+      python script in CI passes every other python script, as above.
+    suggestion: >-
+      Same change as for measures-intent. Narrow the table exemption to the
+      track index itself, for example only rows under a heading configured as
+      the index, rather than any line starting with `|`.
+  - criterion: fix-leads-to-pass
+    verdict: pass
+    reason: >-
+      The evidence is each missing "tool subcommand" (e.g. ['cargo nope'] on
+      the partial fixture, .seikika/tests/standards.test.yaml:660-670). The
+      fix says to run it from a GitHub Actions workflow or remove it from the
+      procedure (agent-docs.yaml:131-134). Either empties the list.
+  - criterion: threshold-justified
+    verdict: pass
+    reason: >-
+      There is no number. D83 decides the rule and its table exemption
+      (docs/decisions/D01M7WMSMS20000000000000000.md), and
+      docs/design/agents-md-standards.md:23,71 places it at gold above
+      silver's has-commands, which it depends on.
+summary: >-
+  The right gold rule, and its fix works, but the match is coarse: a
+  script is reduced to "python3 scripts", so one script in CI covers them
+  all. Tools outside the eight are never looked at, and a table row
+  escapes the check. This repo passes because its named commands do run,
+  not because the rule would notice if they stopped.

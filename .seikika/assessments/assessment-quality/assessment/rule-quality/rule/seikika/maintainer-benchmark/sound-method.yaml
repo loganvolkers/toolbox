@@ -1,0 +1,56 @@
+apiVersion: seikika.com/assessment/v1
+entity: assessment:rule-quality/rule:seikika/maintainer-benchmark/sound-method
+rubric: assessment-quality
+subjectHash: de4931b75d86
+assessor: {kind: agent, name: cursor-reviewer-34, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: supported
+    verdict: fail
+    reason: >-
+      Two citations in
+      .seikika/assessments/rule-quality/rule/seikika/maintainer-benchmark/sound-method.yaml
+      do not say what the reasons claim. fix-leads-to-pass cites
+      .seikika/tests/standards.test.yaml:1212-1216 as naming each remaining
+      gap; those lines are the protocol-1 expect (level silver, sound-method
+      fail), and the gap list is the next test at :1227-1229.
+      threshold-justified says the rationale's 21-call drift is L12 at
+      docs/design/dx-benchmarks.md:100, which records 29, 38 and 29 calls. The
+      21-call figure is docs/decisions/D01M83RDWQ5EVKY5SFHDWAD5HFH.md:22. The
+      check, the deterministic skip
+      (.seikika/standards/benchmarks.yaml:125-127, 140-141) and the twelve
+      results.json sound-method failures do hold.
+    suggestion: >-
+      Point the gap list at .seikika/tests/standards.test.yaml:1221-1229 and
+      the 21-call drift at D01M83RDWQ5EVKY5SFHDWAD5HFH.md:22, not at
+      dx-benchmarks.md:100.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      The four verdicts match the rule. measures-intent is right that empty
+      registrationGaps and runGaps are P1-P7
+      (.seikika/standards/benchmarks.yaml:117-142, 366-373) and that
+      protocol-1 runs stop at silver (docs/design/dx-benchmarks.md:155-157).
+      hard-to-game is right that any non-empty frozenAt and fitAudit pass.
+      fix-leads-to-pass and threshold-justified are right in substance: the
+      fix at benchmarks.yaml:374-378 reruns under protocol 2, and three runs
+      is P2 (dx-benchmarks.md:162).
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      A second assessor reading the computed gaps and the catalog entries
+      reaches the same pass, fail, pass, pass. The two bad line numbers do not
+      change those verdicts; the gaming route is the check itself.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      The hard-to-game suggestion, requiring a resolvable frozenAt commit and
+      real paths for the fit audit and the spread, would close the free-text
+      route the reason describes in
+      .seikika/standards/benchmarks.yaml:137-142. The other verdicts pass and
+      have no suggestion.
+summary: >-
+  The sound-method verdicts are the ones the check supports, including the
+  free-text gold route. Two citations do not: the gap list is
+  standards.test.yaml:1227-1229, not :1212-1216, and the 21-call drift is
+  the protocol-2 decision, not L12 at dx-benchmarks.md:100.

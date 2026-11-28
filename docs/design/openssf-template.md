@@ -54,7 +54,7 @@ The author of, say, *an observability scorecard* writes a package, not a tool in
 | Step | In the package | Precedent here |
 |---|---|---|
 | 1. The facts | A tool, or an existing one, that emits records or SARIF: "every HTTP handler opens a span", "metric names follow the convention" | `seikika-connector-workspace` observability facts; semgrep rules through the SARIF slot |
-| 2. The judgements | Rules over those facts, with levels, a measure and fix text | `portal/standards/observability.yaml` (`maintainer-observability`) |
+| 2. The judgements | Rules over those facts, with levels, a measure and fix text | `.seikika/standards/observability.yaml` (`maintainer-observability`) |
 | 3. Documentation | Each rule's fix, generated into STANDARD.md | `-o standard` |
 | 4. Tests | Fixtures where each rule both passes and fails, and expectations | `packages/*/tests`, the meta-standards (`meta-rule`: decided on fixtures) |
 | 5. Distribution | A versioned package that others `include` with parameters | `packages/sarif`, `packages/github-actions`, `packages/openssf-scorecard` |

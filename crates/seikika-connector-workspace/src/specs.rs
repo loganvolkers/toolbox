@@ -9,13 +9,7 @@ use std::path::Path;
 
 const DRAFT_2020_12: &str = "https://json-schema.org/draft/2020-12/schema";
 
-/// Files that compile or apply a schema. A schema none of them names is not part of the contract.
-const WIRED_IN: &[&str] = &[
-    "crates/seikika-model/src/schema.rs",
-    "examples/reference-portal/tools/validate.py",
-];
-
-pub(crate) fn analyse(root: &Path, rel: &str) -> Value {
+pub(crate) fn analyse(root: &Path, rel: &str, sources: &[String]) -> Value {
     let text = std::fs::read_to_string(root.join(rel)).unwrap_or_default();
     let doc: Value = serde_json::from_str(&text).unwrap_or(Value::Null);
     let filename = Path::new(rel)
@@ -30,7 +24,7 @@ pub(crate) fn analyse(root: &Path, rel: &str) -> Value {
         "titleChars": doc["title"].as_str().unwrap_or("").trim().chars().count() as i64,
         "descriptionChars": doc["description"].as_str().unwrap_or("").trim().chars().count() as i64,
         "externalRefs": external_refs(&doc),
-        "wired": wired(root, &filename),
+        "wired": wired(root, &filename, sources),
         "draft202012": doc["$schema"].as_str().unwrap_or("").trim() == DRAFT_2020_12,
         "secretHits": secrets(rel, &text),
     })
@@ -65,9 +59,9 @@ fn collect_refs(node: &Value, out: &mut Vec<String>) {
     }
 }
 
-fn wired(root: &Path, filename: &str) -> bool {
+fn wired(root: &Path, filename: &str, sources: &[String]) -> bool {
     !filename.is_empty()
-        && WIRED_IN.iter().any(|rel| {
+        && sources.iter().any(|rel| {
             std::fs::read_to_string(root.join(rel))
                 .unwrap_or_default()
                 .contains(filename)
@@ -116,12 +110,20 @@ mod tests {
             &[
                 ("schema/demo.schema.json", schema),
                 (
-                    "crates/seikika-model/src/schema.rs",
+                    "tools/custom-validator.rs",
                     "include_str!(\"demo.schema.json\");\n",
                 ),
             ],
         );
-        let rec = analyse(&tmp.0, "schema/demo.schema.json");
+        assert_eq!(
+            analyse(&tmp.0, "schema/demo.schema.json", &[])["wired"],
+            false
+        );
+        let rec = analyse(
+            &tmp.0,
+            "schema/demo.schema.json",
+            &["tools/custom-validator.rs".to_owned()],
+        );
         assert_eq!(rec["draft202012"], true);
         assert_eq!(rec["externalRefs"], json!([]));
         assert_eq!(rec["wired"], true);
@@ -133,7 +135,7 @@ mod tests {
     fn an_external_ref_and_an_old_draft_are_named() {
         let schema = "{\n  \"$schema\": \"https://json-schema.org/draft-07/schema#\",\n  \"$ref\": \"https://example.invalid/other.json\",\n  \"note\": \"AKIAIOSFODNN7EXAMPLE\"\n}\n";
         let tmp = scratch("bad", &[("schema/unsafe.schema.json", schema)]);
-        let rec = analyse(&tmp.0, "schema/unsafe.schema.json");
+        let rec = analyse(&tmp.0, "schema/unsafe.schema.json", &[]);
         assert_eq!(rec["draft202012"], false);
         assert_eq!(rec["schemaId"], "");
         assert_eq!(
@@ -155,7 +157,11 @@ mod tests {
             "crates/seikika-model/schema/connector-messages.schema.json",
             "crates/seikika-model/schema/executor-messages.schema.json",
         ] {
-            let rec = analyse(&root, rel);
+            let rec = analyse(
+                &root,
+                rel,
+                &["crates/seikika-model/src/schema.rs".to_owned()],
+            );
             assert_eq!(rec["draft202012"], true, "{rel}");
             assert!(
                 rec["schemaId"].as_str().unwrap().starts_with("https://"),

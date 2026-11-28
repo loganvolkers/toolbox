@@ -1,6 +1,6 @@
 # Scorecards for Scorecards: What Makes a Standard Good, and Where the Recursion Stops
 
-*Status: built, 2026-11-20 (D71, D79, D80). Seikika for Seikika ([portal/](../../portal/README.md))
+*Status: built, 2026-11-20 (D71, D79, D80). Seikika for Seikika ([portal/](../../.seikika/README.md))
 catalogues every part of three portals: itself, the
 [repo-portal starter](../../examples/repo-portal-starter/README.md) and the
 [reference portal](../../examples/reference-portal/README.md). Deterministic meta scorecards cover
@@ -48,8 +48,8 @@ scorecards of their own.
 | L0 | Entities: crates, docs, workflows, MCP tools … | L1 scorecards | — |
 | L1 | Scorecards and rules (ours, the starter's, the reference portal's) | L2 | the portals' manifests |
 | L1′ | Kinds, fields, connectors (the model those rules read) | L2 | the portals' manifests |
-| L2 | `meta-rule`, `meta-scorecard`, `meta-kind`, `meta-field`, `meta-connector`, `review-*` | **L2 itself**: they are rules, scorecards, kinds and fields, so they appear in their own input | the same `portal/seikika.yaml` |
-| — | Assessments (judgement) | `review-*` (advisory) | files in `portal/assessments/` |
+| L2 | `meta-rule`, `meta-scorecard`, `meta-kind`, `meta-field`, `meta-connector`, `review-*` | **L2 itself**: they are rules, scorecards, kinds and fields, so they appear in their own input | the same `.seikika/seikika.yaml` |
+| — | Assessments (judgement) | `review-*` (advisory) | files in `.seikika/assessments/` |
 
 Seikika for Seikika stops at two levels. Two things keep L2 a fixed point:
 - **Self-application.** The meta rules are tested by the same expectations they demand, and decide
@@ -357,7 +357,7 @@ The assessment record carries what the deterministic card needs (`seikika_connec
     real portals;
   - the ratchet's new-entity floor, including the bootstrap case;
   - meta describe, run against three portals: 83 records (68 rules, 15 scorecards).
-- **`seikika test portal`:** 40/40. Nine expectations are new; they cover every meta rule, including
+- **`seikika test .seikika`:** 40/40. Nine expectations are new; they cover every meta rule, including
   self-application: `meta-rule` scores `rule:seikika/meta-rule/tested`.
 - **The ratchet:**
   - `--update` twice is stable, and `--ci` matches (a fixed point);
@@ -368,7 +368,7 @@ The assessment record carries what the deterministic card needs (`seikika_connec
 - **The ratchet caught this change, twice:** `compare` grew past 80 lines and complexity 15, and the
   CEL walker reached complexity 17. Both were split into named steps; the baseline was not loosened.
 - **D79: the model and assessments:**
-  - `seikika test portal`: 53/53. Thirteen new expectations cover every rule of `meta-kind`,
+  - `seikika test .seikika`: 53/53. Thirteen new expectations cover every rule of `meta-kind`,
     `meta-field`, `meta-connector` and the three `review-*` cards, both ways: fresh, stale, missing,
     failing and unsure.
   - An end-to-end CLI test (`crates/seikika-cli/tests/assess.rs`) covers `describe portal`, `assess
@@ -395,6 +395,6 @@ The assessment record carries what the deterministic card needs (`seikika_connec
   `model.rs` (`describe portal`), `crates/seikika-cli/src/report.rs` (`newEntitiesAtLeast`,
   `advisory`), `crates/seikika-cli/src/assess.rs`, `crates/seikika-api/src/assess.rs`
   (`assessment_brief`), `crates/seikika-connect/src/assessment.rs`,
-  [`crates/seikika-model/schema/assessment.schema.json`](../../crates/seikika-model/schema/assessment.schema.json), `portal/seikika.yaml`
+  [`crates/seikika-model/schema/assessment.schema.json`](../../crates/seikika-model/schema/assessment.schema.json), `.seikika/seikika.yaml`
   (`Kind`, `Field`, `Connector`, `Assessment`, the meta and review scorecards, the rubrics),
-  `portal/assessments/`.
+  `.seikika/assessments/`.

@@ -1,6 +1,6 @@
 # ruff's own configuration: read by ruff whether Seikika runs it or you do
 # (docs/design/seikika-and-tools.md, take-it-out). Seikika for Seikika carries ruff in its box
-# (portal/standards/python.yaml) and passes it no settings of its own.
+# (.seikika/standards/python.yaml) and passes it no settings of its own.
 target-version = "py311"
 
 [lint]

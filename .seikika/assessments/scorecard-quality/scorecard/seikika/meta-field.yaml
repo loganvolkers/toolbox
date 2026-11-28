@@ -1,0 +1,61 @@
+apiVersion: seikika.com/assessment/v1
+entity: scorecard:seikika/meta-field
+rubric: scorecard-quality
+subjectHash: f974462f035a
+assessor: {kind: agent, name: cursor-assessor-03, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: one-concern
+    verdict: pass
+    reason: >-
+      populated-in-fixtures, described, has-shape and computed-readable
+      (.seikika/standards/meta.yaml:780-831) each ask whether a field's
+      definition can be read and trusted by the rules and agents that use it,
+      as the description says (meta.yaml:760-763). There is one audience, the
+      portal author.
+  - criterion: levels-are-a-ladder
+    verdict: pass
+    reason: >-
+      Bronze, a value in some fixture, is the prerequisite the ratchet holds
+      new fields to (meta.yaml:778). Silver adds a description, and gold a
+      declared shape and readable logic. The brief's fixture levels reach all
+      three (bronze 2, silver 1, gold 1). Live, 284 of 511 fields are gold,
+      and most of the rest stop at bronze on `described`
+      (.seikika/results.json). Gold is close to automatic for a described
+      scalar field, because computed-readable reads 0 for fields that aren't
+      computed (meta.yaml:301-302). So gold mainly separates the opaque
+      fields, which is its purpose.
+  - criterion: no-obvious-gap
+    verdict: fail
+    reason: >-
+      Missing: values match the declared type. Nothing checks that a fixture
+      or live value fits `type:`. The derive diagnostics are map.error,
+      relation.dropped, computed.error, tuples.error, options.error and
+      compare.missing (crates/seikika-derive/src/lib.rs:349-735), none of them
+      about types, and population counts any non-null value
+      (crates/seikika-cli/src/model.rs:110-122). An `integer` field mapped
+      from a string passes populated-in-fixtures and breaks numeric
+      comparisons in rules. has-shape's rationale (meta.yaml:811-814)
+      attributes that kind of silent wrong outcome to objects alone.
+    suggestion: >-
+      In population(), count for each field the fixture values whose JSON type
+      doesn't match `type` (and `items`), and emit `mistyped`. Add a
+      `values-match-type` rule at bronze or silver with those values as
+      evidence.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      I raised field:seikika/Scorecard.liveEntities from none on paper. For
+      bronze, add `"liveEntities": 3` to a scorecard record in
+      .seikika/fixtures/surfaces.ndjson; its map reads that key
+      (meta.yaml:91). For silver, add a `description:` at meta.yaml:22. It is
+      an integer and not computed, so gold follows. Each fix names its key and
+      each evidence names Kind.field. One caveat: where a map renames the key
+      (Field.fieldType reads `record.type`, meta.yaml:297), the populated
+      fix's wording misleads, though reading the map rule in the manifest
+      resolves it.
+summary: >-
+  One concern on a sound ladder, with fixes an agent can follow. The
+  missing standard is type agreement: nothing notices a field whose values
+  don't match its declared type, and that is the failure the card's own
+  rationale says it guards against.

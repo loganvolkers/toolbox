@@ -1,0 +1,53 @@
+apiVersion: seikika.com/assessment/v1
+entity: assessment:rule-quality/rule:seikika/sdlc-layer/stages-declared
+rubric: assessment-quality
+subjectHash: 48ea3ae5a9fc
+assessor: {kind: agent, name: cursor-reviewer-36, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: supported
+    verdict: pass
+    reason: >-
+      The citations in
+      .seikika/assessments/rule-quality/rule/seikika/sdlc-layer/stages-declared.yaml
+      match. The check is entity.stages.all(s, s in entity.definedStages)
+      (.seikika/standards/sdlc.yaml:268), and definedStages is inbound.stageOf
+      names (:20), linked by record.layer (:140). The rationale is :273-276.
+      docs/sdlc.md:6 says every layer needs a plan, build, test, deploy,
+      monitor loop. package-author's stages are author through adopt with no
+      plan or monitor (.seikika/sdlc/layers.yaml:19), and the user layer has
+      no plan (:42). .seikika/results.json shows all four layers passing this
+      rule (none lists stages-declared under failing). nothing-missing and
+      every-stage-built read inbound.stageOf (sdlc.yaml:27-31). The fixture
+      evidence is .seikika/tests/standards.test.yaml:1060-1061. Bronze is
+      thresholds.md:58, under the prerequisite principle at :22-23.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      measures-intent fails because the two lists are written by the same
+      author and nothing compares them to the loop in docs/sdlc.md:6.
+      hard-to-game fails because deleting a name from stages: makes the check
+      pass (sdlc.yaml:268) and a stage with no record is invisible to
+      stagesMissing and stagesNotBuilt (sdlc.yaml:27-31). The fix, adding a
+      record with that name, puts it in definedStages. There is no number;
+      thresholds.md:58 places "every stage declared" at bronze.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      The check, the inbound relation and the four stage lists are text. A
+      second assessor comparing .seikika/sdlc/layers.yaml with docs/sdlc.md:6
+      sees the same missing plan and monitor names, and the same deletion
+      shortcut.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      The suggestions in
+      .seikika/assessments/rule-quality/rule/seikika/sdlc-layer/stages-declared.yaml
+      declare the loop once and require every step to map to a declared stage.
+      Removing a name from layers.yaml would then fail, which flips both
+      measures-intent and hard-to-game. The two passes need no suggestion.
+summary: >-
+  A sound bronze consistency check with a fix the fixture pins. It only
+  compares two lists the same author writes, so a layer can drop a stage
+  from layers.yaml and pass, and package-author and user already omit
+  steps of the loop docs/sdlc.md says every layer needs.

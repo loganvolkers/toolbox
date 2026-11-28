@@ -36,24 +36,24 @@ jobs:
           cargo build --locked
           scripts/ci-tools.sh "$RUNNER_TEMP/tools" openfga actionlint scorecard osv-scanner rustsec-osv shellcheck shfmt bats
           export PATH="$RUNNER_TEMP/tools:$PATH" OSV_SCANNER_LOCAL_DB_CACHE_DIRECTORY="$RUNNER_TEMP/tools"
-          target/debug/seikika tools install portal --via pipx   # the pins in the portal's tools:
-          target/debug/seikika doctor portal
+          target/debug/seikika tools install .seikika --via pipx   # the pins in the portal's tools:
+          target/debug/seikika doctor .seikika
           # On main, score live run history too; pull requests keep the deterministic report.
           skip=runner
           if [ "$GITHUB_EVENT_NAME" = pull_request ]; then skip=runner,github-actions; fi
           # The baseline gives each campaign its recorded start, so the report shows progress since then.
-          target/debug/seikika report portal --skip "$skip" --baseline portal/results.json -o web --out site/.generated
+          target/debug/seikika report .seikika --skip "$skip" --baseline .seikika/results.json -o web --out npm/site/.generated
       - name: Public organization federation snapshot
         env: {GH_TOKEN: "${{ github.token }}"}
         run: |
           export PATH="$RUNNER_TEMP/tools:$PATH"
-          install -D -m 0644 site/.generated/report.json examples/github-org-federation/publications/seikika.json
-          target/debug/seikika report examples/github-org-federation/public.yaml -o web --out site/.generated/organization
+          install -D -m 0644 npm/site/.generated/report.json examples/github-org-federation/publications/seikika.json
+          target/debug/seikika report examples/github-org-federation/public.yaml -o web --out npm/site/.generated/organization
       - run: pnpm check:packages
       # CLI reference is built from clap (`seikika describe` + --help) in Astro;
       # fail if the committed fingerprint is stale.
       - name: CLI docs up to date
-        working-directory: site
+        working-directory: npm/site
         run: pnpm check:cli-docs
         env:
           SEIKIKA_BIN: ${{ github.workspace }}/target/debug/seikika
@@ -62,23 +62,23 @@ jobs:
         env:
           ASTRO_TELEMETRY_DISABLED: "1"
           SEIKIKA_BIN: ${{ github.workspace }}/target/debug/seikika
-          SEIKIKA_REPORT_DATA: ${{ github.workspace }}/site/.generated/report.json
-          SEIKIKA_ORG_REPORT_DATA: ${{ github.workspace }}/site/.generated/organization/report.json
+          SEIKIKA_REPORT_DATA: ${{ github.workspace }}/npm/site/.generated/report.json
+          SEIKIKA_ORG_REPORT_DATA: ${{ github.workspace }}/npm/site/.generated/organization/report.json
       - run: >-
           pnpm --filter @seikika/astro-report exec playwright install --with-deps
           chromium
       - name: Smoke test the published UI paths
         run: |
           pnpm --filter @seikika/astro-report smoke
-          node report-ui/scripts/federation.mjs
+          node npm/report-ui/scripts/federation.mjs
         env:
           SEIKIKA_OPENFGA_BIN: ${{ runner.temp }}/tools/openfga
           SEIKIKA_BIN: ${{ github.workspace }}/target/debug/seikika
-          SEIKIKA_ORG_REPORT_DATA: ${{ github.workspace }}/site/.generated/organization/report.json
+          SEIKIKA_ORG_REPORT_DATA: ${{ github.workspace }}/npm/site/.generated/organization/report.json
       - name: upload
         if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
         uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
-        with: {path: site/dist}
+        with: {path: npm/site/dist}
 
   deploy:
     if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'

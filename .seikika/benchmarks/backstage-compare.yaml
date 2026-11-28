@@ -1,0 +1,73 @@
+# DX Benchmark catalog entry (docs/design/dx-benchmarks.md §6), scored by maintainer-benchmark.
+records:
+  - id: backstage-compare
+    title: Seikika vs Backstage, beyond DX (F1 to F14)
+    question: >-
+      Is Seikika at least at parity with Backstage on the factors a platform
+      team weighs besides developer experience: performance, footprint,
+      security, supply chain, change safety, org fit, the agent surface and
+      capabilities?
+    layers: [operator]
+    stages: [operator/deploy, operator/monitor]
+    hypotheses: [F1, F2, F3, F4, F5, F6, F7, F8, F9, F10, F11, F12, F13, F14]
+    rival: >-
+      Backstage 1.57 from @backstage/create-app 0.9.4, built as its Dockerfile
+      does and run with its production config, on the same Postgres 16
+    repos: [backstage/backstage@9342a5de]
+    status: complete
+    ran: 2026-11-23
+    outcome: >-
+      Round 3: Seikika is ahead on seven of the eight pre-registered factors
+      and behind on capabilities (docs search, docs, templates, API docs,
+      Kubernetes, notifications, community). Security is 2 rules ahead and 6
+      at parity; both products listen on every interface as shipped, and in
+      neither can an extension be kept from the server's credentials (the
+      round 3 adjudication read OpenFGA's key from its memory). Round 1 lost
+      on filtered lists at 10k; rounds 1 and 2 measured Backstage's lists on
+      empty responses, a harness defect round 3 fixed with an equivalence
+      gate, and the round 1 loss stands at 2.4x rather than 6x (RESULTS.md)
+    changed:
+    - D01M857ZB3FZJZWX8G3BF5W1RNR
+    - D01M857ZB468ZM2YS6GNSEG6YB9
+    - 'e06d6a7: in-image connectors start from an allowlisted environment'
+    - >-
+      9bf06d7, 41d1564, 3b3ff8b, a62d92f, 127b08e, 6c5eb4a, 5ef6263: read
+      performance with authorization on
+    - >-
+      916f596, 5968a55: a filter's required equality comparisons narrow
+      candidates through a per-snapshot index
+    - >-
+      71d8655, 26b77f3: the server is non-dumpable, and OpenFGA gets no server
+      credentials and needs a per-start key
+    servedValue: ''
+    blockedOn: ''
+    readme: experiments/backstage-compare/README.md
+    results: experiments/backstage-compare/RESULTS.md
+    protocol: 2
+    prompts: ''
+    runsPerArm: 5
+    deterministic: true
+    measure: >-
+      medians of 5 scripted runs per arm per corpus size (measure.py with oha
+      1.10.0), single-run probes (surface.py), footprint and upgrade scripts,
+      and facts with evidence (facts.yaml), merged by snapshot.py into
+      .seikika/comparisons/ and scored by the vs-backstage scorecards
+    frozenAt: >-
+      rounds 1 and 2 dfeeea4 (Seikika 5ef6263, then 916f596); round 3 harness
+      e66526c, scorecards 581be50 (Seikika 581be50)
+    designer: the agent that wrote the README and ran the rounds
+    adjudicator: >-
+      a fresh agent that designed no part of it and changed nothing,
+      2026-11-23 (ADJUDICATION.md)
+    fitAudit: >-
+      rounds 1 and 2: the pre-freeze commits fit but were undisclosed (now
+      disclosed); 916f596 fits with its uses corrected to the MCP query tool,
+      seikika query and the UI catalog filter; three facts were scored in
+      Seikika's favour and are corrected in round 3 (ADJUDICATION.md). Round
+      3: the freeze preceded the run, the numbers recompute, and the post-hoc
+      harness changes move the result toward Backstage; 5968a55 fits (P5);
+      credential isolation does not hold on the measurement VM and is rescored
+      as a fail, after the run (ADJUDICATION.md R3.3)
+    spread: >-
+      minimum, median and maximum per arm per size for every timed fact in
+      RESULTS.md; raw runs in results/r1 to r3

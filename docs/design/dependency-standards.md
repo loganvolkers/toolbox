@@ -73,7 +73,7 @@ against.
 
 ## 5. This repository
 
-Measured with `seikika report portal --skip runner,github-actions`. Twenty direct crates.
+Measured with `seikika report .seikika --skip runner,github-actions`. Twenty direct crates.
 
 | Level | Crates |
 |---|---|

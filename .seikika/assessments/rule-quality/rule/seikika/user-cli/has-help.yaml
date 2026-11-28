@@ -1,0 +1,49 @@
+apiVersion: seikika.com/assessment/v1
+entity: rule:seikika/user-cli/has-help
+rubric: rule-quality
+subjectHash: 342b95f0e2a7
+assessor: {kind: agent, name: cursor-assessor-14, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: measures-intent
+    verdict: pass
+    reason: >-
+      The check reads clap's `about` for the leaf command
+      (crates/seikika-cli/src/main.rs:1236), the line `--help` prints, so a
+      pass means a user's agent learns what the read does from `--help`
+      (.seikika/standards/cli.yaml:175-178). All 12 user commands pass; the
+      shortest, `graph`'s "Neighbours of an entity" (23 characters), still
+      says what comes back. It doesn't compare the help with the MCP tool the
+      command calls, but that is a different rule.
+  - criterion: hard-to-game
+    verdict: pass
+    reason: >-
+      The 10-character floor (cli.yaml:168) rejects a missing or one-word
+      about, so the cheapest pass is a one-line `///` on the variant, the
+      intended fix. Ten characters of filler would pass, but cost the same as
+      a real sentence and show up in every `--help`.
+  - criterion: fix-leads-to-pass
+    verdict: pass
+    reason: >-
+      All 12 user commands are variants of the `Command` enum in
+      crates/seikika-cli/src/main.rs (their names are mapped to MCP tools at
+      main.rs:401-413), so the fix names the right file, and a `///` of 10 or
+      more characters on the variant becomes `about`.
+  - criterion: threshold-justified
+    verdict: unsure
+    reason: >-
+      Bronze is set in docs/design/seikika-for-seikika.md:106 ("Has help; `-o
+      json`"), but the number 10 has no source: docs/design/thresholds.md has
+      no row for it. user-mcp/described sets 20 for the MCP description of the
+      very tools these commands call (cli.yaml:272), and nothing says why the
+      CLI side of one read may be half as long.
+    suggestion: >-
+      Add a has-help row to docs/design/thresholds.md that states 10 as chosen
+      or measured, and say why a read command's help and its MCP tool's
+      description have different floors, or align them.
+summary: >-
+  A sound bronze rule that reads exactly what `--help` prints and points
+  at the right enum; every user command passes with room to spare. The
+  number 10 is unexplained, and differs from the 20 its MCP twin uses for
+  the same tools. No fixture fails it (3 pass in
+  .seikika/fixtures/surfaces.ndjson), so only its pass path is exercised.

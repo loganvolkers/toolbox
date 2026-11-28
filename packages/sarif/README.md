@@ -21,7 +21,7 @@ that the counts match.
 
 ## Use it
 
-Seikika for Seikika carries ruff this way ([portal/seikika.yaml](../../portal/seikika.yaml)):
+Seikika for Seikika carries ruff this way ([.seikika/seikika.yaml](../../.seikika/seikika.yaml)):
 
 ```yaml
 include:

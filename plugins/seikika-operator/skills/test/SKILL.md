@@ -11,7 +11,7 @@ description: >-
 3. Fix the rule, the action, the fixture or the expectation that failed, then run it again.
 
 ```
-seikika test portal
+seikika test .seikika
 seikika test .seikika
 ```
 

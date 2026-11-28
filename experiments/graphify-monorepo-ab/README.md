@@ -135,7 +135,7 @@ so the rule is quoted.
   kind. It names the server's port and the two variables the CLI needs.
 - **The portal is the starter plus crates**, as a Rust repository would adopt it: the starter's
   Repository and Doc kinds without its scorecards, and the Crate facts from
-  `portal/standards/crates.yaml` (fields, `dependsOn`, and `dependents` and `dependentCount`
+  `.seikika/standards/crates.yaml` (fields, `dependsOn`, and `dependents` and `dependentCount`
   computed from inbound `dependsOn`). Nothing is added for these questions in particular: no
   transitive closure, no call or reference edges. A second workspace connector is rooted at
   `codex-rs/`, because the connector runs `cargo metadata` in its root and Codex's Cargo workspace

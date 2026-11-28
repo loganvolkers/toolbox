@@ -1,0 +1,52 @@
+apiVersion: seikika.com/assessment/v1
+entity: assessment:rule-quality/rule:seikika/maintainer-site/reachable
+rubric: assessment-quality
+subjectHash: 840669fc09c2
+assessor: {kind: agent, name: cursor-reviewer-13, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: supported
+    verdict: pass
+    reason: >-
+      The citations in
+      .seikika/assessments/rule-quality/rule/seikika/maintainer-site/reachable.yaml
+      resolve. crates/seikika-connector-workspace/src/site.rs:114-133 is the
+      raw-text `directory:` regex plus the quoted-slug search, and :14-15 and
+      :115-117 handle draft and hidden. site/astro.config.mjs:15-25 is the
+      sidebar. .seikika/standards/site.yaml:124-127 are the evidence and fix,
+      and .seikika/tests/standards.test.yaml:762-767 pins draft.md.
+      docs/design/site-standards.md:24 and :29-30 put the sidebar at silver.
+  - criterion: complete
+    verdict: fail
+    reason: >-
+      fix-leads-to-pass should not pass. A page with `sidebar: {hidden: true}`
+      or `hidden: true` returns false at site.rs:115-117, before the directory
+      and slug tests, so adding its directory or linking its slug changes
+      nothing. The fix (site.yaml:125-127) mentions only `draft`, and the
+      fixed evidence `not in the sidebar` (site.yaml:124) doesn't say which
+      cause applies. The reason's "doing either step flips `inSidebar`
+      (site.rs:126-132)" is true only for a page that isn't hidden. The rule
+      needs data, `sidebarHidden` (site.yaml:27-29), that the fix doesn't
+      mention, which is the rubric's fail case
+      (.seikika/standards/meta.yaml:1171-1172).
+    suggestion: >-
+      Fail fix-leads-to-pass and suggest that the evidence name the cause
+      (`draft`, `sidebar.hidden` or `not listed in astro.config.mjs`) and that
+      the fix say to unset `sidebar.hidden`/`hidden` as well as `draft`.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      The measures-intent fail, and the passes on hard-to-game and
+      threshold-justified, follow from site.rs:114-133 and site.yaml:121-127
+      without judgement.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      Stripping comments, or reading only the evaluated `sidebar:` array,
+      would remove the commented-out-section and stray-slug misfires that
+      measures-intent cites (site.rs:125-132).
+summary: >-
+  The measures-intent fail is right and well cited. fix-leads-to-pass
+  should have failed: a `sidebar.hidden` page is rejected at
+  site.rs:115-117 whatever the config says. The fix mentions only `draft`,
+  and the evidence doesn't say which cause applies.

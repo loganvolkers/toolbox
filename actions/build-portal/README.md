@@ -17,4 +17,4 @@ baseline. A CLI or connector error fails the build.
 
 Review the snapshot's catalog data and rule evidence before uploading or deploying it.
 The workflow controls its audience and deployment permissions.
-[Host the snapshot on GitHub Pages or in Astro](../../site/src/content/docs/operators/publish.md)
+[Host the snapshot on GitHub Pages or in Astro](../../npm/site/src/content/docs/operators/publish.md)

@@ -1,0 +1,53 @@
+apiVersion: seikika.com/assessment/v1
+entity: assessment:crate-design/crate:seikika-connector-gitlab
+rubric: assessment-quality
+subjectHash: aa1b613d47b4
+assessor: {kind: agent, name: cursor-reviewer-32, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: supported
+    verdict: fail
+    reason: >-
+      Most citations in
+      .seikika/assessments/crate-design/crate/seikika-connector-gitlab.yaml
+      hold. crates/seikika-connector-gitlab/src/main.rs:1-19 names the group
+      and project records, the config and the endpoints, and lines 13-14 say a
+      model that wants inherited members maps parent. main.rs:22 imports only
+      Out, Source and run_stdio, which crates/seikika-connect/src/sdk.rs
+      defines between lines 11 and 111. Capabilities at main.rs:198-201 name
+      group and project, the tests at 255-271 and 273-291 do what the reason
+      says, and a resync uses archived=false at main.rs:133 while a refresh by
+      id does not (144-151). docs/research-log.md:147 records a removed member
+      losing approval, and .github/workflows/ci.yml:196 names GitLab CE
+      19.6.1. The F6 citation does not. docs/design/forges.md:78 is the
+      stories-section intro. The F6 approver story, which is what both
+      one-responsibility and tests-match-risk cite, is forges.md:88.
+    suggestion: >-
+      Cite docs/design/forges.md:88 for the F6 story, and :73 for the groups
+      row that turns members into approvers.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      The four crate-design verdicts match the sources. Membership, the path
+      the reason calls riskiest, has a direct test (main.rs:255-271), and the
+      conformance run is real (scripts/gitlab-acceptance.sh:217,
+      ci.yml:196-202). Pagination (main.rs:74-91) and the archived asymmetry
+      are named in the tests-match-risk reason rather than hidden, and neither
+      is the path the rubric's examples treat as the one that must be direct.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      A second assessor reading main.rs, Cargo.toml, the acceptance script and
+      forges.md:88 reaches the same four passes. The line-number slip does not
+      change the verdicts.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      .seikika/assessments/crate-design/crate/seikika-connector-gitlab.yaml
+      has no fail or unsure verdict, so there is no suggestion to apply.
+summary: >-
+  The four passes are the ones the crate and its tests support, but
+  forges.md:78 is not the F6 story both one-responsibility and
+  tests-match-risk cite. That story is at forges.md:88. The rest of the
+  citations, including the membership test and the GitLab CI run, check
+  out.

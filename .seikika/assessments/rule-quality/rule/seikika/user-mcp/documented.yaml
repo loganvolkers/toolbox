@@ -1,0 +1,45 @@
+apiVersion: seikika.com/assessment/v1
+entity: rule:seikika/user-mcp/documented
+rubric: rule-quality
+subjectHash: 8912798bac9b
+assessor: {kind: agent, name: cursor-assessor-14, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: measures-intent
+    verdict: pass
+    reason: >-
+      `documentedIn` holds docs with a code span exactly equal to the tool's
+      name (.seikika/standards/docs.yaml:49), and the check requires
+      docs/v1-spec.md among them (.seikika/standards/cli.yaml:309), the file
+      the rationale calls the contract. Exact equality makes it tight: for
+      every one of the 17 tools the only matching spans in v1-spec are its row
+      in the §7.3 table (docs/v1-spec.md:321-339), plus §7.7 cross references
+      for `scorecard_report`, `campaign_report` and `assessment_brief`.
+      Whether the row's inputs are right is a separate question (see the
+      scorecard's assessment).
+  - criterion: hard-to-game
+    verdict: pass
+    reason: >-
+      A backticked tool name anywhere in v1-spec would pass, but that is no
+      cheaper than the §7.3 row the fix asks for, and naming the one file
+      already removed the stray-mention passes F14 found
+      (docs/design/seikika-for-seikika.md:218).
+  - criterion: fix-leads-to-pass
+    verdict: pass
+    reason: >-
+      "List the tool, in backticks, in docs/v1-spec.md §7.3" produces the
+      exact code span the check needs, and the evidence says where the tool is
+      mentioned instead (pinned as `['documented in: nothing']`,
+      .seikika/tests/standards.test.yaml:94-98).
+  - criterion: threshold-justified
+    verdict: pass
+    reason: >-
+      No number. Silver is set in docs/design/seikika-for-seikika.md:108, and
+      the switch to one authoritative file is recorded as F14's fix
+      (seikika-for-seikika.md:175, 218).
+summary: >-
+  A good rule: it names the authoritative file, matches exact code spans
+  and so can't be passed by a common word elsewhere, and its fix produces
+  what it checks. It deliberately checks presence, not accuracy: §7.3
+  lists `get_run` with `run_id` while the schema's input is `run`, which
+  is a gap for the scorecard rather than a flaw in this rule.

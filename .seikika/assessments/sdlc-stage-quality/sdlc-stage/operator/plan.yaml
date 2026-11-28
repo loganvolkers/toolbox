@@ -1,0 +1,79 @@
+apiVersion: seikika.com/assessment/v1
+entity: sdlc-stage:operator/plan
+rubric: sdlc-stage-quality
+subjectHash: ed560b612a8c
+assessor: {kind: agent, name: cursor-assessor-21, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: executable-exit
+    verdict: fail
+    reason: >-
+      `checks: []` (.seikika/sdlc/stages/operator.yaml:56-68). "A plan against
+      the running portal's data is attached to the PR" needs `plan --remote`
+      and the `seikika/plan` Action with its sticky comment. Both are M6
+      design (docs/design/sdlc.md:14-15, §8). `plan --local` exits 0 even when
+      levels drop: three bronze/silver → none drops still exited 0 when I
+      tried it, so it can't serve as a gate.
+    suggestion: >-
+      Until `--remote` lands, make the exit criterion "a `plan --local --base
+      <main's manifest>` summary is posted to the PR". Add a check, a CI step
+      or an actions/report mode, that posts it. Later, give `plan` an exit
+      code for tripped gates (sdlc.md §6).
+  - criterion: agent-can-complete
+    verdict: fail
+    reason: >-
+      The local half works. `seikika plan --local --base <file>` on the
+      starter printed a Markdown table of score changes, and `--format json`
+      exists (crates/seikika-cli/src/main.rs:70-83). The listed command
+      `seikika plan --local` (.seikika/sdlc/stages/operator.yaml:64) fails on
+      its own, though: `base` is a required `PathBuf` (main.rs:75-76), so clap
+      reports "required arguments were not provided: --base". Planning
+      "against the running portal's data" isn't possible yet, because there is
+      no remote plan (docs/design/sdlc.md:66-101 is design).
+    suggestion: >-
+      List the full command, `seikika plan --local --base <base manifest>`,
+      and say in the stage how to get the base (for example `git show
+      main:seikika.yaml`). Narrow the exit criterion to fixtures until `plan
+      --remote` exists.
+  - criterion: reuses-artifacts
+    verdict: pass
+    reason: >-
+      A plan is two recomputes and a diff inside the released CLI (D37,
+      `seikika plan --help`). It builds or installs nothing beyond the binary
+      operators already pin.
+  - criterion: decoupled-from-core
+    verdict: fail
+    reason: >-
+      An operator can run the local plan today without touching Seikika. The
+      exit criterion, though, needs server-side remote plans with OIDC
+      submission (docs/design/sdlc.md:66-101), which means new code in
+      seikika-cli and the server. No configuration in the operator's
+      repository reaches it.
+    suggestion: >-
+      Ship `plan --remote` (M6). Meanwhile, document a fixture-refresh path,
+      such as exporting a snapshot to fixtures, so operators can plan over
+      production-shaped data without a core change.
+# Codex evaluated the two added criteria. Earlier verdicts retain their original attribution.
+  - criterion: fast-feedback
+    verdict: fail
+    reason: >-
+      .seikika/sdlc/stages/operator.yaml defines the stage exit but declares
+      no runnable local check for it. docs/design/sdlc.md documents the
+      intended workflow.
+    suggestion: >-
+      Add a runnable local check for this exit and record its measured time in
+      docs/design/sdlc.md.
+  - criterion: beyond-one-reference
+    verdict: fail
+    reason: >-
+      .seikika/sdlc/stages/operator.yaml declares no executable reference for
+      the exit, and docs/design/sdlc.md describes the workflow without
+      supplying a second exercised reference.
+    suggestion: >-
+      Exercise this exit on a second reference and cite the result in
+      .seikika/sdlc/stages/operator.yaml.
+summary: >-
+  `plan --local` is real and useful: it gave a clear level-drop diff on
+  the starter. The stage's exit criterion, a plan over live data attached
+  to the PR, depends on unbuilt M6 work and has no check. The listed
+  command is also missing its required `--base`.

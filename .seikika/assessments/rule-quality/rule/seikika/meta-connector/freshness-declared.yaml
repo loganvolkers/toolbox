@@ -1,0 +1,64 @@
+apiVersion: seikika.com/assessment/v1
+entity: rule:seikika/meta-connector/freshness-declared
+rubric: rule-quality
+subjectHash: 6f9498a65242
+assessor: {kind: agent, name: cursor-assessor-03, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: measures-intent
+    verdict: fail
+    reason: >-
+      The check lists declared record kinds with no key under `freshness:`
+      (crates/seikika-cli/src/model.rs:220, 232). The fix promises that stale
+      data "shows as stale rather than current"
+      (.seikika/standards/meta.yaml:881-882), but a bound marks nothing stale.
+      freshness_loop resyncs a kind once its last full read is older than the
+      bound, and only if the connector registered `resync` for that kind
+      (crates/seikika-api/src/connectors.rs:171-200, can_resync at :183). The
+      entity page shows `last_read` with no comparison against the bound
+      (crates/seikika-api/src/reads.rs:421-429, npm/ui/src/main.tsx:278-279).
+      So a connector whose package can't resync the kind passes while its data
+      still goes stale, unflagged.
+    suggestion: >-
+      Restate the fix and rationale as what the policy does ("so Seikika
+      resyncs it before it is older than the bound"). Then either show
+      `last_read` against the bound on the entity page, flagged when older, or
+      emit whether the connector's package resyncs the kind and check that
+      too.
+  - criterion: hard-to-game
+    verdict: fail
+    reason: >-
+      `freshness: {codeowners: 36500d}` matches the schema's
+      `^[0-9]+(s|m|h|d)$`
+      (crates/seikika-model/schema/manifest.schema.json:475-478), and the
+      check reads only the keys (model.rs:220). A century-long bound passes
+      exactly like S4S's 5m bounds (.seikika/seikika.yaml:231-252), at the
+      same cost of one line, and bounds nothing.
+    suggestion: >-
+      Emit each record's bound in seconds and fail bounds above a stated
+      ceiling (for example 7d, recorded with its reason in
+      docs/design/thresholds.md), with evidence naming the record and its
+      bound.
+  - criterion: fix-leads-to-pass
+    verdict: pass
+    reason: >-
+      The evidence is the list of record kinds (meta.yaml:880), and the fix
+      names the `freshness:` key. Validate rejects a bound for an undeclared
+      record (crates/seikika-model/src/validate.rs:196-208) and the schema
+      rejects a malformed duration, so a wrong attempt is caught. Adding
+      `codeowners: 1h` to the reference portal's github connector clears the
+      evidence pinned at .seikika/tests/standards.test.yaml:830-832.
+  - criterion: threshold-justified
+    verdict: pass
+    reason: >-
+      No number. Silver is placed by
+      docs/design/scorecards-for-scorecards.md:209 and by the card's
+      rationale, "a mapping and fixtures are the floor, freshness and refresh
+      sit above it" (meta.yaml:841-846). The first run found the starter
+      shipping without freshness (scorecards-for-scorecards.md:219-221).
+summary: >-
+  The fix is clear and the level is justified, but the rule certifies a
+  declaration rather than bounded staleness. Any duration passes, a bound
+  does nothing for a kind the connector can't resync, and nothing in the
+  product shows data as stale against the bound, which is the effect the
+  fix promises.

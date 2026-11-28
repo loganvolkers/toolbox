@@ -1,0 +1,69 @@
+apiVersion: seikika.com/assessment/v1
+entity: rule:seikika/vs-backstage-org-fit/federation
+rubric: rule-quality
+subjectHash: e4b74f6c5ee8
+assessor: {kind: agent, name: cursor-assessor-17, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: measures-intent
+    verdict: fail
+    reason: >-
+      The field says "two instances join into one catalog"
+      (.seikika/standards/backstage-comparison.yaml:111-113), but federation
+      in this repo is several flows. docs/design/federation.md has standards
+      down, results up and graduation. D01M86BY3YQX3SA1W99QXF1QA1H has built
+      actions up and runs down, and revises D68. Standards down already works
+      through git-first packages (D89). Seikika's `false` still cites
+      "designed, not built (D68)"
+      (experiments/backstage-compare/facts.yaml:54), and the rule links D68 as
+      "federation is designed, not built" (:792-793). Both are stale since
+      federation.md's "Partly built" banner. The rule doesn't say which flow
+      turns the fact true, so a pass could mean any of them.
+    suggestion: >-
+      Define the fact as one observable flow, for example "a parent portal
+      reads a child's entities and scores through the workspace connector's
+      `portal` records". Update experiments/backstage-compare/facts.yaml:54's
+      evidence to cite D01M86BY3YQX3SA1W99QXF1QA1H, and change the rule's
+      decision link to federated-actions.md.
+  - criterion: hard-to-game
+    verdict: fail
+    reason: >-
+      The outcome is a hand-written boolean
+      (experiments/backstage-compare/facts.yaml:54) that snapshot.py copies
+      (snapshot.py:85). With no definition of what counts, flipping it to
+      `true` on the strength of federated actions alone would be arguable, and
+      no probe would contradict it.
+    suggestion: >-
+      Add a two-portal probe to the harness: a parent and a child portal on
+      one Postgres database, the child ingesting one entity, and the parent's
+      API answering for it. Set `federates` from that probe.
+  - criterion: fix-leads-to-pass
+    verdict: fail
+    reason: >-
+      "Build federation as its design describes"
+      (backstage-comparison.yaml:783) names no section, flow or place, and the
+      design it means is 201 lines covering three flows plus a revision
+      (docs/design/federation.md). With the evidence `federates is false`, an
+      agent can't tell whether finishing results up, which is still design,
+      would flip the fact. The fix also omits the
+      experiments/backstage-compare/facts.yaml and snapshot.py step.
+    suggestion: >-
+      Name the flow and the place: "Build results up
+      (docs/design/federation.md §1), a parent reading children's committed
+      results through the workspace connector's `portal` records
+      (federated-actions.md), then rerun the harness's federation probe."
+  - criterion: threshold-justified
+    verdict: pass
+    reason: >-
+      The rule is boolean and has no number. "Federation true" at bronze was
+      registered before the run (experiments/backstage-compare/README.md:51)
+      and confirmed by the adjudication (ADJUDICATION.md:112), and the
+      rationale says honestly that both products fail it (:787-788). Whether
+      an unbuilt feature belongs at bronze is a scorecard question, raised
+      under that scorecard's ladder.
+summary: >-
+  The weakest rule in its scorecard. Its fact is stale: it cites D68 as
+  "designed, not built" while federated actions are built. The fact is
+  also undefined, since nothing says which federation flow makes it true,
+  and the fix gives no place to start. It is the rule that keeps Seikika
+  at none on org fit (.seikika/results.json).

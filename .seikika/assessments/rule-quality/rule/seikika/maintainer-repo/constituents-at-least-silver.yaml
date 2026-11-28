@@ -1,0 +1,69 @@
+apiVersion: seikika.com/assessment/v1
+entity: rule:seikika/maintainer-repo/constituents-at-least-silver
+rubric: rule-quality
+subjectHash: 323c32b636de
+assessor: {kind: agent, name: cursor-assessor-13, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: measures-intent
+    verdict: fail
+    reason: >-
+      `rank` is the position of a card's level in that card's own ladder
+      (crates/seikika-derive/src/lib.rs:1296-1305). maintainer-action-deps has
+      only `levels: [bronze]`
+      (packages/github-actions/fragments/github-actions.yaml:552), and its
+      rationale says bronze is its only level "because an action is either
+      pinned everywhere or not" (:543-544). All 15 of its entities are bronze,
+      its top rung, yet this rule counts it as lagging. The rule's rationale
+      says "a lagging scorecard is exactly what the level exposes"
+      (.seikika/standards/repository.yaml:173-174), but this card is finished,
+      not lagging. As with bronze, a watched name with no summary drops out of
+      `cards` (lib.rs:930-934), so a misspelt constituent passes vacuously.
+    suggestion: >-
+      Compare against each card's own top when it is lower: bind `c.top` (the
+      rank of the card's last level) and check `cards.all(c, c.rank >= 2 ||
+      c.rank == c.top)`, or give maintainer-action-deps a silver rung (for
+      example a no-mutable-ref rule). Also require `cards.size() ==
+      entity.watch.size()`.
+  - criterion: hard-to-game
+    verdict: fail
+    reason: >-
+      Live, the rule fails on four cards: maintainer-action-deps,
+      maintainer-skill, maintainer-dependency and maintainer-example (4
+      evidence lines for repo:seikika/seikika in .seikika/results.json).
+      Deleting those four names from .seikika/seikika.yaml:30-43 makes it pass
+      with no decision, and the ratchet sees an improvement. For
+      maintainer-action-deps, deleting it is the only way to pass at all.
+    suggestion: >-
+      Treat a removal from `repoRollup` as a ratchet regression unless
+      accepted, and fix the one-level-card cap (see measures-intent) so that
+      honest work is the only way to pass.
+  - criterion: fix-leads-to-pass
+    verdict: fail
+    reason: >-
+      The live evidence includes `maintainer-action-deps is bronze`. The fix
+      says to raise each listed card to silver, then adds that "a card whose
+      highest level is bronze caps the repository at bronze"
+      (repository.yaml:170-172). That card has no silver rung, so following
+      the fix can't make this rule pass. The fix doesn't say what to do
+      instead: drop the card or add a rung. The other three listed cards do
+      have silver rules with their own fixes.
+    suggestion: >-
+      After fixing the cap, say in the fix that a card capped below silver is
+      met at its top. Until then, have the fix name the two options: add a
+      silver rung to the capped card, or remove it from `policy.repoRollup`
+      with a decision.
+  - criterion: threshold-justified
+    verdict: pass
+    reason: >-
+      D86 (D01M7WMSMS50000000000000000) sets the repository level to the
+      minimum constituent, and docs/design/repo-level.md:19-24 lists silver as
+      "every counted scorecard reaches silver". The level follows from that
+      definition. D86 doesn't address cards with shorter ladders, which is a
+      measurement problem (above), not an unjustified number.
+summary: >-
+  The intent is right, but the rank comparison treats a finished one-level
+  card as lagging. With maintainer-action-deps in the rollup, the rule
+  can't pass and its own fix admits it. Live, it fails on four cards.
+  Deleting them from `repoRollup` is the only cheap way to pass, and
+  nothing guards that list.

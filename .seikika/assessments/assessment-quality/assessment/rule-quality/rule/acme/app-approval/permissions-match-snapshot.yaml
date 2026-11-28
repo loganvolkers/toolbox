@@ -1,0 +1,60 @@
+apiVersion: seikika.com/assessment/v1
+entity: assessment:rule-quality/rule:acme/app-approval/permissions-match-snapshot
+rubric: assessment-quality
+subjectHash: dacc4ba2a40d
+assessor: {kind: agent, name: cursor-reviewer-18, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: supported
+    verdict: pass
+    reason: >-
+      The citations in
+      .seikika/assessments/rule-quality/rule/acme/app-approval/permissions-match-snapshot.yaml
+      land where it says. In examples/reference-portal/seikika.yaml the check
+      is at 271, the fix at 272-274 and the rationale at 275-278. The
+      snapshots are at 20-25 and 31, and the scorecard rationale is at
+      258-261. crates/seikika-connector-github/src/main.rs:221-223 reads `GET
+      /apps/{slug}` permissions. fixtures/github.ndjson:11 gives snyk-security
+      `administration: read` beyond its snapshot. There is no CODEOWNERS file
+      under examples/reference-portal/. docs/examples/approved-github-apps.md
+      59-60, 100-101, 158 and 196 say what is claimed. Two paraphrases are
+      loose without changing a verdict. seikika.yaml:13-14 claims security
+      owns the section "via CODEOWNERS" and only implies, in its
+      parenthetical, that a real repo would use a separate file. It doesn't
+      "admit" CODEOWNERS can't do it. Design :46 lists events as a GitHubApp
+      field, but the snapshot at :59 pins only permissions.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      The verdicts are right. Equality fails a narrowed app while the fix says
+      "beyond" (seikika.yaml:271-274). Neither the fix nor the evidence names
+      the change or the policy path. hard-to-game rests on who may merge an
+      edit to the inline policy, which nothing in the portal settles, so it is
+      fairly unsure. One more proxy issue strengthens measures-intent rather
+      than changing it. The design's hygiene rule compares "installation
+      permissions" (approved-github-apps.md:90-91). The connector reads the
+      app's requested permissions (main.rs:222), which an org must still
+      accept before an installation can use them.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      The two fails rest on text a second assessor can read: the operator and
+      fix wording (seikika.yaml:271-274), and the lack of an `evidence:` key
+      on the rule. The unsure is explicitly tied to a CODEOWNERS layout the
+      reference portal doesn't have, so it is not a matter of taste.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      Each suggestion would change its verdict. A widening-only check or
+      "differ from" wording fixes measures-intent. Evidence plus a named
+      `policies.approvedApps.<slug>.permissions` path fixes fix-leads-to-pass.
+      A security-owned policy file settles hard-to-game. The example CEL
+      treats `write` as the top level, but GitHub app permissions also have
+      `admin` (e.g. repository_projects), so the check should rank levels. Its
+      alternative wording fix doesn't depend on that.
+summary: >-
+  A sound assessment. Every line citation checks out and the fixture
+  confirms the snyk-security drift. Both fails and the unsure follow from
+  the sources. Two paraphrases (the seikika.yaml:13-14 comment and
+  "events" at design :46) are looser than the sources, and the example CEL
+  in the suggestion should handle the `admin` permission level.

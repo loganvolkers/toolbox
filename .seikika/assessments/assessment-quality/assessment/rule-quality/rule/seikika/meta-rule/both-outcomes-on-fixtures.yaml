@@ -1,0 +1,45 @@
+apiVersion: seikika.com/assessment/v1
+entity: assessment:rule-quality/rule:seikika/meta-rule/both-outcomes-on-fixtures
+rubric: assessment-quality
+subjectHash: 65a2a01c2d9b
+rubricHash: e30700fc6322cf9f05a301bb4638d6708e9f5eb5aea0281911229ce75bd37bf7
+assessor: {kind: agent, name: codex}
+at: 2026-11-27
+verdicts:
+  - criterion: supported
+    verdict: fail
+    reason: >-
+      .seikika/assessments/rule-quality/rule/seikika/meta-rule/both-outcomes-on-fixtures.yaml
+      cites .seikika/standards/meta.yaml and .seikika/fixtures/surfaces.ndjson
+      for scope and fixture counts. The current definition and catalog records
+      are in packages/meta-scoring/fragments/catalog.yaml and
+      .seikika/fixtures/meta-catalog.ndjson.
+    suggestion: >-
+      Reassess against the current fixture counts and cite their new location
+      and the matching current definitions.
+  - criterion: complete
+    verdict: fail
+    reason: >-
+      The assessment claims a failed fixture means evidence evaluated
+      successfully. crates/seikika-cli/src/meta.rs counts the rule outcome.
+      The assessment cites no assertion that requires the evidence value in
+      the relevant fixtures.
+    suggestion: >-
+      Limit the claim to the recorded pass and fail outcomes and cite an
+      evidence assertion when claiming evidence was verified.
+  - criterion: reproducible
+    verdict: fail
+    reason: >-
+      .seikika/assessments/rule-quality/rule/seikika/meta-rule/both-outcomes-on-fixtures.yaml
+      gives historical counts without pinning a revision. Its cited fixture
+      file now describes CLI and MCP surfaces.
+    suggestion: >-
+      Identify the revision for historical counts or recompute them and cite
+      the current report and fixture expectations.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      The reviewed assessment contains no fail or unsure verdict with a
+      proposed change. Its fix discussion points to the fixture records as the
+      source of the missing outcome. See
+      .seikika/assessments/rule-quality/rule/seikika/meta-rule/both-outcomes-on-fixtures.yaml.

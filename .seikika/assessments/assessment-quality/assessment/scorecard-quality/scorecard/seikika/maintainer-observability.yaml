@@ -1,0 +1,55 @@
+apiVersion: seikika.com/assessment/v1
+entity: assessment:scorecard-quality/scorecard:seikika/maintainer-observability
+rubric: assessment-quality
+subjectHash: 544915608a6b
+assessor: {kind: agent, name: cursor-reviewer-33, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: supported
+    verdict: fail
+    reason: >-
+      The ladder, the gauges and the decision citations in
+      .seikika/assessments/scorecard-quality/scorecard/seikika/maintainer-observability.yaml
+      hold. The card is .seikika/standards/observability.yaml:91-114, the
+      ladder is 101-103, connector lag is 99-101, and the missing-path fields
+      are 38-77. The two gauges are initialised at
+      crates/seikika-telemetry/src/metrics_prom.rs:150 and :152 and are set in
+      no other crate. The alert is ops/alerts/index-freshness.yaml:6. The
+      fixture range does not. .seikika/tests/standards.test.yaml:1107-1149
+      starts in maintainer-advisories and contains the gold and bronze
+      observability expectations, but the none level (`demo-unsafe`) is
+      standards.test.yaml:1152-1155.
+    suggestion: >-
+      Cite .seikika/tests/standards.test.yaml:1120-1155 for the gold, bronze
+      and none observability fixtures.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      The three passes and the fail are right. Every rule is a path on the
+      maintainer track (observability.yaml:112), and the decision groups the
+      monitor assessment with the crate
+      (docs/decisions/D01M81ADN8C10EA1Z1VNRY3A5JZ.md:14-18). The ladder orders
+      crate, then logs and alerts, then a collector. No rule checks that a
+      catalogued gauge is updated, and index-freshness.yaml:6 alerts on one
+      that is only initialised. Evidence is the missing path
+      (observability.yaml:38-77), so an agent can create the three paths the
+      demo-partial fixture lacks (.seikika/fixtures/workspace.ndjson:82).
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      The gap is metrics_prom.rs:150-152 plus a repo-wide search that finds no
+      setter outside seikika-telemetry. A second assessor fails no-obvious-gap
+      from that and passes the other three from observability.yaml:91-114.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      Adding rules that a non-stub catalog metric has a setter, that each
+      alert's metric is one of those, and that METRIC_CATALOG.md matches the
+      catalog names, as the suggestion in
+      .seikika/assessments/scorecard-quality/scorecard/seikika/maintainer-observability.yaml
+      says, would close the gap the reason names and change no-obvious-gap.
+summary: >-
+  The scorecard verdicts are right, including the gap that two catalogued
+  gauges are only initialised. The fixture citation stops short of the
+  none case: standards.test.yaml:1107-1149 has gold and bronze, and
+  demo-unsafe at none is 1152-1155.

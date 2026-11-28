@@ -72,8 +72,8 @@ scorecards whose every entity must pass.
 ## Checking that the box doesn't change what a tool says
 
 ```bash
-seikika connector records --portal portal --name ci-lint    # the records, with each `command`
-python3 scripts/take-it-out.py portal ci-lint               # rerun each command alone and compare
+seikika connector records --portal .seikika --name ci-lint    # the records, with each `command`
+python3 scripts/take-it-out.py .seikika ci-lint               # rerun each command alone and compare
 ```
 
 `take-it-out.py` counts each file's findings from the tool's own output, independently of

@@ -36,4 +36,4 @@ campaign's starting point, so the report shows progress since then.
 `--skip github-actions` leaves out the GitHub API reads when no token is set; the runner connectors
 (staticcheck, OpenSSF Scorecard) need the tools `seikika doctor` lists. The report-ui fixture
 script renders this portal the same way
-([report-ui/README.md](../../report-ui/README.md)).
+([report-ui/README.md](../../npm/report-ui/README.md)).

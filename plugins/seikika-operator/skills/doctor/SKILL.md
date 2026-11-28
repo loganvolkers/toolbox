@@ -14,8 +14,8 @@ description: >-
    `SEIKIKA_CONNECTOR_CONFINEMENT=required` is set as well, so serve would not start them.
 
 ```
-seikika doctor portal
-seikika doctor portal --mise
+seikika doctor .seikika
+seikika doctor .seikika --mise
 ```
 
 Do not ignore an exit code of 1. If it fails, a connector binary or a declared tool is absent or at the wrong version.

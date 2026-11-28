@@ -1,0 +1,50 @@
+apiVersion: seikika.com/assessment/v1
+entity: assessment:rule-quality/rule:seikika/vs-backstage-footprint/loaded-memory
+rubric: assessment-quality
+subjectHash: e4f98bba35d4
+assessor: {kind: agent, name: cursor-reviewer-33, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: supported
+    verdict: fail
+    reason: >-
+      Two line ranges in
+      .seikika/assessments/rule-quality/rule/seikika/vs-backstage-footprint/loaded-memory.yaml
+      stop one line early. `rssAfterLoadMb` is sampled at
+      experiments/backstage-compare/measure.py:275 and named at line 286; line
+      274 is `reads = list(oha(...))`. The state.rs path in the fix is
+      .seikika/standards/backstage-comparison.yaml:386, not inside 384-385.
+      The rest holds: rssLoadedMb is the sample after `time.sleep(2)`
+      (measure.py:268-269), Backstage `totalItems >= n` is measure.py:221-224,
+      the field text is backstage-comparison.yaml:54-56, 166.4 is the median
+      of experiments/backstage-compare/results/r3/perf-seikika-10000-*.json,
+      and 1,024 MB is README.md:41 and ADJUDICATION.md:108.
+    suggestion: >-
+      Cite measure.py:275 and :286 for rssAfterLoadMb, and
+      backstage-comparison.yaml:384-386 for the fix that names state.rs.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      The four passes are right. rssLoadedMb is resident memory with the
+      catalog loaded (backstage-comparison.yaml:56 and measure.py:268-269),
+      which is what the rule name says. The sample is after the catalog is
+      readable, the fix names measure.py and state.rs, and README.md:41 states
+      1,024 before the run. Peak RSS being unused is a note, not a failed
+      criterion: the rule does not claim peak.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      The measure is measure.py:264-269 and the bar is README.md:41. A second
+      assessor passes all four from those lines. The "not derived" caveat is
+      recorded and does not flip threshold-justified, because a source states
+      the number.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      .seikika/assessments/rule-quality/rule/seikika/vs-backstage-footprint/loaded-memory.yaml
+      has no fail or unsure verdict, so there is no suggestion to apply.
+summary: >-
+  The four passes match the measure and the pre-registered 1,024 MB bar.
+  Two ranges stop a line early: rssAfterLoadMb is measure.py:275, not 274,
+  and the state.rs path is backstage-comparison.yaml:386, not 384-385.
+  166.4 is the round-3 median of the five seikika 10k files.

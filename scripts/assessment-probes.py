@@ -20,7 +20,7 @@ def script(path, body):
 
 
 def onboarding(work, seikika=None):
-    source = (ROOT / "site/src/content/docs/start/quickstart.md").read_text()
+    source = (ROOT / "npm/site/src/content/docs/start/quickstart.md").read_text()
     blocks = re.findall(r"^```bash\n(.*?)^```", source, re.M | re.S)
     if len(blocks) != 4:
         raise ValueError("quickstart must provide four walkthrough steps")

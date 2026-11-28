@@ -1,0 +1,56 @@
+apiVersion: seikika.com/assessment/v1
+entity: assessment:sdlc-stage-quality/sdlc-stage:user/deploy
+rubric: assessment-quality
+subjectHash: db5749ccb38c
+assessor: {kind: agent, name: cursor-reviewer-22, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: supported
+    verdict: fail
+    reason: >-
+      Most citations in
+      .seikika/assessments/sdlc-stage-quality/sdlc-stage/user/deploy.yaml
+      land. scripts/m3-acceptance.sh:49-52 mints a PAT for alice and checks
+      /v1/me plus a 401 for an unknown token.
+      crates/seikika-cli/src/main.rs:538-548 is `token create`, with `--user`
+      and `--database-url`/DATABASE_URL. crates/seikika-authz/src/authn.rs:5-6
+      describes bearer PATs and OIDC. authn.rs:52-55 and 93-95 are the single
+      issuer and subject claim. user-sdlc.md:79-80 is the service identity
+      gap. One citation is wrong. decoupled-from-core says service identities
+      are 'still "planned" at line 55'. user-sdlc.md:55 is the "Check
+      contracts" row, whose "planned" refers to a user CI kit. Service
+      identities are marked planned at lines 52 and 57.
+    suggestion: >-
+      Cite user-sdlc.md:52 and 57 for service identities being planned.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      The verdicts match the stage (.seikika/sdlc/stages/user.yaml:40-50). m3
+      never exercises a service identity or a CI caller, so executable-exit
+      fails. Minting needs an operator, so agent-can-complete fails, and
+      service principals need seikika-authz work, so decoupled-from-core
+      fails. The reason omits one route. authn.rs:56-58 accepts static PATs
+      from `SEIKIKA_PATS` without a database. That route still needs an
+      operator to set the server's environment, so the verdict stands.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      Each verdict rests on code or a script a second assessor can read:
+      m3-acceptance.sh:49-52 covers only a person's PAT, main.rs:547-548
+      requires the database URL, and authn.rs has one issuer field. The
+      stage's own gap ("service identities are designed; personal access
+      tokens only today", user.yaml:50) agrees.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      Each suggestion would change its verdict. An m3 step with a scoped
+      service token and an allowed and a denied read exercises the exit
+      (deploy.yaml lines 16-19). Self-service minting through the API removes
+      the operator step (lines 27-28). Service principals and a CI OIDC issuer
+      let operators grant apps access in the manifest (lines 44-47).
+summary: >-
+  The fail, fail, pass, fail verdicts are right, and the suggestions would
+  flip the fails. One citation is wrong: user-sdlc.md:55 is the
+  contract-kit row, while service identities are marked planned at lines
+  52 and 57. The reason also omits the database-free `SEIKIKA_PATS` route
+  (authn.rs:56-58), which does not change the verdict.

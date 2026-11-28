@@ -99,7 +99,7 @@ the latest tags.*
 
 **Determinism.** zizmor runs `--offline`, and actionlint runs with `-shellcheck= -pyflakes=`: the CI
 image has shellcheck and a laptop may not, and enabling it on one side only would change results.
-Both are pinned (1.32.0, 1.7.12) in CI and in the docs, and `portal/results.json` was made with those
+Both are pinned (1.32.0, 1.7.12) in CI and in the docs, and `.seikika/results.json` was made with those
 versions.
 
 **Unknown, not fail.** zizmor and actionlint rules reference the linter's record without a guard,
@@ -127,7 +127,7 @@ are all unknown is not granted.
   - actionlint reports 0 errors;
   - `workflow-runs` passes end to end against the mock GitHub API (two new endpoints in
     `tools/mock_github.py`).
-- **`seikika test portal`:** 31/31. Nine of the expectations are new and cover each card, including
+- **`seikika test .seikika`:** 31/31. Nine of the expectations are new and cover each card, including
   unknown-not-fail and the supply-chain view.
 - **The ratchet:**
   - with both tools installed, `--ci` matches the committed baseline;

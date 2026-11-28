@@ -1,0 +1,65 @@
+apiVersion: seikika.com/assessment/v1
+entity: scorecard:seikika/review-crate
+rubric: scorecard-quality
+subjectHash: 869ea3546375
+assessor: {kind: agent, name: cursor-cloud-agent, model: claude-opus-5.5}
+at: 2026-11-24
+verdicts:
+  - criterion: one-concern
+    verdict: pass
+    reason: >-
+      All five rules (.seikika/standards/crates.yaml:351-426) read one thing,
+      the crate-design assessment of a crate and its review, for one audience,
+      maintainers. The card is advisory (`ratchet: {advisory: true}`,
+      crates.yaml:348), as D79 and D01M831P5QWJQ4A2FT85N5MXJQF set out, and
+      its rationale gives the reason: "a review that goes stale on every
+      change must not gate the ratchet" (crates.yaml:331-337). The rewritten
+      description (crates.yaml:326-330) states the same ladder in plain words
+      and changes no rule.
+  - criterion: levels-are-a-ladder
+    verdict: pass
+    reason: >-
+      Bronze is no open finding, stale ones included (crates.yaml:351-364).
+      Silver is a current review (crates.yaml:365-377). Every gold rule also
+      needs a current review and adds something more: clean and cited, no
+      doubts, and a second assessor's grounded review of the assessment
+      (`independently-reviewed`, crates.yaml:409-426), as
+      docs/design/thresholds.md:55 states and the description now says ("a
+      clean review that a second agent checked is gold"). Fixtures reach none
+      and gold (.seikika/tests/standards.test.yaml:916-941). No fixture sits
+      at silver, so that rung is untested, but it is still a coherent step. In
+      this build 14 crates sit at bronze, 1 at gold and 2 are out of scope.
+  - criterion: no-obvious-gap
+    verdict: pass
+    reason: >-
+      Gold needs a current, grounded review of the crate-design assessment by
+      a different named assessor (`reviewIndependent`, crates.yaml:85-92),
+      computed by `link_reviews` in crates/seikika-connect/src/assessment.rs
+      and unit-tested there. The hash description matches the code
+      (crates.yaml:51-54, `source_hash` in
+      crates/seikika-connector-workspace/src/rust.rs:395). Assessor identity
+      is still a self-chosen name, which thresholds.md:63-70 records as not
+      checked, and why: git can't tell the agents apart either. The
+      independently-reviewed rationale's claim that one of three assessment
+      reviews was self-review when the rule was added is the finding
+      D01M831P5QWJQ4A2FT85N5MXJQF records.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      I tried crate:seikika-expr, the one crate with a live assessment
+      (.seikika/assessments/crate-design/crate/seikika-expr.yaml). The fix for
+      `independently-reviewed` gives the exact brief command
+      (crates.yaml:417-421). I ran `seikika assess brief
+      assessment:crate-design/crate:seikika-expr --portal .seikika`, and it
+      printed the assessment-quality rubric and the file to write. The bronze
+      and silver fixes point at the failing criteria's suggestions and the
+      crate brief (crates.yaml:357-374); the silver fix now says what to do in
+      words first ("Have an agent review the crate's current sources") and
+      then gives the same two commands, unchanged.
+summary: >-
+  Re-assessed after the silver rule's fix was reworded to lead with a
+  plain instruction before its commands; no check, level or command
+  changed. Independence is required at gold, the hash description is
+  right, and the rationale says why the card is advisory, so the ladder
+  has no obvious gap. It is still untested at silver, and assessor
+  identity is a self-declared name, which is a documented limit.

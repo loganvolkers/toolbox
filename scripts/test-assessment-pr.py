@@ -33,7 +33,7 @@ class AssessmentTests(unittest.TestCase):
         self.git("init", "-q")
         self.git("config", "user.email", "review@example.invalid")
         self.git("config", "user.name", "Assessment fixtures")
-        (self.repo / "portal").mkdir()
+        (self.repo / pilot.POLICY).parent.mkdir()
         self.policy = {
             "format": "seikika-pr-policy/v1", "owner": "group:maintainers",
             "checks": {"probe": [sys.executable, "-c", "print('probe evidence')"]},
@@ -93,7 +93,7 @@ class AssessmentTests(unittest.TestCase):
                 changed.parent.mkdir(parents=True, exist_ok=True)
                 changed.write_text("fixture\n")
                 plan, _ = pilot.build_plan(self.repo, base, self.save())
-                self.assertEqual(plan["checks"], ["onboarding"])
+                self.assertEqual(plan["checks"], ["module-coupling", "onboarding", "report-states"])
                 self.assertEqual(plan["unmappedPaths"], [])
 
     def test_check_transport_and_evidence_validation(self):

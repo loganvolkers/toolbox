@@ -22,7 +22,7 @@ which round 10's section records.
 
 | Item | Value |
 |---|---|
-| Surface | `<seikika-report>` from `report-ui/src`, rendered by Storybook stories over the fixtures in `report-ui/fixtures/` |
+| Surface | `<seikika-report>` from `report-ui/src`, rendered by Storybook stories over the fixtures in `npm/report-ui/fixtures/` |
 | Portals | OpenFGA (`examples/openfga-portal` over OpenFGA v1.23.0, compared with SpiceDB v1.57.1), Seikika for Seikika (`portal/`, compared with Backstage), the repo portal starter, and the starter before its first run |
 | Stories | 22 page stories: 12 OpenFGA, 6 Seikika, 1 starter, 3 no-data |
 | Viewports | 1280×800 and 390×844, light and dark, plus a full-page desktop light shot |
@@ -268,7 +268,7 @@ Declined, with reasons:
 
 The declined baseline item from round 7 was fixed before capture after all. The published report
 and the OpenFGA example now build with `--baseline` (the pages workflow,
-`scripts/regen-site-report.sh` and `report-ui/scripts/fixtures.sh`), and OpenFGA gains a committed
+`scripts/regen-site-report.sh` and `npm/report-ui/scripts/fixtures.sh`), and OpenFGA gains a committed
 `results.json`. Campaigns therefore show "since the start" rather than a missing-baseline note. The
 probes passed 212 of 212 and every task succeeded for all three auditors. Consistency (U6) rose from
 2 to 3 and wayfinding (U7) from 3 to 4. Honesty (U8) fell from 4 to 3, so the round did not pass.
@@ -490,8 +490,8 @@ went in as portal configuration:
 | Six factor scorecards, their rules, bars, "why" and "what would close it" lines | `examples/openfga-portal/standards/vs-spicedb.yaml` | Portal |
 | A track that groups them, with the method and links | `examples/openfga-portal/seikika.yaml` | Portal |
 | Two product records, written by the harness | `examples/openfga-portal/comparisons/{openfga,spicedb}.yaml` | Portal (from `experiments/openfga-spicedb-compare`) |
-| A state for a comparison whose records have not landed: "not measured yet", and every section agreeing with it | `report-ui/src/views/compare.js` | Box |
-| Product names when a record is missing, instead of `product:openfga` | `report-ui/src/views/compare.js` | Box |
+| A state for a comparison whose records have not landed: "not measured yet", and every section agreeing with it | `npm/report-ui/src/views/compare.js` | Box |
+| Product names when a record is missing, instead of `product:openfga` | `npm/report-ui/src/views/compare.js` | Box |
 
 No Rust changed to add it: the comparison engine, the facts and the rendering are the ones Seikika
 for Seikika already had. The one gap was a state Seikika's own portal never reaches, a
@@ -514,5 +514,5 @@ factor.
 ## Sources
 
 - Rubric and stop rule: [design-audit SKILL.md](../../plugins/seikika-operator/skills/design-audit/SKILL.md), [design-audit.md](../design/design-audit.md).
-- Stories and fixtures: [report-ui/README.md](../../report-ui/README.md).
+- Stories and fixtures: [report-ui/README.md](../../npm/report-ui/README.md).
 - The loop this one follows: [seikika-report-2026-11-24-2.md](./seikika-report-2026-11-24-2.md) and its process audit, [design-loop-efficiency-2026-11-24.md](./design-loop-efficiency-2026-11-24.md).

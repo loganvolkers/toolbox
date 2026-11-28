@@ -1,0 +1,74 @@
+apiVersion: seikika.com/assessment/v1
+entity: sdlc-stage:operator/verify
+rubric: sdlc-stage-quality
+subjectHash: 670048c373c5
+assessor: {kind: agent, name: cursor-assessor-21, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: executable-exit
+    verdict: fail
+    reason: >-
+      The exit criterion is "seikika verify passes", but `seikika verify` does
+      not exist: it is not among the subcommands in `seikika --help`, and the
+      stage lists no commands or checks
+      (.seikika/sdlc/stages/operator.yaml:94-104). The probes it should run
+      are design only (docs/design/sdlc.md:156-162).
+    suggestion: >-
+      Implement `seikika verify --against <url>` with the sdlc.md §7 probes,
+      operator access and the MCP tool list first, and run it in CI against a
+      `seikika serve --fixtures` instance.
+  - criterion: agent-can-complete
+    verdict: fail
+    reason: >-
+      With no verify command, an agent can only improvise partial checks. It
+      can probe `/readyz` and `/healthz`
+      (crates/seikika-cli/src/detach.rs:114-165) and read through `seikika
+      get`, `seikika scorecard` and `seikika mcp`. Confirming that the
+      deployment "matches the plan" needs a plan of the deployed state, which
+      is M6 (`plan --remote`).
+    suggestion: >-
+      Meanwhile, document a verify checklist that uses existing reads:
+      `/readyz`, `seikika scorecard --url`, and the MCP tools/list compared
+      with `seikika describe`.
+  - criterion: reuses-artifacts
+    verdict: pass
+    reason: >-
+      As designed, verify is a released-CLI subcommand pointed at a URL
+      (docs/design/sdlc.md:156). It builds or installs nothing, and its
+      rollback is "the previous digest" (docs/design/sdlc.md:162).
+  - criterion: decoupled-from-core
+    verdict: fail
+    reason: >-
+      Meeting the exit criterion ("seikika verify passes",
+      .seikika/sdlc/stages/operator.yaml:99) needs a new `verify` subcommand
+      in seikika-cli, whose `Command` enum has none
+      (crates/seikika-cli/src/main.rs:43-322). An operator cannot add it from
+      their portal repository.
+    suggestion: >-
+      Ship `seikika verify` (M6), or make "verify" a set of operator-defined
+      post-deploy checks over existing endpoints so it lives in the portal
+      repository.
+# Codex evaluated the two added criteria. Earlier verdicts retain their original attribution.
+  - criterion: fast-feedback
+    verdict: fail
+    reason: >-
+      .seikika/sdlc/stages/operator.yaml defines the stage exit but declares
+      no runnable local check for it. docs/design/sdlc.md documents the
+      intended workflow.
+    suggestion: >-
+      Add a runnable local check for this exit and record its measured time in
+      docs/design/sdlc.md.
+  - criterion: beyond-one-reference
+    verdict: fail
+    reason: >-
+      .seikika/sdlc/stages/operator.yaml declares no executable reference for
+      the exit, and docs/design/sdlc.md describes the workflow without
+      supplying a second exercised reference.
+    suggestion: >-
+      Exercise this exit on a second reference and cite the result in
+      .seikika/sdlc/stages/operator.yaml.
+summary: >-
+  Verify is design only: its exit criterion names a command that doesn't
+  exist, so no agent can complete or check it. The readiness and read
+  endpoints it would build on already exist, and a documented interim
+  checklist over them would make the stage partly usable now.

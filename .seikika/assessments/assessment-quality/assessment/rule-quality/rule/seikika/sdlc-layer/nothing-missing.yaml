@@ -1,0 +1,53 @@
+apiVersion: seikika.com/assessment/v1
+entity: assessment:rule-quality/rule:seikika/sdlc-layer/nothing-missing
+rubric: assessment-quality
+subjectHash: da2a60f40d8a
+assessor: {kind: agent, name: cursor-reviewer-35, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: supported
+    verdict: fail
+    reason: >-
+      stagesMissing is .seikika/standards/sdlc.yaml:21-30, the namedIn
+      fallback to record.docs is sdlc.yaml:139, and the fix is
+      sdlc.yaml:280-285. not_naming is a case-insensitive substring at
+      crates/seikika-connector-workspace/src/data.rs:220-233, and namedIn is
+      filled at 258-267. The unit test at data.rs:331-339 drops a silent doc
+      and a missing doc. package-author.yaml:83 and :101 are status missing,
+      and :103 says the registry is undecided. packages.md's title contains
+      "Package" and "distribute" occurs once, at packages.md:229.
+      thresholds.md:59 is the silver rung. The pin citation does not hold.
+      .seikika/tests/standards.test.yaml:1286-1289 is the tests-pass
+      expectation for maintainer-crate. The "(no doc that exists and names
+      it)" strings are pinned at standards.test.yaml:1301-1304.
+    suggestion: >-
+      Cite .seikika/tests/standards.test.yaml:1301-1304 for the
+      nothing-missing evidence pin. Leave 1286-1289 out; that expectation is
+      tests-pass.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      measures-intent now matches the fix: a missing status or an empty
+      namedIn fails. hard-to-game fails because the substring test would
+      accept packages.md for both package and distribute once the status is no
+      longer missing. The fix names the file, the keys and both conditions.
+      Only sdlc:package-author fails nothing-missing in .seikika/results.json,
+      with two evidence items.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      The substring test, the two missing stages and the shared doc are in the
+      files. Flipping those two statuses is a concrete cheap pass, not a taste
+      call.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      Requiring a heading or a path#anchor, and falling back to an empty
+      namedIn when the connector has no naming config, would stop the status
+      flip from passing. That changes hard-to-game.
+summary: >-
+  The nothing-missing verdicts match the checker: existence is required,
+  and naming is still a substring, so a status edit can pass on a shared
+  doc. The review fails supported because the test pin is
+  standards.test.yaml:1301-1304, not 1286-1289, which is a crate
+  tests-pass expectation.

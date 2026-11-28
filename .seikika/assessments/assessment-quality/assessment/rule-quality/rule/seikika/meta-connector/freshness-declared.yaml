@@ -1,0 +1,60 @@
+apiVersion: seikika.com/assessment/v1
+entity: assessment:rule-quality/rule:seikika/meta-connector/freshness-declared
+rubric: assessment-quality
+subjectHash: 432fa27c5dd2
+assessor: {kind: agent, name: cursor-reviewer-03, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: supported
+    verdict: pass
+    reason: >-
+      Every citation in
+      .seikika/assessments/rule-quality/rule/seikika/meta-connector/freshness-declared.yaml
+      lands. crates/seikika-cli/src/model.rs:220 reads only `freshness` keys
+      and :232 builds `withoutFreshness`. The fix is
+      .seikika/standards/meta.yaml:881-882, the evidence is :880 and the card
+      rationale is :841-846. freshness_loop is
+      crates/seikika-api/src/connectors.rs:171-200, with `can_resync` at :183.
+      connector_freshness (crates/seikika-api/src/reads.rs:421-429) and
+      npm/ui/src/main.tsx:278-279 show `last_read` with no bound. The duration
+      pattern is crates/seikika-model/schema/manifest.schema.json:475-478,
+      S4S's 5m bounds are .seikika/seikika.yaml:231-252, and the
+      undeclared-record check is crates/seikika-model/src/validate.rs:196-208.
+      acme/github's ['codeowners'] evidence is pinned at
+      .seikika/tests/standards.test.yaml:830-832. In
+      docs/design/scorecards-for-scorecards.md, the ladder row is :209 and the
+      starter finding is :219-221. An rg over crates/ finds no other reader of
+      `freshness` and no notion of stale entity data.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      The two fails are what the rubric's guidance asks about
+      (.seikika/standards/meta.yaml:1160-1161, 1165-1166). The fix promises
+      "shows as stale", which nothing does, and `36500d` passes like `5m`. The
+      two passes hold. The evidence lists record kinds, the fix names the key,
+      and the rule has no number, sitting at silver per
+      scorecards-for-scorecards.md:209. I found no failure the assessment
+      missed.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      Both fails rest on code a second assessor can read: model.rs:220 sees
+      keys only, and connectors.rs:183 resyncs only kinds the connector
+      registered. The fix's own wording sets the bar for measures-intent
+      (meta.yaml:881-882), and the century-long bound is a schema-valid
+      one-liner (manifest.schema.json:477).
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      Each suggestion in
+      .seikika/assessments/rule-quality/rule/seikika/meta-connector/freshness-declared.yaml
+      would change its verdict. Restating the fix as what freshness_loop does
+      (connectors.rs:171-172), or flagging `last_read` against the bound,
+      makes passing mean what the fix says. A stated ceiling with per-record
+      bounds as evidence would make `36500d` fail, and the cheapest pass would
+      then be a real bound.
+summary: >-
+  A trustworthy assessment. Every line number checks out, and both fails
+  rest on code: the check reads only `freshness:` keys, and nothing shows
+  data as stale against the bound. The passes are right too, and each
+  suggestion would flip the verdict it is attached to.

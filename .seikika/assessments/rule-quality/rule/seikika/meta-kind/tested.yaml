@@ -1,0 +1,55 @@
+apiVersion: seikika.com/assessment/v1
+entity: rule:seikika/meta-kind/tested
+rubric: rule-quality
+subjectHash: 1a7af9cf6b8b
+assessor: {kind: agent, name: cursor-assessor-03, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: measures-intent
+    verdict: fail
+    reason: >-
+      `tested` is true when the raw text of the portal's test files contains
+      `'<entity id>'` (crates/seikika-cli/src/model.rs:177, with the text read
+      whole at crates/seikika-cli/src/meta.rs:20-26). A test's name, a YAML
+      comment, or an expectation that compares nothing all count. The
+      rationale says "one expectation pins the kind's mapping"
+      (.seikika/standards/meta.yaml:730-733), but a mention pins nothing.
+      meta-rule's own `tested` uses a regex to reject bare mentions for that
+      reason (meta.rs:28-36). In the other direction, an expectation that
+      quotes the id in double quotes, which is valid CEL, is missed.
+    suggestion: >-
+      Parse the tests as YAML and look for the id only inside `expect:`
+      values, as an `entity('<id>')` or `score(_, '<id>')` call whose result
+      is compared with a literal. Reuse the shape of rule_regex
+      (meta.rs:31-36) and accept either quote.
+  - criterion: hard-to-game
+    verdict: fail
+    reason: >-
+      A comment line `# 'file:scripts/m4-acceptance.sh'` in
+      .seikika/tests/standards.test.yaml would pass kind:seikika/File. Its
+      only fixture entity has that id (.seikika/fixtures/workspace.ndjson),
+      and the kind fails this rule today (standards.test.yaml:807). No
+      expectation is needed.
+    suggestion: >-
+      The check described above, limited to compared calls inside `expect:`,
+      ignores comments and test names.
+  - criterion: fix-leads-to-pass
+    verdict: pass
+    reason: >-
+      The fix says what to add: an expectation about a field, relation or
+      score of one of the kind's fixture entities (meta.yaml:727-729). The
+      manifest names the tests file (.seikika/seikika.yaml:441). The evidence
+      doesn't list the entity ids, but the fixture file gives them, and a
+      single-quoted id, the convention throughout standards.test.yaml, passes.
+  - criterion: threshold-justified
+    verdict: pass
+    reason: >-
+      No number. Bronze follows the ratchet comment "a new kind must be in the
+      fixtures and the tests" (meta.yaml:709) and the rationale's evidence
+      that three kinds were in no test on the first run (meta.yaml:731-733,
+      docs/design/scorecards-for-scorecards.md:213-214).
+summary: >-
+  The right floor with a usable fix, but the check is a substring search
+  of the raw test files. A comment or test name that quotes an entity id
+  passes, which is the bare mention meta-rule's own `tested` was built to
+  reject.

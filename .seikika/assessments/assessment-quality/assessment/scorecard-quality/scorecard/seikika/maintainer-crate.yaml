@@ -1,0 +1,63 @@
+apiVersion: seikika.com/assessment/v1
+entity: assessment:scorecard-quality/scorecard:seikika/maintainer-crate
+rubric: assessment-quality
+subjectHash: 03224db6a466
+assessor: {kind: agent, name: cursor-reviewer-38, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: supported
+    verdict: fail
+    reason: >-
+      The shape of
+      .seikika/assessments/scorecard-quality/scorecard/seikika/maintainer-crate.yaml
+      is right, and several lines are exact: the rationale and track are
+      .seikika/standards/crates.yaml:148-154 and :163, doc coverage 80 is
+      :252, function length 150 is :264, workspace lints are Cargo.toml:56-60,
+      the allow in run.rs is crates/seikika-exec/src/run.rs:447, and
+      few-unwraps evidence is .seikika/standards/crates.yaml:332-334.
+      .seikika/results.json has 17 measured crates at bronze or above and gold
+      on git-files, gitlab, runner, workspace and expr; scim fails only
+      few-unwraps. These lines do not say what they are cited for.
+      .github/workflows/ci.yml:23-24 are cargo fmt and cargo clippy; cargo
+      test is :25. .seikika/standards/crates.yaml:293, :305, :277 and :317 are
+      level or size() checks; the 100, the 80-line fix, the 30 and the 15 are
+      :294, :307, :278 and the field at :108. change.rs:340 is the last line
+      of a doc comment; the allow is :341 and fn change_run is :342, so "337
+      against 341" is neither the doc start (:338) nor the fn.
+    suggestion: >-
+      Cite .github/workflows/ci.yml:24-25 for clippy and test. Cite
+      .seikika/standards/crates.yaml:252 and :294, :264 and :307, :278 and
+      :108 for the ladder. Cite change.rs:341 for the allow and :338 against
+      :342 for the span.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      one-concern and levels-are-a-ladder pass on the text that is there: one
+      maintainer question (.seikika/standards/crates.yaml:148-154), the same
+      facts tightened from 80 to 100, 150 to 80 and 30 to 15, and gold
+      reachable on five crates. no-obvious-gap fails because nothing checks
+      [lints] workspace = true, which all 18 crate Cargo.toml files set, or
+      allow attributes. actionable fails because few-unwraps evidence is one
+      count (.seikika/standards/crates.yaml:332-334) and "document the
+      invariant" does not lower it. The off-by-one lines do not hide a third
+      fail or make a pass wrong.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      The ladder numbers in .seikika/standards/crates.yaml:252-317, the lint
+      inheritance and the count-only evidence are in the files. A second
+      assessor fails no-obvious-gap and actionable and passes the other two
+      without deciding how many allows are too many.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      An inherits-workspace-lints rule and a suppressions-explained rule would
+      close the gap the no-obvious-gap reason names. unwrapSites as the
+      evidence at .seikika/standards/crates.yaml:332-334, and a fix that says
+      what lowers the count, would make raising scim a step the card itself
+      locates, which is the actionable fail.
+summary: >-
+  The card is one concern with a real ladder, and the lint and few-unwraps
+  fails are earned. Several cited lines are off by one or two: CI's test
+  step is .github/workflows/ci.yml:25, the gold numbers are the next line
+  or the field definition, and the change.rs allow is line 341, not 340.

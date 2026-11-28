@@ -34,12 +34,12 @@ applies the design §13 rubric. CI job `otel-testbed` must pass.
 
 The hosted demo uses the [Cloudflare observability example](../../examples/cloudflare-containers/observability/)
 to export over HTTPS and publish a guest Grafana dashboard. The Collector filters the dedicated demo
-data set before storage. See the [operator playbook](../../site/src/content/docs/operators/observability.md).
+data set before storage. See the [operator playbook](../../npm/site/src/content/docs/operators/observability.md).
 
 ## S4S
 
 Scorecard `maintainer-observability` over kind `Observability` (declared in
-`portal/observability/`). Rules fail when the crate, catalog, scrape test, alert stubs,
+`.seikika/observability/`). Rules fail when the crate, catalog, scrape test, alert stubs,
 operator/monitor assessment or OTLP testbed are missing. Gold includes
 `otlp-export-tested`.
 

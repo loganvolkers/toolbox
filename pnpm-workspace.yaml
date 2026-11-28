@@ -1,2 +1,3 @@
-packages: [ui, ui-kit, report-ui, site]
+packages: [npm/*]
+disallowWorkspaceCycles: true
 allowBuilds: {esbuild: true}

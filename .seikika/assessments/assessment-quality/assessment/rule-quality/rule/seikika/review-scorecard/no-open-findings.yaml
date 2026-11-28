@@ -1,0 +1,46 @@
+apiVersion: seikika.com/assessment/v1
+entity: assessment:rule-quality/rule:seikika/review-scorecard/no-open-findings
+rubric: assessment-quality
+subjectHash: 0f71050d4921
+assessor: {kind: agent, name: cursor-reviewer-05, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: supported
+    verdict: pass
+    reason: >-
+      Every citation in
+      .seikika/assessments/rule-quality/rule/seikika/review-scorecard/no-open-findings.yaml
+      holds. .seikika/standards/meta.yaml has reviewFailing at 57-63, the
+      evidence at 1019-1021 and the fix at 1022-1025.
+      .seikika/tests/standards.test.yaml:902-906 has meta-rule's
+      no-open-findings failing, with no-obvious-gap.
+      .seikika/campaigns.yaml:121-135 is close-review-findings, which says "a
+      new, independent assessment" and includes review-scorecard.
+      crates/seikika-cli/src/meta.rs:249 sets the hash, the CI step is at
+      .github/workflows/ci.yml:95-98, and C1 is at
+      docs/design/meta-standards-review.md:136.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      measures-intent passes correctly, because `failing` is read whether or
+      not the review is fresh (meta.yaml:61-63). hard-to-game fails correctly:
+      the check (meta.yaml:1018) never compares assessors, so a same-name
+      rewrite closes a finding that the fix and the campaign say needs an
+      independent assessment. The missing stale fixture is accurate. The
+      review-scorecard expectations (standards.test.yaml:896-915) have no
+      stale review.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      The route follows from the check and the campaign text (meta.yaml:1018,
+      campaigns.yaml:126-128), not from taste.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      Closing a finding only on a hash change or a different assessor directly
+      blocks the same-name rewrite the reason names, and it makes the
+      campaign's "independent" a checked condition.
+summary: >-
+  Trustworthy. Every citation holds. The gaming route is concrete, a
+  same-assessor rewrite that also counts toward close-review-findings, and
+  the suggestion closes it.

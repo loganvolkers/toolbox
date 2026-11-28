@@ -1,0 +1,59 @@
+apiVersion: seikika.com/assessment/v1
+entity: rule:seikika/sdlc-stage/automated
+rubric: rule-quality
+subjectHash: 8d256fc99233
+assessor: {kind: agent, name: cursor-assessor-13, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: measures-intent
+    verdict: fail
+    reason: >-
+      A check counts as automated when its path appears anywhere in a
+      workflow's or action's `run:`, `uses:` or `with:` text (crates/
+      seikika-connector-workspace/src/data.rs:150-218). Whether it runs as a
+      check, or would fail if the exit criterion weren't met, is not looked
+      at. maintainer/build lists `rust-toolchain.toml`, which passes only
+      because actions/report/action.yml:98 `cat`s it into a cache-key hash.
+      maintainer/monitor lists `.seikika/results.json`, a data file passed as
+      `--baseline`. Both stages are gold (.seikika/results.json). A `.rs` file
+      under crates/ passes whenever CI runs `cargo test`, test or not
+      (data.rs:207-209).
+    suggestion: >-
+      Count a check as run only when CI executes it: a workflow file, a script
+      or test path that is the program or first argument of a `run:` command,
+      or a `uses: ./path` action. Treat any other mention as not run, and say
+      so in the evidence.
+  - criterion: hard-to-game
+    verdict: fail
+    reason: >-
+      Listing `.github/workflows/ci.yml` passes for any stage, since a
+      workflow file always counts as run by CI (data.rs:204). That is cheaper
+      than writing the check that proves the exit criterion, which is what the
+      fix asks for (.seikika/standards/sdlc.yaml:227-230). Three maintainer
+      stages list ci.yml today (.seikika/sdlc/stages/ maintainer.yaml), so the
+      route is easy to copy.
+    suggestion: >-
+      Accept a workflow file only when the stage also names the job or step
+      that proves its exit criterion (for example `ci.yml#test`), and check
+      that job exists.
+  - criterion: fix-leads-to-pass
+    verdict: pass
+    reason: >-
+      The evidence names the stage when `checks:` is empty, or each check no
+      workflow runs (sdlc.yaml:223-226). The fix says to add a CI step, script
+      or test, list it under `checks:`, and run it from a workflow under
+      .github/workflows (sdlc.yaml:227-230). That satisfies `notInCi`, as the
+      fixture demo-gap/release shows
+      (.seikika/tests/standards.test.yaml:1053-1054).
+  - criterion: threshold-justified
+    verdict: pass
+    reason: >-
+      No number. docs/design/thresholds.md:57 gives "checks a workflow
+      executes (a `run:`, `uses:` or `with:` value, not a step name or
+      comment)" as silver, and the rationale explains why CI is the gate
+      (sdlc.yaml:231-234).
+summary: >-
+  The fix is clear, but "run by CI" means "mentioned in a run, uses or
+  with value". A hashed toolchain file and a baseline JSON pass as checks
+  today, and listing ci.yml passes any stage. The rule should count only
+  paths CI actually executes.

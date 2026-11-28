@@ -1,0 +1,53 @@
+apiVersion: seikika.com/assessment/v1
+entity: rule:seikika/maintainer-observability/metric-catalog-complete
+rubric: rule-quality
+subjectHash: 9e9a4412cee4
+assessor: {kind: agent, name: cursor-assessor-09, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: measures-intent
+    verdict: fail
+    reason: >-
+      The rule is named "complete", but the check is only that
+      crates/seikika-telemetry/METRIC_CATALOG.md exists
+      (.seikika/standards/observability.yaml:43-46). Completeness against the
+      code's list, `catalog::names::REQUIRED`
+      (crates/seikika-telemetry/src/catalog.rs:30-44), is not compared. Today
+      the Markdown lists all 13 required names plus the deprecated alias
+      (METRIC_CATALOG.md:15-28), but only by inspection, not because the rule
+      checks it.
+    suggestion: >-
+      Compare the catalog's table with `REQUIRED`: add a test in
+      crates/seikika-telemetry that parses METRIC_CATALOG.md and asserts set
+      equality, and point the rule at that test (or have a fitting report the
+      difference as a field).
+  - criterion: hard-to-game
+    verdict: fail
+    reason: >-
+      An empty METRIC_CATALOG.md passes. So does renaming a metric in
+      catalog.rs without touching the Markdown, which is the silent rename the
+      rationale says the catalog exists to prevent
+      (observability.yaml:147-150).
+    suggestion: >-
+      Make the pass depend on the catalog-versus-code comparison above, run in
+      CI (declare the test path under the data source's `ci:` fields,
+      data.rs:150).
+  - criterion: fix-leads-to-pass
+    verdict: pass
+    reason: >-
+      The evidence gives the missing catalog path (`missingCatalog`), and the
+      fix names the file and where its contents come from: the v1 required set
+      in docs/v1-spec.md §10.5 (line 528). Writing it passes.
+  - criterion: threshold-justified
+    verdict: pass
+    reason: >-
+      There is no threshold. Bronze matches D01M81ADN8C10EA1Z1VNRY3A5JZ, which
+      makes the metric catalog part of the telemetry crate's contract because
+      a single catalog keeps Prometheus and OTLP names from drifting, and the
+      catalog's own SemVer note (METRIC_CATALOG.md:3-5).
+summary: >-
+  The rule is called "complete" but checks only that a file exists, so
+  neither an empty catalog nor a rename in code that never reaches the
+  Markdown fails it. It belongs at bronze, and the fix is clear. It needs
+  a comparison against `catalog::names::REQUIRED` to mean what its name
+  says.

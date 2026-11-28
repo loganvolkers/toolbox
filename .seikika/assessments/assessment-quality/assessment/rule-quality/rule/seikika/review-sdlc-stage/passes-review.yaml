@@ -1,0 +1,53 @@
+apiVersion: seikika.com/assessment/v1
+entity: assessment:rule-quality/rule:seikika/review-sdlc-stage/passes-review
+rubric: assessment-quality
+subjectHash: c47f30eabe50
+assessor: {kind: agent, name: cursor-reviewer-33, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: supported
+    verdict: fail
+    reason: >-
+      One citation in
+      .seikika/assessments/rule-quality/rule/seikika/review-sdlc-stage/passes-review.yaml
+      is one line early. "M8 at line 167" of
+      docs/design/meta-standards-review.md is M7; M8, which drops the
+      redundant passes-review rules, is line 168. The rest holds: the check is
+      .seikika/standards/sdlc.yaml:365-367, the rationale 375-378, "try its
+      commands" is inside sdlc.yaml:396-399 (the phrase is line 399), cites()
+      is crates/seikika-connect/src/assessment.rs:10-45, the redundancy
+      sentence is meta-standards-review.md:113, C1 is line 136, and the
+      fixture branches are .seikika/tests/standards.test.yaml:1075-1080 and
+      1086-1087.
+    suggestion: >-
+      Cite M8 at docs/design/meta-standards-review.md:168.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      The pass, the fail and the two passes are right. The check is fresh,
+      nothing failing and nothing uncited (sdlc.yaml:365-367), which is the
+      rationale at 375-378. cites() accepts any existing path
+      (assessment.rs:44-45 and 66-67), so naming
+      .seikika/sdlc/stages/operator.yaml passes without a command. The fix at
+      sdlc.yaml:372-374, followed by citing what was read, clears both
+      evidence branches. Gold is docs/design/thresholds.md:55.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      The gaming route is assessment.rs:15-45: any path that exists returns
+      true. A second assessor fails hard-to-game from that and passes the
+      other three from sdlc.yaml:365-378 and thresholds.md:55.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      The suggestion in
+      .seikika/assessments/rule-quality/rule/seikika/review-sdlc-stage/passes-review.yaml
+      requires a checks path, a commands script or a stage doc, checked
+      against the cited list assessment.rs:220-228 already builds. A review
+      that only names operator.yaml would then fail, which changes
+      hard-to-game.
+summary: >-
+  The hard-to-game fail is right: any existing path satisfies cites(). One
+  line number is early. M8 is meta-standards-review.md:168, not 167 (that
+  line is M7). The rubric's "try its commands" is inside the cited
+  sdlc.yaml:396-399.

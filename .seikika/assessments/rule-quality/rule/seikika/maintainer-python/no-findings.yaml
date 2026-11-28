@@ -1,0 +1,61 @@
+apiVersion: seikika.com/assessment/v1
+entity: rule:seikika/maintainer-python/no-findings
+rubric: rule-quality
+subjectHash: cb54f3333d9c
+assessor: {kind: agent, name: cursor-cloud-agent, model: claude-opus-5.5}
+at: 2026-11-24
+verdicts:
+  - criterion: measures-intent
+    verdict: pass
+    reason: >-
+      The check is ruff's own finding count from its SARIF
+      (packages/sarif/fragments/sarif.yaml:69-72), run with the repository's
+      ruff.toml (.seikika/seikika.yaml:379-401), so passing means "ruff finds
+      nothing". The previous scope caveat is fixed: the globs now include
+      examples/acme-live/deploy/*.py (.seikika/seikika.yaml:401), and every
+      tracked Python file outside experiments/ matches one of the three globs
+      (scripts/take-it-out.py, examples/acme-live/deploy/facade.py,
+      examples/reference-portal/tools/validate.py among them).
+  - criterion: hard-to-game
+    verdict: fail
+    reason: >-
+      The inline routes are closed: with --ignore-noqa
+      (.seikika/seikika.yaml:394-396) ruff 0.14.0 still reports F401 under `#
+      noqa: F401`, `# ruff: noqa` and `# ruff: noqa: F401` (I ran each). The
+      route left is one line in ruff.toml: a `[lint.per-file-ignores]` entry
+      or a `[lint] ignore` makes the finding vanish from the SARIF, so it is
+      in neither `active` nor `total` and the ratchet can't see it (I checked:
+      zero results). The fix asks for "a comment saying why"
+      (.seikika/seikika.yaml:403-407), but nothing checks that, and
+      .github/CODEOWNERS covers only .github/, not ruff.toml.
+    suggestion: >-
+      Add ruff.toml to .github/CODEOWNERS so an ignore needs an owner's
+      review. Have the workspace connector report ruff.toml ignore entries
+      without a comment line above them, and fail this rule (or a sibling
+      rule) on any.
+  - criterion: fix-leads-to-pass
+    verdict: pass
+    reason: >-
+      The evidence lists `line N: RULE message` per finding
+      (packages/sarif/fragments/sarif.yaml:74-77), the record's `command`
+      reruns ruff alone (sarif.yaml:35-37), and the fix names
+      `[lint.per-file-ignores]` in ruff.toml for deliberate style and warns
+      that `# noqa` won't help (.seikika/seikika.yaml:403-407). Fixing or
+      ignoring the listed findings passes, as the fixtures show
+      (.seikika/tests/standards.test.yaml:1093-1102).
+  - criterion: threshold-justified
+    verdict: pass
+    reason: >-
+      There is no tuned number. The one level, `clean`, means zero findings,
+      and `newEntitiesAtLeast: clean`
+      (packages/sarif/fragments/sarif.yaml:66-70) matches the scorecard's own
+      description, "a new file must arrive clean" (sarif.yaml:49-52).
+summary: >-
+  Re-assessed after the rule gained a rationale: its check, evidence, fix
+  and level are the same as on main, as is the code the reasons cite, so
+  the verdicts stand; line numbers are updated for the rationale lines
+  inserted above them. The rationale states the why without claiming more
+  than the check sees. A faithful carrier for ruff that now covers all the
+  maintained Python, and --ignore-noqa closes every inline suppression. A
+  one-line ignore in ruff.toml, with no reason and no required reviewer,
+  still hides a finding from every count.
