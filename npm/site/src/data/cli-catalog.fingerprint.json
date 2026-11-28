@@ -1273,7 +1273,7 @@
       "inputSchema": {
         "properties": {
           "fields": {
-            "description": "Comma-separated",
+            "description": "Comma-separated fields to return (default: every visible field)",
             "type": "string"
           },
           "id": {
