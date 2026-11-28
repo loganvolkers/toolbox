@@ -66,7 +66,8 @@ echo "   write-readme succeeded, verified: $(echo "$OUT" | field "['verification
 
 echo "2. a stale preview and invalid inputs are refused"
 TOKEN=$(run "$WORK/alpha" write-readme -i text='A second README for alpha.' | field "['confirm_token']")
-echo "# changed meanwhile, by someone else" >"$WORK/alpha/README.md"
+# Change the word-count fact used in the preview basis.
+echo "# changed meanwhile, by another local author" >"$WORK/alpha/README.md"
 set +e
 OUT=$(run "$WORK/alpha" write-readme -i text='A second README for alpha.' --confirm "$TOKEN" 2>&1)
 CODE=$?

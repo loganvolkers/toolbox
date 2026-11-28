@@ -542,7 +542,7 @@ enum ToolsCommand {
         /// The repository root.
         #[arg(default_value = ".")]
         path: PathBuf,
-        /// The portal to compare with (default: the root's seikika.yaml, .seikika/seikika.yaml, or .seikika/seikika.yaml).
+        /// The portal to compare with (default: the root's seikika.yaml, .seikika/seikika.yaml, or portal/seikika.yaml).
         #[arg(long)]
         portal: Option<PathBuf>,
         /// Output format.
@@ -579,7 +579,7 @@ enum Format {
     Json,
 }
 
-/// A reader that closed the pipe (`seikika describe .seikika . | head`) ends the command quietly,
+/// A reader that closed the pipe (`seikika describe portal . | head`) ends the command quietly,
 /// with the status a process killed by SIGPIPE has, instead of a panic and a backtrace.
 fn quiet_on_closed_pipe() {
     let default = std::panic::take_hook();
