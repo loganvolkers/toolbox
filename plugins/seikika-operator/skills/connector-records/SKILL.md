@@ -11,7 +11,7 @@ description: >-
 3. To check a finding, run the record's `command` yourself. The box must give the same findings as the tool; `scripts/take-it-out.py` checks every record this way.
 
 ```
-seikika connector records --portal portal --name ci-lint
+seikika connector records --portal .seikika --name ci-lint
 ```
 
 It prints records only; nothing is scored or written. If it fails, the connector name is wrong or its program isn't installed.

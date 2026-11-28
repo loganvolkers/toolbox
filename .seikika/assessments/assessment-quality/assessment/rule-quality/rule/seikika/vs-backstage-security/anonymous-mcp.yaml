@@ -1,0 +1,45 @@
+apiVersion: seikika.com/assessment/v1
+entity: assessment:rule-quality/rule:seikika/vs-backstage-security/anonymous-mcp
+rubric: assessment-quality
+subjectHash: ec5ef4cc8e27
+assessor: {kind: agent, name: cursor-reviewer-16, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: supported
+    verdict: fail
+    reason: >-
+      The code citations in
+      .seikika/assessments/rule-quality/rule/seikika/vs-backstage-security/anonymous-mcp.yaml
+      land. surface.py:159-160 posts tools/list with no credentials.
+      mcp.rs:1007-1009 returns 202 for notifications, and mcp.rs:1010-1013
+      calls `state.caller` before the method match at 1015. access.rs:32-51 is
+      `caller`, RESEARCH.md:177-192 is F6, and RESULTS.md:181 has 401 for
+      both. The rationale is backstage-comparison.yaml:493-494. The exception
+      is "Single bronze level per D01M857ZB468ZM2YS6GNSEG6YB9": that decision
+      defines standings and says nothing about levels. The level is
+      backstage-comparison.yaml:458.
+    suggestion: >-
+      Cite backstage-comparison.yaml:458 for the single bronze level.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      All four passes are right. /mcp is the only MCP route (routes.rs:70),
+      and the identity check precedes every method, so the tools/list probe
+      stands for initialize and tools/call too. The fix names the right file
+      and mechanism.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      Each verdict rests on mcp.rs:1004-1015 and surface.py:159-160, which
+      read unambiguously.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      There are no fail or unsure verdicts in
+      .seikika/assessments/rule-quality/rule/seikika/vs-backstage-security/anonymous-mcp.yaml,
+      so no suggestion is needed.
+summary: >-
+  The verdicts are right, and the mcp.rs citations land exactly: the
+  identity check precedes dispatch, so one probe covers every method. The
+  only miss is attributing the single bronze level to
+  D01M857ZB468ZM2YS6GNSEG6YB9, which doesn't set levels.

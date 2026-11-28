@@ -1,0 +1,81 @@
+apiVersion: seikika.com/assessment/v1
+entity: scorecard:seikika/maintainer-advisories
+rubric: scorecard-quality
+subjectHash: 9b5157c502ec
+assessor: {kind: agent, name: cursor-assessor-24, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: one-concern
+    verdict: pass
+    reason: >-
+      One rule, `no-findings`, over one kind, `Lockfile`, with one tool,
+      osv-scanner 2.7.1, on one file, `Cargo.lock`, and track `maintainer`
+      (.seikika/seikika.yaml:414-442). The audience is the maintainers who
+      ship that lockfile. The concern is unexplained RustSec advisories,
+      scored offline so a result changes only when the pin moves
+      (D01M885GT32STM506V32XKPP37G). It does not also measure speed, and it is
+      not the comparison card: `vs-backstage-supply-chain` counts `knownVulns`
+      and `highVulns` for a benchmark
+      (.seikika/standards/backstage-comparison.yaml), a different audience.
+  - criterion: levels-are-a-ladder
+    verdict: pass
+    reason: >-
+      There is one level, `clean`, with `ratchet: {newEntitiesAtLeast: clean}`
+      and a campaign `maintainer-advisories-zero`
+      (packages/sarif/fragments/sarif.yaml:67-68, sarif.yaml:86-94). That is
+      the SARIF slot's shape: the tool owns the advisory rules, and the box
+      adds clean plus a ratchet that blocks a new finding
+      (packages/sarif/seikika-package.yaml:1-8). There is no second rung to
+      mix, and no gold that is cheaper than bronze. Clean is reached now. The
+      fixture `Cargo.lock` has `active: 0` and the standards test expects a
+      pass (.seikika/fixtures/maintainer-advisories.ndjson,
+      .seikika/tests/standards.test.yaml:1107-1110). `.seikika/results.json`
+      stores `"maintainer-advisories": {}`, which is what a card whose floor
+      is its only level looks like when nothing fails: clean entities are
+      omitted (crates/seikika-cli/src/report.rs:437-455), the same way
+      `"maintainer-python": {}` is stored.
+  - criterion: no-obvious-gap
+    verdict: fail
+    reason: >-
+      The decision's own leftover is still open. O5 and
+      D01M885GT32STM506V32XKPP37G §5 cover `Cargo.lock` only and say the npm
+      lockfiles need a second pinned database, GitHub's advisories
+      (docs/design/openssf-template.md:123). This repo ships three:
+      `ui/package-lock.json`, `site/package-lock.json` and
+      `scripts/playwright-ci/package-lock.json`, and the glob is only
+      `Cargo.lock` (.seikika/seikika.yaml:435). A second gap is inside the
+      Cargo scope the card does claim. The decision requires every accepted
+      advisory to carry a reason and no `effectiveUntil`, but the only rule is
+      the scanner's finding count, and osv-scanner drops ignores from the
+      SARIF (packages/sarif/README.md:50), so a reasonless or expiring ignore
+      is invisible. The experiments' lockfiles are excluded on purpose
+      (.seikika/seikika.yaml:417-418); that one is not the gap.
+    suggestion: >-
+      When a GitHub advisory snapshot can be pinned the way
+      `scripts/ci-tools.sh rustsec-osv` pins RustSec, add a second include of
+      `packages/sarif` for the three shipped npm lockfiles, with its own name
+      and kind. Add a rule, beside `no-findings`, that each `[[IgnoredVulns]]`
+      in osv-scanner.toml has a non-empty `reason` and no `effectiveUntil`.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      The failing fixture's evidence is one line naming the advisory and the
+      package, `line 0: RUSTSEC-2026-0543 Package 'chrono@0.4.45' is
+      vulnerable to 'RUSTSEC-2026-0543'.`
+      (.seikika/tests/standards.test.yaml:1111-1118). The record carries the
+      command that reruns osv-scanner on that lockfile alone
+      (.seikika/fixtures/maintainer-advisories.ndjson). The fix says to
+      upgrade that crate, or to ignore the id in osv-scanner.toml with a
+      reason and without an expiry (.seikika/seikika.yaml:437-442). The paired
+      fixture is the root `Cargo.lock` after the two justified chrono ignores,
+      and it passes. I did not re-run osv-scanner on this machine; the fixture
+      pair is the recorded before and after, and the decision records the same
+      two findings on 2026-11-25 (D01M885GT32STM506V32XKPP37G §3).
+summary: >-
+  maintainer-advisories is one concern for maintainers: Cargo.lock has no
+  advisory osv-scanner still reports, offline, against one pinned RustSec
+  snapshot. One level, clean, is the SARIF slot's whole ladder, and the
+  shipped lockfile is there. Two things the decision itself names are
+  missing: the npm lockfiles this repo ships, and any check that an ignore
+  in osv-scanner.toml has a reason and no expiry. The evidence names the
+  crate and the id, and the fix tells an agent where to change it.

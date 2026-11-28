@@ -1,0 +1,53 @@
+apiVersion: seikika.com/assessment/v1
+entity: rule:seikika/maintainer-ci-reliability/main-not-stuck-red
+rubric: rule-quality
+subjectHash: 76a61efe7315
+assessor: {kind: agent, name: cursor-assessor-09, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: measures-intent
+    verdict: pass
+    reason: >-
+      `failingStreak` is the number of newest decided runs that failed in a
+      row, skipping cancelled and skipped runs
+      (crates/seikika-connector-github/src/runs.rs:66-69, 91). Below 3 means
+      the branch went green since its last two failures, which is what "not
+      stuck red" says. The fixture of this repository's real 11-run streak
+      fails it (.seikika/tests/standards.test.yaml:155-166).
+  - criterion: hard-to-game
+    verdict: pass
+    reason: >-
+      Only a decided run that didn't fail ends the streak. Cancelling runs
+      doesn't help, because cancelled runs are not decided (runs.rs:9-10).
+      Re-running a deterministic break fails again. A flaky failure that
+      passes on a re-run does end the streak (runs.rs:66-69 reads only the
+      final conclusion), but then the branch genuinely isn't broken, and
+      fail-rate-under-20 still counts that run as a first-try failure
+      (runs.rs:59-65).
+  - criterion: fix-leads-to-pass
+    verdict: pass
+    reason: >-
+      The evidence gives the streak, branch, last run time and up to 5
+      failed-run URLs (runs.rs:84-90;
+      packages/github-actions/fragments/github-actions.yaml:355-358). The fix
+      sends the agent to those runs and to .github/workflows/ or the code. One
+      green run on the branch resets the streak to 0, so fixing the cause is
+      enough.
+  - criterion: threshold-justified
+    verdict: unsure
+    reason: >-
+      The only source for "3" is the rule's own rationale, "three in a row
+      means the break is not being fixed" (github-actions.yaml:363-366).
+      docs/design/thresholds.md has no row for it: its ladder lists "not stuck
+      red" without a number (line 57). Nothing records whether 3 was chosen or
+      measured, for example against the 11-run streak in
+      docs/design/github-actions-standards.md:121.
+    suggestion: >-
+      Add a main-not-stuck-red row to docs/design/thresholds.md that labels 3
+      as chosen (or measured) with its reason, and consider making it a
+      package parameter like the fail-rate bounds.
+summary: >-
+  A clear, hard-to-game bronze rule: the streak counts only decided runs
+  and is reset only by a run that didn't fail, and its evidence links the
+  runs to open. The one open item is that the number 3 is justified only
+  in the rule's own rationale, not in thresholds.md.

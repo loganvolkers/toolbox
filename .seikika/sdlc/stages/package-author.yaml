@@ -1,0 +1,121 @@
+# Package author SDLC stages (docs/design/package-author-sdlc.md, D87). Like the maintainer SDLC
+# until test, then it forks: a package is tested against released Seikika versions and distributed
+# to consumers instead of merged into one repository.
+records:
+  - id: package-author/author
+    layer: package-author
+    name: author
+    order: 1
+    intent: >-
+      Write standards (kinds, scorecards, rubrics, skills) as a package with
+      typed parameters.
+    exitCriterion: >-
+      A package manifest validates and its fragments validate against the
+      manifest schema.
+    commands: [seikika validate]
+    checks: [packages/github-actions/seikika-package.yaml]
+    docs: [docs/design/packages.md, packages/github-actions/README.md]
+    status: partial
+    gaps: [no scaffold (seikika package new)]
+  - id: package-author/build-connector
+    layer: package-author
+    name: build-connector
+    order: 2
+    intent: >-
+      Build a connector outside this repository, in any language, against the
+      connector protocol.
+    exitCriterion: >-
+      The connector passes the conformance kit as a standalone executable or
+      WASM component.
+    commands: [seikika connector test, seikika connector drive, seikika install]
+    checks:
+    - crates/seikika-connect/src/conformance.rs
+    - crates/seikika-cli/tests/install.rs
+    docs:
+    - examples/connector-scaffold/README.md
+    - docs/design/connector-control.md
+    - docs/design/package-author-sdlc.md
+    - npm/site/src/content/docs/authors/connectors.md
+    status: partial
+    gaps:
+    - >-
+      the Rust SDK (seikika-connect) is not published; no SDK for other
+      languages
+    - no `seikika connector new` generator (directory scaffold exists)
+    - no workflow builds or tests examples/connector-scaffold
+    - no WASM component connectors yet
+  - id: package-author/test
+    layer: package-author
+    name: test
+    order: 3
+    intent: >-
+      Prove the package's rules both ways on its fixtures, on every Seikika
+      version it claims to support.
+    exitCriterion: >-
+      seikika test passes for each supported Seikika release and platform;
+      meta bronze for every exported rule.
+    commands:
+    - seikika test packages/github-actions/tests
+    - seikika connector test
+    checks:
+    - packages/github-actions/tests/standards.test.yaml
+    - .github/workflows/ci.yml
+    docs: [docs/design/package-author-sdlc.md]
+    status: partial
+    gaps:
+    - >-
+      no released Seikika versions to test against (maintainer/release is
+      missing)
+    - no compatibility matrix or `seikika` version range in a package
+  - id: package-author/package
+    layer: package-author
+    name: package
+    order: 4
+    intent: >-
+      Produce one deterministic archive with fragments, fixtures, tests,
+      skills, connector artifacts and tool requirements.
+    exitCriterion: >-
+      The same source produces the same archive digest; tool requirements are
+      pinned with checksums.
+    commands: []
+    checks: []
+    docs: [docs/design/packages.md]
+    status: missing
+    gaps:
+    - >-
+      git packages are pinned by content hash; no deterministic archive for
+      OCI mirrors yet
+  - id: package-author/distribute
+    layer: package-author
+    name: distribute
+    order: 5
+    intent: >-
+      Release the archive and connector binaries so consumers can pin and
+      verify them.
+    exitCriterion: >-
+      A tag publishes attested artifacts, mirrored to OCI, and consumers
+      resolve them by digest.
+    commands: []
+    checks: []
+    docs: [docs/design/packages.md]
+    status: missing
+    gaps:
+    - registry undecided (Q15)
+    - no release workflow, attestations or installers for connector binaries
+  - id: package-author/adopt
+    layer: package-author
+    name: adopt
+    order: 6
+    intent: >-
+      Show a consumer what an upgrade changes before it lands, and roll it out
+      across a fleet.
+    exitCriterion: >-
+      seikika plan shows entities whose level changes for a package upgrade; a
+      fleet rollout opens one PR per repository.
+    commands: [seikika plan --local]
+    checks: [actions/report/action.yml]
+    docs: [docs/design/federation.md]
+    status: designed
+    gaps:
+    - plan compares local manifests only; no remote package resolution
+    - no fleet rollout workflow (gh-aw or otherwise)

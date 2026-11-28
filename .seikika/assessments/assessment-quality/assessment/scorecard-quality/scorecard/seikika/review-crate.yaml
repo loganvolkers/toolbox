@@ -1,0 +1,66 @@
+apiVersion: seikika.com/assessment/v1
+entity: assessment:scorecard-quality/scorecard:seikika/review-crate
+rubric: assessment-quality
+subjectHash: b059be0bc0b0
+assessor: {kind: agent, name: cursor-reviewer-38, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: supported
+    verdict: fail
+    reason: >-
+      The quotes in
+      .seikika/assessments/scorecard-quality/scorecard/seikika/review-crate.yaml
+      exist, but the scorecard line numbers are the file from before
+      few-unwraps and the later crate rules.
+      .seikika/standards/crates.yaml:348 is the title, not ratchet: {advisory:
+      true} (that is :372). :326-330 is the end of simple-functions and the
+      few-unwraps name, not the description (:350-354). :331-337 is the
+      few-unwraps check and fix, not the stale-review rationale (:360-361).
+      The five rules are :375-453, not :351-426. Bronze is :375-388, silver is
+      :389-401, and independently-reviewed is :433-453, not :409-426. The
+      silver fix's opening sentence is :394-397 and the brief command is
+      :441-445, not :357-374 and :417-421. What is still exact:
+      reviewIndependent at :84-92, the hash description at :51-54, source_hash
+      at crates/seikika-connector-workspace/src/rust.rs:395,
+      docs/design/thresholds.md:55 and :63-70, and the fixtures at
+      .seikika/tests/standards.test.yaml:916-941. The "14 bronze, 1 gold, 2
+      out of scope" count is not in .seikika/results.json, which has no
+      review-crate block.
+    suggestion: >-
+      Re-cite the review-crate block at
+      .seikika/standards/crates.yaml:347-453, in particular the ratchet at
+      :372, the description at :350-354, the rationale at :355-361, and the
+      five rules at :375-453. Drop the level counts, or point at a results
+      file that still contains them.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      Read at the current lines, the four passes hold. All five rules read the
+      crate-design review (.seikika/standards/crates.yaml:375-453), the card
+      is advisory (:372) for the reason at :360-361, and each gold rule adds a
+      current review plus a further fact, as docs/design/thresholds.md:55
+      states. The hash description matches source_hash
+      (crates/seikika-connector-workspace/src/rust.rs:392-395). Assessor names
+      are recorded as unchecked at docs/design/thresholds.md:63-70. The silver
+      and gold fixes name the brief command (:394-397, :441-445). No fixture
+      in .seikika/tests/standards.test.yaml:916-941 is pinned at silver, which
+      the assessment already says is untested rather than incoherent.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      A second assessor who opens the review-crate block, rather than the
+      stale line numbers, passes all four criteria. The self-declared assessor
+      name is a documented limit (docs/design/thresholds.md:63-70), not an
+      open judgement about this card.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      The reviewed file has no fail or unsure verdict
+      (.seikika/assessments/scorecard-quality/scorecard/seikika/review-crate.yaml),
+      so there is no suggestion that would need to change one. The fixes it
+      describes, at the current lines, name the brief command an agent runs.
+summary: >-
+  The verdicts match the current card, but the line numbers for the
+  scorecard body point at few-unwraps and the wrong rules. The hash field,
+  source_hash, the thresholds and the fixtures are cited correctly. The
+  14/1/2 level count is not in .seikika/results.json.

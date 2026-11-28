@@ -70,7 +70,7 @@ try {
   if (published) checkProvenance(npm, installed);
 
   mkdirSync(join(work, "src/pages"), { recursive: true });
-  copyFileSync(new URL("../report-ui/fixtures/starter-empty.json", import.meta.url), join(work, "report.json"));
+  copyFileSync(new URL("../npm/report-ui/fixtures/starter-empty.json", import.meta.url), join(work, "report.json"));
   writeFileSync(join(work, "astro.config.mjs"), `
 import { defineConfig } from "astro/config";
 import seikikaReport from "@seikika/astro-report";

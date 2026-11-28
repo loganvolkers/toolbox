@@ -1,0 +1,53 @@
+apiVersion: seikika.com/assessment/v1
+entity: assessment:rule-quality/rule:seikika/meta-rule/decided-on-fixtures
+rubric: assessment-quality
+subjectHash: ac7efa49ba18
+assessor: {kind: agent, name: cursor-reviewer-02, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: supported
+    verdict: pass
+    reason: >-
+      The citations in
+      .seikika/assessments/rule-quality/rule/seikika/meta-rule/decided-on-fixtures.yaml
+      resolve. The outcome buckets are meta.rs:140-146, the rationale
+      meta.yaml:464-466, both-outcomes 468-480 and the evidence 460-462. The
+      fix is meta.yaml:463. The ratchet floor is
+      scorecards-for-scorecards.md:117-119 and L10 is line 90. The only test
+      is standards.test.yaml:242-252. One example is weaker than stated.
+      rule:demo/sprawling/everything (surfaces.ndjson line 20) is a
+      hand-written record: its "3 unknown" was not derived from any demo
+      fixtures, and its `check.fields` reads `["a","b"]`, so "because they
+      have no `items` or `size`" is inferred, not shown. The verdict doesn't
+      rest on it. The evidence and fix text alone show that the evidence
+      reports unknowns and the fix never mentions the checked fields.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      The verdicts are right. Unknown only arises when a rule's data is
+      missing, so the evidence's "n unknown" points at records that exist, and
+      "Add fixture records the rule applies to" (meta.yaml:463) never says to
+      supply the fields the check reads. That fits the rubric's "the rule
+      needs data the fix doesn't mention" (meta.yaml:1171-1172). results.json
+      has no live rule failing it.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      The fix-leads-to-pass fail is a reading of the fix text, but the rubric
+      names this exact case (meta.yaml:1171-1172). The other three verdicts
+      rest on meta.rs:140-146 and the cited docs.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      The fix-leads-to-pass suggestion names the place
+      (fixtures/<connector>.ndjson, the layout in
+      crates/seikika-store/src/lib.rs:171) and the missing instruction (set
+      the fields the check reads). It also adds `entity.check.fields` to the
+      evidence, so the evidence names those fields. That would make the fix
+      sufficient and flip the verdict.
+summary: >-
+  Trustworthy. The fix-leads-to-pass fail is well founded and its
+  suggestion would flip it. Its illustrating example, the synthetic
+  demo/sprawling/everything record, is a hand-written fixture whose
+  unknown count can't show why it is unknown. Other line citations are
+  exact.

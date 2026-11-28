@@ -1,0 +1,53 @@
+apiVersion: seikika.com/assessment/v1
+entity: assessment:rule-quality/rule:seikika/maintainer-crate/no-huge-functions
+rubric: assessment-quality
+subjectHash: 99526cfe2b38
+assessor: {kind: agent, name: cursor-reviewer-07, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: supported
+    verdict: pass
+    reason: >-
+      The citations in
+      .seikika/assessments/rule-quality/rule/seikika/maintainer-crate/no-huge-functions.yaml
+      hold. `lines_of` spans first to last token
+      (crates/seikika-connector-workspace/src/rust.rs:70-72), and an item's
+      span includes its outer attributes, so doc comments count
+      (rust.rs:160-165). change_run is reported at
+      crates/seikika-exec/src/executor/change.rs:337, with three `///` lines,
+      an attribute at 340 and `fn` at 341. The evidence, fix and links are
+      .seikika/standards/crates.yaml:265-267, 268 and 273-275. `public` counts
+      only `pub` items (rust.rs:114-125). 150 lines appears at
+      docs/design/seikika-for-seikika.md:89-90 and :103 with no reason.
+      thresholds.md has no row for it. A connector rerun gives the four
+      failing crates as named, with the longest at 472 lines (seikika-derive
+      Pipeline::run).
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      The rerun backs up hard-to-game. seikika-api's `explain`
+      (crates/seikika-api/src/reads.rs:198) measures exactly 151, so dropping
+      one blank line would pass that function today. The crate still fails on
+      `markdown` (378) and `run_tool` (218), so the reason's crate-level claim
+      stands. measures-intent fails because docs count, fix-leads-to-pass
+      passes, and threshold-justified fails because 150 is stated but never
+      justified (docs/design/thresholds.md:13-16 asks every number to be
+      measured or labelled chosen).
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      The measure is in rust.rs:70-72 and 160-165, and the change.rs:337
+      against 341 offset is visible in the source. The missing thresholds.md
+      row is a fact. A second assessor would reach the same verdicts.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      Counting only the body's code lines stops docs from counting, which
+      fixes measures-intent, and makes deleting comments useless, which fixes
+      hard-to-game. A thresholds.md row, measured or labelled chosen, turns
+      threshold-justified into a pass.
+summary: >-
+  An accurate assessment. Function length really does include doc comments
+  and attributes, the citations and live numbers check out, and 150 has no
+  stated reason. One live function (`explain`, 151 lines) is a single
+  blank line over the bound, which bears out the hard-to-game fail.

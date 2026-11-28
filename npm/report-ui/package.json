@@ -1,0 +1,41 @@
+{
+  "name": "@seikika/astro-report",
+  "version": "0.1.2",
+  "description": "Astro integration for publishing Seikika catalog and scorecard snapshots.",
+  "license": "MIT",
+  "type": "module",
+  "engines": { "node": ">=22" },
+  "repository": { "type": "git", "url": "https://github.com/seikika/seikika.git", "directory": "npm/report-ui" },
+  "publishConfig": { "access": "public" },
+  "files": ["integration.mjs", "integration.d.mts", "src"],
+  "exports": {
+    ".": { "types": "./integration.d.mts", "default": "./integration.mjs" },
+    "./app": "./src/ReportApp.vue",
+    "./types": {"types": "./src/public-types.ts"},
+    "./page.astro": "./src/report.astro",
+    "./default-layout.astro": "./src/layouts/DefaultLayout.astro"
+  },
+  "scripts": {
+    "check": "vue-tsc --noEmit",
+    "build": "astro build && node scripts/embed.mjs",
+    "fixtures": "scripts/fixtures.sh",
+    "storybook": "storybook dev -p 6006 --no-open",
+    "build-storybook": "storybook build -o storybook-static --quiet",
+    "probe": "node scripts/probe.mjs storybook-static",
+    "smoke": "node scripts/smoke.mjs"
+  },
+  "dependencies": { "@astrojs/vue": "7.1.6", "@seikika/ui": "workspace:^" },
+  "peerDependencies": { "astro": "^7.0.0", "vue": "^3.5.0" },
+  "devDependencies": {
+    "@storybook/vue3-vite": "10.6.8",
+    "@vitejs/plugin-vue": "^6.0.0",
+    "astro": "7.4.13",
+    "axe-core": "4.14.1",
+    "playwright": "1.65.1",
+    "storybook": "10.6.8",
+    "typescript": "5.9.3",
+    "vite": "8.3.8",
+    "vue": "^3.5.0",
+    "vue-tsc": "^3.0.0"
+  }
+}

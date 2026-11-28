@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
-# Regenerate site/.generated the same way .github/workflows/pages.yml does.
+# Regenerate npm/site/.generated the same way .github/workflows/pages.yml does.
 #
 # Pages CI installs actionlint 1.7.12, osv-scanner 2.7.1 and the pinned RustSec database
 # (scripts/ci-tools.sh), then zizmor and ruff from the portal's
 # pins (seikika tools install),
 # runs seikika doctor, then:
-#   seikika report portal --skip runner,github-actions --baseline portal/results.json -o web --out site/.generated
+#   seikika report .seikika --skip runner,github-actions --baseline .seikika/results.json -o web --out npm/site/.generated
 # Without those pins, ci-lint rules become `unknown` and the preview diverges from CI
 # (D01M7YAXH89ZJQ7Q4HP77NMHBX8). Use this script instead of a bare report command.
 #
@@ -22,13 +22,13 @@ pnpm build
 cargo build --locked
 # zizmor and ruff from the portal's own pins (tools:), with uv, pipx or pip: whichever is here.
 export PATH="${HOME}/.local/bin:$PATH"
-target/debug/seikika tools install portal
+target/debug/seikika tools install .seikika
 
 actionlint -version
 zizmor --version
 ruff --version
 osv-scanner --version
 
-target/debug/seikika doctor portal
-target/debug/seikika report portal --skip runner,github-actions --baseline portal/results.json -o web --out site/.generated
-echo "wrote site/.generated/report.json for the Astro report integration"
+target/debug/seikika doctor .seikika
+target/debug/seikika report .seikika --skip runner,github-actions --baseline .seikika/results.json -o web --out npm/site/.generated
+echo "wrote npm/site/.generated/report.json for the Astro report integration"

@@ -1,0 +1,49 @@
+apiVersion: seikika.com/assessment/v1
+entity: assessment:rule-quality/rule:seikika/maintainer-docs/links-resolve
+rubric: assessment-quality
+subjectHash: 8ae1fb006767
+assessor: {kind: agent, name: cursor-reviewer-31, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: supported
+    verdict: pass
+    reason: >-
+      .seikika/assessments/rule-quality/rule/seikika/maintainer-docs/links-resolve.yaml
+      matches the resolver. links_in drops fenced and inline code
+      (crates/seikika-connector-workspace/src/main.rs:301-306) and matches
+      inline targets, keeping the fragment out of the capture (main.rs:298),
+      so anchors, reference-style definitions and href attributes are not
+      checked. The unit test is
+      root_relative_links_resolve_from_the_repository_root at main.rs:1372.
+      Evidence is the target string (docs.yaml:105, main.rs:313-315). The
+      fixture's ./missing.md is .seikika/fixtures/workspace.ndjson:9, and
+      standards.test.yaml:43-47 expects links-resolve to fail. Bronze is
+      docs.yaml:84-89 and seikika-for-seikika.md:104. The anchored file
+      targets in the scored docs, including docs/plan.md and docs/v1-spec.md,
+      point at headings that exist.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      Passing measures-intent matches the rationale, which is a file move or
+      rename (docs.yaml:106-108), not anchors. hard-to-game passes because
+      backticks and deletion remove the link the fix allows. The fix names the
+      evidence targets, and there is no number. The unchecked anchor cases are
+      named and do not flip a criterion the rationale scopes to paths.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      The four passes follow from the regex and the rationale text. A second
+      assessor who wants anchors in scope is arguing with docs.yaml:106-108,
+      which states the file-move intent the check implements.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      All four verdicts in
+      .seikika/assessments/rule-quality/rule/seikika/maintainer-docs/links-resolve.yaml
+      are pass, so there is no suggestion to apply. The anchor gap is
+      described as latent and is not attached to a fail.
+summary: >-
+  Trustworthy. The resolver, the fixture failure, and the bronze rationale
+  are where the assessment cites them, and the four passes match that
+  scope. Anchors are unchecked, as the reason says, and the file targets
+  that do carry fragments still point at real headings.

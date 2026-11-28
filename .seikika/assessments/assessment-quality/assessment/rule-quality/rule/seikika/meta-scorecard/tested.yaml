@@ -1,0 +1,34 @@
+apiVersion: seikika.com/assessment/v1
+entity: assessment:rule-quality/rule:seikika/meta-scorecard/tested
+rubric: assessment-quality
+subjectHash: 35ee60991510
+rubricHash: e30700fc6322cf9f05a301bb4638d6708e9f5eb5aea0281911229ce75bd37bf7
+assessor: {kind: agent, name: codex-astra-self, model: gpt-6.2-astra}
+at: 2026-11-27
+verdicts:
+  - criterion: supported
+    verdict: pass
+    reason: >-
+      crates/seikika-derive/src/testing.rs discards skipped cards even after a
+      successful level comparison, and crates/seikika-cli/src/meta.rs credits
+      only the card named in the surviving comparison.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      packages/meta-scoring/fragments/catalog.yaml directs the author to pin
+      an in-scope fixture level or rule outcome, matching the implementation.
+      It requires one such observation at bronze and rule-by-rule coverage at
+      silver.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      The skipped fixture for maintainer-crate in
+      .seikika/tests/standards.test.yaml exercises the previously missed case.
+      Tracing it through crates/seikika-derive/src/testing.rs shows that it
+      cannot confer coverage on its own.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      .seikika/assessments/rule-quality/rule/seikika/meta-scorecard/tested.yaml
+      contains four passes and no attached suggestions that could lead the
+      reader to change an unrelated entity.

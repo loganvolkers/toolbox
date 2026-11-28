@@ -4,7 +4,7 @@
 and measured Seikika at `581be50`. Rounds 1 and 2 ran on the harness frozen at `dfeeea4`. The
 adjudication of rounds 1 and 2 is [ADJUDICATION.md](./ADJUDICATION.md); round 3 answers it. Raw
 results for every round are in [results/](./results); the product records the scorecards read are
-[portal/comparisons/](../../portal/comparisons). The adjudication of round 3 is
+[.seikika/comparisons/](../../.seikika/comparisons). The adjudication of round 3 is
 [ADJUDICATION.md § Round 3](./ADJUDICATION.md#round-3). It upholds the factor verdict and fails one
 rule, credential isolation, which this write-up and the records now score as it found.*
 

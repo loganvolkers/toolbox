@@ -38,9 +38,10 @@
 //! - `storybook` (`storybooks` globs): one per Storybook `main.*` config, with deps, a11y addon,
 //!   telemetry, story files and CI build/test signals (packages/storybook);
 //! - `json-schema` (`schemas` globs): one per JSON Schema document, with its dialect, id and
-//!   whether the binary compiles it (docs/design/schema-standards.md);
+//!   whether a file listed in `schemaSources` names it (docs/design/schema-standards.md);
 //! - `site-page` (`pages` globs): one per Starlight content page, with its title, sidebar reach,
-//!   links and secret shapes (docs/design/site-standards.md);
+//!   links and secret shapes (docs/design/site-standards.md). `siteDir` sets the project directory
+//!   used to locate connector and package guides (default `site`);
 //! - `example` (`examples` globs): one per example or experiment write-up, with its links and the
 //!   command that checks it (docs/design/example-standards.md);
 //! - `portal` (`portals` globs, usually `**/.seikika/seikika.yaml`): one per child portal a parent
@@ -129,10 +130,12 @@ struct Workspace {
     standard_packages: Vec<Regex>,
     /// JSON Schema documents (`json-schema` records), usually `schema/*.json`.
     schemas: Vec<Regex>,
+    schema_sources: Vec<String>,
     /// Example and experiment write-ups (`example` records).
     examples: Vec<Regex>,
     /// Starlight content pages (`site-page` records).
     pages: Vec<Regex>,
+    site_dir: String,
     /// Expo app configs (`expo-app` records), e.g. `apps/*/app.json`.
     expo_apps: Vec<Regex>,
     /// Storybook main configs (`storybook` records), e.g. `**/.storybook/main.*`.
@@ -366,6 +369,11 @@ impl Workspace {
             cfg["lastChange"].as_bool().unwrap_or(true),
             std::sync::atomic::Ordering::Relaxed,
         );
+        let schema_sources = match cfg.get("schemaSources") {
+            Some(value) => serde_json::from_value(value.clone())
+                .map_err(|e| format!("schemaSources must be a list of file paths: {e}"))?,
+            None => vec!["crates/seikika-model/src/schema.rs".to_owned()],
+        };
         Ok(Workspace {
             root: PathBuf::from(cfg["root"].as_str().unwrap_or(".")),
             exclude: globs(&cfg, "exclude")?,
@@ -383,8 +391,10 @@ impl Workspace {
             packages: globs(&cfg, "packages")?,
             standard_packages: globs(&cfg, "standardPackages")?,
             schemas: globs(&cfg, "schemas")?,
+            schema_sources,
             examples: globs(&cfg, "examples")?,
             pages: globs(&cfg, "pages")?,
+            site_dir: cfg["siteDir"].as_str().unwrap_or("site").to_owned(),
             expo_apps: globs(&cfg, "expoApps")?,
             storybooks: globs(&cfg, "storybooks")?,
             portals: globs(&cfg, "portals")?,
@@ -833,7 +843,7 @@ impl Workspace {
     }
 
     fn connector_record(&self, rel: &str) -> Value {
-        let mut rec = connectors::analyse(&self.root, rel);
+        let mut rec = connectors::analyse(&self.root, rel, &self.site_dir);
         if let Some(obj) = rec.as_object_mut() {
             obj.insert("lastChange".into(), json!(last_change(&self.root, rel)));
         }
@@ -950,7 +960,7 @@ impl Workspace {
             out.record(
                 "json-schema",
                 &format!("json-schema:{rel}"),
-                specs::analyse(&self.root, rel),
+                specs::analyse(&self.root, rel, &self.schema_sources),
             );
         }
         out.snapshot_complete("json-schema");
@@ -990,7 +1000,7 @@ impl Workspace {
             "path": rel,
             "name": manifest["name"].as_str().unwrap_or_default(),
             "version": manifest["version"].as_str().unwrap_or_default(),
-            "publicGuide": site::public_guide(&self.root, "packages", slug),
+            "publicGuide": site::public_guide(&self.root, &self.site_dir, "packages", slug),
         })
     }
 
@@ -1321,7 +1331,11 @@ impl Workspace {
     fn refresh_schema(&self, id: &str, out: &mut Out) {
         let rel = id.strip_prefix("json-schema:").unwrap_or("");
         if Self::matches(&self.schemas, rel) && self.root.join(rel).is_file() {
-            out.record("json-schema", id, specs::analyse(&self.root, rel));
+            out.record(
+                "json-schema",
+                id,
+                specs::analyse(&self.root, rel, &self.schema_sources),
+            );
         } else {
             out.not_found("json-schema", id);
         }

@@ -14,7 +14,7 @@ Enforce a committed scorecard baseline. Run [setup](../setup/README.md) first or
 The action prepares any committed lockfile with `seikika install --frozen`, writes a job summary
 and annotations for regressions, and fails the step on a nonzero CLI exit. It reads the baseline.
 Create or update it separately with `seikika report --baseline … --update`, then review and commit
-the diff. [Set up a baseline](../../site/src/content/docs/operators/ci.md)
+the diff. [Set up a baseline](../../npm/site/src/content/docs/operators/ci.md)
 
 The `result` and `exit-code` outputs carry the scorecard verdict and CLI exit code. The `verdict`
 and `report` outputs are absolute paths to the JSON verdict and Markdown report when the CLI

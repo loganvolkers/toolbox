@@ -383,7 +383,7 @@ mod tests {
     #[test]
     fn this_repository_catalogues_the_public_pnpm_packages() {
         let root = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../..");
-        let ui = analyse(&root, "ui/package.json");
+        let ui = analyse(&root, "npm/ui/package.json");
         assert_eq!(ui["name"], "seikika-portal-ui");
         assert_eq!(ui["private"], true);
         assert_eq!(ui["lockfile"], "pnpm-lock.yaml");
@@ -394,7 +394,7 @@ mod tests {
         assert_eq!(ui["gitRanges"], json!([]));
         // CI uses the frozen workspace lockfile.
         assert_eq!(ui["ciUsesInstall"], false);
-        for manifest in ["ui-kit/package.json", "report-ui/package.json"] {
+        for manifest in ["npm/ui-kit/package.json", "npm/report-ui/package.json"] {
             let package = analyse(&root, manifest);
             assert_eq!(package["private"], false);
             assert_eq!(package["publishAccess"], "public");

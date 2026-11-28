@@ -1,0 +1,80 @@
+apiVersion: seikika.com/assessment/v1
+entity: assessment:crate-design/crate:seikika-connect
+rubric: assessment-quality
+subjectHash: 62d20a745deb
+assessor: {kind: agent, name: cursor-reviewer-19, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: supported
+    verdict: fail
+    reason: >-
+      Most citations in
+      .seikika/assessments/crate-design/crate/seikika-connect.yaml hold.
+      lib.rs:1-2 names hub, sdk, conformance and assessment but not `files`.
+      The date helpers are hub.rs:77-111 and are seikika-exec's only imports
+      from this crate (run.rs:19, ci/mod.rs:25, executor/mod.rs:145 and
+      others). Also as cited: `Command`'s pub fields (hub.rs:30-49), the
+      undocumented `Out` methods (sdk.rs:44-79), `expire` (hub.rs:248-256),
+      `on_messages` (hub.rs:258-311), the discarded `let _ = post(msgs)`
+      (sdk.rs:174), the lone hub test (hub.rs:444-473) and the conformance
+      runs at .github/workflows/ci.yml:103-105. One claim fails against its
+      own citation. small-contract says seikika-api reaches into `hub::now`
+      and `hub::rfc3339` "for timestamps that have nothing to do with the
+      hub". But the cited crates/seikika-api/src/reads.rs:427 and 945-946
+      format `s.hub.last_read(..)` and the hub `Registration.at`, and
+      connectors.rs:184 and 454 compare `hub::now()` with `hub.last_read`.
+      Those are the hub's own timestamps. The claim holds only for
+      seikika-exec. A smaller slip: the failed-command skip is hub.rs:299-302,
+      not 301-304.
+    suggestion: >-
+      Restrict the time-helper point to seikika-exec (run.rs:19, ci/mod.rs:25,
+      executor/*.rs, ci/github.rs:166). Seikika-api's uses are hub data, so
+      drop them. Cite hub.rs:299-302 for the skip.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      I found no failure the assessment missed. replaceable-defaults passes on
+      a dependency list with no charter default
+      (crates/seikika-connect/Cargo.toml:9-17). tests-match-risk fails
+      correctly. `expire` has no test anywhere. The snapshot_complete
+      reconciliation, including its failed-command skip, has no test: rg over
+      crates/*/tests and scripts finds no snapshot_complete or TimedOut
+      assertion. The conformance kit (conformance.rs:1-11) is only ever run
+      against connectors that pass. small-contract's other grounds hold
+      without the seikika-api claim: the core types and every `Out` method are
+      undocumented, and `Command` exposes its bookkeeping fields.
+  - criterion: reproducible
+    verdict: unsure
+    reason: >-
+      small-contract, replaceable-defaults and tests-match-risk rest on facts
+      anyone can check. one-responsibility rests on "unrelated", which is
+      taste. assessment.rs:1-4 defines assessments "as connector records", and
+      the workspace connector is its main caller
+      (crates/seikika-connector-workspace/src/main.rs:699-716). files.rs:1-2
+      says it serves "connectors that read one". A second assessor could
+      therefore pass one-responsibility on lib.rs:1-2. The factual ground for
+      failing is narrower: lib.rs omits `files`, and the hub's date helpers
+      are seikika-exec's only reason to depend on this crate.
+    suggestion: >-
+      Rest the one-responsibility fail on what the sources state. The crate
+      doc is stale because lib.rs:1-2 omits `files`, and seikika-exec depends
+      on the crate only for `hub::rfc3339`. Leave aside the claim that
+      assessments are unrelated to connectors.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      Each suggestion in
+      .seikika/assessments/crate-design/crate/seikika-connect.yaml would flip
+      its verdict. Moving `assessment`, `files` and the date helpers makes
+      lib.rs describe every module, as lines 28-32 say. Documenting the core
+      types and adding accessors meets the "documented" bar, and moving the
+      time helpers off `hub` does too (lines 49-53). The hub tests for
+      snapshot_complete, failed commands and expiry, plus a fake connector for
+      the kit, cover each untested path in the reason (lines 85-90).
+summary: >-
+  A careful assessment, and its test-gap findings are verified: no test
+  covers expiry or reconciliation, and the kit never meets a misbehaving
+  connector. One claim doesn't hold. Seikika-api's `hub::now` and
+  `hub::rfc3339` calls format the hub's own timestamps, not unrelated
+  ones. The one-responsibility fail also leans on calling connector-record
+  code "unrelated", which a second assessor might not share.

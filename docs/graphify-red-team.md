@@ -6,7 +6,7 @@ SDLC's DX Benchmarks judged it, at the bottom-up, single-repository end. It audi
 [graphify-monorepo-ab](../experiments/graphify-monorepo-ab/README.md),
 [D01M84ZW6K2V9CV2SD644DE5M0S](decisions/D01M84ZW6K2V9CV2SD644DE5M0S.md),
 [knowledge-graphs.md](design/knowledge-graphs.md), [dx-benchmarks.md](design/dx-benchmarks.md) and the
-two catalog entries in `portal/benchmarks/`. It steelmans Graphify on purpose. Every claim carries a
+two catalog entries in `.seikika/benchmarks/`. It steelmans Graphify on purpose. Every claim carries a
 source, and claims that are secondary, vendor-made, anecdotal or my own estimates are labelled as such.
 
 ## Bottom line
@@ -240,8 +240,8 @@ at"). Results in the first list would make the current decision's wording accura
   `results/r1/*.json`, `prompts/graphify.mdc`, `prompts/seikika.mdc`.
 - [docs/decisions/D01M84ZW6K2V9CV2SD644DE5M0S.md](decisions/D01M84ZW6K2V9CV2SD644DE5M0S.md),
   [docs/design/knowledge-graphs.md](design/knowledge-graphs.md),
-  [docs/design/dx-benchmarks.md](design/dx-benchmarks.md), `portal/benchmarks/graphify-ab.yaml`,
-  `portal/benchmarks/graphify-monorepo-ab.yaml`.
+  [docs/design/dx-benchmarks.md](design/dx-benchmarks.md), `.seikika/benchmarks/graphify-ab.yaml`,
+  `.seikika/benchmarks/graphify-monorepo-ab.yaml`.
 
 ### Primary external sources
 

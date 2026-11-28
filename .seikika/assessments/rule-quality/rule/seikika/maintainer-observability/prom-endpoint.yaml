@@ -1,0 +1,53 @@
+apiVersion: seikika.com/assessment/v1
+entity: rule:seikika/maintainer-observability/prom-endpoint
+rubric: rule-quality
+subjectHash: 458b5d60397a
+assessor: {kind: agent, name: cursor-assessor-09, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: measures-intent
+    verdict: fail
+    reason: >-
+      The rationale is that `/metrics` really serves the catalog
+      (.seikika/standards/observability.yaml:161-163). The check is that
+      crates/seikika-telemetry/tests/prom_catalog.rs exists. That test is
+      good, but it calls `metrics_text()` directly (prom_catalog.rs:20-26),
+      not the route (crates/seikika-api/src/routes.rs:27, 173-174), and no
+      crate test requests "/metrics". Neither the test's content nor whether
+      CI runs it is read.
+    suggestion: >-
+      Declare `promTest` under the observability data source's `ci:` fields
+      (.seikika/seikika.yaml:175-185; data.rs:150), so `notInCi` fails when CI
+      doesn't run it, and add an API test that GETs `/metrics` and checks the
+      catalog names, pointing `promTest` at it.
+  - criterion: hard-to-game
+    verdict: fail
+    reason: >-
+      An empty file at tests/prom_catalog.rs passes, and so does pointing
+      `promTest` at any existing file. The data connector already offers a
+      `ci:` check (`notInCi`, data.rs:150-200) that would catch a test nobody
+      runs, but the observability source configures only `paths:`
+      (.seikika/seikika.yaml:175-185).
+    suggestion: >-
+      Enable `ci: [promTest]` and add a check on `notInCi`. A Rust file under
+      crates/ counts as run when CI runs `cargo test` (data.rs:203-210), so
+      also require that the file asserts something, as maintainer-crate's
+      has-tests already does.
+  - criterion: fix-leads-to-pass
+    verdict: pass
+    reason: >-
+      The evidence names the missing test path (`docs/missing-prom-test.rs` in
+      the demo-unsafe fixture, .seikika/fixtures/workspace.ndjson:83), and the
+      fix says what the test must assert, naming
+      `seikika_snapshot_lag_seconds`. Adding it at the declared path passes.
+  - criterion: threshold-justified
+    verdict: pass
+    reason: >-
+      There is no threshold. Bronze follows D01M81ADN8C10EA1Z1VNRY3A5JZ ("Keep
+      `GET /metrics` scrape") and v1-spec §10.5 (docs/v1-spec.md:528). A
+      catalog that isn't served protects no dashboard, so this check belongs
+      with the catalog at the floor.
+summary: >-
+  The test the rule points at is a real one, but the rule only checks that
+  the file exists, and it never touches the HTTP route it is named after.
+  The data connector already has a CI check that would harden it cheaply.

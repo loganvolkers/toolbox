@@ -1,0 +1,79 @@
+apiVersion: seikika.com/assessment/v1
+entity: rule:seikika/maintainer-advisories/no-findings
+rubric: rule-quality
+subjectHash: 52a63d749f6a
+assessor: {kind: agent, name: cursor-assessor-24, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: measures-intent
+    verdict: pass
+    reason: >-
+      The rule's name is no findings, and the check is the scanner's own
+      active count: `(false ? entity.total : entity.active) == 0`
+      (.seikika/seikika.yaml:414-435 leaves `countSuppressed` at its default,
+      so the package writes `false`; packages/sarif/fragments/sarif.yaml:72,
+      packages/sarif/seikika-package.yaml:64-69). For this tool that is the
+      right count. osv-scanner drops an id listed in osv-scanner.toml from the
+      SARIF entirely (packages/sarif/README.md:50), and both fixture records
+      have `suppressed: 0` (.seikika/fixtures/maintainer-advisories.ndjson).
+      Passing means osv-scanner 2.7.1, offline against the pinned RustSec
+      snapshot, reports nothing for that lockfile, which is what the scorecard
+      title "No unexplained advisories in Cargo.lock" means
+      (.seikika/seikika.yaml:436, D01M885GT32STM506V32XKPP37G). The evidence
+      lists the same findings the check counts (`evidenceTracksCheck` is true;
+      sarif.yaml:75-78).
+  - criterion: hard-to-game
+    verdict: fail
+    reason: >-
+      The cheapest pass is one `[[IgnoredVulns]]` entry. osv-scanner then
+      omits the advisory from the SARIF (packages/sarif/README.md:50), so it
+      is in neither `active` nor `total`, and `countSuppressed` cannot see it
+      even if it were turned on. The fix asks for a reason and says to leave
+      out `effectiveUntil` (.seikika/seikika.yaml:437-442), but the check
+      never reads osv-scanner.toml: an id with an empty reason, or with an
+      expiry, passes the same way as the two justified chrono ignores
+      (osv-scanner.toml:6-17). `.github/CODEOWNERS` covers only `.github/`,
+      not this file. D01M885GT32STM506V32XKPP37G says to review the ignores
+      when the pin in scripts/ci-tools.sh moves; that is a process, not a
+      check, so a silenced vulnerability and an accepted unmaintained notice
+      look identical to the rule.
+    suggestion: >-
+      Add a sibling rule that reads osv-scanner.toml and fails an
+      `IgnoredVulns` entry whose `reason` is empty or that sets
+      `effectiveUntil`. Keep the finding rule as the scanner's own count.
+      Putting the file in `.github/CODEOWNERS` would make an ignore wait for
+      the owner the supply-chain card already requires for `.github/`.
+  - criterion: fix-leads-to-pass
+    verdict: pass
+    reason: >-
+      The evidence for the failing fixture is `line 0: RUSTSEC-2026-0543
+      Package 'chrono@0.4.45' is vulnerable to 'RUSTSEC-2026-0543'.`
+      (.seikika/tests/standards.test.yaml:1111-1118,
+      .seikika/fixtures/maintainer-advisories.ndjson). That names both the id
+      and the crate. The fix says to `cargo update -p <crate>`, or to ignore
+      that id under `[[IgnoredVulns]]` in osv-scanner.toml with a reason and
+      without `effectiveUntil` (.seikika/seikika.yaml:437-442). The record's
+      `command` reruns `osv-scanner scan source --offline --format sarif
+      --lockfile` on that file alone. The root `Cargo.lock` fixture, which has
+      the two justified ignores, passes the same rule
+      (standards.test.yaml:1107-1110).
+  - criterion: threshold-justified
+    verdict: pass
+    reason: >-
+      There is no tuned number. The only level is `clean`, and it means zero
+      active findings (packages/sarif/fragments/sarif.yaml:67-72).
+      D01M885GT32STM506V32XKPP37G is why that zero is taken offline against
+      one pinned RustSec commit (`944cab37` in scripts/ci-tools.sh:35) rather
+      than from a live osv.dev query, and why an ignore has no expiry date.
+      docs/design/thresholds.md has no row for this rule; the decision is the
+      source, and the level is the SARIF slot's single rung, not a
+      bronze/silver/gold choice.
+summary: >-
+  no-findings means what it says for this scanner: osv-scanner, offline
+  against the pinned RustSec snapshot, reports nothing for the lockfile,
+  and an id in osv-scanner.toml is how an accepted advisory stops being a
+  finding. That ignore is also the cheap pass. Nothing checks that it has
+  a reason or that it has no expiry, so a silenced advisory and the two
+  justified chrono notices look the same. The evidence names the id and
+  the crate, and the fix, followed, makes the rule pass. Zero findings at
+  the single `clean` level is the decision, not a tuned threshold.

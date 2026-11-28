@@ -1,0 +1,134 @@
+# JSON Schema documents (docs/design/schema-standards.md).
+# Included by .seikika/seikika.yaml; see .seikika/README.md for the layout.
+
+kinds:
+  # JSON Schema documents (docs/design/schema-standards.md).
+  - name: JsonSchema
+    description: >-
+      A JSON Schema document the binary compiles: its dialect, id, title,
+      description, external references and whether it is wired in.
+    identityFrom: [connector:workspace]
+    fields:
+      path: {type: string}
+      name: {type: string}
+      dialect: {type: string}
+      schemaId: {type: string}
+      titleChars: {type: integer}
+      descriptionChars: {type: integer}
+      externalRefs: {type: list, items: string}
+      wired: {type: boolean}
+      draft202012: {type: boolean}
+      secretHits: {type: list, items: string}
+    sources: {default: [connector:workspace]}
+    map:
+    - from: workspace/json-schema
+      id: "'json-schema:' + record.path"
+      set: >-
+        {'path': record.path, 'name': record.name, 'dialect': record.dialect, 'schemaId': record.schemaId,
+         'titleChars': record.titleChars, 'descriptionChars': record.descriptionChars,
+         'externalRefs': record.externalRefs, 'wired': record.wired,
+         'draft202012': record.draft202012, 'secretHits': record.secretHits}
+
+scorecards:
+  # The binary compiles these with Draft 2020-12 and does not fetch `$ref`s, so a schema that
+  # names another dialect or a remote schema is not the contract the server runs.
+  - name: maintainer-schema
+    title: JSON Schemas
+    kind: JsonSchema
+    description: >-
+      Each JSON Schema compiled into the binary: Draft 2020-12 with an $id,
+      titled and described, wired into the binary, with local $refs only and
+      no credentials (D77).
+    rationale: >-
+      These documents are the configuration and protocol contracts the binary
+      enforces, and it compiles them as Draft 2020-12 without fetching remote
+      references. A document that departs from that, or that nothing loads,
+      looks like a contract but is not the one the server runs. Bronze is a
+      valid, identifiable schema; silver ties it to the code; gold keeps it
+      self-contained.
+    links:
+    - title: Schema standards
+      url: https://github.com/seikika/seikika/blob/main/docs/design/schema-standards.md
+    - title: 'Decision: JSON Schemas are catalogued'
+      url: https://github.com/seikika/seikika/blob/main/docs/decisions/D01M7W5BEAG0000000000000000.md
+    owner: group:maintainers
+    track: maintainer
+    levels: [bronze, silver, gold]
+    ratchet: {newEntitiesAtLeast: bronze}
+    rules:
+    - name: draft-2020-12
+      level: bronze
+      check: entity.draft202012
+      evidence: "entity.dialect != '' ? [entity.dialect] : ['no $schema']"
+      fix: >-
+        Set $schema to https://json-schema.org/draft/2020-12/schema. The binary
+        compiles schemas as that draft and no other.
+      rationale: >-
+        Keywords from another dialect are read with 2020-12 meaning or ignored,
+        so the server would validate differently from what the author wrote.
+      links:
+      - title: JSON Schema 2020-12 core
+        url: https://json-schema.org/draft/2020-12/json-schema-core
+    - name: has-id
+      level: bronze
+      check: entity.schemaId.startsWith('https://')
+      evidence: "entity.schemaId != '' ? [entity.schemaId] : ['no $id']"
+      fix: >-
+        Set $id to an absolute https URI. That is the schema's canonical
+        identity in JSON Schema 2020-12.
+      rationale: >-
+        The $id is the base URI that references resolve against and the name
+        other tools cite. Without an absolute one the contract has no stable
+        identity.
+    - name: described
+      level: bronze
+      check: entity.descriptionChars > 0
+      evidence: "['no description']"
+      fix: >-
+        Add a root `description` saying which contract this document is. Readers
+        and agents meet the schema before the code.
+      rationale: >-
+        Without a root description a reader has to work out which contract the
+        document is from the code that loads it.
+    - name: titled
+      level: silver
+      check: entity.titleChars > 0
+      evidence: "['no title']"
+      fix: >-
+        Add a root `title`. JSON Schema defines it as the short name of the
+        document.
+      rationale: >-
+        Editors and generated docs show the title as the schema's name. Without
+        one, readers see only a file path or a URI.
+    - name: wired-in
+      level: silver
+      check: entity.wired
+      evidence: "['not compiled by schema.rs or applied by the reference validator']"
+      fix: >-
+        Compile the document from crates/seikika-model/src/schema.rs, or apply
+        it from the reference portal validator. A schema file nothing loads is
+        not a contract.
+      rationale: >-
+        A schema nothing compiles is never enforced, so it can drift from the
+        real contract while still looking authoritative to readers and agents.
+    - name: local-refs
+      level: gold
+      check: entity.externalRefs.size() == 0
+      evidence: entity.externalRefs
+      fix: >-
+        Point $ref at a fragment in this file. The compiler embeds the document
+        and does not fetch a remote schema.
+      rationale: >-
+        A remote $ref cannot be resolved where the contract runs, and its target
+        can change without a review in this repository.
+    - name: no-hardcoded-secrets
+      level: bronze
+      check: entity.secretHits.size() == 0
+      evidence: entity.secretHits
+      fix: >-
+        Remove the credential in the evidence. A schema is compiled into the
+        binary and published with the repository.
+      rationale: >-
+        A credential in a schema ships inside every build of the binary, where
+        it cannot be removed without a new release.
+    facets: {summary: public, details: public}

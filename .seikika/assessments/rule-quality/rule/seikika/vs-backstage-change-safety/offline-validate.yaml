@@ -1,0 +1,68 @@
+apiVersion: seikika.com/assessment/v1
+entity: rule:seikika/vs-backstage-change-safety/offline-validate
+rubric: rule-quality
+subjectHash: b3a1c44f9bc6
+assessor: {kind: agent, name: cursor-assessor-17, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: measures-intent
+    verdict: pass
+    reason: >-
+      The check reads `offlineValidate`, defined as "the catalog and config
+      validate with no running instance"
+      (.seikika/standards/backstage-comparison.yaml:95-97), which is the
+      rule's name. Seikika's `true`
+      (experiments/backstage-compare/facts.yaml:39-42) is also enforced
+      outside the harness: the CI job runs `seikika validate` and `seikika
+      test` on four portals with no database service
+      (.github/workflows/ci.yml:53-70; Postgres is installed only later, for
+      the acceptance scripts). Backstage's `false` cites `catalog validate
+      --instance` (facts.yaml:122-127), so a pass means what it says on both
+      sides.
+  - criterion: hard-to-game
+    verdict: fail
+    reason: >-
+      No script measures the fact. snapshot.py copies `value` from facts.yaml
+      into .seikika/comparisons/
+      (experiments/backstage-compare/snapshot.py:85), so to pass, someone
+      writes `offlineValidate: {value: true}` and reruns snapshot.py on the
+      committed results/r3. Only a reviewer reads the evidence string. The
+      harness README admits that facts.yaml decides 24 of the 48 rules
+      (experiments/backstage-compare/README.md:128), and
+      D01M857ZB468ZM2YS6GNSEG6YB9 §3 says a comparison "is re-run and not
+      hand-edited".
+    suggestion: >-
+      Measure the fact in the harness: run `seikika validate` and `seikika
+      test` on experiments/backstage-compare/portal under `unshare -n`, with
+      no DATABASE_URL set, and record whether both exit 0. Have the Backstage
+      arm try `backstage-cli catalog validate` with no instance. snapshot.py
+      should then refuse a facts.yaml entry for a fact a script measures.
+  - criterion: fix-leads-to-pass
+    verdict: fail
+    reason: >-
+      The evidence is `offlineValidate is false`, and the fix says "Keep
+      `seikika validate` and `seikika test` working with no server or
+      database" (backstage-comparison.yaml:681-683). If validation started
+      needing a server, an agent who restored offline validation would still
+      fail the rule. The fact changes only when someone edits facts.yaml:39-42
+      and reruns snapshot.py, and the fix names neither. "Keep" is also not an
+      instruction for a product that fails.
+    suggestion: >-
+      Change the fix to: "Make `seikika validate` and `seikika test` run with
+      no server or database (crates/seikika-cli/src/main.rs), then rerun
+      experiments/backstage-compare/snapshot.py", once the fact is measured.
+      Until then, name facts.yaml and its evidence field.
+  - criterion: threshold-justified
+    verdict: pass
+    reason: >-
+      The rule is boolean and has no number. The bar ("true") and the bronze
+      level were registered before the run
+      (experiments/backstage-compare/README.md:50), and the adjudication
+      confirms the implementation matches them
+      (experiments/backstage-compare/ADJUDICATION.md:111).
+summary: >-
+  A sound claim, measured by hand. Offline validation is real, and CI
+  keeps it working (ci.yml:53-70), so the pass means what it says. The
+  input, though, is a value someone types into facts.yaml, and the fix
+  doesn't name that file, so neither the rule nor its fix is connected to
+  a measurement.

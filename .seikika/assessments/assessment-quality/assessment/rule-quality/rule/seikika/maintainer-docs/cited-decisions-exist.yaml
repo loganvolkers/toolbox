@@ -1,0 +1,54 @@
+apiVersion: seikika.com/assessment/v1
+entity: assessment:rule-quality/rule:seikika/maintainer-docs/cited-decisions-exist
+rubric: assessment-quality
+subjectHash: ccc9e3eac2e4
+assessor: {kind: agent, name: cursor-reviewer-38, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: supported
+    verdict: pass
+    reason: >-
+      The citations in
+      .seikika/assessments/rule-quality/rule/seikika/maintainer-docs/cited-decisions-exist.yaml
+      hold. The intent and the fix are .seikika/standards/docs.yaml:129-136.
+      Citations are a case-insensitive D-plus-digits or ULID compared with id
+      and legacy frontmatter
+      (crates/seikika-connector-workspace/src/main.rs:234-255 and :274-289),
+      as docs/design/decision-citations.md:14-16 and :20-24 specify, and :31
+      calls a missing id the same class of defect as a dead link. Decision
+      files are outside the scorecard (.seikika/standards/docs.yaml:98-100).
+      The fixture pins ['D999'] at .seikika/tests/standards.test.yaml:651-659.
+      Legacy D1-D98 all have files, so a case-folded d3 resolves. D84 is
+      docs/decisions/D01M7WMSMS30000000000000000.md.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      measures-intent passes because the design says the check is existence,
+      not a reading of the prose (docs/design/decision-citations.md:14-16).
+      hard-to-game fails because decision_file_ids reads only id and legacy
+      (crates/seikika-connector-workspace/src/main.rs:244-251), so a
+      frontmatter stub is a known id and no docs rule scores the file
+      (.seikika/standards/docs.yaml:98-100). fix-leads-to-pass still passes:
+      citing an existing id, which the evidence names, clears
+      missingDecisions. There is no number, and bronze is the decision's
+      level.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      A second assessor reading
+      crates/seikika-connector-workspace/src/main.rs:234-289 and
+      .seikika/standards/docs.yaml:125-136 reaches the same pass, fail, pass,
+      pass. The stub is the rubric's empty-document case
+      (.seikika/standards/meta.yaml:1164-1166), not a taste call about how
+      long a decision should be.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      Requiring a title and a non-empty body before an id counts, as
+      crates/seikika-connector-workspace/src/main.rs:244-251 reads only id and
+      legacy, would make the stub fail cited-decisions-exist. A separate
+      decision-record card would do the same for that verdict.
+summary: >-
+  The assessment matches the checker. Existence is a set comparison
+  against frontmatter, a stub file satisfies it, the fix and the bronze
+  level are documented, and the suggestion would close the stub.

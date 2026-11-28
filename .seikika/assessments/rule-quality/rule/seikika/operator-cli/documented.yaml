@@ -1,0 +1,61 @@
+apiVersion: seikika.com/assessment/v1
+entity: rule:seikika/operator-cli/documented
+rubric: rule-quality
+subjectHash: 9fefe63a9837
+assessor: {kind: agent, name: cursor-assessor-14, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: measures-intent
+    verdict: fail
+    reason: >-
+      `documentedIn` is every doc whose `commands` capture matches `seikika
+      <command>` (.seikika/standards/cli.yaml:19-22,
+      .seikika/standards/docs.yaml:48), over globs that include
+      `plugins/**/*.md` and every file under docs/, decisions and logs
+      included (.seikika/seikika.yaml:95-102). So a SKILL.md alone passes it,
+      which means cli-skill's bronze (cli.yaml:236) implies this rule, and so
+      does one passing mention in a decision record. The fix names
+      docs/v1-spec.md §7.7 or the operator SDLC doc, but `connector records`,
+      `connector drive`, `vendor`, `tools find`, `describe portal` and `assess
+      check` all pass without appearing in either. F14
+      (docs/design/seikika-for-seikika.md:218, applied at :175) fixed exactly
+      this for user-mcp/documented by naming the authoritative file.
+    suggestion: >-
+      Check `entity.documentedIn.exists(p, p == 'docs/v1-spec.md' || p ==
+      'docs/design/sdlc.md')`, as user-mcp/documented does, and keep the
+      any-doc reading for cli-skill. List the commands that fail in v1-spec
+      §7.7 in the same change.
+  - criterion: hard-to-game
+    verdict: fail
+    reason: >-
+      One phrase such as "seikika vendor" anywhere in a markdown file under
+      the doc globs passes, whether or not it describes the command; the regex
+      (.seikika/seikika.yaml:111-114) captures any lowercase word after
+      `seikika`, in prose, comments or code. Adding that phrase to the
+      research log is cheaper than writing a §7.7 row.
+    suggestion: >-
+      Restrict the check to the authoritative docs (see above), so the
+      cheapest pass is a row in v1-spec §7.7 or a line in the operator SDLC
+      doc.
+  - criterion: fix-leads-to-pass
+    verdict: pass
+    reason: >-
+      Writing `seikika <command>` in v1-spec §7.7 passes. One trap: §7.7's own
+      convention of piping siblings, `seikika connector refresh|resync|test`
+      (docs/v1-spec.md:415), is captured only as its first word, so a new row
+      written in that style documents one command of the group. No command
+      fails today, so nobody has hit it.
+  - criterion: threshold-justified
+    verdict: pass
+    reason: >-
+      No number; bronze is set in docs/design/seikika-for-seikika.md:105 ("Has
+      help; documented"), and the rationale (cli.yaml:118-121) argues it
+      belongs in the floor: an agent planning a change finds commands in the
+      docs, and help is read only once it knows the command exists.
+summary: >-
+  The intent is right and the level is argued, but the check accepts any
+  markdown mention, including the SKILL.md that cli-skill already
+  requires, so for this repo it adds nothing to cli-skill and does not
+  hold the commands to the places its own fix names. Narrowing it to
+  v1-spec and the operator SDLC doc, as F14 did for MCP tools, would make
+  it bite.

@@ -1,0 +1,44 @@
+apiVersion: seikika.com/assessment/v1
+entity: rule:seikika/vs-backstage-performance/recovery
+rubric: rule-quality
+subjectHash: 861d487fb513
+assessor: {kind: agent, name: cursor-assessor-16, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: measures-intent
+    verdict: pass
+    reason: >-
+      measure.py kills the whole process tree with SIGKILL, OpenFGA included
+      (measure.py:76-84, 276-278). It then restarts on the same database
+      without a fresh load and times until the last component reads again
+      (measure.py:279-283). That is the rationale's "down until its state is
+      back" (.seikika/standards/backstage-comparison.yaml:333-336). The brief
+      also wanted the kill mid-ingest (RESEARCH.md:285), which this run does
+      not do; it kills a settled server after the reads. The rule's name and
+      evidence ("readable again N s after kill -9") claim no more than that.
+  - criterion: hard-to-game
+    verdict: pass
+    reason: >-
+      The restart passes `fresh=False` and skips `load` (measure.py:280), so
+      the catalog must come back from Postgres, not be re-posted. Readiness
+      plus the last id readable under the client's PAT (measure.py:281) means
+      a server that only reports ready cannot pass.
+  - criterion: fix-leads-to-pass
+    verdict: pass
+    reason: >-
+      The fix names the restart path in crates/seikika-api/src/state.rs, the
+      first recompute from Postgres, which is what the value times on restart.
+      It also names the harness; run.sh:4 points to snapshot.py for the
+      record.
+  - criterion: threshold-justified
+    verdict: pass
+    reason: >-
+      The 60 s bar is pre-registered (README.md:40; ADJUDICATION.md §3.1) and
+      equals the plan's cold start with an index snapshot present, under 60 s
+      (docs/plan.md:923). The rationale ties it to DORA's recovery time.
+      Single bronze level per D01M857ZB468ZM2YS6GNSEG6YB9.
+summary: >-
+  A good recovery rule: a real SIGKILL of the whole tree, a restart from
+  the database alone, and a bar that is the plan's own cold-start budget.
+  It leaves out the brief's harder case, a kill during ingest. Seikika's
+  1.13 s is far from the bar.

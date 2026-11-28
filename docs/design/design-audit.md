@@ -110,4 +110,4 @@ change follows `report-ux` and then a `design-audit` pass.
   (story probes and capture).
 - B. Bach et al., *Dashboard Design Patterns* (arXiv:2205.00757).
 - [report-ux.md](./report-ux.md), [maintainer-sdlc.md](./maintainer-sdlc.md),
-  [report-ui/README.md](../../report-ui/README.md).
+  [report-ui/README.md](../../npm/report-ui/README.md).

@@ -1,0 +1,386 @@
+# DX Benchmarks (docs/design/dx-benchmarks.md, D01M82X2K0DYWTCA23MQJ4CKR0Z). Maintainer SDLC.
+# One entry per benchmark in .seikika/benchmarks/*.yaml; included by .seikika/seikika.yaml.
+
+kinds:
+  - name: Benchmark
+    description: >-
+      A DX Benchmark: a pre-registered A/B in which fresh coding agents do
+      lifecycle work on open-source repositories with Seikika and with its
+      strongest alternative, measuring one or more SDLC layers.
+    identityFrom: [connector:workspace]
+    fields:
+      title: {type: string, description: "The benchmark's name."}
+      question:
+        type: string
+        description: The one-sentence question the benchmark answers.
+      layers:
+        type: list
+        items: string
+        description: >-
+          The SDLC layers it measures: maintainer, package-author, operator or
+          user.
+      stages:
+        type: list
+        items: string
+        description: The SDLC stages it exercises, as layer/stage ids from portal/sdlc.
+      hypotheses:
+        type: list
+        items: string
+        description: >-
+          The hypotheses it tests, each with a bar set before running (R1-R7 in
+          repo-value.md, or the benchmark's own).
+      rival:
+        type: string
+        description: The arm without Seikika, the strongest alternative a team would use.
+      repos:
+        type: list
+        items: string
+        description: Open-source repositories it ran on, as owner/name@commit.
+      status:
+        type: string
+        description: designed, blocked, complete or archived.
+      ran: {type: string, description: "The date it ran (empty if it hasn't)."}
+      outcome:
+        type: string
+        description: The result against the pre-registered bar, in one sentence.
+      changed:
+        type: list
+        items: string
+        description: >-
+          What it changed in Seikika (fixes, decisions), closing the friction
+          loop.
+      servedValue:
+        type: string
+        description: Why an archived benchmark has served its value and won't be rerun.
+      blockedOn:
+        type: string
+        description: The named prerequisite a blocked benchmark waits on.
+      readme:
+        type: string
+        description: The pre-registration (question, arms, bar), as a repository path.
+      results:
+        type: string
+        description: Where the results are published, as a repository path.
+      missingPaths:
+        type: list
+        items: string
+        description: Declared paths that don't exist under the repository root.
+      hash: {type: string, description: Content hash of the catalog entry.}
+      protocol:
+        type: integer
+        description: >-
+          The DX Benchmark protocol it is registered under: 1 for runs before
+          D01M83RDWQ5EVKY5SFHDWAD5HFH, 2 after. An entry without one is 1.
+      prompts:
+        type: string
+        description: >-
+          Where every rendered prompt for every arm and phase is committed, as a
+          repository path (P1).
+      runsPerArm:
+        type: integer
+        description: Fresh runs per arm per phase (P2; at least three under protocol 2).
+      deterministic:
+        type: boolean
+        description: >-
+          True when no agent is in the scored path, so repeated runs give the same
+          answer and P2 does not apply.
+      measure:
+        type: string
+        description: >-
+          The measure the bar is written in, which a dry run showed the runtime
+          reports for every arm (P6).
+      frozenAt:
+        type: string
+        description: >-
+          The commit at which Seikika, the harness and every arm were frozen for
+          the scored round (P3).
+      designer:
+        type: string
+        description: Who designed the experiment and built its arms.
+      adjudicator:
+        type: string
+        description: >-
+          Who applied the bar and wrote the outcome; not the designer and not
+          whoever changed the product between rounds (P7).
+      fitAudit:
+        type: string
+        description: >-
+          The adjudicator's audit of every change between rounds: rival friction
+          fixed as carefully as Seikika's, and no product change shaped to the
+          harness (P4, P5).
+      spread:
+        type: string
+        description: >-
+          Minimum, median and maximum of the measure per arm, or where they are
+          published (P2).
+      registrationGaps:
+        type: list
+        items: string
+        description: >-
+          What the entry has not registered under protocol 2: prompts, runs,
+          measure, and an independent adjudicator.
+        computed: >-
+          entity.protocol != 2 ? ['protocol 1: re-register under protocol 2
+          (D01M83RDWQ5EVKY5SFHDWAD5HFH)'] : (entity.deterministic ? [] :
+          (entity.prompts == '' ? ['no committed prompts'] : []) +
+          (entity.runsPerArm < 3 ? ['fewer than three runs per arm'] : [])) +
+          (entity.measure == '' ? ['no measure the runtime reports'] : []) +
+          (entity.designer == '' ? ['no designer'] : []) + (entity.adjudicator in
+          ['', entity.designer] ? ['no adjudicator independent of the designer'] :
+          [])
+      runGaps:
+        type: list
+        items: string
+        description: >-
+          What a protocol-2 benchmark that has run has not recorded: the frozen
+          commit, the spread and the fit audit.
+        computed: >-
+          entity.protocol == 2 && entity.status in ['complete', 'archived'] ?
+          (entity.frozenAt == '' ? ['no frozen commit for the round'] : []) +
+          (entity.spread == '' && !entity.deterministic ? ['no spread across
+          runs'] : []) + (entity.fitAudit == '' ? ['no fit audit of the changes
+          between rounds'] : []) : []
+      declarationGaps:
+        type: list
+        items: string
+        description: What the entry fails to declare (question, layers, status).
+        computed: >-
+          (entity.question == '' ? ['no question'] : []) + (entity.layers.size()
+          == 0 ? ['no SDLC layer'] : []) + (entity.status in ['designed',
+          'blocked', 'complete', 'archived'] ? [] : ['unknown status ' +
+          entity.status])
+      unknownLayers:
+        type: list
+        items: string
+        description: Declared layers that are not one of the four SDLC layers.
+        computed: >-
+          entity.layers.filter(l, !(l in ['maintainer', 'package-author',
+          'operator', 'user'])).map(l, 'unknown layer ' + l)
+      rivalGaps:
+        type: list
+        items: string
+        description: Set when no rival arm is named.
+        computed: >-
+          entity.rival == '' ? ['no rival arm: name the strongest alternative a
+          team would use'] : []
+      hypothesisGaps:
+        type: list
+        items: string
+        description: Set when no hypothesis with a bar is named.
+        computed: >-
+          entity.hypotheses.size() == 0 ? ['no hypothesis with a pre-registered
+          bar'] : []
+      repoGaps:
+        type: list
+        items: string
+        description: >-
+          Missing open-source repositories, or repositories without a pinned
+          commit.
+        computed: >-
+          (entity.repos.size() == 0 ? ['no open-source repository'] : []) +
+          entity.repos.filter(r, !r.contains('@')).map(r, r + ' has no pinned
+          commit')
+      reasonGaps:
+        type: list
+        items: string
+        description: >-
+          An archived entry without servedValue, or a blocked one without
+          blockedOn.
+        computed: >-
+          (entity.status == 'archived' && entity.servedValue == '' ? ['archived
+          without servedValue'] : []) + (entity.status == 'blocked' &&
+          entity.blockedOn == '' ? ['blocked without blockedOn'] : [])
+      resultGaps:
+        type: list
+        items: string
+        description: >-
+          What a run benchmark hasn't published (outcome, results), or that it
+          hasn't run.
+        computed: >-
+          entity.status in ['complete', 'archived'] ? ((entity.outcome == '' ?
+          ['no outcome'] : []) + (entity.results == '' ? ['no results path'] :
+          [])) : ['not run yet']
+      changeGaps:
+        type: list
+        items: string
+        description: Set when a run benchmark lists nothing it changed in Seikika.
+        computed: >-
+          entity.status in ['complete', 'archived'] && entity.changed.size() == 0
+          ? ['nothing changed: link the fixes or decisions it produced'] : []
+    sources: {default: [connector:workspace]}
+    map:
+    - from: workspace/benchmark
+      id: "'benchmark:' + record.id"
+      set: >-
+        {'title': record.title, 'question': record.question, 'layers':
+        record.layers, 'stages': record.stages, 'hypotheses': record.hypotheses,
+        'rival': record.rival, 'repos': record.repos, 'status': record.status,
+        'ran': record.ran, 'outcome': record.outcome, 'changed': record.changed,
+        'servedValue': record.servedValue, 'blockedOn': record.blockedOn,
+        'readme': record.readme, 'results': record.results, 'missingPaths':
+        record.missingPaths, 'hash': record.hash, 'protocol':
+        has(record.protocol) ? record.protocol : 1, 'prompts':
+        has(record.prompts) ? record.prompts : '', 'runsPerArm':
+        has(record.runsPerArm) ? record.runsPerArm : 1, 'deterministic':
+        has(record.deterministic) ? record.deterministic : false, 'measure':
+        has(record.measure) ? record.measure : '', 'frozenAt':
+        has(record.frozenAt) ? record.frozenAt : '', 'designer':
+        has(record.designer) ? record.designer : '', 'adjudicator':
+        has(record.adjudicator) ? record.adjudicator : '', 'fitAudit':
+        has(record.fitAudit) ? record.fitAudit : '', 'spread':
+        has(record.spread) ? record.spread : ''}
+
+scorecards:
+  - name: maintainer-benchmark
+    title: DX Benchmarks
+    kind: Benchmark
+    description: >-
+      Each DX Benchmark: declared, pre-registered against a rival on pinned
+      open-source repositories, and run with results and the fixes it produced
+      (D01M82X2K0DYWTCA23MQJ4CKR0Z).
+    rationale: >-
+      A claim that Seikika makes a lifecycle easier for agents is only as good
+      as the benchmark behind it, and two benchmarks without repeated runs or
+      an independent adjudicator reached wrong results. The levels follow a
+      benchmark's life: declared, then registered so the result can't be
+      explained away, then run, published and turned into fixes.
+    links:
+    - title: DX Benchmarks design
+      url: https://github.com/seikika/seikika/blob/main/docs/design/dx-benchmarks.md
+    - title: DX Benchmarks decision
+      url: https://github.com/seikika/seikika/blob/main/docs/decisions/D01M82X2K0DYWTCA23MQJ4CKR0Z.md
+    - title: Protocol 2 decision
+      url: https://github.com/seikika/seikika/blob/main/docs/decisions/D01M83RDWQ5EVKY5SFHDWAD5HFH.md
+    owner: group:maintainers
+    track: evidence
+    levels: [bronze, silver, gold]
+    ratchet: {newEntitiesAtLeast: bronze}
+    rules:
+    - name: declared
+      level: bronze
+      check: entity.declarationGaps.size() + entity.unknownLayers.size() == 0
+      evidence: entity.declarationGaps + entity.unknownLayers
+      fix: >-
+        Give the entry a one-sentence question, the SDLC layers it measures
+        (maintainer, package-author, operator, user) and a status (designed,
+        blocked, complete, archived).
+      rationale: >-
+        Without a question and the layers it measures, a benchmark can't be tied
+        to a decision or to the SDLC stages it is meant to prove; a benchmark
+        with no decision behind it is a demo.
+    - name: paths-exist
+      level: bronze
+      check: entity.missingPaths.size() == 0
+      evidence: entity.missingPaths
+      fix: >-
+        Point readme at the benchmark's pre-registration and results at its
+        published results, as paths that exist in the repository.
+      rationale: >-
+        The catalog entry is the index to the pre-registered bar and the
+        published result; a dead path means neither can be read or checked
+        against the other.
+    - name: has-a-rival
+      level: silver
+      check: entity.rivalGaps.size() == 0
+      evidence: entity.rivalGaps
+      fix: >-
+        Name the arm without Seikika: an agent from scratch, a checklist,
+        hand-written glue, an existing standard or another platform
+        (dx-benchmarks.md §4, step 3).
+      rationale: >-
+        Beating a straw man proves nothing; a win counts only against the
+        alternative a capable team would really use, which our record shows is
+        often an agent with a checklist.
+    - name: pre-registered
+      level: silver
+      check: entity.hypothesisGaps.size() == 0
+      evidence: entity.hypothesisGaps
+      fix: >-
+        Name the hypotheses the benchmark tests, each with a bar written in its
+        README before it ran (dx-benchmarks.md §4, step 5).
+      rationale: >-
+        A bar set after the run bends to fit the result; without one, both of
+        the standards A/B's losses could have been explained away as learning
+        cost.
+    - name: open-source-pinned
+      level: silver
+      check: entity.repoGaps.size() == 0
+      evidence: entity.repoGaps
+      fix: >-
+        Run on open-source repositories we didn't write and list each as
+        owner/name@commit, so the run can be reproduced.
+      rationale: >-
+        Repositories we wrote can be tuned to Seikika, and an unpinned one
+        changes under the run; forks of others' code at a pinned commit keep the
+        work real and the result reproducible.
+    - name: says-why
+      level: silver
+      check: entity.reasonGaps.size() == 0
+      evidence: entity.reasonGaps
+      fix: >-
+        Say why an archived benchmark has served its value (servedValue), or
+        what a blocked one waits on (blockedOn).
+      rationale: >-
+        An archived benchmark without its reason looks abandoned, and a blocked
+        one without its prerequisite can't be unblocked; the reason is what the
+        next maintainer acts on.
+    - name: method-registered
+      level: silver
+      check: >-
+        !(entity.status in ['designed', 'blocked']) ||
+        entity.registrationGaps.size() == 0
+      evidence: "entity.status in ['designed', 'blocked'] ? entity.registrationGaps : []"
+      fix: >-
+        Before it runs, register it under protocol 2: set protocol 2, commit the
+        prompts, plan at least three runs per arm, name the measure a dry run
+        showed the runtime reports, and name a designer and a different
+        adjudicator (dx-benchmarks.md §4.1).
+      rationale: >-
+        connector-ab's win came from tuning only Seikika's arm, and deploy-ab's
+        defeat from probes that treated the arms unequally, both judged by their
+        designers. Registering the method before the run closes those routes.
+      links:
+      - title: DX Benchmark protocol 2
+        url: https://github.com/seikika/seikika/blob/main/docs/design/dx-benchmarks.md#41-protocol-2
+    - name: results-recorded
+      level: gold
+      check: entity.resultGaps.size() == 0
+      evidence: entity.resultGaps
+      fix: >-
+        Run it, then record the outcome against the bar as written and the path
+        of the published results (dx-benchmarks.md §4, step 9).
+      rationale: >-
+        A loss we hide is a loss we repeat; until the outcome is published
+        against the bar as written, the benchmark is evidence of nothing.
+    - name: closes-the-loop
+      level: gold
+      check: entity.changeGaps.size() == 0
+      evidence: entity.changeGaps
+      fix: >-
+        List what the benchmark changed in Seikika: the friction fixes and the
+        decisions it produced (dx-benchmarks.md §4, step 10).
+      rationale: >-
+        Measured friction is a benchmark's most useful output; a run that
+        changed nothing in Seikika paid its token cost without making Seikika
+        better.
+    - name: sound-method
+      level: gold
+      check: >-
+        !(entity.status in ['complete', 'archived']) ||
+        entity.registrationGaps.size() + entity.runGaps.size() == 0
+      evidence: >-
+        entity.status in ['complete', 'archived'] ? entity.registrationGaps +
+        entity.runGaps : []
+      fix: >-
+        Rerun it under protocol 2 and record the frozen commit, the spread
+        across at least three runs per arm, and the independent adjudicator's
+        fit audit (dx-benchmarks.md §4.1). A protocol-1 result stays on the
+        record as one sample.
+      rationale: >-
+        One run is one sample: an unchanged rival's calls moved by 21 across
+        connector-ab's rounds. A result supports a claim only with a frozen
+        commit, the spread of repeated runs and an audit of what changed between
+        rounds.
+      links:
+      - title: DX Benchmark protocol 2
+        url: https://github.com/seikika/seikika/blob/main/docs/design/dx-benchmarks.md#41-protocol-2

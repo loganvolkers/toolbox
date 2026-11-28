@@ -1,0 +1,67 @@
+apiVersion: seikika.com/assessment/v1
+entity: scorecard:seikika/vs-backstage-footprint
+rubric: scorecard-quality
+subjectHash: 18cc24c78226
+assessor: {kind: agent, name: cursor-assessor-17, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: one-concern
+    verdict: pass
+    reason: >-
+      The scorecard is "what it costs to run and to own", for the platform
+      team that would run a portal
+      (.seikika/standards/backstage-comparison.yaml:339-350). It merges two
+      ISO 25010 characteristics, installability (F2, adopter files and lines)
+      and resource use (F3, memory and disk), as
+      docs/design/backstage-comparison.md:47-48 maps them. Both are costs paid
+      by the same operator on every instance and upgrade, so one bronze still
+      means one thing: a small portal to run and keep.
+  - criterion: levels-are-a-ladder
+    verdict: pass
+    reason: >-
+      There is one level. All five rules are bronze bars, three of them
+      pre-registered (experiments/backstage-compare/README.md:41-42). Seikika
+      reaches bronze today (89.4 MB idle, 166.4 MB loaded, 121.1 MB installed,
+      2 files, 230 lines in .seikika/comparisons/seikika.yaml), so bronze is
+      reachable. No level mixes unrelated rules, and no harder rule sits below
+      an easier one. A single pass bar is how D01M857ZB468ZM2YS6GNSEG6YB9
+      frames a comparison: the standing, not the level, carries the result.
+  - criterion: no-obvious-gap
+    verdict: fail
+    reason: >-
+      RESEARCH.md F3 asks for peak RSS and CPU-seconds to ingest as well as
+      idle RSS and image size (experiments/backstage-compare/RESEARCH.md:59).
+      measure.py already records `rssAfterLoadMb`, memory after the read load
+      (measure.py:274, 286), but snapshot.py drops it (snapshot.py:27) and no
+      rule reads it. F2's time to a first portal is listed as not measured
+      (docs/design/backstage-comparison.md:116), and download size is computed
+      for Seikika (footprint.py:162) but not for Backstage, so it has no rule
+      either.
+    suggestion: >-
+      Add a `peak-memory` rule on `rssAfterLoadMb` (pass it through
+      snapshot.py's PERF list). Record CPU-seconds to ingest from
+      `/proc/<pid>/stat` in measure.py for a `ingest-cpu` rule. Measure
+      Backstage's download size, so a download rule can compare like with
+      like.
+  - criterion: actionable
+    verdict: fail
+    reason: >-
+      Try raising Seikika if idle memory went over 512 MB. The evidence gives
+      one number. The fix names measure.py and "trim what starts eagerly"
+      (backstage-comparison.yaml:369-371) but no code, and measure.py doesn't
+      split the number by process. install-size's fix points at archive extras
+      that footprint.py doesn't count (only executables, :69-73). None of the
+      five fixes names snapshot.py, the step that writes the record the
+      scorecard reads (snapshot.py:1-4), though the performance scorecard's
+      fixes say to rerun run.sh. loaded-memory (state.rs) and the adopter
+      rules (the starter, packages) are actionable.
+    suggestion: >-
+      Fix idle-memory and install-size as their rule assessments suggest. End
+      every footprint fix with "then rerun run.sh and snapshot.py", as the
+      performance scorecard does.
+summary: >-
+  A coherent, reachable scorecard where Seikika leads by a wide margin.
+  Its gaps: peak memory under load is measured and then dropped, ingest
+  CPU is never measured, and two of the five fixes don't lead to a change
+  in the score. The adopter rules count the wrong set of files (see their
+  assessments).

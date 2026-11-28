@@ -79,7 +79,7 @@ change (12) and tied on reuse (15).
 | 2 | `seikika connector test` needs a portal; scaffold had none | A | **Fixed** — portal stub in scaffold + `examples/connector-scaffold/` (D01M83FFM2K6XS4EAVHVP92TBDZ) |
 | 3 | No one-shot entities export; hand-built stdio JSON | A | **Fixed** — `seikika connector drive` + `author-connector` skill |
 | 4 | `Source::version()` reports connect crate version | A | **Fixed** — `version()` required on every `Source` |
-| 5 | Env vs `portal/seikika.yaml` must stay in sync for tenant switch | A | **Fixed in docs/skill** — call out in RUN.md / author-connector |
+| 5 | Env vs `.seikika/seikika.yaml` must stay in sync for tenant switch | A | **Fixed in docs/skill** — call out in RUN.md / author-connector |
 | 6 | Ocean pin needs fastapi; unusable offline | B | **Deferred** — document shim / pin deps |
 | 7 | `httpx` in requirements but installs discouraged | B | **Deferred** — stdlib-only scaffold |
 | 8 | Single `OUT/entities.ndjson` overwrites on tenant flip | B, C | **Deferred** — per-tenant OUT |

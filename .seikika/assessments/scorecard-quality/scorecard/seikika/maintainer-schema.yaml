@@ -1,0 +1,74 @@
+apiVersion: seikika.com/assessment/v1
+entity: scorecard:seikika/maintainer-schema
+rubric: scorecard-quality
+subjectHash: 20fd60f436c5
+assessor: {kind: agent, name: cursor-assessor-10, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: one-concern
+    verdict: pass
+    reason: >-
+      Every rule asks whether a crates/seikika-model/schema/*.json document is
+      the contract the binary actually enforces: its dialect, identity,
+      self-description, whether it is compiled, whether it is self-contained,
+      and whether it is clean (.seikika/standards/schemas.yaml:35-58). One
+      audience: the maintainers who own those contracts (track maintainer,
+      :55; .seikika/README.md:31).
+  - criterion: levels-are-a-ladder
+    verdict: fail
+    reason: >-
+      Gold adds almost nothing. For a document schema.rs compiles, which is
+      how all four live ones reach silver's wired-in, a remote `$ref` already
+      fails the build: jsonschema is built with `default-features = false`
+      (Cargo.toml:23), so it can't fetch, and
+      crates/seikika-model/src/schema.rs:25 `expect`s the compile to succeed.
+      That breaks docs/design/thresholds.md:24 (gold asks for what lower
+      levels don't imply). Silver's titled costs the same as bronze's
+      described and doesn't match the card's rationale that silver "ties it to
+      the code" (schemas.yaml:47). No fixture sits at silver (the brief's
+      fixtureLevels are bronze, gold and none).
+    suggestion: >-
+      Move local-refs and titled to bronze (identity and self-containment are
+      floors), keep wired-in at silver, and give gold something wired-in
+      doesn't imply: a test that validates one good and one bad sample
+      instance against the schema, or the versioning rule below. Add a silver
+      fixture.
+  - criterion: no-obvious-gap
+    verdict: fail
+    reason: >-
+      These are versioned contracts (docs/design/user-sdlc.md:30, 59 promise a
+      stability and deprecation policy and `/v1`), yet nothing checks that a
+      schema carries its version or that a change stays compatible. Three
+      `$id`s carry one (`.../manifest/v1alpha1.json`,
+      `.../connector-messages/v1.json`, `.../executor-messages/v1.json`).
+      crates/seikika-model/schema/assessment.schema.json:3 uses
+      `https://seikika.com/schema/assessment.schema.json`, with no version and
+      a different path, though its documents must say `apiVersion:
+      seikika.com/assessment/v1` (:10). The design doc's research stops at the
+      core keywords (docs/design/schema-standards.md:30-34); the
+      backward-compatibility spec tests that
+      docs/design/connector-standards.md:46 cites from Airbyte are the field's
+      answer.
+    suggestion: >-
+      Add a `versioned-id` rule (the `$id` ends in a version segment matching
+      the document's apiVersion), and later a compatibility rule that diffs a
+      schema against its last release and fails on removed or newly required
+      properties.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      Raising schema/demo/partial from bronze to silver is direct. The
+      evidence says "no title" and "not compiled by schema.rs or applied by
+      the reference validator" (.seikika/tests/standards.test.yaml:591-597).
+      The fixes name the root `title` and crates/seikika-model/src/schema.rs
+      (schemas.yaml:97-110), and gold's fix names the `$ref` to change
+      (:118-120). Every rule has evidence, and five of seven print the
+      offending value.
+summary: >-
+  A focused card whose rules agents can act on, but its ladder is uneven:
+  gold's local-refs is already enforced by the compiler for every wired
+  document, and titled sits at silver for no stated reason. It also misses
+  the obvious contract concern, versioning and compatibility, which the
+  assessment schema's unversioned `$id` shows.
+  docs/design/schema-standards.md still says three documents and lists
+  secrets at gold.

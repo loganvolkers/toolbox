@@ -19,7 +19,7 @@ central portal won't fix that.
 The bet has five parts. Each has an experiment and a result that would stop us (§3).
 
 R2, R3, R4, R6 and R7 are tested by DX Benchmarks ([dx-benchmarks.md](./dx-benchmarks.md)).
-Each is catalogued in `portal/benchmarks/` with its status and outcome. R1 and R5 are measured on
+Each is catalogued in `.seikika/benchmarks/` with its status and outcome. R1 and R5 are measured on
 the installed pilots.
 
 | # | Hypothesis |

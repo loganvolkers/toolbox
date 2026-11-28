@@ -53,6 +53,6 @@ confirm interaction.
 
 The report keeps the existing progress and attainment views so readers can still see what passes,
 what holds a level, and where to investigate. Short reports now fill the theme background across the
-viewport. The [browser smoke test](../../report-ui/scripts/smoke.mjs) exercises the two navigation
+viewport. The [browser smoke test](../../npm/report-ui/scripts/smoke.mjs) exercises the two navigation
 shortcuts, keyboard tab movement, and the Pages URLs. The
-[Storybook probe](../../report-ui/scripts/probe.mjs) checks the complete story collection.
+[Storybook probe](../../npm/report-ui/scripts/probe.mjs) checks the complete story collection.

@@ -50,7 +50,7 @@ from the same SHA.
 **Refreshing OpenSSF scores:** the kit’s connector is the **runner**. Do **not** pass
 `--skip runner` when you need live `maintainer-openssf` / Scorecard facts. After recording those
 scores, rewrite a CI baseline that skips the runner with the usual
-`seikika report portal --skip runner,github-actions --baseline … --update` so crate clippy/test
+`seikika report .seikika --skip runner,github-actions --baseline … --update` so crate clippy/test
 facts are not left `unknown` under the skip.
 
 **Why a fitting, not a slot:** Scorecard's SARIF output needs a policy file and `ENABLE_SARIF`

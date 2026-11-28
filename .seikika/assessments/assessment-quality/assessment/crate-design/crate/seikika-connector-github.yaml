@@ -1,0 +1,56 @@
+apiVersion: seikika.com/assessment/v1
+entity: assessment:crate-design/crate:seikika-connector-github
+rubric: assessment-quality
+subjectHash: da5feb42bddb
+assessor: {kind: agent, name: cursor-reviewer-31, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: supported
+    verdict: pass
+    reason: >-
+      The citations in
+      .seikika/assessments/crate-design/crate/seikika-connector-github.yaml
+      match the files. crates/seikika-connector-github/src/main.rs:1-15 lists
+      the five record kinds, src/runs.rs:1-3 is the workflow-run module, and
+      docs/v1-spec.md:100 and :355-356 are the connector row and the webhook
+      promise. main.rs:20 imports only the SDK, :408-421 advertises
+      workflow-runs only when actions is set, and docs/research-log.md:74
+      records the conformance failure that fixed. Cargo.toml depends on
+      jsonwebtoken, reqwest, serde_json, tokio and seikika-connect. The tests
+      are main.rs:467-483 and runs.rs:109-160. token() is main.rs:70-106,
+      get() calls it at :116 without checking the access_tokens status
+      (:90-105), mock_github.py:8-10 lists no access_tokens route and empty
+      later pages, the page loop is main.rs:132-153, and the selector alias is
+      :312-319. scripts/m4-acceptance.sh:33 runs the conformance kit against
+      that mock.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      one-responsibility, small-contract and replaceable-defaults pass for the
+      reasons the crate-design rubric asks. The crate docs state one GitHub
+      read job (main.rs:1-15), the binary exports no library API, and it wraps
+      none of the charter defaults. tests-match-risk fails on the untested App
+      token path, which the sources show and the assessment names. No other
+      criterion should have failed.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      Each verdict follows from code a second assessor can read: the token
+      function never checks HTTP status (main.rs:90-105), the mock has no
+      access_tokens route (mock_github.py:8-10), and the only tests are
+      CODEOWNERS and run statistics. The pass on one-responsibility follows
+      the crate docs matching docs/v1-spec.md §4, with the webhook promise
+      left as drift rather than a second job.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      The tests-match-risk suggestion would change that verdict. Caching the
+      installation token, failing on a non-2xx access_tokens response, and
+      adding the route plus a selector test covers the three gaps the reason
+      cites in main.rs:70-116 and :312-319. The other three verdicts pass, so
+      they need no suggestion.
+summary: >-
+  Trustworthy. The crate docs, SDK boundary, missing webhook, untested App
+  token path and the mock's gaps are all where the assessment says they
+  are. Failing tests-match-risk and passing the other three criteria is
+  what those sources support, and the suggestion would close the auth gap.

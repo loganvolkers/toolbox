@@ -1,0 +1,45 @@
+apiVersion: seikika.com/assessment/v1
+entity: assessment:scorecard-quality/scorecard:acme/github-app-hygiene
+rubric: assessment-quality
+subjectHash: ca30cfb118ea
+assessor: {kind: agent, name: cursor-reviewer-18, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: supported
+    verdict: pass
+    reason: >-
+      The citations in
+      .seikika/assessments/scorecard-quality/scorecard/acme/github-app-hygiene.yaml
+      hold. In examples/reference-portal/seikika.yaml the card is at 230-254,
+      the rationale's "single bronze rule is enough" at 235-236, the fix at
+      247-249 and the only actions at 304-364. The `eligible` keys are at 26
+      and 32. docs/examples/approved-github-apps.md:89-91 lists the four
+      hygiene rules. `rg eligible` over crates/ finds only
+      crates/seikika-derive/tests/reference.rs:79. tests/apps.test.yaml shows
+      platform-infra bronze and checkout-web none.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      The verdicts are right. One concern for one owner, `group:security`,
+      with permission drift moved to app-approval, passes one-concern. A
+      single reachable bronze level passes levels-are-a-ladder. no-obvious-gap
+      fails on the design's own four-rule list (:89-91). actionable fails
+      because the fix names a missing action and there is no evidence
+      (seikika.yaml:247-249).
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      The gap verdict compares the manifest with the design's explicit rule
+      list, and the actionable verdict checks the fix against the defined
+      actions. A second assessor would reach the same result.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      An `installed-apps-eligible` rule, or explicitly deferring expiry and
+      unused-install rules in the design, flips no-obvious-gap. Evidence
+      listing the unapproved apps plus a fix pointing at `remove-app` flips
+      actionable.
+summary: >-
+  An accurate assessment. Each citation holds, and both fails come from
+  comparing the manifest with the design's own four-rule list and its
+  defined actions. Each suggestion would change its verdict.

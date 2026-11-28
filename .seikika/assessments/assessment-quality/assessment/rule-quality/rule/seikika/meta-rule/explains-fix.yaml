@@ -1,0 +1,50 @@
+apiVersion: seikika.com/assessment/v1
+entity: assessment:rule-quality/rule:seikika/meta-rule/explains-fix
+rubric: assessment-quality
+subjectHash: 71029d847a10
+assessor: {kind: agent, name: cursor-reviewer-02, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: supported
+    verdict: pass
+    reason: >-
+      The citations in
+      .seikika/assessments/rule-quality/rule/seikika/meta-rule/explains-fix.yaml
+      hold. The rule is meta.yaml:414-418 and the word count is
+      `split_whitespace().count()` (meta.rs:190-192). "Pin `uses:` to SHAs" is
+      4 tokens and fails, and "Please fix this rule soon." is 5 and passes.
+      thresholds.md:44 is the 5-word row. fixNamesPlace is meta.yaml:150-154.
+      explains-fix's fix matches no regex arm and no check field, so it passes
+      only through the evidence arm: its evidence reads `fixWords`, and the
+      rule brief shows fixNamesPlace true. The test is
+      standards.test.yaml:242-252 ("fix has 2 words"). L1 and the explains-fix
+      row are scorecards-for-scorecards.md:81 and :100.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      Both fails meet the rubric's wording. An entity "could pass while
+      missing the intent" (meta.yaml:1160) with five filler words, and filler
+      is the cheapest pass (meta.yaml:1163-1165). fix-leads-to-pass and
+      threshold-justified are right: thresholds.md:44 labels 5 as chosen, with
+      its reason. results.json has no live rule failing it.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      Each fail has a concrete counterexample a second assessor can count by
+      hand against meta.rs:190-192. The threshold is labelled chosen in the
+      doc, so the pass doesn't rest on taste.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      The hard-to-game suggestion (require a code span, path or checked field
+      at bronze) rejects five filler words, so it would flip that verdict. The
+      measures-intent suggestion offers two routes. A rename alone would not
+      flip it, because the fix text at meta.yaml:418 would still promise "what
+      to change, and where". Checking for a verb plus a code span, path or
+      field would flip it, because the filler passes no longer exist and the
+      4-word real fix passes.
+summary: >-
+  Trustworthy. Both counterexamples check out against the word counter.
+  The gold escape through `fixWords` evidence is real and visible in the
+  brief. The second measures-intent route would flip that verdict. The
+  rename route alone would not, unless the fix text changes with it.

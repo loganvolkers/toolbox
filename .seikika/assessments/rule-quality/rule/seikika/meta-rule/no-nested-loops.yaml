@@ -1,0 +1,51 @@
+apiVersion: seikika.com/assessment/v1
+entity: rule:seikika/meta-rule/no-nested-loops
+rubric: rule-quality
+subjectHash: 0cbb5abf81d6
+assessor: {kind: agent, name: cursor-assessor-02, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: measures-intent
+    verdict: pass
+    reason: >-
+      `loops` is the AST comprehension depth
+      (crates/seikika-expr/src/analysis.rs:18-20, 66-70). Only a
+      comprehension's body raises the depth, not its range, so chained
+      `filter(...).size()` stays at 1 and `a.all(x, b.exists(...))` is 2
+      (analysis.rs:222-223). That is exactly "a comprehension inside a
+      comprehension", the case named in the rule's name and fix
+      (.seikika/standards/meta.yaml:481-491).
+  - criterion: hard-to-game
+    verdict: fail
+    reason: >-
+      The `in` operator on a list is a call, not a comprehension
+      (analysis.rs:55-64), so it adds no depth. Rewriting the inner
+      `entity.b.exists(y, y == x)` as `x in entity.b` gives depth 1 and
+      passes. The cost is unchanged, a product of two list lengths per entity,
+      which is the cost the rationale cites from lesson L8 (meta.yaml:492-495,
+      docs/design/scorecards-for-scorecards.md:88).
+    suggestion: >-
+      Count `@in` with a list operand inside a comprehension as a loop level
+      in the analysis, and add a fixture rule using that form, pinned failing
+      in .seikika/tests/standards.test.yaml.
+  - criterion: fix-leads-to-pass
+    verdict: pass
+    reason: >-
+      The evidence gives the check and evidence depths (`check loops 2` for
+      rule:demo/sprawling/everything, .seikika/tests/standards.test.yaml:
+      273-277). Moving the inner list into a computed field, as the fix says,
+      takes the check to depth 1. meta-field's computed-readable then guards
+      that computed field (docs/design/thresholds.md:43).
+  - criterion: threshold-justified
+    verdict: pass
+    reason: >-
+      "At most one level" follows from the cost model: one level is linear in
+      a list, two are quadratic. The 100k-entity budget failing on 2-vCPU
+      runners (24.4 s vs 10 s) is the measured reason
+      (scorecards-for-scorecards.md:88, 105). The card's rationale names it
+      silver's cost bound (meta.yaml:398-400).
+summary: >-
+  It measures nesting correctly and its fix works. The cost it exists to
+  bound can be hidden with list membership, `x in list`, inside a single
+  comprehension. All 272 live rules pass (.seikika/results.json), so it
+  guards rather than ranks. Tests pin only the fail outcome.

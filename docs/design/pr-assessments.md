@@ -6,7 +6,7 @@ This is about the box. Seikika for Seikika determines which checks and review qu
 
 ## Plan and check
 
-The planner reads [the policy](../../portal/assessment-pr.json) at the base ref and diffs the merge base against the requested head. Both paths of a rename, deleted paths, and shared dependency files can trigger a check. An unmapped path or a base without the policy gives `scope_unknown` and names who can triage it. Changes to the policy in a PR take effect on later PRs once the trusted base contains the new version.
+The planner reads [the policy](../../.seikika/assessment-pr.json) at the base ref and diffs the merge base against the requested head. Both paths of a rename, deleted paths, and shared dependency files can trigger a check. An unmapped path or a base without the policy gives `scope_unknown` and names who can triage it. Changes to the policy in a PR take effect on later PRs once the trusted base contains the new version.
 
 CI uses the exact candidate commit that the existing PR jobs test. The Rust job archives the plan and evidence for onboarding, acceptance diagnostics, and SDK coverage. The UI job archives the rendered-state evidence. Existing Storybook CI includes the campaign hatch and unmeasured-comparison assertions. A missing artefact, a failed check, or an unanswered criterion leaves the affected review obligation incomplete.
 
@@ -58,5 +58,5 @@ This pilot keeps CI model-free. A maintainer supplies the delegate and its authe
 ## Sources
 
 - [Assessment audit and archived replays](../audits/agentic-assessments-2026-11-26.md)
-- [Maintainer CI](../../.github/workflows/ci.yml) and [report state probes](../../report-ui/scripts/probe.mjs)
+- [Maintainer CI](../../.github/workflows/ci.yml) and [report state probes](../../npm/report-ui/scripts/probe.mjs)
 - [Delegate mode in Open Code Review](https://github.com/alibaba/open-code-review/blob/main/pages/src/content/docs/en/integrations/delegate.md)

@@ -1,0 +1,55 @@
+apiVersion: seikika.com/assessment/v1
+entity: assessment:rule-quality/rule:seikika/maintainer-dependency/one-version
+rubric: assessment-quality
+subjectHash: 48f15de5b382
+assessor: {kind: agent, name: cursor-reviewer-35, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: supported
+    verdict: fail
+    reason: >-
+      The rule text and the lockfile story hold.
+      .seikika/standards/dependencies.yaml:100 is versions.size() == 1, the
+      fix is 102-105, the evidence is the version list at 101, and the
+      rationale cites cargo-deny at 106-109. deps.rs:90-114 collects every
+      lockfile version of the name. Cargo.toml:17 requires syn version 3.
+      sqlx-macros-core, tracing-attributes and prost-derive depend on syn
+      2.0.119, and serde_derive and tokio-macros depend on syn 3.0.10, in
+      Cargo.lock. .seikika/results.json shows syn as the only one-version
+      failure. It does not contain the strings 2.0.119 or 3.0.10. Those
+      versions are in Cargo.lock, and the assessment attributes them to
+      .seikika/results.json.
+    suggestion: >-
+      Cite Cargo.lock for syn 2.0.119 and 3.0.10, and cite
+      .seikika/results.json only for syn being the sole live one-version
+      failure.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      measures-intent and hard-to-game pass for the right reason: the check is
+      one lockfile version and there is no exemption list. The
+      fix-leads-to-pass fail is right. The direct requirement is already syn
+      3, both majors are pulled by proc-macros the repo still needs, and the
+      evidence lists versions only. Silver is stated at
+      docs/design/dependency-standards.md:19 and the
+      duplicate-on-the-direct-crate note is at :33.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      The four verdicts follow from the check, the fix text, Cargo.lock's
+      dependency edges and the design doc. The caveat that syn 2 is not linked
+      into the shipped binary is labeled as a caveat and does not flip the
+      name of the rule.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      Putting each version's dependents in the evidence and telling the reader
+      to run cargo tree, or to record an exemption when both copies are
+      transitive, would give the fix a path that actually clears the live syn
+      failure. That changes fix-leads-to-pass.
+summary: >-
+  The one-version assessment gets the verdicts right: the check is a real
+  lockfile count, and the fix does not clear the transitive syn duplicate.
+  It fails supported because it attributes syn 2.0.119 and 3.0.10 to
+  .seikika/results.json, which only records that the rule fails, not those
+  version strings.

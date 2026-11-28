@@ -2,7 +2,7 @@
 
 *Status: built 2026-11-20 (D66); the static-site extensions in §5 are proposals. A **repo portal**
 is a Seikika manifest in one repository, run by `seikika report` locally and in CI. Seikika for
-Seikika ([portal/](../../portal/README.md)) is the first one. It is the leaf of
+Seikika ([portal/](../../.seikika/README.md)) is the first one. It is the leaf of
 [federation](./federation.md) and the first step of the go-to-market path. Proving its value is the
 current focus: [repo-value.md](./repo-value.md).*
 
@@ -34,7 +34,7 @@ portal, these repos are already its children ([federation.md](./federation.md) �
 ## 2. What runs where
 
 ```
-seikika report portal --baseline portal/results.json --ci
+seikika report .seikika --baseline .seikika/results.json --ci
   ├─ for each in-image connector (in parallel, except --skip): spawn, send one resync, collect records
   ├─ full recompute (the same pipeline as serve)
   ├─ compare with the baseline: worse → exit 1; stale under --ci → exit 1; --update → write
@@ -89,7 +89,7 @@ and it never goes stale relative to the commit it describes.
 
 **Hosting it in another site.** `seikika report -o web --out DIR` writes `report.json`,
 `seikika-report.js`, and a standalone `index.html`. An Astro site imports
-[`@seikika/astro-report`](../../report-ui/README.md) with that JSON and can supply its own Astro
+[`@seikika/astro-report`](../../npm/report-ui/README.md) with that JSON and can supply its own Astro
 layout. The integration and the hosted portal share the Vue entity and scorecard views. The CLI
 uses the same integration to produce its offline HTML document.
 
@@ -135,7 +135,7 @@ its static portal. The scheduled and manual runs use the starter's pinned versio
 [Release smoke workflow](../../.github/workflows/mise.yml)
 
 [Consumer action comparison](../audits/consumer-github-actions.md) ·
-[Operator workflow examples](../../site/src/content/docs/operators/ci.md)
+[Operator workflow examples](../../npm/site/src/content/docs/operators/ci.md)
 
 ## Sources
 

@@ -8,7 +8,7 @@ secrets ([docs/design/repo-portals.md](../../docs/design/repo-portals.md)).
 For separate steps, use [setup](../setup/README.md) to install the CLI,
 [ratchet](../ratchet/README.md) to enforce the baseline, or
 [build-portal](../build-portal/README.md) to produce a static snapshot. The
-[operator CI guide](../../site/src/content/docs/operators/ci.md) shows how to compose them.
+[operator CI guide](../../npm/site/src/content/docs/operators/ci.md) shows how to compose them.
 
 ## Adopt it in a repository
 
@@ -42,7 +42,7 @@ For separate steps, use [setup](../setup/README.md) to install the CLI,
 
 3. **First run:** start the workflow by hand with `mode: update`. It uploads `results.json` in the
    `seikika-report` artifact; commit it as `.seikika/results.json`. Or, with the release
-   installed ([Install Seikika](../../site/src/content/docs/start/install.md)), run
+   installed ([Install Seikika](../../npm/site/src/content/docs/start/install.md)), run
    `seikika report .seikika --baseline .seikika/results.json --update`.
 4. **Git packages:** if `.seikika/seikika.yaml` includes a `github:…@…` package, run
    `seikika install .seikika` locally, commit `.seikika/seikika.lock`, and keep the action's

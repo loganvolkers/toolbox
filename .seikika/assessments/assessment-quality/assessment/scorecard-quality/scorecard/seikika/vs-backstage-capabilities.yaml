@@ -1,0 +1,55 @@
+apiVersion: seikika.com/assessment/v1
+entity: assessment:scorecard-quality/scorecard:seikika/vs-backstage-capabilities
+rubric: assessment-quality
+subjectHash: d0b4d47bfb2e
+assessor: {kind: agent, name: cursor-reviewer-15, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: supported
+    verdict: pass
+    reason: >-
+      The citations in
+      .seikika/assessments/scorecard-quality/scorecard/seikika/vs-backstage-capabilities.yaml
+      hold:
+      - RESEARCH.md:110-123 is F1.
+      - RESEARCH.md:31-33 separates functional completeness from project
+        health, and :64 puts the OpenSSF Scorecard under F8.
+      - backstage-comparison.yaml:906-910 is the description, and :926-1057
+        the 12 scenario rules.
+      - docs/v1-spec.md:46 and :50 defer template executors and
+        notifications.
+      - RESULTS.md:269-270 splits out extensibility.
+      - .seikika/results.json shows level none with these seven failing:
+        api-docs, community, docs, docs-search, kubernetes, notifications
+        and templates.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      The three fails are right. `community` is project health. One bronze
+      level holds six kept rules beside seven costly or external ones. Several
+      fixes are stale or vague, as the sibling assessments of templates, docs
+      and notifications show. no-obvious-gap passes because each brief
+      scenario has its rule.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      Each fail cites a countable fact: the brief's split, the seven failures
+      in .seikika/results.json, and the stale fix texts. A second assessor
+      would reach the same verdicts.
+  - criterion: actionable
+    verdict: fail
+    reason: >-
+      The levels-are-a-ladder suggestion puts "search" in bronze. That rule is
+      docs-search, which needs documentation indexing. Seikika fails it, and
+      v1 scopes search to entities (docs/v1-spec.md:48). So the suggested
+      bronze is still out of reach now, and the rubric's "bronze reachable
+      now" (.seikika/standards/meta.yaml:1198-1199) still fails. The
+      one-concern and actionable suggestions would change their verdicts.
+    suggestion: >-
+      Put docs-search with docs and API docs in silver. Bronze then holds the
+      six capabilities Seikika passes, and is reachable now.
+summary: >-
+  An accurate, well-cited assessment whose three fails are right. One
+  suggestion would not fix its verdict: the proposed bronze includes
+  docs-search, which Seikika fails and v1 does not scope. Bronze would
+  still be unreachable.

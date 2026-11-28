@@ -1,0 +1,48 @@
+apiVersion: seikika.com/assessment/v1
+entity: assessment:rule-quality/rule:seikika/meta-kind/described
+rubric: assessment-quality
+subjectHash: 04c6a537b507
+assessor: {kind: agent, name: cursor-reviewer-37, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: supported
+    verdict: pass
+    reason: >-
+      .seikika/assessments/rule-quality/rule/seikika/meta-kind/described.yaml
+      matches the sources. described is filled()
+      (crates/seikika-cli/src/model.rs:197, :281-285), which rejects only
+      blank text. The seven failing kinds in .seikika/results.json are
+      kind:acme/GitHubApp, GitHubAppInstallation, Group, Repository and User,
+      and kind:repo/Doc and Repository, none of which declare a description.
+      The Command description in .seikika/standards/cli.yaml:6 is seven words,
+      and no described kind in the three portals is shorter. Evidence and fix
+      are .seikika/standards/meta.yaml:737-740, the rationale is :741-743, the
+      card rationale is :696-700, the level table is
+      docs/design/scorecards-for-scorecards.md:207, and kind:demo/Bare fails
+      described at .seikika/tests/standards.test.yaml:806.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      The check is presence, which is what "described" says, so
+      measures-intent passes. "TBD" passes filled(), so hard-to-game fails.
+      The fix names the description key and the fixture shows the failing
+      case. Silver is the card's stated placement, with no number.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      filled() and the seven results rows are readable as they stand. A
+      four-word floor is a suggestion, not a verdict that depends on taste:
+      the fail is that any non-blank string passes.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      Requiring four words that are not the kind's name, and rejecting
+      TODO/TBD, would make "TBD" fail while leaving Command's seven-word
+      description passing, which changes the hard-to-game fail in
+      .seikika/assessments/rule-quality/rule/seikika/meta-kind/described.yaml.
+      The three passes have no suggestion.
+summary: >-
+  Trustworthy. filled() is a non-blank check, the seven live failures are
+  the undescribed acme and repo kinds, and Command's description is seven
+  words. The placeholder fail is the one the code supports, and a word
+  floor would change it.

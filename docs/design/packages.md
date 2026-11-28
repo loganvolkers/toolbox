@@ -238,7 +238,7 @@ From federation §3, Q15 and charter goals G1–G3:
 
 ## 5. The S4S monolith
 
-S4S's `portal/seikika.yaml` is 1,841 lines: 5 connectors, 21 kinds, 26 scorecards with 143 rules, and
+S4S's `.seikika/seikika.yaml` is 1,841 lines: 5 connectors, 21 kinds, 26 scorecards with 143 rules, and
 4 rubrics. Scorecards are 965 lines and kinds 665.
 
 | Option | For | Against |
@@ -250,11 +250,11 @@ S4S's `portal/seikika.yaml` is 1,841 lines: 5 connectors, 21 kinds, 26 scorecard
 **Recommended:** split now, along the lines packages will follow:
 
 ```
-portal/seikika.yaml                     # portal, policies, mcp, include list
+.seikika/seikika.yaml                     # portal, policies, mcp, include list
 portal/connectors.yaml
-portal/standards/maintainer/{crates,docs,ci,skills,connectors,deps,agent-docs,packages,schemas,examples}.yaml
-portal/standards/operator/cli.yaml
-portal/standards/user/{cli,mcp}.yaml
+.seikika/standards/maintainer/{crates,docs,ci,skills,connectors,deps,agent-docs,packages,schemas,examples}.yaml
+.seikika/standards/operator/cli.yaml
+.seikika/standards/user/{cli,mcp}.yaml
 portal/meta/{rules,model,assessments}.yaml   # meta-*, review-*, rubrics
 ```
 
@@ -262,7 +262,7 @@ Then let the second user of a pattern trigger a package with parameters (§3.3).
 scorecards and their computed fields are the first candidate.
 
 **Done (D95), with two changes from the layout above.**
-- **Files are by topic, not by layer.** `portal/standards/<topic>.yaml` holds a topic's kind, its
+- **Files are by topic, not by layer.** `.seikika/standards/<topic>.yaml` holds a topic's kind, its
   scorecards and its rubrics together: for example `cli.yaml` holds `Command`, `operator-cli` and
   `user-cli`. A topic often spans layers, and a reviewer reads a kind next to the standards that
   score it.
@@ -272,7 +272,7 @@ scorecards and their computed fields are the first candidate.
 Before the split, `validate` labelled every problem `seikika.yaml` with the merged document's
 pointer. Now problems name the included file and the pointer inside it.
 
-`portal/results.json` is the busier file: 22 of 50 recent commits touched it along with
+`.seikika/results.json` is the busier file: 22 of 50 recent commits touched it along with
 `seikika.yaml`. It is not split. Its keys are sorted, so a new scorecard or entity is inserted, not
 appended, and splitting it by scorecard wouldn't change which hunks touch. Its conflicts come from
 one entity changing on both sides, which needs regenerating anyway. It is treated like a lockfile:

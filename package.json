@@ -10,6 +10,7 @@
   "scripts": {
     "build": "pnpm --filter seikika-portal-ui build && pnpm --filter @seikika/astro-report build",
     "check": "pnpm --filter @seikika/ui check && pnpm --filter seikika-portal-ui check && pnpm --filter @seikika/astro-report check && pnpm check:packages",
+    "check:coupling": "node scripts/check-coupling.mjs",
     "check:packages": "node scripts/check-ui-packages.mjs",
     "storybook": "pnpm --filter @seikika/astro-report storybook",
     "storybook:build": "pnpm --filter @seikika/astro-report build-storybook",

@@ -1,0 +1,62 @@
+apiVersion: seikika.com/assessment/v1
+entity: assessment:rule-quality/rule:seikika/meta-connector/refreshable
+rubric: assessment-quality
+subjectHash: d695a8c048c6
+assessor: {kind: agent, name: cursor-reviewer-03, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: supported
+    verdict: pass
+    reason: >-
+      Every citation in
+      .seikika/assessments/rule-quality/rule/seikika/meta-connector/refreshable.yaml
+      holds. crates/seikika-cli/src/model.rs:233 emits `refresh` keys, and
+      crates/seikika-model/src/validate.rs:196-208 only cross-checks them with
+      `records`. `can_refresh` is crates/seikika-connect/src/hub.rs:408-415,
+      used at crates/seikika-api/src/connectors.rs:510. The github connector
+      registers `external_ids` for codeowners and app
+      (crates/seikika-connector-github/src/main.rs:411-412), while
+      examples/reference-portal/seikika.yaml:45-47 lists only installation and
+      repository and asks for `since`, which the connector doesn't offer.
+      .seikika/results.json gives connector:acme/github two refreshable
+      evidence items. The workspace connector drops `assessment` from refresh
+      at crates/seikika-connector-workspace/src/main.rs:1330-1333, and the
+      schema's `refresh` items are an enum with no minItems
+      (crates/seikika-model/schema/manifest.schema.json:516-529). I found
+      nothing that compares the manifest with registered capabilities. The
+      conformance kit reads `refresh` only to pick a sample
+      (crates/seikika-connect/src/conformance.rs:194-197).
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      All three fails are right. The reference portal shows the check failing
+      a connector that meets the intent (main.rs:411-412 against
+      seikika.yaml:45-47). `assessment: []` passes a key-only check. The fix
+      (.seikika/standards/meta.yaml:891-892) doesn't name the `refresh:` key
+      the rule reads, which is the rubric's "names the wrong place". The
+      threshold pass is right too: no number, gold per
+      docs/design/scorecards-for-scorecards.md:209.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      Each fail rests on a concrete mismatch a second assessor can reproduce
+      from the files: model.rs:233 against hub.rs:408-415, and
+      examples/reference-portal/seikika.yaml:45-47 against
+      crates/seikika-connector-github/src/main.rs:411-412. fix-leads-to-pass
+      could be argued, since "by external id" hints at `[external_ids]`. But
+      the guidance's "names the wrong place" fits a fix that names no place at
+      all.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      Each suggestion in
+      .seikika/assessments/rule-quality/rule/seikika/meta-connector/refreshable.yaml
+      would flip its verdict. Comparing the manifest with registered scopes
+      clears acme/github's false fails and catches a declaration the connector
+      refuses. Requiring `external_ids` rejects `[]` and `[since]`. Naming the
+      `refresh:` key and the package capability gives the fix a place.
+summary: >-
+  A well-founded assessment. The rule scores the manifest's declaration,
+  not the connector's ability to refresh, and the reference portal already
+  shows the two drifting apart. Every citation holds, and each suggestion
+  targets the verdict it is attached to.

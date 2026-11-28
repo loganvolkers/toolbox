@@ -1,0 +1,113 @@
+connectors:
+  - name: module-coupling
+    package: builtin:runner
+    runtime: in-image
+    config:
+      name: module-coupling
+      root: .
+      jobs:
+        - name: module-coupling
+          command: [node, scripts/check-coupling.mjs, --ndjson]
+          parse: ndjson
+          kinds: [module-coupling]
+    records: [module-coupling]
+    refresh: {module-coupling: [external_ids]}
+    freshness: {module-coupling: 5m}
+
+kinds:
+  - name: ModuleCoupling
+    title: Module
+    description: A Rust crate or npm package and its direct internal dependencies.
+    identityFrom: [connector:module-coupling]
+    sources: {default: [connector:module-coupling]}
+    fields:
+      name: {type: string, description: Cargo or npm package name.}
+      path: {type: string, description: Repository-relative package manifest.}
+      dependencies:
+        type: list
+        items: string
+        description: Direct internal dependencies.
+      cycles:
+        type: list
+        items: string
+        description: One return path for each cyclic edge.
+      boundaries:
+        type: list
+        items: string
+        description: Edges across a forbidden boundary.
+      entrypoints:
+        type: list
+        items: string
+        description: Dependencies that bypass package declarations or exports.
+      deploymentData:
+        type: list
+        items: string
+        description: Literal deployment links in reusable frontend code.
+    map:
+    - from: module-coupling/module-coupling
+      id: "'module-coupling:' + record.path"
+      set: >-
+        {'name': record.name, 'path': record.path,
+         'dependencies': record.dependencies, 'cycles': record.cycles,
+         'boundaries': record.boundaries, 'entrypoints': record.entrypoints,
+         'deploymentData': record.deploymentData}
+
+scorecards:
+  - name: maintainer-module-coupling
+    title: Module coupling
+    kind: ModuleCoupling
+    owner: group:maintainers
+    track: maintainer
+    description: >-
+      Keep modules acyclic, reusable, and reachable through declared public
+      interfaces.
+    rationale: >-
+      Dependency cycles and private imports turn independent changes into
+      coordinated releases.
+    links:
+    - title: Coupling policy and review
+      url: https://github.com/seikika/seikika/blob/main/docs/design/module-coupling.md
+    levels: [clean]
+    ratchet: {newEntitiesAtLeast: clean}
+    rules:
+    - name: acyclic
+      level: clean
+      check: entity.cycles.size() == 0
+      measure: entity.cycles.size()
+      dataFrom: module-coupling
+      evidence: entity.cycles
+      fix: Move the shared contract to a dependency both modules can use.
+      rationale: >-
+        A cycle prevents modules from being developed and reasoned about
+        independently.
+    - name: deployment-independent
+      level: clean
+      check: entity.boundaries.size() == 0
+      measure: entity.boundaries.size()
+      dataFrom: module-coupling
+      evidence: entity.boundaries
+      fix: >-
+        Pass deployment data through an existing manifest, API response, or
+        component input.
+      rationale: >-
+        Product modules must work for a portal whose data and deployment are
+        different.
+    - name: public-entrypoints
+      level: clean
+      check: entity.entrypoints.size() == 0
+      measure: entity.entrypoints.size()
+      dataFrom: module-coupling
+      evidence: entity.entrypoints
+      fix: Declare the workspace dependency and import a public export.
+      rationale: The published interface controls which changes consumers can depend on.
+    - name: deployment-links
+      level: clean
+      check: entity.deploymentData.size() == 0
+      measure: entity.deploymentData.size()
+      dataFrom: module-coupling
+      evidence: entity.deploymentData
+      fix: >-
+        Build the link from the portal's data and omit it when the destination
+        is unavailable.
+      rationale: Navigation must use destinations available on the current deployment.
+    facets: {summary: public, details: public}

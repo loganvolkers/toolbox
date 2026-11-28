@@ -14,7 +14,7 @@ It requires no organization credential, hosted database, or Cloudflare deploymen
 ```sh
 pnpm build
 cargo build --locked -p seikika-cli -p seikika-connector-workspace -p seikika-connector-runner
-SEIKIKA_FEDERATION_OUT=/tmp/seikika-federation node report-ui/scripts/federation-parity.mjs
+SEIKIKA_FEDERATION_OUT=/tmp/seikika-federation node npm/report-ui/scripts/federation-parity.mjs
 python3 -m http.server 8765 --bind 127.0.0.1 --directory /tmp/seikika-federation
 ```
 
@@ -46,11 +46,11 @@ for the workflow audit and ensure it is on `PATH`.
 pnpm install --frozen-lockfile
 pnpm build
 cargo build --locked -p seikika-cli -p seikika-connector-workspace -p seikika-connector-runner
-target/debug/seikika tools install portal --via pipx
+target/debug/seikika tools install .seikika --via pipx
 target/debug/seikika validate examples/github-org-federation
 target/debug/seikika test examples/github-org-federation
 source_report=$(mktemp -d)
-target/debug/seikika report portal --skip runner,github-actions -o web --out "$source_report"
+target/debug/seikika report .seikika --skip runner,github-actions -o web --out "$source_report"
 install -D -m 0644 "$source_report/report.json" examples/github-org-federation/publications/seikika.json
 snapshot=$(mktemp -d)
 target/debug/seikika report examples/github-org-federation -o web --out "$snapshot"
@@ -75,9 +75,9 @@ For the docs site, build the public variant and pass its snapshot to Astro.
 
 ```bash
 target/debug/seikika report examples/github-org-federation/public.yaml -o web \
-  --out site/.generated/organization
+  --out npm/site/.generated/organization
 SEIKIKA_BIN="$PWD/target/debug/seikika" \
-  SEIKIKA_ORG_REPORT_DATA="$PWD/site/.generated/organization/report.json" pnpm docs:build
+  SEIKIKA_ORG_REPORT_DATA="$PWD/npm/site/.generated/organization/report.json" pnpm docs:build
 ```
 
 The Pages workflow rebuilds this snapshot from public inventory. The organization view lives at

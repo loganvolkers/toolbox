@@ -1,0 +1,68 @@
+apiVersion: seikika.com/assessment/v1
+entity: rule:seikika/vs-backstage-footprint/adopter-files
+rubric: rule-quality
+subjectHash: 31750955d76f
+assessor: {kind: agent, name: cursor-assessor-17, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: measures-intent
+    verdict: fail
+    reason: >-
+      The field is "files the adopter keeps in their repository for a first
+      portal" (.seikika/standards/backstage-comparison.yaml:58-60). Seikika's
+      2 comes from footprint.py:154, which counts examples/repo-portal-starter
+      while skipping any path under `tests` or `fixtures`. That counts
+      README.md, which the starter's own README never asks the adopter to copy
+      ("Copy `seikika.yaml` to `.seikika/seikika.yaml` and add the report
+      action", examples/repo-portal-starter/README.md:4-5). It omits the
+      workflow file for the report action, which the adopter does keep, and
+      the tests/ and fixtures/ that the same README expects under `.seikika/`
+      (:20-22). Backstage's 44 counts the whole create-app tree, tests
+      included (footprint.py:157). The adjudication adds that the starter is a
+      repo-scored portal, not a served catalog
+      (experiments/backstage-compare/ADJUDICATION.md:224-229).
+    suggestion: >-
+      Count what the starter's README tells the adopter to keep:
+      `.seikika/seikika.yaml`, `.seikika/tests`, `.seikika/fixtures` and the
+      workflow calling actions/report. Count Backstage the same way, or
+      measure the served bench portal (.seikika/seikika.yaml plus model.fga)
+      as the adjudication suggests.
+  - criterion: hard-to-game
+    verdict: fail
+    reason: >-
+      footprint.py skips a file if any part of its path is `tests` or
+      `fixtures` (:47-48, 154). Moving starter content under a directory with
+      one of those names takes it out of the count, and the adopter keeps just
+      as much. The intended route, moving content into included packages, is
+      real but no cheaper.
+    suggestion: >-
+      Skip only the starter's documented test inputs (the files `seikika test`
+      reads), not any path with those names. Or count every file the adopter
+      copies, as above.
+  - criterion: fix-leads-to-pass
+    verdict: pass
+    reason: >-
+      The evidence is "N files to keep for a first portal", and the fix, "Move
+      what examples/repo-portal-starter asks an adopter to keep into packages
+      they include" (backstage-comparison.yaml:414-415), names the directory
+      footprint.py counts and a mechanism that exists today: git-first
+      packages under packages/ (D89). Moving files there lowers the count on
+      the next footprint.py run.
+  - criterion: threshold-justified
+    verdict: fail
+    reason: >-
+      Nothing justifies 10 files. The pre-registered README gives "—" for
+      adopter files (experiments/backstage-compare/README.md:43), and
+      RESULTS.md:261-265 records that this bar was written after the smoke
+      rounds. RESEARCH.md F2 has only a comparative bar on authored lines
+      (RESEARCH.md:58).
+    suggestion: >-
+      Give the 10 a source in backstage-comparison.md, or in
+      docs/design/thresholds.md with a measured reason, or drop the absolute
+      bar and score only the comparative value. Mark it as post-registration
+      in the rule's rationale meanwhile.
+summary: >-
+  An important question, measured loosely. The count includes a README the
+  adopter doesn't copy and skips the tests, fixtures and workflow they do
+  keep. Any path under `tests` or `fixtures` drops out, and the bar of 10
+  was set after the smoke rounds.

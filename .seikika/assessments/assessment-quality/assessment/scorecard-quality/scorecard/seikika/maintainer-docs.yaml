@@ -1,0 +1,51 @@
+apiVersion: seikika.com/assessment/v1
+entity: assessment:scorecard-quality/scorecard:seikika/maintainer-docs
+rubric: assessment-quality
+subjectHash: 4af1aa11cfc3
+assessor: {kind: agent, name: cursor-reviewer-11, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: supported
+    verdict: pass
+    reason: >-
+      The citations in
+      .seikika/assessments/scorecard-quality/scorecard/seikika/maintainer-docs.yaml
+      hold. Both silver checks start `entity.area != 'design' ||`
+      (docs.yaml:144,155). .seikika/results.json has 157 docs at silver, 92 of
+      them outside docs/design/, and 159 skipped. No test names status-banner,
+      and results.json shows meta-rule failing `tested` for it. The
+      box-or-tool rule is AGENTS.md:150 and D01M7ZRAJT47W11X5X3FEJ6QTX8. Only
+      12 of the 65 docs/design/*.md say "about the box", "about a tool" or
+      link seikika-and-tools.md in their first 15 lines, and thresholds.md:3
+      shows the form. The time-estimate rule was dropped at
+      seikika-for-seikika.md:211. historicalDocs is
+      .seikika/seikika.yaml:16-27. One slip: the links-resolve fix is
+      docs.yaml:106, not :105.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      The two fails are the real gaps. A silver that 92 docs reach for free
+      means nothing beyond bronze for them (docs.yaml:144,155), and a written
+      rule for design docs has no check. The passes hold: the rules share one
+      audience (docs.yaml:84-89), and each fix names a place.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      Both fails rest on counts a second assessor can recompute from
+      .seikika/results.json and docs/design/, as I did, and on a written rule
+      (AGENTS.md:150). Calling a vacuous silver a broken ladder is
+      interpretive, but the rubric asks whether each level builds on the one
+      below, and for 92 docs silver adds nothing.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      Scoping the card to docs/design/, or giving non-design docs a silver
+      rule of their own, makes silver mean one thing, which flips the ladder
+      verdict. A box-or-tool rule with fixtures closes the named gap. Adding a
+      design-doc fixture with no status line also fixes the untested
+      status-banner.
+summary: >-
+  Accurate and checkable: the 157/92 silver split, the 12-of-65
+  box-or-tool count and the untested status-banner all reproduce from
+  results.json and the docs. Both fails name a concrete gap with a
+  suggestion that would close it. One fix line is off by one.

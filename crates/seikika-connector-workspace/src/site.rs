@@ -29,12 +29,12 @@ pub fn analyse(root: &Path, rel: &str) -> Value {
 }
 
 /// The directory builds its entries from public connector landing pages.
-pub(crate) fn connector_guide(root: &Path, package: &str) -> Option<String> {
+pub(crate) fn connector_guide(root: &Path, site: &str, package: &str) -> Option<String> {
     let name = package.strip_prefix("seikika-connector-")?;
-    public_guide(root, "connectors", name)
+    public_guide(root, site, "connectors", name)
 }
 
-pub(crate) fn public_guide(root: &Path, section: &str, name: &str) -> Option<String> {
+pub(crate) fn public_guide(root: &Path, site: &str, section: &str, name: &str) -> Option<String> {
     if name.is_empty()
         || !name
             .bytes()
@@ -43,11 +43,8 @@ pub(crate) fn public_guide(root: &Path, section: &str, name: &str) -> Option<Str
         return None;
     }
     let slug = format!("{section}/{name}");
-    if !is_published_page(
-        root,
-        &format!("site/src/content/docs/{section}/index.mdx"),
-        section,
-    ) {
+    let docs = format!("{site}/src/content/docs");
+    if !is_published_page(root, &format!("{docs}/{section}/index.mdx"), section) {
         return None;
     }
     [
@@ -57,7 +54,7 @@ pub(crate) fn public_guide(root: &Path, section: &str, name: &str) -> Option<Str
         format!("{slug}/index.mdx"),
     ]
     .iter()
-    .any(|page| is_published_page(root, &format!("site/src/content/docs/{page}"), &slug))
+    .any(|page| is_published_page(root, &format!("{docs}/{page}"), &slug))
     .then(|| format!("/{slug}/"))
 }
 
@@ -102,7 +99,10 @@ fn fm_string(fm: &Value, key: &str) -> String {
 /// Whether another content page has the same title (a reader can't tell them apart in search or
 /// the sidebar).
 fn title_elsewhere(root: &Path, rel: &str, title: &str) -> bool {
-    let dir = root.join("site/src/content/docs");
+    let Some(site) = site_dir(rel) else {
+        return false;
+    };
+    let dir = root.join(site).join("src/content/docs");
     walkdir::WalkDir::new(&dir)
         .into_iter()
         .flatten()
@@ -323,9 +323,9 @@ mod tests {
 
     #[test]
     fn a_public_connector_guide_requires_no_manual_directory_link() {
-        let config = "site/astro.config.mjs";
-        let directory = "site/src/content/docs/connectors/index.mdx";
-        let guide = "site/src/content/docs/connectors/github.md";
+        let config = "npm/site/astro.config.mjs";
+        let directory = "npm/site/src/content/docs/connectors/index.mdx";
+        let guide = "npm/site/src/content/docs/connectors/github.md";
         let header = "---\ntitle: Connector\ndescription: What it reads.\n---\n";
         let tmp = scratch(
             "connector-guide",
@@ -338,7 +338,7 @@ mod tests {
                 (guide, header),
             ],
         );
-        let route = || connector_guide(&tmp.0, "seikika-connector-github");
+        let route = || connector_guide(&tmp.0, "npm/site", "seikika-connector-github");
         assert_eq!(route().as_deref(), Some("/connectors/github/"));
         for change in [
             "draft: true",

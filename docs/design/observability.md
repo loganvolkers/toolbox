@@ -39,7 +39,7 @@ data set before storage. See the [operator playbook](../../site/src/content/docs
 ## S4S
 
 Scorecard `maintainer-observability` over kind `Observability` (declared in
-`portal/observability/`). Rules fail when the crate, catalog, scrape test, alert stubs,
+`.seikika/observability/`). Rules fail when the crate, catalog, scrape test, alert stubs,
 operator/monitor assessment or OTLP testbed are missing. Gold includes
 `otlp-export-tested`.
 

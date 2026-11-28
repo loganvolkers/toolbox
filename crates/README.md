@@ -1,7 +1,7 @@
 # Seikika Rust crates
 
 These crates build the Seikika CLI, server, and first-party connectors. To work
-on them, follow [Build and check Seikika](../site/src/content/docs/start/run.md)
+on them, follow [Build and check Seikika](../npm/site/src/content/docs/start/run.md)
 from the repository root.
 
 | Crate | Responsibility |

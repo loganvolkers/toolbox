@@ -17,7 +17,7 @@ on:
       - .github/workflows/npm-registry-smoke.yml
       - .github/workflows/publish-npm.yml
       - scripts/check-npm-release.mjs
-      - report-ui/fixtures/starter-empty.json
+      - npm/report-ui/fixtures/starter-empty.json
   schedule: [{cron: 43 14 * * 1}]
 
 permissions: {contents: read}

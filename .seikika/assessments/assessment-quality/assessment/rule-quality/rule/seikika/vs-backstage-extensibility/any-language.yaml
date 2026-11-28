@@ -1,0 +1,58 @@
+apiVersion: seikika.com/assessment/v1
+entity: assessment:rule-quality/rule:seikika/vs-backstage-extensibility/any-language
+rubric: assessment-quality
+subjectHash: 3e1f2ec2917d
+assessor: {kind: agent, name: cursor-reviewer-17, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: supported
+    verdict: pass
+    reason: >-
+      The citations in
+      .seikika/assessments/rule-quality/rule/seikika/vs-backstage-extensibility/any-language.yaml
+      land. measure.py:158-163 is a Python POST to /v1/ingest with a connector
+      token, and scripts/m3-acceptance.sh:57 is a curl POST to /v1/ingest. The
+      facts are facts.yaml:60-64 and 150-154, and the copy is snapshot.py:85.
+      The field, fix and rationale are backstage-comparison.yaml:123-125,
+      883-884 and 886-888. README.md:53 puts extension cost inside
+      capabilities, RESULTS.md:269-270 discloses the split, and RESEARCH.md:67
+      lists languages under F11.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      The hard-to-game and fix-leads-to-pass fails match the other facts.yaml
+      rules: a hand-typed value, and a fix that omits the record step
+      (https://github.com/seikika/seikika/blob/05510a57fafd8707979370858b578b78b935cf0e/portal/standards/meta.yaml#L1164-L1173).
+      threshold-justified is boolean and registered. The sources show no
+      missed failure on the Seikika side.
+  - criterion: reproducible
+    verdict: unsure
+    reason: >-
+      measures-intent passes because "a pull of static files isn't an
+      extension". That is the assessor's reading, and no source states it.
+      ADJUDICATION.md:290-291 calls Backstage's `false` "weakly evidenced",
+      because URL locations let any-language services feed the catalog. The
+      rationale's test is whether "the teams who own the data" can write
+      integrations (backstage-comparison.yaml:886-888), and a service that
+      emits catalog-info YAML in any language arguably meets it. A second
+      assessor could mark measures-intent unsure, on the rubric's "fail while
+      meeting it"
+      (https://github.com/seikika/seikika/blob/05510a57fafd8707979370858b578b78b935cf0e/portal/standards/meta.yaml#L1160-L1161).
+    suggestion: >-
+      Ground the dismissal in a source: Backstage's docs saying entity
+      providers and processors are TypeScript backend modules, and that a URL
+      location only reads descriptor files in its fixed schema. If no source
+      says so, mark measures-intent unsure.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      Setting the fact from the harness's own non-Rust ingest (measure.py
+      already does one) removes the hand-typed route, so hard-to-game would
+      pass. Adding the snapshot.py step to the fix, with the fact measured,
+      gives fix-leads-to-pass what it lacks.
+summary: >-
+  Citations hold, and the two facts.yaml fails are consistent and
+  well-founded. One verdict rests on taste: passing measures-intent by
+  ruling that Backstage's URL locations aren't extensions, which the
+  adjudication itself questions. A source on Backstage's extension surface
+  would settle it.

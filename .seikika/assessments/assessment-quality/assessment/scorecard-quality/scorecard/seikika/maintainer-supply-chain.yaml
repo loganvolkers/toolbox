@@ -1,0 +1,63 @@
+apiVersion: seikika.com/assessment/v1
+entity: assessment:scorecard-quality/scorecard:seikika/maintainer-supply-chain
+rubric: assessment-quality
+subjectHash: 5e893217e26f
+assessor: {kind: agent, name: cursor-reviewer-38, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: supported
+    verdict: pass
+    reason: >-
+      The citations in
+      .seikika/assessments/scorecard-quality/scorecard/seikika/maintainer-supply-chain.yaml
+      hold. The card is .seikika/standards/repository.yaml:59-82, the three
+      rules and the "stays until Pinned-Dependencies reaches 10" note are
+      :84-128, and D01M82E93XAPNE0WFXEPJZ59WG4 §2 says Dependency-Update-Tool
+      does not check each ecosystem.
+      crates/seikika-connector-workspace/src/repo.rs:129-135 wants cargo, npm
+      and github-actions, and :145 sets codeScanningPinned from any one pinned
+      use. Pinned-Dependencies is level ten in .seikika/results.json.
+      .github/dependabot.yml has no pip or docker entry and no npm entry for
+      scripts/. .github/workflows/ci.yml:36 installs
+      scripts/requirements-yamark.txt and the Playwright step at :170 runs npm
+      ci on scripts/playwright-ci. image/Dockerfile:6 is the base image. The
+      acme/unsafe fixture is .seikika/fixtures/workspace.ndjson:61 and the
+      test is .seikika/tests/standards.test.yaml:722-728. The gold principle
+      is docs/design/thresholds.md:24-25. .seikika/README.md:35 still lists
+      code scanning and a security policy.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      one-concern passes: the three rules are checkout files for maintainers
+      (.seikika/standards/repository.yaml:62-71). levels-are-a-ladder fails
+      because gold is one SHA
+      (crates/seikika-connector-workspace/src/repo.rs:145) while bronze is
+      three ecosystems, and the reason gold stayed has expired
+      (.seikika/standards/repository.yaml:126-127 against
+      .seikika/results.json). no-obvious-gap fails because the wanted list
+      cannot see pip, docker or scripts/ npm. actionable fails for a repo with
+      codeScanning false (.seikika/fixtures/workspace.ndjson:61): the evidence
+      at .seikika/standards/repository.yaml:120 does not name a file, and the
+      fix only says to pin. No pass should have failed.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      The cost comparison is the rules' own text, not a preference about
+      CODEOWNERS. A second assessor reading
+      .seikika/standards/repository.yaml:84-128 and
+      crates/seikika-connector-workspace/src/repo.rs:129-145 fails the same
+      three criteria.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      Retiring code-scanning-pinned at
+      .seikika/standards/repository.yaml:117-123, and scoring (ecosystem,
+      directory) pairs from the tracked manifests, would remove the cheap gold
+      rung and the uncovered pip, docker and scripts npm manifests. Splitting
+      the gold evidence into "no workflow" versus each unpinned line would
+      make the current fix lead to a pass for acme/unsafe.
+summary: >-
+  The assessment matches the card. Gold is one pinned use whose stated
+  reason expired when Pinned-Dependencies reached ten, Dependabot is three
+  fixed ecosystem names, and a repository without CodeQL is told only to
+  pin.

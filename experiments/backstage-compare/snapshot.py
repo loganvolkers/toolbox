@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Turn a run's raw results into the product records the comparative scorecards read. Usage:
-[SEIKIKA_COMMIT=<sha>] snapshot.py <results-dir>. Writes portal/comparisons/{seikika,backstage}.yaml and prints the
+[SEIKIKA_COMMIT=<sha>] snapshot.py <results-dir>. Writes .seikika/comparisons/{seikika,backstage}.yaml and prints the
 spread (min, median, max over runs) as a markdown table, for RESULTS.md.
 
 Performance and memory are the medians over runs at SIZE components (README.md); every other
@@ -73,7 +73,7 @@ def main():
                 cells.append(f"{min(vals)} / {median(perf[arm][n], f)} / {max(vals)} ({len(vals)})"
                              if vals else "—")
             spread.append(f"| `{f}` | {n} | {cells[0]} | {cells[1]} |")
-    out_dir = ROOT / "portal" / "comparisons"
+    out_dir = ROOT / ".seikika" / "comparisons"
     out_dir.mkdir(exist_ok=True)
     for arm, title in ARMS.items():
         surface = json.loads((results / f"surface-{arm}.json").read_text())

@@ -363,10 +363,10 @@ fn found(e: &Entry, tree: &Tree, commands: Vec<String>, b: Option<&Box_>) -> Opt
 }
 
 /// The portal to compare with: the one given, else `<root>/seikika.yaml`, else
-/// `<root>/portal/seikika.yaml`.
+/// `<root>/.seikika/seikika.yaml`, then `<root>/portal/seikika.yaml`.
 fn portal_for(root: &Path, given: Option<&Path>) -> Option<PathBuf> {
     given.map(Path::to_owned).or_else(|| {
-        [root.to_owned(), root.join("portal")]
+        [root.to_owned(), root.join(".seikika"), root.join("portal")]
             .into_iter()
             .find(|p| p.join("seikika.yaml").is_file())
     })

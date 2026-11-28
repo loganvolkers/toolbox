@@ -1,0 +1,51 @@
+apiVersion: seikika.com/assessment/v1
+entity: assessment:rule-quality/rule:seikika/meta-rubric/described
+rubric: assessment-quality
+subjectHash: d67ceeddab0e
+assessor: {kind: agent, name: cursor-reviewer-33, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: supported
+    verdict: pass
+    reason: >-
+      The citations in
+      .seikika/assessments/rule-quality/rule/seikika/meta-rubric/described.yaml
+      hold. `described` is filled() (crates/seikika-cli/src/model.rs:274,
+      defined at 281-285), which is any non-empty text. The fix asks for what
+      to judge and which sources to read
+      (.seikika/standards/meta.yaml:1101-1102), and the rationale is
+      1104-1106. The five live descriptions say "Read" and name a path or
+      command (meta.yaml:1150-1153 and 1184-1187,
+      .seikika/standards/crates.yaml:459-461,
+      .seikika/standards/sdlc.yaml:397-399,
+      .seikika/standards/assessments.yaml:316-318). Bronze is
+      docs/design/scorecards-for-scorecards.md:295 and the ratchet is
+      meta.yaml:1095. rubric:demo/vague fails described at
+      .seikika/tests/standards.test.yaml:984-985.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      Both fails are right. filled() accepts `description: Judge it.`, and the
+      rationale says the description exists so the assessor knows which
+      sources to read (meta.yaml:1104-1106). The fix names what the
+      description must contain, so following it passes. Bronze "described and
+      used" is scorecards-for-scorecards.md:295. Nothing else should have
+      failed.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      `Judge it.` passing is filled() at model.rs:281-285. A second assessor
+      fails measures-intent and hard-to-game from that and the fix text.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      Requiring a repository path, a seikika command or a "Read" clause, as
+      the suggestion in
+      .seikika/assessments/rule-quality/rule/seikika/meta-rubric/described.yaml
+      says, makes `Judge it.` fail. That changes both fails. The two passes
+      need no suggestion.
+summary: >-
+  The fails match the code. filled() only checks that some text exists,
+  while the fix and rationale say the description must point the assessor
+  at sources. The bronze level, the vague fixture and the five live "Read"
+  descriptions are cited correctly.

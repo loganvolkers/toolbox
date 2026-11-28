@@ -96,4 +96,4 @@ seikika test examples/repo-portal-starter              # the rules' own tests ov
 ```
 
 In a Rust workspace, set `crates: true` in the connector config for per-crate metrics, and borrow
-scorecards from [portal/seikika.yaml](../../portal/seikika.yaml) (Seikika for Seikika).
+scorecards from [.seikika/seikika.yaml](../../.seikika/seikika.yaml) (Seikika for Seikika).

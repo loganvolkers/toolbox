@@ -3,7 +3,7 @@
 # after checking each release archive's SHA-256. Same layout as actions/report/install.sh.
 #
 # The consumer install is the installer on the GitHub release.
-# See site/src/content/docs/start/install.md. For v0.2.1:
+# See npm/site/src/content/docs/start/install.md. For v0.2.1:
 #   curl --proto '=https' --tlsv1.2 -LsSf \
 #     https://github.com/seikika/seikika/releases/download/v0.2.1/seikika-cli-installer.sh | sh
 #

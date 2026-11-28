@@ -11,8 +11,8 @@ description: >-
 3. Run `seikika doctor <portal>` afterwards. It checks every tool against its pin.
 
 ```
-seikika tools install portal --dry-run
-seikika tools install portal --via uv
+seikika tools install .seikika --dry-run
+seikika tools install .seikika --via uv
 ```
 
 A tool marked SKIP declares no id for any available installer: add one to its `install` map, or install it another way at the pinned version. aqua installs from its own aqua.yaml, which `seikika tools config --for aqua` prints.

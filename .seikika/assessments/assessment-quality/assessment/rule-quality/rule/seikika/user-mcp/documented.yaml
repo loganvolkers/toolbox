@@ -1,0 +1,63 @@
+apiVersion: seikika.com/assessment/v1
+entity: assessment:rule-quality/rule:seikika/user-mcp/documented
+rubric: assessment-quality
+subjectHash: 7a0324875893
+assessor: {kind: agent, name: cursor-reviewer-14, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: supported
+    verdict: fail
+    reason: >-
+      The measures-intent reason in
+      .seikika/assessments/rule-quality/rule/seikika/user-mcp/documented.yaml
+      says that for every one of the 17 tools, the only matching spans in
+      v1-spec are its own §7.3 row, plus the §7.7 cross references. That
+      doesn't hold for `query`: `` `query` `` also appears in `search`'s
+      Inputs column (docs/v1-spec.md:323). The other citations hold.
+      - .seikika/standards/docs.yaml:49 is `mentionsTool` from code spans, and
+        .seikika/standards/cli.yaml:309 is the check.
+      - docs/v1-spec.md:321-339 is the §7.3 table, and 404-406 are the §7.7
+        mentions of scorecard_report, campaign_report and assessment_brief.
+      - .seikika/tests/standards.test.yaml:94-98 pins `['documented in:
+        nothing']`.
+      - docs/design/seikika-for-seikika.md:175 and 218 are F14. The
+        `get_run`/`run_id` drift is v1-spec.md:338 against
+        crates/seikika-api/src/mcp.rs:91.
+    suggestion: >-
+      Correct the claim: `query` also matches at docs/v1-spec.md:323, as an
+      input of `search`. Then say whether that collision matters.
+  - criterion: complete
+    verdict: fail
+    reason: >-
+      measures-intent should be unsure or fail, not pass. The rubric fails a
+      rule "when an entity could pass while missing the intent"
+      (.seikika/standards/meta.yaml:1160). `query` could: delete its §7.3 row
+      and it still passes on `search`'s input column (v1-spec.md:323). Any
+      future tool named like another tool's input would do the same, for
+      example `id` or `rule`. The "exact equality makes it tight" argument is
+      what misses it. The other three verdicts are right.
+    suggestion: >-
+      Revisit measures-intent with the v1-spec.md:323 collision. Either fail
+      it, and suggest matching only the first column of the §7.3 table (a `|
+      `name` |` capture), or keep pass and explain why an input-name collision
+      is acceptable.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      Any second assessor can rerun a grep for each backticked tool name in
+      docs/v1-spec.md and get the same matches (323-339, 404-406). The
+      verdicts rest on that and on the check's text (cli.yaml:309), not on
+      taste.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      Every verdict in the assessment is a pass, so no suggestion is needed
+      (.seikika/assessments/rule-quality/rule/seikika/user-mcp/documented.yaml).
+      It rightly sends the schema-accuracy gap (`get_run`'s `run_id`) to the
+      scorecard.
+summary: >-
+  Mostly sound. The rule's design, its F14 history and the pinned evidence
+  are cited accurately. But the claim that each tool matches only its own
+  §7.3 row is wrong for `query`, which also appears as `search`'s input at
+  docs/v1-spec.md:323. That collision is a latent false pass, so
+  measures-intent should not be a clean pass.

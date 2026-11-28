@@ -1,0 +1,57 @@
+apiVersion: seikika.com/assessment/v1
+entity: rule:seikika/review-assessment/assessed
+rubric: rule-quality
+subjectHash: 1a4aaf2c2ecf
+assessor: {kind: agent, name: cursor-assessor-04, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: measures-intent
+    verdict: pass
+    reason: >-
+      `reviewState` is fresh when the review's subjectHash equals the
+      assessment's content hash (.seikika/standards/assessments.yaml:67-73;
+      `hash` at crates/seikika-connect/src/assessment.rs:151-160), so editing
+      the assessment makes the review stale. `selfReviewed` compares the two
+      assessor names (assessments.yaml:105-112). Passing therefore means "a
+      current review under a different name", which is the silver of
+      docs/design/thresholds.md:55. The limits of self-declared names are
+      stated at thresholds.md:63-70. Fixtures pin both outcomes
+      (.seikika/tests/standards.test.yaml:1016-1023, 1247-1257).
+  - criterion: hard-to-game
+    verdict: fail
+    reason: >-
+      Independence is the point of the rule, and the only thing it checks is a
+      free-text name. One session can write the assessment as `a` and the
+      review as `b` at no extra cost. Silver also asks for no grounding (that
+      waits for gold, .seikika/standards/assessments.yaml:274-282), so a
+      one-line review under another name passes. thresholds.md:63-66 accepts
+      renaming as "a false statement in a committed file", but no one is
+      prompted to look for it.
+    suggestion: >-
+      Make a different name harder to fake by accident. Have `seikika assess
+      brief` print a per-run id that the assessor copies into the file as
+      `assessor.run` (cloud agents already have one, e.g. a bc- id), and count
+      a review as a self-review when the two runs match or the review has
+      none.
+  - criterion: fix-leads-to-pass
+    verdict: pass
+    reason: >-
+      The evidence says which of       three states applies: self-reviewed
+      (naming the assessor), stale, or unreviewed
+      (.seikika/standards/assessments.yaml:262-266). The fix gives the brief
+      command and says another agent or person must write the review
+      (assessments.yaml:267-269). A review written from that brief under a
+      different name is fresh and not a self-review, so the rule passes.
+  - criterion: threshold-justified
+    verdict: pass
+    reason: >-
+      There is no number. Silver with a reviewer other than the assessor is
+      decision 2 of D01M831P5QWJQ4A2FT85N5MXJQF (one of the first three
+      assessment reviews was a self-review) and the silver cell of
+      docs/design/thresholds.md:55.
+summary: >-
+  The check states the silver ladder exactly, its evidence separates the
+  three causes, and the fix works. Its independence test rests on a
+  self-chosen name: renaming defeats it. The design accepts that and
+  documents it, but nothing makes the dodge visible. A run id stamped by
+  the brief would make an accidental self-review detectable.

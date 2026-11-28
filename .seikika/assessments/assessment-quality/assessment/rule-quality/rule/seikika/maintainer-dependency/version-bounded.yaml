@@ -1,0 +1,47 @@
+apiVersion: seikika.com/assessment/v1
+entity: assessment:rule-quality/rule:seikika/maintainer-dependency/version-bounded
+rubric: assessment-quality
+subjectHash: 31045eb96509
+assessor: {kind: agent, name: cursor-reviewer-37, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: supported
+    verdict: pass
+    reason: >-
+      .seikika/assessments/rule-quality/rule/seikika/maintainer-dependency/version-bounded.yaml
+      matches the sources. unbounded is empty, "*", or a leading ">" or "*"
+      (crates/seikika-connector-workspace/src/deps.rs:65-68), so ">=1, <2"
+      fails and "0" or "^0" does not. The rationale is a missing ceiling
+      (.seikika/standards/dependencies.yaml:66-69) and the fix names only "a
+      bare >=" (dependencies.yaml:63-65). Cargo's caret page, linked at
+      dependencies.yaml:70-72, gives ^0 as >=0.0.0, <1.0.0. The fixture
+      evidence is ['*'] at .seikika/tests/standards.test.yaml:446-456, and
+      inherited reqs are read at deps.rs:36-38. Bronze is
+      dependency-standards.md:16-18 and D74.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      measures-intent is the right fail: the check rejects a bounded ">=1, <2"
+      and accepts "0", which the rationale's ceiling test would treat the
+      other way. hard-to-game passes because a caret is as cheap as "<99".
+      Following the fix's caret, tilde or exact requirement passes unbounded.
+      There is no numeric threshold.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      The prefix test is a few lines, and the caret semantics are the page the
+      rule already links. A second assessor does not have to choose between
+      the two misfires.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      Parsing the requirement and flagging a missing upper bound, or a ceiling
+      that crosses a breaking boundary, would make ">=1, <2" pass and "0"
+      fail, which is the measures-intent change asked for in
+      .seikika/assessments/rule-quality/rule/seikika/maintainer-dependency/version-bounded.yaml.
+      The three passes have no suggestion to apply.
+summary: >-
+  Trustworthy. The prefix test, the fix's "bare >=" wording, and Cargo's
+  ^0 range are where the assessment says they are. Failing measures-intent
+  and passing the other three is what those sources support, and parsing
+  the requirement would change the fail.

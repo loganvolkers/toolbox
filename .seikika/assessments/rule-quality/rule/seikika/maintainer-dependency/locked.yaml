@@ -1,0 +1,57 @@
+apiVersion: seikika.com/assessment/v1
+entity: rule:seikika/maintainer-dependency/locked
+rubric: rule-quality
+subjectHash: 75c66cdac79c
+assessor: {kind: agent, name: cursor-assessor-07, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: measures-intent
+    verdict: fail
+    reason: >-
+      The rationale is that two builds of one commit can differ without a
+      lockfile (.seikika/standards/dependencies.yaml:91-94), which is about a
+      committed Cargo.lock. The connector reads Cargo.lock from the working
+      tree (crates/seikika-connector-workspace/src/deps.rs:41-42), and any
+      cargo build writes every direct dependency into it. So in practice the
+      check means "a Cargo.lock exists on disk". A repository that gitignores
+      its lockfile passes once anything has been built. Here the intent holds
+      for other reasons: Cargo.lock is tracked (`git ls-files Cargo.lock`) and
+      CI builds with `--locked` (.github/workflows/ci.yml:23-24, 39). The only
+      failing case pinned is a dependency with no versions at all
+      (`dependency:cargo:unsafe` in .seikika/fixtures/workspace.ndjson).
+    suggestion: >-
+      Have the connector report whether Cargo.lock is tracked by git (`git
+      ls-files --error-unmatch Cargo.lock`, the same git access `lastChange`
+      already uses) and whether it matches the manifests (`cargo metadata
+      --locked` succeeds). Check both, and add a fixture with an untracked
+      lockfile.
+  - criterion: hard-to-game
+    verdict: pass
+    reason: >-
+      There is nothing to fake: versions come from Cargo.lock's `[[package]]`
+      blocks (deps.rs:90-114). The cheapest pass is to generate the lockfile,
+      which is the right step. The missing half, committing it, belongs under
+      measures-intent above.
+  - criterion: fix-leads-to-pass
+    verdict: pass
+    reason: >-
+      The rule is a yes/no check with a fixed evidence sentence, `not in
+      Cargo.lock` (dependencies.yaml:87), pinned at
+      .seikika/tests/standards.test.yaml:446-456. The fix names the command,
+      `cargo generate-lockfile` (dependencies.yaml:88-90). Running it records
+      every direct dependency, so `versions` is no longer empty.
+  - criterion: threshold-justified
+    verdict: pass
+    reason: >-
+      There is no number. docs/design/dependency-standards.md:19 puts "Does
+      the lockfile resolve it" at silver, and :32 explains why the lockfile,
+      not `=x.y.z`, is the pin. The OpenSSF Scorecard Pinned-Dependencies link
+      (dependencies.yaml:95-97) is the outside source for treating a lockfile
+      as Rust's pin. Bronze would also be defensible, but silver is stated and
+      sourced.
+summary: >-
+  Clear evidence and fix, with a sourced level. But it checks the working
+  tree, not the commit: any build writes the lockfile, so the rule is
+  close to always true, and here it is CI's `--locked` and a tracked
+  Cargo.lock that make builds reproducible. Checking that the lockfile is
+  tracked and up to date would let the rule carry its own rationale.

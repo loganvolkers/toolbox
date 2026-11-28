@@ -17,13 +17,13 @@ Work in this order. Do not invent a second protocol.
    from your crate)**, `capabilities` (`resync` / `refresh` kinds), and `handle`.
    Call `run_stdio(src).await` from `main`. Read config only from
    `SEIKIKA_CONNECTOR_CONFIG` JSON.
-3. **Add a minimal portal** at `portal/seikika.yaml` that declares the connector
+3. **Add a minimal portal** at `.seikika/seikika.yaml` that declares the connector
    name, `records: […]`, and enough kinds to map those records. `seikika
    connector test` loads the portal; a binary alone is not enough.
 4. **Prove the protocol**:
    ```
    cargo build
-   seikika connector test --name <name> --portal portal -- target/debug/<bin>
+   seikika connector test --name <name> --portal .seikika -- target/debug/<bin>
    ```
 5. **Dump a catalog without hand-built stdio JSON or a map script**:
    ```
@@ -37,11 +37,11 @@ Work in this order. Do not invent a second protocol.
    records` only when debugging the protocol itself.
 6. **Tenant / config switches:** for a dump-only resync, pass `--config` to
    `seikika connector drive` and leave the portal alone. Update
-   `portal/seikika.yaml` connector `config:` only when you also run
+   `.seikika/seikika.yaml` connector `config:` only when you also run
    `connector test` against that tenant.
 
 ```
-seikika connector test --name forge --portal portal -- target/debug/forge-connector
+seikika connector test --name forge --portal .seikika -- target/debug/forge-connector
 seikika connector drive --kinds project,issue --format catalog --out OUT/entities.ndjson \
   --config '{"baseUrl":"http://127.0.0.1:9743","token":"t"}' -- target/debug/forge-connector
 ```

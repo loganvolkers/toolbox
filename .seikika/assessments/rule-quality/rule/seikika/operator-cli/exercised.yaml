@@ -1,0 +1,68 @@
+apiVersion: seikika.com/assessment/v1
+entity: rule:seikika/operator-cli/exercised
+rubric: rule-quality
+subjectHash: 355a06bb7a73
+assessor: {kind: agent, name: cursor-assessor-14, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: measures-intent
+    verdict: fail
+    reason: >-
+      `exercisedBy` is every file whose `commands` capture matches `seikika
+      <command>` (.seikika/standards/cli.yaml:23-26,
+      .seikika/standards/docs.yaml:74), and that capture, unlike the `tools`
+      one, does not skip comments (.seikika/seikika.yaml:111-117). So
+      `describe portal` and `assess submit` pass only through the `//!` module
+      doc of crates/seikika-cli/tests/assess.rs:2-4, `install` only through
+      install.rs:1, and `tools config` and `tools find` only through
+      tools.rs:2-4, not through the calls, which look like
+      `seikika(&["assess", "check", …])` (assess.rs:177) and never match.
+      Those tests do run the commands, but the rule cannot see it. The
+      evidence also says "scripts/ and crates/*/tests", while workflows count
+      too: `derive` passes only through .github/workflows/ci.yml.
+    suggestion: >-
+      Exclude comment lines from the `commands` capture for `file` records, as
+      the `tools` capture does, and add a second capture for the argument
+      arrays Rust tests pass to the binary (`seikika(&["plan"` and
+      `.args(["plan"` after `CARGO_BIN_EXE_seikika`). Better, record observed
+      invocations as the runner does for MCP calls (SEIKIKA_MCP_TRACE,
+      .seikika/seikika.yaml:282-291). Name workflows in the evidence.
+  - criterion: hard-to-game
+    verdict: fail
+    reason: >-
+      A line `# seikika plan` in any file under scripts/ or a `//! seikika
+      push` header in a test file makes `plan` or `push` pass, and both fail
+      today (.seikika/results.json). That is cheaper than a test that runs
+      them against a server.
+    suggestion: >-
+      Ignore comments in the capture (above), so the cheapest pass is a script
+      line that runs the command.
+  - criterion: fix-leads-to-pass
+    verdict: fail
+    reason: >-
+      The fix offers "an integration test under crates/seikika-cli/tests/",
+      but every test there drives the binary through
+      `Command::new(env!("CARGO_BIN_EXE_seikika"))` with `.arg("report")` or a
+      `seikika(&[...])` helper (ratchet.rs:54-55, assess.rs:68), which the
+      regex never matches. An agent that adds such a test for `connector
+      records`, `token create` or `vendor` still fails, unless it happens to
+      write `seikika <command>` in a comment. The acceptance script route
+      works (`"$T/seikika" serve`).
+    suggestion: >-
+      Make the capture see the tests' argument arrays (above), or until then
+      say in the fix that the test must contain the literal `seikika
+      <command>` outside a comment.
+  - criterion: threshold-justified
+    verdict: pass
+    reason: >-
+      No number: at least one run. Silver is set in
+      docs/design/seikika-for-seikika.md:105 ("run by a script or test"), and
+      the rationale (cli.yaml:139-141) explains why: a command no script runs
+      breaks without CI noticing.
+summary: >-
+  The intent is right, but the check reads mentions, not runs. Five
+  operator commands pass only on the prose of a test file's module
+  comment, and the integration-test route its own fix suggests is
+  invisible to it. F9 found the same weakness for MCP tools
+  (docs/design/seikika-for-seikika.md:213) and it was fixed there by
+  observing calls (:189); commands need the same.

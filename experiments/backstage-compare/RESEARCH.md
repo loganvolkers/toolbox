@@ -12,7 +12,7 @@ Backstage facts were read in `backstage/backstage` at tag `v1.57.1` (`9342a5de`)
 
 1. **Fourteen factors, all measurable on one 4-vCPU / 8 GB VM without agents.** They cover all nine
    ISO/IEC 25010:2023 characteristics except Safety, which does not apply to a portal. DX is one
-   factor of fourteen. The agent DX Benchmarks in `portal/benchmarks/` stay the evidence for the
+   factor of fourteen. The agent DX Benchmarks in `.seikika/benchmarks/` stay the evidence for the
    agent claims, and these benchmarks complement them.
 2. **Today Seikika is better on four factors, by evidence from source and docs, still to be
    confirmed at runtime:**
@@ -370,7 +370,7 @@ and the guest provider source.
 | Backstage Upgrade Helper | https://github.com/backstage/upgrade-helper | [P] repository metadata only |
 | npm registry metadata for `@backstage/*` | https://registry.npmjs.org/@backstage/create-app | [P] |
 | Spotify engineering blog | — | Not used: no post needed for a claim here |
-| Seikika context | `docs/technology-critique.md` §4, §7; `docs/research.md` §2; `docs/red-team.md`; `docs/adversarial-critique.md` §4; `site/src/content/docs/compare/backstage.md`; `experiments/deploy-ab/README.md` | [P] repo |
+| Seikika context | `docs/technology-critique.md` §4, §7; `docs/research.md` §2; `docs/red-team.md`; `docs/adversarial-critique.md` §4; `npm/site/src/content/docs/compare/backstage.md`; `experiments/deploy-ab/README.md` | [P] repo |
 
 **Threats to validity.**
 - Both products are the maintainers' configurations, so expertise in each must be comparable.

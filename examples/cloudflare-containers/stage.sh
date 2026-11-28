@@ -49,8 +49,8 @@ if [[ "$portal_dir" -ef "$example_dir/seikika-forks" ]]; then
       python3 -m venv "$report_dir/python"
       export PATH="$report_dir/tools:$report_dir/python/bin:$destination/bin:$PATH"
       export OSV_SCANNER_LOCAL_DB_CACHE_DIRECTORY="$report_dir/tools"
-      seikika tools install portal --via pip
-      seikika report portal --skip runner,github-actions --baseline portal/results.json -o web --out "$report_dir"
+      seikika tools install .seikika --via pip
+      seikika report .seikika --skip runner,github-actions --baseline .seikika/results.json -o web --out "$report_dir"
     )
     install -D -m 0644 -- "$report_dir/report.json" "$destination/portal/publications/seikika.json"
   fi

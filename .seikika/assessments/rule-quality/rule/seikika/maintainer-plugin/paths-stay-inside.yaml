@@ -1,0 +1,61 @@
+apiVersion: seikika.com/assessment/v1
+entity: rule:seikika/maintainer-plugin/paths-stay-inside
+rubric: rule-quality
+subjectHash: b082b70c397e
+assessor: {kind: agent, name: cursor-assessor-06, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: measures-intent
+    verdict: fail
+    reason: >-
+      Agent Plugins 1.0.0 §4.1 defines containment for package paths, and the
+      MCP fields it applies to are `command` and `cwd` (§4.1 item 4 of the
+      failure list; §7.2.1); §4.1 item 5 says arguments and env values "are
+      opaque strings" that clients must not treat as package paths
+      (https://github.com/agentplugins/agent-plugins-spec/blob/main/spec/1.0.0.md).
+      `mcp_facts` checks `command` and `args` and never reads `cwd`
+      (crates/seikika-connector-workspace/src/plugins.rs:80-95). A scratch
+      server with `"cwd": "../outside"` reported only the arg, and the fixture
+      pins an arg as the failure (.seikika/tests/standards.test.yaml:707-708).
+      The command half is already enforced at silver: `command_token_ok`
+      rejects `..` (plugins.rs:114).
+    suggestion: >-
+      Read `cwd` and require it to start with `./`, `${PLUGIN_ROOT}` or
+      `${PLUGIN_DATA}` with no `..` segment (the schema's pattern plus
+      containment); report args with `..` as advice, or drop them.
+  - criterion: hard-to-game
+    verdict: fail
+    reason: >-
+      `escapes` splits on `/` and `\` and looks for a whole `..` segment
+      (plugins.rs:117-119), so `--config=../x` (segment `--config=..`) and an
+      absolute `/home/me/x` both pass. Gluing the flag to the path clears the
+      evidence 'dev arg' with no change in behaviour.
+    suggestion: >-
+      If args stay in scope, look for `..` after splitting on `=` as well, and
+      flag absolute paths; better, check `cwd` as above, where the spec gives
+      a fixed grammar.
+  - criterion: fix-leads-to-pass
+    verdict: pass
+    reason: >-
+      The evidence names server and field ('dev arg',
+      .seikika/standards/plugins.yaml:154), and the fix says to drop the `..`
+      segments. Rewriting the listed value as `${PLUGIN_ROOT}/…` or `./…`
+      empties the list.
+  - criterion: threshold-justified
+    verdict: fail
+    reason: >-
+      D81 (docs/decisions/D01M7WMSMS00000000000000000.md) puts "no .. path" at
+      gold and docs/design/plugin-standards.md:49 repeats it, without a reason
+      for gold. The command case is already implied by silver's stdio-command
+      (plugins.rs:114), which thresholds.md:23-24 says a gold rule should not
+      be. The case the spec does care about, a `cwd` escape, invalidates the
+      server entry exactly as a bad command does (spec §4.1, §7.2.2), so it
+      belongs at silver with stdio-command.
+    suggestion: >-
+      Move a cwd containment check to silver (or into stdio-command), and
+      record the placement in docs/design/thresholds.md.
+summary: >-
+  It checks the wrong fields: arguments, which the spec calls opaque, and
+  commands, which silver already covers, but not `cwd`, the field the spec
+  constrains. `--x=../y` slips through the segment split. Checking `cwd`
+  at silver would match the spec and the ladder.

@@ -45,4 +45,4 @@ For layouts other than `.seikika`, set `manifest` to the portal path,
 and `assessments` to globs. All paths are relative to `root`. If your
 portal has a quality track, set `track` to its name. Add a campaign with a concrete scope and target
 for the gaps you intend to close. The [organization portal](../../examples/github-org-federation/meta.yaml)
-tracks review coverage, and [Seikika for Seikika](../../portal/campaigns.yaml) tracks open findings.
+tracks review coverage, and [Seikika for Seikika](../../.seikika/campaigns.yaml) tracks open findings.

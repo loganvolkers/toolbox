@@ -23,7 +23,7 @@ different questions, and the tools that answer them should not be mixed into one
 | Does it state limits, carry eval cases, and hide nothing hostile? | Spec progressive disclosure, Anthropic's "evals first", SkillBench / SkillSpector hard rules that are pure text | gold |
 | Does the skill actually raise task success? | Paired with/without-skill runs (SkillsBench, SkillEvaluator Tier 3, skill-creator, SkillPortrait) | **Not gated.** The gold rule only requires the cases to exist |
 
-The workspace connector emits one `skill` record per `SKILL.md`. It reports facts. `portal/seikika.yaml`
+The workspace connector emits one `skill` record per `SKILL.md`. It reports facts. `.seikika/seikika.yaml`
 holds the thresholds. A skill added after this baseline must reach bronze (`ratchet.newEntitiesAtLeast`),
 which is the spec plus a routable description. CLI commands are catalogued separately: each leaf has
 one skill, and `cli-skill` scores the command (D94, [cli-skills.md](./cli-skills.md)).
@@ -111,7 +111,7 @@ same kind of follow-on. Four skills do not need it.
 
 ## 5. This repository
 
-Measured with `seikika report portal --skip runner,github-actions` after the connector change.
+Measured with `seikika report .seikika --skip runner,github-actions` after the connector change.
 The four operator skills:
 
 | Skill | Level | What fails above bronze |
@@ -128,7 +128,7 @@ not a parser quirk.
 D94 adds one skill per CLI command and scores the command, not the file, with `cli-skill`
 ([cli-skills.md](./cli-skills.md)). `maintainer-skill` still scores each of those files.
 
-`seikika test portal` pins the three fixture skills: `plugins/demo/focused` at gold,
+`seikika test .seikika` pins the three fixture skills: `plugins/demo/focused` at gold,
 `plugins/demo/partial` at bronze, `plugins/demo/unsafe` at none. Every `maintainer-skill` rule is
 named in those expectations and fails on one fixture and passes on another, so the new rules and the
 new scorecard clear `meta-rule` / `meta-scorecard` from the first commit (D71).

@@ -17,7 +17,7 @@ stop rule ([D01M87PSM9YQGGW3YQ5X4XCJP63](../decisions/D01M87PSM9YQGGW3YQ5X4XCJP6
 
 | Item | Value |
 |---|---|
-| Surface | `<seikika-report>` as rendered by `seikika report portal --skip runner,github-actions -o web` for this repo's own portal |
+| Surface | `<seikika-report>` as rendered by `seikika report .seikika --skip runner,github-actions -o web` for this repo's own portal |
 | Goals | Tracks easy to see, understand and explore; kinds grouped, with a sensible grouping for this portal; a comparison understood without its docs; a rationale and links on every rule and scorecard; measured and agent-judged results told apart wherever a result is shown |
 | Routes | `#overview`, `#tracks`, `#track/delivery`, `#catalog`, `#catalog/Crate`, `#campaigns`, `#scorecards`, `#scorecard/maintainer-skill`, `#scorecard/review-crate`, `#rule/maintainer-skill/has-example`, `#entity/crate:seikika-cli`, `#compare`, `#compare/vs-backstage-capabilities`, `#compare/vs-backstage-performance` |
 | Viewports | 1280×800 and 390×844, light and dark, plus a full-page desktop light shot |

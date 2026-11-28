@@ -1,0 +1,54 @@
+apiVersion: seikika.com/assessment/v1
+entity: rule:seikika/maintainer-site/described
+rubric: rule-quality
+subjectHash: 4e15fe26cbb4
+assessor: {kind: agent, name: cursor-assessor-13, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: measures-intent
+    verdict: pass
+    reason: >-
+      `descriptionChars` counts the top-level frontmatter `description`, the
+      key Starlight puts in the page's meta description, after trimming. A
+      blank `"  "` or a nested key counts as no description
+      (crates/seikika-connector-workspace/src/site.rs:12, 22, 48-53). Passing
+      means the page has a description a search index can read, which is what
+      the name and fix promise (.seikika/standards/site.yaml: 95-108). The
+      fixture unsafe.md, with empty frontmatter, fails as intended
+      (.seikika/tests/standards.test.yaml:771-777).
+  - criterion: hard-to-game
+    verdict: fail
+    reason: >-
+      Any single non-blank character passes, for example `description: .` or a
+      copy of the title, because the check is `descriptionChars > 0`
+      (site.yaml:97). meta-standards-review.md:84 found the same "presence,
+      not quality" hole in `titled`, which now requires 3 characters
+      (docs/design/thresholds.md:39). This rule kept the presence check. Every
+      live page is well above the bar today: the shortest description is 59
+      characters (npm/site/src/content/docs/start/run.md).
+    suggestion: >-
+      Set a floor like `titled`'s, for example `entity.descriptionChars >=
+      30`, measured against the live minimum of 59. Record it in
+      docs/design/thresholds.md, and fail a description equal to the title
+      (the connector can emit `descriptionIsTitle`).
+  - criterion: fix-leads-to-pass
+    verdict: pass
+    reason: >-
+      The evidence is `no description` and the fix says to set `description:`
+      in the page's frontmatter (site.yaml:98-101). Adding any non-empty
+      description makes `descriptionChars` positive, so the fix alone is
+      enough.
+  - criterion: threshold-justified
+    verdict: pass
+    reason: >-
+      The number is zero: an empty description fails bronze, as stated in
+      docs/design/site-standards.md:47. D91 (D01M7X0RYD00000000000000000) puts
+      a description at bronze, beside the title and resolving links. No
+      allowance is involved, so the level is the only choice to justify, and
+      the decision does that.
+summary: >-
+  A clear bronze presence check whose fix works and whose level D91 sets.
+  Its weakness is the one `titled` already fixed: a one-character or
+  title-copying description passes, so the rule promises a summary but
+  checks only that the key is there. Every live page is well above any
+  sensible floor.

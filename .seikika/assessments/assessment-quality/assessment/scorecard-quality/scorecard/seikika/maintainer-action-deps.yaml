@@ -1,0 +1,53 @@
+apiVersion: seikika.com/assessment/v1
+entity: assessment:scorecard-quality/scorecard:seikika/maintainer-action-deps
+rubric: assessment-quality
+subjectHash: b7c3be1980bf
+assessor: {kind: agent, name: cursor-reviewer-34, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: supported
+    verdict: fail
+    reason: >-
+      The rank and pinning citations in
+      .seikika/assessments/scorecard-quality/scorecard/seikika/maintainer-action-deps.yaml
+      hold. packages/github-actions/fragments/github-actions.yaml:17-22 runs
+      zizmor --offline, :532-544 is the per-action card with bronze as its
+      only level, and .seikika/results.json has 15 of 15 actions at bronze and
+      maintainer-repo at bronze. .seikika/standards/repository.yaml:166-174
+      needs rank 2 for silver, and crates/seikika-derive/src/lib.rs:1296-1304
+      ranks the first level as 1. docs/design/github-actions-standards.md:55
+      lists impostor-commit and known-vulnerable-actions. Lines 68-70 do not:
+      they name SHA pinning, CODEOWNERS, least-privilege tokens,
+      pull_request_target and Dependabot, not those two audits.
+    suggestion: >-
+      Cite github-actions-standards.md:55 for the zizmor audits, and do not
+      claim that lines 68-70 name known-vulnerable or impostor checks.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      one-concern should pass: one rule, one maintainer question
+      (github-actions.yaml:534-539, .seikika/README.md:20).
+      levels-are-a-ladder should fail: a bronze-only card's top rank is 1, and
+      the rollup's silver needs every constituent at rank 2. no-obvious-gap
+      should fail: the card only checks pins == 'sha', and the design lists
+      known-vulnerable and impostor audits the offline run does not apply.
+      actionable should pass: the fixture evidence at
+      .seikika/tests/standards.test.yaml:220-221 hands over the SHA pin with
+      its version comment.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      Rank 1 versus rank 2 is the code, and the missing audit is the card's
+      single rule. A second assessor fails the same two criteria without
+      relying on lines 68-70.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      Adding a known-vulnerable or impostor rule, and either a higher level or
+      dropping the card from repoRollup, would change the two fails. The
+      one-concern and actionable passes need no suggestion.
+summary: >-
+  The action-deps verdicts match the bronze-only rollup cap and the
+  pin-only rule. The no-obvious-gap reason over-cites
+  github-actions-standards.md:68-70, which does not name the
+  known-vulnerable or impostor audits; those are on line 55.

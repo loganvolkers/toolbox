@@ -11,7 +11,7 @@ description: >-
 3. Leave the plan in the pull request. Do not merge a plan that trips a gate without the owner acknowledging it.
 
 ```
-seikika plan portal --local --base portal/seikika.yaml
+seikika plan portal --local --base .seikika/seikika.yaml
 ```
 
 Do not drop --base. Without the before manifest the diff is not a plan.

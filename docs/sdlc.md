@@ -47,7 +47,7 @@ this app").
 
 [Seikika for Seikika](./design/seikika-for-seikika.md) (D65) turns these layers into scorecards on
 this repository: `maintainer-crate` and `maintainer-docs` (layer 1), `operator-cli` (layer 3), and
-`user-cli` and `user-mcp` (layer 4). The layers themselves are catalogued too (D87): `portal/sdlc/`
+`user-cli` and `user-mcp` (layer 4). The layers themselves are catalogued too (D87): `.seikika/sdlc/`
 declares every stage of every layer (exit criterion, commands, checks, status, gaps), scored by
 `sdlc-stage` and `sdlc-layer` and reviewed by agents against `sdlc-stage-quality`. Run `scripts/self-portal.sh report`, or point an agent at
 `scripts/self-portal.sh serve`.
@@ -58,7 +58,7 @@ Scorecards check that each stage is declared and has a gate. **DX Benchmarks**
 ([design/dx-benchmarks.md](./design/dx-benchmarks.md), D01M82X2K0DYWTCA23MQJ4CKR0Z) check that
 the stages work for agents. Fresh coding agents do a layer's work on open-source repositories,
 with Seikika and with its strongest alternative, against a bar set before the run. Each benchmark
-names the layers and stages it measures (`portal/benchmarks/`, scored by `maintainer-benchmark`).
+names the layers and stages it measures (`.seikika/benchmarks/`, scored by `maintainer-benchmark`).
 So far the benchmarks have measured the operator and package-author layers most. The user layer
 has no benchmark of its own yet.
 

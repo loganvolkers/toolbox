@@ -7,7 +7,7 @@ that command alone, count the findings for the record's file from the tool's own
 compare with the record's `total`. For OpenSSF Scorecard records, compare the check's score. The counting here is independent of Seikika's parsers, so a
 box that dropped, added or filtered findings fails the check.
 
-    python3 scripts/take-it-out.py portal ci-lint      # run from the repository root
+    python3 scripts/take-it-out.py .seikika ci-lint      # run from the repository root
 
 Exit 1 on any mismatch, 2 if the connector can't be read.
 """

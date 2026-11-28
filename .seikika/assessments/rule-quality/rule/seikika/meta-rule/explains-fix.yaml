@@ -1,0 +1,52 @@
+apiVersion: seikika.com/assessment/v1
+entity: rule:seikika/meta-rule/explains-fix
+rubric: rule-quality
+subjectHash: a1c574673aeb
+assessor: {kind: agent, name: cursor-assessor-02, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: measures-intent
+    verdict: fail
+    reason: >-
+      The name and fix promise a fix "an agent can act on: what to change, and
+      where" (.seikika/standards/meta.yaml:414-418). The check counts
+      whitespace-separated words (crates/seikika-cli/src/meta.rs:190-192).
+      Both kinds of error happen. "Please fix this rule soon." (5 words)
+      passes. "Pin `uses:` to SHAs" (4 words) is actionable and fails, even
+      though thresholds.md:44 gives a 5-word fix as the shortest real
+      instruction.
+    suggestion: >-
+      Rename it to say what it measures (e.g. `fix-not-trivial`). Or check for
+      a verb plus an object (a code span, path or field) instead of length,
+      and leave "where" to fix-names-a-place.
+  - criterion: hard-to-game
+    verdict: fail
+    reason: >-
+      Five filler words pass bronze. The gold backstop, fix-names-a-place,
+      doesn't catch them either when the rule's evidence reads any field
+      (meta.yaml:150-154). This rule's own fix names no place and still passes
+      fix-names-a-place only because its evidence reads `fixWords` (brief
+      facts: fixNamesPlace true).
+    suggestion: >-
+      Require the fix to contain a backtick span, path or checked field name
+      at bronze, and drop the evidence-reads-a-field escape from
+      fixNamesPlace.
+  - criterion: fix-leads-to-pass
+    verdict: pass
+    reason: >-
+      Any fix that says what and where, as the fix asks, has five words or
+      more. The evidence gives the count (`fix has 2 words` for
+      rule:demo/sprawling/everything, .seikika/tests/standards.test.yaml:
+      242-252).
+  - criterion: threshold-justified
+    verdict: pass
+    reason: >-
+      docs/design/thresholds.md:44 labels 5 words as chosen, with an example
+      of the shortest what-and-where instruction. Bronze follows from lesson
+      L1 (docs/design/scorecards-for-scorecards.md:81, 100).
+summary: >-
+  A length floor that passes filler and fails some terse but real fixes.
+  The threshold is documented and following the fix passes. The real "act
+  on it" bar sits at gold, and that rule has its own escape hatch. No live
+  rule fails it (0 of 272, .seikika/results.json), so it only screens new
+  rules. Tests pin only fail.
