@@ -127,7 +127,7 @@ export function aggregateReport(snapshot: ReportData): CatalogReport {
     ...parent, catalog: map(), scorecards: map(), scores: map(), campaigns: map(), tracks: map(),
     entityOverview: map(), entities: map(), kinds: map(), unassessed: map(), comparisons: map(), rubrics: map(),
     sources: map(), entitySources: map(), entityObservations: map(), entityRedirects: map(), comparisonSources: map(),
-    repoRollupsByCard: map(),
+    repoRollupsByCard: map(), itemSources: map(),
     actions: [], kindGroups: [], assessmentIds: [], metaDetails: map(),
   };
   const sources = out.sources!;
@@ -164,6 +164,7 @@ export function aggregateReport(snapshot: ReportData): CatalogReport {
       while (names.has(result)) result = "@" + result;
       names.add(result);
       mapped.set(original, result);
+      out.itemSources![result] = key;
       return result;
     }
     const aliases = aliasesFor(aliasRules.get(JSON.stringify(path)) ?? [], parent, doc);

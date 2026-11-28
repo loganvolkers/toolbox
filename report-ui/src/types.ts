@@ -188,6 +188,7 @@ export type MetaDetail =
 
 export interface CatalogReport extends ReportData {
   metaDetails: Record<string, MetaDetail>;
+  itemSources?: Record<string, string>;
 }
 
 export interface ActionInput {

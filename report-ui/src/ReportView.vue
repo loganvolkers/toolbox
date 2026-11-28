@@ -123,6 +123,14 @@ watchPostEffect(() => {
 
 const displayId = computed(() => entity.value && (props.data.entitySources?.[entity.value.id]?.original ?? entity.value.id));
 const sources = computed(() => entity.value ? entitySourceKeys(props.data, entity.value.id) : []);
+const facts = ref<HTMLElement>();
+function showSourceFields() {
+  const heading = facts.value?.querySelector<HTMLElement>("h2, h3");
+  if (!heading) return;
+  heading.tabIndex = -1;
+  heading.focus({ preventScroll: true });
+  heading.scrollIntoView({ block: "start" });
+}
 const offer = computed(() => entity.value && props.data.actions?.some(item => item.entities.includes(entity.value!.id)));
 const scoredBy = computed(() => {
   const id = entity.value?.id;
@@ -137,6 +145,7 @@ const scoredBy = computed(() => {
     <template #meta>
       <code v-if="displayId !== entity.title">{{ displayId }}</code>
       <div v-for="source in sources" :key="source" class="sub">{{ sourceLabel(data, source) }}</div>
+      <button v-if="sources.length > 1" type="button" class="link source-fields-jump" @click="showSourceFields">View source fields</button>
       <div class="sub">{{ kindTitle(data, entity.kind) }}
         <template v-if="!data.publicCatalog"> · {{ plural(scoredBy.length, "scorecard") }}</template>
         <span v-if="data.snapshot != null" class="asof"> · as of snapshot <code>{{ data.snapshot }}</code></span>
@@ -146,7 +155,7 @@ const scoredBy = computed(() => {
     <slot name="entity-tools" :id="entity.id" :source="data.entitySources?.[entity.id]?.source" :snapshot="data.snapshot" />
     <CatalogEntityContext :id="entity.id" :data="data" />
     <ReportContent v-if="!data.publicCatalog" :build="() => body ?? null" />
-    <CatalogEntityFacts :data="data" :summary="summary" :id="entity.id" />
+    <div ref="facts"><CatalogEntityFacts :data="data" :summary="summary" :id="entity.id" /></div>
     <SectionCard v-if="offer" title="Actions">
       <a :href="'#actions?entity=' + encodeURIComponent(entity.id)">Preview actions for {{ entity.title }}</a>
     </SectionCard>

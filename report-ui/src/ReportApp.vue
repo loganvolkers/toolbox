@@ -97,6 +97,13 @@ const columns = computed(() => tabs.value.length <= 3 ? tabs.value.length : tabs
 const portal = computed(() => data.value.portal || "Seikika report");
 const showSummary = computed(() => !data.value.publicCatalog && (!data.value.sources || active.value === "overview"));
 const reportSources = computed(() => Object.entries(data.value.sources ?? {}).filter(([, source]) => !source.repository));
+const publication = computed(() => {
+  const item = route.value.name || route.value.id || route.value.scorecard;
+  const source = item && data.value.itemSources?.[item];
+  return source ? { title: data.value.sources?.[source]?.title, href: "#overview?" + new URLSearchParams({ source }) } : undefined;
+});
+const selectedSource = computed(() => route.value.mode === "overview" ? route.value.query?.source : undefined);
+const sourceList = ref<HTMLDetailsElement>();
 
 function rememberScroll() {
   clearTimeout(scrollTimer);
@@ -173,7 +180,10 @@ async function ready() {
     const y = frame?.getBoundingClientRect().top ?? 0;
     const inset = frame ? Number.parseFloat(getComputedStyle(frame).scrollMarginTop) || 0 : 0;
     const top = Math.max(0, y + scrollY - inset);
-    if (tabFocus) {
+    const publicationRow = sourceList.value?.querySelector<HTMLElement>('[data-publication][aria-current="true"]');
+    if (publicationRow) {
+      publicationRow.focus();
+    } else if (tabFocus) {
       selected?.focus({ preventScroll: true });
       scrollTo(0, top);
     } else if (heading && (lastHash !== undefined || props.embedded && hash.value)) {
@@ -258,13 +268,15 @@ onUnmounted(() => {
         </div>
       </template>
     </PageHeader>
+    <a v-if="publication" class="report-publication-link" :href="publication.href">Publication details<span class="sr"> for {{ publication.title }}</span></a>
     <slot name="tools" :route="route" />
-    <details v-if="reportSources.length && showSummary && !pending" class="report-sources" :open="reportSources.length <= 3">
+    <details v-if="reportSources.length && showSummary && !pending" ref="sourceList" class="report-sources" :open="Boolean(selectedSource) || reportSources.length <= 3">
       <summary>Report sources ({{ reportSources.length }})</summary>
-      <ul><li v-for="[key, source] in reportSources" :key="key">
+      <ul><li v-for="[key, source] in reportSources" :key="key" :data-publication="key" :aria-current="selectedSource === key ? 'true' : undefined" tabindex="-1">
         {{ sourceLabel(data, key) }}
         <code v-if="source.commit" :title="source.commit">Commit {{ source.commit.slice(0, 12) }}</code>
         <code v-else-if="source.digest">Artifact SHA-256 {{ source.digest }}</code>
+        <span v-else-if="source.local && data.snapshot" class="sub"> · Report snapshot {{ data.snapshot }}</span>
         <span v-if="source.error" class="sub"> · {{ source.error }}</span>
       </li></ul>
     </details>

@@ -226,6 +226,15 @@ try {
       await example.getByText(marker, { exact: true }).waitFor();
       assert.equal(await example.locator("federation-marker").count(), 0);
     }
+    if (snapshot.catalogAliases?.some(alias => alias.from === "repo:seikika/seikika")) {
+      await page.evaluate(() => location.hash = "entity/" + encodeURIComponent("repository:seikika/seikika"));
+      await page.getByRole("button", { name: "View source fields" }).press("Enter");
+      await page.waitForFunction(() => document.activeElement?.textContent === "Inventory fields");
+      await page.getByRole("tab", { name: "Assessments", exact: true }).click();
+      await page.locator(".assessment-runs li").filter({ hasText: "Published by Seikika for Seikika" }).first().getByRole("link").click();
+      await page.getByRole("link", { name: "Publication details for Seikika for Seikika" }).press("Enter");
+      await page.waitForFunction(() => document.activeElement?.textContent?.includes("Artifact SHA-256"));
+    }
   }
   await page.goto(docsOrigin + "storybook/?path=/story/hosted-portal--entity");
   await page.frameLocator("#storybook-preview-iframe").getByRole("heading", { name: "Checkout", exact: true }).waitFor();

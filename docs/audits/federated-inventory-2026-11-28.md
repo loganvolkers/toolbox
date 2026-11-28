@@ -24,6 +24,10 @@ The audit used the organization federation example with a real Seikika for Seiki
 | Revised | 2 | 3 | 2 | 3 | 3 | 3 | 2 | 2 | 3 | 2 | 3 | 3 | 2 | 3 | 2 |
 | Revised | 3 | 3 | 2 | 3 | 3 | 3 | 3 | 3 | 4 | 2 | 2 | 3 | 2 | 3 | 3 |
 | Revised | Median | 3 | 2 | 3 | 3 | 3 | 3 | 3 | 3 | 2 | 3 | 3 | 2 | 3 | 2 |
+| Third | 1 | 3 | 2 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 2 | 3 | 2 | 3 | 3 |
+| Third | 2 | 3 | 2 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 1 | 3 | 2 |
+| Third | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 2 | 3 | 3 | 3 | 3 | 1 | 3 | 3 |
+| Third | Median | 3 | 2 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 1 | 3 | 3 |
 
 ## Initial findings and changes
 
@@ -38,3 +42,11 @@ The audit used the organization federation example with a real Seikika for Seiki
 - All three reviewers distinguished the organization’s repository results from the child’s scores, and found OpenFGA’s `tuples.go` measurement of 2,629 lines against the 800-line rule. The source register exposed the full child fingerprint. Reviewers requested a more explicit artifact label and publication roles on assessment rows. Those labels now appear in the overview and the assessment list and detail.
 - The revision retained a serious target-size issue on the first track link in the repository’s context card. The link and its list row now reserve 28 px of vertical space.
 - Scoped scorecard rows now show their own denominators. Catalog-wide kind counts appear with a scorecard caption only when the scorecard covers the whole kind.
+
+## Third panel and navigation checks
+
+- All three auditors identified the independent repository outcomes, the child standards, and the assessment publisher and comparison participants. Two auditors cited the child artifact fingerprint from Overview. A third looked for an artifact for the parent’s built-in standards. The source register now identifies the parent report snapshot alongside the child artifact fingerprint.
+- All federation and OpenFGA captures had zero serious axe findings and no horizontal overflow. The repository detail was the only route with a serious axe finding in the first two rounds.
+- The third panel had to scroll past several scorecards for repository facts and navigate back to Overview to match source labels to the publication. The entity now has a shortcut to inventory fields, and child detail views link to their selected publication. Scorecard requirements based on other scorecards explain that dependency instead of implying a single local correction.
+- Chromium activated both shortcuts with the keyboard at 390 and 1280 px. Focus moved to the inventory heading and the selected publication row. The repository continued to pass the target-size check at both widths.
+- OpenFGA’s catalog exposes the failed line-count check directly. The passing example’s precise count remains inside its rule disclosure. Long labels still wrap on narrow screens.

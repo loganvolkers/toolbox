@@ -12,6 +12,7 @@ const details = computed(() => [
   { original: props.id, source: undefined, detail: props.data.entities?.[props.id] },
   ...(props.data.entityObservations?.[props.id] ?? []),
 ]);
+const primary = computed(() => props.data.entitySources?.[props.id]?.source);
 const entityLink = (id: string) => props.summary.kindOf[id] ? "#" + catalogEntityPath(props.data, id) : "";
 </script>
 
@@ -20,6 +21,7 @@ const entityLink = (id: string) => props.summary.kindOf[id] ? "#" + catalogEntit
     <SectionCard v-if="detail && Object.keys(detail.fields).length || source"
       :title="source ? 'Fields from ' + data.sources?.[source]?.title : details.length > 1 ? 'Inventory fields' : 'Fields'">
       <p v-if="source" class="sub">{{ sourceLabel(data, source) }} · <code>{{ original }}</code></p>
+      <p v-else-if="details.length > 1" class="sub">{{ sourceLabel(data, primary) }}</p>
       <dl>
         <template v-for="(value, name) in detail?.fields" :key="name">
           <dt>{{ name }}</dt><dd><DataValue :value="value" :entity-href="entityLink" />
