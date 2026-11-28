@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, ref, shallowRef, watch, watchPostEffect } from "vue";
 import SectionCard from "@seikika/ui/components/SectionCard.vue";
-import { entitySource } from "./lib/federation";
+import { entitySourceKeys, sourceLabel } from "./lib/federation";
 import EntityPage from "@seikika/ui/components/EntityPage.vue";
 import ScorecardPage from "@seikika/ui/components/ScorecardPage.vue";
 import { entityOverview } from "@seikika/ui/entity";
@@ -24,9 +24,14 @@ const emit = defineEmits<{ ready: [] }>();
 const entity = computed(() => {
   const id = props.route.id;
   if (props.route.mode !== "entity" || !id || !props.summary.kindOf[id]) return null;
-  const overview = entityOverview(id, props.summary.kindOf[id], {
+  const fields = {
     ...props.data.entities?.[id]?.fields, ...props.data.entityOverview?.[id],
-  });
+  };
+  const overview = entityOverview(id, props.summary.kindOf[id], fields);
+  if (props.data.entityObservations?.[id]?.length) {
+    overview.links = overview.links.map(link => ({ ...link, label: link.label !== "Source" ? link.label
+      : link.href === fields.repositoryUrl ? "Repository" : link.href === fields.sourceUrl ? "Scanned revision" : link.label }));
+  }
   return overview.title === id ? { ...overview, title: shortId(id) } : overview;
 });
 const cardName = computed(() => {
@@ -117,6 +122,7 @@ watchPostEffect(() => {
 });
 
 const displayId = computed(() => entity.value && (props.data.entitySources?.[entity.value.id]?.original ?? entity.value.id));
+const sources = computed(() => entity.value ? entitySourceKeys(props.data, entity.value.id) : []);
 const offer = computed(() => entity.value && props.data.actions?.some(item => item.entities.includes(entity.value!.id)));
 const scoredBy = computed(() => {
   const id = entity.value?.id;
@@ -130,7 +136,7 @@ const scoredBy = computed(() => {
     <template #breadcrumbs><ReportContent v-if="breadcrumbs" :build="() => breadcrumbs ?? null" /></template>
     <template #meta>
       <code v-if="displayId !== entity.title">{{ displayId }}</code>
-      <div v-if="entitySource(data, entity.id)" class="sub">{{ entitySource(data, entity.id) }}</div>
+      <div v-for="source in sources" :key="source" class="sub">{{ sourceLabel(data, source) }}</div>
       <div class="sub">{{ kindTitle(data, entity.kind) }}
         <template v-if="!data.publicCatalog"> · {{ plural(scoredBy.length, "scorecard") }}</template>
         <span v-if="data.snapshot != null" class="asof"> · as of snapshot <code>{{ data.snapshot }}</code></span>

@@ -1,4 +1,4 @@
-import type { CatalogReport, ReportAction, ReportChild, ReportData, Score } from "../types";
+import type { CatalogAlias, CatalogReport, ReportAction, ReportChild, ReportData, ReportEntity, Score } from "../types";
 import { withMetaCatalog } from "./meta-catalog";
 
 const map = <T>(): Record<string, T> => Object.create(null);
@@ -57,11 +57,14 @@ function valid(data: unknown): data is ReportData {
     && optionalMap(data.kinds, (value, kind) => record(value) && kindName.test(kind) && textFields(value, ["title", "description"]))
     && optionalMap(data.entityOverview, value => record(value)
       && textFields(value, ["title", "displayName", "name", "description", "owner", "repositoryUrl", "sourceUrl"])
-      && links(value.links) && (value.ownership == null || record(value.ownership) && textFields(value.ownership, ["owner", "status"])))
+      // A catalog kind can use `links` as a metric, such as the Rule kind's link count.
+      && (links(value.links) || number(value.links))
+      && (value.ownership == null || record(value.ownership) && textFields(value.ownership, ["owner", "status"])))
     && optionalMap(data.entities, value => record(value) && record(value.fields) && optionalMap(value.provenance, item => typeof item === "string")
       && (value.relations == null || record(value.relations) && Array.isArray(value.relations.in) && Array.isArray(value.relations.out)
         && value.relations.in.every(item => edge(item, "from")) && value.relations.out.every(item => edge(item, "to"))))
     && (data.assessmentKinds == null || strings(data.assessmentKinds))
+    && (data.repoRollup == null || strings(data.repoRollup))
     && optionalMap(data.rubrics, value => record(value) && typeof value.name === "string"
       && typeof value.kind === "string" && textFields(value, ["description", "subject"]) && links(value.links)
       && Array.isArray(value.criteria) && value.criteria.every(criterion => record(criterion)
@@ -76,6 +79,32 @@ function valid(data: unknown): data is ReportData {
       && optionalMap(value.fields, item => item == null || typeof item === "string"))
     && (data.actions == null || Array.isArray(data.actions) && data.actions.every(action))
     && (data.children == null || Array.isArray(data.children));
+}
+
+function aliasesFor(rules: CatalogAlias[], parent: CatalogReport, child: CatalogReport) {
+  const aliases = new Map<string, string>();
+  const fromCounts = new Map<string, number>();
+  const toCounts = new Map<string, number>();
+  for (const { from, to } of rules) {
+    fromCounts.set(from, (fromCounts.get(from) ?? 0) + 1);
+    toCounts.set(to, (toCounts.get(to) ?? 0) + 1);
+  }
+  for (const { from, to, kind } of rules) {
+    if (fromCounts.get(from) === 1 && toCounts.get(to) === 1
+        && child.catalog[kind]?.includes(from) && parent.catalog[kind]?.includes(to)
+        && !child.metaDetails[from] && !parent.metaDetails[to]) aliases.set(from, to);
+  }
+  return aliases;
+}
+
+function rewriteRelations(detail: ReportEntity, id: (original: string) => string): ReportEntity {
+  return {
+    ...detail,
+    relations: {
+      in: (detail.relations?.in ?? []).map(row => ({ ...row, from: id(row.from) })),
+      out: (detail.relations?.out ?? []).map(row => ({ ...row, to: id(row.to) })),
+    },
+  };
 }
 
 function withTitle(value: { title?: string | null }, fallback: string, source: string) {
@@ -97,10 +126,13 @@ export function aggregateReport(snapshot: ReportData): CatalogReport {
   const out: CatalogReport = {
     ...parent, catalog: map(), scorecards: map(), scores: map(), campaigns: map(), tracks: map(),
     entityOverview: map(), entities: map(), kinds: map(), unassessed: map(), comparisons: map(), rubrics: map(),
-    sources: map(), entitySources: map(), actions: [], kindGroups: [], assessmentIds: [], metaDetails: map(),
+    sources: map(), entitySources: map(), entityObservations: map(), entityRedirects: map(), comparisonSources: map(),
+    repoRollupsByCard: map(),
+    actions: [], kindGroups: [], assessmentIds: [], metaDetails: map(),
   };
   const sources = out.sources!;
   const entitySources = out.entitySources!;
+  const observations = out.entityObservations!;
   const actionRows = out.actions!;
   const parentKey = "local";
   sources[parentKey] = { title: parent.portal, local: true };
@@ -115,6 +147,13 @@ export function aggregateReport(snapshot: ReportData): CatalogReport {
   }
   const matched = new Set<ReportAction>();
   const grouped = new Set<string>();
+  const aliasRules = new Map<string, CatalogAlias[]>();
+  for (const rule of parent.catalogAliases ?? []) {
+    const key = JSON.stringify(rule.source);
+    const rules = aliasRules.get(key) ?? [];
+    rules.push(rule);
+    aliasRules.set(key, rules);
+  }
   function add(doc: CatalogReport, key: string, path: string[], depth: number) {
     const mapped = new Map<string, string>();
     function id(original: string) {
@@ -127,11 +166,20 @@ export function aggregateReport(snapshot: ReportData): CatalogReport {
       mapped.set(original, result);
       return result;
     }
-    const owner = <T>(value: T) => typeof value === "string" && doc.entityOverview?.[value] ? id(value) : value;
+    const aliases = aliasesFor(aliasRules.get(JSON.stringify(path)) ?? [], parent, doc);
+    const entityId = (original: string) => aliases.get(original) ?? id(original);
+    const owner = <T>(value: T) => typeof value === "string" && doc.entityOverview?.[value] ? entityId(value) : value;
     for (const [kind, metadata] of entries(doc.kinds)) out.kinds![kind] ??= metadata;
     for (const [kind, ids] of entries(doc.catalog)) {
       const values = out.catalog[kind] ??= [];
       for (const original of [...new Set(ids)]) {
+        const canonical = aliases.get(original);
+        const detail = doc.entities?.[original];
+        if (canonical) {
+          out.entityRedirects![id(original)] = canonical;
+          (observations[canonical] ??= []).push({ source: key, original, detail: detail && rewriteRelations(detail, entityId) });
+          continue;
+        }
         const entity = id(original);
         const meta = doc.metaDetails[original];
         if (meta) out.metaDetails[entity] = "name" in meta ? { ...meta, name: id(meta.name) } : meta;
@@ -151,14 +199,7 @@ export function aggregateReport(snapshot: ReportData): CatalogReport {
             ...(ownership ? { ownership: { ...ownership, owner: owner(ownership.owner as string | undefined) } } : {}),
           };
         }
-        const detail = doc.entities?.[original];
-        if (detail) out.entities![entity] = {
-          ...detail,
-          relations: {
-            in: (detail.relations?.in ?? []).map(row => ({ ...row, from: id(row.from) })),
-            out: (detail.relations?.out ?? []).map(row => ({ ...row, to: id(row.to) })),
-          },
-        };
+        if (detail) out.entities![entity] = rewriteRelations(detail, entityId);
       }
     }
     for (const group of doc.kindGroups ?? []) {
@@ -171,13 +212,15 @@ export function aggregateReport(snapshot: ReportData): CatalogReport {
       ...card, title: withTitle(card, name, label(key)), owner: owner(card.owner),
       track: card.track ? id(card.track) : card.track,
     };
+    const rollup = doc.repoRollup?.map(id) ?? [];
+    for (const name of rollup) out.repoRollupsByCard![name] = rollup;
     for (const [name, rubric] of entries(doc.rubrics)) {
       const entity = id(name);
       out.rubrics![entity] = rubric;
       entitySources[entity] ??= { source: key, original: name };
     }
     for (const [name, rows] of entries(doc.scores)) out.scores[id(name)] =
-      Object.fromEntries(entries(rows).map(([target, row]) => [id(target), path.length ? reportScore(row) : row]));
+      Object.fromEntries(entries(rows).map(([target, row]) => [entityId(target), path.length ? reportScore(row) : row]));
     for (const [name, track] of entries(doc.tracks)) out.tracks![id(name)] = {
       ...track, title: withTitle(track, name, label(key)), owner: owner(track.owner),
     };
@@ -185,20 +228,23 @@ export function aggregateReport(snapshot: ReportData): CatalogReport {
       ...campaign, title: withTitle(campaign, name, label(key)), owner: owner(campaign.owner),
       track: campaign.track ? id(campaign.track) : campaign.track,
       includes: campaign.includes.map(include => ({ ...include, scorecard: id(include.scorecard) })),
-      entities: campaign.entities && Object.fromEntries(entries(campaign.entities).map(([target, row]) => [id(target), {
+      entities: campaign.entities && Object.fromEntries(entries(campaign.entities).map(([target, row]) => [entityId(target), {
         ...row, gaps: row.gaps?.map(gap => gap.replace(/^([^:]+)(:.*)$/, (_, card, rest) => id(card) + rest)),
       }])),
     };
-    for (const [name, values] of entries(doc.unassessed)) out.unassessed![id(name)] = values.map(id);
-    for (const [name, comparison] of entries(doc.comparisons)) out.comparisons![id(name)] = {
-      ...comparison, subject: id(comparison.subject), peers: comparison.peers.map(id),
-      verdict: Object.fromEntries(entries(comparison.verdict).map(([target, verdict]) => [id(target), verdict])),
-      rules: Object.fromEntries(entries(comparison.rules).map(([rule, scores]) =>
-        [rule, Object.fromEntries(entries(scores).map(([target, value]) => [id(target), value]))])),
-      titles: Object.fromEntries(entries(comparison.titles).map(([target, value]) => [id(target), value])),
-      facts: Object.fromEntries(entries(comparison.facts).map(([target, value]) => [id(target), value])),
-      scores: Object.fromEntries(entries(comparison.scores).map(([target, value]) => [id(target), path.length ? reportScore(value) : value])),
-    };
+    for (const [name, values] of entries(doc.unassessed)) out.unassessed![id(name)] = values.map(entityId);
+    for (const [name, comparison] of entries(doc.comparisons)) {
+      out.comparisonSources![id(name)] = key;
+      out.comparisons![id(name)] = {
+        ...comparison, subject: entityId(comparison.subject), peers: comparison.peers.map(entityId),
+        verdict: Object.fromEntries(entries(comparison.verdict).map(([target, verdict]) => [entityId(target), verdict])),
+        rules: Object.fromEntries(entries(comparison.rules).map(([rule, scores]) =>
+          [rule, Object.fromEntries(entries(scores).map(([target, value]) => [entityId(target), value]))])),
+        titles: Object.fromEntries(entries(comparison.titles).map(([target, value]) => [entityId(target), value])),
+        facts: Object.fromEntries(entries(comparison.facts).map(([target, value]) => [entityId(target), value])),
+        scores: Object.fromEntries(entries(comparison.scores).map(([target, value]) => [entityId(target), path.length ? reportScore(value) : value])),
+      };
+    }
     for (const item of doc.actions ?? []) {
       if (!path.length && item.portal) continue;
       const link = path.length === 1 && !item.portal ? forwarded.get(JSON.stringify([path[0], item.name])) : undefined;
@@ -206,9 +252,9 @@ export function aggregateReport(snapshot: ReportData): CatalogReport {
       actionRows.push({
         ...item, ...(link ? { inputs: link.inputs, approval: link.approval, permission: link.permission } : {}),
         catalogId: item.catalogId && id(item.catalogId),
-        source: key, entities: item.entities.map(id), target: link?.entities[0],
+        source: key, entities: item.entities.map(entityId), target: link?.entities[0],
         choices: item.choices && Object.fromEntries(entries(item.choices).map(([input, targets]) =>
-          [input, Object.fromEntries(entries(targets).map(([target, values]) => [id(target), values]))])),
+          [input, Object.fromEntries(entries(targets).map(([target, values]) => [entityId(target), values]))])),
         previewOnly: path.length > 0 && (!link || item.entities.length > 1),
       });
     }
@@ -223,6 +269,7 @@ export function aggregateReport(snapshot: ReportData): CatalogReport {
       sources[sourceKey] = {
         title: path.length ? sources[key].title + " / " + title : title,
         commit: typeof child.commit === "string" ? child.commit : undefined,
+        digest: typeof child.digest === "string" ? child.digest : undefined,
         error: typeof child.error === "string" ? child.error : undefined,
       };
       if (valid(child.report)) add(withMetaCatalog(child.report), sourceKey, next, depth + 1);
@@ -259,4 +306,9 @@ export function sourceLabel(data: ReportData, key: string | undefined): string {
 
 export function entitySource(data: ReportData, id: string): string {
   return sourceLabel(data, data.entitySources?.[id]?.source);
+}
+
+export function entitySourceKeys(data: ReportData, id: string): string[] {
+  const primary = data.entitySources?.[id]?.source;
+  return [...new Set([...(primary ? [primary] : []), ...(data.entityObservations?.[id] ?? []).map(item => item.source)])];
 }

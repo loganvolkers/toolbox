@@ -144,8 +144,7 @@ export function summarize(D: ReportData) {
   return { rows: rows, worst: byEntity, atTop: atTop, worstState: worstState, checks: checks, entityCount: entityCount, kindOf: kindOf, repo: repoLevel(D) };
 }
 
-export function repoLevel(D: ReportData) {
-  var rollup = Array.isArray(D.repoRollup) ? D.repoRollup : [];
+export function repoLevel(D: ReportData, rollup = Array.isArray(D.repoRollup) ? D.repoRollup : []) {
   if (!rollup.length) return null;
   var ladder = ["none", "bronze", "silver", "gold"];
   var constituents = rollup

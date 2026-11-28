@@ -984,7 +984,7 @@ Change a standard by changing these parameters in the portal's `seikika.yaml`.
   - `assessments`: `["portal/assessments/**/*.y*ml"]`
   - `crateMapping`: `"record.entity.startsWith('crate:') ? [record.entity] : []"`
   - `crateRelation`: `{"many":false,"to":"Crate","unresolved":"ignore"}`
-  - `describeCommand`: `["target/debug/seikika","describe","portal","portal","examples/repo-portal-starter","examples/reference-portal","--results","portal=portal/results.json"]`
+  - `describeCommand`: `["seikika","describe","portal","portal","examples/repo-portal-starter","examples/reference-portal","--results","portal=portal/results.json"]`
   - `manifest`: `"portal"`
   - `reviewScope`: `"entity.portal == 'seikika'"`
   - `sdlcStageMapping`: `"record.entity.startsWith('sdlc-stage:') ? [record.entity] : []"`

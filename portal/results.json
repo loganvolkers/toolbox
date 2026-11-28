@@ -5310,6 +5310,9 @@
       "doc:docs/audits/design-loop-efficiency-2026-11-24.md": {
         "level": "silver"
       },
+      "doc:docs/audits/federated-inventory-2026-11-28.md": {
+        "level": "silver"
+      },
       "doc:docs/audits/internal-capabilities-2026-11-26.md": {
         "level": "silver"
       },
@@ -5865,6 +5868,9 @@
       "doc:docs/decisions/D01M8EXN6P8HX02R74DA9X6MS0C.md": {
         "level": "skipped"
       },
+      "doc:docs/decisions/D01M8FRFDEKE0F5XHG7ZSNEJ9S8.md": {
+        "level": "skipped"
+      },
       "doc:docs/decisions/README.md": {
         "level": "skipped"
       },
@@ -5929,6 +5935,9 @@
         "level": "silver"
       },
       "doc:docs/design/federated-actions.md": {
+        "level": "silver"
+      },
+      "doc:docs/design/federation-inventory.md": {
         "level": "silver"
       },
       "doc:docs/design/federation.md": {

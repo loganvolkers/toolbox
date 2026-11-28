@@ -66,6 +66,7 @@ pub fn validate_manifest(doc: &Value, file: &str) -> (Option<Manifest>, Vec<Diag
         }
     };
     v.cross_references(&manifest);
+    v.report_federation(&manifest);
     v.form_subset(&manifest);
     v.executors(&manifest);
     v.cel(&manifest);
@@ -78,6 +79,51 @@ struct Checker {
 }
 
 impl Checker {
+    fn report_federation(&mut self, m: &Manifest) {
+        let Some(federation) = &m.federation else {
+            return;
+        };
+        for (key, source) in &federation.report_sources {
+            if source
+                .path
+                .split('/')
+                .any(|part| matches!(part, "." | ".."))
+            {
+                self.push(
+                    "path",
+                    format!("/federation/reportSources/{}/path", key.replace('/', "~1")),
+                    "use a file path relative to the portal directory without . or ..".into(),
+                );
+            }
+        }
+        let mut from = BTreeSet::new();
+        let mut to = BTreeSet::new();
+        for (index, alias) in federation.catalog_aliases.iter().enumerate() {
+            let path = format!("/federation/catalogAliases/{index}");
+            if !m.kinds.iter().any(|kind| kind.name == alias.kind) {
+                self.push(
+                    "xref.kind",
+                    format!("{path}/kind"),
+                    format!("unknown parent kind {}", alias.kind),
+                );
+            }
+            if !from.insert((&alias.source, &alias.from)) {
+                self.push(
+                    "duplicate",
+                    format!("{path}/from"),
+                    "a source entity can have only one catalog alias".into(),
+                );
+            }
+            if !to.insert((&alias.source, &alias.to)) {
+                self.push(
+                    "duplicate",
+                    format!("{path}/to"),
+                    "a source can contribute only one observation per parent entity".into(),
+                );
+            }
+        }
+    }
+
     /// Rubrics: the kind exists, it has the subject field, and criterion names are unique.
     /// Each kind group names known kinds, and no kind is in two groups.
     fn kind_groups(&mut self, m: &Manifest, kinds: &BTreeMap<&str, usize>) {

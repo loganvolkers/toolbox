@@ -101,6 +101,8 @@ jobs:
         run: |
           target/debug/seikika report portal --skip runner,github-actions -o standard > /tmp/STANDARD.md
           diff -u portal/STANDARD.md /tmp/STANDARD.md
+      - name: Replay the repository report in the federation example
+        run: node report-ui/scripts/federation-parity.mjs
       - name: >-
           Take-it-out (docs/design/seikika-and-tools.md, B1) — the tools in the
           box give the same findings alone

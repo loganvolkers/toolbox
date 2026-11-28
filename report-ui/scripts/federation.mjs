@@ -155,7 +155,7 @@ try {
     assert.equal(await page.locator(".federated-catalog-row").count(), 3);
     await page.getByRole("combobox", { name: "Group entities" }).selectOption("repository");
     assert.equal(await page.locator(".federated-catalog-group").count(), 3);
-    await page.getByRole("combobox", { name: "Source repository" }).selectOption({ label: "Child-defined · alpha portal" });
+    await page.getByRole("combobox", { name: "Catalog source" }).selectOption({ label: "Child-defined · alpha portal" });
     assert.equal(await page.locator(".federated-catalog-row").count(), 1);
     await page.locator(".federated-catalog-group summary").click();
     await page.getByRole("link", { name: "alpha workflow", exact: true }).click();

@@ -11,6 +11,7 @@ import { ruleTitle } from "../lib/rules";
 import { rich } from "../lib/text";
 import { STANDING_MARK, byMajority, factorChip, standingBy, standingChip, standingColor, standingPhrase } from "../lib/tracks";
 import { andList, firstSentence, lowerFirst, plural, sentences } from "../lib/words";
+import { sourceLabel } from "../lib/federation";
 
 // The number a factor leads with: rules behind, else ahead, else at parity; both when it is ahead on some and behind on
 // others; or, before any record, that none has values.
@@ -147,6 +148,28 @@ export const compareViews = {
     var all = D.comparisons || {};
     var names = Object.keys(all).sort();
     if (!names.length) return el("section", {}, el("div", { className: "empty", textContent: "No comparative scorecards in this portal." }));
+    if (D.comparisonSources) {
+      const groups = new Map<string, string[]>();
+      for (const factor of names) {
+        const comparison = all[factor];
+        const key = JSON.stringify([D.comparisonSources[factor], comparison.subject, comparison.peers, comparison.verdictRule]);
+        const group = groups.get(key) ?? [];
+        group.push(factor);
+        groups.set(key, group);
+      }
+      if (name) {
+        names = [...groups.values()].find(group => group.includes(name)) ?? names;
+      } else if (groups.size > 1) {
+        return el("div", {}, ...[...groups.values()].map(group => {
+          const comparison = all[group[0]];
+          const who = (id: string) => comparison.titles?.[id] ?? productName(D, id);
+          return el("section", {},
+            el("h2", { textContent: who(comparison.subject) + " vs " + andList(comparison.peers.map(who)) }),
+            el("p", { className: "sub", textContent: sourceLabel(D, D.comparisonSources?.[group[0]]) }),
+            this.factorCards(D, group));
+        }));
+      }
+    }
     var first = all[names[0]];
     var subject = first.subject;
     var peer = (first.peers || [])[0];
@@ -223,7 +246,7 @@ export const compareViews = {
       el(
         "div",
         { className: "cmp-main" },
-        el("div", { className: "kicker", textContent: "Head to head" }),
+        el("div", { className: "kicker", textContent: sourceLabel(D, D.comparisonSources?.[names[0]]) || "Head to head" }),
         el("h2", { className: "big", textContent: who(subject) + " vs " + who(peer) }),
         el("p", { className: "verdict", style: "margin:0;font-size:18px" }, el("b", { textContent: headline }), behindNames.length ? el("span", {}, " Behind on ", ...behindNames.map(function (n, i) {
           return el("span", {}, i ? ", " : "", link("compare/" + enc(n), "", title(D, n)), " (" + behindRules[n] + " of " + Object.keys(all[n].rules || {}).length + " rules)");

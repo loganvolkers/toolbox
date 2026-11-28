@@ -25,7 +25,8 @@ export function levelName(l) {
 // One summary of a scorecard row wherever a list shows it: scope, share at its own top level, and the
 // levels that may not hold, so a list never reads better than the scorecard's page.
 export function scCaption(D: ReportData, r, split?) {
-  var head = (r.sc.kind ? kindCount(D, r.sc.kind, r.total) + (split ? scorecardSplit(D, r.sc.kind) : "") : plural(r.total, "entity", "entities")) + (r.total > r.scored ? ", " + fmt(r.total - r.scored) + " not in scope" : "");
+  const fullKind = split && r.total === D.catalog[r.sc.kind]?.length;
+  var head = (r.sc.kind ? kindCount(D, r.sc.kind, r.total) + (fullKind ? scorecardSplit(D, r.sc.kind) : "") : plural(r.total, "entity", "entities")) + (r.total > r.scored ? ", " + fmt(r.total - r.scored) + " not in scope" : "");
   var prov = provisionalOf(D, r.name);
   var unj = unassessedOf(D, r.name);
   var idle = idleLowestMark(D, r.name);
@@ -208,7 +209,7 @@ function ringMovers(D: ReportData, cards): Mover[] {
     var byCount = function (x, y) {
       return y[1] - x[1] || x[0].localeCompare(y[0]);
     };
-    var waits = !Object.keys(held).length && (Object.entries(unrun).sort(byCount)[0] as [string, number] | undefined);
+    var waits = Object.entries(unrun).sort(byCount)[0];
     var rule = Object.entries(held).sort(byCount)[0] as [string, number] | undefined;
     out.push({ r: r, n: n, below: below, top: top, gain: gain, rule: rule, waits: waits });
   });
@@ -295,7 +296,7 @@ export function goalWords(each) {
 
 export function goalBar(state, pct, target, big, each?) {
   var empty = state === "empty";
-  var parts = (each || []).length;
+  var parts = (each || []).some(p => p.rated > 0) ? each.length : 0;
   var met = (each || []).filter(function (p) {
     return p.met;
   }).length;
@@ -304,10 +305,10 @@ export function goalBar(state, pct, target, big, each?) {
     { className: "cprog" + (big ? " big" : "") + (state === "on" || (empty && parts && met === parts) ? " on" : "") },
     el("b", { textContent: empty ? (parts ? met + " of " + parts + (big ? " scorecards" : "") : "—") : pct + "%" }),
     empty ? null : el("div", { className: "gb" }, el("span", { style: "width:" + Math.max(0, Math.min(100, pct)) + "%" }), el("i", { style: "left:calc(" + target + "% - 1px)" })),
-    el("small", { textContent: empty ? (parts ? (met === parts ? "at target" : "target " + target + "%") : "no single score") : "target " + target + "%" }),
+    el("small", { textContent: empty ? (parts ? (met === parts ? "at target" : "target " + target + "%") : "not scored yet") : "target " + target + "%" }),
   );
   g.setAttribute("role", "img");
-  g.setAttribute("aria-label", empty ? (parts ? met + " of " + plural(parts, "scorecard") + (met === parts ? " at the target of " : " toward the target of ") + target + "%, each scored on its own" : "no single score") : pct + "% of entities meet the goal; target " + target + "%");
+  g.setAttribute("aria-label", empty ? (parts ? met + " of " + plural(parts, "scorecard") + (met === parts ? " at the target of " : " toward the target of ") + target + "%, each scored on its own" : "not scored yet") : pct + "% of entities meet the goal; target " + target + "%");
   return g;
 }
 
@@ -390,7 +391,7 @@ export function includeProgress(D: ReportData, c) {
       return order.indexOf(D.scores[i.scorecard][id].level) >= goal && unassessedIn(D, i.scorecard, id);
     }).length;
     var pct = rated.length ? Math.floor((100 * (rated.length - below)) / rated.length) : 0;
-    return { name: i.scorecard, title: title(D, i.scorecard), known: !!sc, goal: order[goal], rated: rated.length, below: below, hollow: hollow, pct: pct, met: !!sc && pct >= target };
+    return { name: i.scorecard, title: title(D, i.scorecard), known: !!sc, goal: order[goal], rated: rated.length, below: below, hollow: hollow, pct: pct, met: rated.length > 0 && pct >= target };
   });
 }
 
@@ -401,10 +402,6 @@ export function campaignStanding(D: ReportData, c) {
   var each = includeProgress(D, c).filter(function (p) {
     return p.known;
   });
-  if (!each.length) return "empty";
-  return each.every(function (p) {
-    return p.met;
-  })
-    ? "on"
-    : "off";
+  if (each.some(p => p.rated && !p.met)) return "off";
+  return each.length && each.every(p => p.met) ? "on" : "empty";
 }

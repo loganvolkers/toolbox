@@ -298,3 +298,9 @@ The repository quickstart recorded a baseline, exited 1 after moving its linked 
 - Reassessed the changed contracts and reran the live report. All three
   advisory scores moved from bronze to silver. Both new scorecards and all
   four of their rules reached gold on the portal's meta-standards.
+
+## 2026-11-28 · Federated inventory and source parity
+
+- Reviewed primary documentation for Google Cloud Asset Inventory, Wiz Security Graph, Backstage, AWS Config, Azure Resource Graph, GitHub repository identity, and W3C PROV. Recorded the source model, tradeoffs, and gap assessment in [Federated inventory and report publications](design/federation-inventory.md).
+- An independent verifier generated the real Seikika for Seikika report and reconciled it with the seeded organization example. The captured source had 7 tracks, 2,612 catalog items, 9 campaigns, 45 level scorecards, 744 assessments, 6 rubrics, and 9 comparison factors. It checked each imported ID and its source, relationship endpoints, evidence, and score rows. The canonical repository retained the parent and child scores and fields.
+- The verifier repeated the checks through the offline report and the loopback guest view. Chromium covered 390 px and 1280 px without page errors or horizontal overflow. Local replay from the prepared snapshot took 1.3–2.1 seconds. Rebuilding the source snapshot with pinned checks took about 33 seconds. The loop used fixtures for organization inventory. [Replay command](../examples/github-org-federation/README.md#replay-federation-locally)

@@ -139,7 +139,7 @@ const runRubric = computed(() => run.value?.rubricName ? rubricTitle(run.value.r
           <li v-for="item in filtered.slice(0, limit)" :key="item.id" class="assessment-row">
             <div class="assessment-row-main">
               <a class="assessment-primary" :href="view('assessment', item.id)">{{ item.subjectTitle || item.id }}</a>
-              <p class="assessment-muted">{{ item.rubricName ? rubricTitle(item.rubricName) : 'Rubric unavailable' }}<template v-if="item.isReview"> · {{ item.reviewProvenance?.stale ? 'Historical review' : 'Review' }}</template><template v-if="item.source"> · {{ item.source }}</template></p>
+              <p class="assessment-muted">{{ item.rubricName ? rubricTitle(item.rubricName) : 'Rubric unavailable' }}<template v-if="item.isReview"> · {{ item.reviewProvenance?.stale ? 'Historical review' : 'Review' }}</template><template v-if="item.source"> · Published by {{ item.source }}</template></p>
             </div>
             <div class="assessment-run-status">
               <span v-if="reviewQualification(item)" class="assessment-review-qualification">{{ reviewQualification(item) }}</span>
@@ -211,7 +211,8 @@ const runRubric = computed(() => run.value?.rubricName ? rubricTitle(run.value.r
             <a v-if="run.rubricId" :href="view('rubric', run.rubricId)">{{ runRubric }} rubric</a>
             <span v-else>{{ runRubric }}</span>
             <a v-if="run.subjectId" :href="subjectHref(run.subjectId)" :title="run.subject">{{ run.isReview ? 'Open reviewed assessment' : 'Open assessed subject' }}</a>
-            <span v-if="run.source">{{ run.source }}</span>
+            <span v-if="run.source">Published by {{ run.source }}</span>
+            <span v-if="run.assessor">{{ run.isReview ? 'Reviewed by' : 'Assessed by' }} {{ run.assessor }}</span>
           </div>
         </template>
       </PageHeader>

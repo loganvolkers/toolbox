@@ -361,7 +361,7 @@ details.ent>summary{grid-template-columns:76px minmax(0,1fr)}details.ent>summary
 
 .report-sources { margin: 0 0 1rem; }
 .report-sources summary, .federated-catalog-group summary { cursor: pointer; min-height: 24px; }
-.report-sources code { margin-inline-start: .5rem; }
+.report-sources code { margin-inline-start: .5rem; overflow-wrap: anywhere; }
 .report-filters { display: flex; flex-wrap: wrap; align-items: end; gap: .75rem; margin-block: 1rem; }
 .report-filters label, .report-field { display: grid; gap: .35rem; }
 .report-filters label { min-inline-size: 0; max-inline-size: 100%; }
@@ -390,6 +390,8 @@ details.ent>summary{grid-template-columns:76px minmax(0,1fr)}details.ent>summary
 .report-entity-details { overflow-wrap: anywhere; }
 .report-entity-details dt { font-weight: 600; }
 .report-entity-details dd { margin: 0 0 .5rem; }
+.entity-context-links li { min-height: 28px; }
+.entity-context-links a { display: inline-flex; align-items: center; min-height: 28px; }
 .report-catalog-scores li > a { display: inline-flex; align-items: center; min-height: 28px; }
 .report-catalog-scores li + li { margin-block-start: 6px; }
 .report-catalog-disclosure > summary { cursor: pointer; min-height: 24px; font-weight: 600; }

@@ -1,4 +1,32 @@
 scorecards:
+  - name: repository-identity
+    title: Repository identity
+    kind: Repository
+    owner: group:maintainers
+    description: Check that each repository carries a usable provider identity and URL.
+    rationale: >-
+      A full slug gives readers a disambiguated link. The provider ID remains
+      available for reconciliation when a repository is renamed.
+    levels: [bronze, silver]
+    facets: {summary: public, details: public}
+    rules:
+    - name: has-qualified-location
+      level: bronze
+      check: >-
+        entity.name.matches('^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$') &&
+        entity.repositoryUrl == 'https://github.com/' + entity.name
+      evidence: '[entity.name, entity.repositoryUrl]'
+      fix: >-
+        Read the owner, repository name, and URL from the organization
+        inventory.
+    - name: has-provider-id
+      level: silver
+      check: has(entity.githubId) && entity.githubId > 0
+      evidence: "['GitHub repository ID missing or invalid for ' + entity.name]"
+      fix: >-
+        Capture the positive repository id from the GitHub organization
+        inventory response.
+
   - name: repo-hygiene
     title: Repository basics
     kind: Repository

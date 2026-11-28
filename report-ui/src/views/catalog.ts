@@ -1,7 +1,7 @@
 import type { ReportViews } from "../report-view";
 import type { Summary } from "../lib/summary";
 import type { CatalogReport, ReportData } from "../types";
-import { entitySource, sourceLabel } from "../lib/federation";
+import { entitySourceKeys, sourceLabel } from "../lib/federation";
 import { barEl, kindParts, legendEl, levelPill, unrunIn } from "../lib/bars";
 import { basisBadge, basisCounts } from "../lib/basis";
 import { judgedMark } from "../lib/compare";
@@ -465,15 +465,18 @@ export const catalogViews = {
 
 function federatedList(D: CatalogReport, kind: string, query: Query, catalogIds?: ReadonlySet<string>) {
   const ids = D.catalog[kind] ?? [];
+  const sourcesById = new Map(ids.map(id => [id, entitySourceKeys(D, id)]));
+  const sources = [...new Set([...sourcesById.values()].flat())];
+  const repositoriesOnly = sources.length > 0 && sources.every(key => D.sources?.[key]?.repository);
+  const attribution = (id: string) => sourcesById.get(id)!.map(key => sourceLabel(D, key)).join(" · ");
   const search = el("input", { type: "search", ariaLabel: "Filter entities by name", value: query.q ?? "" });
   const group = el("select", { ariaLabel: "Group entities" },
     el("option", { value: "", textContent: "Full list" }),
-    el("option", { value: "repository", textContent: "By repository" }));
+    el("option", { value: "repository", textContent: repositoriesOnly ? "By repository" : "By source" }));
   group.value = query.group === "repository" ? query.group : "";
-  const sources = [...new Set(ids.map(id => D.entitySources?.[id]?.source ?? ""))];
-  const source = el("select", { ariaLabel: "Source repository" },
-    el("option", { value: "", textContent: "All repositories" }),
-    ...sources.filter(Boolean).map(key => el("option", { value: key, textContent: sourceLabel(D, key) })));
+  const source = el("select", { ariaLabel: repositoriesOnly ? "Source repository" : "Catalog source" },
+    el("option", { value: "", textContent: repositoriesOnly ? "All repositories" : "All sources" }),
+    ...sources.map(key => el("option", { value: key, textContent: sourceLabel(D, key) })));
   source.value = query.source ?? "";
   const list = el("div");
   const kindCards = Object.keys(D.scorecards).filter(name => D.scorecards[name].kind === kind);
@@ -500,8 +503,9 @@ function federatedList(D: CatalogReport, kind: string, query: Query, catalogIds?
     const filtered = ids.filter(id => {
       const locator = D.entitySources?.[id];
       return (!catalogIds || catalogIds.has(id))
-        && (!source.value || locator?.source === source.value)
-        && (!q || [locator?.original ?? id, D.entityOverview?.[id]?.title, entitySource(D, id)]
+        && (!source.value || sourcesById.get(id)!.includes(source.value))
+        && (!q || [locator?.original ?? id, D.entityOverview?.[id]?.title, attribution(id),
+          ...(D.entityObservations?.[id] ?? []).map(item => item.original)]
           .some(value => typeof value === "string" && value.toLowerCase().includes(q)));
     });
     const row = (id: string) => {
@@ -509,7 +513,7 @@ function federatedList(D: CatalogReport, kind: string, query: Query, catalogIds?
       const titleText = (D.entityOverview?.[id]?.title as string | undefined) ?? raw;
       const unavailable = kind === "Workflow" && typeof D.entities?.[id]?.fields.auditError === "string";
       return el("div", { className: "federated-catalog-row" },
-        el("div", {}, link(catalogEntityPath(D, id), "", titleText), el("small", { className: "sub", textContent: entitySource(D, id) })),
+        el("div", {}, link(catalogEntityPath(D, id), "", titleText), el("small", { className: "sub", textContent: attribution(id) })),
         el("ul", { className: standard ? "federated-catalog-score" : "" }, ...kindCards.flatMap(name => {
           const score = D.scores[name]?.[id];
           return score ? [el("li", {},
@@ -532,7 +536,7 @@ function federatedList(D: CatalogReport, kind: string, query: Query, catalogIds?
     if (group.value) {
       const groups = new Map<string, string[]>();
       for (const id of filtered) {
-        const key = D.entitySources?.[id]?.source ?? "";
+        const key = source.value || D.entitySources?.[id]?.source || "";
         if (!groups.has(key)) groups.set(key, []);
         groups.get(key)!.push(id);
       }

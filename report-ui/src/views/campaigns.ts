@@ -99,8 +99,8 @@ export const campaignsViews = {
           el(
             "div",
             { className: "why incl" },
-            p.known ? kpiBar(p.pct, p.pct + "% at " + p.goal + " or above" + (p.hollow ? ", " + evPct + "% on an agent's assessment" : "") + "; target " + target + "%", !p.met, p.pct - evPct) : null,
-            el("span", { textContent: p.known ? (p.hollow ? evPct + "% at " + p.goal + " or above on an agent's assessment; " + p.pct + "% counting those not assessed yet" : p.pct + "% at " + p.goal + " or above") + " · " + (p.met ? "✓ at target" : fmt(p.below) + " of " + (kind ? kindCount(D, kind, p.rated) : fmt(p.rated)) + " to lift") : "not in this report" }),
+            p.rated ? kpiBar(p.pct, p.pct + "% at " + p.goal + " or above" + (p.hollow ? ", " + evPct + "% on an agent's assessment" : "") + "; target " + target + "%", !p.met, p.pct - evPct) : null,
+            el("span", { textContent: p.rated ? (p.hollow ? evPct + "% at " + p.goal + " or above on an agent's assessment; " + p.pct + "% counting those not assessed yet" : p.pct + "% at " + p.goal + " or above") + " · " + (p.met ? "✓ at target" : fmt(p.below) + " of " + (kind ? kindCount(D, kind, p.rated) : fmt(p.rated)) + " to lift") : p.known ? "No entities scored yet" : "Scorecard unavailable" }),
             p.hollow ? el("span", { className: "unjudged-n", style: "flex-basis:100%;font-size:13px" }, el("span", { className: "vhatch", ariaHidden: "true", style: "margin:0 5px 0 0" }), fmt(p.hollow) + " pass only because no agent has assessed them yet (hatched)") : null,
           ),
         );

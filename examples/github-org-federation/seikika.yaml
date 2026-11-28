@@ -4,6 +4,7 @@ include:
   - standards.yaml
   - workflows.yaml
   - meta.yaml
+  - self-publication.yaml
   - package: ../../packages/meta-scoring
     with:
       track: portal-quality

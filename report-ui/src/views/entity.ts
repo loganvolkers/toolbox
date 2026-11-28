@@ -429,6 +429,7 @@ export const entityViews = {
                 unsetCards.length && setCards.length
                   ? null
                   : el("strong", { style: "color:" + (whollyUnset ? "var(--muted)" : ink(shown)) + (whollyUnset || KNOWN.indexOf(ownLevel(D, kind, shown)) < 0 ? ";text-transform:none" : "") }, whollyUnset ? "Not run in this build" : ownLevel(D, kind, shown), !whollyUnset && atTop ? el("span", { className: "topmark", textContent: " ✓ top" + (KNOWN.indexOf(shown) < 0 ? " level" : "") }) : null),
+                D.entityObservations?.[id]?.length && shown && !mixed ? el("span", { className: "sub", textContent: "Lowest published level" }) : null,
                 ...openCards.flatMap(cardLine),
                 total.all ? el("span", { className: "sub", textContent: [total.pass + " of " + plural(total.all, "check passes", "checks pass") + " on evidence", total.fail ? plural(total.fail, "failure") : "", total.unrun ? plural(total.unrun, "check was not run", "checks were not run") : "", total.unassessed ? plural(total.unassessed, "check is not assessed yet", "checks are not assessed yet") + ", not counted as " + (total.unassessed === 1 ? "a pass" : "passes") : ""].filter(Boolean).join(" · ") }) : null,
               ),

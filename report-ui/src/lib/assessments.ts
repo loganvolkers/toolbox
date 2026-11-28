@@ -129,6 +129,9 @@ export function assessmentIndex(data: ReportData) {
   };
   const key = (scope: string, name: string) => JSON.stringify([scope, name]);
   const visibleBySource = new Map([...visible].map(id => [key(source(id), original(id)), id]));
+  for (const [id, observations] of Object.entries(data.entityObservations ?? {})) {
+    for (const item of observations) visibleBySource.set(key(item.source, item.original), id);
+  }
   const rubricsByName = new Map(Object.entries(data.rubrics ?? {}).map(([id, rubric]) => [key(source(id), rubric.name), id]));
   const allCardScores = Object.entries(data.scorecards);
   const scoresFor = (id: string): AssessmentScore[] => allCardScores.flatMap(([name, definition]) => {

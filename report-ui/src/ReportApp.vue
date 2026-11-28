@@ -96,6 +96,7 @@ const tabs = computed<{ id: string; label: string; count?: number }[]>(() => {
 const columns = computed(() => tabs.value.length <= 3 ? tabs.value.length : tabs.value.length === 4 ? 2 : 3);
 const portal = computed(() => data.value.portal || "Seikika report");
 const showSummary = computed(() => !data.value.publicCatalog && (!data.value.sources || active.value === "overview"));
+const reportSources = computed(() => Object.entries(data.value.sources ?? {}).filter(([, source]) => !source.repository));
 
 function rememberScroll() {
   clearTimeout(scrollTimer);
@@ -258,11 +259,12 @@ onUnmounted(() => {
       </template>
     </PageHeader>
     <slot name="tools" :route="route" />
-    <details v-if="data.sources && showSummary && !pending" class="report-sources">
-      <summary>{{ Object.keys(data.sources).length }} portal sources</summary>
-      <ul><li v-for="(source, key) in data.sources" :key="key">
-        {{ sourceLabel(data, String(key)) }}
-        <code v-if="source.commit">{{ source.commit.slice(0, 12) }}</code>
+    <details v-if="reportSources.length && showSummary && !pending" class="report-sources" :open="reportSources.length <= 3">
+      <summary>Report sources ({{ reportSources.length }})</summary>
+      <ul><li v-for="[key, source] in reportSources" :key="key">
+        {{ sourceLabel(data, key) }}
+        <code v-if="source.commit" :title="source.commit">Commit {{ source.commit.slice(0, 12) }}</code>
+        <code v-else-if="source.digest">Artifact SHA-256 {{ source.digest }}</code>
         <span v-if="source.error" class="sub"> · {{ source.error }}</span>
       </li></ul>
     </details>

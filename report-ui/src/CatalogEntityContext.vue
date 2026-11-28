@@ -16,7 +16,7 @@ const tracks = computed(() => {
 </script>
 
 <template>
-  <SectionCard v-if="campaigns.length || tracks.length" title="Campaigns and tracks">
+  <SectionCard v-if="campaigns.length || tracks.length" title="Campaigns and tracks" class="entity-context-links">
     <ul>
       <li v-for="[name, campaign] in campaigns" :key="'campaign:' + name">
         <a :href="'#campaign/' + encodeURIComponent(name)">{{ campaign.title || name }}</a>
