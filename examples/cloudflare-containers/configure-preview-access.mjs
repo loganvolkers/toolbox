@@ -13,6 +13,7 @@ const production = {
   team: process.env.SEIKIKA_PRODUCTION_CF_TEAM_DOMAIN,
   audience: process.env.SEIKIKA_PRODUCTION_CF_AUDIENCE,
   admin: process.env.SEIKIKA_PRODUCTION_CF_ADMIN,
+  githubAppId: process.env.WRANGLER_CI_OVERRIDE_NAME === "seikika" ? "5961174" : undefined,
 };
 const configured = ({ team, audience, admin, viewer }) => Boolean(team || audience || admin || viewer);
 if (configured(preview) && configured(production)) {
@@ -25,6 +26,7 @@ const {
   audience,
   admin,
   viewer,
+  githubAppId,
 } = configured(production) ? production : preview;
 const repositories = process.env.SEIKIKA_PRODUCTION_PUBLIC_REPOSITORIES;
 if (repositories !== undefined && (!configured(production) ||
@@ -61,6 +63,7 @@ if (team || audience || admin || viewer) {
     `SEIKIKA_CF_TEAM_DOMAIN = "${team}"`,
     `SEIKIKA_AUDIENCE = "${audience}"`,
     ...(repositories === undefined ? [] : [`SEIKIKA_PUBLIC_REPOSITORIES = "${repositories}"`]),
+    ...(githubAppId === undefined ? [] : [`GITHUB_APP_ID = "${githubAppId}"`]),
     "",
   ].join("\n")));
   writeFileSync(portalPath, portal.replace(staticTuples, [
