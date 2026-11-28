@@ -25,7 +25,8 @@ verdicts:
     verdict: fail
     reason: >-
       A scratch connector with no test at all, only the comment `// #[test]`,
-      reported tests 1 through target/debug/seikika-connector-workspace, so
+      reported tests 1 through target/debug/seikika-connector-workspace
+      (crates/seikika-connector-workspace/src/connectors.rs:178-180), so
       silver's test rule passed.
     suggestion: >-
       Count only `#[test]` attributes on functions, from a parse, and only

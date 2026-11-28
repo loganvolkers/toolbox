@@ -333,7 +333,7 @@ connectors:
       root: .
       jobs:
         - name: describe
-          command: [target/debug/seikika, describe]
+          command: [seikika, describe]
           parse: ndjson
           kinds: [command, mcp-tool]
         # Use rustdoc and the npm export targets to score the SDK reference consumers see.
@@ -355,7 +355,7 @@ include:
     with:
       track: standards
       describeCommand:
-        - target/debug/seikika
+        - seikika
         - describe
         - portal
         - portal

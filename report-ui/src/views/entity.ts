@@ -194,8 +194,13 @@ export const entityViews = {
     if (!next) return el("div", { className: "callout done" }, "✓ Top level reached: every rule passes.");
     var need = blockers(sc, score, next);
     if (!need.length) return null;
-    if (need.length === 1)
-      return el("div", { className: "callout near" }, el("span", {}, el("b", { textContent: "One rule from " }), badge(next), " · pass “" + ruleTitleOf(sc, need[0]) + "” ", basisBadge(basisOf((sc.rules || {})[need[0]]), "tip"), " and this entity moves up a level."));
+    if (need.length === 1) {
+      const rule = sc.rules?.[need[0]];
+      if (rule?.check?.includes("cards.")) {
+        return el("div", { className: "callout near" }, el("span", {}, el("b", { textContent: "Required for " }), badge(next), " · “" + ruleTitleOf(sc, need[0]) + "” depends on the levels and ceilings of the contributing scorecards."));
+      }
+      return el("div", { className: "callout near" }, el("span", {}, el("b", { textContent: "One rule from " }), badge(next), " · pass “" + ruleTitleOf(sc, need[0]) + "” ", basisBadge(basisOf(rule), "tip"), " and this entity moves up a level."));
+    }
     return el("div", { className: "callout" }, el("span", {}, el("b", { textContent: "Next: " }), badge(next), " needs: ", ...need.map(function (n, i) {
       return el("span", { className: "nr" }, ...keepWithLast(ruleTitleOf(sc, n), basisBadge(basisOf((sc.rules || {})[n]), "tip")), i < need.length - 1 ? ", " : "");
     }), "."));
@@ -429,6 +434,7 @@ export const entityViews = {
                 unsetCards.length && setCards.length
                   ? null
                   : el("strong", { style: "color:" + (whollyUnset ? "var(--muted)" : ink(shown)) + (whollyUnset || KNOWN.indexOf(ownLevel(D, kind, shown)) < 0 ? ";text-transform:none" : "") }, whollyUnset ? "Not run in this build" : ownLevel(D, kind, shown), !whollyUnset && atTop ? el("span", { className: "topmark", textContent: " ✓ top" + (KNOWN.indexOf(shown) < 0 ? " level" : "") }) : null),
+                D.entityObservations?.[id]?.length && shown && !mixed ? el("span", { className: "sub", textContent: "Lowest published level" }) : null,
                 ...openCards.flatMap(cardLine),
                 total.all ? el("span", { className: "sub", textContent: [total.pass + " of " + plural(total.all, "check passes", "checks pass") + " on evidence", total.fail ? plural(total.fail, "failure") : "", total.unrun ? plural(total.unrun, "check was not run", "checks were not run") : "", total.unassessed ? plural(total.unassessed, "check is not assessed yet", "checks are not assessed yet") + ", not counted as " + (total.unassessed === 1 ? "a pass" : "passes") : ""].filter(Boolean).join(" · ") }) : null,
               ),

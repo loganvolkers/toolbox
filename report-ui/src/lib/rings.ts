@@ -228,8 +228,10 @@ export function isTop(D: ReportData, name, level) {
 // A repository standard whose only top level is the repository's level holds the repository there:
 // that is a ceiling, not an achievement.
 export function capsRepo(D: ReportData, name, level) {
-  var R = repoLevel(D);
-  return !!(R && R.next && isTop(D, name, level) && level === R.floor && (D.repoRollup || []).indexOf(name) >= 0);
+  const rollup = D.repoRollupsByCard?.[name] ?? D.repoRollup ?? [];
+  if (!rollup.includes(name)) return false;
+  const result = repoLevel(D, rollup);
+  return Boolean(result?.next && isTop(D, name, level) && level === result.floor);
 }
 
 export function topNote(D: ReportData, name, level) {

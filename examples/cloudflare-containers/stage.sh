@@ -23,7 +23,7 @@ if [[ "$portal_dir" -ef "$example_dir/seikika-forks" ]]; then
   organization="$destination/portal/examples/github-org-federation"
   source="$repo_dir/examples/github-org-federation"
   mkdir -p "$organization" "$destination/portal/packages"
-  cp -- "$source"/{public,public-connector,repositories,standards,workflows,meta,standards.test}.yaml "$organization/"
+  cp -- "$source"/{public,public-connector,self-publication,repositories,standards,workflows,meta,standards.test}.yaml "$organization/"
   cp -R -- "$source"/{assessments,fixtures} "$organization/"
   cp -R -- "$repo_dir/packages/meta-scoring" "$destination/portal/packages/"
   bundle=$(cd -- "$destination/portal" && pwd)
@@ -37,4 +37,21 @@ if [[ "$portal_dir" -ef "$example_dir/seikika-forks" ]]; then
   sed -i 's|../../github-org-federation/|examples/github-org-federation/|g; s|../../../packages/|packages/|g' \
     "$destination/portal/seikika.yaml"
   bash "$repo_dir/scripts/ci-tools.sh" "$destination/bin" zizmor
+  destination=$(cd -- "$destination" && pwd)
+  if [[ -n "${SEIKIKA_SELF_REPORT:-}" ]]; then
+    install -D -m 0644 -- "$SEIKIKA_SELF_REPORT" "$destination/portal/publications/seikika.json"
+  else
+    report_dir=$(mktemp -d)
+    trap 'rm -rf -- "$report_dir"' EXIT
+    (
+      cd -- "$repo_dir"
+      bash scripts/ci-tools.sh "$report_dir/tools" actionlint shellcheck shfmt bats scorecard osv-scanner rustsec-osv
+      python3 -m venv "$report_dir/python"
+      export PATH="$report_dir/tools:$report_dir/python/bin:$destination/bin:$PATH"
+      export OSV_SCANNER_LOCAL_DB_CACHE_DIRECTORY="$report_dir/tools"
+      seikika tools install portal --via pip
+      seikika report portal --skip runner,github-actions --baseline portal/results.json -o web --out "$report_dir"
+    )
+    install -D -m 0644 -- "$report_dir/report.json" "$destination/portal/publications/seikika.json"
+  fi
 fi

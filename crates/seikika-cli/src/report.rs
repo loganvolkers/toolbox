@@ -9,7 +9,10 @@
 //! improvements; `--ci` also fails when the file is out of date, so the committed file always
 //! matches the code.
 
-use seikika_api::report::{campaign_defs, is_peer, number, paydown, snapshot, title_of};
+use seikika_api::report::{
+    ReportPublications, campaign_defs, is_peer, number, paydown, snapshot_with_publications,
+    title_of,
+};
 #[cfg(test)]
 use seikika_api::report::{public_entity_overviews, unassessed};
 use seikika_derive::{Derived, DerivedState, FullRecompute};
@@ -1099,10 +1102,6 @@ fn html_page(data_json: &str) -> String {
         .replace("/*DATA*/", &embedded)
 }
 
-fn html(m: &seikika_model::Manifest, d: &Derived, starts: &Map<String, Value>) -> String {
-    html_page(&snapshot(m, d, starts, None).to_string())
-}
-
 /// One-file `index.html`, its client bundle, and `report.json` for an Astro host.
 fn write_web_parts(dir: &std::path::Path, data_json: &str) -> Result<(), String> {
     std::fs::create_dir_all(dir).map_err(|e| format!("{}: {e}", dir.display()))?;
@@ -1117,15 +1116,6 @@ fn write_web_parts(dir: &std::path::Path, data_json: &str) -> Result<(), String>
     write("report.json", data_json)?;
     write("index.html", &html_page(data_json))?;
     Ok(())
-}
-
-fn write_web(
-    dir: &std::path::Path,
-    m: &seikika_model::Manifest,
-    d: &Derived,
-    starts: &Map<String, Value>,
-) -> Result<(), String> {
-    write_web_parts(dir, &snapshot(m, d, starts, None).to_string())
 }
 
 /// `seikika connector records`: one resync of a portal's connector, its records printed as NDJSON.
@@ -1679,7 +1669,7 @@ pub fn run(o: &Options) -> ExitCode {
         );
         ExitCode::from(2)
     };
-    let (_, m, d) = match live(&o.path, o.fixtures, &o.skip) {
+    let (root, m, d) = match live(&o.path, o.fixtures, &o.skip) {
         Ok(x) => x,
         Err(e) => return fail(e),
     };
@@ -1710,10 +1700,17 @@ pub fn run(o: &Options) -> ExitCode {
     save(&verdict_json(o, &v));
     let (code, summary) = (ExitCode::from(v.code), v.summary);
     let output = o.output.as_deref().unwrap_or("md");
+    let web = std::cell::OnceCell::new();
+    let web = || {
+        web.get_or_init(|| {
+            let publications = ReportPublications::load(&root, &m);
+            snapshot_with_publications(&m, &d, &v.starts, None, &publications).to_string()
+        })
+    };
     let gate =
         o.output.is_none() && o.out.is_none() && (o.baseline.is_some() || o.against.is_some());
     if let Some(p) = &o.html
-        && let Err(e) = std::fs::write(p, html(&m, &d, &v.starts))
+        && let Err(e) = std::fs::write(p, html_page(web()))
     {
         return fail(format!("{}: {e}", p.display()));
     }
@@ -1721,7 +1718,7 @@ pub fn run(o: &Options) -> ExitCode {
         let Some(dir) = &o.out else {
             return fail("-o web writes a directory; pass --out DIR".into());
         };
-        if let Err(e) = write_web(dir, &m, &d, &v.starts) {
+        if let Err(e) = write_web_parts(dir, web()) {
             return fail(e);
         }
         eprint!("{summary}");
@@ -1750,7 +1747,7 @@ pub fn run(o: &Options) -> ExitCode {
         }
         "failures" => seikika_derive::pyjson::pretty(&failures(&m, &d)),
         "standard" => standard(o, &m),
-        "html" => html(&m, &d, &v.starts),
+        "html" => html_page(web()),
         "md" => markdown(&m, &d, o.all),
         other => {
             return fail(format!(

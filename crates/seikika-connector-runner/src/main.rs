@@ -301,7 +301,16 @@ impl Runner {
 
     async fn run_in(&self, argv: &[String], dir: &std::path::Path) -> Run {
         let start = Instant::now();
-        let out = tokio::process::Command::new(&argv[0])
+        // Source builds and release bundles put the CLI next to this connector.
+        let bundled = (argv[0] == "seikika")
+            .then(std::env::current_exe)
+            .and_then(Result::ok)
+            .map(|path| path.with_file_name(format!("seikika{}", std::env::consts::EXE_SUFFIX)))
+            .filter(|path| path.is_file());
+        let program = bundled
+            .as_deref()
+            .unwrap_or_else(|| std::path::Path::new(&argv[0]));
+        let out = tokio::process::Command::new(program)
             .args(&argv[1..])
             .current_dir(dir)
             .output()

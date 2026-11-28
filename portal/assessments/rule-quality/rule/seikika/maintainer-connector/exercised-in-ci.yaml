@@ -27,8 +27,9 @@ verdicts:
     reason: >-
       On a scratch repo, a new scripts/notes.sh holding only the comment `#
       someday: seikika connector test -- seikika-connector-fake` gave
-      conformanceMentions 1 through target/debug/seikika-connector-workspace,
-      so gold passed with nothing running the kit.
+      conformanceMentions 1 through target/debug/seikika-connector-workspace
+      (crates/seikika-connector-workspace/src/connectors.rs:197-200), so gold
+      passed with nothing running the kit.
     suggestion: >-
       Ignore `#` comment lines and scripts no workflow calls, as above.
   - criterion: fix-leads-to-pass

@@ -28,7 +28,8 @@ verdicts:
       A scratch crate whose only doc line was "Unlike `--seikika` flag ones,
       it reads nothing." reported configDocumented true when run through
       target/debug/seikika-connector-workspace. Any sentence containing one of
-      the three tokens, even one that denies it, passes.
+      the three tokens, even one that denies it, passes
+      (crates/seikika-connector-workspace/src/connectors.rs:120-124).
     suggestion: >-
       Match a usage line (`seikika-connector-<name> --seikika`) or a config
       object (`SEIKIKA_CONNECTOR_CONFIG`: `{...}`) rather than a bare token.

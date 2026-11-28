@@ -109,7 +109,9 @@ export const tracksViews = {
         kids.push(
           nm
             ? el("div", { className: "tnext" }, el("b", { textContent: "Next medal: " }), link("scorecard/" + enc(nm.name), "", title(D, nm.name)), wk && nm.name === wk.row.name ? el("span", {}, " at ", badge(wk.floor), " → " + nm.up) : " to " + nm.up, " · " + plural(nm.low, "entity", "entities") + " to lift")
-            : el("div", { className: "tnext good", textContent: "✓ Every scorecard is at its top level" }),
+            : t.scoredRows < t.cards.length
+              ? el("div", { className: "tnext sub", textContent: plural(t.cards.length - t.scoredRows, "scorecard is", "scorecards are") + " not scored yet" })
+              : el("div", { className: "tnext good", textContent: "✓ Every scorecard is at its top level" }),
         );
     }
     var weakest = !t.compare && t.cards[0] && t.cards[0].floor ? title(D, t.cards[0].row.name) + " at " + t.cards[0].floor + (capsRepo(D, t.cards[0].row.name, t.cards[0].floor) ? ", its top level, which caps the repository" : isTop(D, t.cards[0].row.name, t.cards[0].floor) ? ", its top level" : "") : null;

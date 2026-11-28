@@ -16,6 +16,9 @@ use serde_json::{Map, Value, json};
 use std::collections::{BTreeMap, BTreeSet};
 use std::sync::Arc;
 
+mod publications;
+pub use publications::ReportPublications;
+
 /// Whether this score belongs to a comparison peer instead of the subject.
 pub fn is_peer(d: &Derived, card: &str, id: &str) -> bool {
     d.comparisons
@@ -302,6 +305,17 @@ pub fn snapshot(
     starts: &Map<String, Value>,
     audience: Option<&Audience<'_>>,
 ) -> Value {
+    snapshot_with_publications(m, d, starts, audience, &ReportPublications::default())
+}
+
+/// Build a report with the current portal's staged publications.
+pub fn snapshot_with_publications(
+    m: &Manifest,
+    d: &Derived,
+    starts: &Map<String, Value>,
+    audience: Option<&Audience<'_>>,
+    publications: &ReportPublications,
+) -> Value {
     let filtered = audience.map(|a| restrict(m, d, a));
     let collection = d;
     let d = filtered.as_ref().unwrap_or(d);
@@ -325,10 +339,7 @@ pub fn snapshot(
             )
         })
         .collect();
-    let mut catalog: BTreeMap<String, Vec<String>> = BTreeMap::new();
-    for (id, e) in &d.entities {
-        catalog.entry(e.kind.clone()).or_default().push(id.clone());
-    }
+    let catalog = report_catalog(d);
     let kind_groups: Vec<Value> = m
         .kind_groups
         .iter()
@@ -341,16 +352,9 @@ pub fn snapshot(
             })
         })
         .collect();
-    let kinds: Map<String, Value> = m
-        .kinds
-        .iter()
-        .map(|k| {
-            (
-                k.name.clone(),
-                json!({"title": k.title, "description": k.description.as_deref().map(str::trim)}),
-            )
-        })
-        .collect();
+    let mut children = children(m, collection, audience);
+    publications.append(&mut children, audience.is_some_and(|a| a.admin && !a.guest));
+    let catalog_aliases = visible_aliases(m, &catalog, &children);
     json!({
         "portal": m.portal.title.as_deref().unwrap_or(&m.portal.name),
         "portalName": namespace,
@@ -360,8 +364,9 @@ pub fn snapshot(
         "entityOverview": public_entity_overviews(m, d),
         "entities": entity_details(m, d, collection, audience),
         "actions": if audience.is_some_and(|a| a.guest) { Vec::new() } else { actions(m, collection, d, audience) },
-        "children": children(m, collection, audience),
-        "kinds": kinds,
+        "children": children,
+        "catalogAliases": catalog_aliases,
+        "kinds": kind_defs(m),
         "kindGroups": kind_groups,
         "tracks": tracks,
         "campaigns": campaign_defs(m, d, starts),
@@ -373,6 +378,54 @@ pub fn snapshot(
         "comparisons": comparison_defs(m, d),
         "repoRollup": m.policies.get("repoRollup").cloned().unwrap_or(Value::Null),
     })
+}
+
+fn kind_defs(m: &Manifest) -> Map<String, Value> {
+    m.kinds.iter().map(|kind| {
+        (kind.name.clone(), json!({"title": kind.title, "description": kind.description.as_deref().map(str::trim)}))
+    }).collect()
+}
+
+fn report_catalog(d: &Derived) -> BTreeMap<String, Vec<String>> {
+    let mut catalog: BTreeMap<String, Vec<String>> = BTreeMap::new();
+    for (id, e) in &d.entities {
+        catalog.entry(e.kind.clone()).or_default().push(id.clone());
+    }
+    catalog
+}
+
+fn visible_aliases<'a>(
+    m: &'a Manifest,
+    catalog: &BTreeMap<String, Vec<String>>,
+    children: &[Value],
+) -> Vec<&'a seikika_model::manifest::CatalogAlias> {
+    m.federation
+        .iter()
+        .flat_map(|f| &f.catalog_aliases)
+        .filter(|alias| {
+            catalog
+                .get(&alias.kind)
+                .is_some_and(|ids| ids.binary_search(&alias.to).is_ok())
+                && child_report(children, &alias.source).is_some_and(|report| {
+                    report["catalog"][&alias.kind]
+                        .as_array()
+                        .is_some_and(|ids| ids.iter().any(|id| id.as_str() == Some(&alias.from)))
+                })
+        })
+        .collect()
+}
+
+fn child_report<'a>(children: &'a [Value], path: &[String]) -> Option<&'a Value> {
+    let (key, rest) = path.split_first()?;
+    let child = children
+        .iter()
+        .find(|child| child["key"].as_str() == Some(key))?;
+    let report = child.get("report")?;
+    if rest.is_empty() {
+        Some(report)
+    } else {
+        child_report(report["children"].as_array()?, rest)
+    }
 }
 
 /// Collect public fields needed on catalog rows and entity page headers.
@@ -909,6 +962,7 @@ pub(crate) async fn view(
         &audience,
         Some(&caller),
         federation,
+        &state.report_publications,
     )
 }
 
@@ -966,6 +1020,7 @@ pub(crate) fn guest_view(state: &AppState) -> Option<Response> {
         &audience,
         None,
         federation,
+        &state.report_publications,
     ))
 }
 
@@ -977,8 +1032,15 @@ fn live_report(
     audience: &Audience<'_>,
     caller: Option<&Caller>,
     federation: Option<FederationProblem>,
+    publications: &ReportPublications,
 ) -> Response {
-    let mut report = snapshot(manifest, &published.derived, &Map::new(), Some(audience));
+    let mut report = snapshot_with_publications(
+        manifest,
+        &published.derived,
+        &Map::new(),
+        Some(audience),
+        publications,
+    );
     report["snapshot"] = json!(published.snapshot_id);
     if let Some(caller) = caller {
         report["viewer"] = json!(caller.user);

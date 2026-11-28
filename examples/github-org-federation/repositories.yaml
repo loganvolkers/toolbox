@@ -10,6 +10,9 @@ kinds:
         type: string
         description: Repository name without the organization.
       repositoryUrl: {type: string, description: GitHub repository page.}
+      githubId:
+        type: integer
+        description: Stable GitHub repository identifier from the organization inventory.
       sourceUrl:
         type: string
         description: GitHub tree at the scanned revision.
@@ -78,9 +81,10 @@ kinds:
     - from: github-org/federated-repo
       id: "'repository:' + record.identity"
       set: >-
-        {'name': record.name, 'repositoryUrl': record.repositoryUrl,
-        'sourceUrl': record.sourceUrl, 'defaultBranch': record.defaultBranch,
-        'visibility': record.visibility, 'scanned': record.scanned, 'scanError':
+        {'name': record.name, 'repositoryUrl': record.repositoryUrl, 'githubId':
+        has(record.githubId) ? record.githubId : null, 'sourceUrl':
+        record.sourceUrl, 'defaultBranch': record.defaultBranch, 'visibility':
+        record.visibility, 'scanned': record.scanned, 'scanError':
         record.scanError, 'commit': has(record.commit) ? record.commit : null,
         'workflowError': has(record.workflowError) ? record.workflowError :
         null, 'report': has(record.report) ? record.report : null,

@@ -36,6 +36,7 @@ pub(crate) struct Config {
 #[derive(Deserialize)]
 struct Repository {
     full_name: String,
+    id: Option<u64>,
     default_branch: String,
     visibility: String,
     fork: bool,
@@ -228,9 +229,11 @@ impl Api {
             // A repository may become private while an authenticated read is in flight.
             let current = self.inventory(config).await?;
             if current.len() != records.len()
-                || current
-                    .iter()
-                    .any(|repo| !records.contains_key(&repo.full_name))
+                || current.iter().any(|repo| {
+                    records
+                        .get(&repo.full_name)
+                        .is_none_or(|record| record["githubId"].as_u64() != repo.id)
+                })
             {
                 return Err("public GitHub inventory changed during the scan; retry".into());
             }
@@ -505,6 +508,7 @@ impl Repository {
         let url = format!("https://github.com/{}", self.full_name);
         facts["name"] = json!(self.full_name);
         facts["identity"] = json!(self.full_name.to_ascii_lowercase());
+        facts["githubId"] = json!(self.id);
         facts["repositoryUrl"] = json!(url);
         facts["sourceUrl"] = json!(commit.as_ref().map(|sha| format!("{url}/tree/{sha}")));
         facts["commit"] = json!(commit);

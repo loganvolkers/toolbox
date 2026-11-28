@@ -143,13 +143,17 @@ export interface ReportData {
   federationStatus?: { code: string; detail: string; pending: boolean };
   actions?: ReportAction[];
   children?: ReportChild[];
+  catalogAliases?: CatalogAlias[];
   entities?: Record<string, ReportEntity>;
   assessmentKinds?: string[];
   /** Assessment entities after combining reports, where the same kind can have different mappings. */
   assessmentIds?: string[];
   rubrics?: Record<string, Rubric>;
-  sources?: Record<string, { title: string; local?: boolean; repository?: boolean; commit?: string; error?: string }>;
-  entitySources?: Record<string, { source: string; original: string }>;
+  sources?: Record<string, { title: string; local?: boolean; repository?: boolean; commit?: string; digest?: string; error?: string }>;
+  entitySources?: Record<string, EntitySource>;
+  entityObservations?: Record<string, (EntitySource & { detail?: ReportEntity })[]>;
+  entityRedirects?: Record<string, string>;
+  comparisonSources?: Record<string, string>;
   snapshot?: string | number | null;
   catalog: Record<string, string[]>;
   entityOverview?: Record<string, Record<string, unknown>>;
@@ -162,6 +166,19 @@ export interface ReportData {
   unassessed?: Record<string, string[]>;
   comparisons?: Record<string, Comparison>;
   repoRollup?: string[] | null;
+  repoRollupsByCard?: Record<string, string[]>;
+}
+
+export interface CatalogAlias {
+  source: string[];
+  kind: string;
+  from: string;
+  to: string;
+}
+
+export interface EntitySource {
+  source: string;
+  original: string;
 }
 
 export type MetaDetail =
@@ -171,6 +188,7 @@ export type MetaDetail =
 
 export interface CatalogReport extends ReportData {
   metaDetails: Record<string, MetaDetail>;
+  itemSources?: Record<string, string>;
 }
 
 export interface ActionInput {
@@ -205,6 +223,7 @@ export interface ReportChild {
   key: string;
   title: string;
   commit?: string;
+  digest?: string;
   error?: string;
   report?: ReportData;
 }

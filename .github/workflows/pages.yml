@@ -47,6 +47,7 @@ jobs:
         env: {GH_TOKEN: "${{ github.token }}"}
         run: |
           export PATH="$RUNNER_TEMP/tools:$PATH"
+          install -D -m 0644 site/.generated/report.json examples/github-org-federation/publications/seikika.json
           target/debug/seikika report examples/github-org-federation/public.yaml -o web --out site/.generated/organization
       - run: pnpm check:packages
       # CLI reference is built from clap (`seikika describe` + --help) in Astro;

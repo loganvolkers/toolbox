@@ -11,7 +11,7 @@ verdicts:
       The fix asks that every resync kind end with `snapshot_complete`
       (portal/standards/connectors.yaml:130-132), but snapshotComplete is
       `source.contains("snapshot_complete")` over all crate text
-      (crates/seikika-connector-workspace/src/connectors.rs:40). One mention
+      (crates/seikika-connector-workspace/src/connectors.rs:41). One mention
       covers a connector that closes one kind and leaves the rest open. That
       is the deletion-by-omission failure the rationale names (:133-136). The
       conformance kit checks per kind
@@ -29,8 +29,9 @@ verdicts:
       target/debug/seikika-connector-workspace: a comment `// TODO: emit
       snapshot_complete` set snapshotComplete true, and a doc that says the
       connector "is not push-only" set pushOnly true, because pushOnly is
-      `doc.contains("push-only")` (connectors.rs:134-136), and that exempts
-      the rule entirely.
+      `doc.contains("push-only")`
+      (crates/seikika-connector-workspace/src/connectors.rs:134-136), and that
+      exempts the rule entirely.
     suggestion: >-
       Ignore comments and test modules for snapshotComplete, and derive
       pushOnly from the code (run_remote without run_stdio, or no `resync` in

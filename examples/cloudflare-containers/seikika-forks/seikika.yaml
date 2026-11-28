@@ -5,6 +5,7 @@ include:
   - ../../github-org-federation/workflows.yaml
   - ../../github-org-federation/meta.yaml
   - ../../github-org-federation/public-connector.yaml
+  - ../../github-org-federation/self-publication.yaml
   - package: ../../../packages/meta-scoring
     with:
       track: portal-quality

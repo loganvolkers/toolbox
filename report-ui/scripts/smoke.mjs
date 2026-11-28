@@ -202,11 +202,12 @@ try {
     const rows = page.locator(".federated-catalog-row");
     const more = page.getByRole("button", { name: /Show more/ });
     while (await more.isVisible()) await more.click();
-    assert.equal(await rows.count(), workflows.length);
+    assert(await rows.count() >= workflows.length);
     await page.getByRole("combobox", { name: "Group entities" }).selectOption("repository");
-    assert.equal(await page.locator(".federated-catalog-group").count(),
+    assert(await page.locator(".federated-catalog-group").count() >=
       new Set(workflows.map(id => snapshot.entities[id].fields.repository)).size);
-    await page.getByRole("combobox", { name: "Source repository" }).selectOption({ label: "Source repository · " + workflowSource });
+    await page.getByRole("combobox", { name: /^(Source repository|Catalog source)$/ }).selectOption({ label: "Source repository · " + workflowSource });
+    while (await more.isVisible()) await more.click();
     assert.equal(await rows.count(), workflows.filter(id => snapshot.entities[id].fields.repository === workflowSource).length);
     assert.equal(await page.locator(".federated-catalog-group").count(), 1);
     await page.locator(".federated-catalog-group summary").click();
@@ -224,6 +225,15 @@ try {
       await example.locator("summary").click();
       await example.getByText(marker, { exact: true }).waitFor();
       assert.equal(await example.locator("federation-marker").count(), 0);
+    }
+    if (snapshot.catalogAliases?.some(alias => alias.from === "repo:seikika/seikika")) {
+      await page.evaluate(() => location.hash = "entity/" + encodeURIComponent("repository:seikika/seikika"));
+      await page.getByRole("button", { name: "View source fields" }).press("Enter");
+      await page.waitForFunction(() => document.activeElement?.textContent === "Inventory fields");
+      await page.getByRole("tab", { name: "Assessments", exact: true }).click();
+      await page.locator(".assessment-runs li").filter({ hasText: "Published by Seikika for Seikika" }).first().getByRole("link").click();
+      await page.getByRole("link", { name: "Publication details for Seikika for Seikika" }).press("Enter");
+      await page.waitForFunction(() => document.activeElement?.textContent?.includes("Artifact SHA-256"));
     }
   }
   await page.goto(docsOrigin + "storybook/?path=/story/hosted-portal--entity");

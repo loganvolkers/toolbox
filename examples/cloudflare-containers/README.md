@@ -97,6 +97,12 @@ repositories. The direct public repository endpoints use the configured reposito
 `policies.reportNamespace` gives report catalog links and rubrics the same IDs as the organization
 report while the demo keeps its own portal identity for authorization and storage.
 
+The demo build stages the checkout's Seikika for Seikika report as a public publication and
+aliases its repository observation to the organization inventory. To stage a previously generated
+artifact, set `SEIKIKA_SELF_REPORT` to the absolute path of its reviewed public `report.json`.
+Run the [local federation replay](../github-org-federation/README.md#replay-federation-locally)
+before building a hosted preview.
+
 On the public hostname's destination in the existing Cloudflare Access application, add public path overrides for `/`, `/search`, `/c/*`, `/e/*`, `/assets/*`, `/v1/views/home`, `/v1/entities`, and `/v1/views/entity/*`. Keep the full-host sign-in policy so Operations, action and run APIs, writes, and the live report still require authentication. Use the same application audience for protected paths. Apply the overrides after deploying the guest routes, then verify that a signed-out visitor can open a repository and gets an Access login for Operations and direct action API requests. [Access destination overrides](https://developers.cloudflare.com/api/resources/zero_trust/subresources/access/subresources/applications/methods/update/)
 
 Use Node 24 and Corepack to build the locked UI workspace before compiling Rust. In Workers Builds, set `NODE_VERSION=24` in production and the Preview base settings. Deploy the [private production monitor](production-monitor/README.md) to track readiness, authorization failures, and connection utilization.

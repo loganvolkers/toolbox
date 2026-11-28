@@ -132,13 +132,16 @@ export function catalogEntityPath(data: CatalogReport, id: string): string {
 export function canonicalDetailHash(data: CatalogReport, hash: string): string {
   if (data.publicCatalog || !hash.startsWith("#entity/")) return hash;
   const { id } = parseHash(hash);
-  if (!id || !data.metaDetails[id]) return hash;
+  if (!id || !data.metaDetails[id] && !data.entityRedirects?.[id]) return hash;
   const query = hash.indexOf("?");
-  return "#" + catalogEntityPath(data, id) + (query >= 0 ? hash.slice(query) : "");
+  return "#" + catalogEntityPath(data, data.entityRedirects?.[id] ?? id) + (query >= 0 ? hash.slice(query) : "");
 }
 
 /** Resolve catalog and section links to the same detail and keep their existing URL formats. */
 export function reportRoute(data: CatalogReport, route: Route): Route {
+  if (route.mode === "entity" && route.id && data.entityRedirects?.[route.id]) {
+    route = { ...route, id: data.entityRedirects[route.id] };
+  }
   if (data.viewerMethod === "guest" && data.organization && route.mode === "entity" && route.id) {
     const legacy = /^repository:([^/]+)$/.exec(route.id);
     const id = legacy && `repository:${data.organization.toLowerCase()}/${legacy[1]}`;

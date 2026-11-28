@@ -2,8 +2,37 @@
 
 Run Seikika locally to score the GitHub repositories and workflows your credentials can read. The
 organization portal shows its own repository hygiene and GitHub Actions security standards alongside
-the catalog, scorecards, tracks, campaigns, and actions published by child portals. Each definition
-identifies where it came from.
+the catalog, scorecards, tracks, campaigns, assessments, comparisons, and actions published by
+child portals. Each definition identifies where it came from.
+
+## Replay federation locally
+
+Run from the Seikika checkout after the [maintainer build and tool setup](../../docs/design/maintainer-sdlc.md#5-local-prerequisites).
+This check uses the actual Seikika for Seikika report and the checked-in organization inventory.
+It requires no organization credential, hosted database, or Cloudflare deployment.
+
+```sh
+pnpm build
+cargo build --locked -p seikika-cli -p seikika-connector-workspace -p seikika-connector-runner
+SEIKIKA_FEDERATION_OUT=/tmp/seikika-federation node report-ui/scripts/federation-parity.mjs
+python3 -m http.server 8765 --bind 127.0.0.1 --directory /tmp/seikika-federation
+```
+
+Open the [federated report](http://127.0.0.1:8765/) to see the source, its catalog, and its standards.
+An existing public snapshot can be replayed by setting `SEIKIKA_SELF_REPORT` to the path of its
+`report.json`. The check compares the catalog and definition identities, assessment runs, and
+comparison factors against the source. It checks that one Seikika repository row retains both
+the parent hygiene score and the child's repository score. UI-only edits can rerun the same
+composition check without rebuilding Rust or regenerating the source artifact.
+
+## Reconcile a shared catalog entity
+
+In [`self-publication.yaml`](self-publication.yaml), `reportSources` names an artifact staged under
+the parent manifest directory. `catalogAliases` names the source path, entity kind, source-local
+ID, and the parent ID. The example maps `repo:seikika/seikika` from `seikika/seikika` to
+`repository:seikika/seikika`. The catalog shows the parent row with both sources, and the entity
+detail displays source-specific facts and scorecards. The organization computes the
+`repository-identity` score from the GitHub inventory's URL and provider ID.
 
 ## Create a local snapshot
 
@@ -20,6 +49,9 @@ cargo build --locked -p seikika-cli -p seikika-connector-workspace -p seikika-co
 target/debug/seikika tools install portal --via pipx
 target/debug/seikika validate examples/github-org-federation
 target/debug/seikika test examples/github-org-federation
+source_report=$(mktemp -d)
+target/debug/seikika report portal --skip runner,github-actions -o web --out "$source_report"
+install -D -m 0644 "$source_report/report.json" examples/github-org-federation/publications/seikika.json
 snapshot=$(mktemp -d)
 target/debug/seikika report examples/github-org-federation -o web --out "$snapshot"
 python3 -m http.server 8765 --bind 127.0.0.1 --directory "$snapshot"

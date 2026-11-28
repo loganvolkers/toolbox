@@ -311,13 +311,14 @@ pub fn serve(path: &Path, listen: &str, database_url: Option<String>, fixtures: 
             }
         };
         let mode = if pg.is_some() { "postgres" } else { "in-memory" };
-        let config = match config_from_env(listen) {
+        let mut config = match config_from_env(listen) {
             Ok(c) => c,
             Err(e) => {
                 eprintln!("error: {e}");
                 return ExitCode::from(2);
             }
         };
+        config.report_root = Some(src.root.clone());
         let auth_mode = match Mode::parse(&config.auth_mode) {
             Ok(m) => m,
             Err(e) => {

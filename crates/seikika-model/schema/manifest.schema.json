@@ -362,7 +362,7 @@
     "federation": {
       "type": "object",
       "additionalProperties": false,
-      "description": "Federated actions (docs/design/federated-actions.md): for a parent, the kind whose entities are child portals, whose declared actions it offers and dispatches to them, and the runners it owns; for a child, how a parent may reach it and whose approvals it accepts.",
+      "description": "Federated reports, catalog identity, and actions (docs/design/federation.md and docs/design/federated-actions.md).",
       "properties": {
         "portals": {
           "$ref": "#/$defs/kindName",
@@ -392,6 +392,37 @@
                 "pattern": "^[a-z0-9][a-z0-9._-]*$",
                 "description": "The child's identity here: its entity is `portal:<key>` (default: the URL's last segment, without `.git`). Its manifest is `.seikika/seikika.yaml` in the repository."
               }
+            }
+          }
+        },
+        "reportSources": {
+          "type": "object",
+          "description": "Read-only report artifacts staged by the parent, keyed by namespace.",
+          "propertyNames": { "pattern": "^[a-z0-9][a-z0-9._/-]{0,199}$" },
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["path", "title"],
+            "properties": {
+              "path": { "type": "string", "pattern": "^[a-zA-Z0-9_.-]+(/[a-zA-Z0-9_.-]+)*$", "format": "path" },
+              "title": { "type": "string", "minLength": 1 },
+              "public": { "type": "boolean", "description": "Include the artifact in guest and offline reports. Review the artifact before publication." }
+            }
+          }
+        },
+        "catalogAliases": {
+          "type": "array",
+          "description": "Approved catalog aliases from a child record to a parent record of the same kind.",
+          "uniqueItems": true,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["source", "kind", "from", "to"],
+            "properties": {
+              "source": { "type": "array", "minItems": 1, "maxItems": 8, "items": { "type": "string", "minLength": 1, "maxLength": 200 } },
+              "kind": { "$ref": "#/$defs/kindName" },
+              "from": { "type": "string", "minLength": 1 },
+              "to": { "type": "string", "minLength": 1 }
             }
           }
         },

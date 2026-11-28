@@ -95,6 +95,7 @@ pub struct AppState {
     pub current: watch::Sender<Option<Arc<Published>>>,
     pub changed: Notify,
     pub config: Config,
+    pub(crate) report_publications: crate::report::ReportPublications,
     pub runs: crate::actions::Runs,
     /// In-image connector → how its last start went (Landlock, unconfined or refused).
     pub confinement: std::sync::Mutex<std::collections::BTreeMap<String, crate::confine::Started>>,
@@ -107,6 +108,8 @@ pub struct Config {
     pub auth_mode: String,
     /// Explicitly published GitHub repositories, keyed by their public catalog id.
     pub public_repositories: std::collections::BTreeMap<String, String>,
+    /// Portal directory for parent-staged report artifacts.
+    pub report_root: Option<std::path::PathBuf>,
     /// connector name → bearer token
     pub connector_tokens: Vec<(String, String)>,
     pub debounce: Duration,
@@ -121,6 +124,7 @@ impl Default for Config {
         Config {
             auth_mode: "dev".into(),
             public_repositories: Default::default(),
+            report_root: None,
             connector_tokens: Vec::new(),
             debounce: Duration::from_millis(500),
             max_lag: Duration::from_secs(5),
