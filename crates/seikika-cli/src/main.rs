@@ -361,23 +361,7 @@ enum AssessWhat {
     },
     /// Validate the portal's assessments/ files and list, per rubric, which entities are assessed
     /// (fresh), assessed against an older version (stale), or not assessed (missing).
-    Check {
-        /// A portal directory (containing seikika.yaml) or a manifest file.
-        #[arg(default_value = ".")]
-        portal: PathBuf,
-        /// Use the portal's fixtures instead of running its connectors.
-        #[arg(long)]
-        fixtures: bool,
-        /// Connectors not to run (comma-separated), e.g. a slow runner.
-        #[arg(long, value_delimiter = ',')]
-        skip: Vec<String>,
-        /// Fail when a recorded assessment or review is stale.
-        #[arg(long)]
-        require_fresh: bool,
-        /// Output: md (default) or json.
-        #[arg(short = 'o', long, default_value = "md")]
-        output: String,
-    },
+    Check(assess::Check),
     /// Validate assessment files and push them to a running server as `assessment` records of a
     /// remote connector (for portals whose assessments live in Postgres, not in a repository).
     Submit {
@@ -1202,13 +1186,7 @@ fn assess_command(what: AssessWhat) -> ExitCode {
             &skip,
             &output,
         ),
-        AssessWhat::Check {
-            portal,
-            fixtures,
-            skip,
-            output,
-            require_fresh,
-        } => assess::check(&portal, fixtures, &skip, &output, require_fresh),
+        AssessWhat::Check(options) => assess::check(&options),
         AssessWhat::Submit {
             files,
             portal,

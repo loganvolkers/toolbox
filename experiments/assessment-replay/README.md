@@ -26,3 +26,18 @@ Set `PLAYWRIGHT_CHROMIUM_EXECUTABLE` to use a system Chromium. The browser case 
 | `rounds` | Recomputes recorded usability and audit counts. The two-extra-runs policy uses the observed round 14 plateau and models starts only. |
 
 The replays cover known cases and repaired revisions. The recorded comparison contains zero model runs and measures call counts only where the historical audit gives enough information. Use separately held-out examples to compare general review accuracy or token spend.
+
+## Assessment work queue replay
+
+Run the [queue replay](queue-loop.py) after building the CLI, workspace and runner connectors.
+
+```sh
+python3 experiments/assessment-replay/queue-loop.py --out /tmp/seikika-queue-replay
+```
+
+The first loop refreshes a stale subject in a relocated assessment file and verifies its scoped
+check. The second hands off an independent review, tests that a self-review leaves the work open,
+and verifies the campaign with a grounded review by a distinct fixture assessor. The replay also
+checks a missing collector input and verifies the SHA-256 digests of its successful output files.
+Each run writes measurements, queue results and their run manifests. It uses synthetic people and
+facts for deterministic tests of the framework. [Campaign retrospective](../../docs/audits/assessment-improvement-2026-11-28.md)

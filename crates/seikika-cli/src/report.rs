@@ -150,15 +150,31 @@ fn resync(
     }
 }
 
+pub(crate) struct EvaluationError {
+    pub stage: &'static str,
+    pub connector: Option<String>,
+    pub message: String,
+}
+
+impl EvaluationError {
+    fn at(stage: &'static str, message: impl std::fmt::Display) -> Self {
+        Self {
+            stage,
+            connector: None,
+            message: message.to_string(),
+        }
+    }
+}
+
 /// Inputs from the connectors (in parallel) or the fixtures.
 fn inputs(
     fixtures: bool,
     skip: &[String],
     root: &std::path::Path,
     m: &seikika_model::Manifest,
-) -> Result<seikika_store::MemStore, String> {
+) -> Result<seikika_store::MemStore, EvaluationError> {
     if fixtures {
-        return seikika_store::load_fixtures(root).map_err(|e| e.to_string());
+        return seikika_store::load_fixtures(root).map_err(|e| EvaluationError::at("fixtures", e));
     }
     let jobs: Vec<_> = m
         .connectors
@@ -171,32 +187,41 @@ fn inputs(
             c.name
         );
     }
-    let results: Vec<Result<(String, Vec<Value>), String>> = std::thread::scope(|scope| {
+    let results: Vec<_> = std::thread::scope(|scope| {
         let handles: Vec<_> = jobs
             .iter()
             .map(|c| {
-                scope.spawn(move || {
+                let handle = scope.spawn(move || {
                     let program = seikika_api::connectors::binary_for(&c.package);
                     let config = seikika_api::connectors::resolve_config(
                         &c.name,
                         c.config.as_ref().unwrap_or(&Value::Null),
                     );
-                    resync(&c.name, &program, &config, &c.records).map(|r| (c.name.clone(), r))
-                })
+                    resync(&c.name, &program, &config, &c.records)
+                });
+                (&c.name, handle)
             })
             .collect();
         handles
             .into_iter()
-            .map(|h| {
-                h.join()
-                    .unwrap_or_else(|_| Err("connector thread panicked".into()))
+            .map(|(name, handle)| {
+                (
+                    name,
+                    handle
+                        .join()
+                        .unwrap_or_else(|_| Err("connector thread panicked".into())),
+                )
             })
             .collect()
     });
     let mut store = seikika_store::MemStore::new();
-    for r in results {
-        let (name, batch) = r?;
-        store.ingest(&name, &batch);
+    for (name, result) in results {
+        let batch = result.map_err(|message| EvaluationError {
+            stage: "connector",
+            connector: Some(name.clone()),
+            message,
+        })?;
+        store.ingest(name, &batch);
     }
     Ok(store)
 }
@@ -1228,14 +1253,39 @@ pub fn live(
     fixtures: bool,
     skip: &[String],
 ) -> Result<(PathBuf, seikika_model::Manifest, Derived), String> {
-    let src = seikika_model::load::load(path).map_err(|e| e.to_string())?;
-    let m = crate::portal::manifest_from(&src)?;
-    let store = inputs(fixtures, skip, &src.root, &m)?;
-    let d = FullRecompute.recompute(&m, &store.snapshot());
-    for diag in &d.diagnostics {
+    let (root, manifest, inputs) = live_inputs(path, fixtures, skip).map_err(|e| e.message)?;
+    let derived = derive_live(&manifest, &inputs);
+    Ok((root, manifest, derived))
+}
+
+pub(crate) fn live_inputs(
+    path: &std::path::Path,
+    fixtures: bool,
+    skip: &[String],
+) -> Result<
+    (
+        PathBuf,
+        seikika_model::Manifest,
+        seikika_store::InputSnapshot,
+    ),
+    EvaluationError,
+> {
+    let src = seikika_model::load::load(path).map_err(|e| EvaluationError::at("manifest", e))?;
+    let manifest =
+        crate::portal::manifest_from(&src).map_err(|e| EvaluationError::at("manifest", e))?;
+    let store = inputs(fixtures, skip, &src.root, &manifest)?;
+    Ok((src.root, manifest, store.snapshot()))
+}
+
+pub(crate) fn derive_live(
+    manifest: &seikika_model::Manifest,
+    inputs: &seikika_store::InputSnapshot,
+) -> Derived {
+    let derived = FullRecompute.recompute(manifest, inputs);
+    for diag in &derived.diagnostics {
         eprintln!("WARN  {}: {} [{}]", diag.location, diag.message, diag.code);
     }
-    Ok((src.root, m, d))
+    derived
 }
 
 /// The ratchet's outcome: for people (`summary`) and for pipelines (`--verdict`, D96).
