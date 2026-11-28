@@ -1,6 +1,6 @@
 # Seikika demo observability
 
-The hosted demo sends OTLP/HTTP protobuf to a Cloudflare Worker. The Worker checks an ingest-only bearer token and forwards just the three OTLP paths to a private OpenTelemetry Collector. The Collector keeps an allowlist before storing data in Grafana LGTM. Grafana's anonymous Viewer can query the demo's Loki, Tempo, and Prometheus data. The Worker denies login, admin routes, and writes other than Grafana's read-only query endpoint.
+The hosted demo sends OTLP/HTTP protobuf to a Cloudflare Worker. The Worker checks an ingest-only bearer token and forwards just the three OTLP paths to a private OpenTelemetry Collector. The Collector keeps an allowlist before storing data in Grafana LGTM. Grafana's anonymous Viewer can open Explore and query the demo's Loki, Tempo, and Prometheus data. The Worker denies login, admin routes, and writes other than Grafana's read-only query endpoint. [Grafana Viewer settings](https://grafana.com/docs/grafana/latest/setup-grafana/configure-grafana/#viewers_can_edit)
 
 [Guest walkthrough](https://seikika.com/demo/observability/) · [Operator playbook](https://seikika.com/operators/observability/)
 
