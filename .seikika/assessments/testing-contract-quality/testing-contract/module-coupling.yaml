@@ -1,23 +1,19 @@
 apiVersion: seikika.com/assessment/v1
 entity: testing-contract:module-coupling
 rubric: testing-contract-quality
-subjectHash: 01662e88af26
+subjectHash: 0c6f5455f762
 rubricHash: 8fc4906aea03cad1a6948469884ba31acc9d4a0259296c9a643f6d7b612e198e
 assessor: {kind: agent, name: Codex, model: GPT-6}
 at: 2026-11-28
 verdicts:
   - criterion: risk-coverage
-    verdict: fail
+    verdict: pass
     reason: >-
-      scripts/check-coupling.test.mjs injects crate and npm cycles, private
-      imports, deployment files, fixed scorecard routes, and both demo URL
-      forms, but has no case for import paths rewritten through a compiler or
-      bundler alias. scripts/check-coupling.mjs does not resolve those
-      aliases.
-    suggestion: >-
-      If product code adds aliases that can leave its own package, exercise
-      their resolver in the checker and prove an alias to an example is
-      rejected.
+      scripts/check-coupling.test.mjs covers crate and npm cycles, direct
+      deployment and private imports, and fixed links. Its Astro fixture also
+      accepts an inherited alias to a local Vue component and rejects an alias
+      to example data, an alias to a sibling package's private source, and an
+      unresolved alias.
   - criterion: meaningful-oracles
     verdict: pass
     reason: >-
@@ -32,6 +28,6 @@ verdicts:
       .github/workflows/ci.yml runs the offline gate and its mutation tests,
       builds Storybook, installs Chromium, and probes the guest states.
 summary: >-
-  Maintainer self-review. The dependency mutations and alternate portal
-  data exercise the declared boundaries. Alias resolution remains an open
-  risk.
+  Maintainer self-review. The mutation tests cover the documented Astro
+  alias mechanism and the guest probes verify navigation against alternate
+  portal data.

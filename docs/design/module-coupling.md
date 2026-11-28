@@ -37,8 +37,10 @@ The source scan covers npm `src/` and the Astro integration entry, including Vue
 style blocks, Astro frontmatter and script blocks, MDX imports, and CSS imports.
 TypeScript resolves Astro’s tsconfig path aliases, including inherited configuration. Alias
 targets use the same boundary checks as relative imports. An unresolved explicit path alias
-fails the gate. Use tsconfig paths for application aliases. Review custom bundler plugins and
-configuration that rewrite imports. The scan checks Rust
+fails the gate. Use tsconfig paths for application aliases. The check rejects inline Vite
+`resolve.alias` maps in build configurations and the integration entry. The Astro Vue renderer
+may pin its two exports to the same installed package names. Review plugins and
+computed configuration that rewrite imports. The scan checks Rust
 literal compile-time includes in crate source and build scripts. Test and Storybook composition
 may read fixtures and exercise several packages. These tools do not resolve arbitrary runtime
 I/O, generated imports, or computed strings. Review changes to these mechanisms

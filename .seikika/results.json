@@ -45,6 +45,13 @@
       "short": 0,
       "start": null
     },
+    "reduce-module-coupling": {
+      "inScope": 23,
+      "measure": 0,
+      "recorded": "2026-11-28",
+      "short": 0,
+      "start": "2026-11-28"
+    },
     "review-assessment-evidence": {
       "inScope": 374,
       "recorded": "2026-11-27",
@@ -3690,6 +3697,26 @@
           "95c6242a"
         ]
       },
+      "rule:seikika/maintainer-module-coupling/acyclic": {
+        "pins-both-outcomes": [
+          "96a1a93f"
+        ]
+      },
+      "rule:seikika/maintainer-module-coupling/deployment-independent": {
+        "pins-both-outcomes": [
+          "b3a185af"
+        ]
+      },
+      "rule:seikika/maintainer-module-coupling/deployment-links": {
+        "pins-both-outcomes": [
+          "53a8226c"
+        ]
+      },
+      "rule:seikika/maintainer-module-coupling/public-entrypoints": {
+        "pins-both-outcomes": [
+          "fe523ca4"
+        ]
+      },
       "rule:seikika/maintainer-python/no-findings": {
         "pins-both-outcomes": [
           "258f97a7"
@@ -5271,6 +5298,9 @@
       }
     },
     "maintainer-docs": {
+      "doc:.seikika/README.md": {
+        "level": "silver"
+      },
       "doc:AGENTS.md": {
         "level": "silver"
       },
@@ -5889,6 +5919,9 @@
       "doc:docs/decisions/D01M8FXW9XRMTM2EPQZEZ49HH9F.md": {
         "level": "skipped"
       },
+      "doc:docs/decisions/D01M8G3N60EYX74TAZMR7M28H97.md": {
+        "level": "skipped"
+      },
       "doc:docs/decisions/README.md": {
         "level": "skipped"
       },
@@ -5998,6 +6031,9 @@
         "level": "silver"
       },
       "doc:docs/design/minimal-ui.md": {
+        "level": "silver"
+      },
+      "doc:docs/design/module-coupling.md": {
         "level": "silver"
       },
       "doc:docs/design/notifications.md": {
@@ -6386,9 +6422,6 @@
       },
       "doc:plugins/seikika-operator/skills/vendor/SKILL.md": {
         "level": "silver"
-      },
-      "doc:portal/README.md": {
-        "level": "silver"
       }
     },
     "maintainer-example": {
@@ -6603,6 +6636,7 @@
         "level": "gold"
       }
     },
+    "maintainer-module-coupling": {},
     "maintainer-observability": {
       "observability:seikika-runtime": {
         "level": "gold"
@@ -6651,25 +6685,25 @@
         },
         "level": "silver"
       },
-      "package-json:package.json": {
+      "package-json:npm/report-ui/package.json": {
         "level": "gold"
       },
-      "package-json:report-ui/package.json": {
+      "package-json:npm/site/package.json": {
+        "level": "gold"
+      },
+      "package-json:npm/ui-kit/package.json": {
+        "level": "gold"
+      },
+      "package-json:npm/ui/package.json": {
+        "level": "gold"
+      },
+      "package-json:package.json": {
         "level": "gold"
       },
       "package-json:scripts/github-emulate/package.json": {
         "level": "gold"
       },
       "package-json:scripts/playwright-ci/package.json": {
-        "level": "gold"
-      },
-      "package-json:site/package.json": {
-        "level": "gold"
-      },
-      "package-json:ui-kit/package.json": {
-        "level": "gold"
-      },
-      "package-json:ui/package.json": {
         "level": "gold"
       }
     },
@@ -6705,238 +6739,238 @@
     "maintainer-sdk-docs": {},
     "maintainer-shell": {},
     "maintainer-site": {
-      "site-page:site/src/content/docs/agents/reads.md": {
+      "site-page:npm/site/src/content/docs/agents/reads.md": {
         "level": "gold"
       },
-      "site-page:site/src/content/docs/authors/connectors.md": {
+      "site-page:npm/site/src/content/docs/authors/connectors.md": {
         "level": "gold"
       },
-      "site-page:site/src/content/docs/authors/index.md": {
+      "site-page:npm/site/src/content/docs/authors/index.md": {
         "level": "gold"
       },
-      "site-page:site/src/content/docs/authors/npm.mdx": {
+      "site-page:npm/site/src/content/docs/authors/npm.mdx": {
         "level": "gold"
       },
-      "site-page:site/src/content/docs/authors/secrets.md": {
+      "site-page:npm/site/src/content/docs/authors/secrets.md": {
         "level": "gold"
       },
-      "site-page:site/src/content/docs/compare/acknowledgments.md": {
+      "site-page:npm/site/src/content/docs/compare/acknowledgments.md": {
         "level": "gold"
       },
-      "site-page:site/src/content/docs/compare/backstage.md": {
+      "site-page:npm/site/src/content/docs/compare/backstage.md": {
         "level": "gold"
       },
-      "site-page:site/src/content/docs/compare/betterer.md": {
+      "site-page:npm/site/src/content/docs/compare/betterer.md": {
         "level": "gold"
       },
-      "site-page:site/src/content/docs/compare/cortex.md": {
+      "site-page:npm/site/src/content/docs/compare/cortex.md": {
         "level": "gold"
       },
-      "site-page:site/src/content/docs/compare/dx-fabric.md": {
+      "site-page:npm/site/src/content/docs/compare/dx-fabric.md": {
         "level": "gold"
       },
-      "site-page:site/src/content/docs/compare/index.md": {
+      "site-page:npm/site/src/content/docs/compare/index.md": {
         "level": "gold"
       },
-      "site-page:site/src/content/docs/compare/linters-and-formatters.md": {
+      "site-page:npm/site/src/content/docs/compare/linters-and-formatters.md": {
         "level": "gold"
       },
-      "site-page:site/src/content/docs/compare/openssf-scorecard.md": {
+      "site-page:npm/site/src/content/docs/compare/openssf-scorecard.md": {
         "level": "gold"
       },
-      "site-page:site/src/content/docs/compare/opslevel.md": {
+      "site-page:npm/site/src/content/docs/compare/opslevel.md": {
         "level": "gold"
       },
-      "site-page:site/src/content/docs/compare/port.md": {
+      "site-page:npm/site/src/content/docs/compare/port.md": {
         "level": "gold"
       },
-      "site-page:site/src/content/docs/concepts/capabilities.md": {
+      "site-page:npm/site/src/content/docs/concepts/capabilities.md": {
         "level": "gold"
       },
-      "site-page:site/src/content/docs/concepts/catalog.md": {
+      "site-page:npm/site/src/content/docs/concepts/catalog.md": {
         "level": "gold"
       },
-      "site-page:site/src/content/docs/concepts/dx-benchmarks.md": {
+      "site-page:npm/site/src/content/docs/concepts/dx-benchmarks.md": {
         "level": "gold"
       },
-      "site-page:site/src/content/docs/concepts/glossary.md": {
+      "site-page:npm/site/src/content/docs/concepts/glossary.md": {
         "level": "gold"
       },
-      "site-page:site/src/content/docs/concepts/layers.md": {
+      "site-page:npm/site/src/content/docs/concepts/layers.md": {
         "level": "gold"
       },
-      "site-page:site/src/content/docs/concepts/scorecards.md": {
+      "site-page:npm/site/src/content/docs/concepts/scorecards.md": {
         "level": "gold"
       },
-      "site-page:site/src/content/docs/connectors/cloudflare.md": {
+      "site-page:npm/site/src/content/docs/connectors/cloudflare.md": {
         "level": "gold"
       },
-      "site-page:site/src/content/docs/connectors/git-files.md": {
+      "site-page:npm/site/src/content/docs/connectors/git-files.md": {
         "level": "gold"
       },
-      "site-page:site/src/content/docs/connectors/github.md": {
+      "site-page:npm/site/src/content/docs/connectors/github.md": {
         "level": "gold"
       },
-      "site-page:site/src/content/docs/connectors/gitlab.md": {
+      "site-page:npm/site/src/content/docs/connectors/gitlab.md": {
         "level": "gold"
       },
-      "site-page:site/src/content/docs/connectors/grafana.md": {
+      "site-page:npm/site/src/content/docs/connectors/grafana.md": {
         "level": "gold"
       },
-      "site-page:site/src/content/docs/connectors/index.mdx": {
+      "site-page:npm/site/src/content/docs/connectors/index.mdx": {
         "level": "gold"
       },
-      "site-page:site/src/content/docs/connectors/runner.md": {
+      "site-page:npm/site/src/content/docs/connectors/runner.md": {
         "level": "gold"
       },
-      "site-page:site/src/content/docs/connectors/scim.md": {
+      "site-page:npm/site/src/content/docs/connectors/scim.md": {
         "level": "gold"
       },
-      "site-page:site/src/content/docs/connectors/workspace.md": {
+      "site-page:npm/site/src/content/docs/connectors/workspace.md": {
         "level": "gold"
       },
-      "site-page:site/src/content/docs/demo/observability.md": {
+      "site-page:npm/site/src/content/docs/demo/observability.md": {
         "level": "gold"
       },
-      "site-page:site/src/content/docs/demo/organization.mdx": {
+      "site-page:npm/site/src/content/docs/demo/organization.mdx": {
         "level": "gold"
       },
-      "site-page:site/src/content/docs/demo/report.md": {
+      "site-page:npm/site/src/content/docs/demo/report.md": {
         "level": "gold"
       },
-      "site-page:site/src/content/docs/index.md": {
+      "site-page:npm/site/src/content/docs/index.md": {
         "level": "gold"
       },
-      "site-page:site/src/content/docs/maintainers/index.md": {
+      "site-page:npm/site/src/content/docs/maintainers/index.md": {
         "level": "gold"
       },
-      "site-page:site/src/content/docs/maintainers/sdk-docs.md": {
+      "site-page:npm/site/src/content/docs/maintainers/sdk-docs.md": {
         "level": "gold"
       },
-      "site-page:site/src/content/docs/maintainers/writing.md": {
+      "site-page:npm/site/src/content/docs/maintainers/writing.md": {
         "level": "gold"
       },
-      "site-page:site/src/content/docs/operators/access.md": {
+      "site-page:npm/site/src/content/docs/operators/access.md": {
         "level": "gold"
       },
-      "site-page:site/src/content/docs/operators/actions.md": {
+      "site-page:npm/site/src/content/docs/operators/actions.md": {
         "level": "gold"
       },
-      "site-page:site/src/content/docs/operators/assessments.md": {
+      "site-page:npm/site/src/content/docs/operators/assessments.md": {
         "level": "gold"
       },
-      "site-page:site/src/content/docs/operators/ci.md": {
+      "site-page:npm/site/src/content/docs/operators/ci.md": {
         "level": "gold"
       },
-      "site-page:site/src/content/docs/operators/deploy.md": {
+      "site-page:npm/site/src/content/docs/operators/deploy.md": {
         "level": "gold"
       },
-      "site-page:site/src/content/docs/operators/federate-actions.md": {
+      "site-page:npm/site/src/content/docs/operators/federate-actions.md": {
         "level": "gold"
       },
-      "site-page:site/src/content/docs/operators/index.md": {
+      "site-page:npm/site/src/content/docs/operators/index.md": {
         "level": "gold"
       },
-      "site-page:site/src/content/docs/operators/manifest.md": {
+      "site-page:npm/site/src/content/docs/operators/manifest.md": {
         "level": "gold"
       },
-      "site-page:site/src/content/docs/operators/observability.md": {
+      "site-page:npm/site/src/content/docs/operators/observability.md": {
         "level": "gold"
       },
-      "site-page:site/src/content/docs/operators/portal.md": {
+      "site-page:npm/site/src/content/docs/operators/portal.md": {
         "level": "gold"
       },
-      "site-page:site/src/content/docs/operators/publish.md": {
+      "site-page:npm/site/src/content/docs/operators/publish.md": {
         "level": "gold"
       },
-      "site-page:site/src/content/docs/operators/secrets.md": {
+      "site-page:npm/site/src/content/docs/operators/secrets.md": {
         "level": "gold"
       },
-      "site-page:site/src/content/docs/operators/standards.md": {
+      "site-page:npm/site/src/content/docs/operators/standards.md": {
         "level": "gold"
       },
-      "site-page:site/src/content/docs/packages/file-size.md": {
+      "site-page:npm/site/src/content/docs/packages/file-size.md": {
         "level": "gold"
       },
-      "site-page:site/src/content/docs/packages/github-actions.md": {
+      "site-page:npm/site/src/content/docs/packages/github-actions.md": {
         "level": "gold"
       },
-      "site-page:site/src/content/docs/packages/index.mdx": {
+      "site-page:npm/site/src/content/docs/packages/index.mdx": {
         "level": "gold"
       },
-      "site-page:site/src/content/docs/packages/meta-scoring.md": {
+      "site-page:npm/site/src/content/docs/packages/meta-scoring.md": {
         "level": "gold"
       },
-      "site-page:site/src/content/docs/packages/openssf-scorecard.md": {
+      "site-page:npm/site/src/content/docs/packages/openssf-scorecard.md": {
         "level": "gold"
       },
-      "site-page:site/src/content/docs/packages/pattern-count.md": {
+      "site-page:npm/site/src/content/docs/packages/pattern-count.md": {
         "level": "gold"
       },
-      "site-page:site/src/content/docs/packages/pnpm-expo.md": {
+      "site-page:npm/site/src/content/docs/packages/pnpm-expo.md": {
         "level": "gold"
       },
-      "site-page:site/src/content/docs/packages/sarif.md": {
+      "site-page:npm/site/src/content/docs/packages/sarif.md": {
         "level": "gold"
       },
-      "site-page:site/src/content/docs/packages/semgrep.md": {
+      "site-page:npm/site/src/content/docs/packages/semgrep.md": {
         "level": "gold"
       },
-      "site-page:site/src/content/docs/packages/service-catalog.md": {
+      "site-page:npm/site/src/content/docs/packages/service-catalog.md": {
         "level": "gold"
       },
-      "site-page:site/src/content/docs/packages/shell.md": {
+      "site-page:npm/site/src/content/docs/packages/shell.md": {
         "level": "gold"
       },
-      "site-page:site/src/content/docs/packages/sre.md": {
+      "site-page:npm/site/src/content/docs/packages/sre.md": {
         "level": "gold"
       },
-      "site-page:site/src/content/docs/packages/storybook.md": {
+      "site-page:npm/site/src/content/docs/packages/storybook.md": {
         "level": "gold"
       },
-      "site-page:site/src/content/docs/reference/contracts.md": {
+      "site-page:npm/site/src/content/docs/reference/contracts.md": {
         "level": "gold"
       },
-      "site-page:site/src/content/docs/reference/index.mdx": {
+      "site-page:npm/site/src/content/docs/reference/index.mdx": {
         "level": "gold"
       },
-      "site-page:site/src/content/docs/reference/mcp.mdx": {
+      "site-page:npm/site/src/content/docs/reference/mcp.mdx": {
         "level": "gold"
       },
-      "site-page:site/src/content/docs/reference/sdks.md": {
+      "site-page:npm/site/src/content/docs/reference/sdks.md": {
         "level": "gold"
       },
-      "site-page:site/src/content/docs/start/cli.mdx": {
+      "site-page:npm/site/src/content/docs/start/cli.mdx": {
         "level": "gold"
       },
-      "site-page:site/src/content/docs/start/install.md": {
+      "site-page:npm/site/src/content/docs/start/install.md": {
         "level": "gold"
       },
-      "site-page:site/src/content/docs/start/portal.md": {
+      "site-page:npm/site/src/content/docs/start/portal.md": {
         "level": "gold"
       },
-      "site-page:site/src/content/docs/start/quickstart.md": {
+      "site-page:npm/site/src/content/docs/start/quickstart.md": {
         "level": "gold"
       },
-      "site-page:site/src/content/docs/start/run.md": {
+      "site-page:npm/site/src/content/docs/start/run.md": {
         "level": "gold"
       },
-      "site-page:site/src/content/docs/start/troubleshooting.md": {
+      "site-page:npm/site/src/content/docs/start/troubleshooting.md": {
         "level": "gold"
       },
-      "site-page:site/src/content/docs/start/versions.md": {
+      "site-page:npm/site/src/content/docs/start/versions.md": {
         "level": "gold"
       },
-      "site-page:site/src/content/docs/users/actions.md": {
+      "site-page:npm/site/src/content/docs/users/actions.md": {
         "level": "gold"
       },
-      "site-page:site/src/content/docs/users/api.md": {
+      "site-page:npm/site/src/content/docs/users/api.md": {
         "level": "gold"
       },
-      "site-page:site/src/content/docs/users/index.md": {
+      "site-page:npm/site/src/content/docs/users/index.md": {
         "level": "gold"
       },
-      "site-page:site/src/content/docs/users/refresh.md": {
+      "site-page:npm/site/src/content/docs/users/refresh.md": {
         "level": "gold"
       }
     },
@@ -7220,6 +7254,9 @@
     },
     "maintainer-testing": {
       "testing-contract:action-lifecycle": {
+        "level": "silver"
+      },
+      "testing-contract:module-coupling": {
         "level": "silver"
       },
       "testing-contract:reference-derivation": {
@@ -9969,6 +10006,9 @@
       "assessment:testing-contract-quality/testing-contract:action-lifecycle": {
         "level": "gold"
       },
+      "assessment:testing-contract-quality/testing-contract:module-coupling": {
+        "level": "gold"
+      },
       "assessment:testing-contract-quality/testing-contract:reference-derivation": {
         "level": "gold"
       },
@@ -10021,6 +10061,9 @@
         "level": "gold"
       },
       "connector:seikika/meta-catalog": {
+        "level": "gold"
+      },
+      "connector:seikika/module-coupling": {
         "level": "gold"
       },
       "connector:seikika/runner": {
@@ -11257,6 +11300,27 @@
           "described": 1
         },
         "level": "bronze"
+      },
+      "field:seikika/ModuleCoupling.boundaries": {
+        "level": "gold"
+      },
+      "field:seikika/ModuleCoupling.cycles": {
+        "level": "gold"
+      },
+      "field:seikika/ModuleCoupling.dependencies": {
+        "level": "gold"
+      },
+      "field:seikika/ModuleCoupling.deploymentData": {
+        "level": "gold"
+      },
+      "field:seikika/ModuleCoupling.entrypoints": {
+        "level": "gold"
+      },
+      "field:seikika/ModuleCoupling.name": {
+        "level": "gold"
+      },
+      "field:seikika/ModuleCoupling.path": {
+        "level": "gold"
       },
       "field:seikika/Observability.alerts": {
         "level": "gold"
@@ -12545,6 +12609,9 @@
         },
         "level": "silver"
       },
+      "kind:seikika/ModuleCoupling": {
+        "level": "gold"
+      },
       "kind:seikika/Observability": {
         "failing": {
           "fields-described": 7
@@ -13054,6 +13121,30 @@
       },
       "rule:seikika/maintainer-example/says-how-to-check": {
         "level": "gold"
+      },
+      "rule:seikika/maintainer-module-coupling/acyclic": {
+        "failing": {
+          "pins-both-outcomes": 1
+        },
+        "level": "silver"
+      },
+      "rule:seikika/maintainer-module-coupling/deployment-independent": {
+        "failing": {
+          "pins-both-outcomes": 1
+        },
+        "level": "silver"
+      },
+      "rule:seikika/maintainer-module-coupling/deployment-links": {
+        "failing": {
+          "pins-both-outcomes": 1
+        },
+        "level": "silver"
+      },
+      "rule:seikika/maintainer-module-coupling/public-entrypoints": {
+        "failing": {
+          "pins-both-outcomes": 1
+        },
+        "level": "silver"
       },
       "rule:seikika/maintainer-observability/assessed-monitor": {
         "level": "gold"
@@ -13861,6 +13952,9 @@
           "fixtures-reach-every-level": 1
         },
         "level": "silver"
+      },
+      "scorecard:seikika/maintainer-module-coupling": {
+        "level": "gold"
       },
       "scorecard:seikika/maintainer-observability": {
         "failing": {

@@ -144,8 +144,42 @@ function resolveAlias(spec, file) {
   return existsSync(resolved) ? resolved : sourcePath(resolved);
 }
 
+// Custom aliases can override Astro's tsconfig resolution. Reject inline Vite
+// alias maps and require application aliases to use the checked mechanism.
+function hasViteAliases(file) {
+  const code = ts.createSourceFile(file, read(file), ts.ScriptTarget.Latest, true);
+  const key = node => ts.isIdentifier(node) || ts.isStringLiteral(node) ? node.text : undefined;
+  function allowedRendererAliases(prop) {
+    if (!ts.isPropertyAssignment(prop) || !ts.isObjectLiteralExpression(prop.initializer)) return false;
+    // The report integration pins Astro's renderer exports to its own installed
+    // Vue integration. Each alias must resolve that exact same package export.
+    return prop.initializer.properties.every(entry => {
+      if (!ts.isPropertyAssignment(entry)) return false;
+      const name = key(entry.name);
+      return /^@astrojs\/vue\/(client|server)\.js$/.test(name ?? "")
+        && entry.initializer.getText(code).replace(/\s+/g, "").replaceAll("'", '"')
+          === `fileURLToPath(import.meta.resolve(${JSON.stringify(name)}))`;
+    });
+  }
+  function visit(node) {
+    if (ts.isPropertyAssignment(node) && key(node.name) === "resolve" && ts.isObjectLiteralExpression(node.initializer)) {
+      if (node.initializer.properties.some(prop => prop.name && key(prop.name) === "alias" && !allowedRendererAliases(prop))) {
+        return true;
+      }
+    }
+    return ts.forEachChild(node, visit);
+  }
+  return visit(code);
+}
+
 for (const pkg of packages) {
   const source = npm.get(pkg.manifest.name);
+  for (const config of globSync("{astro.config,vite.config,integration}.{js,ts,mjs,mts,cjs,cts}", { cwd: pkg.dir })) {
+    const path = join(pkg.dir, config);
+    if (hasViteAliases(path)) {
+      source.findings.entrypoints.add(`${relative(root, path)} defines Vite resolve.alias. Declare application aliases in tsconfig paths.`);
+    }
+  }
   const declared = new Set();
   const runtime = new Set();
   for (const section of ["dependencies", "optionalDependencies", "peerDependencies", "devDependencies"]) {

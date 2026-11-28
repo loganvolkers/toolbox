@@ -49,6 +49,11 @@ test("coupling evidence and blocking mode agree on clean and forbidden dependenc
     await write("npm/b/tsconfig.base.json", { compilerOptions: { paths: { "~local/*": ["./src/*"] } } });
     await write("npm/b/tsconfig.json", { extends: "./tsconfig.base.json" });
     await write("npm/b/src/local.astro", '---\nimport Screen from "~local/screen.vue";\n---\n<Screen />');
+    await write("npm/a/integration.mjs", [
+      'export default { vite: { resolve: { alias: {',
+      '"@astrojs/vue/client.js": fileURLToPath(import.meta.resolve("@astrojs/vue/client.js")),',
+      '} } } };',
+    ].join("\n"));
     const clean = await run();
     assert.equal(clean.code, 0, clean.stderr);
     assert.match(clean.stdout, /4 modules, 1 internal edges, 0 findings/);
@@ -83,12 +88,14 @@ test("coupling evidence and blocking mode agree on clean and forbidden dependenc
       'import missing from "~private/missing";',
       "---",
     ].join("\n"));
+    await write("npm/b/astro.config.mjs", 'export default { vite: { resolve: { alias: { sneaky: "../../examples" } } } };');
     const result = await records();
     assert.deepEqual(result.find(item => item.name === "a").cycles, ["a -> b -> a"]);
     assert.match(result.find(item => item.name === "a").boundaries[0], /includes \.seikika\/seikika.yaml/);
     const checked = result.find(item => item.name === "@fixture/b");
     assert.deepEqual(checked.cycles, ["@fixture/b -> @fixture/a -> @fixture/b"]);
-    assert.equal(checked.entrypoints.length, 4);
+    assert.equal(checked.entrypoints.length, 5);
+    assert.ok(checked.entrypoints.some(finding => finding.includes("defines Vite resolve.alias")));
     assert.ok(checked.entrypoints.some(finding => finding.includes("bypasses the package exports: ~private/index")));
     assert.ok(checked.entrypoints.some(finding => finding.includes("unresolved path alias: ~private/missing")));
     assert.ok(checked.boundaries.some(finding => finding.includes("imports deployment data: ~deployment/catalog.json")));
