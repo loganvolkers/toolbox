@@ -273,6 +273,35 @@ Routine `seikika assess check` reports fresh, stale and missing subjects. It fai
 files, including missing verdicts for criteria. Land rubric additions with verdicts for the
 affected assessments. Use `--require-fresh` for release preflight and high-risk review gates.
 
+### Work through a campaign
+
+Collect a scoped queue and briefs in one derivation. Reuse the same inputs for review and verification.
+
+```sh
+seikika assess check .seikika --skip runner,github-actions \
+  --queue --campaign review-assessment-evidence --rubric assessment-quality \
+  --with-briefs --limit 5 --run-manifest /tmp/review-run.json -o json
+```
+
+- The queue distinguishes changed subject and rubric hashes from missing reviews, failed criteria,
+  and uncertain evidence. Use `--action` to select repair, evidence collection, assessment, or
+  independent review work. The result includes counts before the action and presentation limits.
+- Pass `--reviewer` to flag work assigned to its original assessor. Hand off those reviews to an
+  independent person or agent. Names route work and the campaign still requires a current,
+  grounded review. Establish the reviewer's identity and independence outside the queue.
+- Use `--entity` and `--rubric` to verify one repaired assessment. Existing file paths take
+  precedence over generated paths, so a moved file receives its updated verdict in place.
+  Invalid files anywhere in the portal still fail validation. `--require-fresh` applies to
+  the selected rubric and entities before the queue is limited.
+- A run manifest records the checked-out Git commit and tree, a dirty flag, tool versions,
+  connector coverage, rubric hashes, and digests of parsed assessment files, collected input and
+  output. For dirty work, retain the patch and files alongside it. Skipped connectors, unknown
+  tools and collector failures stay explicit. Externally managed cache state and provider token
+  usage require separate instrumentation.
+- After a layout move, keep entity IDs and verify the subjects whose hashes changed. Refresh
+  a review binding only after comparing its cited sources and current subject with the reviewed
+  version. The CLI records the changed input and keeps the old verdict available for inspection.
+
 The [PR assessment pilot](pr-assessments.md) scopes deterministic checks and advisory judgment
 to a candidate diff. It keeps evidence, runs and budgets outside the entity-assessment baseline
 under D01M8D9AK7Q9B18B10FC38WB2BQ.

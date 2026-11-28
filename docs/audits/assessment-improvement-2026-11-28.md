@@ -100,3 +100,5 @@ The report also depends on connector inputs and the evaluation date. The archive
 - The [entity outcomes](evidence/assessment-improvement-2026-11-28/outcomes.csv) give the matching entity IDs, campaign verdicts and review states at baseline, checkpoint and integration.
 - The [session chronology](evidence/assessment-improvement-2026-11-28/chronology.md) records the work sequence, data provenance and available instrumentation.
 - Git preserves the [checkpoint patch](https://github.com/seikika/seikika/commit/0467ff2d6753db0dc2fdaed7cdeb8ce7e8d0b9a5) and the [integration changes](https://github.com/seikika/seikika/pull/183). The session archive also retains the original reports, logs, notes and assessment briefs.
+
+The [framework validation follow-up](evidence/assessment-improvement-2026-11-28/validation.md) records two repair and verification loops and the observed cost of preparing a scoped brief.

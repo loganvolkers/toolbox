@@ -4794,6 +4794,9 @@
       "doc:docs/audits/evidence/assessment-improvement-2026-11-28/chronology.md": {
         "level": "silver"
       },
+      "doc:docs/audits/evidence/assessment-improvement-2026-11-28/validation.md": {
+        "level": "silver"
+      },
       "doc:docs/audits/federated-inventory-2026-11-28.md": {
         "level": "silver"
       },

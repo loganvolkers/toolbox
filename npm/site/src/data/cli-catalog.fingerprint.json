@@ -100,6 +100,51 @@
           "name": "output",
           "long": "output",
           "positional": false
+        },
+        {
+          "name": "rubric",
+          "long": "rubric",
+          "positional": false
+        },
+        {
+          "name": "entities",
+          "long": "entity",
+          "positional": false
+        },
+        {
+          "name": "campaign",
+          "long": "campaign",
+          "positional": false
+        },
+        {
+          "name": "queue",
+          "long": "queue",
+          "positional": false
+        },
+        {
+          "name": "limit",
+          "long": "limit",
+          "positional": false
+        },
+        {
+          "name": "action",
+          "long": "action",
+          "positional": false
+        },
+        {
+          "name": "with_briefs",
+          "long": "with-briefs",
+          "positional": false
+        },
+        {
+          "name": "reviewer",
+          "long": "reviewer",
+          "positional": false
+        },
+        {
+          "name": "run_manifest",
+          "long": "run-manifest",
+          "positional": false
         }
       ],
       "usage": "seikika assess check [OPTIONS] [PORTAL]"

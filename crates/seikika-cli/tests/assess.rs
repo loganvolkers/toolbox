@@ -431,3 +431,91 @@ fn kind_coverage_requires_a_lookup_in_a_passing_assertion() {
     assert!(tested("score('reviewed', 'thing:a').level == 'none'"));
     std::fs::remove_dir_all(dir).unwrap();
 }
+
+#[test]
+fn scoped_queue_explains_versions_and_binds_briefs_to_existing_files() {
+    use sha2::{Digest, Sha256};
+
+    let root = portal_with("queue", MANIFEST);
+    let p = root.to_str().unwrap();
+    let path = root.join("assessments/previous-layout.yml");
+    std::fs::write(
+        &path,
+        format!(
+            "{}rubricHash: \"{}\"\n",
+            ASSESSMENT.replace("0123456789ab", "000000000000"),
+            "0".repeat(64)
+        ),
+    )
+    .unwrap();
+    let record_path = root.join("run.json");
+    let output = seikika(&[
+        "assess",
+        "check",
+        p,
+        "--fixtures",
+        "--rubric",
+        "thing-review",
+        "--entity",
+        "thing:a",
+        "--queue",
+        "--action",
+        "assess",
+        "--with-briefs",
+        "--run-manifest",
+        record_path.to_str().unwrap(),
+        "-o",
+        "json",
+    ]);
+    let body: Value = serde_json::from_str(&stdout(&output)).unwrap();
+    assert_eq!(body["totalPending"], 1);
+    assert_eq!(body["pendingByAction"]["assess"], 1);
+    let row = &body["queue"][0];
+    assert_eq!(row["state"], "stale");
+    assert_eq!(
+        row["reasons"],
+        serde_json::json!(["subject-changed", "rubric-changed"])
+    );
+    assert_eq!(row["versions"]["subject"]["field"], "hash");
+    assert_eq!(row["versions"]["subject"]["current"], "0123456789ab");
+    assert_eq!(row["versions"]["subject"]["recorded"], "000000000000");
+    assert_eq!(row["assessmentPath"], "assessments/previous-layout.yml");
+    assert_eq!(row["brief"]["file"], row["assessmentPath"]);
+    let record: Value = serde_json::from_slice(&std::fs::read(record_path).unwrap()).unwrap();
+    assert_eq!(record["connectors"]["things"]["status"], "fixture");
+    assert_eq!(record["scope"]["action"], "assess");
+    assert_eq!(record["exitCode"], 0);
+    assert_eq!(
+        record["outputSha256"],
+        Sha256::digest(&output.stdout)
+            .iter()
+            .map(|byte| format!("{byte:02x}"))
+            .collect::<String>()
+    );
+    for key in [
+        "manifestSha256",
+        "inputsSha256",
+        "parsedAssessmentFilesSha256",
+        "binarySha256",
+    ] {
+        assert_eq!(record[key].as_str().unwrap().len(), 64, "{key}");
+    }
+    // A presentation filter cannot hide a stale assessment from the configured gate.
+    let output = seikika(&[
+        "assess",
+        "check",
+        p,
+        "--fixtures",
+        "--queue",
+        "--action",
+        "repair",
+        "--require-fresh",
+        "-o",
+        "json",
+    ]);
+    assert_eq!(output.status.code(), Some(1));
+    let body: Value = serde_json::from_slice(&output.stdout).unwrap();
+    assert_eq!(body["totalPending"], 0);
+    assert_eq!(body["pendingByAction"]["assess"], 1);
+    std::fs::remove_dir_all(root).unwrap();
+}
