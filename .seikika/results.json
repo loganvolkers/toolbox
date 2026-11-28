@@ -4770,6 +4770,12 @@
       "doc:docs/audits/agentic-assessments-2026-11-26.md": {
         "level": "silver"
       },
+      "doc:docs/audits/assessment-improvement-2026-11-28.md": {
+        "level": "silver"
+      },
+      "doc:docs/audits/assessment-improvement-benchmark.md": {
+        "level": "silver"
+      },
       "doc:docs/audits/assessment-viewer-2026-11-27.md": {
         "level": "silver"
       },
@@ -4783,6 +4789,9 @@
         "level": "silver"
       },
       "doc:docs/audits/design-loop-efficiency-2026-11-24.md": {
+        "level": "silver"
+      },
+      "doc:docs/audits/evidence/assessment-improvement-2026-11-28/chronology.md": {
         "level": "silver"
       },
       "doc:docs/audits/federated-inventory-2026-11-28.md": {
