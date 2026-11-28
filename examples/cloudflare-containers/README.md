@@ -107,6 +107,8 @@ On the public hostname's destination in the existing Cloudflare Access applicati
 
 Use Node 24 and Corepack to build the locked UI workspace before compiling Rust. In Workers Builds, set `NODE_VERSION=24` in production and the Preview base settings. Deploy the [private production monitor](production-monitor/README.md) to track readiness, authorization failures, and connection utilization.
 
+The [demo observability stack](observability/README.md) can receive OTLP from the public portal and share a filtered runtime dashboard with guests.
+
 ### Preview a trusted branch
 
 Start with preview builds disabled while you verify the tracked-branch deployment. The Wrangler configuration declares a Container and Durable Object binding for each Preview. Use `wrangler preview` so each Preview gets its own image, Container application, and namespace. [Container Preview isolation](https://developers.cloudflare.com/workers/previews/resources/#containers)

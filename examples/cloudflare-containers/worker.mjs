@@ -5,6 +5,26 @@ const IDLE_TIMEOUT_MS = 30 * 60 * 1000;
 const STARTUP_TIMEOUT_MS = 25_000;
 const GITHUB_APP_BINDINGS = ["GITHUB_APP_ID", "GITHUB_INSTALLATION_ID", "SEIKIKA_SECRET_GITHUB_APP_PRIVATE_KEY"];
 
+function telemetryEnvironment(env) {
+  const { SEIKIKA_OTLP_ENDPOINT, SEIKIKA_OTLP_TOKEN } = env;
+  if (!SEIKIKA_OTLP_ENDPOINT && !SEIKIKA_OTLP_TOKEN) return {};
+  if (!/^https:\/\/[a-z0-9.-]+\/?$/i.test(SEIKIKA_OTLP_ENDPOINT ?? "") ||
+      !/^[a-f0-9]{64}$/.test(SEIKIKA_OTLP_TOKEN ?? "")) {
+    console.error("OTLP disabled: set an HTTPS SEIKIKA_OTLP_ENDPOINT and a hex SEIKIKA_OTLP_TOKEN");
+    return {};
+  }
+  return {
+    SEIKIKA_TELEMETRY: "prod",
+    RUST_LOG: "info",
+    OTEL_SERVICE_NAME: "seikika-demo",
+    OTEL_EXPORTER_OTLP_ENDPOINT: SEIKIKA_OTLP_ENDPOINT,
+    OTEL_EXPORTER_OTLP_PROTOCOL: "http/protobuf",
+    OTEL_EXPORTER_OTLP_HEADERS: `authorization=Bearer%20${SEIKIKA_OTLP_TOKEN}`,
+    OTEL_TRACES_SAMPLER: "always_on",
+    OTEL_METRIC_EXPORT_INTERVAL: "15000",
+  };
+}
+
 function containerEnvironment(env) {
   const { DATABASE_URL, SEIKIKA_SIGNING_KEY, SEIKIKA_AUTH_MODE } = env;
   if (!DATABASE_URL || !/^[0-9a-f]{64}$/i.test(SEIKIKA_SIGNING_KEY ?? "")) {
@@ -52,7 +72,8 @@ export class SeikikaContainer extends DurableObject {
 
   async #start(container) {
     if (!container.running) {
-      container.start({ env: containerEnvironment(this.env), enableInternet: true });
+      const env = { ...containerEnvironment(this.env), ...telemetryEnvironment(this.env) };
+      container.start({ env, enableInternet: true });
     }
     await container.setInactivityTimeout(IDLE_TIMEOUT_MS);
     const port = container.getTcpPort(PORT);

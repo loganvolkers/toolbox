@@ -6398,6 +6398,9 @@
       "example:examples/cloudflare-containers/README.md": {
         "level": "gold"
       },
+      "example:examples/cloudflare-containers/observability/README.md": {
+        "level": "gold"
+      },
       "example:examples/cloudflare-containers/preview-operator/README.md": {
         "level": "gold"
       },
@@ -6759,6 +6762,9 @@
       "site-page:site/src/content/docs/connectors/workspace.md": {
         "level": "gold"
       },
+      "site-page:site/src/content/docs/demo/observability.md": {
+        "level": "gold"
+      },
       "site-page:site/src/content/docs/demo/organization.mdx": {
         "level": "gold"
       },
@@ -6799,6 +6805,9 @@
         "level": "gold"
       },
       "site-page:site/src/content/docs/operators/manifest.md": {
+        "level": "gold"
+      },
+      "site-page:site/src/content/docs/operators/observability.md": {
         "level": "gold"
       },
       "site-page:site/src/content/docs/operators/portal.md": {
